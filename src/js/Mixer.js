@@ -34,10 +34,6 @@ export const Mixer = {
 
     outputNames: [
         'mixerOutputNone',
-        'mixerOutputMotor1',
-        'mixerOutputMotor2',
-        'mixerOutputMotor3',
-        'mixerOutputMotor4',
         'mixerOutputServo1',
         'mixerOutputServo2',
         'mixerOutputServo3',
@@ -46,6 +42,10 @@ export const Mixer = {
         'mixerOutputServo6',
         'mixerOutputServo7',
         'mixerOutputServo8',
+        'mixerOutputMotor1',
+        'mixerOutputMotor2',
+        'mixerOutputMotor3',
+        'mixerOutputMotor4',
     ],
 
     operNames: [

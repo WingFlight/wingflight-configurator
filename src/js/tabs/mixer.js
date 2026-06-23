@@ -27,6 +27,13 @@ const tab = {
 
 tab.initialize = function (callback) {
     const self = this;
+    const standardGliderRules = [
+        { oper: 1, src: 1, dst: 1, offset: 0, weight: 1000 },
+        { oper: 1, src: 1, dst: 2, offset: 0, weight: -1000 },
+        { oper: 1, src: 2, dst: 3, offset: 0, weight: 1000 },
+        { oper: 1, src: 3, dst: 4, offset: 0, weight: 1000 },
+        { oper: 1, src: 15, dst: 9, offset: 0, weight: 1000 },
+    ];
 
     function setDirty() {
         if (!self.isDirty) {
@@ -128,7 +135,6 @@ tab.initialize = function (callback) {
     function add_override(axis) {
 
         const mixerOverride = $('#tab-mixer-templates .mixerOverrideTemplate tr').clone();
-
         const mixerSlider = mixerOverride.find('.mixerOverrideSlider').get(0);
         const mixerEnable = mixerOverride.find('.mixerOverrideEnable input');
         const mixerPassthrough = mixerOverride.find('.mixerPassthroughEnable input');
@@ -562,6 +568,80 @@ tab.initialize = function (callback) {
         });
     }
 
+    // Wing mixer rule table — shows every non-null rule with direction toggle, rate %, and trim
+    function renderWingRuleTable() {
+        const tbody = $('#wingRuleTableBody');
+        if (!tbody.length) return;
+        tbody.empty();
+
+        const outputNames = Mixer.outputNames;
+        const inputNames  = Mixer.inputNames;
+
+        FC.MIXER_RULES.forEach(function(rule, index) {
+            if (rule.oper === 0) return; // skip NOP rules
+
+            const absWeight = Math.abs(rule.weight);
+            const ratePercent = Math.round(absWeight / 10);
+            const isReversed = rule.weight < 0;
+            const outputLabel = outputNames[rule.dst] ? i18n.getMessage(outputNames[rule.dst]) : ('Out ' + rule.dst);
+            const inputLabel  = inputNames[rule.src]  ? i18n.getMessage(inputNames[rule.src])  : ('In ' + rule.src);
+
+            const row = $(`
+                <tr data-rule-index="${index}" style="border-bottom:1px solid #333;">
+                    <td style="padding:4px 8px;">${index}</td>
+                    <td style="padding:4px 8px;">${outputLabel}</td>
+                    <td style="padding:4px 8px;">${inputLabel}</td>
+                    <td style="padding:4px 8px;">
+                        <select class="wingRuleDir">
+                            <option value="1"  ${isReversed ? '' : 'selected'}>Normal</option>
+                            <option value="-1" ${isReversed ? 'selected' : ''}>Reversed</option>
+                        </select>
+                    </td>
+                    <td style="padding:4px 8px;">
+                        <input class="wingRuleRate" type="number" min="0" max="200" step="1" value="${ratePercent}" style="width:60px;" />
+                    </td>
+                    <td style="padding:4px 8px;">
+                        <input class="wingRuleOffset" type="number" min="-1000" max="1000" step="10" value="${rule.offset}" style="width:70px;" />
+                    </td>
+                </tr>`);
+
+            row.find('.wingRuleDir, .wingRuleRate, .wingRuleOffset').on('change', function() {
+                const dir    = parseInt(row.find('.wingRuleDir').val());
+                const rate   = parseInt(row.find('.wingRuleRate').val()) * 10;
+                const offset = parseInt(row.find('.wingRuleOffset').val());
+                FC.MIXER_RULES[index].weight = rate * dir;
+                FC.MIXER_RULES[index].offset = offset;
+                self.MIXER_RULES_dirty = true;
+                self.needSave = true;
+                setDirty();
+            });
+
+            tbody.append(row);
+        });
+    }
+
+    function applyStandardGliderPreset() {
+        const ruleCount = FC.MIXER_RULES.length || 32;
+        const nextRules = [];
+
+        for (let i = 0; i < ruleCount; i++) {
+            nextRules.push(Mixer.nullRule());
+        }
+
+        standardGliderRules.forEach((rule, index) => {
+            if (index < nextRules.length) {
+                nextRules[index] = Object.assign({}, rule);
+            }
+        });
+
+        FC.MIXER_RULES = nextRules;
+        self.MIXER_RULES_dirty = true;
+        self.needSave = true;
+        setDirty();
+
+        self.save(() => GUI.tab_switch_reload());
+    }
+
     function process_html() {
 
         // translate to user-selected language
@@ -569,6 +649,7 @@ tab.initialize = function (callback) {
 
         // UI Hooks
         data_to_form();
+        renderWingRuleTable();
 
         // Hide the buttons toolbar
         $('.tab-mixer').addClass('toolbar_hidden');
@@ -589,6 +670,11 @@ tab.initialize = function (callback) {
 
         $('a.save').click(function () {
             self.save(() => GUI.tab_switch_reload());
+        });
+
+        $('a.standardGliderPreset').click(function (event) {
+            event.preventDefault();
+            applyStandardGliderPreset();
         });
 
         $('a.reboot').click(function () {

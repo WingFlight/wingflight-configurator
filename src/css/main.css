@@ -31,8 +31,8 @@
 }
 
 :root {
-    --accent: #4da8da;
-    --darkAccent: #007cc7;
+    --accent: #d40000ff;
+    --darkAccent: #a80000ff;
     --subtleAccent: #c0c0c0;
     --superSubtleAccent: #cccccc;
     --quietText: #ffffff;
@@ -40,7 +40,7 @@
     --defaultText: #000000;
     --subtleText: #c0c0c0;
     --mutedText: #616161;
-    --linkText: #203647;
+    --linkText: #8f0000ff;
     --error: red;
     --attention: #f07050;
     --boxBackground: #ffffff;
@@ -455,12 +455,12 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .firmware_b a.flash:hover, .connect_b a.connect:hover {
-    background-color: #007cc7;
+    background-color: var(--darkAccent);
     border-color: #e0e0e0;
 }
 
 .firmware_b a.flash:active, .connect_b a.connect:active {
-    background-color: #4da8da;
+    background-color: var(--accent);
     border-color: #ffffff;
 }
 

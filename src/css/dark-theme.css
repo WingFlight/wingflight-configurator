@@ -1,13 +1,13 @@
 :root[data-theme=dark] {
-    --accent: #0375b4;
-    --darkAccent: #203647;
+    --accent: #d40000ff;
+    --darkAccent: #8f0000ff;
     --subtleAccent: #c0c0c0;
     --superSubtleAccent: #595959;
     --quietHeader: #939682;
     --defaultText: #ffffff;
     --subtleText: #c0c0c0;
     --mutedText: #d6d6d6;
-    --linkText: #4da8da;
+    --linkText: #ff7070;
     --attention: #c04020;
     --boxBackground: #3a3a3a;
     --alternativeBackground: #414443;

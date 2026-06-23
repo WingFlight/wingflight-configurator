@@ -3080,13 +3080,13 @@
         "message": "-"
     },
     "mixerInputStabilizedRoll": {
-        "message": "Roll"
+        "message": "Stabilized Roll"
     },
     "mixerInputStabilizedPitch": {
-        "message": "Pitch"
+        "message": "Stabilized Pitch"
     },
     "mixerInputStabilizedYaw": {
-        "message": "Yaw"
+        "message": "Stabilized Yaw"
     },
     "mixerInputStabilizedCollective": {
         "message": "Collective"
@@ -3110,19 +3110,19 @@
         "message": "Commanded Throttle"
     },
     "mixerInputRCChannelRoll": {
-        "message": "RC Channel Roll"
+        "message": "RC Roll (bypass)"
     },
     "mixerInputRCChannelPitch": {
-        "message": "RC Channel Pitch"
+        "message": "RC Pitch (bypass)"
     },
     "mixerInputRCChannelYaw": {
-        "message": "RC Channel Yaw"
+        "message": "RC Yaw (bypass)"
     },
     "mixerInputRCChannelCollective": {
         "message": "RC Channel Collective"
     },
     "mixerInputRCChannelThrottle": {
-        "message": "RC Channel Throttle"
+        "message": "RC Throttle"
     },
     "mixerInputRCChannelAux1": {
         "message": "RC Channel AUX1"
@@ -3176,7 +3176,7 @@
         "message": "Servo #3"
     },
     "mixerOutputServo4": {
-        "message": "Servo #4"
+        "message": "Tail Servo"
     },
     "mixerOutputServo5": {
         "message": "Servo #5"
@@ -3191,7 +3191,7 @@
         "message": "Servo #8"
     },
     "mixerOutputMotor1": {
-        "message": "Motor #1"
+        "message": "Motor"
     },
     "mixerOutputMotor2": {
         "message": "Motor #2"
