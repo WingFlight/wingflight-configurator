@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/rotorflight/rotorflight-configurator"
+    "url": "github.com/WingFlight/wingflight-configurator"
   },
   "webview": {
     "partitions": [
@@ -38,7 +38,7 @@
       }
     ]
   },
-  "author": "The Rotorflight open source project.",
+  "author": "The Wingflight open source project.",
   "license": "GPL-3.0",
   "engines": {
     "node": ">=24"

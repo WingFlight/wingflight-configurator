@@ -35,7 +35,7 @@ const BUNDLE_DIR = "./bundle";
 const APP_DIR = "./app";
 const REDIST_DIR = "./redist";
 
-const LINUX_INSTALL_DIR = "/opt/rotorflight";
+const LINUX_INSTALL_DIR = "/opt/wingflight";
 
 const NWJS_CACHE_DIR = "nwjs_cache";
 const NWJS_VERSION = "0.109.1";
@@ -158,7 +158,7 @@ function build_app_nwjs() {
   const platformOpts = {
     osx: {
       icon: "./src/images/rf_icon.icns",
-      CFBundleDisplayName: "Rotorflight Configurator",
+      CFBundleDisplayName: "Wingflight Configurator",
     },
     win: {
       icon: "./src/images/rf_icon.ico",
@@ -259,7 +259,7 @@ function build_redist_tar_xz() {
 
   const filename = `${pkg.name}_${pkg.version}_${platform}_${arch}.tar.xz`;
   const output = `${path.relative(context.appdir, REDIST_DIR)}/${filename}`;
-  const command = `tar -cJf '${output}' --transform 's|^\\./|rotorflight-configurator-${pkg.version}/|' .`;
+  const command = `tar -cJf '${output}' --transform 's|^\\./|wingflight-configurator-${pkg.version}/|' .`;
 
   return runAsync(
     new Promise((resolve, reject) =>
@@ -374,7 +374,7 @@ function build_redist_osx() {
         target: targetPath,
         basepath: context.appdir,
         specification: {
-          title: "Rotorflight Configurator",
+          title: "Wingflight Configurator",
           contents: [
             { x: 448, y: 342, type: "link", path: "/Applications" },
             {
@@ -382,7 +382,7 @@ function build_redist_osx() {
               y: 344,
               type: "file",
               path: `${pkg.name}.app`,
-              name: "Rotorflight Configurator.app",
+              name: "Wingflight Configurator.app",
             },
           ],
           background: `${import.meta.dirname}/assets/osx/dmg-background.png`,

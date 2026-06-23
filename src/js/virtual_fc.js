@@ -8,7 +8,7 @@ export function applyVirtualConfig() {
     name: "VirtualFC",
     buildVersion: CONFIGURATOR.virtualFwVersion,
     flightControllerVersion: CONFIGURATOR.virtualFwVersion,
-    flightControllerIdentifier: "RTFL",
+    flightControllerIdentifier: "WGFL",
     apiVersion: CONFIGURATOR.virtualApiVersion,
     motorCount: 1,
     servoCount: 4,

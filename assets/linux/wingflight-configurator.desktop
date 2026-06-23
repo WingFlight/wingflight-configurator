@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Wingflight Configurator
+Comment=Crossplatform configuration tool for the Wingflight flight control system
+Exec=/opt/wingflight/wingflight-configurator/wingflight-configurator
+Icon=/opt/wingflight/wingflight-configurator/icon/rf_icon.png
+Terminal=false
+Type=Application
+Categories=Utility

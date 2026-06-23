@@ -21,7 +21,7 @@ async function getCachedUnifiedTargets() {
 const tab = {
     tabName: 'firmware_flasher',
     releases: null,
-    releaseChecker: new ReleaseChecker('firmware', 'https://api.github.com/repos/rotorflight/rotorflight-firmware/releases'),
+    releaseChecker: new ReleaseChecker('firmware', 'https://api.github.com/repos/WingFlight/wingflight-firmware/releases'),
     localFirmwareLoaded: false,
     selectedBoard: undefined,
     intel_hex: undefined, // standard intel hex in string format
@@ -96,7 +96,7 @@ tab.initialize = function (callback) {
                 $('div.release_info #unifiedTargetInfo').hide();
             }
 
-            var formattedNotes = summary.notes; //.replace(/#(\d+)/g, '[#$1](https://github.com/rotorflight/rotorflight-firmware/pull/$1)');
+            var formattedNotes = summary.notes; //.replace(/#(\d+)/g, '[#$1](https://github.com/WingFlight/wingflight-firmware/pull/$1)');
             formattedNotes = marked.parse(formattedNotes);
             $('div.release_info .notes').html(formattedNotes);
             $('div.release_info .notes').find('a').each(function() {
@@ -181,7 +181,7 @@ tab.initialize = function (callback) {
 
         function processBoardOptions(releaseData, buildLevel) {
             var releases = {};
-            const filenameExpression = /^rotorflight_([\d]+[.][\d]+[.][\d]+((-[A-Za-z][\w]*)|(-[\d]+))?)_([A-Za-z][\w]*)[.]hex$/;
+            const filenameExpression = /^wingflight_([\d]+[.][\d]+[.][\d]+((-[A-Za-z][\w]*)|(-[\d]+))?)_([A-Za-z][\w]*)[.]hex$/;
             releaseData.forEach(function(release) {
                 if (release.prerelease && buildLevel < 2)
                     return;
@@ -246,7 +246,9 @@ tab.initialize = function (callback) {
                 if (cacheAge > expirationPeriod) {
                     console.log("Fetching unified targets");
                     try {
-                        supportedTargets = await github.getContents("rotorflight/rotorflight-targets", "rotorflight", "configs");
+                        supportedTargets = await github.getContents("WingFlight/wingflight-targets", "master", "configs");
+                        // wingflight-targets has no legacy/ folder yet -- fall back to Rotorflight's legacy board list
+                        // (marked unsupported below either way) until Wingflight grows its own.
                         legacyTargets = await github.getContents("rotorflight/rotorflight-targets", "rotorflight", "legacy");
 
                         await new Promise((resolve) => chrome.storage.local.set(
@@ -623,7 +625,11 @@ tab.initialize = function (callback) {
                                 const bareBoard = grabBuildNameFromConfig(config);
                                 tab.bareBoard = bareBoard;
 
-                                const commit = await github.getFileLastCommitInfo("rotorflight/rotorflight-targets", "rotorflight", targetSpec.path);
+                                // Supported targets now live in wingflight-targets; legacy targets are still
+                                // sourced from rotorflight-targets until wingflight-targets grows its own legacy/ folder.
+                                const commit = targetSpec.supported
+                                    ? await github.getFileLastCommitInfo("WingFlight/wingflight-targets", "master", targetSpec.path)
+                                    : await github.getFileLastCommitInfo("rotorflight/rotorflight-targets", "rotorflight", targetSpec.path);
                                 config = self.injectDefaultDesign(config, "BTFL");
                                 config = self.injectTargetInfo(config, targetSpec.name, target, targetSpec.manufacturer, commit);
 
@@ -1170,7 +1176,7 @@ tab.flashingMessage = function(message, type) {
             try {
                 await writeTextFile(self.intel_hex, {
                     suggestedName: summary.file,
-                    description: 'Rotorflight Firmware (.hex)',
+                    description: 'Wingflight Firmware (.hex)',
                 });
             } catch (err) {
                 console.log('Error saving firmware file', err);
@@ -1210,7 +1216,7 @@ tab.injectTargetInfo = function (targetConfig, configName, targetName, manufactu
     targetConfig = targetConfig.replace(configLineRegex, '');
 
     const newConfig =
-        '## Rotorflight Custom Defaults\n' +
+        '## Wingflight Custom Defaults\n' +
         `# config: ${configName}\n` +
         `# board: ${targetName}\n` +
         `# make: ${manufacturerId}\n` +
