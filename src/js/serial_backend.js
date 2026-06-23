@@ -282,7 +282,7 @@ async function onOpen(openInfo) {
             await MSP.promise(MSPCodes.MSP_FC_VARIANT, false);
 
             const { flightControllerIdentifier } = FC.CONFIG;
-            if (flightControllerIdentifier !== 'RTFL') {
+            if (flightControllerIdentifier !== 'WGFL') {
                 throw showConnectWarningDialogAndConnectCli('firmwareTypeNotSupported');
             }
             await MSP.promise(MSPCodes.MSP_FC_VERSION, false);

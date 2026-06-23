@@ -363,7 +363,7 @@ export function setDarkTheme(enabled) {
 }
 
 export function checkForConfiguratorUpdates() {
-    const releaseChecker = new ReleaseChecker('configurator', 'https://api.github.com/repos/rotorflight/rotorflight-configurator/releases');
+    const releaseChecker = new ReleaseChecker('configurator', 'https://api.github.com/repos/WingFlight/wingflight-configurator/releases');
 
     releaseChecker.loadReleaseData(notifyOutdatedVersion);
 }

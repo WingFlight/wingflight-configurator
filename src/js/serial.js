@@ -151,7 +151,7 @@ export const serial = {
 
         chrome.sockets.tcp.create({
             persistent: false,
-            name: 'Rotorflight',
+            name: 'Wingflight',
             bufferSize: 65535,
         }, function(createInfo) {
             if (createInfo && !self.openCanceled || !checkChromeRuntimeError()) {
