@@ -25,6 +25,7 @@
 
         <resource-file src="resources/android/values/ic_launcher_background.xml" target="/app/src/main/res/values/ic_launcher_background.xml" />
         <resource-file src="resources/android/drawable/ic_launcher_foreground.xml" target="/app/src/main/res/drawable/ic_launcher_foreground.xml" />
+        <resource-file src="resources/android/drawable/ic_launcher_foreground_art.png" target="/app/src/main/res/drawable/ic_launcher_foreground_art.png" />
 
         <resource-file src="resources/android/mipmap-anydpi-v26/ic_launcher.xml" target="/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" />
         <resource-file src="resources/android/mipmap-hdpi/ic_launcher.webp" target="/app/src/main/res/mipmap-hdpi/ic_launcher.webp" />
