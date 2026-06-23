@@ -1,5 +1,5 @@
 ; ------------------------------------------
-; Installer for Rotorflight Configurator
+; Installer for Wingflight Configurator
 ; ------------------------------------------
 ; It receives from the command line with /D the parameters:
 ; version
@@ -9,18 +9,18 @@
 ; sourceFolder
 ; targetFolder
 
-#define ApplicationName "Rotorflight Configurator"
-#define CompanyName "The Rotorflight open source project"
-#define CompanyUrl "https://github.com/rotorflight/"
-#define ExecutableFileName "rotorflight-configurator.exe"
-#define GroupName "Rotorflight"
-#define InstallerFileName "rotorflight-configurator-installer_" + version + "_" + archName
+#define ApplicationName "Wingflight Configurator"
+#define CompanyName "The Wingflight open source project"
+#define CompanyUrl "https://github.com/WingFlight/"
+#define ExecutableFileName "wingflight-configurator.exe"
+#define GroupName "Wingflight"
+#define InstallerFileName "wingflight-configurator-installer_" + version + "_" + archName
 #define SourcePath "..\..\" + sourceFolder
-#define TargetFolderName "Rotorflight-Configurator"
-#define UpdatesUrl "https://github.com/rotorflight/rotorflight-configurator/releases"
+#define TargetFolderName "Wingflight-Configurator"
+#define UpdatesUrl "https://github.com/WingFlight/wingflight-configurator/releases"
 
 [CustomMessages]
-AppName=rotorflight-configurator
+AppName=wingflight-configurator
 LaunchProgram=Start {#ApplicationName}
 UninstallError=Error uninstalling Configurator %1.
 
