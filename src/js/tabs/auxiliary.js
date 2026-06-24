@@ -359,6 +359,12 @@ tab.initialize = function (callback) {
 
         for (let modeIndex = 0; modeIndex < FC.AUX_CONFIG.length; modeIndex++) {
 
+            // The heli-specific attitude/collective recovery mode is not used
+            // on this platform. GPS Rescue (RTH) is a separate mode and stays.
+            if (FC.AUX_CONFIG[modeIndex] === 'RESCUE') {
+                continue;
+            }
+
             const modeId = FC.AUX_CONFIG_IDS[modeIndex];
             const newMode = createMode(modeIndex, modeId);
             modeTableBodyElement.append(newMode);

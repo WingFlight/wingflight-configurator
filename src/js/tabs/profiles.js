@@ -216,43 +216,6 @@ tab.initialize = function (callback) {
         // Horizon mode
         $('.tab-profiles input[id="horizonModeGain"]').val(FC.PID_PROFILE.horizonLevelStrength);
 
-        // Rescue settings
-        const rescueModeCheck = $('.tab-profiles input[id="rescueEnable"]');
-        rescueModeCheck.change(function() {
-            const checked = $(this).is(':checked');
-            $('.tab-profiles .rescueMode .suboption').toggle(checked);
-            $('.tab-profiles .rescueMode .subhelp').toggle(checked);
-            // Hide unless already in use
-            $('.tab-profiles .rescueAltHold').toggle(checked && FC.PID_PROFILE.rescueMode > 1);
-        });
-        rescueModeCheck.prop('checked', FC.PID_PROFILE.rescueMode > 0).change();
-
-        const rescueAltHoldCheck = $('.tab-profiles input[id="rescueAltHold"]');
-        rescueAltHoldCheck.change(function() {
-            const checked = $(this).is(':checked');
-            $('.tab-profiles .rescueAltHold .suboption').toggle(checked);
-            $('.tab-profiles .rescueAltHold .subhelp').toggle(checked);
-        });
-        rescueAltHoldCheck.prop('checked', FC.PID_PROFILE.rescueMode > 1).change();
-
-        $('.tab-profiles select[id="rescueFlipMode"]').val(FC.PID_PROFILE.rescueFlipMode);
-        $('.tab-profiles input[id="rescuePullupCollective"]').val(FC.PID_PROFILE.rescuePullupCollective / 10).change();
-        $('.tab-profiles input[id="rescueClimbCollective"]').val(FC.PID_PROFILE.rescueClimbCollective / 10).change();
-        $('.tab-profiles input[id="rescueHoverCollective"]').val(FC.PID_PROFILE.rescueHoverCollective / 10).change();
-        $('.tab-profiles input[id="rescuePullupTime"]').val(FC.PID_PROFILE.rescuePullupTime / 10).change();
-        $('.tab-profiles input[id="rescueClimbTime"]').val(FC.PID_PROFILE.rescueClimbTime / 10).change();
-        $('.tab-profiles input[id="rescueFlipTime"]').val(FC.PID_PROFILE.rescueFlipTime / 10).change();
-        $('.tab-profiles input[id="rescueExitTime"]').val(FC.PID_PROFILE.rescueExitTime / 10).change();
-        $('.tab-profiles input[id="rescueFlipGain"]').val(FC.PID_PROFILE.rescueFlipGain);
-        $('.tab-profiles input[id="rescueLevelGain"]').val(FC.PID_PROFILE.rescueLevelGain);
-        $('.tab-profiles input[id="rescueMaxRate"]').val(FC.PID_PROFILE.rescueMaxRate);
-        $('.tab-profiles input[id="rescueMaxAccel"]').val(FC.PID_PROFILE.rescueMaxAccel);
-        $('.tab-profiles input[id="rescueHoverAltitude"]').val(FC.PID_PROFILE.rescueHoverAltitude / 100).change();
-        $('.tab-profiles input[id="rescueAltitudePGain"]').val(FC.PID_PROFILE.rescueAltitudePGain);
-        $('.tab-profiles input[id="rescueAltitudeIGain"]').val(FC.PID_PROFILE.rescueAltitudeIGain);
-        $('.tab-profiles input[id="rescueAltitudeDGain"]').val(FC.PID_PROFILE.rescueAltitudeDGain);
-        $('.tab-profiles input[id="rescueMaxCollective"]').val(FC.PID_PROFILE.rescueMaxCollective / 10).change();
-
         // Governor settings are not used on this platform
         $('.tab-profiles #svelte-gov-settings').hide();
     }
@@ -321,29 +284,6 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.levelAngleStrength = parseInt($('.tab-profiles input[id="angleModeGain"]').val());
         FC.PID_PROFILE.levelAngleLimit = parseInt($('.tab-profiles input[id="angleModeLimit"]').val());
         FC.PID_PROFILE.horizonLevelStrength = parseInt($('.tab-profiles input[id="horizonModeGain"]').val());
-
-        // Rescue settings
-        const rescueEna = $('.tab-profiles input[id="rescueEnable"]').is(':checked');
-        const rescueAlt = $('.tab-profiles input[id="rescueAltHold"]').is(':checked');
-        FC.PID_PROFILE.rescueMode = rescueEna ? (rescueAlt ? 2 : 1) : 0;
-
-        FC.PID_PROFILE.rescueFlipMode = $('.tab-profiles select[id="rescueFlipMode"]').val();
-        FC.PID_PROFILE.rescuePullupCollective = $('.tab-profiles input[id="rescuePullupCollective"]').val() * 10;
-        FC.PID_PROFILE.rescueClimbCollective = $('.tab-profiles input[id="rescueClimbCollective"]').val() * 10;
-        FC.PID_PROFILE.rescueHoverCollective = $('.tab-profiles input[id="rescueHoverCollective"]').val() * 10;
-        FC.PID_PROFILE.rescueMaxRate = $('.tab-profiles input[id="rescueMaxRate"]').val();
-        FC.PID_PROFILE.rescueMaxAccel = $('.tab-profiles input[id="rescueMaxAccel"]').val();
-        FC.PID_PROFILE.rescueFlipGain = $('.tab-profiles input[id="rescueFlipGain"]').val();
-        FC.PID_PROFILE.rescueLevelGain = $('.tab-profiles input[id="rescueLevelGain"]').val();
-        FC.PID_PROFILE.rescuePullupTime = $('.tab-profiles input[id="rescuePullupTime"]').val() * 10;
-        FC.PID_PROFILE.rescueClimbTime = $('.tab-profiles input[id="rescueClimbTime"]').val() * 10;
-        FC.PID_PROFILE.rescueFlipTime = $('.tab-profiles input[id="rescueFlipTime"]').val() * 10;
-        FC.PID_PROFILE.rescueExitTime = $('.tab-profiles input[id="rescueExitTime"]').val() * 10;
-        FC.PID_PROFILE.rescueHoverAltitude = $('.tab-profiles input[id="rescueHoverAltitude"]').val() * 100;
-        FC.PID_PROFILE.rescueAltitudePGain = $('.tab-profiles input[id="rescueAltitudePGain"]').val();
-        FC.PID_PROFILE.rescueAltitudeIGain = $('.tab-profiles input[id="rescueAltitudeIGain"]').val();
-        FC.PID_PROFILE.rescueAltitudeDGain = $('.tab-profiles input[id="rescueAltitudeDGain"]').val();
-        FC.PID_PROFILE.rescueMaxCollective = $('.tab-profiles input[id="rescueMaxCollective"]').val() * 10;
     }
 
     function process_html() {
