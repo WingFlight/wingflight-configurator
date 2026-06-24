@@ -42,10 +42,7 @@ export function checkChromeRuntimeError() {
 }
 
 const virtualFirmwareVersions = [
-  { fw: '4.3.0', msp: '12.6.0', label: 'Rotorflight 2.0.x'},
-  { fw: '4.4.0', msp: '12.7.0', label: 'Rotorflight 2.1.x'},
-  { fw: '4.5.0', msp: '12.8.0', label: 'Rotorflight 2.2.x'},
-  { fw: '4.6.0', msp: '12.9.0', label: 'Rotorflight 2.3.x'},
+  { fw: '4.6.99', msp: '22.0.0', label: 'Wingflight 1.0.x'},
 ];
 
 export function generateVirtualApiVersions() {
