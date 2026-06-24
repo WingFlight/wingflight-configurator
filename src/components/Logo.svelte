@@ -40,8 +40,7 @@
     position: absolute;
     left: 80px;
     top: 49px;
-    color: #949494;
-    opacity: 0.5;
+    color: #d8d8d8;
     font-size: 10px;
     min-width: 210px;
     display: flex;
