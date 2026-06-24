@@ -1810,7 +1810,7 @@
         "message": "The throttle channel value where throttle is considered 100%."
     },
     "receiverCyclicDeadband": {
-        "message": "Cyclic Deadband"
+        "message": "Roll/Pitch Deadband"
     },
     "receiverHelpCyclicDeadband": {
         "message": "How far the roll and pitch channel values must move from center before it's considered an input."
