@@ -290,10 +290,6 @@
     background-color: #8080FF;
 }
 
-.tab-rates .COLLECTIVE .axis_title {
-    background-color: #FFBB00;
-}
-
 .tab-rates .rates_titlebar td:first-child {
     text-align: left;
 }
@@ -576,19 +572,17 @@ html[data-theme="light"] .tab-rates .rateDynamic {
     --color-roll: #ff8080;
     --color-pitch: #80ff80;
     --color-yaw: #8080ff;
-    --color-collective: #ffbb00;
 }
 
 html[data-theme="dark"] .tab-rates .rateDynamic {
     --color-roll: #a00000;
     --color-pitch: #00a000;
     --color-yaw: #0000a0;
-    --color-collective: #c08000;
 }
 
 .tab-rates .rateDynamic .grid-container {
     display: grid;
-    grid-template-columns: minmax(min-content, 220px) repeat(4, minmax(60px, 1fr));
+    grid-template-columns: minmax(min-content, 220px) repeat(3, minmax(60px, 1fr));
     align-items: center;
 
 }
@@ -650,10 +644,6 @@ html[data-theme="dark"] .tab-rates .rateDynamic .group {
 
 .tab-rates .rateDynamic .YAW {
     background-color: var(--color-yaw);
-}
-
-.tab-rates .rateDynamic .COLLECTIVE {
-    background-color: var(--color-collective);
 }
 
 .tab-rates .row-label {

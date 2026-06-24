@@ -127,13 +127,11 @@ const tab = {
         raw_setpoint_roll: 0,
         raw_setpoint_pitch: 0,
         raw_setpoint_yaw: 0,
-        raw_setpoint_collective: 0,
         raw_setpoint_polar_cyclic: 0,
 
         actual_setpoint_roll: 0,
         actual_setpoint_pitch: 0,
         actual_setpoint_yaw: 0,
-        actual_setpoint_collective: 0,
 
         polar_rc_command: 0,
     },
@@ -190,19 +188,7 @@ const tab = {
             this.currentRates.yaw_rate_limit
         );
 
-        this.liveData.raw_setpoint_collective = this.rateCurve.rcCommandRawToDegreesPerSecond(
-            1500 + FC.RC_COMMAND[3],
-            this.currentRatesType,
-            this.currentRates.collective_srate,
-            this.currentRates.collective_rc_rate,
-            this.currentRates.collective_rc_expo,
-            this.currentRates.superexpo,
-            0,
-            this.currentRates.collective_rate_limit
-        );
-
         this.liveData.actual_setpoint_yaw = this.liveData.raw_setpoint_yaw;
-        this.liveData.actual_setpoint_collective = this.liveData.raw_setpoint_collective;
 
         if (this.polarRatesEnabled) {
             const roll = FC.RC_COMMAND[0] / 500;
@@ -313,22 +299,18 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.roll_response_time = getIntegerValue('.tab-rates input[name="roll_response"]');
         FC.RC_TUNING.pitch_response_time = getIntegerValue('.tab-rates input[name="pitch_response"]');
         FC.RC_TUNING.yaw_response_time = getIntegerValue('.tab-rates input[name="yaw_response"]');
-        FC.RC_TUNING.collective_response_time = getIntegerValue('.tab-rates input[name="coll_response"]');
 
         // Rates acceleration limits
         FC.RC_TUNING.roll_accel_limit = getIntegerValue('.tab-rates input[name="roll_accel"]', 0.1);
         FC.RC_TUNING.pitch_accel_limit = getIntegerValue('.tab-rates input[name="pitch_accel"]', 0.1);
         FC.RC_TUNING.yaw_accel_limit = getIntegerValue('.tab-rates input[name="yaw_accel"]', 0.1);
-        FC.RC_TUNING.collective_accel_limit = getIntegerValue('.tab-rates input[name="coll_accel"]', 0.1);
 
         FC.RC_TUNING.roll_setpoint_boost_gain = getIntegerValue('#setpoint-boost-gain-roll');
         FC.RC_TUNING.pitch_setpoint_boost_gain = getIntegerValue('#setpoint-boost-gain-pitch');
         FC.RC_TUNING.yaw_setpoint_boost_gain = getIntegerValue('#setpoint-boost-gain-yaw');
-        FC.RC_TUNING.collective_setpoint_boost_gain = getIntegerValue('#setpoint-boost-gain-collective');
         FC.RC_TUNING.roll_setpoint_boost_cutoff = getIntegerValue('#setpoint-boost-cutoff-roll');
         FC.RC_TUNING.pitch_setpoint_boost_cutoff = getIntegerValue('#setpoint-boost-cutoff-pitch');
         FC.RC_TUNING.yaw_setpoint_boost_cutoff = getIntegerValue('#setpoint-boost-cutoff-yaw');
-        FC.RC_TUNING.collective_setpoint_boost_cutoff = getIntegerValue('#setpoint-boost-cutoff-collective');
 
         FC.RC_TUNING.yaw_dynamic_ceiling_gain = getIntegerValue('#yaw-dynamic-ceiling-gain');
         FC.RC_TUNING.yaw_dynamic_deadband_gain = getIntegerValue('#yaw-dynamic-deadband-gain');
@@ -339,9 +321,6 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.cyclic_polar = $('#enable-polar-coordinates').is(':checked');
 
         // catch RC_tuning changes
-        const collective_rc_expo_e = $('.rates_setup input[name="collective_rc_expo"]');
-        const collective_rc_rate_e = $('.rates_setup input[name="collective_rc_rate"]');
-        const collective_srate_e = $('.rates_setup input[name="collective_srate"]');
         const pitch_rc_expo_e = $('.rates_setup input[name="pitch_rc_expo"]');
         const pitch_rc_rate_e = $('.rates_setup input[name="pitch_rc_rate"]');
         const pitch_srate_e = $('.rates_setup input[name="pitch_srate"]');
@@ -352,9 +331,6 @@ tab.initialize = function (callback) {
         const yaw_rc_rate_e = $('.rates_setup input[name="yaw_rc_rate"]');
         const yaw_srate_e = $('.rates_setup input[name="yaw_srate"]');
 
-        FC.RC_TUNING.collective_rc_expo = getFloatValue(collective_rc_expo_e);
-        FC.RC_TUNING.collective_rc_rate = getFloatValue(collective_rc_rate_e);
-        FC.RC_TUNING.collective_srate = getFloatValue(collective_srate_e);
         FC.RC_TUNING.pitch_rc_expo = getFloatValue(pitch_rc_expo_e);
         FC.RC_TUNING.pitch_rc_rate = getFloatValue(pitch_rc_rate_e);
         FC.RC_TUNING.pitch_srate = getFloatValue(pitch_srate_e);
@@ -370,48 +346,39 @@ tab.initialize = function (callback) {
                 FC.RC_TUNING.pitch_srate        /= 100;
                 FC.RC_TUNING.roll_srate         /= 100;
                 FC.RC_TUNING.yaw_srate          /= 100;
-                FC.RC_TUNING.collective_srate   /= 100;
                 FC.RC_TUNING.pitch_rc_rate      /= 1000;
                 FC.RC_TUNING.roll_rc_rate       /= 1000;
                 FC.RC_TUNING.yaw_rc_rate        /= 1000;
-                FC.RC_TUNING.collective_rc_rate /= 25;
                 FC.RC_TUNING.pitch_rc_expo      /= 100;
                 FC.RC_TUNING.roll_rc_expo       /= 100;
                 FC.RC_TUNING.yaw_rc_expo        /= 100;
-                FC.RC_TUNING.collective_rc_expo /= 100;
                 break;
 
             case self.RATES_TYPE.ACTUAL:
                 FC.RC_TUNING.pitch_srate        /= 1000;
                 FC.RC_TUNING.roll_srate         /= 1000;
                 FC.RC_TUNING.yaw_srate          /= 1000;
-                FC.RC_TUNING.collective_srate   /= 25;
                 FC.RC_TUNING.pitch_rc_rate      /= 1000;
                 FC.RC_TUNING.roll_rc_rate       /= 1000;
                 FC.RC_TUNING.yaw_rc_rate        /= 1000;
-                FC.RC_TUNING.collective_rc_rate /= 25;
                 break;
 
             case self.RATES_TYPE.QUICKRATES:
                 FC.RC_TUNING.pitch_srate        /= 1000;
                 FC.RC_TUNING.roll_srate         /= 1000;
                 FC.RC_TUNING.yaw_srate          /= 1000;
-                FC.RC_TUNING.collective_srate   /= 480;
                 break;
 
             case self.RATES_TYPE.ROTORFLIGHT:
                 FC.RC_TUNING.pitch_rc_rate      /= 500;
                 FC.RC_TUNING.roll_rc_rate       /= 500;
                 FC.RC_TUNING.yaw_rc_rate        /= 500;
-                FC.RC_TUNING.collective_rc_rate /= 50 / 4;
                 FC.RC_TUNING.pitch_srate        /= 100;
                 FC.RC_TUNING.roll_srate         /= 100;
                 FC.RC_TUNING.yaw_srate          /= 100;
-                FC.RC_TUNING.collective_srate   /= 100;
                 FC.RC_TUNING.roll_rc_expo       /= 100;
                 FC.RC_TUNING.yaw_rc_expo        /= 100;
                 FC.RC_TUNING.pitch_rc_expo      /= 100;
-                FC.RC_TUNING.collective_rc_expo /= 100;
                 break;
 
             default: // BetaFlight
@@ -505,7 +472,6 @@ tab.initialize = function (callback) {
         self.maxAngularVelRollElement    = $('.rates_setup .maxAngularVelRoll');
         self.maxAngularVelPitchElement   = $('.rates_setup .maxAngularVelPitch');
         self.maxAngularVelYawElement     = $('.rates_setup .maxAngularVelYaw');
-        self.maxCollectiveAngleElement   = $('.rates_setup .maxCollectiveAngle');
 
         rcCurveElement.width = 1000;
         rcCurveElement.height = 1000;
@@ -540,15 +506,6 @@ tab.initialize = function (callback) {
 
             curveContext.clearRect(0, 0, curveWidth, curveHeight);
 
-            self.maxCollectiveAngle = self.rateCurve.getMaxAngularVel(
-                self.currentRatesType,
-                self.currentRates.collective_srate,
-                self.currentRates.collective_rc_rate,
-                self.currentRates.collective_rc_expo,
-                self.currentRates.superexpo,
-                0,
-                self.currentRates.collective_rate_limit,
-            );
             self.currentRates.max_angular_roll = self.rateCurve.getMaxAngularVel(
                 self.currentRatesType,
                 self.currentRates.roll_srate,
@@ -603,7 +560,6 @@ tab.initialize = function (callback) {
                 self.maxAngularVelPitchElement.text(self.currentRates.max_angular_pitch.toFixed(0));
             }
             self.maxAngularVelYawElement.text(self.currentRates.max_angular_yaw.toFixed(0));
-            self.maxCollectiveAngleElement.text(self.convertToCollective(self.maxCollectiveAngle));
 
             maxAngularVel = self.currentRates.max_angular_yaw;
             if (self.polarRatesEnabled) {
@@ -618,19 +574,6 @@ tab.initialize = function (callback) {
             drawAxes(curveContext, curveWidth, curveHeight);
 
             curveContext.lineWidth = 2 * lineScale;
-
-            drawCurve(
-                self.currentRates.collective_srate,
-                self.currentRates.collective_rc_rate,
-                self.currentRates.collective_rc_expo,
-                self.currentRates.superexpo,
-                0,
-                self.currentRates.collective_rate_limit,
-                self.maxCollectiveAngle,
-                '#ffbb00',
-                -4,
-                curveContext
-            );
 
             drawCurve(
                 self.currentRates.yaw_srate,
@@ -842,26 +785,6 @@ tab.initialize = function (callback) {
     }
 };
 
-tab.convertToCollective = function (rate) {
-    const self = this;
-
-    switch (self.currentRatesType) {
-        case self.RATES_TYPE.NONE:
-        case self.RATES_TYPE.BETAFLIGHT:
-        case self.RATES_TYPE.KISS:
-        case self.RATES_TYPE.QUICKRATES:
-            rate /= 40;
-            break;
-        case self.RATES_TYPE.RACEFLIGHT:
-        case self.RATES_TYPE.ACTUAL:
-        case self.RATES_TYPE.ROTORFLIGHT:
-        default:
-            break;
-    }
-
-    return rate.toFixed(1);
-};
-
 tab.initRatesPreview = function () {
     this.keepRendering = true;
 
@@ -1013,7 +936,6 @@ tab.updateRatesLabels = function() {
             roll    : {color: 'rgba(255,128,128,0.4)', border: 'rgba(255,128,128,0.6)', text: '#000000'},
             pitch   : {color: 'rgba(128,255,128,0.4)', border: 'rgba(128,255,128,0.6)', text: '#000000'},
             yaw     : {color: 'rgba(128,128,255,0.4)', border: 'rgba(128,128,255,0.6)', text: '#000000'},
-            collective : {color: 'rgba(255,187,0,0.4)', border: 'rgba(255,187,0,0.6)', text: '#000000'}
         };
 
         const rcStickElement = $('.rate_curve canvas#rate_curve_layer1').get(0);
@@ -1074,12 +996,6 @@ tab.updateRatesLabels = function() {
                 self.liveData.actual_setpoint_yaw,
                 maxAngularVel
             );
-            drawStickPosition(stickContext,
-                '#FFBB00',
-                FC.RC_COMMAND[3],
-                self.liveData.actual_setpoint_collective,
-                self.maxCollectiveAngle,
-            );
 
             stickContext.lineWidth = lineScale;
 
@@ -1093,16 +1009,6 @@ tab.updateRatesLabels = function() {
             balloonsDirty = []; // reset the dirty balloon draw area (for overlap detection)
 
             // max value balloons
-            drawBalloonLabel(
-                stickContext,
-                self.convertToCollective(self.maxCollectiveAngle) + '°',
-                curveWidth,
-                0,
-                  'right',
-                BALLOON_COLORS.collective,
-                balloonsDirty,
-            );
-
             const maxValBalloons = [
                 {
                     value: self.currentRates.max_angular_yaw,
@@ -1172,14 +1078,6 @@ tab.updateRatesLabels = function() {
             maxValBalloons.sort((a, b) => b.value - a.value).forEach(x => x.draw());
 
             // current value balloons
-            drawBalloonLabel(
-                stickContext,
-                self.convertToCollective(this.liveData.actual_setpoint_collective) + '°',
-                10,
-                50,
-                'none',
-                BALLOON_COLORS.collective, balloonsDirty,
-            );
             if (self.polarRatesEnabled) {
                 drawBalloonLabel(
                     stickContext,

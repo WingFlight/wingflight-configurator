@@ -4652,7 +4652,7 @@
         "message": "Yaw"
     },
     "controlAxisCollective": {
-        "message": "Collective"
+        "message": "Aux 0"
     },
     "controlAxisThrottle": {
         "message": "Throttle"

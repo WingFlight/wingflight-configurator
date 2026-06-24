@@ -175,19 +175,6 @@
                                 </td>
                                 <td class="maxAngularVelYaw"></td>
                             </tr>
-                            <tr class="COLLECTIVE">
-                                <td class="axis_title" i18n="axisCOLLECTIVE">COLLECTIVE</td>
-                                <td>
-                                    <input type="number" class="rc_collective_input" name="collective_rc_rate" step="0.1" min="0" max="30" />
-                                </td>
-                                <td class="collective_rate">
-                                    <input type="number" class="collective_input" name="collective_srate" step="0.1" min="0" max="30" />
-                                </td>
-                                <td>
-                                    <input type="number" class="expo_input" name="collective_rc_expo" step="0.01" min="0" max="1" />
-                                </td>
-                                <td class="maxCollectiveAngle"></td>
-                            </tr>
                         </table>
                     </div>
 
@@ -228,7 +215,6 @@
                                 <div class="axis-title ROLL" i18n="axisROLL"></div>
                                 <div class="axis-title PITCH" i18n="axisPITCH"></div>
                                 <div class="axis-title YAW" i18n="axisYAW"></div>
-                                <div class="axis-title COLLECTIVE" i18n="axisCOLLECTIVE"></div>
                             </div>
 
                             <div class="group">
@@ -239,7 +225,6 @@
                                 <input type="number" name="roll_response" step="1" min="0" max="250" />
                                 <input type="number" name="pitch_response" step="1" min="0" max="250" />
                                 <input type="number" name="yaw_response" step="1" min="0" max="250" />
-                                <input type="number" name="coll_response" step="1" min="0" max="250" />
                             </div>
 
                             <div class="group setpoint-boost">
@@ -250,7 +235,6 @@
                                 <input id="setpoint-boost-gain-roll" type="number" step="1" min="0" max="250" />
                                 <input id="setpoint-boost-gain-pitch" type="number" step="1" min="0" max="250" />
                                 <input id="setpoint-boost-gain-yaw" type="number" step="1" min="0" max="250" />
-                                <input id="setpoint-boost-gain-collective" type="number" step="1" min="0" max="250" />
 
                                 <div class="row-label">
                                     <div>
@@ -261,7 +245,6 @@
                                 <input id="setpoint-boost-cutoff-roll" type="number" step="1" min="0" max="250" />
                                 <input id="setpoint-boost-cutoff-pitch" type="number" step="1" min="0" max="250" />
                                 <input id="setpoint-boost-cutoff-yaw" type="number" step="1" min="0" max="250" />
-                                <input id="setpoint-boost-cutoff-collective" type="number" step="1" min="0" max="250" />
                             </div>
 
                             <div class="group yaw-deadband">
@@ -272,7 +255,6 @@
                                 <div></div>
                                 <div></div>
                                 <input id="yaw-dynamic-ceiling-gain" type="number" step="1" min="0" max="250" />
-                                <div></div>
 
                                 <div class="row-label">
                                     <div i18n="rateYawDynamicDeadbandGain"></div>
@@ -281,7 +263,6 @@
                                 <div></div>
                                 <div></div>
                                 <input id="yaw-dynamic-deadband-gain" type="number" step="1" min="0" max="250" />
-                                <div></div>
 
                                 <div class="row-label">
                                     <div>
@@ -292,7 +273,6 @@
                                 <div></div>
                                 <div></div>
                                 <input id="yaw-dynamic-deadband-filter" type="number" step="0.1" min="0" max="25" />
-                                <div></div>
                             </div>
                         </div>
                     </div>
