@@ -4778,16 +4778,16 @@
         "message": "Decay Time [s]"
     },
     "profilesErrorDecayTimeCyclic": {
-        "message": "Error Decay time [s]"
+        "message": "Roll/Pitch Error Decay Time [s]"
     },
     "profilesErrorDecayTimeCyclicHelp": {
-        "message": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "message": "Time constant for bleeding off the accumulated roll/pitch error (I-term). Longer decay time gives a more stable hold, but may reduce responsiveness during aggressive maneuvers."
     },
     "profilesErrorDecayLimitCyclic": {
-        "message": "Error Decay maximum rate [&deg;/s]"
+        "message": "Roll/Pitch Error Decay Max Rate [&deg;/s]"
     },
     "profilesErrorDecayLimitCyclicHelp": {
-        "message": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "message": "Maximum bleed-off speed for the accumulated roll/pitch error (I-term)."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Error Decay time [s]"
@@ -4908,108 +4908,6 @@
     },
     "profilesHorizonModeGainHelp": {
         "message": "Horizon Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Horizon Mode"
-    },
-    "profilesMainRotorSettings": {
-        "message": "Main Rotor Settings"
-    },
-    "profilesTailRotorSettings": {
-        "message": "Tail Rotor Settings"
-    },
-    "profilesYawCenterOffset": {
-        "message": "Center Offset"
-    },
-    "profilesYawCenterOffsetHelp": {
-        "message": "Center Offset for tail motor or servo"
-    },
-    "profilesYawStopGainCW": {
-        "message": "CW Yaw Stop Gain"
-    },
-    "profilesYawStopGainCWHelp": {
-        "message": "Stop gain (PD) for clock-wise rotation. Typical range 50..200."
-    },
-    "profilesYawStopGainCCW": {
-        "message": "CCW Yaw Stop Gain"
-    },
-    "profilesYawStopGainCCWHelp": {
-        "message": "Stop gain (PD) for counter clock-wise rotation. Typical range 50..200."
-    },
-    "profilesYawPrecompCutoff": {
-        "message": "Yaw Precomp Cutoff [Hz]"
-    },
-    "profilesYawPrecompCutoffHelp": {
-        "message": "Frequency limit for all yaw precompensation actions"
-    },
-    "profilesYawFFCyclicGain": {
-        "message": "Cyclic Feedforward Gain"
-    },
-    "profilesYawFFCyclicGainHelp": {
-        "message": "Gain value for cyclic feedforward mixed into yaw"
-    },
-    "profilesYawFFCollectiveGain": {
-        "message": "Collective Feedforward Gain"
-    },
-    "profilesYawFFCollectiveGainHelp": {
-        "message": "Gain value for collective feedforward mixed into yaw"
-    },
-    "profilesYawFFImpulseGain": {
-        "message": "Collective Impulse Feedforward Gain"
-    },
-    "profilesYawFFImpulseGainHelp": {
-        "message": "Gain value for collective impulse feedforward mixed into yaw"
-    },
-    "profilesyawFFImpulseDecay": {
-        "message": "Collective Impulse Feedforward Decay time"
-    },
-    "profilesyawFFImpulseDecayHelp": {
-        "message": "Decay time for collective impulse feedforward mixed into yaw"
-    },
-    "profilesYawInertiaPrecompGain": {
-        "message": "Inertia Precomp Gain"
-    },
-    "profilesYawInertiaPrecompGainHelp": {
-        "message": "The strength of the main rotor's inertia. Larger values result in more precomp being applied to the yaw control."
-    },
-    "profilesYawInertiaPrecompCutoff": {
-        "message": "Inertia Precomp Cutoff"
-    },
-    "profilesYawInertiaPrecompCutoffHelp": {
-        "message": "Derivative cutoff frequency for inertia precomp. Larger values result in a sharper application of precomp."
-    },
-    "profilesPitchFFCollective": {
-        "message": "Collective to Pitch Compensation"
-    },
-    "profilesPitchFFCollectiveHelp": {
-        "message": "Compensation for the pitching up tendency in collective pitch pumps."
-    },
-    "profilesPitchFFCollectiveGain": {
-        "message": "Compensation Gain"
-    },
-    "profilesPitchFFCollectiveGainHelp": {
-        "message": "Amount of collective mixed into the elevator control."
-    },
-    "profilesCyclicCrossCoupling": {
-        "message": "Cyclic Cross-Coupling"
-    },
-    "profilesCyclicCrossCouplingHelp": {
-        "message": "Cyclic Cross-Coupling compensation removes the aileron (roll) wobble when only elevator is applied."
-    },
-    "profilesCyclicCrossCouplingGain": {
-        "message": "Cross-Coupling Gain"
-    },
-    "profilesCyclicCrossCouplingGainHelp": {
-        "message": "Amount of compensation applied for Pitch-to-Roll decoupling."
-    },
-    "profilesCyclicCrossCouplingRatio": {
-        "message": "Cross-Coupling Ratio [%]"
-    },
-    "profilesCyclicCrossCouplingRatioHelp": {
-        "message": "Amount of Roll-to-Pitch compensation needed, vs. Pitch-to-Roll."
-    },
-    "profilesCyclicCrossCouplingCutoff": {
-        "message": "Cross-Coupling Cutoff Frequency [Hz]"
-    },
-    "profilesCyclicCrossCouplingCutoffHelp": {
-        "message": "Frequency limit for the compensation. Higher value will make the compensation action faster."
     },
     "profilesRescueSettings": {
         "message": "Rescue Settings"

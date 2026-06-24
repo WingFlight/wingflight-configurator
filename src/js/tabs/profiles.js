@@ -1,8 +1,6 @@
 import semver from "semver";
 
 import {
-    API_VERSION_12_7,
-    API_VERSION_12_8,
     API_VERSION_12_9,
 } from "@/js/configurator.svelte.js";
 
@@ -207,44 +205,6 @@ tab.initialize = function (callback) {
         });
         itermRelaxType.val(FC.PID_PROFILE.itermRelaxType < 2 ? 1 : 2).change();
 
-        // Yaw settings
-        $('.tab-profiles input[id="yawStopGainCW"]').val(FC.PID_PROFILE.yawStopGainCW);
-        $('.tab-profiles input[id="yawStopGainCCW"]').val(FC.PID_PROFILE.yawStopGainCCW);
-        $('.tab-profiles input[id="yawPrecompCutoff"]').val(FC.PID_PROFILE.yawPrecompCutoff);
-        $('.tab-profiles input[id="yawFFCyclicGain"]').val(FC.PID_PROFILE.yawFFCyclicGain);
-        $('.tab-profiles input[id="yawFFCollectiveGain"]').val(FC.PID_PROFILE.yawFFCollectiveGain);
-        $('.tab-profiles input[id="yawFFImpulseGain"]').val(FC.PID_PROFILE.yawFFImpulseGain);
-        $('.tab-profiles input[id="yawFFImpulseDecay"]').val(FC.PID_PROFILE.yawFFImpulseDecay);
-        $('.tab-profiles input[id="yaw_inertia_precomp_gain"]').val(FC.PID_PROFILE.yaw_inertia_precomp_gain);
-        $('.tab-profiles input[id="yaw_inertia_precomp_cutoff"]').val(FC.PID_PROFILE.yaw_inertia_precomp_cutoff / 10);
-
-        // Collective-to-Pitch
-        $('.tab-profiles input[id="pitchFFCollectiveGain"]').val(FC.PID_PROFILE.pitchFFCollectiveGain);
-        const pitchFFCollectiveCheck = $('.tab-profiles input[id="pitchFFCollective"]');
-        pitchFFCollectiveCheck.change(function() {
-            const checked = $(this).is(':checked');
-            $('.tab-profiles .pitchFFCollective .suboption').toggle(checked);
-            $('.tab-profiles .pitchFFCollective .subhelp').toggle(checked);
-        });
-        pitchFFCollectiveCheck.prop('checked', FC.PID_PROFILE.pitchFFCollectiveGain > 0).change();
-
-        // Cyclic Cross-Coupling
-        $('.tab-profiles input[id="cyclicCrossCouplingGain"]').val(FC.PID_PROFILE.cyclicCrossCouplingGain);
-        $('.tab-profiles input[id="cyclicCrossCouplingRatio"]').val(FC.PID_PROFILE.cyclicCrossCouplingRatio);
-        if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-            $('.tab-profiles input[id="cyclicCrossCouplingCutoff"]')
-                .val((FC.PID_PROFILE.cyclicCrossCouplingCutoff / 10).toFixed(1));
-        } else {
-            $('.tab-profiles input[id="cyclicCrossCouplingCutoff"]').val(FC.PID_PROFILE.cyclicCrossCouplingCutoff);
-        }
-        const cyclicCrossCouplingCheck = $('.tab-profiles input[id="cyclicCrossCoupling"]');
-        cyclicCrossCouplingCheck.change(function() {
-            const checked = $(this).is(':checked');
-            $('.tab-profiles .cyclicCrossCoupling .suboption').toggle(checked);
-            $('.tab-profiles .cyclicCrossCoupling .subhelp').toggle(checked);
-        });
-        cyclicCrossCouplingCheck.prop('checked', FC.PID_PROFILE.cyclicCrossCouplingGain > 0).change();
-
         // Acro Trainer
         $('.tab-profiles input[id="acroTrainerGain"]').val(FC.PID_PROFILE.acroTrainerGain).trigger('input');
         $('.tab-profiles input[id="acroTrainerLimit"]').val(FC.PID_PROFILE.acroTrainerLimit).trigger('input');
@@ -294,8 +254,6 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="rescueMaxCollective"]').val(FC.PID_PROFILE.rescueMaxCollective / 10).change();
 
         // Governor settings are not used on this platform
-        $('.tab-profiles .govTTAGain').hide();
-        $('.tab-profiles .govTTALimit').hide();
         $('.tab-profiles #svelte-gov-settings').hide();
     }
 
@@ -347,30 +305,15 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.itermRelaxCutoffPitch = parseInt($('.tab-profiles input[id="itermRelaxCutoffPitch"]').val());
         FC.PID_PROFILE.itermRelaxCutoffYaw = parseInt($('.tab-profiles input[id="itermRelaxCutoffYaw"]').val());
 
-        // Yaw settings
-        FC.PID_PROFILE.yawStopGainCW = $('.tab-profiles input[id="yawStopGainCW"]').val();
-        FC.PID_PROFILE.yawStopGainCCW = $('.tab-profiles input[id="yawStopGainCCW"]').val();
-        FC.PID_PROFILE.yawPrecompCutoff = $('.tab-profiles input[id="yawPrecompCutoff"]').val();
-        FC.PID_PROFILE.yawFFCyclicGain = $('.tab-profiles input[id="yawFFCyclicGain"]').val();
-        FC.PID_PROFILE.yawFFCollectiveGain = $('.tab-profiles input[id="yawFFCollectiveGain"]').val();
-        FC.PID_PROFILE.yawFFImpulseGain = $('.tab-profiles input[id="yawFFImpulseGain"]').val();
-        FC.PID_PROFILE.yawFFImpulseDecay = $('.tab-profiles input[id="yawFFImpulseDecay"]').val();
-        FC.PID_PROFILE.yaw_inertia_precomp_gain = $('.tab-profiles input[id="yaw_inertia_precomp_gain"]').val();
-        FC.PID_PROFILE.yaw_inertia_precomp_cutoff = $('.tab-profiles input[id="yaw_inertia_precomp_cutoff"]').val() * 10;
-
-        // Collective-to-Pitch
-        FC.PID_PROFILE.pitchFFCollectiveGain =  $('.tab-profiles input[id="pitchFFCollective"]').is(':checked') ?
-            parseInt($('.tab-profiles input[id="pitchFFCollectiveGain"]').val()) : 0;
-
-        // Cyclic Cross-Coupling
-        FC.PID_PROFILE.cyclicCrossCouplingGain = $('.tab-profiles input[id="cyclicCrossCoupling"]').is(':checked') ?
-            parseInt($('.tab-profiles input[id="cyclicCrossCouplingGain"]').val()) : 0;
-
-        FC.PID_PROFILE.cyclicCrossCouplingRatio = parseInt($('.tab-profiles input[id="cyclicCrossCouplingRatio"]').val());
-        FC.PID_PROFILE.cyclicCrossCouplingCutoff = parseFloat($('.tab-profiles input[id="cyclicCrossCouplingCutoff"]').val());
-        if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-            FC.PID_PROFILE.cyclicCrossCouplingCutoff *= 10;
-        }
+        // Swashplate cyclic/collective coupling and tail-rotor torque-reaction
+        // compensation are not used on this platform; keep them neutralized.
+        FC.PID_PROFILE.yawStopGainCW = 100;
+        FC.PID_PROFILE.yawStopGainCCW = 100;
+        FC.PID_PROFILE.yawFFCyclicGain = 0;
+        FC.PID_PROFILE.yawFFCollectiveGain = 0;
+        FC.PID_PROFILE.yaw_inertia_precomp_gain = 0;
+        FC.PID_PROFILE.pitchFFCollectiveGain = 0;
+        FC.PID_PROFILE.cyclicCrossCouplingGain = 0;
 
         // Leveling modes
         FC.PID_PROFILE.acroTrainerGain = parseInt($('.tab-profiles input[id="acroTrainerGain"]').val());
@@ -536,26 +479,6 @@ tab.initialize = function (callback) {
         $('.tab-area').change(function () {
             setChanged();
         });
-
-        if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-            $('.tab-profiles input[id="cyclicCrossCouplingCutoff"]').attr({
-                step: 0.1,
-                min: 0.1,
-                max: 25,
-            });
-        }
-
-        if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-            $('.tab-profiles tr.yawFFImpulseGain').hide();
-            $('.tab-profiles tr.yawFFImpulseDecay').hide();
-            $('.tab-profiles tr.yaw_inertia_precomp_gain').show();
-            $('.tab-profiles tr.yaw_inertia_precomp_cutoff').show();
-        } else {
-            $('.tab-profiles tr.yawFFImpulseGain').show();
-            $('.tab-profiles tr.yawFFImpulseDecay').show();
-            $('.tab-profiles tr.yaw_inertia_precomp_gain').hide();
-            $('.tab-profiles tr.yaw_inertia_precomp_cutoff').hide();
-        }
 
         function get_status() {
             MSP.send_message(MSPCodes.MSP_STATUS, false, false, function() {

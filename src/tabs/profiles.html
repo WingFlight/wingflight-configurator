@@ -146,6 +146,28 @@
                                     </span>
                                 </td>
                             </tr>
+                            <tr class="errorDecayCyclic">
+                                <td>
+                                    <input type="number" id="errorDecayTimeCyclic" step="0.1" min="0" max="25" />
+                                </td>
+                                <td colspan="2">
+                                    <label for="errorDecayTimeCyclic">
+                                        <span i18n="profilesErrorDecayTimeCyclic"></span>
+                                    </label>
+                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayTimeCyclicHelp"></div>
+                                </td>
+                            </tr>
+                            <tr class="errorDecayCyclic border">
+                                <td>
+                                    <input type="number" id="errorDecayLimitCyclic" step="1" min="0" max="250" />
+                                </td>
+                                <td colspan="2">
+                                    <label for="errorDecayLimitCyclic">
+                                        <span i18n="profilesErrorDecayLimitCyclic"></span>
+                                    </label>
+                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayLimitCyclicHelp"></div>
+                                </td>
+                            </tr>
                             <tr class="itermRelax border">
                                 <td>
                                     <input type="checkbox" id="itermRelax" class="toggle" />
@@ -259,229 +281,6 @@
                                     <label for="offsetGainPitch">
                                         <span i18n="profilesOffsetGainPitch"></span>
                                     </label>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <div class="gui_box grey pid_config">
-                        <div class="gui_box_titlebar">
-                            <div class="spacer_box_title" i18n="profilesMainRotorSettings"></div>
-                        </div>
-                        <table id="pid_cyclic_advanced" class="settings_table pid_settings">
-                            <tr class="pitchFFCollective border">
-                                <td>
-                                    <input type="checkbox" id="pitchFFCollective" class="toggle" />
-                                </td>
-                                <td colspan="2">
-                                    <div class="helpicon cf_tip" i18n_title="profilesPitchFFCollectiveHelp"></div>
-                                    <div>
-                                        <span i18n="profilesPitchFFCollective"></span>
-                                    </div>
-                                    <div class="helpicon cf_tip subhelp" i18n_title="profilesPitchFFCollectiveGainHelp"></div>
-                                    <span class="suboption">
-                                        <input type="number" id="pitchFFCollectiveGain" step="1" min="0" max="250"/>
-                                        <label for="profilesPitchFFCollectiveGain">
-                                            <span i18n="profilesPitchFFCollectiveGain"></span>
-                                        </label>
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="cyclicCrossCoupling border">
-                                <td>
-                                    <input type="checkbox" id="cyclicCrossCoupling" class="toggle" />
-                                </td>
-                                <td colspan="2">
-                                    <div class="helpicon cf_tip" i18n_title="profilesCyclicCrossCouplingHelp"></div>
-                                    <div>
-                                        <span i18n="profilesCyclicCrossCoupling"></span>
-                                    </div>
-                                    <div class="helpicon cf_tip subhelp" i18n_title="profilesCyclicCrossCouplingGainHelp"></div>
-                                    <span class="suboption">
-                                        <input type="number" id="cyclicCrossCouplingGain" step="1" min="0" max="250"/>
-                                        <label for="cyclicCrossCouplingGain">
-                                            <span i18n="profilesCyclicCrossCouplingGain"></span>
-                                        </label>
-                                    </span>
-                                    <div class="helpicon cf_tip subhelp" i18n_title="profilesCyclicCrossCouplingRatioHelp"></div>
-                                    <span class="suboption">
-                                        <input type="number" id="cyclicCrossCouplingRatio" step="1" min="0" max="200"/>
-                                        <label for="cyclicCrossCouplingRatio">
-                                            <span i18n="profilesCyclicCrossCouplingRatio"></span>
-                                        </label>
-                                    </span>
-                                    <div class="helpicon cf_tip subhelp" i18n_title="profilesCyclicCrossCouplingCutoffHelp"></div>
-                                    <span class="suboption">
-                                        <input type="number" id="cyclicCrossCouplingCutoff" step="1" min="1" max="250"/>
-                                        <label for="cyclicCrossCouplingCutoff">
-                                            <span i18n="profilesCyclicCrossCouplingCutoff"></span>
-                                        </label>
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="errorDecay">
-                                <td>
-                                    <input type="number" id="errorDecayTimeCyclic" step="0.1" min="0" max="25" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="errorDecayTimeCyclic">
-                                        <span i18n="profilesErrorDecayTimeCyclic"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayTimeCyclicHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="errorDecay">
-                                <td>
-                                    <input type="number" id="errorDecayLimitCyclic" step="1" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="errorDecayLimitCyclic">
-                                        <span i18n="profilesErrorDecayLimitCyclic"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayLimitCyclicHelp"></div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <div class="gui_box grey pid_config">
-                        <div class="gui_box_titlebar">
-                            <div class="spacer_box_title" i18n="profilesTailRotorSettings"></div>
-                        </div>
-                        <table class="settings_table pid_settings">
-                            <tr class="yawStopGainCW">
-                                <td>
-                                    <input type="number" id="yawStopGainCW" step="1" min="25" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <span i18n="profilesYawStopGainCW"></span>
-                                    <div class="helpicon cf_tip" i18n_title="profilesYawStopGainCWHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="yawStopGainCCW border">
-                                <td>
-                                    <input type="number" id="yawStopGainCCW" step="1" min="25" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <span i18n="profilesYawStopGainCCW"></span>
-                                    <div class="helpicon cf_tip" i18n_title="profilesYawStopGainCCWHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="yawPrecompCutoff">
-                                <td>
-                                    <input type="number" id="yawPrecompCutoff" step="1" min="0" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawPrecompCutoff"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawPrecompCutoffHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yawFFCyclicGain">
-                                <td>
-                                    <input type="number" id="yawFFCyclicGain" step="1" min="0" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawFFCyclicGain"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawFFCyclicGainHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yawFFCollectiveGain border">
-                                <td>
-                                    <input type="number" id="yawFFCollectiveGain" step="1" min="0" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawFFCollectiveGain"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawFFCollectiveGainHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yawFFImpulseGain">
-                                <td>
-                                    <input type="number" id="yawFFImpulseGain" step="1" min="-125" max="125"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawFFImpulseGain"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawFFImpulseGainHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yawFFImpulseDecay border">
-                                <td>
-                                    <input type="number" id="yawFFImpulseDecay" step="1" min="1" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesyawFFImpulseDecay"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesyawFFImpulseDecayHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yaw_inertia_precomp_gain">
-                                <td>
-                                    <input type="number" id="yaw_inertia_precomp_gain" step="1" min="0" max="250"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawInertiaPrecompGain"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawInertiaPrecompGainHelp"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="yaw_inertia_precomp_cutoff border">
-                                <td>
-                                    <input type="number" id="yaw_inertia_precomp_cutoff" step="0.1" min="0" max="25"/>
-                                </td>
-                                <td colspan="2">
-                                    <div>
-                                        <span i18n="profilesYawInertiaPrecompCutoff"></span>
-                                        <div class="helpicon cf_tip" i18n_title="profilesYawInertiaPrecompCutoffHelp"></div><span> [Hz]</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!--tr class="errorDecay">
-                                <td>
-                                    <input type="number" id="errorDecayTimeYaw" step="0.1" min="0" max="25" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="errorDecayTimeYaw">
-                                        <span i18n="profilesErrorDecayTimeYaw"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayTimeYawHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="errorDecay border">
-                                <td>
-                                    <input type="number" id="errorDecayLimitYaw" step="1" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="errorDecayLimitYaw">
-                                        <span i18n="profilesErrorDecayLimitYaw"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesErrorDecayLimitYawHelp"></div>
-                                </td>
-                            </tr-->
-                            <tr class="govTTAGain">
-                                <td>
-                                    <input type="number" id="govTTAGain" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <span i18n="govTTAGain"></span>
-                                    <div class="helpicon cf_tip" i18n_title="govTTAGainHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="govTTALimit">
-                                <td>
-                                    <input type="number" id="govTTALimit" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <span i18n="govTTALimit"></span>
-                                    <div class="helpicon cf_tip" i18n_title="govTTALimitHelp"></div>
                                 </td>
                             </tr>
                         </table>
