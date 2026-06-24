@@ -4,66 +4,36 @@
   import Section from "@/components/Section.svelte";
   import Meter from "@/components/Meter.svelte";
 
-  let headRatio = $derived(
-    FC.MOTOR_CONFIG.main_rotor_gear_ratio[0] /
-      FC.MOTOR_CONFIG.main_rotor_gear_ratio[1],
+  let speeds = $derived(
+    Array.from({ length: FC.CONFIG.motorCount }, (_, i) =>
+      Math.round(FC.MOTOR_TELEMETRY_DATA.rpm[i] ?? 0),
+    ),
   );
 
-  let tailRatio = $derived.by(() => {
-    const ratio =
-      FC.MOTOR_CONFIG.tail_rotor_gear_ratio[0] /
-      FC.MOTOR_CONFIG.tail_rotor_gear_ratio[1];
-
-    if (FC.MIXER_CONFIG.tail_rotor_mode === 0) {
-      return headRatio / ratio;
-    }
-
-    return ratio;
-  });
-
-  const headSource = 0;
-  let tailSource = $derived(FC.MIXER_CONFIG.tail_rotor_mode === 0 ? 0 : 1);
-
-  let headspeed = $derived(
-    Math.round(FC.MOTOR_TELEMETRY_DATA.rpm[headSource] * headRatio),
-  );
-  let tailspeed = $derived(
-    Math.round(FC.MOTOR_TELEMETRY_DATA.rpm[tailSource] * tailRatio),
-  );
-
-  let headspeedMax = $state(1000);
-  let tailspeedMax = $state(5000);
+  let speedMaxes = $state([]);
 
   $effect(() => {
-    if (headspeed > headspeedMax) {
-      headspeedMax = Math.ceil((headspeed + 1000) / 1000) * 1000;
-    }
-
-    if (tailspeed > tailspeedMax) {
-      tailspeedMax = Math.ceil((tailspeed + 1000) / 1000) * 1000;
-    }
+    speeds.forEach((speed, i) => {
+      if (speedMaxes[i] === undefined) {
+        speedMaxes[i] = 1000;
+      }
+      if (speed > speedMaxes[i]) {
+        speedMaxes[i] = Math.ceil((speed + 1000) / 1000) * 1000;
+      }
+    });
   });
 </script>
 
 <Section label="motorRotorSpeeds">
   <div class="container">
-    {#if FC.CONFIG.motorCount > 0}
+    {#each speeds as speed, i (i)}
       <Meter
-        title={$i18n.t("motorMainRotorSpeed")}
-        rightLabel={`${headspeedMax.toLocaleString()} RPM`}
-        leftLabel={`${headspeed.toLocaleString()} RPM`}
-        value={100 * (headspeed / headspeedMax)}
+        title={$i18n.t("motors.motor.heading", { index: i + 1 })}
+        rightLabel={`${(speedMaxes[i] ?? 1000).toLocaleString()} RPM`}
+        leftLabel={`${speed.toLocaleString()} RPM`}
+        value={100 * (speed / (speedMaxes[i] ?? 1000))}
       />
-
-      {#if FC.MIXER_CONFIG.tail_rotor_mode === 0 || FC.CONFIG.motorCount > 1}
-        <Meter
-          title={$i18n.t("motorTailRotorSpeed")}
-          rightLabel={`${tailspeedMax.toLocaleString()} RPM`}
-          leftLabel={`${tailspeed.toLocaleString()} RPM`}
-          value={100 * (tailspeed / tailspeedMax)}
-        />
-      {/if}
-    {/if}
+    {/each}
   </div>
 </Section>
 

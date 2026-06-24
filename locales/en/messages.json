@@ -3337,29 +3337,17 @@
     "motorsRPMSensorHelp": {
         "message": "Use the RPM Sensor input for motor RPM. You can connect an RPM signal from the ESC, or from an external RPM Sensor dongle."
     },
-    "motorsMainRotorGearRatio": {
-        "message": "Main Rotor Gear Ratio"
-    },
-    "motorsMainRotorGearRatioHelp": {
-        "message": "Gear ratio between the motor and the main rotor.<br>Use <span class=\"value\">motor pinion</span> : <span class=\"value\">main gear</span> tooth count."
-    },
-    "motorsTailRotorGearRatio": {
-        "message": "Tail Rotor Gear Ratio"
-    },
-    "motorsTailRotorGearRatioHelp": {
-        "message": "Gear ratio between the tail rotor and the main rotor. Use <span class=\"value\">tail gear</span> : <span class=\"value\">autorotation gear</span> tooth count for Torque Tube, or <span class=\"value\">tail pulley</span> : <span class=\"value\">front pulley</span> for a belt tail. For a direct drive tail, use <span class=\"value\">1</span> : <span class=\"value\">1</span>"
-    },
     "motorsMotorPoles1Long": {
-        "message": "Main Motor Pole Count"
+        "message": "Motor #1 Pole Count"
     },
     "motorsMotorPoles2Long": {
-        "message": "Tail Motor Pole Count"
+        "message": "Motor #2 Pole Count"
     },
     "motorsMotorPoles3Long": {
-        "message": "Motor M3 Pole Count"
+        "message": "Motor #3 Pole Count"
     },
     "motorsMotorPoles4Long": {
-        "message": "Motor M4 Pole Count"
+        "message": "Motor #4 Pole Count"
     },
     "motorsMotorPolesHelp": {
         "message": "The <i>pole count</i> is the number of magnets on the motor bell. The manual should give this number. Or you can count the magnets. Do NOT count the stators with the copper wire windings."
@@ -3419,13 +3407,7 @@
         "message": "Adjusts the Consumption reported by the ESC's telemetry."
     },
     "motorRotorSpeeds": {
-        "message": "Rotor Speed"
-    },
-    "motorMainRotorSpeed": {
-        "message": "Main Rotor"
-    },
-    "motorTailRotorSpeed": {
-        "message": "Tail Rotor"
+        "message": "Motor Speed"
     },
     "motorInfo1": {
         "message": "Motor #1 - Main Motor"
