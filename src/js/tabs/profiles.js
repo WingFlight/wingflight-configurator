@@ -1,6 +1,4 @@
 import semver from "semver";
-import { mount, unmount } from "svelte";
-import Governor from "@/tabs/profiles/Governor.svelte";
 
 import {
     API_VERSION_12_7,
@@ -10,13 +8,11 @@ import {
 
 const tab = {
     tabName: 'profiles',
-    svelteComponent: null,
     isDirty: false,
     isChanged: false,
     activeSubtab: null,
     savedProfile: null,
     currentProfile: null,
-    isGovEnabled: false,
     isPIDDefault: false,
     tabNames: [
         'profile1',
@@ -297,15 +293,10 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="rescueAltitudeDGain"]').val(FC.PID_PROFILE.rescueAltitudeDGain);
         $('.tab-profiles input[id="rescueMaxCollective"]').val(FC.PID_PROFILE.rescueMaxCollective / 10).change();
 
-        // Governor settings
-        self.isGovEnabled = FC.FEATURE_CONFIG.features.isEnabled('GOVERNOR') && (FC.GOVERNOR.gov_mode > 0);
-
-        $('.tab-profiles input[id="govTTAGain"]').val(FC.GOVERNOR.gov_tta_gain);
-        $('.tab-profiles input[id="govTTALimit"]').val(FC.GOVERNOR.gov_tta_limit);
-
-        $('.tab-profiles .govTTAGain').toggle(self.isGovEnabled);
-        $('.tab-profiles .govTTALimit').toggle(self.isGovEnabled);
-        $('.tab-profiles #svelte-gov-settings').toggle(self.isGovEnabled);
+        // Governor settings are not used on this platform
+        $('.tab-profiles .govTTAGain').hide();
+        $('.tab-profiles .govTTALimit').hide();
+        $('.tab-profiles #svelte-gov-settings').hide();
     }
 
     function form_to_data() {
@@ -410,24 +401,9 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.rescueAltitudeIGain = $('.tab-profiles input[id="rescueAltitudeIGain"]').val();
         FC.PID_PROFILE.rescueAltitudeDGain = $('.tab-profiles input[id="rescueAltitudeDGain"]').val();
         FC.PID_PROFILE.rescueMaxCollective = $('.tab-profiles input[id="rescueMaxCollective"]').val() * 10;
-
-        // TTA settings
-        if (self.isGovEnabled) {
-            FC.GOVERNOR.gov_tta_gain = parseInt($('.tab-profiles input[id="govTTAGain"]').val());
-            FC.GOVERNOR.gov_tta_limit = parseInt($('.tab-profiles input[id="govTTALimit"]').val());
-        }
     }
 
     function process_html() {
-        self.svelteComponent = mount(Governor, {
-            target: document.querySelector("#svelte-gov-settings"),
-            props: {
-                onchange: () => {
-                    setChanged();
-                }
-            }
-        });
-
         // translate to user-selected language
         i18n.localizePage();
 
@@ -602,11 +578,6 @@ tab.initialize = function (callback) {
 
 
 tab.cleanup = function (callback) {
-    if (this.svelteComponent) {
-        unmount(this.svelteComponent);
-        this.svelteComponent = null;
-    }
-
     this.isDirty = false;
 
     callback?.();
