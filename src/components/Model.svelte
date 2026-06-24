@@ -3,8 +3,6 @@
   import * as THREE from "three";
   import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-  import { FC } from "@/js/fc.svelte.js";
-
   let container;
   let canvas;
   let renderer;
@@ -19,8 +17,6 @@
   });
 
   onMount(async () => {
-    const clockwise = FC.MIXER_CONFIG.main_rotor_dir === 0;
-
     try {
       renderer = new THREE.WebGLRenderer({
         canvas,
@@ -38,8 +34,8 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     o.scene = new THREE.Scene();
     o.modelWrapper = new THREE.Object3D();
-    o.camera = new THREE.PerspectiveCamera(20, width / height, 1, 1000);
-    o.camera.position.z = 600;
+    o.camera = new THREE.PerspectiveCamera(50, width / height, 1, 1000);
+    o.camera.position.z = 125;
     o.light = new THREE.AmbientLight(0xffffff, 4);
     o.light2 = new THREE.DirectionalLight(new THREE.Color(1, 1, 1), 3.0);
     o.light2.position.set(0, 600, 800);
@@ -49,7 +45,8 @@
     o.scene.add(o.camera);
     o.scene.add(o.modelWrapper);
 
-    o.model = await loadGLTF(`bell_${clockwise ? "cw" : "ccw"}`);
+    o.model = await loadGLTF("flying_wing");
+    o.model.scale.set(15, 15, 15);
     o.modelWrapper.add(o.model);
     o.scene.add(o.modelWrapper);
     resize(width, height);

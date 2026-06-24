@@ -3,8 +3,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // 3D model
 export const Model = function (wrapper, canvas) {
-    const clockwise = FC.MIXER_CONFIG.main_rotor_dir === 0;
-
     this.wrapper = wrapper;
     this.canvas = canvas;
 
@@ -22,10 +20,10 @@ export const Model = function (wrapper, canvas) {
     this.modelWrapper = new THREE.Object3D();
 
     // stationary camera
-    this.camera = new THREE.PerspectiveCamera(10, this.wrapper.width() / this.wrapper.height(), 1, 10000);
+    this.camera = new THREE.PerspectiveCamera(50, this.wrapper.width() / this.wrapper.height(), 1, 10000);
 
     // move camera away from the model
-    this.camera.position.z = 800;
+    this.camera.position.z = 125;
 
     // some light
     const light = new THREE.AmbientLight(0xffffff, 1.2);
@@ -39,7 +37,8 @@ export const Model = function (wrapper, canvas) {
     this.scene.add(this.modelWrapper);
 
     // Load model file, add to scene and render it
-    this.loadGLTF(`bell_${clockwise ? 'cw' : 'ccw'}`, (model) => {
+    this.loadGLTF('flying_wing', (model) => {
+        model.scale.set(15, 15, 15);
         this.model = model;
         this.modelWrapper.add(model);
         this.scene.add(this.modelWrapper);
