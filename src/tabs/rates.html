@@ -44,96 +44,15 @@
             <div class="subtab-rates">
                 <div class="clear-both"></div>
                 <div class="cf_column">
-                    <div class="gui_box rates_type rates_change">
-                        <table class="cf">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <div>
-                                            <div i18n="rateSetupRatesType" class="float-left"></div>
-                                            <div class="helpicon cf_tip" i18n_title="rateSetupRatesTypeTip"></div>
-                                        </div>
-                                    </th>
-                                    <th class="rates_logo_bg"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <select id="ratesType">
-                                            <!-- list generated here -->
-                                        </select>
-                                    </td>
-                                    <td class="rates_logo_bg">
-                                        <div class="rates_logo_div">
-                                            <img id="ratesLogo" src="/images/rate_logos/rotorflight.svg" class="rates_logo" alt="Rates logo"/>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="gui_box grey cyclic-ring-container">
-                        <div class="rates_titlebar titlebar" i18n="rates.cyclic_ring.heading"></div>
-                        <div class="content">
-                            <div class="field">
-                                <div>
-                                    <input type="checkbox" id="enable-cyclic-ring" class="toggle" />
-                                </div>
-                                <label
-                                  for="enable-cyclic-ring"
-                                  i18n="rates.cyclic_ring.enable_cyclic_ring.label">
-                                </label>
-                                <div
-                                  class="helpicon cf_tip"
-                                  i18n_title="rates.cyclic_ring.enable_cyclic_ring.help">
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <input
-                                  type="number"
-                                  id="cyclic-ring-level"
-                                  step="1"
-                                  min="100"
-                                  max="250"
-                                />
-                                <label for="cyclic-ring-level">
-                                    <span i18n="rates.cyclic_ring.cyclic_ring_level.label"></span>
-                                    <span>[%]</span>
-                                </label>
-                                <div
-                                  class="helpicon cf_tip"
-                                  i18n_title="rates.cyclic_ring.cyclic_ring_level.help">
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <div>
-                                    <input type="checkbox" id="enable-polar-coordinates" class="toggle" />
-                                </div>
-                                <label
-                                  for="enable-polar-coordinates"
-                                  i18n="rates.cyclic_ring.polar_coordinates.label">
-                                </label>
-                                <div
-                                  class="helpicon cf_tip"
-                                  i18n_title="rates.cyclic_ring.polar_coordinates.help">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="gui_box grey rates_setup rates_change">
                         <table>
                             <tr class="rates_titlebar">
                                 <th class="name" i18n="rateSetupRates">
                                     <div class="helpicon cf_tip" i18n_title="rateSetupTuningHelp"></div>
                                 </th>
-                                <th class="rc_rate" i18n="rateSetupRcRate"></th>
-                                <th class="rate" i18n="rateSetupRate"></th>
-                                <th class="rc_expo" i18n="rateSetupRcExpo"></th>
+                                <th class="rc_rate" i18n="rateSetupRotorflightRate"></th>
+                                <th class="rate" i18n="rateSetupRotorflightShape"></th>
+                                <th class="rc_expo" i18n="rateSetupRotorflightExpo"></th>
                                 <th class="maxVel" i18n="rateSetupMaxVel"></th>
                             </tr>
                             <tr class="ROLL">
@@ -348,17 +267,6 @@
         </div>
         <div class="buttons">
             <a href="#" class="dialogProfileChangeConfirmBtn regular-button" i18n="dialogProfileChangeConfirm"></a>
-        </div>
-    </dialog>
-
-    <dialog class="dialogRatesType">
-        <h3 i18n="dialogRatesTypeTitle"></h3>
-        <div class="content">
-            <div i18n="dialogRatesTypeNote" style="margin-top: 10px"></div>
-        </div>
-        <div class="buttons">
-            <a href="#" class="dialogRatesType-confirmbtn regular-button" i18n="dialogRatesTypeConfirm"></a>
-            <a href="#" class="dialogRatesType-cancelbtn regular-button" i18n="cancel"></a>
         </div>
     </dialog>
 

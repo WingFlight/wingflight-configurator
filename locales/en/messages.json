@@ -5161,21 +5161,6 @@
     "rateSetupTuningHelp": {
         "message": "<b>Rates and Expo</b>: Determine your stick feel based on these parameters. Use the graph and live 3D model to find your favourite rate setting."
     },
-    "rateSetupRatesType": {
-        "message": "Rates Type"
-    },
-    "rateSetupRatesTypeTip": {
-        "message": "Changing rates type will change the rates curve and the way you can set it"
-    },
-    "rateSetupRate": {
-        "message": "Rate"
-    },
-    "rateSetupRcRate": {
-        "message": "RC Rate"
-    },
-    "rateSetupRcExpo": {
-        "message": "RC Expo"
-    },
     "rateSetupRotorflightRate": {
         "message": "Rate"
     },
@@ -5184,24 +5169,6 @@
     },
     "rateSetupRotorflightExpo": {
         "message": "Expo"
-    },
-    "rateSetupRcRateRaceflight": {
-        "message": "Rate"
-    },
-    "rateSetupRcExpoRaceflight": {
-        "message": "Expo"
-    },
-    "rateSetupRateRaceflight": {
-        "message": "Acro+"
-    },
-    "rateSetupRcExpoKISS": {
-        "message": "RC Curve"
-    },
-    "rateSetupRateQuickRates": {
-        "message": "Max Rate"
-    },
-    "rateSetupRcRateActual": {
-        "message": "Center Sensitivity"
     },
     "rateSetupMaxVel": {
         "message": "Max Vel [°/s]"
@@ -5250,30 +5217,6 @@
     },
     "rateYawDynamicDeadbandGainHelp": {
         "message": "Increases stick deadband while rapidly approaching center."
-    },
-    "rates.cyclic_ring.heading": {
-        "message": "Cyclic Ring"
-    },
-    "rates.cyclic_ring.enable_cyclic_ring.label": {
-        "message": "Enable Cyclic Ring"
-    },
-    "rates.cyclic_ring.enable_cyclic_ring.help": {
-        "message": "Limits combined cyclic input to a circular range, preventing excessive rates with diagonal inputs."
-    },
-    "rates.cyclic_ring.cyclic_ring_level.label": {
-        "message": "Cyclic Ring Level"
-    },
-    "rates.cyclic_ring.cyclic_ring_level.help": {
-        "message": "<p>Adjusts to what degree the cyclic ring limits diagonal input.</p><br /><p>At 100%, the combined cyclic range forms a true circle. Increasing this value relaxes the limit, allowing more diagonal deflection.</p>"
-    },
-    "rates.cyclic_ring.polar_coordinates.label": {
-        "message": "Enable Polar Coordinates"
-    },
-    "rates.cyclic_ring.polar_coordinates.help": {
-        "message": "<p>Apply cyclic rates to the combined cyclic direction and magnitude.</p><br /><p>When disabled, rates are applied to each cyclic axis separately.</p>"
-    },
-    "rates.config.cyclic.label": {
-        "message": "CYCLIC"
     },
     "gyroFilterSettings": {
         "message": "Gyro Filter Settings"
@@ -7558,15 +7501,6 @@
     },
     "darkTheme": {
         "message": "Enable dark theme"
-    },
-    "dialogRatesTypeTitle": {
-        "message": "Rates type change"
-    },
-    "dialogRatesTypeNote": {
-        "message": "<span class=\"message-negative\"><b>WARNING: You are changing the rates type.</b></span> If you change the rates type your rates will be set to a default curve."
-    },
-    "dialogRatesTypeConfirm": {
-        "message": "Change"
     },
     "gpsSbasAutoDetect": {
         "message": "Auto-detect",

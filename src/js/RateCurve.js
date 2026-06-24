@@ -59,70 +59,6 @@ export const RateCurve = function () {
         context.restore();
     };
 
-    this.getBetaflightRates = function (rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo, superExpoActive, limit) {
-        let angularVel;
-
-        if (rcRate > 2) {
-            rcRate = rcRate + (rcRate - 2) * 14.54;
-        }
-
-        let expoPower = 3;
-        let rcRateConstant = 200;
-
-        if (rcExpo > 0) {
-            rcCommandf =  rcCommandf * Math.pow(rcCommandfAbs, expoPower) * rcExpo + rcCommandf * (1-rcExpo);
-        }
-
-        if (superExpoActive) {
-            const rcFactor = 1 / this.constrain(1 - rcCommandfAbs * rate, 0.01, 1);
-            angularVel = rcRateConstant * rcRate * rcCommandf;
-            angularVel = angularVel * rcFactor;
-        } else {
-            angularVel = (((rate * 100) + 27) * rcCommandf / 16) / 4.1; // Only applies to old versions ?
-        }
-
-        angularVel = this.constrain(angularVel, -1 * limit, limit); // Rate limit from profile
-
-        return angularVel;
-    };
-
-    this.getRaceflightRates = function (rcCommandf, rate, rcRate, rcExpo) {
-        let angularVel = ((1 + 0.01 * rcExpo * (rcCommandf * rcCommandf - 1.0)) * rcCommandf);
-        angularVel = (angularVel * (rcRate + (Math.abs(angularVel) * rcRate * rate * 0.01)));
-        return angularVel;
-    };
-
-    this.getKISSRates = function (rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo) {
-        const kissRpy = 1 - rcCommandfAbs * rate;
-        const kissTempCurve = rcCommandf * rcCommandf;
-        rcCommandf = ((rcCommandf * kissTempCurve) * rcExpo + rcCommandf * (1 - rcExpo)) * (rcRate / 10);
-        return ((2000.0 * (1.0 / kissRpy)) * rcCommandf);
-    };
-
-    this.getActualRates = function (rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo) {
-        let angularVel;
-        const expof = rcCommandfAbs * ((Math.pow(rcCommandf, 5) * rcExpo) + (rcCommandf * (1 - rcExpo)));
-
-        angularVel = Math.max(0, rate-rcRate);
-        angularVel = (rcCommandf * rcRate) + (angularVel * expof);
-
-        return angularVel;
-    };
-
-    this.getQuickRates = function (rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo) {
-        rcRate = rcRate * 200;
-        rate = Math.max(rate, rcRate);
-
-        let angularVel;
-        const superExpoConfig = (((rate / rcRate) - 1) / (rate / rcRate));
-        const curve = Math.pow(rcCommandfAbs, 3) * rcExpo + rcCommandfAbs * (1 - rcExpo);
-
-        angularVel = 1.0 / (1.0 - (curve * superExpoConfig));
-        angularVel = rcCommandf * rcRate * angularVel;
-
-        return angularVel;
-    };
-
     function rfPow(x, expo) {
         const bits = Math.min(expo, 127);
 
@@ -155,7 +91,7 @@ export const RateCurve = function () {
 
 };
 
-RateCurve.prototype.rcCommandRawToDegreesPerSecond = function (rcData, ratesType, rate, rcRate, rcExpo, superExpoActive, deadband, limit) {
+RateCurve.prototype.rcCommandRawToDegreesPerSecond = function (rcData, ratesType, rate, rcRate, rcExpo, superExpoActive, deadband, _limit) {
     let angleRate;
 
     if (rate !== undefined && rcRate !== undefined && rcExpo !== undefined) {
@@ -166,35 +102,7 @@ RateCurve.prototype.rcCommandRawToDegreesPerSecond = function (rcData, ratesType
 
         const rcCommandfAbs = Math.abs(rcCommandf);
 
-        switch(ratesType) {
-            case TABS.rates.RATES_TYPE.BETAFLIGHT:
-                angleRate = this.getBetaflightRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo, superExpoActive, limit);
-                break;
-
-            case TABS.rates.RATES_TYPE.RACEFLIGHT:
-                angleRate = this.getRaceflightRates(rcCommandf, rate, rcRate, rcExpo);
-                break;
-
-            case TABS.rates.RATES_TYPE.KISS:
-                angleRate = this.getKISSRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo);
-                break;
-
-            case TABS.rates.RATES_TYPE.ACTUAL:
-                angleRate = this.getActualRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo);
-                break;
-
-            case TABS.rates.RATES_TYPE.QUICKRATES:
-                angleRate = this.getQuickRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo);
-                break;
-
-            case TABS.rates.RATES_TYPE.ROTORFLIGHT:
-                angleRate = this.getRotorflightRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo / 100);
-                break;
-
-            default:
-                angleRate = rcCommandf * 500;
-                break;
-            }
+        angleRate = this.getRotorflightRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo / 100);
     }
 
     return angleRate;

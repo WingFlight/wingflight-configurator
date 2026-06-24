@@ -22,6 +22,39 @@ function drawStickPosition(context, color, rcPos, value, maxValue) {
   context.restore();
 }
 
+// Rotorflight is the only supported rates system.
+const RATES_DEFAULTS = {
+    rcRateDec:    0,
+    rcRateDef:    250,
+    rcRateYawDef: 400,
+    rcRateMax:    1000,
+    rcRateMin:    10,
+    rcRateStep:   5,
+    rateDec:      0,
+    rateDef:      12,
+    rateYawDef:   12,
+    rateMax:      127,
+    rateMin:      0,
+    rateStep:     1,
+    expoDec:      0,
+    expoDef:      40,
+    yawExpoDef:   50,
+    expoMax:      100,
+    expoMin:      0,
+    expoStep:     1,
+    rcColDec:     2,
+    rcColDef:     12.5,
+    rcColMax:     25,
+    rcColMin:     0,
+    rcColStep:    0.25,
+    colDec:       0,
+    colDef:       12,
+    colMax:       127,
+    colMin:       0,
+    colStep:      1,
+    colExpoDef:   0,
+};
+
 const DEFAULTS = {
   DYNAMICS_4_5: {
       roll_setpoint_boost_gain:          0,
@@ -65,7 +98,6 @@ const DEFAULTS = {
       yaw_accel_limit:                   0,
       collective_accel_limit:            0,
   },
-  CYCLIC_RING: 150,
 };
 
 const tab = {
@@ -75,42 +107,11 @@ const tab = {
     activeSubtab: null,
     savedRateProfile: null,
     currentRateProfile: null,
-    currentRatesType: null,
-    previousRatesType: null,
     currentRates: null,
-    cyclicRingEnabled: null,
-    polarRatesEnabled: null,
     RATES_TYPE: {
-        NONE:        0,
-        BETAFLIGHT:  1,
-        RACEFLIGHT:  2,
-        KISS:        3,
-        ACTUAL:      4,
-        QUICKRATES:  5,
         ROTORFLIGHT: 6,
     },
 
-    getRatesTypes() {
-        return [
-            'None',
-            'Betaflight',
-            'Raceflight',
-            'KISS',
-            'Actual',
-            'QuickRates',
-            ...(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9) ? ['Rotorflight'] : []),
-        ];
-    },
-
-    RATES_TYPE_IMAGES: [
-        'none.svg',
-        'betaflight.svg',
-        'raceflight.svg',
-        'kiss.svg',
-        'actual.svg',
-        'quickrates.svg',
-        'rotorflight.svg',
-    ],
     TAB_NAMES: [
         'rateProfile1',
         'rateProfile2',
@@ -127,13 +128,10 @@ const tab = {
         raw_setpoint_roll: 0,
         raw_setpoint_pitch: 0,
         raw_setpoint_yaw: 0,
-        raw_setpoint_polar_cyclic: 0,
 
         actual_setpoint_roll: 0,
         actual_setpoint_pitch: 0,
         actual_setpoint_yaw: 0,
-
-        polar_rc_command: 0,
     },
 
     hasRcCommandChanged() {
@@ -157,7 +155,7 @@ const tab = {
 
         this.liveData.raw_setpoint_roll = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[0],
-            this.currentRatesType,
+            this.RATES_TYPE.ROTORFLIGHT,
             this.currentRates.roll_srate,
             this.currentRates.roll_rc_rate,
             this.currentRates.roll_rc_expo,
@@ -168,7 +166,7 @@ const tab = {
 
         this.liveData.raw_setpoint_pitch = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[1],
-            this.currentRatesType,
+            this.RATES_TYPE.ROTORFLIGHT,
             this.currentRates.pitch_srate,
             this.currentRates.pitch_rc_rate,
             this.currentRates.pitch_rc_expo,
@@ -179,7 +177,7 @@ const tab = {
 
         this.liveData.raw_setpoint_yaw = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[2],
-            this.currentRatesType,
+            this.RATES_TYPE.ROTORFLIGHT,
             this.currentRates.yaw_srate,
             this.currentRates.yaw_rc_rate,
             this.currentRates.yaw_rc_expo,
@@ -188,43 +186,9 @@ const tab = {
             this.currentRates.yaw_rate_limit
         );
 
+        this.liveData.actual_setpoint_roll = this.liveData.raw_setpoint_roll;
+        this.liveData.actual_setpoint_pitch = this.liveData.raw_setpoint_pitch;
         this.liveData.actual_setpoint_yaw = this.liveData.raw_setpoint_yaw;
-
-        if (this.polarRatesEnabled) {
-            const roll = FC.RC_COMMAND[0] / 500;
-            const pitch = FC.RC_COMMAND[1] / 500;
-
-            this.liveData.polar_rc_command = Math.sqrt(roll ** 2 + pitch ** 2);
-            this.liveData.raw_setpoint_polar_cyclic = Math.min(this.rateCurve.rcCommandRawToDegreesPerSecond(
-                1500 + this.liveData.polar_rc_command * 500,
-                this.currentRatesType,
-                this.currentRates.pitch_srate,
-                this.currentRates.pitch_rc_rate,
-                this.currentRates.pitch_rc_expo,
-                this.currentRates.superexpo,
-                this.currentRates.deadband,
-                this.currentRates.pitch_rate_limit
-            ), this.currentRates.max_setpoint_pitch);
-
-            const mult = (this.liveData.polar_rc_command > 1e-6) ?
-                this.liveData.raw_setpoint_polar_cyclic / this.liveData.polar_rc_command : 0;
-            this.liveData.actual_setpoint_roll = roll * mult;
-            this.liveData.actual_setpoint_pitch = pitch * mult;
-        } else {
-            this.liveData.actual_setpoint_roll = this.liveData.raw_setpoint_roll;
-            this.liveData.actual_setpoint_pitch = this.liveData.raw_setpoint_pitch;
-
-            // Apply Cyclic Ring
-            const R = this.liveData.raw_setpoint_roll / this.currentRates.max_setpoint_roll;
-            const P = this.liveData.raw_setpoint_pitch / this.currentRates.max_setpoint_pitch;
-            const C = Math.sqrt(R ** 2 + P ** 2);
-
-            if (C > 1.0) {
-                this.liveData.actual_setpoint_roll /= C;
-                this.liveData.actual_setpoint_pitch /= C;
-            }
-        }
-
     }
 };
 
@@ -267,9 +231,6 @@ tab.initialize = function (callback) {
 
     function data_to_form() {
 
-        self.currentRatesType = FC.RC_TUNING.rates_type;
-        self.previousRatesType = FC.RC_TUNING.rates_type;
-
         self.currentRateProfile = FC.CONFIG.rateProfile;
 
         if (self.savedRateProfile == undefined)
@@ -280,20 +241,13 @@ tab.initialize = function (callback) {
         $('.tab-rates .tab-container .tab').removeClass('active');
         $('.tab-rates .tab-container .' + self.activeSubtab).addClass('active');
 
-        const ratesTypeListElement = $('.rates_type select[id="ratesType"]');
-        self.getRatesTypes().forEach(function(element, index) {
-            ratesTypeListElement.append(`<option value="${index}">${element}</option>`);
-        });
-        ratesTypeListElement.val(self.currentRatesType);
-
-        self.changeRatesLogo();
-        self.initRatesSystem();
+        self.initRatesSystem(false);
     }
 
     function form_to_data() {
 
-        // Rates type
-        FC.RC_TUNING.rates_type = parseInt($('.rates_type select[id="ratesType"]').val());
+        // Rates type: Rotorflight is the only supported rates system.
+        FC.RC_TUNING.rates_type = self.RATES_TYPE.ROTORFLIGHT;
 
         // Rates response time
         FC.RC_TUNING.roll_response_time = getIntegerValue('.tab-rates input[name="roll_response"]');
@@ -316,9 +270,9 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.yaw_dynamic_deadband_gain = getIntegerValue('#yaw-dynamic-deadband-gain');
         FC.RC_TUNING.yaw_dynamic_deadband_filter = getIntegerValue('#yaw-dynamic-deadband-filter', 10);
 
-        const cyclicRingEnabled = $('#enable-cyclic-ring').is(':checked');
-        FC.RC_TUNING.cyclic_ring = cyclicRingEnabled ? getIntegerValue('#cyclic-ring-level') : 0;
-        FC.RC_TUNING.cyclic_polar = $('#enable-polar-coordinates').is(':checked');
+        // Cyclic Ring / Polar Coordinates are helicopter-only concepts; keep them permanently disabled.
+        FC.RC_TUNING.cyclic_ring = 0;
+        FC.RC_TUNING.cyclic_polar = false;
 
         // catch RC_tuning changes
         const pitch_rc_expo_e = $('.rates_setup input[name="pitch_rc_expo"]');
@@ -341,49 +295,16 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.yaw_rc_rate = getFloatValue(yaw_rc_rate_e);
         FC.RC_TUNING.yaw_srate = getFloatValue(yaw_srate_e);
 
-        switch (self.currentRatesType) {
-            case self.RATES_TYPE.RACEFLIGHT:
-                FC.RC_TUNING.pitch_srate        /= 100;
-                FC.RC_TUNING.roll_srate         /= 100;
-                FC.RC_TUNING.yaw_srate          /= 100;
-                FC.RC_TUNING.pitch_rc_rate      /= 1000;
-                FC.RC_TUNING.roll_rc_rate       /= 1000;
-                FC.RC_TUNING.yaw_rc_rate        /= 1000;
-                FC.RC_TUNING.pitch_rc_expo      /= 100;
-                FC.RC_TUNING.roll_rc_expo       /= 100;
-                FC.RC_TUNING.yaw_rc_expo        /= 100;
-                break;
-
-            case self.RATES_TYPE.ACTUAL:
-                FC.RC_TUNING.pitch_srate        /= 1000;
-                FC.RC_TUNING.roll_srate         /= 1000;
-                FC.RC_TUNING.yaw_srate          /= 1000;
-                FC.RC_TUNING.pitch_rc_rate      /= 1000;
-                FC.RC_TUNING.roll_rc_rate       /= 1000;
-                FC.RC_TUNING.yaw_rc_rate        /= 1000;
-                break;
-
-            case self.RATES_TYPE.QUICKRATES:
-                FC.RC_TUNING.pitch_srate        /= 1000;
-                FC.RC_TUNING.roll_srate         /= 1000;
-                FC.RC_TUNING.yaw_srate          /= 1000;
-                break;
-
-            case self.RATES_TYPE.ROTORFLIGHT:
-                FC.RC_TUNING.pitch_rc_rate      /= 500;
-                FC.RC_TUNING.roll_rc_rate       /= 500;
-                FC.RC_TUNING.yaw_rc_rate        /= 500;
-                FC.RC_TUNING.pitch_srate        /= 100;
-                FC.RC_TUNING.roll_srate         /= 100;
-                FC.RC_TUNING.yaw_srate          /= 100;
-                FC.RC_TUNING.roll_rc_expo       /= 100;
-                FC.RC_TUNING.yaw_rc_expo        /= 100;
-                FC.RC_TUNING.pitch_rc_expo      /= 100;
-                break;
-
-            default: // BetaFlight
-                break;
-        }
+        // Convert from display units back to Rotorflight's internal units.
+        FC.RC_TUNING.pitch_rc_rate      /= 500;
+        FC.RC_TUNING.roll_rc_rate       /= 500;
+        FC.RC_TUNING.yaw_rc_rate        /= 500;
+        FC.RC_TUNING.pitch_srate        /= 100;
+        FC.RC_TUNING.roll_srate         /= 100;
+        FC.RC_TUNING.yaw_srate          /= 100;
+        FC.RC_TUNING.roll_rc_expo       /= 100;
+        FC.RC_TUNING.yaw_rc_expo        /= 100;
+        FC.RC_TUNING.pitch_rc_expo      /= 100;
     }
 
     function drawAxes(curveContext, width, height) {
@@ -409,7 +330,7 @@ tab.initialize = function (callback) {
         context.save();
         context.strokeStyle = colour;
         context.translate(0, yOffset);
-        self.rateCurve.draw(self.currentRatesType, rate, rcRate, rcExpo, useSuperExpo, deadband, limit, maxAngularVel, context, opts);
+        self.rateCurve.draw(self.RATES_TYPE.ROTORFLIGHT, rate, rcRate, rcExpo, useSuperExpo, deadband, limit, maxAngularVel, context, opts);
         context.restore();
     }
 
@@ -486,10 +407,6 @@ tab.initialize = function (callback) {
                     self.currentRates[targetElement.attr('name')] = targetValue;
                     updateNeeded = true;
                 }
-                if (targetElement.attr('id') === 'ratesType') {
-                    self.changeRatesType(targetValue);
-                    updateNeeded = true;
-                }
 
                 if (!updateNeeded) {
                     return;
@@ -497,7 +414,6 @@ tab.initialize = function (callback) {
             }
 
             // update max rates
-
 
             let maxAngularVel;
             const curveHeight = rcCurveElement.height;
@@ -507,7 +423,7 @@ tab.initialize = function (callback) {
             curveContext.clearRect(0, 0, curveWidth, curveHeight);
 
             self.currentRates.max_angular_roll = self.rateCurve.getMaxAngularVel(
-                self.currentRatesType,
+                self.RATES_TYPE.ROTORFLIGHT,
                 self.currentRates.roll_srate,
                 self.currentRates.roll_rc_rate,
                 self.currentRates.roll_rc_expo,
@@ -516,7 +432,7 @@ tab.initialize = function (callback) {
                 self.currentRates.roll_rate_limit,
             );
             self.currentRates.max_angular_pitch = self.rateCurve.getMaxAngularVel(
-                self.currentRatesType,
+                self.RATES_TYPE.ROTORFLIGHT,
                 self.currentRates.pitch_srate,
                 self.currentRates.pitch_rc_rate,
                 self.currentRates.pitch_rc_expo,
@@ -525,7 +441,7 @@ tab.initialize = function (callback) {
                 self.currentRates.pitch_rate_limit,
             );
             self.currentRates.max_angular_yaw = self.rateCurve.getMaxAngularVel(
-                self.currentRatesType,
+                self.RATES_TYPE.ROTORFLIGHT,
                 self.currentRates.yaw_srate,
                 self.currentRates.yaw_rc_rate,
                 self.currentRates.yaw_rc_expo,
@@ -534,39 +450,11 @@ tab.initialize = function (callback) {
                 self.currentRates.yaw_rate_limit,
             );
 
-            self.currentRates.max_setpoint_roll = self.cyclicRingEnabled ?
-                    (self.currentRates.max_angular_roll * (self.currentRates.cyclic_ring / 100)) : 2000;
-            self.currentRates.max_setpoint_pitch = self.cyclicRingEnabled ?
-                    (self.currentRates.max_angular_pitch * (self.currentRates.cyclic_ring / 100)) : 2000;
-
-            self.currentRates.max_setpoint_polar_cyclic = self.rateCurve.rcCommandRawToDegreesPerSecond(
-                1500 + (500 * Math.sqrt(2)),
-                self.currentRatesType,
-                self.currentRates.pitch_srate,
-                self.currentRates.pitch_rc_rate,
-                self.currentRates.pitch_rc_expo,
-                self.currentRates.superexpo,
-                self.currentRates.deadband,
-                self.currentRates.pitch_rate_limit,
-            );
-            if (self.cyclicRingEnabled) {
-                self.currentRates.max_setpoint_polar_cyclic = Math.min(self.currentRates.max_angular_pitch * (self.currentRates.cyclic_ring / 100), self.currentRates.max_setpoint_polar_cyclic);
-            }
-
             self.maxAngularVelRollElement.text(self.currentRates.max_angular_roll.toFixed(0));
-            if (self.polarRatesEnabled) {
-                self.maxAngularVelPitchElement.text(self.currentRates.max_setpoint_polar_cyclic.toFixed(0));
-            } else {
-                self.maxAngularVelPitchElement.text(self.currentRates.max_angular_pitch.toFixed(0));
-            }
+            self.maxAngularVelPitchElement.text(self.currentRates.max_angular_pitch.toFixed(0));
             self.maxAngularVelYawElement.text(self.currentRates.max_angular_yaw.toFixed(0));
 
-            maxAngularVel = self.currentRates.max_angular_yaw;
-            if (self.polarRatesEnabled) {
-                maxAngularVel = Math.max(maxAngularVel, self.currentRates.max_setpoint_polar_cyclic);
-            } else {
-                maxAngularVel = Math.max(maxAngularVel, self.currentRates.max_angular_roll, self.currentRates.max_angular_pitch);
-            }
+            maxAngularVel = Math.max(self.currentRates.max_angular_yaw, self.currentRates.max_angular_roll, self.currentRates.max_angular_pitch);
 
             // make maxAngularVel multiple of 200°/s so that the auto-scale doesn't keep changing for small changes of the maximum curve
             maxAngularVel = self.rateCurve.setMaxAngularVel(maxAngularVel);
@@ -588,87 +476,37 @@ tab.initialize = function (callback) {
                 curveContext,
             );
 
-            if (self.polarRatesEnabled) {
-                drawCurve(
-                    self.currentRates.pitch_srate,
-                    self.currentRates.pitch_rc_rate,
-                    self.currentRates.pitch_rc_expo,
-                    self.currentRates.superexpo,
-                    self.currentRates.deadband,
-                    self.currentRates.pitch_rate_limit,
-                    maxAngularVel,
-                    '#00ff00',
-                    0,
-                    curveContext,
-                    {
-                        rcRange: 500 * Math.sqrt(2),
-                        maxAngularVel: self.currentRates.max_setpoint_polar_cyclic,
-                    },
-                );
-            } else {
-                drawCurve(
-                    self.currentRates.roll_srate,
-                    self.currentRates.roll_rc_rate,
-                    self.currentRates.roll_rc_expo,
-                    self.currentRates.superexpo,
-                    self.currentRates.deadband,
-                    self.currentRates.roll_rate_limit,
-                    maxAngularVel,
-                    '#ff0000',
-                    -2,
-                    curveContext,
-                );
-                drawCurve(
-                    self.currentRates.pitch_srate,
-                    self.currentRates.pitch_rc_rate,
-                    self.currentRates.pitch_rc_expo,
-                    self.currentRates.superexpo,
-                    self.currentRates.deadband,
-                    self.currentRates.pitch_rate_limit,
-                    maxAngularVel,
-                    '#00ff00',
-                    2,
-                    curveContext,
-                );
-            }
+            drawCurve(
+                self.currentRates.roll_srate,
+                self.currentRates.roll_rc_rate,
+                self.currentRates.roll_rc_expo,
+                self.currentRates.superexpo,
+                self.currentRates.deadband,
+                self.currentRates.roll_rate_limit,
+                maxAngularVel,
+                '#ff0000',
+                -2,
+                curveContext,
+            );
+            drawCurve(
+                self.currentRates.pitch_srate,
+                self.currentRates.pitch_rc_rate,
+                self.currentRates.pitch_rc_expo,
+                self.currentRates.superexpo,
+                self.currentRates.deadband,
+                self.currentRates.pitch_rate_limit,
+                maxAngularVel,
+                '#00ff00',
+                2,
+                curveContext,
+            );
 
             self.updateRcPositions();
             self.updateRatesLabels();
         }
 
-        $('.tab-rates .cyclic-ring-container').toggle(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9));
-        $('.tab-rates .cyclic-ring-container #enable-cyclic-ring').on('change', function () {
-            const enabled = $(this).is(':checked');
-            self.cyclicRingEnabled = enabled;
-            const level_e = $('.tab-rates .cyclic-ring-container #cyclic-ring-level');
-            if (enabled && self.currentRates.cyclic_ring === 0) {
-                level_e.val(DEFAULTS.CYCLIC_RING);
-            }
-            level_e.closest('.field').toggle(enabled);
-
-            updateRates();
-        }).trigger('change');
-        $('#cyclic-ring-level').on('change', function () {
-            self.currentRates.cyclic_ring = getIntegerValue($(this));
-            updateRates();
-        });
-
-        $('.tab-rates .cyclic-ring-container #enable-polar-coordinates').on('change', function () {
-            const enabled = $(this).is(':checked');
-            self.polarRatesEnabled = enabled;
-            $('.tab-rates .rates_setup .ROLL').toggle(!enabled);
-
-            const pitchTitle = $('.tab-rates .rates_setup .PITCH .axis_title');
-            if (enabled) {
-                pitchTitle.text(i18n.getMessage('rates.config.cyclic.label'));
-            } else {
-                pitchTitle.text(i18n.getMessage('axisPITCH'));
-            }
-
-            updateRates();
-        }).trigger('change');
-
-        $('.rates_change').on('input change', updateRates).trigger('input');
+        $('.rates_change').on('input change', updateRates);
+        updateRates();
 
         const dialogResetProfile = $('.dialogResetProfile')[0];
 
@@ -682,9 +520,8 @@ tab.initialize = function (callback) {
 
         $('.dialogResetProfile-confirmbtn').click(function() {
             dialogResetProfile.close();
-            self.previousRatesType = null;
-            self.changeRatesLogo();
-            self.initRatesSystem();
+            self.initRatesSystem(true);
+            updateRates();
             setChanged();
         });
 
@@ -966,30 +803,20 @@ tab.updateRatesLabels = function() {
                 stickContext.font = (24 * windowScale) + "pt Verdana, Arial, sans-serif";
             }
 
-            if (self.polarRatesEnabled) {
-                drawStickPosition(
-                    stickContext,
-                    '#80FF80',
-                    self.liveData.polar_rc_command * 500 / Math.sqrt(2),
-                    self.liveData.raw_setpoint_polar_cyclic,
-                    maxAngularVel,
-                );
-            } else {
-                drawStickPosition(
-                    stickContext,
-                    '#FF8080',
-                    FC.RC_COMMAND[0],
-                    self.liveData.actual_setpoint_roll,
-                    maxAngularVel,
-                );
-                drawStickPosition(
-                    stickContext,
-                    '#80FF80',
-                    FC.RC_COMMAND[1],
-                    self.liveData.actual_setpoint_pitch,
-                    maxAngularVel,
-                );
-            }
+            drawStickPosition(
+                stickContext,
+                '#FF8080',
+                FC.RC_COMMAND[0],
+                self.liveData.actual_setpoint_roll,
+                maxAngularVel,
+            );
+            drawStickPosition(
+                stickContext,
+                '#80FF80',
+                FC.RC_COMMAND[1],
+                self.liveData.actual_setpoint_pitch,
+                maxAngularVel,
+            );
             drawStickPosition(stickContext,
                 '#8080FF',
                 FC.RC_COMMAND[2],
@@ -1024,90 +851,56 @@ tab.updateRatesLabels = function() {
                         );
                     },
                 },
+                {
+                    value: self.currentRates.max_angular_roll,
+                    draw() {
+                        drawBalloonLabel(
+                            stickContext,
+                            self.currentRates.max_angular_roll.toFixed(0) + '°/s',
+                             curveWidth,
+                            rateScale * (maxAngularVel - self.currentRates.max_angular_roll),
+                             'right',
+                            BALLOON_COLORS.roll,
+                            balloonsDirty,
+                        );
+                    },
+                },
+                {
+                    value: self.currentRates.max_angular_pitch,
+                    draw() {
+                        drawBalloonLabel(
+                            stickContext,
+                            self.currentRates.max_angular_pitch.toFixed(0) + '°/s',
+                            curveWidth,
+                            rateScale * (maxAngularVel - self.currentRates.max_angular_pitch),
+                            'right',
+                            BALLOON_COLORS.pitch,
+                            balloonsDirty,
+                        );
+                    },
+                },
             ];
-
-            if (self.polarRatesEnabled) {
-                maxValBalloons.push(
-                    {
-                        value: self.currentRates.max_setpoint_polar_cyclic,
-                        draw() {
-                            drawBalloonLabel(
-                                stickContext,
-                                self.currentRates.max_setpoint_polar_cyclic.toFixed(0) + '°/s',
-                                curveWidth,
-                                rateScale * (maxAngularVel - self.currentRates.max_setpoint_polar_cyclic),
-                                'right',
-                                BALLOON_COLORS.pitch,
-                                balloonsDirty,
-                            );
-                        },
-                    },
-                );
-            } else {
-                maxValBalloons.push(
-                    {
-                        value: self.currentRates.max_angular_roll,
-                        draw() {
-                            drawBalloonLabel(
-                                stickContext,
-                                self.currentRates.max_angular_roll.toFixed(0) + '°/s',
-                                 curveWidth,
-                                rateScale * (maxAngularVel - self.currentRates.max_angular_roll),
-                                 'right',
-                                BALLOON_COLORS.roll,
-                                balloonsDirty,
-                            );
-                        },
-                    },
-                    {
-                        value: self.currentRates.max_angular_pitch,
-                        draw() {
-                            drawBalloonLabel(
-                                stickContext,
-                                self.currentRates.max_angular_pitch.toFixed(0) + '°/s',
-                                curveWidth,
-                                rateScale * (maxAngularVel - self.currentRates.max_angular_pitch),
-                                'right',
-                                BALLOON_COLORS.pitch,
-                                balloonsDirty,
-                            );
-                        },
-                    },
-                );
-            }
             maxValBalloons.sort((a, b) => b.value - a.value).forEach(x => x.draw());
 
             // current value balloons
-            if (self.polarRatesEnabled) {
-                drawBalloonLabel(
-                    stickContext,
-                    this.liveData.raw_setpoint_polar_cyclic.toFixed(0) + '°/s',
-                    10,
-                    250,
-                    'none',
-                    BALLOON_COLORS.pitch,
-                    balloonsDirty,
-                );
-            } else {
-                drawBalloonLabel(
-                    stickContext,
-                    this.liveData.actual_setpoint_roll.toFixed(0) + '°/s',
-                    10,
-                    150,
-                    'none',
-                    BALLOON_COLORS.roll,
-                    balloonsDirty,
-                );
-                drawBalloonLabel(
-                    stickContext,
-                    this.liveData.actual_setpoint_pitch.toFixed(0) + '°/s',
-                    10,
-                    250,
-                    'none',
-                    BALLOON_COLORS.pitch,
-                    balloonsDirty,
-                );
-            }
+            drawBalloonLabel(
+                stickContext,
+                this.liveData.actual_setpoint_roll.toFixed(0) + '°/s',
+                10,
+                150,
+                'none',
+                BALLOON_COLORS.roll,
+                balloonsDirty,
+            );
+            drawBalloonLabel(
+                stickContext,
+                this.liveData.actual_setpoint_pitch.toFixed(0) + '°/s',
+                10,
+                250,
+                'none',
+                BALLOON_COLORS.pitch,
+                balloonsDirty,
+            );
             drawBalloonLabel(
                 stickContext,
                 this.liveData.actual_setpoint_yaw.toFixed(0) + '°/s',
@@ -1123,274 +916,14 @@ tab.updateRatesLabels = function() {
     }
 };
 
-tab.changeRatesType = function(rateTypeID) {
+/*
+ * Loads the current rate profile from FC.RC_TUNING into self.currentRates,
+ * converting from Rotorflight's internal units to display units.
+ * Pass resetToDefaults=true to reset the rate curve to factory defaults
+ * (used by the "Reset to defaults" button).
+ */
+tab.initRatesSystem = function(resetToDefaults) {
     const self = this;
-
-    const dialogRatesType = $('.dialogRatesType')[0];
-
-    if (!dialogRatesType.hasAttribute('open')) {
-
-        dialogRatesType.showModal();
-
-        $('.dialogRatesType-cancelbtn').click(function() {
-            $('.rates_type select[id="ratesType"]').val(self.currentRatesType);
-            self.previousRatesType = self.currentRatesType;
-            dialogRatesType.close();
-        });
-
-        $('.dialogRatesType-confirmbtn').click(function() {
-            self.currentRatesType = rateTypeID;
-            self.changeRatesLogo();
-            self.initRatesSystem();
-            dialogRatesType.close();
-        });
-    }
-};
-
-tab.initRatesSystem = function() {
-    const self = this;
-
-    let rcRateDef, rcRateYawDef, rcRateMax, rcRateMin, rcRateStep, rcRateDec;
-    let rateDef, rateYawDef, rateMax, rateStep, rateDec;
-    let colExpoDef, yawExpoDef, expoDef, expoMax, expoStep, expoDec;
-    let rcColDef, rcColMax, rcColMin, rcColStep, rcColDec;
-    let colDef, colMax, colStep, colDec;
-
-    let rcRateLabel, rateLabel, rcExpoLabel;
-
-    const rateMin = 0;
-    const expoMin = 0;
-    const colMin = 0;
-
-    switch (self.currentRatesType) {
-
-        case self.RATES_TYPE.RACEFLIGHT:
-            rcRateLabel = "rateSetupRcRateRaceflight";
-            rateLabel   = "rateSetupRateRaceflight";
-            rcExpoLabel = "rateSetupRcExpoRaceflight";
-            rcRateDec   = 0;
-            rcRateDef   = 240;
-            rcRateYawDef= 400;
-            rcRateMax   = 1000;
-            rcRateMin   = 10;
-            rcRateStep  = 10;
-            rateDec     = 0;
-            rateDef     = 0;
-            rateYawDef  = 0;
-            rateMax     = 255;
-            rateStep    = 1;
-            rcColDec    = 1;
-            rcColDef    = 12.5;
-            rcColMax    = 25;
-            rcColMin    = 0;
-            rcColStep   = 0.1;
-            colDec      = 0;
-            colDef      = 0;
-            colMax      = 255;
-            colStep     = 1;
-            expoDec     = 0;
-            expoDef     = 0;
-            yawExpoDef  = 0;
-            colExpoDef  = 0;
-            expoMax     = 100;
-            expoStep    = 1;
-
-            break;
-
-        case self.RATES_TYPE.KISS:
-            rcRateLabel = "rateSetupRcRate";
-            rateLabel   = "rateSetupRcRateRaceflight";
-            rcExpoLabel = "rateSetupRcExpoKISS";
-            rcRateDec   = 2;
-            rcRateDef   = 1.20;
-            rcRateYawDef= 2.00;
-            rcRateMax   = 2.55;
-            rcRateMin   = 0.01;
-            rcRateStep  = 0.01;
-            rateDec     = 2;
-            rateDef     = 0.00;
-            rateYawDef  = 0.00;
-            rateMax     = 0.99;
-            rateStep    = 0.01;
-            rcColDec    = 2;
-            rcColDef    = 2.50;
-            rcColMax    = 2.55;
-            rcColMin    = 0.01;
-            rcColStep   = 0.01;
-            colDec      = 2;
-            colDef      = 0.00;
-            colMax      = 0.99;
-            colStep     = 0.01;
-            expoDec     = 2;
-            expoDef     = 0.00;
-            yawExpoDef  = 0.00;
-            colExpoDef  = 0.00;
-            expoMax     = 1.00;
-            expoStep    = 0.01;
-
-            break;
-
-        case self.RATES_TYPE.ACTUAL:
-            rcRateLabel = "rateSetupRcRateActual";
-            rateLabel   = "rateSetupRateQuickRates";
-            rcExpoLabel = "rateSetupRcExpoRaceflight";
-            rcRateDec   = 0;
-            rcRateDef   = 180;
-            rcRateYawDef= 180;
-            rcRateMax   = 1000;
-            rcRateMin   = 10;
-            rcRateStep  = 10;
-            rateDec     = 0;
-            rateDef     = 240;
-            rateYawDef  = 400;
-            rateMax     = 1000;
-            rateStep    = 10;
-            rcColDec    = 1;
-            rcColDef    = 12.5;
-            rcColMax    = 25;
-            rcColMin    = 0;
-            rcColStep   = 0.5;
-            colDec      = 1;
-            colDef      = 12.5;
-            colMax      = 25;
-            colStep     = 0.5;
-            expoDec     = 2;
-            expoDef     = 0.00;
-            yawExpoDef  = 0.00;
-            colExpoDef  = 0.00;
-            expoMax     = 1.00;
-            expoStep    = 0.01;
-
-            break;
-
-        case self.RATES_TYPE.QUICKRATES:
-            rcRateLabel = "rateSetupRcRate";
-            rateLabel   = "rateSetupRateQuickRates";
-            rcExpoLabel = "rateSetupRcExpoRaceflight";
-            rcRateDec   = 2;
-            rcRateDef   = 1.20;
-            rcRateYawDef= 2.00;
-            rcRateMax   = 2.55;
-            rcRateMin   = 0.01;
-            rcRateStep  = 0.01;
-            rateDec     = 0;
-            rateDef     = 240;
-            rateYawDef  = 400;
-            rateMax     = 1000;
-            rateStep    = 10;
-            rcColDec    = 2;
-            rcColDef    = 2.50;
-            rcColMax    = 2.55;
-            rcColMin    = 0.01;
-            rcColStep   = 0.01;
-            colDec      = 0;
-            colDef      = 500;
-            colMax      = 1000;
-            colStep     = 10;
-            expoDec     = 2;
-            expoDef     = 0.00;
-            yawExpoDef  = 0.00;
-            colExpoDef  = 0.00;
-            expoMax     = 1.00;
-            expoStep    = 0.01;
-            break;
-
-        case self.RATES_TYPE.BETAFLIGHT:
-            rcRateLabel = "rateSetupRcRate";
-            rateLabel   = "rateSetupRate";
-            rcExpoLabel = "rateSetupRcExpo";
-            rcRateDec   = 2;
-            rcRateDef   = 1.20;
-            rcRateYawDef= 2.00;
-            rcRateMax   = 2.55;
-            rcRateMin   = 0.01;
-            rcRateStep  = 0.01;
-            rateDec     = 2;
-            rateDef     = 0.00;
-            rateYawDef  = 0.00;
-            rateMax     = 0.99;
-            rateStep    = 0.01;
-            rcColDec    = 2;
-            rcColDef    = 2.03;
-            rcColMax    = 2.20;
-            rcColMin    = 0.01;
-            rcColStep   = 0.01;
-            colDec      = 2;
-            colDef      = 0.01;
-            colMax      = 0.99;
-            colStep     = 0.01;
-            expoDec     = 2;
-            expoDef     = 0.00;
-            yawExpoDef  = 0.00;
-            colExpoDef  = 0.00;
-            expoMax     = 1.00;
-            expoStep    = 0.01;
-            break;
-
-        case self.RATES_TYPE.ROTORFLIGHT:
-            rcRateLabel = "rateSetupRotorflightRate";
-            rateLabel   = "rateSetupRotorflightShape";
-            rcExpoLabel = "rateSetupRotorflightExpo";
-            rcRateDec   = 0;
-            rcRateDef   = 250;
-            rcRateYawDef= 400;
-            rcRateMax   = 1000;
-            rcRateMin   = 10;
-            rcRateStep  = 5;
-            rateDec     = 0;
-            rateDef     = 12;
-            rateYawDef  = 12;
-            rateMax     = 127;
-            rateStep    = 1;
-            rcColDec    = 2;
-            rcColDef    = 12.5;
-            rcColMax    = 25;
-            rcColMin    = 0;
-            rcColStep   = 0.25;
-            colDec      = 0;
-            colDef      = 12;
-            colMax      = 127;
-            colStep     = 1;
-            expoDec     = 0;
-            expoDef     = 40;
-            yawExpoDef  = 50;
-            colExpoDef  = 0;
-            expoMax     = 100;
-            expoStep    = 1;
-            break;
-
-        default:
-            rcRateLabel = "rateSetupRcRate";
-            rateLabel   = "rateSetupRate";
-            rcExpoLabel = "rateSetupRcExpo";
-            rcRateDec   = 0;
-            rcRateDef   = 0;
-            rcRateYawDef= 0;
-            rcRateMax   = 0;
-            rcRateMin   = 0;
-            rcRateStep  = 0;
-            rateDec     = 0;
-            rateDef     = 0;
-            rateYawDef  = 0;
-            rateMax     = 0;
-            rateStep    = 0;
-            rcColDec    = 0;
-            rcColDef    = 0;
-            rcColMax    = 0;
-            rcColMin    = 0;
-            rcColStep   = 0;
-            colDec      = 0;
-            colDef      = 0;
-            colMax      = 0;
-            colStep     = 0;
-            expoDec     = 0;
-            expoDef     = 0;
-            yawExpoDef  = 0;
-            colExpoDef  = 0;
-            expoMax     = 0;
-            expoStep    = 0;
-            break;
-        }
 
     self.currentRates = {
         roll_rc_rate:               FC.RC_TUNING.roll_rc_rate,
@@ -1431,81 +964,35 @@ tab.initRatesSystem = function() {
         yaw_dynamic_ceiling_gain:         FC.RC_TUNING.yaw_dynamic_ceiling_gain,
         yaw_dynamic_deadband_gain:        FC.RC_TUNING.yaw_dynamic_deadband_gain,
         yaw_dynamic_deadband_filter:      FC.RC_TUNING.yaw_dynamic_deadband_filter,
-        cyclic_ring:                      FC.RC_TUNING.cyclic_ring,
-        cyclic_polar:                     FC.RC_TUNING.cyclic_polar,
     };
 
-    switch (self.currentRatesType) {
+    // Convert from Rotorflight's internal units to display units.
+    self.currentRates.roll_rc_rate       *= 500;
+    self.currentRates.pitch_rc_rate      *= 500;
+    self.currentRates.yaw_rc_rate        *= 500;
+    self.currentRates.collective_rc_rate *= 50 / 4;
+    self.currentRates.roll_srate         *= 100;
+    self.currentRates.pitch_srate        *= 100;
+    self.currentRates.yaw_srate          *= 100;
+    self.currentRates.collective_srate   *= 100;
+    self.currentRates.roll_rc_expo       *= 100;
+    self.currentRates.yaw_rc_expo        *= 100;
+    self.currentRates.pitch_rc_expo      *= 100;
+    self.currentRates.collective_rc_expo *= 100;
 
-        case self.RATES_TYPE.RACEFLIGHT:
-            self.currentRates.roll_srate         *= 100;
-            self.currentRates.pitch_srate        *= 100;
-            self.currentRates.yaw_srate          *= 100;
-            self.currentRates.collective_srate   *= 100;
-            self.currentRates.roll_rc_rate       *= 1000;
-            self.currentRates.yaw_rc_rate        *= 1000;
-            self.currentRates.collective_rc_rate *= 25;
-            self.currentRates.pitch_rc_rate      *= 1000;
-            self.currentRates.roll_rc_expo       *= 100;
-            self.currentRates.yaw_rc_expo        *= 100;
-            self.currentRates.collective_rc_expo *= 100;
-            self.currentRates.pitch_rc_expo      *= 100;
-            break;
-
-        case self.RATES_TYPE.ACTUAL:
-            self.currentRates.roll_srate         *= 1000;
-            self.currentRates.pitch_srate        *= 1000;
-            self.currentRates.yaw_srate          *= 1000;
-            self.currentRates.collective_srate   *= 25;
-            self.currentRates.roll_rc_rate       *= 1000;
-            self.currentRates.yaw_rc_rate        *= 1000;
-            self.currentRates.collective_rc_rate *= 25;
-            self.currentRates.pitch_rc_rate      *= 1000;
-            break;
-
-        case self.RATES_TYPE.QUICKRATES:
-            self.currentRates.roll_srate         *= 1000;
-            self.currentRates.pitch_srate        *= 1000;
-            self.currentRates.yaw_srate          *= 1000;
-            self.currentRates.collective_srate   *= 480;
-            break;
-
-        case self.RATES_TYPE.ROTORFLIGHT:
-            self.currentRates.roll_rc_rate       *= 500;
-            self.currentRates.pitch_rc_rate      *= 500;
-            self.currentRates.yaw_rc_rate        *= 500;
-            self.currentRates.collective_rc_rate *= 50 / 4;
-            self.currentRates.roll_srate         *= 100;
-            self.currentRates.pitch_srate        *= 100;
-            self.currentRates.yaw_srate          *= 100;
-            self.currentRates.collective_srate   *= 100;
-            self.currentRates.roll_rc_expo       *= 100;
-            self.currentRates.yaw_rc_expo        *= 100;
-            self.currentRates.pitch_rc_expo      *= 100;
-            self.currentRates.collective_rc_expo *= 100;
-            break;
-
-        default:
-            break;
-    }
-
-    // Set defaults if type changed
-    if (self.currentRatesType !== self.previousRatesType) {
-        self.currentRates.roll_srate                = rateDef;
-        self.currentRates.pitch_srate               = rateDef;
-        self.currentRates.yaw_srate                 = rateYawDef;
-        self.currentRates.collective_srate          = colDef;
-        self.currentRates.roll_rc_rate              = rcRateDef;
-        self.currentRates.yaw_rc_rate               = rcRateYawDef;
-        self.currentRates.pitch_rc_rate             = rcRateDef;
-        self.currentRates.collective_rc_rate        = rcColDef;
-        self.currentRates.roll_rc_expo              = expoDef;
-        self.currentRates.yaw_rc_expo               = yawExpoDef;
-        self.currentRates.pitch_rc_expo             = expoDef;
-        self.currentRates.collective_rc_expo        = colExpoDef;
-
-        self.currentRates.cyclic_ring = 150;
-        self.currentRates.cyclic_polar = false;
+    if (resetToDefaults) {
+        self.currentRates.roll_srate                = RATES_DEFAULTS.rateDef;
+        self.currentRates.pitch_srate               = RATES_DEFAULTS.rateDef;
+        self.currentRates.yaw_srate                 = RATES_DEFAULTS.rateYawDef;
+        self.currentRates.collective_srate          = RATES_DEFAULTS.colDef;
+        self.currentRates.roll_rc_rate              = RATES_DEFAULTS.rcRateDef;
+        self.currentRates.yaw_rc_rate               = RATES_DEFAULTS.rcRateYawDef;
+        self.currentRates.pitch_rc_rate             = RATES_DEFAULTS.rcRateDef;
+        self.currentRates.collective_rc_rate        = RATES_DEFAULTS.rcColDef;
+        self.currentRates.roll_rc_expo              = RATES_DEFAULTS.expoDef;
+        self.currentRates.yaw_rc_expo               = RATES_DEFAULTS.yawExpoDef;
+        self.currentRates.pitch_rc_expo             = RATES_DEFAULTS.expoDef;
+        self.currentRates.collective_rc_expo        = RATES_DEFAULTS.colExpoDef;
 
         if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
             Object.assign(self.currentRates, DEFAULTS.DYNAMICS_4_6);
@@ -1514,17 +1001,6 @@ tab.initRatesSystem = function() {
         }
     }
 
-    const rcRateLabel_e = $('.rates_setup .rates_titlebar .rc_rate');
-    const rateLabel_e = $('.rates_setup .rates_titlebar .rate');
-    const rcExpoLabel_e = $('.rates_setup .rates_titlebar .rc_expo');
-
-    rcRateLabel_e.text(i18n.getMessage(rcRateLabel));
-    rateLabel_e.text(i18n.getMessage(rateLabel));
-    rcExpoLabel_e.text(i18n.getMessage(rcExpoLabel));
-
-    const collective_rc_expo_e = $('.rates_setup input[name="collective_rc_expo"]');
-    const collective_rc_rate_e = $('.rates_setup input[name="collective_rc_rate"]');
-    const collective_srate_e = $('.rates_setup input[name="collective_srate"]');
     const pitch_rc_expo_e = $('.rates_setup input[name="pitch_rc_expo"]');
     const pitch_rc_rate_e = $('.rates_setup input[name="pitch_rc_rate"]');
     const pitch_srate_e = $('.rates_setup input[name="pitch_srate"]');
@@ -1535,76 +1011,42 @@ tab.initRatesSystem = function() {
     const yaw_rc_rate_e = $('.rates_setup input[name="yaw_rc_rate"]');
     const yaw_srate_e = $('.rates_setup input[name="yaw_srate"]');
 
-    collective_rc_expo_e.val(self.currentRates.collective_rc_expo.toFixed(expoDec));
-    collective_rc_rate_e.val(self.currentRates.collective_rc_rate.toFixed(rcColDec));
-    collective_srate_e.val(self.currentRates.collective_srate.toFixed(colDec));
-    pitch_rc_expo_e.val(self.currentRates.pitch_rc_expo.toFixed(expoDec));
-    pitch_rc_rate_e.val(self.currentRates.pitch_rc_rate.toFixed(rcRateDec));
-    pitch_srate_e.val(self.currentRates.pitch_srate.toFixed(rateDec));
-    roll_rc_expo_e.val(self.currentRates.roll_rc_expo.toFixed(expoDec));
-    roll_rc_rate_e.val(self.currentRates.roll_rc_rate.toFixed(rcRateDec));
-    roll_srate_e.val(self.currentRates.roll_srate.toFixed(rateDec));
-    yaw_rc_expo_e.val(self.currentRates.yaw_rc_expo.toFixed(expoDec));
-    yaw_rc_rate_e.val(self.currentRates.yaw_rc_rate.toFixed(rcRateDec));
-    yaw_srate_e.val(self.currentRates.yaw_srate.toFixed(rateDec));
+    pitch_rc_expo_e.val(self.currentRates.pitch_rc_expo.toFixed(RATES_DEFAULTS.expoDec));
+    pitch_rc_rate_e.val(self.currentRates.pitch_rc_rate.toFixed(RATES_DEFAULTS.rcRateDec));
+    pitch_srate_e.val(self.currentRates.pitch_srate.toFixed(RATES_DEFAULTS.rateDec));
+    roll_rc_expo_e.val(self.currentRates.roll_rc_expo.toFixed(RATES_DEFAULTS.expoDec));
+    roll_rc_rate_e.val(self.currentRates.roll_rc_rate.toFixed(RATES_DEFAULTS.rcRateDec));
+    roll_srate_e.val(self.currentRates.roll_srate.toFixed(RATES_DEFAULTS.rateDec));
+    yaw_rc_expo_e.val(self.currentRates.yaw_rc_expo.toFixed(RATES_DEFAULTS.expoDec));
+    yaw_rc_rate_e.val(self.currentRates.yaw_rc_rate.toFixed(RATES_DEFAULTS.rcRateDec));
+    yaw_srate_e.val(self.currentRates.yaw_srate.toFixed(RATES_DEFAULTS.rateDec));
 
     const rc_rate_input_c = $('.rates_setup input[class="rc_rate_input"]');
     const rate_input_c = $('.rates_setup input[class="rate_input"]');
     const expo_input_c = $('.rates_setup input[class="expo_input"]');
 
-    rc_rate_input_c.attr({"max":rcRateMax, "min":rcRateMin, "step":rcRateStep}).change();
-    rate_input_c.attr({"max":rateMax, "min":rateMin, "step":rateStep}).change();
-    expo_input_c.attr({"max":expoMax, "min":expoMin, "step":expoStep}).change();
-
-    const rc_collective_input_c = $('.rates_setup input[class="rc_collective_input"]');
-    rc_collective_input_c.attr({"max":rcColMax, "min":rcColMin, "step":rcColStep}).change();
-    const collective_input_c = $('.rates_setup input[class="collective_input"]');
-    collective_input_c.attr({"max":colMax, "min":colMin, "step":colStep}).change();
-
-    self.previousRatesType = self.currentRatesType;
+    rc_rate_input_c.attr({"max":RATES_DEFAULTS.rcRateMax, "min":RATES_DEFAULTS.rcRateMin, "step":RATES_DEFAULTS.rcRateStep}).change();
+    rate_input_c.attr({"max":RATES_DEFAULTS.rateMax, "min":RATES_DEFAULTS.rateMin, "step":RATES_DEFAULTS.rateStep}).change();
+    expo_input_c.attr({"max":RATES_DEFAULTS.expoMax, "min":RATES_DEFAULTS.expoMin, "step":RATES_DEFAULTS.expoStep}).change();
 
     $('.tab-rates input[name="roll_response"]').val(self.currentRates.roll_response_time);
     $('.tab-rates input[name="pitch_response"]').val(self.currentRates.pitch_response_time);
     $('.tab-rates input[name="yaw_response"]').val(self.currentRates.yaw_response_time);
-    $('.tab-rates input[name="coll_response"]').val(self.currentRates.collective_response_time);
 
     $('.tab-rates input[name="roll_accel"]').val(self.currentRates.roll_accel_limit * 10);
     $('.tab-rates input[name="pitch_accel"]').val(self.currentRates.pitch_accel_limit * 10);
     $('.tab-rates input[name="yaw_accel"]').val(self.currentRates.yaw_accel_limit * 10);
-    $('.tab-rates input[name="coll_accel"]').val(self.currentRates.collective_accel_limit * 10);
 
     $('#setpoint-boost-gain-roll').val(self.currentRates.roll_setpoint_boost_gain);
     $('#setpoint-boost-gain-pitch').val(self.currentRates.pitch_setpoint_boost_gain);
     $('#setpoint-boost-gain-yaw').val(self.currentRates.yaw_setpoint_boost_gain);
-    $('#setpoint-boost-gain-collective').val(self.currentRates.collective_setpoint_boost_gain);
     $('#setpoint-boost-cutoff-roll').val(self.currentRates.roll_setpoint_boost_cutoff);
     $('#setpoint-boost-cutoff-pitch').val(self.currentRates.pitch_setpoint_boost_cutoff);
     $('#setpoint-boost-cutoff-yaw').val(self.currentRates.yaw_setpoint_boost_cutoff);
-    $('#setpoint-boost-cutoff-collective').val(self.currentRates.collective_setpoint_boost_cutoff);
 
     $('#yaw-dynamic-ceiling-gain').val(self.currentRates.yaw_dynamic_ceiling_gain);
     $('#yaw-dynamic-deadband-gain').val(self.currentRates.yaw_dynamic_deadband_gain);
     $('#yaw-dynamic-deadband-filter').val((self.currentRates.yaw_dynamic_deadband_filter / 10).toFixed(1));
-
-    if ($('#enable-cyclic-ring').is(':checked') !== self.currentRates.cyclic_ring > 0) {
-        $('#enable-cyclic-ring').trigger('click');
-    }
-
-    $('#cyclic-ring-level')
-        .val(self.currentRates.cyclic_ring)
-        .closest('.field')
-        .toggle(self.currentRates.cyclic_ring > 0);
-
-    if ($('#enable-polar-coordinates').is(':checked') !== self.currentRates.cyclic_polar) {
-        $('#enable-polar-coordinates').trigger('click');
-    }
-};
-
-tab.changeRatesLogo = function() {
-    const self = this;
-
-    const image = self.RATES_TYPE_IMAGES[self.currentRatesType];
-    $('.rates_type img[id="ratesLogo"]').attr("src", "/images/rate_logos/" + image);
 };
 
 TABS[tab.tabName] = tab;
