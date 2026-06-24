@@ -131,8 +131,6 @@ export function getCustomCrsfSensors() {
         { name: "FLIGHT_MODE" },
         { name: "ARMING_FLAGS" },
         { name: "ARMING_DISABLE_FLAGS" },
-        { name: "RESCUE_STATE" },
-        { name: "GOVERNOR_STATE" },
         { name: "ADJFUNC" },
       ],
     },
@@ -152,17 +150,11 @@ export function getCustomCrsfSensors() {
       sensors: [
         {
           name: "CONTROL",
-          conflicts: [
-            "PITCH_CONTROL",
-            "ROLL_CONTROL",
-            "YAW_CONTROL",
-            "COLLECTIVE_CONTROL",
-          ],
+          conflicts: ["PITCH_CONTROL", "ROLL_CONTROL", "YAW_CONTROL"],
         },
         { name: "PITCH_CONTROL", conflicts: ["CONTROL"] },
         { name: "ROLL_CONTROL", conflicts: ["CONTROL"] },
         { name: "YAW_CONTROL", conflicts: ["CONTROL"] },
-        { name: "COLLECTIVE_CONTROL", conflicts: ["CONTROL"] },
         { name: "THROTTLE_CONTROL" },
       ],
     },

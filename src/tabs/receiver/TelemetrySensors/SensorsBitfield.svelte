@@ -30,7 +30,6 @@
     { name: "ESC_RPM", id: 17 },
     { name: "ESC_TEMPERATURE", id: 18 },
     { name: "ADJUSTMENT", id: 21 },
-    { name: "GOV_MODE", id: 22 },
     { name: "ARMING_FLAGS", id: 30 },
     { name: "PID_PROFILE", id: 24 },
     { name: "RATES_PROFILE", id: 25 },
