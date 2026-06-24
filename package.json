@@ -1,7 +1,7 @@
 {
   "name": "wingflight-configurator",
   "productName": "Wingflight Configurator",
-  "description": "Crossplatform configuration tool for Wingflight (fixed-wing fork of Rotorflight).",
+  "description": "Crossplatform configuration tool for Wingflight.",
   "version": "0.0.0",
   "main": "http://localhost:5077/",
   "node-remote": "http://localhost:*",

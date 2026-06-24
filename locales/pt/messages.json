@@ -335,13 +335,13 @@
         "english": "Show update notifications for unstable versions of the configurator"
     },
     "configuratorDevelopmentNotice": {
-        "message": "You are using a <b>development version</b> of the <b>Rotorflight Configurator</b>.<br> Please consider using a released version, unless you have a good reason for using an unreleased development version.",
-        "english": "You are using a <b>development version</b> of the <b>Rotorflight Configurator</b>.<br> Please consider using a released version, unless you have a good reason for using an unreleased development version.",
+        "message": "You are using a <b>development version</b> of the <b>Wingflight Configurator</b>.<br> Please consider using a released version, unless you have a good reason for using an unreleased development version.",
+        "english": "You are using a <b>development version</b> of the <b>Wingflight Configurator</b>.<br> Please consider using a released version, unless you have a good reason for using an unreleased development version.",
         "status": "New entry. Please translate!"
     },
     "configuratorUpdateNotice": {
-        "message": "Está a usar uma versão desatualizada do <b>Configurador Rotorflight</b>.<br>$t(configuratorUpdateHelp.message)",
-        "english": "You are using an outdated version of the <b>Rotorflight Configurator</b>.<br>$t(configuratorUpdateHelp.message)",
+        "message": "Está a usar uma versão desatualizada do <b>Configurador Wingflight</b>.<br>$t(configuratorUpdateHelp.message)",
+        "english": "You are using an outdated version of the <b>Wingflight Configurator</b>.<br>$t(configuratorUpdateHelp.message)",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "Está a usar uma versão desatualizada do <b>Configurador Betaflight</b>.<br>$t(configuratorUpdateHelp.message)",
@@ -349,8 +349,8 @@
         }
     },
     "configuratorUpdateHelp": {
-        "message": "Usar uma versão mais recente do firmware com uma versão desatualizada do Configurador significa que a alteração de algumas definições resultará numa <strong>configuração de firmware corrompida e num aparelho sem funcionar</strong>. Além disso, algumas funcionalidades do firmware só serão configuráveis na CLI.<br><strong>Configurador de Rotorflight <b>$1</b> está disponível para download online</strong>, por favor, visite <a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\">esta página</a> para download e instalação da versão mais recente com correções e melhorias.<br>Por favor, feche a janela do configurador antes de atualizar.",
-        "english": "Using a newer version of the firmware with an outdated version of Configurator means that changing some settings will result in a <strong>corrupted firmware configuration and a non-working craft</strong>. Furthermore, some features of the firmware will only be configurable in CLI.<br><strong>Rotorflight Configurator version <b>$1</b> is available for download online</strong>, please visit <a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\">this page</a> to download and install the latest version with fixes and improvements.<br>Please close the configurator window before updating.",
+        "message": "Usar uma versão mais recente do firmware com uma versão desatualizada do Configurador significa que a alteração de algumas definições resultará numa <strong>configuração de firmware corrompida e num aparelho sem funcionar</strong>. Além disso, algumas funcionalidades do firmware só serão configuráveis na CLI.<br><strong>Configurador de Wingflight <b>$1</b> está disponível para download online</strong>, por favor, visite <a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\">esta página</a> para download e instalação da versão mais recente com correções e melhorias.<br>Por favor, feche a janela do configurador antes de atualizar.",
+        "english": "Using a newer version of the firmware with an outdated version of Configurator means that changing some settings will result in a <strong>corrupted firmware configuration and a non-working craft</strong>. Furthermore, some features of the firmware will only be configurable in CLI.<br><strong>Wingflight Configurator version <b>$1</b> is available for download online</strong>, please visit <a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\">this page</a> to download and install the latest version with fixes and improvements.<br>Please close the configurator window before updating.",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "Usar uma versão mais recente do firmware com uma versão desatualizada do Configurador significa que a alteração de algumas definições resultará numa <strong>configuração de firmware corrompida e num aparelho sem funcionar</strong>. Além disso, algumas funcionalidades do firmware só serão configuráveis na CLI.<br><strong>Configurador de Betaflight <b>$1</b> está disponível para download online</strong>, por favor, visite <a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\">esta página</a> para download e instalação da versão mais recente com correções e melhorias.<br>Por favor, feche a janela do configurador antes de atualizar.",
@@ -723,8 +723,8 @@
         }
     },
     "firmwareTypeNotSupported": {
-        "message": "Firmware que não seja o Rotorflight <span class=\"message-negative\">não é suportado</span>, exceto no modo CLI.",
-        "english": "Non - Rotorflight firmware is <span class=\"message-negative\">not supported</span>, except for CLI mode.",
+        "message": "Firmware que não seja o Wingflight <span class=\"message-negative\">não é suportado</span>, exceto no modo CLI.",
+        "english": "Non - Wingflight firmware is <span class=\"message-negative\">not supported</span>, except for CLI mode.",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "Firmware que não seja o Betaflight <span class=\"message-negative\">não é suportado</span>, exceto no modo CLI.",
@@ -944,8 +944,8 @@
         "english": "EEPROM <span class=\"message-positive\">saved</span>"
     },
     "defaultWelcomeIntro": {
-        "message": "Bem-vindo ao <strong>Configurador Rotorflight</strong>, um utilitário feito para simplificar a atualização, configuração e otimização da sua controladora de voo.",
-        "english": "Welcome to <strong>Rotorflight - Configurator</strong>, a utility designed to simplify updating, configuring and tuning of your flight controller.",
+        "message": "Bem-vindo ao <strong>Configurador Wingflight</strong>, um utilitário feito para simplificar a atualização, configuração e otimização da sua controladora de voo.",
+        "english": "Welcome to <strong>Wingflight - Configurator</strong>, a utility designed to simplify updating, configuring and tuning of your flight controller.",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "Bem-vindo ao <strong>Configurador Betaflight</strong>, um utilitário feito para simplificar a atualização, configuração e otimização da sua controladora de voo.",
@@ -958,8 +958,8 @@
         "status": "New entry. Please translate!"
     },
     "defaultDownloadsText": {
-        "message": "The latest Rotorflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/rotorflight/rotorflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Configurator</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-scripts/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-ethos/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Rotorflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/rotorflight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
-        "english": "The latest Rotorflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/rotorflight/rotorflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Configurator</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-scripts/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-ethos/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Rotorflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/rotorflight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
+        "message": "The latest Rotorflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/WingFlight/wingflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Configurator</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-scripts/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/WingFlight/wingflight-lua-ethos-suite/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Wingflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
+        "english": "The latest Rotorflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/WingFlight/wingflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Configurator</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-scripts/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/WingFlight/wingflight-lua-ethos-suite/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Wingflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
         "status": "New entry. Please translate!"
     },
     "defaultCommunityHead": {
@@ -968,18 +968,18 @@
         "status": "New entry. Please translate!"
     },
     "defaultCommunityText": {
-        "message": "Rotorflight has an active online community of normal users, pro-pilots, and developers.",
-        "english": "Rotorflight has an active online community of normal users, pro-pilots, and developers.",
+        "message": "Wingflight has an active online community of normal users, pro-pilots, and developers.",
+        "english": "Wingflight has an active online community of normal users, pro-pilots, and developers.",
         "status": "New entry. Please translate!"
     },
     "defaultWebsiteText": {
-        "message": "<a href=\"https://www.rotorflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight website</a> is the first stop for instructions, manuals, and information.",
-        "english": "<a href=\"https://www.rotorflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight website</a> is the first stop for instructions, manuals, and information.",
+        "message": "<a href=\"https://www.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight website</a> is the first stop for instructions, manuals, and information.",
+        "english": "<a href=\"https://www.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight website</a> is the first stop for instructions, manuals, and information.",
         "status": "New entry. Please translate!"
     },
     "defaultDiscordText": {
-        "message": "<a href=\"https://discord.gg/FyfMF4RwSA/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions.",
-        "english": "<a href=\"https://discord.gg/FyfMF4RwSA/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions.",
+        "message": "<a href=\"https://discord.gg/aEyyAJTXRw/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions.",
+        "english": "<a href=\"https://discord.gg/aEyyAJTXRw/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions.",
         "status": "New entry. Please translate!"
     },
     "defaultFacebookText": {
@@ -992,8 +992,8 @@
         "english": "Contributing"
     },
     "defaultContributingText": {
-        "message": "Rotorflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Rotorflight Discord or other online forums</li><li><a href=\"https://github.com/rotorflight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.rotorflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.rotorflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.rotorflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Rotorflight Configurator into a new language, or helping to maintain an existing translation</li></ul>",
-        "english": "Rotorflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Rotorflight Discord or other online forums</li><li><a href=\"https://github.com/rotorflight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.rotorflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.rotorflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.rotorflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Rotorflight Configurator into a new language, or helping to maintain an existing translation</li></ul>",
+        "message": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>",
+        "english": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "Se quiser ajudar a melhorar o Betaflight pode ajudar de várias maneiras, incluíndo:<br /><ul><li>usando o seu conhecimento de Betaflight para criar ou atualizar conteúdo em <a href=\"https://github.com/betaflight/betaflight/wiki\" target=\"_blank\" rel=\"noopener noreferrer\">a nossa Wiki</a>, ou respondendo a questões de outros utilizadores nos fóruns online;</li><li><a href=\"https://github.com/betaflight/betaflight/blob/master/docs/development/Development.md\" target=\"_blank\" rel=\"noopener noreferrer\">contribuíndo com código</a> para o firmware e Configurador - novas funcionalidades, correções, melhorias;</li><li>testes <a href=\"https://github.com/Betaflight/betaflight/pulls\" target=\"_blank\" rel=\"noopener noreferrer\">a novas funcionalidades e correções</a> e dando feedback;</li><li>ajudando outros utilizadores a resolver os problemas que reportam <a href=\"https://github.com/betaflight/betaflight/issues\" target=\"_blank\" rel=\"noopener noreferrer\">no nosso tracker de assuntos</a>, e participando em discussões de pedidos de funcionalidades;</li><li><a href=\"https://github.com/betaflight/betaflight/tree/master/README.md#Translators\" target=\"_blank\" rel=\"noopener noreferrer\">traduzindo</a> o Betaflight Configurator numa nova linguagem, ou ajudando a manter traduções existentes.</li></ul>",
@@ -1006,8 +1006,8 @@
         "status": "New entry. Please translate!"
     },
     "defaultDonateText": {
-        "message": "<p>Rotorflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Rotorflight useful, please consider <b>supporting</b> the development by donating to the Rotorflight Project.</p>",
-        "english": "<p>Rotorflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Rotorflight useful, please consider <b>supporting</b> the development by donating to the Rotorflight Project.</p>",
+        "message": "<p>Wingflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Wingflight useful, please consider <b>supporting</b> the development by donating to the Rotorflight Project.</p>",
+        "english": "<p>Wingflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Wingflight useful, please consider <b>supporting</b> the development by donating to the Rotorflight Project.</p>",
         "status": "New entry. Please translate!"
     },
     "defaultDonateTooltip": {
@@ -1024,8 +1024,8 @@
         "english": "Documentation / Manual"
     },
     "defaultDocumentation": {
-        "message": "Rotorflight documentation is available in release notes and website.<br /><br />",
-        "english": "Rotorflight documentation is available in release notes and website.<br /><br />",
+        "message": "Wingflight documentation is available in release notes and website.<br /><br />",
+        "english": "Wingflight documentation is available in release notes and website.<br /><br />",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "A documentação do Betaflight está disponível nas notas de lançamento e no wiki.<br /><br />",
@@ -1033,8 +1033,8 @@
         }
     },
     "defaultDocumentation1": {
-        "message": "The Rotorflight website tutorial is a great resource for information, it can be found <a href=\"https://www.rotorflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
-        "english": "The Rotorflight website tutorial is a great resource for information, it can be found <a href=\"https://www.rotorflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "message": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "english": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
         "status": "Auto-converted translation. Please check!",
         "previous": {
             "message": "A wiki do Betaflight é um ótimo recurso para informações, pode ser encontrada <a href=\"https://github.com/betaflight/betaflight/wiki\" target=\"_blank\" rel=\"noopener noreferrer\">aqui</a>.",
@@ -1042,8 +1042,8 @@
         }
     },
     "defaultDocumentation2": {
-        "message": "The latest news can be read at the Website Announcements page, <a href=\"https://www.rotorflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
-        "english": "The latest news can be read at the Website Announcements page, <a href=\"https://www.rotorflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "message": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "english": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "As notas de lançamento do firmware podem ser lidas na página de lançamentos do GitHub, <a href=\"https://github.com/Betaflight/Betaflight/releases\" target=\"_blank\" rel=\"noopener noreferrer\">aqui</a>.",
@@ -1051,8 +1051,8 @@
         }
     },
     "defaultDocumentation3": {
-        "message": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/rotorflight/rotorflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
-        "english": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/rotorflight/rotorflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "message": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/WingFlight/wingflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
+        "english": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/WingFlight/wingflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.",
         "status": "New entry. Please translate!"
     },
     "defaultSupportHead": {
@@ -1082,8 +1082,8 @@
         }
     },
     "defaultSupport1": {
-        "message": "<a href=\"https://www.rotorflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Website</a>",
-        "english": "<a href=\"https://www.rotorflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Website</a>",
+        "message": "<a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Website</a>",
+        "english": "<a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Website</a>",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "<a href=\"http://www.rcgroups.com/forums/showthread.php?t=2464844&page=1\" target=\"_blank\" rel=\"noopener noreferrer\">Tópico do RC Groups</a>",
@@ -1100,8 +1100,8 @@
         }
     },
     "defaultSupport3": {
-        "message": "<a href=\"https://discord.com/invite/FyfMF4RwSA\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight discussion on Discord</a>",
-        "english": "<a href=\"https://discord.com/invite/FyfMF4RwSA\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight discussion on Discord</a>",
+        "message": "<a href=\"https://discord.com/invite/aEyyAJTXRw\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight discussion on Discord</a>",
+        "english": "<a href=\"https://discord.com/invite/aEyyAJTXRw\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight discussion on Discord</a>",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "<a href=\"https://www.youtube.com/playlist?list=PLwoDb7WF6c8nT4jjsE4VENEmwu9x8zDiE\" target=\"_blank\" rel=\"noopener noreferrer\">Vídeos Betaflight 4.3 do Joshua Bardwell</a>",
@@ -1197,8 +1197,8 @@
         "status": "Reused translation. Please check!"
     },
     "statusArmingDisableFlagsTooltip": {
-        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info.",
-        "english": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info.",
+        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info.",
+        "english": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info.",
         "status": "Reused translation. Please check!",
         "previous": {
             "message": "Lista de indicadores sobre a razão de não ser permitido armar. Para saber mais, mova o rato sobre o indicador ou consulte a página do Wiki 'Arming Sequence & Safety' para mais info.",
@@ -1314,8 +1314,8 @@
         "description": "Message that pops up to describe the BST arming disable flag"
     },
     "statusArmingDisableFlagsTooltipMSP": {
-        "message": "MSP connection is active, probably with this Rotorflight Configurator",
-        "english": "MSP connection is active, probably with this Rotorflight Configurator",
+        "message": "MSP connection is active, probably with this Wingflight Configurator",
+        "english": "MSP connection is active, probably with this Wingflight Configurator",
         "status": "New entry. Please translate!",
         "description": "Message that pops up to describe the MSP arming disable flag"
     },
@@ -3477,8 +3477,8 @@
         "english": "Preview"
     },
     "receiverMspWarningText": {
-        "message": "These sticks allow Rotorflight to be armed and tested without a transmitter or receiver being present. However, <strong>this feature is not intended for flight and rotor blades must not be attached.</strong><br /><br />This feature does not guarantee reliable control of your craft. <strong>Serious injury is likely to result if rotor blades are left on.</strong>",
-        "english": "These sticks allow Rotorflight to be armed and tested without a transmitter or receiver being present. However, <strong>this feature is not intended for flight and rotor blades must not be attached.</strong><br /><br />This feature does not guarantee reliable control of your craft. <strong>Serious injury is likely to result if rotor blades are left on.</strong>",
+        "message": "These sticks allow Wingflight to be armed and tested without a transmitter or receiver being present. However, <strong>this feature is not intended for flight and rotor blades must not be attached.</strong><br /><br />This feature does not guarantee reliable control of your craft. <strong>Serious injury is likely to result if rotor blades are left on.</strong>",
+        "english": "These sticks allow Wingflight to be armed and tested without a transmitter or receiver being present. However, <strong>this feature is not intended for flight and rotor blades must not be attached.</strong><br /><br />This feature does not guarantee reliable control of your craft. <strong>Serious injury is likely to result if rotor blades are left on.</strong>",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "Estes sticks permitem ao Betaflight ser armado e testado sem um transmissor ou receptor disponíveis. Porém, <strong>esta funcionalidade não foi feita para voos e as hélices não devem estar montadas.</strong><br /><br />Esta função não garante um controle fiável do seu aparelho. <strong>Podem ocorrer ferimentos graves se as hélices forem deixadas montadas.</strong>",
@@ -6395,8 +6395,8 @@
         "english": "Message:"
     },
     "firmwareFlasherWarningText": {
-        "message": "Please do <span class=\"message-negative\">ONLY</span> flash <strong>Rotorflight</strong> or <strong>Betaflight</strong> hardware with this firmware flasher.<br /><br /><strong>Note: </strong>STM32 bootloader is stored in ROM, it cannot be bricked.<br /><strong>Note: </strong><span class=\"message-negative\">Auto-Connect</span> is always disabled while you are inside firmware flasher.<br /><strong>Note: </strong>Make sure you have a backup; some upgrades/downgrades will wipe your configuration.<br /><strong>Note:</strong> If you have problems flashing <strong>try disconnecting all cables from your FC</strong> first, try rebooting, upgrade drivers.<br /><strong>Note:</strong> When flashing boards that have directly connected USB sockets (most newer boards) ensure you have read the USB Flashing section of the manual and have the correct software and drivers installed",
-        "english": "Please do <span class=\"message-negative\">ONLY</span> flash <strong>Rotorflight</strong> or <strong>Betaflight</strong> hardware with this firmware flasher.<br /><br /><strong>Note: </strong>STM32 bootloader is stored in ROM, it cannot be bricked.<br /><strong>Note: </strong><span class=\"message-negative\">Auto-Connect</span> is always disabled while you are inside firmware flasher.<br /><strong>Note: </strong>Make sure you have a backup; some upgrades/downgrades will wipe your configuration.<br /><strong>Note:</strong> If you have problems flashing <strong>try disconnecting all cables from your FC</strong> first, try rebooting, upgrade drivers.<br /><strong>Note:</strong> When flashing boards that have directly connected USB sockets (most newer boards) ensure you have read the USB Flashing section of the manual and have the correct software and drivers installed",
+        "message": "Please do <span class=\"message-negative\">ONLY</span> flash <strong>Wingflight</strong> or <strong>Betaflight</strong> hardware with this firmware flasher.<br /><br /><strong>Note: </strong>STM32 bootloader is stored in ROM, it cannot be bricked.<br /><strong>Note: </strong><span class=\"message-negative\">Auto-Connect</span> is always disabled while you are inside firmware flasher.<br /><strong>Note: </strong>Make sure you have a backup; some upgrades/downgrades will wipe your configuration.<br /><strong>Note:</strong> If you have problems flashing <strong>try disconnecting all cables from your FC</strong> first, try rebooting, upgrade drivers.<br /><strong>Note:</strong> When flashing boards that have directly connected USB sockets (most newer boards) ensure you have read the USB Flashing section of the manual and have the correct software and drivers installed",
+        "english": "Please do <span class=\"message-negative\">ONLY</span> flash <strong>Wingflight</strong> or <strong>Betaflight</strong> hardware with this firmware flasher.<br /><br /><strong>Note: </strong>STM32 bootloader is stored in ROM, it cannot be bricked.<br /><strong>Note: </strong><span class=\"message-negative\">Auto-Connect</span> is always disabled while you are inside firmware flasher.<br /><strong>Note: </strong>Make sure you have a backup; some upgrades/downgrades will wipe your configuration.<br /><strong>Note:</strong> If you have problems flashing <strong>try disconnecting all cables from your FC</strong> first, try rebooting, upgrade drivers.<br /><strong>Note:</strong> When flashing boards that have directly connected USB sockets (most newer boards) ensure you have read the USB Flashing section of the manual and have the correct software and drivers installed",
         "status": "Modified entry. Please translate!",
         "previous": {
             "message": "Por favor <span class=\"message-negative\">não</span> tente flashar hardware<strong>não-Betaflight</strong>com este instalador de firmware.<br />Não <span class=\"message-negative\"></span> <strong>desconecte</strong> a controladora ou <strong>desligue</strong> o seu computador enquanto estiver a flashar.<br /><br /><strong>Nota: </strong>STM32 bootloader está guardado na ROM, não pode ser apagado.<br /><strong>Note: </strong><span class=\"message-negative\">Auto-Ligar</span> está sempre desativado quando está dentro do instalador de firmware.<br /><strong>Note: </strong>Assegure-se que tem um backup; alguns upgrades/downgrades vão apagar as suas configurações.<br /><strong>Note:</strong> Se tem problemas a flashar <strong>tente desconectar todos os cabos da controladora</strong> Primeiro, tente reiniciá-la, atualize os drivers.<br /><strong>Nota:</strong> Quando flashar controladoras com conetores USB diretos (maioria das mais recentes) assegure-se que leu a secção USB Flashing do manual do Betaflight e que tem instalados o software e os drivers corretos",
@@ -6408,12 +6408,12 @@
         "english": "<strong>Recovery / Lost communication</strong>"
     },
     "firmwareFlasherRecoveryText": {
-        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>",
-        "english": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>",
+        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>",
+        "english": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>",
         "status": "Modified entry. Please translate!",
         "previous": {
-            "message": "Se perdeu a comunicação com a sua controladora siga estes passos para restaurar a comunicação: <ul><li>Desligue</li><li>Ative 'Sem sequência de reinicialização', habilitar 'Apagar completo do chip'.</li><li>Una os pinos de BOOT ou mantenha pressionado o botão BOOT.</li><li>Ligue (LED de atividade NÃO acenderá se feito corretamente).</li><li>Instale todos os drivers STM32 e Zadig se necessário (veja <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> - secção do manual do Betaflight).</li><li>Feche o configurador, Reinicie o Configurador.</li><li>Solte o botão BOOT se a sua controladora tiver um.</li><li>Flash o firmware correto (usando a taxa de transmissão manual se especificado no manual da sua controladora).</li><li>Desligue.</li><li>Desuna os pinos de BOOT.</li><li>Ligue (LED de atividade deve piscar).</li><li>Conecte-se normalmente.</li></ul>",
-            "english": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.rotorflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of Betaflight manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
+            "message": "Se perdeu a comunicação com a sua controladora siga estes passos para restaurar a comunicação: <ul><li>Desligue</li><li>Ative 'Sem sequência de reinicialização', habilitar 'Apagar completo do chip'.</li><li>Una os pinos de BOOT ou mantenha pressionado o botão BOOT.</li><li>Ligue (LED de atividade NÃO acenderá se feito corretamente).</li><li>Instale todos os drivers STM32 e Zadig se necessário (veja <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> - secção do manual do Betaflight).</li><li>Feche o configurador, Reinicie o Configurador.</li><li>Solte o botão BOOT se a sua controladora tiver um.</li><li>Flash o firmware correto (usando a taxa de transmissão manual se especificado no manual da sua controladora).</li><li>Desligue.</li><li>Desuna os pinos de BOOT.</li><li>Ligue (LED de atividade deve piscar).</li><li>Conecte-se normalmente.</li></ul>",
+            "english": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of Betaflight manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
         }
     },
     "firmwareFlasherFirmwareNotLoaded": {

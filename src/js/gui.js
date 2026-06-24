@@ -390,7 +390,7 @@ GuiControl.prototype.content_ready = function (callback) {
 
     this.switchery();
 
-    // Build link to Rotorflight documentation
+    // Build link to Wingflight documentation
     if (CONFIGURATOR.connectionValid) {
         const tabName = $('#content .tab_title').attr("i18n");
         const helpButton = $('#content #button-documentation');

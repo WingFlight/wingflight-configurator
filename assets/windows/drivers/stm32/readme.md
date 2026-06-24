@@ -1,6 +1,6 @@
 # STM32 DFU Driver
 
-This directory contains the official STMicroelectronics STM32 Bootloader / DFU driver package used by the Rotorflight Configurator Windows installer.
+This directory contains the official STMicroelectronics STM32 Bootloader / DFU driver package used by the Wingflight Configurator Windows installer.
 
 ## Source
 
@@ -28,7 +28,7 @@ The included `STM32Bootloader.inf` package installs the STM32 Bootloader device 
 
 ## Installation
 
-Rotorflight Configurator can optionally install this driver during the Windows installer flow.
+Wingflight Configurator can optionally install this driver during the Windows installer flow.
 
 Driver installation is not automatic unless the user selects the STM32 DFU driver installation option during setup.
 
@@ -42,4 +42,4 @@ The included license header identifies the license as:
 
 - SLA0048 Rev3 / October 2017
 
-The Rotorflight Configurator installer requires the user to explicitly opt in and accept the STMicroelectronics driver license before installing the driver.
+The Wingflight Configurator installer requires the user to explicitly opt in and accept the STMicroelectronics driver license before installing the driver.

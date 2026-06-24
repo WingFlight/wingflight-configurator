@@ -29,8 +29,8 @@ export const CONFIGURATOR = $state({
   version: __APP_VERSION__,
   latestVersion: "0.0.1",
   latestVersionReleaseUrl:
-    "https://github.com/rotorflight/rotorflight-configurator/releases",
+    "https://github.com/WingFlight/wingflight-configurator/releases",
   allReleasesUrl:
-    "https://github.com/rotorflight/rotorflight-configurator/releases",
+    "https://github.com/WingFlight/wingflight-configurator/releases",
   expertMode: false,
 });
