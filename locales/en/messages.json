@@ -3238,6 +3238,21 @@
     "curveEditorHint": {
         "message": "Drag points to adjust · click empty space to add · right-click a point to remove"
     },
+    "curvePointIndex": {
+        "message": "#"
+    },
+    "curvePointX": {
+        "message": "X"
+    },
+    "curvePointY": {
+        "message": "Y"
+    },
+    "curveAddPoint": {
+        "message": "Add Point"
+    },
+    "curvePointCount": {
+        "message": "Points:"
+    },
     "mixerRuleWeight": {
         "message": "Weight +"
     },

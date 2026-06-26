@@ -116,6 +116,51 @@ export const MixerCurve = {
         return true;
     },
 
+    // Convenience for an "Add Point" button (which has no click position to
+    // work from, unlike clicking directly on the plot): finds the widest gap
+    // between adjacent active points and inserts a new point at its x
+    // midpoint, with y taken from the curve's own current value there - so
+    // the new point lands exactly on the existing line instead of creating a
+    // visible kink, and the user can then drag it to reshape the curve.
+    addPointAtLargestGap: function (curve)
+    {
+        const self = this;
+
+        if (curve.count >= self.POINT_COUNT)
+            return false;
+
+        let bestIndex = 0;
+        let bestGap = -1;
+
+        for (let i = 0; i < curve.count - 1; i++) {
+            const gap = curve.points[i + 1].x - curve.points[i].x;
+            if (gap > bestGap) {
+                bestGap = gap;
+                bestIndex = i;
+            }
+        }
+
+        const midX = Math.round((curve.points[bestIndex].x + curve.points[bestIndex + 1].x) / 2);
+        const midY = Math.round(self.evaluate(curve, midX));
+
+        return self.addPoint(curve, midX, midY);
+    },
+
+    // Adjust the curve's active point count to exactly `targetCount` by
+    // repeatedly adding (at the largest gap) or removing (keeping both
+    // endpoints intact as long as possible) interior points.
+    setPointCount: function (curve, targetCount)
+    {
+        const self = this;
+
+        while (curve.count < targetCount) {
+            if (!self.addPointAtLargestGap(curve)) break;
+        }
+        while (curve.count > targetCount) {
+            if (!self.removePoint(curve, curve.count - 2)) break;
+        }
+    },
+
     // Remove an active point. Returns false (no change) if it would leave
     // fewer than the 2 points a curve needs to interpolate. The points array
     // stays at a fixed POINT_COUNT length - removing shifts the remaining

@@ -27,10 +27,19 @@
     margin-bottom: 10px;
 }
 
+.tab-curves .curveEditorRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .tab-curves .curvePlotWrapper {
     width: 100%;
     max-width: 500px;
     aspect-ratio: 1 / 1;
+    flex: 0 1 auto;
 }
 
 .tab-curves .curveSvg {
@@ -39,6 +48,96 @@
     background-color: #fff;
     border: 1px solid var(--subtleAccent);
     touch-action: none;
+}
+
+.tab-curves .curveCoordLabel {
+    font-size: 13px;
+    fill: #fff;
+    pointer-events: none;
+}
+
+.tab-curves .curveCoordLabelBg {
+    fill: #333;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.tab-curves .curvePointListWrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 360px;
+    overflow-x: hidden;
+}
+
+.tab-curves .curvePointTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.tab-curves .curvePointTable th {
+    text-align: left;
+    font-weight: bold;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--subtleAccent);
+}
+
+.tab-curves .curvePointTable td {
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--superSubtleAccent);
+    vertical-align: middle;
+}
+
+.tab-curves .curvePointTable input {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: right;
+    height: 20px;
+    border: 1px solid var(--subtleAccent);
+    border-radius: 3px;
+}
+
+.tab-curves .curvePointTable .curvePointIndex {
+    width: 1.8em;
+    color: #626262;
+}
+
+.tab-curves .curvePointTable .curvePointDelete {
+    width: 1.8em;
+    text-align: center;
+    cursor: pointer;
+    color: #626262;
+    text-decoration: none;
+}
+
+.tab-curves .curvePointTable .curvePointDelete:hover {
+    color: #333;
+}
+
+.tab-curves .curvePointListToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tab-curves .curvePointCountGroup {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tab-curves .curvePointCountLabel {
+    font-size: 11px;
+    color: #626262;
+}
+
+.tab-curves .curvePointCountGroup select {
+    width: auto;
+    min-width: 3.5em;
 }
 
 .tab-curves .curveGrid {

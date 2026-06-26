@@ -92,11 +92,15 @@ tab.initialize = function (callback) {
 
     function renderCurveSvg() {
         const svg = document.getElementById('curveSvg');
-        if (!svg) return;
+        const tableBody = document.getElementById('curvePointTableBody');
+        if (!svg || !tableBody) return;
 
         while (svg.firstChild) svg.removeChild(svg.firstChild);
+        while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
 
         const curve = FC.MIXER_CURVES[self.selectedCurve];
+
+        updatePointCountSelect(curve);
 
         // Gridlines every 25%, bold axes through the middle
         [-1000, -500, 0, 500, 1000].forEach(function (v) {
@@ -123,7 +127,7 @@ tab.initialize = function (callback) {
 
         // Only the first `count` points are active - the rest are unused
         // filler kept around solely to match the firmware's fixed-size wire
-        // format, and must never be drawn or connected.
+        // format, and must never be drawn, connected, or listed.
         const activePoints = curve.points.slice(0, curve.count);
 
         const circles = activePoints.map(function () {
@@ -134,6 +138,107 @@ tab.initialize = function (callback) {
             return circle;
         });
 
+        // Floating "x, y" readout that follows a point while it's being
+        // dragged - hidden the rest of the time.
+        const coordLabelBg = ns('rect');
+        coordLabelBg.setAttribute('class', 'curveCoordLabelBg');
+        coordLabelBg.setAttribute('rx', 3);
+        coordLabelBg.style.display = 'none';
+        svg.appendChild(coordLabelBg);
+
+        const coordLabel = ns('text');
+        coordLabel.setAttribute('class', 'curveCoordLabel');
+        coordLabel.style.display = 'none';
+        svg.appendChild(coordLabel);
+
+        function showCoordLabel(p) {
+            coordLabel.textContent = Math.round(p.x) + ', ' + Math.round(p.y);
+            coordLabel.setAttribute('x', toSvgX(p.x) + 14);
+            coordLabel.setAttribute('y', toSvgY(p.y) - 0);
+            coordLabel.style.display = '';
+
+            // getBBox() needs the text visible/in the DOM first (done above)
+            // to return accurate measurements - fits the background exactly
+            // instead of guessing a width from the character count.
+            const bbox = coordLabel.getBBox();
+            coordLabelBg.setAttribute('x', bbox.x - 4);
+            coordLabelBg.setAttribute('y', bbox.y - 2);
+            coordLabelBg.setAttribute('width', bbox.width + 8);
+            coordLabelBg.setAttribute('height', bbox.height + 4);
+            coordLabelBg.style.display = '';
+        }
+
+        function hideCoordLabel() {
+            coordLabel.style.display = 'none';
+            coordLabelBg.style.display = 'none';
+        }
+
+        // One row per active point: index + editable X/Y + delete button,
+        // kept in sync with the SVG circles in both directions.
+        const rows = activePoints.map(function (point, index) {
+            const row = document.createElement('tr');
+
+            const indexCell = document.createElement('td');
+            indexCell.className = 'curvePointIndex';
+            indexCell.textContent = index + 1;
+            row.appendChild(indexCell);
+
+            const xInput = document.createElement('input');
+            xInput.type = 'number';
+            xInput.min = MixerCurve.CURVE_MIN;
+            xInput.max = MixerCurve.CURVE_MAX;
+            xInput.step = 10;
+
+            const yInput = document.createElement('input');
+            yInput.type = 'number';
+            yInput.min = MixerCurve.CURVE_MIN;
+            yInput.max = MixerCurve.CURVE_MAX;
+            yInput.step = 10;
+
+            [xInput, yInput].forEach(function (input) {
+                const cell = document.createElement('td');
+                cell.appendChild(input);
+                row.appendChild(cell);
+            });
+
+            function commitFromInputs() {
+                const clamped = MixerCurve.clampPoint(
+                    curve, index,
+                    Math.round(parseFloat(xInput.value)) || 0,
+                    Math.round(parseFloat(yInput.value)) || 0
+                );
+                Object.assign(curve.points[index], clamped);
+                updateGeometry();
+                self.CURVES_dirty = true;
+                self.needSave = true;
+                setDirty();
+            }
+
+            xInput.addEventListener('change', commitFromInputs);
+            yInput.addEventListener('change', commitFromInputs);
+
+            const deleteCell = document.createElement('td');
+            const deleteLink = document.createElement('a');
+            deleteLink.href = '#';
+            deleteLink.className = 'curvePointDelete';
+            deleteLink.textContent = '✕';
+            deleteLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (MixerCurve.removePoint(curve, index)) {
+                    self.CURVES_dirty = true;
+                    self.needSave = true;
+                    setDirty();
+                    renderCurveSvg();
+                }
+            });
+            deleteCell.appendChild(deleteLink);
+            row.appendChild(deleteCell);
+
+            tableBody.appendChild(row);
+
+            return { xInput: xInput, yInput: yInput };
+        });
+
         function updateGeometry() {
             polyline.setAttribute('points', activePoints.map(function (p) {
                 return toSvgX(p.x) + ',' + toSvgY(p.y);
@@ -142,6 +247,8 @@ tab.initialize = function (callback) {
             activePoints.forEach(function (p, i) {
                 circles[i].setAttribute('cx', toSvgX(p.x));
                 circles[i].setAttribute('cy', toSvgY(p.y));
+                rows[i].xInput.value = Math.round(p.x);
+                rows[i].yInput.value = Math.round(p.y);
             });
         }
 
@@ -152,6 +259,7 @@ tab.initialize = function (callback) {
                 event.preventDefault();
                 event.stopPropagation();
                 circle.setPointerCapture(event.pointerId);
+                showCoordLabel(activePoints[index]);
 
                 function onMove(moveEvent) {
                     const point = svgPointFromEvent(svg, moveEvent);
@@ -161,6 +269,7 @@ tab.initialize = function (callback) {
                     // stays in sync without needing a full re-render per frame.
                     Object.assign(curve.points[index], clamped);
                     updateGeometry();
+                    showCoordLabel(clamped);
                     self.CURVES_dirty = true;
                     self.needSave = true;
                     setDirty();
@@ -170,6 +279,7 @@ tab.initialize = function (callback) {
                 circle.addEventListener('pointerup', function onUp() {
                     circle.removeEventListener('pointermove', onMove);
                     circle.removeEventListener('pointerup', onUp);
+                    hideCoordLabel();
                 }, { once: true });
             });
 
@@ -212,6 +322,20 @@ tab.initialize = function (callback) {
         });
     }
 
+    // Rebuilt on every render (not just once) so it always reflects the
+    // active curve's current point count, however it last changed - via
+    // drag-to-add, the table's delete buttons, or this select itself.
+    function updatePointCountSelect(curve) {
+        const select = $('#curvePointCountSelect');
+        select.empty();
+
+        for (let n = 2; n <= MixerCurve.POINT_COUNT; n++) {
+            select.append($('<option></option>').attr('value', n).text(n));
+        }
+
+        select.val(curve.count);
+    }
+
     function process_html() {
         i18n.localizePage();
 
@@ -242,6 +366,26 @@ tab.initialize = function (callback) {
         $('.curveResetBtn').on('click', function (event) {
             event.preventDefault();
             FC.MIXER_CURVES[self.selectedCurve] = MixerCurve.nullCurve();
+            self.CURVES_dirty = true;
+            self.needSave = true;
+            setDirty();
+            renderCurveSvg();
+        });
+
+        $('.curveAddPointBtn').on('click', function (event) {
+            event.preventDefault();
+            const curve = FC.MIXER_CURVES[self.selectedCurve];
+            if (MixerCurve.addPointAtLargestGap(curve)) {
+                self.CURVES_dirty = true;
+                self.needSave = true;
+                setDirty();
+                renderCurveSvg();
+            }
+        });
+
+        $('#curvePointCountSelect').on('change', function () {
+            const curve = FC.MIXER_CURVES[self.selectedCurve];
+            MixerCurve.setPointCount(curve, parseInt($(this).val(), 10));
             self.CURVES_dirty = true;
             self.needSave = true;
             setDirty();
