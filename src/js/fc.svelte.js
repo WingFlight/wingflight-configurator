@@ -34,6 +34,7 @@ class FlightController {
   LED_STRIP = $state();
   LED_STRIP_CONFIG = $state();
   MIXER_CONFIG = $state();
+  MIXER_CURVES = $state();
   MIXER_INPUTS = $state();
   MIXER_OVERRIDE = $state();
   MIXER_RULES = $state();
@@ -203,6 +204,7 @@ class FlightController {
 
     this.MIXER_INPUTS =             [];
     this.MIXER_RULES =              [];
+    this.MIXER_CURVES =             [];
     this.MIXER_OVERRIDE =           Array.from({length: 29});
 
     this.BOARD_ALIGNMENT_CONFIG = {

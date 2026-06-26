@@ -101,13 +101,14 @@
 .tab-mixer .mixerRuleColIndex    { width: 3%; }
 .tab-mixer .mixerRuleColOutput   { width: 11%; }
 .tab-mixer .mixerRuleColOperator { width: 7%; }
-.tab-mixer .mixerRuleColInput    { width: 14%; }
+.tab-mixer .mixerRuleColInput    { width: 12%; }
+.tab-mixer .mixerRuleColCurve    { width: 9%; }
 .tab-mixer .mixerRuleColWeight   { width: 8%; }
 .tab-mixer .mixerRuleColOffset   { width: 8%; }
 .tab-mixer .mixerRuleColSpeed    { width: 8%; }
 .tab-mixer .mixerRuleColReverse  { width: 6%; }
 .tab-mixer .mixerRuleColActions  { width: 8%; }
-.tab-mixer .mixerRuleColHint     { width: 14%; }
+.tab-mixer .mixerRuleColHint     { width: 11%; }
 
 .tab-mixer .mixerRuleActions {
     white-space: nowrap;

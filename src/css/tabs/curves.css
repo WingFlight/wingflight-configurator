@@ -1,0 +1,69 @@
+.tab-curves .curvesBox {
+    display: block;
+    width: 100%;
+    /* Safety net: clip anything that ends up wider than the box instead of
+       letting it push the whole page into a horizontal scrollbar. */
+    overflow-x: hidden;
+}
+
+.tab-curves .curveToolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tab-curves .curveToolbar select {
+    width: auto;
+    min-width: 10em;
+}
+
+.tab-curves .curveHint {
+    display: block;
+    color: #626262;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+.tab-curves .curvePlotWrapper {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1 / 1;
+}
+
+.tab-curves .curveSvg {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border: 1px solid var(--subtleAccent);
+    touch-action: none;
+}
+
+.tab-curves .curveGrid {
+    stroke: var(--superSubtleAccent);
+    stroke-width: 1;
+}
+
+.tab-curves .curveAxis {
+    stroke: var(--subtleAccent);
+    stroke-width: 1.5;
+}
+
+.tab-curves .curveLine {
+    fill: none;
+    stroke: #2080d0;
+    stroke-width: 2;
+}
+
+.tab-curves .curvePoint {
+    fill: #2080d0;
+    stroke: #fff;
+    stroke-width: 1.5;
+    cursor: pointer;
+}
+
+.tab-curves .curvePoint:hover {
+    fill: #d04020;
+}

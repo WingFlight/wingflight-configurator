@@ -1304,6 +1304,18 @@ li.active .ic_adjust {
     background-image: url(/images/icons/cf_icon_adjust_white.svg);
 }
 
+.ic_curves {
+    background-image: url(/images/icons/cf_icon_curves_grey.svg);
+}
+
+.ic_curves:hover {
+    background-image: url(/images/icons/cf_icon_curves_white.svg);
+}
+
+li.active .ic_curves {
+    background-image: url(/images/icons/cf_icon_curves_white.svg);
+}
+
 .ic_servo {
     background-image: url(/images/icons/cf_icon_servo_grey.svg);
 }

@@ -468,6 +468,9 @@
     "tabMixer": {
         "message": "Mixer"
     },
+    "tabCurves": {
+        "message": "Curves"
+    },
     "tabLedStrip": {
         "message": "LED Strip"
     },
@@ -3216,6 +3219,24 @@
     },
     "mixerRuleInput": {
         "message": "Input source"
+    },
+    "mixerRuleCurve": {
+        "message": "Curve"
+    },
+    "mixerCurveNone": {
+        "message": "-"
+    },
+    "mixerCurveLabel": {
+        "message": "Curve $1"
+    },
+    "curvesTitle": {
+        "message": "Mixer Curves"
+    },
+    "curveReset": {
+        "message": "Reset Curve"
+    },
+    "curveEditorHint": {
+        "message": "Drag points to adjust · click empty space to add · right-click a point to remove"
     },
     "mixerRuleWeight": {
         "message": "Weight +"

@@ -45,6 +45,7 @@ export const GuiControl = function () {
         'motors',
         'governor',
         'mixer',
+        'curves',
         'profiles',
         'rates',
         'gyro',

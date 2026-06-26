@@ -2,6 +2,8 @@ import * as noUiSlider from 'nouislider';
 import semver from 'semver';
 import wNumb from 'wnumb';
 
+import { MixerCurve } from '@/js/MixerCurve.js';
+
 const tab = {
     tabName: 'mixer',
     isDirty: false,
@@ -594,6 +596,7 @@ tab.initialize = function (callback) {
             const outputSelect    = row.find('.ruleOutput');
             const operSelect      = row.find('.ruleOper');
             const inputSelect     = row.find('.ruleInput');
+            const curveSelect     = row.find('.ruleCurve');
             const weightInput     = row.find('.ruleWeight');
             const weightNegInput  = row.find('.ruleWeightNeg');
             const offsetInput     = row.find('.ruleOffset');
@@ -610,11 +613,16 @@ tab.initialize = function (callback) {
                 if (Mixer.heliOnlyInputs.includes(i)) return;
                 inputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
             });
+            curveSelect.append($('<option></option>').attr('value', 0).text(i18n.getMessage('mixerCurveNone')));
+            for (let c = 0; c < MixerCurve.CURVE_COUNT; c++) {
+                curveSelect.append($('<option></option>').attr('value', c + 1).text(i18n.getMessage('mixerCurveLabel', [c + 1])));
+            }
 
             row.find('.ruleIndex').text(isBlank ? '' : (pos + 1));
             outputSelect.val(rule.dst);
             operSelect.val(rule.oper || Mixer.OP_SET);
             inputSelect.val(rule.src);
+            curveSelect.val(rule.curve);
             weightInput.val(rule.weight);
             weightNegInput.val(rule.weightNeg);
             offsetInput.val(rule.offset);
@@ -641,6 +649,7 @@ tab.initialize = function (callback) {
                     oper:      parseInt(operSelect.val(), 10),
                     src:       parseInt(inputSelect.val(), 10),
                     dst:       parseInt(outputSelect.val(), 10),
+                    curve:     parseInt(curveSelect.val(), 10) || 0,
                     weight:    parseInt(weightInput.val(), 10) || 0,
                     weightNeg: parseInt(weightNegInput.val(), 10) || 0,
                     offset:    parseInt(offsetInput.val(), 10) || 0,
@@ -667,6 +676,7 @@ tab.initialize = function (callback) {
             outputSelect.on('change', commit);
             operSelect.on('change', commit);
             inputSelect.on('change', commit);
+            curveSelect.on('change', commit);
             weightNegInput.on('change', commit);
             offsetInput.on('change', commit);
             speedInput.on('change', commit);
@@ -781,7 +791,7 @@ tab.initialize = function (callback) {
             const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
             if (index === -1) return;
 
-            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, weightNeg: 1000, offset: 0, speed: 0, reverse: 0 };
+            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, curve: 0, weight: 1000, weightNeg: 1000, offset: 0, speed: 0, reverse: 0 };
             self.MIXER_RULES_dirty = true;
             self.needSave = true;
             setDirty();

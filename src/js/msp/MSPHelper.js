@@ -1316,7 +1316,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_RULES: {
                 FC.MIXER_RULES = [];
-                const ruleCount = data.byteLength / 12;
+                const ruleCount = data.byteLength / 13;
                 for (let i = 0; i < ruleCount; i++) {
                     FC.MIXER_RULES.push({
                         oper:      data.readU8(),
@@ -1327,7 +1327,23 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         weightNeg: data.read16(),
                         reverse:   data.readU8(),
                         speed:     data.readU16(),
+                        curve:     data.readU8(),
                     });
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_MIXER_CURVES: {
+                FC.MIXER_CURVES = [];
+                const pointsPerCurve = 9; // MIXER_CURVE_POINTS
+                const curveBytes = 1 + pointsPerCurve * 4; // count:u8 + N x (x:i16 + y:i16)
+                const curveCount = data.byteLength / curveBytes;
+                for (let i = 0; i < curveCount; i++) {
+                    const curve = { count: data.readU8(), points: [] };
+                    for (let p = 0; p < pointsPerCurve; p++) {
+                        curve.points.push({ x: data.read16(), y: data.read16() });
+                    }
+                    FC.MIXER_CURVES.push(curve);
                 }
                 break;
             }
@@ -2656,7 +2672,8 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push16(rule.weight)
           .push16(rule.weightNeg)
           .push8(rule.reverse)
-          .push16(rule.speed);
+          .push16(rule.speed)
+          .push8(rule.curve);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };
@@ -2669,6 +2686,36 @@ MspHelper.prototype.sendMixerRules = function(onCompleteCallback)
     function send_next() {
         if (index < FC.MIXER_RULES.length)
             self.sendMixerRule(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendMixerCurve = function(curveIndex, onCompleteCallback)
+{
+    const curve = FC.MIXER_CURVES[curveIndex];
+    const buffer = [];
+
+    buffer.push8(curveIndex)
+          .push8(curve.count);
+
+    curve.points.forEach(function (point) {
+        buffer.push16(point.x).push16(point.y);
+    });
+
+    MSP.send_message(MSPCodes.MSP_SET_MIXER_CURVE, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendMixerCurves = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.MIXER_CURVES.length)
+            self.sendMixerCurve(index++, send_next);
         else
             onCompleteCallback();
     }
