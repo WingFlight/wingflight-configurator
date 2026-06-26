@@ -3218,7 +3218,10 @@
         "message": "Input source"
     },
     "mixerRuleWeight": {
-        "message": "Weight"
+        "message": "Weight +"
+    },
+    "mixerRuleWeightNeg": {
+        "message": "Weight -"
     },
     "mixerRuleOffset": {
         "message": "Offset"

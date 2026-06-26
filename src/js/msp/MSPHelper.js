@@ -1316,14 +1316,15 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_RULES: {
                 FC.MIXER_RULES = [];
-                const ruleCount = data.byteLength / 7;
+                const ruleCount = data.byteLength / 9;
                 for (let i = 0; i < ruleCount; i++) {
                     FC.MIXER_RULES.push({
-                        oper:   data.readU8(),
-                        src:    data.readU8(),
-                        dst:    data.readU8(),
-                        offset: data.read16(),
-                        weight: data.read16(),
+                        oper:      data.readU8(),
+                        src:       data.readU8(),
+                        dst:       data.readU8(),
+                        offset:    data.read16(),
+                        weight:    data.read16(),
+                        weightNeg: data.read16(),
                     });
                 }
                 break;
@@ -2650,7 +2651,8 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push8(rule.src)
           .push8(rule.dst)
           .push16(rule.offset)
-          .push16(rule.weight);
+          .push16(rule.weight)
+          .push16(rule.weightNeg);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };

@@ -591,11 +591,12 @@ tab.initialize = function (callback) {
             const row = $('#tab-mixer-templates .mixerRuleTemplate tr').clone();
             if (index === highlightIndex) row.addClass('mixerRuleMoved');
 
-            const outputSelect = row.find('.ruleOutput');
-            const operSelect   = row.find('.ruleOper');
-            const inputSelect  = row.find('.ruleInput');
-            const weightInput  = row.find('.ruleWeight');
-            const offsetInput  = row.find('.ruleOffset');
+            const outputSelect    = row.find('.ruleOutput');
+            const operSelect      = row.find('.ruleOper');
+            const inputSelect     = row.find('.ruleInput');
+            const weightInput     = row.find('.ruleWeight');
+            const weightNegInput  = row.find('.ruleWeightNeg');
+            const offsetInput     = row.find('.ruleOffset');
 
             Mixer.outputNames.forEach(function (nameKey, i) {
                 outputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
@@ -612,6 +613,7 @@ tab.initialize = function (callback) {
             operSelect.val(rule.oper || Mixer.OP_SET);
             inputSelect.val(rule.src);
             weightInput.val(rule.weight);
+            weightNegInput.val(rule.weightNeg);
             offsetInput.val(rule.offset);
 
             if (!isBlank && rule.dst !== 0) {
@@ -631,11 +633,12 @@ tab.initialize = function (callback) {
 
             function commit() {
                 FC.MIXER_RULES[index] = {
-                    oper:   parseInt(operSelect.val(), 10),
-                    src:    parseInt(inputSelect.val(), 10),
-                    dst:    parseInt(outputSelect.val(), 10),
-                    weight: parseInt(weightInput.val(), 10) || 0,
-                    offset: parseInt(offsetInput.val(), 10) || 0,
+                    oper:      parseInt(operSelect.val(), 10),
+                    src:       parseInt(inputSelect.val(), 10),
+                    dst:       parseInt(outputSelect.val(), 10),
+                    weight:    parseInt(weightInput.val(), 10) || 0,
+                    weightNeg: parseInt(weightNegInput.val(), 10) || 0,
+                    offset:    parseInt(offsetInput.val(), 10) || 0,
                 };
                 self.MIXER_RULES_dirty = true;
                 self.needSave = true;
@@ -643,10 +646,21 @@ tab.initialize = function (callback) {
                 renderMixerRuleTable();
             }
 
+            // While a rule is still symmetric (Weight === Weight-), changing
+            // Weight keeps Weight- in lockstep. Once the user has deliberately
+            // set them apart for differential, further Weight edits leave
+            // Weight- alone.
+            weightInput.on('change', function () {
+                if (rule.weight === rule.weightNeg) {
+                    weightNegInput.val(weightInput.val());
+                }
+                commit();
+            });
+
             outputSelect.on('change', commit);
             operSelect.on('change', commit);
             inputSelect.on('change', commit);
-            weightInput.on('change', commit);
+            weightNegInput.on('change', commit);
             offsetInput.on('change', commit);
 
             if (isBlank) {
@@ -758,7 +772,7 @@ tab.initialize = function (callback) {
             const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
             if (index === -1) return;
 
-            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, offset: 0 };
+            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, weightNeg: 1000, offset: 0 };
             self.MIXER_RULES_dirty = true;
             self.needSave = true;
             setDirty();

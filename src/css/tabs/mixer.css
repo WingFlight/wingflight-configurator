@@ -87,12 +87,12 @@
 }
 
 .tab-mixer .mixerRuleColIndex    { width: 3%; }
-.tab-mixer .mixerRuleColOutput   { width: 13%; }
-.tab-mixer .mixerRuleColOperator { width: 9%; }
-.tab-mixer .mixerRuleColInput    { width: 23%; }
-.tab-mixer .mixerRuleColWeight   { width: 12%; }
-.tab-mixer .mixerRuleColOffset   { width: 12%; }
-.tab-mixer .mixerRuleColActions  { width: 10%; }
+.tab-mixer .mixerRuleColOutput   { width: 12%; }
+.tab-mixer .mixerRuleColOperator { width: 8%; }
+.tab-mixer .mixerRuleColInput    { width: 19%; }
+.tab-mixer .mixerRuleColWeight   { width: 9%; }
+.tab-mixer .mixerRuleColOffset   { width: 9%; }
+.tab-mixer .mixerRuleColActions  { width: 9%; }
 .tab-mixer .mixerRuleColHint     { width: 18%; }
 
 .tab-mixer .mixerRuleActions {

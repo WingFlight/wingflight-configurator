@@ -30,6 +30,7 @@
                                     <col class="mixerRuleColOperator">
                                     <col class="mixerRuleColInput">
                                     <col class="mixerRuleColWeight">
+                                    <col class="mixerRuleColWeight">
                                     <col class="mixerRuleColOffset">
                                     <col class="mixerRuleColActions">
                                     <col class="mixerRuleColHint">
@@ -41,6 +42,7 @@
                                         <th i18n="mixerRuleOperator"></th>
                                         <th i18n="mixerRuleInput"></th>
                                         <th i18n="mixerRuleWeight"></th>
+                                        <th i18n="mixerRuleWeightNeg"></th>
                                         <th i18n="mixerRuleOffset"></th>
                                         <th i18n="mixerRuleActionsHeader"></th>
                                         <th></th>
@@ -597,6 +599,9 @@
                 </td>
                 <td>
                     <input class="ruleWeight" type="number" min="-5000" max="5000" step="10" />
+                </td>
+                <td>
+                    <input class="ruleWeightNeg" type="number" min="-5000" max="5000" step="10" />
                 </td>
                 <td>
                     <input class="ruleOffset" type="number" min="-1000" max="1000" step="10" />
