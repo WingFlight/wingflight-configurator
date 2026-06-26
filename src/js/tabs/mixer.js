@@ -27,13 +27,6 @@ const tab = {
 
 tab.initialize = function (callback) {
     const self = this;
-    const standardGliderRules = [
-        { oper: 1, src: 1, dst: 1, offset: 0, weight: 1000 },
-        { oper: 1, src: 1, dst: 2, offset: 0, weight: -1000 },
-        { oper: 1, src: 2, dst: 3, offset: 0, weight: 1000 },
-        { oper: 1, src: 3, dst: 4, offset: 0, weight: 1000 },
-        { oper: 1, src: 15, dst: 9, offset: 0, weight: 1000 },
-    ];
 
     function setDirty() {
         if (!self.isDirty) {
@@ -273,6 +266,12 @@ tab.initialize = function (callback) {
         $('.tab-mixer .mixerMotorisedTailCalibrationNote .note').show();
         $('.tab-mixer .mixerMotorisedTailCalibrationNote').hide();
 
+        // Real hardware always reports MIXER_RULE_COUNT (32) rules; pad out the
+        // simulator's empty default so the rule editor has slots to add into.
+        while (FC.MIXER_RULES.length < Mixer.RULE_COUNT) {
+            FC.MIXER_RULES.push(Mixer.nullRule());
+        }
+
         self.origMixerConfig = Mixer.cloneConfig(FC.MIXER_CONFIG);
         self.origMixerInputs = Mixer.cloneInputs(FC.MIXER_INPUTS);
         self.origMixerRules  = Mixer.cloneRules(FC.MIXER_RULES);
@@ -344,11 +343,6 @@ tab.initialize = function (callback) {
             $('.mixerCustomNote').show();
             $('.tab-mixer .configuration input,select').prop('disabled', true);
         }
-
-        self.customRules = !Mixer.isNullMixer(FC.MIXER_RULES);
-
-        if (self.customRules)
-            $('.mixerRulesNote').show();
 
         const ailDir = (FC.MIXER_INPUTS[1].rate < 0) ? -1 : 1;
         const elevDir = (FC.MIXER_INPUTS[2].rate < 0) ? -1 : 1;
@@ -568,69 +562,150 @@ tab.initialize = function (callback) {
         });
     }
 
-    // Wing mixer rule table — shows every non-null rule with direction toggle, rate %, and trim
-    function renderWingRuleTable() {
-        const tbody = $('#wingRuleTableBody');
+    // Full mixer rule editor: every used rule plus one trailing blank slot to add a new one.
+    // Rules are evaluated by the FC in array order (SET overwrites an output, ADD/MUL stack
+    // onto whatever an earlier rule already wrote there), so display order must match array
+    // order, and add/delete/move operate on that same order.
+    function renderMixerRuleTable() {
+        const tbody = $('#mixerRuleTableBody');
         if (!tbody.length) return;
         tbody.empty();
 
-        const outputNames = Mixer.outputNames;
-        const inputNames  = Mixer.inputNames;
+        const rules = FC.MIXER_RULES;
 
-        FC.MIXER_RULES.forEach(function(rule, index) {
-            if (rule.oper === 0) return; // skip NOP rules
+        const visibleIndexes = [];
+        rules.forEach(function (rule, index) {
+            if (!Mixer.isNullRule(rule)) visibleIndexes.push(index);
+        });
 
-            const absWeight = Math.abs(rule.weight);
-            const ratePercent = Math.round(absWeight / 10);
-            const isReversed = rule.weight < 0;
-            const outputLabel = outputNames[rule.dst] ? i18n.getMessage(outputNames[rule.dst]) : ('Out ' + rule.dst);
-            const inputLabel  = inputNames[rule.src]  ? i18n.getMessage(inputNames[rule.src])  : ('In ' + rule.src);
+        const freeIndex = Mixer.firstFreeRuleIndex(rules);
+        const blankIndex = visibleIndexes.length;
+        if (freeIndex !== -1) visibleIndexes.push(freeIndex);
 
-            const row = $(`
-                <tr data-rule-index="${index}" style="border-bottom:1px solid #333;">
-                    <td style="padding:4px 8px;">${index}</td>
-                    <td style="padding:4px 8px;">${outputLabel}</td>
-                    <td style="padding:4px 8px;">${inputLabel}</td>
-                    <td style="padding:4px 8px;">
-                        <select class="wingRuleDir">
-                            <option value="1"  ${isReversed ? '' : 'selected'}>Normal</option>
-                            <option value="-1" ${isReversed ? 'selected' : ''}>Reversed</option>
-                        </select>
-                    </td>
-                    <td style="padding:4px 8px;">
-                        <input class="wingRuleRate" type="number" min="0" max="200" step="1" value="${ratePercent}" style="width:60px;" />
-                    </td>
-                    <td style="padding:4px 8px;">
-                        <input class="wingRuleOffset" type="number" min="-1000" max="1000" step="10" value="${rule.offset}" style="width:70px;" />
-                    </td>
-                </tr>`);
+        const outputsSeen = {};
 
-            row.find('.wingRuleDir, .wingRuleRate, .wingRuleOffset').on('change', function() {
-                const dir    = parseInt(row.find('.wingRuleDir').val());
-                const rate   = parseInt(row.find('.wingRuleRate').val()) * 10;
-                const offset = parseInt(row.find('.wingRuleOffset').val());
-                FC.MIXER_RULES[index].weight = rate * dir;
-                FC.MIXER_RULES[index].offset = offset;
+        visibleIndexes.forEach(function (index, pos) {
+            const rule = rules[index];
+            const isBlank = (pos === blankIndex);
+
+            const row = $('#tab-mixer-templates .mixerRuleTemplate tr').clone();
+            const outputSelect = row.find('.ruleOutput');
+            const operSelect   = row.find('.ruleOper');
+            const inputSelect  = row.find('.ruleInput');
+            const weightInput  = row.find('.ruleWeight');
+            const offsetInput  = row.find('.ruleOffset');
+
+            Mixer.outputNames.forEach(function (nameKey, i) {
+                outputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
+            });
+            Mixer.operNames.slice(1).forEach(function (nameKey, i) {
+                operSelect.append($('<option></option>').attr('value', i + 1).text(i18n.getMessage(nameKey)));
+            });
+            Mixer.inputNames.forEach(function (nameKey, i) {
+                inputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
+            });
+
+            row.find('.ruleIndex').text(isBlank ? '' : (pos + 1));
+            outputSelect.val(rule.dst);
+            operSelect.val(rule.oper || Mixer.OP_SET);
+            inputSelect.val(rule.src);
+            weightInput.val(rule.weight);
+            offsetInput.val(rule.offset);
+
+            if (!isBlank && rule.dst !== 0) {
+                const firstForOutput = !outputsSeen[rule.dst];
+                let hint = '';
+
+                if (firstForOutput && rule.oper !== Mixer.OP_SET) {
+                    hint = i18n.getMessage('mixerRuleHintFirstShouldSet');
+                } else if (!firstForOutput && rule.oper === Mixer.OP_SET) {
+                    hint = i18n.getMessage('mixerRuleHintOverride');
+                }
+
+                row.find('.ruleHint').text(hint).attr('title', hint);
+
+                outputsSeen[rule.dst] = true;
+            }
+
+            function commit() {
+                FC.MIXER_RULES[index] = {
+                    oper:   parseInt(operSelect.val(), 10),
+                    src:    parseInt(inputSelect.val(), 10),
+                    dst:    parseInt(outputSelect.val(), 10),
+                    weight: parseInt(weightInput.val(), 10) || 0,
+                    offset: parseInt(offsetInput.val(), 10) || 0,
+                };
                 self.MIXER_RULES_dirty = true;
                 self.needSave = true;
                 setDirty();
-            });
+                renderMixerRuleTable();
+            }
+
+            outputSelect.on('change', commit);
+            operSelect.on('change', commit);
+            inputSelect.on('change', commit);
+            weightInput.on('change', commit);
+            offsetInput.on('change', commit);
+
+            if (isBlank) {
+                row.find('.mixerRuleActions a').hide();
+            } else {
+                row.find('.ruleMoveUp').toggle(pos > 0).on('click', function (event) {
+                    event.preventDefault();
+                    Mixer.swapRules(FC.MIXER_RULES, index, visibleIndexes[pos - 1]);
+                    self.MIXER_RULES_dirty = true;
+                    self.needSave = true;
+                    setDirty();
+                    renderMixerRuleTable();
+                });
+
+                row.find('.ruleMoveDown').toggle(pos < blankIndex - 1).on('click', function (event) {
+                    event.preventDefault();
+                    Mixer.swapRules(FC.MIXER_RULES, index, visibleIndexes[pos + 1]);
+                    self.MIXER_RULES_dirty = true;
+                    self.needSave = true;
+                    setDirty();
+                    renderMixerRuleTable();
+                });
+
+                row.find('.ruleDelete').on('click', function (event) {
+                    event.preventDefault();
+                    FC.MIXER_RULES.splice(index, 1);
+                    FC.MIXER_RULES.push(Mixer.nullRule());
+                    self.MIXER_RULES_dirty = true;
+                    self.needSave = true;
+                    setDirty();
+                    renderMixerRuleTable();
+                });
+            }
 
             tbody.append(row);
         });
     }
 
-    function applyStandardGliderPreset() {
-        const ruleCount = FC.MIXER_RULES.length || 32;
+    function populatePresetSelect() {
+        const select = $('#mixerPresetSelect');
+        select.empty();
+
+        Mixer.presets.forEach(function (preset) {
+            select.append($('<option></option>').attr('value', preset.id).text(i18n.getMessage(preset.nameKey)));
+        });
+    }
+
+    function applyPreset(presetId) {
+        const preset = Mixer.getPresetById(presetId);
+        if (!preset) return;
+
+        const ruleCount = FC.MIXER_RULES.length || Mixer.RULE_COUNT;
         const nextRules = [];
 
         for (let i = 0; i < ruleCount; i++) {
             nextRules.push(Mixer.nullRule());
         }
 
-        standardGliderRules.forEach((rule, index) => {
+        preset.rules.forEach(function (rule, index) {
             if (index < nextRules.length) {
-                nextRules[index] = Object.assign({}, rule);
+                nextRules[index] = Mixer.cloneRule(rule);
             }
         });
 
@@ -639,7 +714,7 @@ tab.initialize = function (callback) {
         self.needSave = true;
         setDirty();
 
-        self.save(() => GUI.tab_switch_reload());
+        renderMixerRuleTable();
     }
 
     function process_html() {
@@ -649,7 +724,8 @@ tab.initialize = function (callback) {
 
         // UI Hooks
         data_to_form();
-        renderWingRuleTable();
+        populatePresetSelect();
+        renderMixerRuleTable();
 
         // Hide the buttons toolbar
         $('.tab-mixer').addClass('toolbar_hidden');
@@ -661,6 +737,7 @@ tab.initialize = function (callback) {
         self.revert = function (callback) {
             FC.MIXER_CONFIG = self.origMixerConfig;
             FC.MIXER_INPUTS = self.origMixerInputs;
+            FC.MIXER_RULES = self.origMixerRules;
 
             self.needSave = false;
             self.needReboot = false;
@@ -672,9 +749,21 @@ tab.initialize = function (callback) {
             self.save(() => GUI.tab_switch_reload());
         });
 
-        $('a.standardGliderPreset').click(function (event) {
+        $('a.mixerAddRule').click(function (event) {
             event.preventDefault();
-            applyStandardGliderPreset();
+            const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
+            if (index === -1) return;
+
+            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, offset: 0 };
+            self.MIXER_RULES_dirty = true;
+            self.needSave = true;
+            setDirty();
+            renderMixerRuleTable();
+        });
+
+        $('a.mixerLoadPreset').click(function (event) {
+            event.preventDefault();
+            applyPreset(parseInt($('#mixerPresetSelect').val(), 10));
         });
 
         $('a.reboot').click(function () {

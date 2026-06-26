@@ -65,6 +65,11 @@ export const Mixer = {
         'mixerSwashType6',
     ],
 
+    OP_NUL: 0,
+    OP_SET: 1,
+    OP_ADD: 2,
+    OP_MUL: 3,
+
     UNINIT: -1,
 
     TAIL_MODE_VARIABLE:       0,
@@ -86,6 +91,53 @@ export const Mixer = {
     OVERRIDE_OFF:  2501,
     OVERRIDE_PASSTHROUGH:  2502,
 
+    //// Mixer rule presets
+    //
+    // Each preset is a starting point loaded into the editable rule table —
+    // not applied directly. Servo/motor numbers and directions are typically
+    // still adjusted by the user afterwards to match their airframe.
+
+    presets: [
+        {
+            id: 1,
+            nameKey: 'mixerPresetStandardGlider',
+            rules: [
+                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000 }, // SET Stabilized Roll  -> Servo1 (aileron)
+                { oper: 1, src: 1,  dst: 2, offset: 0, weight: -1000 }, // SET Stabilized Roll  -> Servo2 (aileron, reversed)
+                { oper: 1, src: 2,  dst: 3, offset: 0, weight:  1000 }, // SET Stabilized Pitch -> Servo3 (elevator)
+                { oper: 1, src: 3,  dst: 4, offset: 0, weight:  1000 }, // SET Stabilized Yaw   -> Servo4 (rudder)
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000 }, // SET RC Throttle      -> Motor1
+            ],
+        },
+        {
+            id: 2,
+            nameKey: 'mixerPresetFlyingWing',
+            rules: [
+                { oper: 1, src: 2,  dst: 1, offset: 0, weight:  1000 }, // SET Stabilized Pitch -> Servo1 (left elevon)
+                { oper: 2, src: 1,  dst: 1, offset: 0, weight:  1000 }, // ADD Stabilized Roll  -> Servo1
+                { oper: 1, src: 2,  dst: 2, offset: 0, weight:  1000 }, // SET Stabilized Pitch -> Servo2 (right elevon)
+                { oper: 2, src: 1,  dst: 2, offset: 0, weight: -1000 }, // ADD Stabilized Roll  -> Servo2 (reversed)
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000 }, // SET RC Throttle      -> Motor1
+            ],
+        },
+        {
+            id: 3,
+            nameKey: 'mixerPresetVTail',
+            rules: [
+                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000 }, // SET Stabilized Roll  -> Servo1 (aileron)
+                { oper: 1, src: 3,  dst: 2, offset: 0, weight:  1000 }, // SET Stabilized Yaw   -> Servo2 (right tail)
+                { oper: 2, src: 2,  dst: 2, offset: 0, weight:  1000 }, // ADD Stabilized Pitch -> Servo2
+                { oper: 1, src: 3,  dst: 3, offset: 0, weight: -1000 }, // SET Stabilized Yaw   -> Servo3 (left tail, reversed)
+                { oper: 2, src: 2,  dst: 3, offset: 0, weight:  1000 }, // ADD Stabilized Pitch -> Servo3
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000 }, // SET RC Throttle      -> Motor1
+            ],
+        },
+    ],
+
+    getPresetById : function (id)
+    {
+        return this.presets.find((p) => p.id === id);
+    },
 
     //// Functions
 
@@ -149,6 +201,24 @@ export const Mixer = {
                 return false;
 
         return true;
+    },
+
+    firstFreeRuleIndex : function (rules)
+    {
+        const self = this;
+
+        for (let i=0; i<rules.length; i++)
+            if (self.isNullRule(rules[i]))
+                return i;
+
+        return -1;
+    },
+
+    swapRules : function (rules, i, j)
+    {
+        const tmp = rules[i];
+        rules[i] = rules[j];
+        rules[j] = tmp;
     },
 
     cloneInput : function (a)

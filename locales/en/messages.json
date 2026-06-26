@@ -3202,6 +3202,60 @@
     "mixerOutputMotor4": {
         "message": "Motor #4"
     },
+    "mixerRulesTitle": {
+        "message": "Mixer Rules"
+    },
+    "mixerRuleIndex": {
+        "message": "#"
+    },
+    "mixerRuleOutput": {
+        "message": "Output"
+    },
+    "mixerRuleOperator": {
+        "message": "Operator"
+    },
+    "mixerRuleInput": {
+        "message": "Input source"
+    },
+    "mixerRuleWeight": {
+        "message": "Weight"
+    },
+    "mixerRuleOffset": {
+        "message": "Offset"
+    },
+    "mixerRuleActionsHeader": {
+        "message": ""
+    },
+    "mixerAddRule": {
+        "message": "Add Rule"
+    },
+    "mixerLoadPreset": {
+        "message": "Load Preset"
+    },
+    "mixerRuleMoveUp": {
+        "message": "Move up"
+    },
+    "mixerRuleMoveDown": {
+        "message": "Move down"
+    },
+    "mixerRuleDelete": {
+        "message": "Delete rule"
+    },
+    "mixerRuleHintFirstShouldSet": {
+        "message": "First rule for this output - usually should be Set"
+    },
+    "mixerRuleHintOverride": {
+        "message": "Overwrites earlier rule(s) for this output - did you mean Add?"
+    },
+    "mixerPresetStandardGlider": {
+        "message": "Standard Glider"
+    },
+    "mixerPresetFlyingWing": {
+        "message": "Flying Wing (Elevons)"
+    },
+    "mixerPresetVTail": {
+        "message": "V-Tail"
+    },
     "dialogMixerResetTitle": {
         "message": "<span class=\"message-negative\">WARNING: Mixer Reset</span>"
     },
