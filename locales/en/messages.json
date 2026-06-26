@@ -3176,7 +3176,7 @@
         "message": "Servo #3"
     },
     "mixerOutputServo4": {
-        "message": "Tail Servo"
+        "message": "Servo #4"
     },
     "mixerOutputServo5": {
         "message": "Servo #5"
@@ -3191,7 +3191,7 @@
         "message": "Servo #8"
     },
     "mixerOutputMotor1": {
-        "message": "Motor"
+        "message": "Motor #1"
     },
     "mixerOutputMotor2": {
         "message": "Motor #2"

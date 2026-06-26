@@ -32,6 +32,12 @@ export const Mixer = {
         'mixerInputRCChannel18',
     ],
 
+    // Collective is a helicopter cyclic/collective-pitch concept inherited from
+    // this firmware's Rotorflight lineage; it has no meaning on a fixed-wing
+    // airframe. The underlying values still exist (firmware keeps them at
+    // zero-rate by default), but they're never offered as a mixer input choice.
+    heliOnlyInputs: [4, 9, 14],
+
     outputNames: [
         'mixerOutputNone',
         'mixerOutputServo1',

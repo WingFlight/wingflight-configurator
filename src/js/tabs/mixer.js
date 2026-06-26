@@ -607,6 +607,7 @@ tab.initialize = function (callback) {
                 operSelect.append($('<option></option>').attr('value', i + 1).text(i18n.getMessage(nameKey)));
             });
             Mixer.inputNames.forEach(function (nameKey, i) {
+                if (Mixer.heliOnlyInputs.includes(i)) return;
                 inputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
             });
 
