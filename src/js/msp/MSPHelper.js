@@ -1316,7 +1316,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_RULES: {
                 FC.MIXER_RULES = [];
-                const ruleCount = data.byteLength / 13;
+                const ruleCount = data.byteLength / 14;
                 for (let i = 0; i < ruleCount; i++) {
                     FC.MIXER_RULES.push({
                         oper:      data.readU8(),
@@ -1328,6 +1328,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         reverse:   data.readU8(),
                         speed:     data.readU16(),
                         curve:     data.readU8(),
+                        condition: data.readU8(),
                     });
                 }
                 break;
@@ -1344,6 +1345,31 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         curve.points.push({ x: data.read16(), y: data.read16() });
                     }
                     FC.MIXER_CURVES.push(curve);
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_LOGIC_CONDITIONS: {
+                FC.LOGIC_CONDITIONS = [];
+                const conditionBytes = 8; // enabled:u8 + operation:u8 + typeA:u8 + valueA:i16 + typeB:u8 + valueB:i16
+                const conditionCount = data.byteLength / conditionBytes;
+                for (let i = 0; i < conditionCount; i++) {
+                    FC.LOGIC_CONDITIONS.push({
+                        enabled:        data.readU8(),
+                        operation:      data.readU8(),
+                        operandAType:   data.readU8(),
+                        operandAValue:  data.read16(),
+                        operandBType:   data.readU8(),
+                        operandBValue:  data.read16(),
+                    });
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_LOGIC_CONDITIONS_STATUS: {
+                FC.LOGIC_CONDITIONS_STATUS = [];
+                for (let i = 0; i < data.byteLength; i++) {
+                    FC.LOGIC_CONDITIONS_STATUS.push(data.readU8());
                 }
                 break;
             }
@@ -2673,7 +2699,8 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push16(rule.weightNeg)
           .push8(rule.reverse)
           .push16(rule.speed)
-          .push8(rule.curve);
+          .push8(rule.curve)
+          .push8(rule.condition);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };
@@ -2716,6 +2743,37 @@ MspHelper.prototype.sendMixerCurves = function(onCompleteCallback)
     function send_next() {
         if (index < FC.MIXER_CURVES.length)
             self.sendMixerCurve(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendLogicCondition = function(conditionIndex, onCompleteCallback)
+{
+    const condition = FC.LOGIC_CONDITIONS[conditionIndex];
+    const buffer = [];
+
+    buffer.push8(conditionIndex)
+          .push8(condition.enabled)
+          .push8(condition.operation)
+          .push8(condition.operandAType)
+          .push16(condition.operandAValue)
+          .push8(condition.operandBType)
+          .push16(condition.operandBValue);
+
+    MSP.send_message(MSPCodes.MSP_SET_LOGIC_CONDITION, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendLogicConditions = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.LOGIC_CONDITIONS.length)
+            self.sendLogicCondition(index++, send_next);
         else
             onCompleteCallback();
     }

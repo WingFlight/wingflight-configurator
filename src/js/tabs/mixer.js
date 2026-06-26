@@ -3,6 +3,7 @@ import semver from 'semver';
 import wNumb from 'wnumb';
 
 import { MixerCurve } from '@/js/MixerCurve.js';
+import { LogicCondition } from '@/js/LogicCondition.js';
 
 const tab = {
     tabName: 'mixer',
@@ -602,6 +603,7 @@ tab.initialize = function (callback) {
             const offsetInput     = row.find('.ruleOffset');
             const speedInput      = row.find('.ruleSpeed');
             const reverseInput    = row.find('.ruleReverse');
+            const conditionSelect = row.find('.ruleCondition');
 
             Mixer.outputNames.forEach(function (nameKey, i) {
                 outputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
@@ -617,6 +619,10 @@ tab.initialize = function (callback) {
             for (let c = 0; c < MixerCurve.CURVE_COUNT; c++) {
                 curveSelect.append($('<option></option>').attr('value', c + 1).text(i18n.getMessage('mixerCurveLabel', [c + 1])));
             }
+            conditionSelect.append($('<option></option>').attr('value', 0).text(i18n.getMessage('mixerConditionNone')));
+            for (let c = 0; c < LogicCondition.CONDITION_COUNT; c++) {
+                conditionSelect.append($('<option></option>').attr('value', c + 1).text(i18n.getMessage('logicConditionLabel', [c + 1])));
+            }
 
             row.find('.ruleIndex').text(isBlank ? '' : (pos + 1));
             outputSelect.val(rule.dst);
@@ -628,6 +634,7 @@ tab.initialize = function (callback) {
             offsetInput.val(rule.offset);
             speedInput.val(rule.speed);
             reverseInput.prop('checked', !!rule.reverse);
+            conditionSelect.val(rule.condition);
 
             if (!isBlank && rule.dst !== 0) {
                 const firstForOutput = !outputsSeen[rule.dst];
@@ -655,6 +662,7 @@ tab.initialize = function (callback) {
                     offset:    parseInt(offsetInput.val(), 10) || 0,
                     speed:     parseInt(speedInput.val(), 10) || 0,
                     reverse:   reverseInput.is(':checked') ? 1 : 0,
+                    condition: parseInt(conditionSelect.val(), 10) || 0,
                 };
                 self.MIXER_RULES_dirty = true;
                 self.needSave = true;
@@ -681,6 +689,7 @@ tab.initialize = function (callback) {
             offsetInput.on('change', commit);
             speedInput.on('change', commit);
             reverseInput.on('change', commit);
+            conditionSelect.on('change', commit);
 
             if (isBlank) {
                 row.find('.mixerRuleActions a').hide();
@@ -754,6 +763,22 @@ tab.initialize = function (callback) {
         renderMixerRuleTable();
     }
 
+    // Dims any rule row whose assigned condition is currently false, so it's
+    // obvious at a glance which rules are actually contributing right now
+    // versus just configured but gated off.
+    function update_condition_status() {
+        MSP.send_message(MSPCodes.MSP_LOGIC_CONDITIONS_STATUS, false, false, render_condition_status);
+    }
+
+    function render_condition_status() {
+        $('#mixerRuleTableBody tr.mixerRule').each(function () {
+            const row = $(this);
+            const condition = parseInt(row.find('.ruleCondition').val(), 10);
+            const gatedOff = condition > 0 && !FC.LOGIC_CONDITIONS_STATUS[condition - 1];
+            row.toggleClass('mixerRuleGatedOff', gatedOff);
+        });
+    }
+
     function process_html() {
 
         // translate to user-selected language
@@ -791,7 +816,7 @@ tab.initialize = function (callback) {
             const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
             if (index === -1) return;
 
-            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, curve: 0, weight: 1000, weightNeg: 1000, offset: 0, speed: 0, reverse: 0 };
+            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, curve: 0, weight: 1000, weightNeg: 1000, offset: 0, speed: 0, reverse: 0, condition: 0 };
             self.MIXER_RULES_dirty = true;
             self.needSave = true;
             setDirty();
@@ -810,6 +835,8 @@ tab.initialize = function (callback) {
         $('a.revert').click(function () {
             self.revert(() => GUI.tab_switch_reload());
         });
+
+        GUI.interval_add('mixer_condition_status_pull', update_condition_status, 200, true);
 
          GUI.content_ready(callback);
     }

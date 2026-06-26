@@ -46,6 +46,7 @@ export const GuiControl = function () {
         'governor',
         'mixer',
         'curves',
+        'logic',
         'profiles',
         'rates',
         'gyro',

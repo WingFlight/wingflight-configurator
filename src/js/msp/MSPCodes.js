@@ -149,6 +149,9 @@ export const MSPCodes = {
     MSP_SET_BATTERY_PROFILE:        176,
     MSP_MIXER_CURVES:               177,
     MSP_SET_MIXER_CURVE:            178,
+    MSP_LOGIC_CONDITIONS:           197,
+    MSP_SET_LOGIC_CONDITION:        198,
+    MSP_LOGIC_CONDITIONS_STATUS:    199,
 
     MSP_DISPLAYPORT:                182,
 

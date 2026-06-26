@@ -98,17 +98,18 @@
     margin: 0;
 }
 
-.tab-mixer .mixerRuleColIndex    { width: 3%; }
-.tab-mixer .mixerRuleColOutput   { width: 11%; }
-.tab-mixer .mixerRuleColOperator { width: 7%; }
-.tab-mixer .mixerRuleColInput    { width: 12%; }
-.tab-mixer .mixerRuleColCurve    { width: 9%; }
-.tab-mixer .mixerRuleColWeight   { width: 8%; }
-.tab-mixer .mixerRuleColOffset   { width: 8%; }
-.tab-mixer .mixerRuleColSpeed    { width: 8%; }
-.tab-mixer .mixerRuleColReverse  { width: 6%; }
-.tab-mixer .mixerRuleColActions  { width: 8%; }
-.tab-mixer .mixerRuleColHint     { width: 11%; }
+.tab-mixer .mixerRuleColIndex     { width: 3%; }
+.tab-mixer .mixerRuleColOutput    { width: 11%; }
+.tab-mixer .mixerRuleColOperator  { width: 7%; }
+.tab-mixer .mixerRuleColInput     { width: 12%; }
+.tab-mixer .mixerRuleColCurve     { width: 9%; }
+.tab-mixer .mixerRuleColWeight    { width: 8%; }
+.tab-mixer .mixerRuleColOffset    { width: 8%; }
+.tab-mixer .mixerRuleColSpeed     { width: 8%; }
+.tab-mixer .mixerRuleColReverse   { width: 6%; }
+.tab-mixer .mixerRuleColCondition { width: 8%; }
+.tab-mixer .mixerRuleColActions   { width: 7%; }
+.tab-mixer .mixerRuleColHint      { width: 8%; }
 
 .tab-mixer .mixerRuleActions {
     white-space: nowrap;
@@ -135,6 +136,13 @@
 
 .tab-mixer .mixerRuleTable tr.mixerRuleMoved {
     animation: mixerRuleMovedFlash 1.2s ease-out;
+}
+
+/* The rule's assigned condition is currently false, so it isn't
+   contributing anything this cycle - dim the whole row (still editable)
+   to make that obvious at a glance rather than just configured-but-inert. */
+.tab-mixer .mixerRuleTable tr.mixerRuleGatedOff {
+    opacity: 0.45;
 }
 
 .tab-mixer .mixerRuleHint {

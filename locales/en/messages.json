@@ -471,6 +471,9 @@
     "tabCurves": {
         "message": "Curves"
     },
+    "tabLogic": {
+        "message": "Conditions"
+    },
     "tabLedStrip": {
         "message": "LED Strip"
     },
@@ -3229,6 +3232,12 @@
     "mixerCurveLabel": {
         "message": "Curve $1"
     },
+    "mixerConditionNone": {
+        "message": "-"
+    },
+    "logicConditionLabel": {
+        "message": "Condition $1"
+    },
     "curvesTitle": {
         "message": "Mixer Curves"
     },
@@ -3253,6 +3262,93 @@
     "curvePointCount": {
         "message": "Points:"
     },
+    "logicNote": {
+        "message": "Define conditions here, then gate any Mixer Rule on one from its Condition column. A gated rule contributes nothing while its condition is false."
+    },
+    "logicConditionsTitle": {
+        "message": "Conditions"
+    },
+    "logicIndex": {
+        "message": "#"
+    },
+    "logicEnable": {
+        "message": "Enable"
+    },
+    "logicOperator": {
+        "message": "Operator"
+    },
+    "logicOperandA": {
+        "message": "Operand A"
+    },
+    "logicOperandB": {
+        "message": "Operand B"
+    },
+    "logicStatus": {
+        "message": "Status"
+    },
+    "logicOperationTrue": {
+        "message": "Always On"
+    },
+    "logicOperationEqual": {
+        "message": "Equals"
+    },
+    "logicOperationGreaterThan": {
+        "message": "Greater Than"
+    },
+    "logicOperationLowerThan": {
+        "message": "Lower Than"
+    },
+    "logicOperationAnd": {
+        "message": "AND"
+    },
+    "logicOperationOr": {
+        "message": "OR"
+    },
+    "logicOperationXor": {
+        "message": "XOR"
+    },
+    "logicOperationNot": {
+        "message": "NOT"
+    },
+    "logicOperationSticky": {
+        "message": "Latch"
+    },
+    "logicOperationDelay": {
+        "message": "Delay"
+    },
+    "logicOperationEdge": {
+        "message": "Pulse"
+    },
+    "logicOperandTypeValue": {
+        "message": "Value"
+    },
+    "logicOperandTypeChannel": {
+        "message": "Channel"
+    },
+    "logicOperandTypeMode": {
+        "message": "Mode"
+    },
+    "logicOperandTypeCondition": {
+        "message": "Condition"
+    },
+    "logicChannelRoll": {
+        "message": "Roll"
+    },
+    "logicChannelPitch": {
+        "message": "Pitch"
+    },
+    "logicChannelYaw": {
+        "message": "Yaw"
+    },
+    "logicChannelThrottle": {
+        "message": "Throttle"
+    },
+    "logicSetValue": {
+        "message": "Set Value"
+    },
+    "logicSetValueHelp": {
+        "message": "Copies the other operand's current channel reading into this value — set the other operand to a Channel first, move it to the position you want, then click this to capture that exact value."
+    },
     "mixerRuleWeight": {
         "message": "Weight +"
     },
@@ -3267,6 +3363,9 @@
     },
     "mixerRuleReverse": {
         "message": "Reverse"
+    },
+    "mixerRuleCondition": {
+        "message": "Condition"
     },
     "mixerRuleActionsHeader": {
         "message": ""
