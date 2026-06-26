@@ -86,6 +86,9 @@ export const Mixer = {
 
     RULE_COUNT: 32,
 
+    SPEED_MIN: 0,
+    SPEED_MAX: 60000,
+
     OVERRIDE_MIN: -2500,
     OVERRIDE_MAX:  2500,
     OVERRIDE_OFF:  2501,
@@ -102,34 +105,34 @@ export const Mixer = {
             id: 1,
             nameKey: 'mixerPresetStandardGlider',
             rules: [
-                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
-                { oper: 1, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0 }, // SET Stabilized Roll  -> Servo2 (aileron, reversed)
-                { oper: 1, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Pitch -> Servo3 (elevator)
-                { oper: 1, src: 3,  dst: 4, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Yaw   -> Servo4 (rudder)
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET RC Throttle      -> Motor1
+                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
+                { oper: 1, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0 }, // SET Stabilized Roll  -> Servo2 (aileron, reversed)
+                { oper: 1, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Pitch -> Servo3 (elevator)
+                { oper: 1, src: 3,  dst: 4, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Yaw   -> Servo4 (rudder)
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET RC Throttle      -> Motor1
             ],
         },
         {
             id: 2,
             nameKey: 'mixerPresetFlyingWing',
             rules: [
-                { oper: 1, src: 2,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Pitch -> Servo1 (left elevon)
-                { oper: 2, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // ADD Stabilized Roll  -> Servo1
-                { oper: 1, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Pitch -> Servo2 (right elevon)
-                { oper: 2, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0 }, // ADD Stabilized Roll  -> Servo2 (reversed)
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET RC Throttle      -> Motor1
+                { oper: 1, src: 2,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Pitch -> Servo1 (left elevon)
+                { oper: 2, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // ADD Stabilized Roll  -> Servo1
+                { oper: 1, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Pitch -> Servo2 (right elevon)
+                { oper: 2, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0 }, // ADD Stabilized Roll  -> Servo2 (reversed)
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET RC Throttle      -> Motor1
             ],
         },
         {
             id: 3,
             nameKey: 'mixerPresetVTail',
             rules: [
-                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
-                { oper: 1, src: 3,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET Stabilized Yaw   -> Servo2 (right tail)
-                { oper: 2, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // ADD Stabilized Pitch -> Servo2
-                { oper: 1, src: 3,  dst: 3, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0 }, // SET Stabilized Yaw   -> Servo3 (left tail, reversed)
-                { oper: 2, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // ADD Stabilized Pitch -> Servo3
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0 }, // SET RC Throttle      -> Motor1
+                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
+                { oper: 1, src: 3,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET Stabilized Yaw   -> Servo2 (right tail)
+                { oper: 2, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // ADD Stabilized Pitch -> Servo2
+                { oper: 1, src: 3,  dst: 3, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0 }, // SET Stabilized Yaw   -> Servo3 (left tail, reversed)
+                { oper: 2, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // ADD Stabilized Pitch -> Servo3
+                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0 }, // SET RC Throttle      -> Motor1
             ],
         },
     ],
@@ -143,7 +146,7 @@ export const Mixer = {
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, reverse: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, reverse: 0, speed: 0 };
     },
 
     cloneRule: function (a)
@@ -159,7 +162,8 @@ export const Mixer = {
                 a.weight    === b.weight &&
                 a.weightNeg === b.weightNeg &&
                 a.offset    === b.offset &&
-                a.reverse   === b.reverse );
+                a.reverse   === b.reverse &&
+                a.speed     === b.speed );
     },
 
     cloneRules : function (a)
@@ -183,7 +187,8 @@ export const Mixer = {
                 a.weight    == 0 &&
                 a.weightNeg == 0 &&
                 a.offset    == 0 &&
-                a.reverse   == 0 );
+                a.reverse   == 0 &&
+                a.speed     == 0 );
     },
 
     isNullMixer : function (a) {
