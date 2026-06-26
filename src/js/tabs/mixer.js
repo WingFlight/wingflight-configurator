@@ -597,6 +597,7 @@ tab.initialize = function (callback) {
             const weightInput     = row.find('.ruleWeight');
             const weightNegInput  = row.find('.ruleWeightNeg');
             const offsetInput     = row.find('.ruleOffset');
+            const reverseInput    = row.find('.ruleReverse');
 
             Mixer.outputNames.forEach(function (nameKey, i) {
                 outputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
@@ -615,6 +616,7 @@ tab.initialize = function (callback) {
             weightInput.val(rule.weight);
             weightNegInput.val(rule.weightNeg);
             offsetInput.val(rule.offset);
+            reverseInput.prop('checked', !!rule.reverse);
 
             if (!isBlank && rule.dst !== 0) {
                 const firstForOutput = !outputsSeen[rule.dst];
@@ -639,6 +641,7 @@ tab.initialize = function (callback) {
                     weight:    parseInt(weightInput.val(), 10) || 0,
                     weightNeg: parseInt(weightNegInput.val(), 10) || 0,
                     offset:    parseInt(offsetInput.val(), 10) || 0,
+                    reverse:   reverseInput.is(':checked') ? 1 : 0,
                 };
                 self.MIXER_RULES_dirty = true;
                 self.needSave = true;
@@ -662,6 +665,7 @@ tab.initialize = function (callback) {
             inputSelect.on('change', commit);
             weightNegInput.on('change', commit);
             offsetInput.on('change', commit);
+            reverseInput.on('change', commit);
 
             if (isBlank) {
                 row.find('.mixerRuleActions a').hide();
@@ -772,7 +776,7 @@ tab.initialize = function (callback) {
             const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
             if (index === -1) return;
 
-            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, weightNeg: 1000, offset: 0 };
+            FC.MIXER_RULES[index] = { oper: Mixer.OP_SET, src: 0, dst: 0, weight: 1000, weightNeg: 1000, offset: 0, reverse: 0 };
             self.MIXER_RULES_dirty = true;
             self.needSave = true;
             setDirty();

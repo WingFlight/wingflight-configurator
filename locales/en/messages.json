@@ -3226,6 +3226,9 @@
     "mixerRuleOffset": {
         "message": "Offset"
     },
+    "mixerRuleReverse": {
+        "message": "Reverse"
+    },
     "mixerRuleActionsHeader": {
         "message": ""
     },

@@ -78,21 +78,34 @@
 }
 
 .tab-mixer .mixerRuleTable select,
-.tab-mixer .mixerRuleTable input {
+.tab-mixer .mixerRuleTable input:not([type="checkbox"]) {
     width: 100%;
 }
 
-.tab-mixer .mixerRuleTable input {
+.tab-mixer .mixerRuleTable input:not([type="checkbox"]) {
     text-align: right;
 }
 
+.tab-mixer .mixerRuleReverseCell,
+.tab-mixer .mixerRuleReverseHeader {
+    text-align: center;
+}
+
+.tab-mixer .mixerRuleTable input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
 .tab-mixer .mixerRuleColIndex    { width: 3%; }
-.tab-mixer .mixerRuleColOutput   { width: 12%; }
-.tab-mixer .mixerRuleColOperator { width: 8%; }
-.tab-mixer .mixerRuleColInput    { width: 19%; }
-.tab-mixer .mixerRuleColWeight   { width: 9%; }
-.tab-mixer .mixerRuleColOffset   { width: 9%; }
-.tab-mixer .mixerRuleColActions  { width: 9%; }
+.tab-mixer .mixerRuleColOutput   { width: 11%; }
+.tab-mixer .mixerRuleColOperator { width: 7%; }
+.tab-mixer .mixerRuleColInput    { width: 16%; }
+.tab-mixer .mixerRuleColWeight   { width: 8%; }
+.tab-mixer .mixerRuleColOffset   { width: 8%; }
+.tab-mixer .mixerRuleColReverse  { width: 6%; }
+.tab-mixer .mixerRuleColActions  { width: 8%; }
 .tab-mixer .mixerRuleColHint     { width: 18%; }
 
 .tab-mixer .mixerRuleActions {

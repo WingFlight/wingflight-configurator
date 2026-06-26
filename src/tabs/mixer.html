@@ -32,6 +32,7 @@
                                     <col class="mixerRuleColWeight">
                                     <col class="mixerRuleColWeight">
                                     <col class="mixerRuleColOffset">
+                                    <col class="mixerRuleColReverse">
                                     <col class="mixerRuleColActions">
                                     <col class="mixerRuleColHint">
                                 </colgroup>
@@ -44,6 +45,7 @@
                                         <th i18n="mixerRuleWeight"></th>
                                         <th i18n="mixerRuleWeightNeg"></th>
                                         <th i18n="mixerRuleOffset"></th>
+                                        <th class="mixerRuleReverseHeader" i18n="mixerRuleReverse"></th>
                                         <th i18n="mixerRuleActionsHeader"></th>
                                         <th></th>
                                     </tr>
@@ -605,6 +607,9 @@
                 </td>
                 <td>
                     <input class="ruleOffset" type="number" min="-1000" max="1000" step="10" />
+                </td>
+                <td class="mixerRuleReverseCell">
+                    <input class="ruleReverse" type="checkbox" />
                 </td>
                 <td class="mixerRuleActions">
                     <a href="#" class="ruleMoveUp" i18n_title="mixerRuleMoveUp">&#9650;</a>
