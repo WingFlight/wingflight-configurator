@@ -113,6 +113,15 @@
     color: #333;
 }
 
+@keyframes mixerRuleMovedFlash {
+    from { background-color: #fff3a0; }
+    to   { background-color: transparent; }
+}
+
+.tab-mixer .mixerRuleTable tr.mixerRuleMoved {
+    animation: mixerRuleMovedFlash 1.2s ease-out;
+}
+
 .tab-mixer .mixerRuleHint {
     display: block;
     height: 20px;

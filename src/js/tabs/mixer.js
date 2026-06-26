@@ -566,7 +566,7 @@ tab.initialize = function (callback) {
     // Rules are evaluated by the FC in array order (SET overwrites an output, ADD/MUL stack
     // onto whatever an earlier rule already wrote there), so display order must match array
     // order, and add/delete/move operate on that same order.
-    function renderMixerRuleTable() {
+    function renderMixerRuleTable(highlightIndex) {
         const tbody = $('#mixerRuleTableBody');
         if (!tbody.length) return;
         tbody.empty();
@@ -589,6 +589,8 @@ tab.initialize = function (callback) {
             const isBlank = (pos === blankIndex);
 
             const row = $('#tab-mixer-templates .mixerRuleTemplate tr').clone();
+            if (index === highlightIndex) row.addClass('mixerRuleMoved');
+
             const outputSelect = row.find('.ruleOutput');
             const operSelect   = row.find('.ruleOper');
             const inputSelect  = row.find('.ruleInput');
@@ -652,20 +654,22 @@ tab.initialize = function (callback) {
             } else {
                 row.find('.ruleMoveUp').toggle(pos > 0).on('click', function (event) {
                     event.preventDefault();
-                    Mixer.swapRules(FC.MIXER_RULES, index, visibleIndexes[pos - 1]);
+                    const target = visibleIndexes[pos - 1];
+                    Mixer.swapRules(FC.MIXER_RULES, index, target);
                     self.MIXER_RULES_dirty = true;
                     self.needSave = true;
                     setDirty();
-                    renderMixerRuleTable();
+                    renderMixerRuleTable(target);
                 });
 
                 row.find('.ruleMoveDown').toggle(pos < blankIndex - 1).on('click', function (event) {
                     event.preventDefault();
-                    Mixer.swapRules(FC.MIXER_RULES, index, visibleIndexes[pos + 1]);
+                    const target = visibleIndexes[pos + 1];
+                    Mixer.swapRules(FC.MIXER_RULES, index, target);
                     self.MIXER_RULES_dirty = true;
                     self.needSave = true;
                     setDirty();
-                    renderMixerRuleTable();
+                    renderMixerRuleTable(target);
                 });
 
                 row.find('.ruleDelete').on('click', function (event) {
