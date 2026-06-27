@@ -270,10 +270,6 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.yaw_dynamic_deadband_gain = getIntegerValue('#yaw-dynamic-deadband-gain');
         FC.RC_TUNING.yaw_dynamic_deadband_filter = getIntegerValue('#yaw-dynamic-deadband-filter', 10);
 
-        // Cyclic Ring / Polar Coordinates are helicopter-only concepts; keep them permanently disabled.
-        FC.RC_TUNING.cyclic_ring = 0;
-        FC.RC_TUNING.cyclic_polar = false;
-
         // catch RC_tuning changes
         const pitch_rc_expo_e = $('.rates_setup input[name="pitch_rc_expo"]');
         const pitch_rc_rate_e = $('.rates_setup input[name="pitch_rc_rate"]');

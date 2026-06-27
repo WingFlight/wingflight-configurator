@@ -412,8 +412,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 }
 
                 if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.RC_TUNING.cyclic_ring = data.readU8();
-                    FC.RC_TUNING.cyclic_polar = Boolean(data.readU8());
+                    data.readU8(); // was cyclic_ring (heli-only, removed)
+                    data.readU8(); // was cyclic_polar (heli-only, removed)
                 }
 
                 break;
@@ -1809,8 +1809,8 @@ MspHelper.prototype.crunch = function(code) {
             }
 
             if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push8(FC.RC_TUNING.cyclic_ring)
-                      .push8(Number(FC.RC_TUNING.cyclic_polar));
+                buffer.push8(0) // was cyclic_ring (heli-only, removed)
+                      .push8(0); // was cyclic_polar (heli-only, removed)
             }
 
             break;

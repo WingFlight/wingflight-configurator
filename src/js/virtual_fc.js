@@ -331,7 +331,6 @@ export function applyVirtualConfig() {
 
   Object.assign(FC.RC_TUNING, {
     rates_type: 0,
-    cyclic_ring: 150,
   });
 }
 

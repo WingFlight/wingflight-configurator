@@ -284,9 +284,6 @@ class FlightController {
       yaw_dynamic_ceiling_gain:   0,
       yaw_dynamic_deadband_gain:  0,
       yaw_dynamic_deadband_filter:0,
-
-      cyclic_ring:                0,
-      cyclic_polar:               false,
     };
 
     this.AUX_CONFIG =               [];
