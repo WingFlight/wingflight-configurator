@@ -7,7 +7,6 @@ import "./configuration.js";
 import "./curves.js";
 import "./failsafe.js";
 import "./firmware_flasher.js";
-import "./governor.js";
 import "./gps.js";
 import "./gyro.js";
 import "./help.js";

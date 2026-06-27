@@ -165,12 +165,6 @@ const tab = {
                 "esc2",
             );
         }
-
-        if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-            this.LOG_FIELDS.push(
-                "governor",
-            );
-        }
     },
 };
 

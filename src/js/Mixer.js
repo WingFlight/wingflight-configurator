@@ -61,34 +61,12 @@ export const Mixer = {
         'mixerRuleMul',
     ],
 
-    swashTypes: [
-        'mixerSwashType0',
-        'mixerSwashType1',
-        'mixerSwashType2',
-        'mixerSwashType3',
-        'mixerSwashType4',
-        'mixerSwashType5',
-        'mixerSwashType6',
-    ],
-
     OP_NUL: 0,
     OP_SET: 1,
     OP_ADD: 2,
     OP_MUL: 3,
 
     UNINIT: -1,
-
-    TAIL_MODE_VARIABLE:       0,
-    TAIL_MODE_MOTORIZED:      1,
-    TAIL_MODE_BIDIRECTIONAL:  2,
-
-    SWASH_TYPE_NONE:    0,
-    SWASH_TYPE_THRU:    1,
-    SWASH_TYPE_120:     2,
-    SWASH_TYPE_135:     3,
-    SWASH_TYPE_140:     4,
-    SWASH_TYPE_90L:     5,
-    SWASH_TYPE_90V:     6,
 
     RULE_COUNT: 32,
 
@@ -286,11 +264,7 @@ export const Mixer = {
 
     cloneConfig : function (orig)
     {
-        const copy = Object.assign({}, orig);
-
-        copy.swash_trim = Array.from(orig.swash_trim);
-
-        return copy;
+        return Object.assign({}, orig);
     },
 
     overrideEnabled : function (value)

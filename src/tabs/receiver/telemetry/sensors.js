@@ -106,9 +106,8 @@ export const TELEMETRY_SENSORS = {
   FLIGHT_MODE: 89,
   ARMING_FLAGS: 90,
   ARMING_DISABLE_FLAGS: 91,
-  RESCUE_STATE: 92,
-  GOVERNOR_STATE: 93,
-  GOVERNOR_FLAGS: 94,
+  // 92 reserved (heli rescue removed, do not reuse)
+  // 93, 94 reserved (heli governor removed, do not reuse)
 
   PID_PROFILE: 95,
   RATES_PROFILE: 96,

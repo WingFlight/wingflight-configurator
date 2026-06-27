@@ -25,7 +25,6 @@ class FlightController {
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
-  GOVERNOR = $state();
   GPS_CONFIG = $state();
   GPS_DATA = $state();
   GPS_RESCUE = $state();
@@ -189,19 +188,7 @@ class FlightController {
     };
 
     this.MIXER_CONFIG = {
-      main_rotor_dir:             0,
       tail_rotor_mode:            0,
-      tail_motor_idle:            0,
-      tail_center_trim:           0,
-      swash_type:                 0,
-      swash_ring:                 0,
-      swash_phase:                0,
-      swash_trim:                 [ 0, 0, 0 ],
-      blade_pitch_limit:          0,
-      coll_rpm_correction:        0,
-      coll_geo_correction:        0,
-      coll_tilt_correction_pos:   0,
-      coll_tilt_correction_neg:   0,
     };
 
     this.MIXER_INPUTS =             [];
@@ -514,7 +501,6 @@ class FlightController {
       itermThrottleThreshold:     0,
       itermAcceleratorGain:       0,
       error_rotation:             0,
-      error_decay_time_ground:    0,
       error_decay_time_cyclic:    0,
       error_decay_limit_cyclic:   0,
       errorLimitRoll:             0,
@@ -570,64 +556,6 @@ class FlightController {
       pid_mode:                   0,
       fwTpaBreakpoint:            0,
       fwTpaRate:                  0,
-      rescueMode:                 0,
-      rescueFlipMode:             0,
-      rescueFlipGain:             0,
-      rescuePullupTime:           0,
-      rescueClimbTime:            0,
-      rescueFlipTime:             0,
-      rescueExitTime:             0,
-      rescuePullupCollective:     0,
-      rescueClimbCollective:      0,
-      rescueHoverCollective:      0,
-      rescueHoverAltitude:        0,
-      rescueAltitudePGain:        0,
-      rescueAltitudeIGain:        0,
-      rescueAltitudeDGain:        0,
-      rescueMaxCollective:        0,
-      rescueMaxRate:              0,
-      rescueMaxAccel:             0,
-    };
-
-    this.GOVERNOR = {
-      gov_mode:                       0,
-      gov_startup_time:               0,
-      gov_spoolup_time:               0,
-      gov_spoolup_min_throttle:       0,
-      gov_tracking_time:              0,
-      gov_recovery_time:              0,
-      gov_zero_throttle_timeout:      0,
-      gov_lost_headspeed_timeout:     0,
-      gov_autorotation_timeout:       0,
-      gov_autorotation_bailout_time:  0,
-      gov_autorotation_min_entry_time: 0,
-      gov_handover_throttle:          0,
-      gov_headspeed:                  0,
-      gov_gain:                       0,
-      gov_p_gain:                     0,
-      gov_i_gain:                     0,
-      gov_d_gain:                     0,
-      gov_f_gain:                     0,
-      gov_tta_gain:                   0,
-      gov_tta_limit:                  0,
-      gov_yaw_ff_weight:              0,
-      gov_cyclic_ff_weight:           0,
-      gov_collective_ff_weight:       0,
-      gov_max_throttle:               0,
-      gov_min_throttle:               0,
-      gov_pwr_filter:                 0,
-      gov_rpm_filter:                 0,
-      gov_tta_filter:                 0,
-      gov_ff_filter:                  0,
-      gov_throttle_hold_timeout:      0,
-      gov_d_filter:                   0,
-      gov_idle_throttle:              0,
-      gov_auto_throttle:              0,
-      gov_flags:                      0,
-      gov_fallback_drop:              0,
-      gov_spooldown_time:             0,
-      gov_throttle_type:              0,
-      gov_bypass_throttle:            [],
     };
 
     this.SENSOR_CONFIG = {

@@ -54,9 +54,6 @@ tab.initialize = function (callback) {
             .then(() => MSP.promise(MSPCodes.MSP_FEATURE_CONFIG))
             .then(() => MSP.promise(MSPCodes.MSP_PID_TUNING))
             .then(() => MSP.promise(MSPCodes.MSP_PID_PROFILE))
-            .then(() => MSP.promise(MSPCodes.MSP_RESCUE_PROFILE))
-            .then(() => MSP.promise(MSPCodes.MSP_GOVERNOR_PROFILE))
-            .then(() => MSP.promise(MSPCodes.MSP_GOVERNOR_CONFIG))
             .then(() => MSP.promise(MSPCodes.MSP_SENSOR_CONFIG))
             .then(() => MSP.promise(MSPCodes.MSP_BATTERY_CONFIG))
             .then(callback);
@@ -66,9 +63,6 @@ tab.initialize = function (callback) {
         Promise.resolve(true)
             .then(() => MSP.promise(MSPCodes.MSP_SET_PID_TUNING, mspHelper.crunch(MSPCodes.MSP_SET_PID_TUNING)))
             .then(() => MSP.promise(MSPCodes.MSP_SET_PID_PROFILE, mspHelper.crunch(MSPCodes.MSP_SET_PID_PROFILE)))
-            .then(() => MSP.promise(MSPCodes.MSP_SET_RESCUE_PROFILE, mspHelper.crunch(MSPCodes.MSP_SET_RESCUE_PROFILE)))
-            .then(() => MSP.promise(MSPCodes.MSP_SET_GOVERNOR_PROFILE, mspHelper.crunch(MSPCodes.MSP_SET_GOVERNOR_PROFILE)))
-            .then(() => MSP.promise(MSPCodes.MSP_SET_GOVERNOR_CONFIG, mspHelper.crunch(MSPCodes.MSP_SET_GOVERNOR_CONFIG)))
             .then(() => MSP.promise(MSPCodes.MSP_EEPROM_WRITE))
             .then(() => {
                 self.savedProfile = self.currentProfile;
@@ -150,16 +144,8 @@ tab.initialize = function (callback) {
             .toggle(semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_9));
 
         // Error decays
-        $('.tab-profiles input[id="errorDecayTimeGround"]').val(FC.PID_PROFILE.error_decay_time_ground / 10);
         $('.tab-profiles input[id="errorDecayTimeCyclic"]').val(FC.PID_PROFILE.error_decay_time_cyclic / 10);
         $('.tab-profiles input[id="errorDecayLimitCyclic"]').val(FC.PID_PROFILE.error_decay_limit_cyclic);
-
-        const errorDecayCheck = $('.tab-profiles input[id="errorDecayGround"]');
-        errorDecayCheck.change(function() {
-            const checked = $(this).is(':checked');
-            $('.tab-profiles .errorDecayGround .suboption').toggle(checked);
-        });
-        errorDecayCheck.prop('checked', FC.PID_PROFILE.error_decay_time_ground > 0).change();
 
         // Fixed-wing throttle-based gain attenuation
         $('.tab-profiles input[id="fwTpaBreakpoint"]').val(FC.PID_PROFILE.fwTpaBreakpoint);
@@ -198,9 +184,6 @@ tab.initialize = function (callback) {
 
         // Horizon mode
         $('.tab-profiles input[id="horizonModeGain"]').val(FC.PID_PROFILE.horizonLevelStrength);
-
-        // Governor settings are not used on this platform
-        $('.tab-profiles #svelte-gov-settings').hide();
     }
 
     function form_to_data() {
@@ -228,9 +211,6 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.errorLimitRoll = $('.tab-profiles input[id="errorLimitRoll"]').val();
         FC.PID_PROFILE.errorLimitPitch = $('.tab-profiles input[id="errorLimitPitch"]').val();
         FC.PID_PROFILE.errorLimitYaw = $('.tab-profiles input[id="errorLimitYaw"]').val();
-
-        FC.PID_PROFILE.error_decay_time_ground = $('.tab-profiles input[id="errorDecayGround"]').is(':checked') ?
-            $('.tab-profiles input[id="errorDecayTimeGround"]').val() * 10 : 0;
 
         FC.PID_PROFILE.error_decay_time_cyclic = $('.tab-profiles input[id="errorDecayTimeCyclic"]').val() * 10;
         FC.PID_PROFILE.error_decay_limit_cyclic = $('.tab-profiles input[id="errorDecayLimitCyclic"]').val();
