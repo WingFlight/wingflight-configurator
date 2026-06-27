@@ -353,7 +353,7 @@ export function applyVirtualConfig() {
     { rate: 0, min: 0, max: 0 },
   ];
 
-  FC.PID_PROFILE.pid_mode = 3;
+  FC.PID_PROFILE.pid_mode = 1;
 
   Object.assign(FC.RC_TUNING, {
     rates_type: 6,

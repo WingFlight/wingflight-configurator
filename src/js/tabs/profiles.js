@@ -119,23 +119,12 @@ tab.initialize = function (callback) {
             $('.tab-profiles .pid_config').hide();
         }
         else if (FC.PID_PROFILE.pid_mode == 1) {
-            show_warning('profilesPIDModeOneWarning');
+            // Normal fixed-wing rate PID mode -- no warning needed.
         }
-        else if (FC.PID_PROFILE.pid_mode == 2) {
-            show_warning('profilesPIDModeTwoWarning');
-        }
-        else if (FC.PID_PROFILE.pid_mode == 3) {
-            //show_warning('profilesPIDModeThreeWarning');
-        }
-        else if (FC.PID_PROFILE.pid_mode == 4) {
-            show_warning('profilesPIDModeFourWarning');
-        }
-        else if (FC.PID_PROFILE.pid_mode > 4) {
+        else {
             show_warning('profilesPIDModeCustomWarning');
             $('.tab-profiles .pid_config').hide();
         }
-
-        $('.tab-profiles .HSI').toggle(FC.PID_PROFILE.pid_mode >= 3);
 
         $('.tab-profiles input[id="gyroCutoffRoll"]').val(FC.PID_PROFILE.gyroCutoffRoll).change();
         $('.tab-profiles input[id="gyroCutoffPitch"]').val(FC.PID_PROFILE.gyroCutoffPitch).change();
@@ -154,14 +143,6 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="errorLimitPitch"]').val(FC.PID_PROFILE.errorLimitPitch).change();
         $('.tab-profiles input[id="errorLimitYaw"]').val(FC.PID_PROFILE.errorLimitYaw).change();
 
-        // Offset limits
-        $('.tab-profiles input[id="offsetLimitRoll"]').val(FC.PID_PROFILE.offsetLimitRoll).change();
-        $('.tab-profiles input[id="offsetLimitPitch"]').val(FC.PID_PROFILE.offsetLimitPitch).change();
-
-        // Offset gains
-        $('.tab-profiles input[id="offsetGainRoll"]').val(FC.PIDS[0][5]).change();
-        $('.tab-profiles input[id="offsetGainPitch"]').val(FC.PIDS[1][5]).change();
-
         // Error rotation
         $('.tab-profiles input[id="errorRotation"]')
             .prop('checked', FC.PID_PROFILE.error_rotation !== 0)
@@ -172,8 +153,6 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="errorDecayTimeGround"]').val(FC.PID_PROFILE.error_decay_time_ground / 10);
         $('.tab-profiles input[id="errorDecayTimeCyclic"]').val(FC.PID_PROFILE.error_decay_time_cyclic / 10);
         $('.tab-profiles input[id="errorDecayLimitCyclic"]').val(FC.PID_PROFILE.error_decay_limit_cyclic);
-        //$('.tab-profiles input[id="errorDecayTimeYaw"]').val(FC.PID_PROFILE.error_decay_time_yaw / 10);
-        //$('.tab-profiles input[id="errorDecayLimitYaw"]').val(FC.PID_PROFILE.error_decay_limit_yaw);
 
         const errorDecayCheck = $('.tab-profiles input[id="errorDecayGround"]');
         errorDecayCheck.change(function() {
@@ -181,6 +160,10 @@ tab.initialize = function (callback) {
             $('.tab-profiles .errorDecayGround .suboption').toggle(checked);
         });
         errorDecayCheck.prop('checked', FC.PID_PROFILE.error_decay_time_ground > 0).change();
+
+        // Fixed-wing throttle-based gain attenuation
+        $('.tab-profiles input[id="fwTpaBreakpoint"]').val(FC.PID_PROFILE.fwTpaBreakpoint);
+        $('.tab-profiles input[id="fwTpaRate"]').val(FC.PID_PROFILE.fwTpaRate);
 
         // I-term relax
         $('.tab-profiles input[id="itermRelaxCutoffRoll"]').val(FC.PID_PROFILE.itermRelaxCutoffRoll);
@@ -246,20 +229,14 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.errorLimitPitch = $('.tab-profiles input[id="errorLimitPitch"]').val();
         FC.PID_PROFILE.errorLimitYaw = $('.tab-profiles input[id="errorLimitYaw"]').val();
 
-        FC.PID_PROFILE.offsetLimitRoll = $('.tab-profiles input[id="offsetLimitRoll"]').val();
-        FC.PID_PROFILE.offsetLimitPitch = $('.tab-profiles input[id="offsetLimitPitch"]').val();
-
-        FC.PIDS[0][5] = $('.tab-profiles input[id="offsetGainRoll"]').val();
-        FC.PIDS[1][5] = $('.tab-profiles input[id="offsetGainPitch"]').val();
-
         FC.PID_PROFILE.error_decay_time_ground = $('.tab-profiles input[id="errorDecayGround"]').is(':checked') ?
             $('.tab-profiles input[id="errorDecayTimeGround"]').val() * 10 : 0;
 
         FC.PID_PROFILE.error_decay_time_cyclic = $('.tab-profiles input[id="errorDecayTimeCyclic"]').val() * 10;
         FC.PID_PROFILE.error_decay_limit_cyclic = $('.tab-profiles input[id="errorDecayLimitCyclic"]').val();
 
-        //FC.PID_PROFILE.error_decay_time_yaw = $('.tab-profiles input[id="errorDecayTimeYaw"]').val() * 10;
-        //FC.PID_PROFILE.error_decay_limit_yaw = $('.tab-profiles input[id="errorDecayLimitYaw"]').val();
+        FC.PID_PROFILE.fwTpaBreakpoint = parseInt($('.tab-profiles input[id="fwTpaBreakpoint"]').val());
+        FC.PID_PROFILE.fwTpaRate = parseInt($('.tab-profiles input[id="fwTpaRate"]').val());
 
         FC.PID_PROFILE.error_rotation = $('.tab-profiles input[id="errorRotation"]').is(':checked') ? 1 : 0;
         FC.PID_PROFILE.itermRelaxType = $('.tab-profiles input[id="itermRelax"]').is(':checked') ?
@@ -267,16 +244,6 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.itermRelaxCutoffRoll = parseInt($('.tab-profiles input[id="itermRelaxCutoffRoll"]').val());
         FC.PID_PROFILE.itermRelaxCutoffPitch = parseInt($('.tab-profiles input[id="itermRelaxCutoffPitch"]').val());
         FC.PID_PROFILE.itermRelaxCutoffYaw = parseInt($('.tab-profiles input[id="itermRelaxCutoffYaw"]').val());
-
-        // Swashplate cyclic/collective coupling and tail-rotor torque-reaction
-        // compensation are not used on this platform; keep them neutralized.
-        FC.PID_PROFILE.yawStopGainCW = 100;
-        FC.PID_PROFILE.yawStopGainCCW = 100;
-        FC.PID_PROFILE.yawFFCyclicGain = 0;
-        FC.PID_PROFILE.yawFFCollectiveGain = 0;
-        FC.PID_PROFILE.yaw_inertia_precomp_gain = 0;
-        FC.PID_PROFILE.pitchFFCollectiveGain = 0;
-        FC.PID_PROFILE.cyclicCrossCouplingGain = 0;
 
         // Leveling modes
         FC.PID_PROFILE.acroTrainerGain = parseInt($('.tab-profiles input[id="acroTrainerGain"]').val());

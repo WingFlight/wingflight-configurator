@@ -431,8 +431,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     FC.PIDS[i][4] = FC.PIDS_ACTIVE[i][4];
                 }
                 for (let i = 0; i < 2; i++) { // RP
-                    FC.PIDS_ACTIVE[i][5] = data.readU16(); // O-term
-                    FC.PIDS[i][5] = FC.PIDS_ACTIVE[i][5];
+                    data.readU16(); // was O-term (heli-only, removed)
                 }
                 break;
             }
@@ -1164,9 +1163,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.pid_mode                      = data.readU8();
                 FC.PID_PROFILE.error_decay_time_ground       = data.readU8();
                 FC.PID_PROFILE.error_decay_time_cyclic       = data.readU8();
-                FC.PID_PROFILE.error_decay_time_yaw          = data.readU8();
+                data.readU8(); // was error_decay_time_yaw (heli-only, removed)
                 FC.PID_PROFILE.error_decay_limit_cyclic      = data.readU8();
-                FC.PID_PROFILE.error_decay_limit_yaw         = data.readU8();
+                data.readU8(); // was error_decay_limit_yaw (heli-only, removed)
                 FC.PID_PROFILE.error_rotation                = data.readU8();
                 FC.PID_PROFILE.errorLimitRoll                = data.readU8();
                 FC.PID_PROFILE.errorLimitPitch               = data.readU8();
@@ -1181,14 +1180,14 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.itermRelaxCutoffRoll          = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffPitch         = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffYaw           = data.readU8();
-                FC.PID_PROFILE.yawStopGainCW                 = data.readU8();
-                FC.PID_PROFILE.yawStopGainCCW                = data.readU8();
-                FC.PID_PROFILE.yawPrecompCutoff              = data.readU8();
-                FC.PID_PROFILE.yawFFCyclicGain               = data.readU8();
-                FC.PID_PROFILE.yawFFCollectiveGain           = data.readU8();
-                FC.PID_PROFILE.yawFFImpulseGain              = data.read8();
-                FC.PID_PROFILE.yawFFImpulseDecay             = data.readU8();
-                FC.PID_PROFILE.pitchFFCollectiveGain         = data.readU8();
+                data.readU8(); // was yawStopGainCW (heli-only, removed)
+                data.readU8(); // was yawStopGainCCW (heli-only, removed)
+                data.readU8(); // was yawPrecompCutoff (heli-only, removed)
+                data.readU8(); // was yawFFCyclicGain (heli-only, removed)
+                data.readU8(); // was yawFFCollectiveGain (heli-only, removed)
+                data.read8();  // was yawFFImpulseGain (heli-only, removed)
+                data.readU8(); // was yawFFImpulseDecay (heli-only, removed)
+                data.readU8(); // was pitchFFCollectiveGain (heli-only, removed)
                 // Angle Mode //
                 FC.PID_PROFILE.levelAngleStrength            = data.readU8();
                 FC.PID_PROFILE.levelAngleLimit               = data.readU8();
@@ -1197,21 +1196,22 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Acro Trainer //
                 FC.PID_PROFILE.acroTrainerGain               = data.readU8();
                 FC.PID_PROFILE.acroTrainerLimit              = data.readU8();
-                // Cyclic CrossCoupling //
-                FC.PID_PROFILE.cyclicCrossCouplingGain       = data.readU8();
-                FC.PID_PROFILE.cyclicCrossCouplingRatio      = data.readU8();
-                FC.PID_PROFILE.cyclicCrossCouplingCutoff     = data.readU8();
-                // Offset limits //
-                FC.PID_PROFILE.offsetLimitRoll               = data.readU8();
-                FC.PID_PROFILE.offsetLimitPitch              = data.readU8();
+                // Cyclic CrossCoupling -- heli-only, removed //
+                data.readU8();
+                data.readU8();
+                data.readU8();
+                // Offset limits -- heli-only, removed //
+                data.readU8();
+                data.readU8();
                 // B-term cutoffs //
                 FC.PID_PROFILE.btermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.btermCutoffPitch              = data.readU8();
                 FC.PID_PROFILE.btermCutoffYaw                = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.PID_PROFILE.yaw_inertia_precomp_gain  = data.readU8();
-                    FC.PID_PROFILE.yaw_inertia_precomp_cutoff= data.readU8();
-                }
+                data.readU8(); // was yaw_inertia_precomp_gain (heli-only, removed)
+                data.readU8(); // was yaw_inertia_precomp_cutoff (heli-only, removed)
+                // Fixed-wing throttle-based gain attenuation //
+                FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
+                FC.PID_PROFILE.fwTpaRate                     = data.readU8();
                 break;
             }
 
@@ -1899,7 +1899,7 @@ MspHelper.prototype.crunch = function(code) {
                 buffer.push16(parseInt(FC.PIDS[i][4])); // B-term
             }
             for (let i = 0; i < 2; i++) { // RP
-                buffer.push16(parseInt(FC.PIDS[i][5])); // O-term
+                buffer.push16(0); // was O-term (heli-only, removed)
             }
             break;
         }
@@ -2201,9 +2201,9 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push8(FC.PID_PROFILE.pid_mode)
                 .push8(FC.PID_PROFILE.error_decay_time_ground)
                 .push8(FC.PID_PROFILE.error_decay_time_cyclic)
-                .push8(FC.PID_PROFILE.error_decay_time_yaw)
+                .push8(0) // was error_decay_time_yaw (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_decay_limit_cyclic)
-                .push8(FC.PID_PROFILE.error_decay_limit_yaw)
+                .push8(0) // was error_decay_limit_yaw (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_rotation)
                 .push8(FC.PID_PROFILE.errorLimitRoll)
                 .push8(FC.PID_PROFILE.errorLimitPitch)
@@ -2218,14 +2218,14 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffPitch)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffYaw)
-                .push8(FC.PID_PROFILE.yawStopGainCW)
-                .push8(FC.PID_PROFILE.yawStopGainCCW)
-                .push8(FC.PID_PROFILE.yawPrecompCutoff)
-                .push8(FC.PID_PROFILE.yawFFCyclicGain)
-                .push8(FC.PID_PROFILE.yawFFCollectiveGain)
-                .push8(FC.PID_PROFILE.yawFFImpulseGain)
-                .push8(FC.PID_PROFILE.yawFFImpulseDecay)
-                .push8(FC.PID_PROFILE.pitchFFCollectiveGain)
+                .push8(0) // was yawStopGainCW (heli-only, removed)
+                .push8(0) // was yawStopGainCCW (heli-only, removed)
+                .push8(0) // was yawPrecompCutoff (heli-only, removed)
+                .push8(0) // was yawFFCyclicGain (heli-only, removed)
+                .push8(0) // was yawFFCollectiveGain (heli-only, removed)
+                .push8(0) // was yawFFImpulseGain (heli-only, removed)
+                .push8(0) // was yawFFImpulseDecay (heli-only, removed)
+                .push8(0) // was pitchFFCollectiveGain (heli-only, removed)
                 // Angle //
                 .push8(FC.PID_PROFILE.levelAngleStrength)
                 .push8(FC.PID_PROFILE.levelAngleLimit)
@@ -2234,21 +2234,23 @@ MspHelper.prototype.crunch = function(code) {
                 // Acro Trainer //
                 .push8(FC.PID_PROFILE.acroTrainerGain)
                 .push8(FC.PID_PROFILE.acroTrainerLimit)
-                // Cyclic Cross-coupling //
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingGain)
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingRatio)
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingCutoff)
-                // Offset limits //
-                .push8(FC.PID_PROFILE.offsetLimitRoll)
-                .push8(FC.PID_PROFILE.offsetLimitPitch)
+                // Cyclic Cross-coupling -- heli-only, removed //
+                .push8(0)
+                .push8(0)
+                .push8(0)
+                // Offset limits -- heli-only, removed //
+                .push8(0)
+                .push8(0)
                 // B-term cutoffs //
                 .push8(FC.PID_PROFILE.btermCutoffRoll)
                 .push8(FC.PID_PROFILE.btermCutoffPitch)
-                .push8(FC.PID_PROFILE.btermCutoffYaw);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push8(FC.PID_PROFILE.yaw_inertia_precomp_gain)
-                    .push8(FC.PID_PROFILE.yaw_inertia_precomp_cutoff);
-            }
+                .push8(FC.PID_PROFILE.btermCutoffYaw)
+                // was yaw_inertia_precomp_gain/cutoff (heli-only, removed) //
+                .push8(0)
+                .push8(0)
+                // Fixed-wing throttle-based gain attenuation //
+                .push8(FC.PID_PROFILE.fwTpaBreakpoint)
+                .push8(FC.PID_PROFILE.fwTpaRate);
             break;
         }
 

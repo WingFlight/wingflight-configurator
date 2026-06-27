@@ -1676,18 +1676,6 @@
     "profilesPIDModeZeroWarning": {
         "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the <b>Passthrough Mode</b>.<br>Please use the <b>CLI</b> to change the PID settings."
     },
-    "profilesPIDModeOneWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the legacy <b>PID Mode 1</b>.<br>Please use the <b>CLI</b> to change the PID settings."
-    },
-    "profilesPIDModeTwoWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the legacy <b>PID Mode 2</b>."
-    },
-    "profilesPIDModeThreeWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the <b>PID Mode 3</b>."
-    },
-    "profilesPIDModeFourWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the experimental <b>PID Mode 4</b>."
-    },
     "profilesPIDModeCustomWarning": {
         "message": "<span class=\"message-negative\">Warning:</span> The PID Controller is configured manually with parameters that can't be expressed here.<br>Please use the <b>CLI</b> to change the PID settings."
     },
@@ -5017,23 +5005,17 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesOffsetLimitHelp": {
-        "message": "Hard limit for the High Speed Integral offset angle in the PID loop. The absolute offset and thus the O-term will never go above these limits."
+    "profilesFwTpaBreakpoint": {
+        "message": "Throttle Attenuation Breakpoint [%]"
     },
-    "profilesOffsetLimitRoll": {
-        "message": "HSI Offset Limit for Roll Axis [&deg;]"
+    "profilesFwTpaBreakpointHelp": {
+        "message": "Throttle level above which PID gain attenuation starts. Below this throttle level, gains are unaffected. On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so gain is reduced above this breakpoint instead of below it."
     },
-    "profilesOffsetLimitPitch": {
-        "message": "HSI Offset Limit for Pitch Axis [&deg;]"
+    "profilesFwTpaRate": {
+        "message": "Throttle Attenuation Rate [%]"
     },
-    "profilesOffsetGainHelp": {
-        "message": "Gain for the High Speed Integral Offset term (Integral for high speed flight), which is only active at large collective angles. This term of the control loop provides angular stability and safe control following at high speeds, as well as attitude stability on large changes of the collective pitch angle of the rotor disk, which would lead to rapid diving and unwanted attitude changes without HSI. Too low values cause the model to become unstable at high speeds, as well as slow reaction and large attitude changes on collective pitch changes. Too large values can cause oscillation and restlessness at large collective pitch angles. For testing of the lower bounds of the parameter, fly in a straight line <strong> AT SAFE ALTITUDE</strong>, only briefly pull the collective into the negative range and observe the model's reaction. Should the model dive, increase the HSI Offset Gain. For testing the upper bounds of the parameter, give short jabs of elevator and aileron in a high collective vertical climb and observe the model's behavior. If the model swings, wobbles or exerts restlessness after releasing the stick, decrease the HSI Offset Gain."
-    },
-    "profilesOffsetGainRoll": {
-        "message": "HSI Offset Gain for Roll Axis"
-    },
-    "profilesOffsetGainPitch": {
-        "message": "HSI Offset Gain for Pitch Axis"
+    "profilesFwTpaRateHelp": {
+        "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
     },
     "profilesErrorDecayGround": {
         "message": "Ground Error Decay"
