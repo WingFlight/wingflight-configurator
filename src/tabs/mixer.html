@@ -38,7 +38,7 @@
                                         <th i18n="mixerRuleInput"></th>
                                         <th i18n="mixerRuleCurve"></th>
                                         <th i18n="mixerRuleWeight"></th>
-                                        <th i18n="mixerRuleWeightNeg"></th>
+                                        <th i18n="mixerRuleDifferential"></th>
                                         <th i18n="mixerRuleOffset"></th>
                                         <th i18n="mixerRuleSpeed"></th>
                                         <th class="mixerRuleReverseHeader" i18n="mixerRuleReverse"></th>
@@ -65,51 +65,6 @@
             <div class="grid-col full-width">
                 <div class="note mixerPassthroughCallout">
                     <p>Assign PASSTHROUGH mode to an AUX channel in the Modes tab to enable direct RC passthrough without stabilization.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- OVERRIDE -->
-        <div class="override">
-            <!--div class="grid-row margin-top">
-                <div class="grid-col full-width">
-                    <div class="note mixerOverrideNote">
-                        <p i18n="mixerOverrideNote"></p>
-                    </div>
-                </div>
-            </div-->
-
-            <div class="gui_box">
-                <div class="gui_box_titlebar no-bottom-margin">
-                    <div class="spacer_box_title" i18n="mixerOverride"></div>
-                    <div class="helpicon cf_tip" i18n_title="mixerOverrideHelp"></div>
-                </div>
-                <div class="spacer_box">
-                    <table class="mixerOverrideSwitch">
-                        <tr>
-                            <td><input type="checkbox" id="mixerOverrideEnableSwitch" class="toggle" /></td>
-                            <td><span i18n="mixerOverrideEnableSwitch"></span></td>
-                            <td class="mixerPassthroughVisible"><input type="checkbox" id="mixerPassthroughEnableSwitch" class="toggle" /></td>
-                            <td class="mixerPassthroughVisible"><span i18n="mixerPassthroughEnableSwitch"></span></td>
-                            <td><span class="description" i18n="mixerOverrideEnableSwitchText"></span></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="mixerOverrideAxis">
-                    <table class="mixerOverrideTable">
-                        <thead>
-                            <tr class="trhead">
-                                <th i18n="mixerInputName"></th>
-                                <th i18n="mixerOverrideEnable"></th>
-                                <th class="mixerPassthroughVisible" i18n="mixerPassthroughEnable"></th>
-                                <th i18n="mixerOverrideValue"></th>
-                                <th i18n="mixerOverrideSlider"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- ROWS GENERATED HERE -->
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -170,13 +125,13 @@
                     </select>
                 </td>
                 <td>
-                    <input class="ruleWeight" type="number" min="-5000" max="5000" step="10" />
+                    <input class="ruleWeight" type="number" min="0" max="5000" step="10" />
                 </td>
                 <td>
-                    <input class="ruleWeightNeg" type="number" min="-5000" max="5000" step="10" />
+                    <input class="ruleDifferential" type="number" min="-100" max="100" step="1" />
                 </td>
                 <td>
-                    <input class="ruleOffset" type="number" min="-1000" max="1000" step="10" />
+                    <input class="ruleOffset" type="number" min="-2500" max="2500" step="10" />
                 </td>
                 <td>
                     <input class="ruleSpeed" type="number" min="0" max="60000" step="100" />
@@ -195,34 +150,6 @@
                     <a href="#" class="ruleDelete" i18n_title="mixerRuleDelete">&#10005;</a>
                 </td>
                 <td class="mixerRuleHint"><span class="ruleHint"></span></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table class="mixerOverrideTemplate">
-        <tbody>
-            <tr>
-                <td><span class="mixerOverrideName"></span></td>
-                <td>
-                    <div class="mixerOverrideEnable">
-                        <input type="checkbox" class="toggle"/>
-                    </div>
-                </td>
-                <td class="mixerPassthroughVisible">
-                    <div class="mixerPassthroughEnable">
-                        <input type="checkbox" class="toggle"/>
-                    </div>
-                </td>
-                <td>
-                    <div class="mixerOverrideInput">
-                        <input type="number" value="0"/>
-                    </div>
-                </td>
-                <td>
-                    <div class="mixerOverrideSliderLeftLabel"></div>
-                    <div class="mixerOverrideSliderRightLabel"></div>
-                    <div class="mixerOverrideSlider pips-range"></div>
-                </td>
             </tr>
         </tbody>
     </table>

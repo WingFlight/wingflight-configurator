@@ -73,16 +73,25 @@ export const Mixer = {
     SPEED_MIN: 0,
     SPEED_MAX: 60000,
 
-    OVERRIDE_MIN: -2500,
-    OVERRIDE_MAX:  2500,
-    OVERRIDE_OFF:  2501,
-    OVERRIDE_PASSTHROUGH:  2502,
+    // Weight/weightNeg are signed on the wire (their sign is the rule's only
+    // notion of polarity now that firmware no longer has a separate reverse
+    // bit), but the GUI only ever asks for a magnitude here -- polarity comes
+    // from the Reverse checkbox instead. Firmware allows magnitudes up to
+    // MIXER_WEIGHT_MIN/MAX (10000), but that's a 10x gain on a PWM/RX-driven
+    // rule -- never a deliberate choice in practice, just a typo. Cap the GUI
+    // well below that.
+    WEIGHT_MIN: 0,
+    WEIGHT_MAX: 5000,
+
+    // Matches firmware's MIXER_INPUT_MIN/MAX.
+    OFFSET_MIN: -2500,
+    OFFSET_MAX:  2500,
 
     //// Functions
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, reverse: 0, speed: 0, curve: 0, condition: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0 };
     },
 
     cloneRule: function (a)
@@ -98,7 +107,6 @@ export const Mixer = {
                 a.weight    === b.weight &&
                 a.weightNeg === b.weightNeg &&
                 a.offset    === b.offset &&
-                a.reverse   === b.reverse &&
                 a.speed     === b.speed &&
                 a.curve     === b.curve &&
                 a.condition === b.condition );
@@ -132,11 +140,10 @@ export const Mixer = {
         let nextServo = 1;
         let nextMotor = 9;
 
-        function rule(oper, src, dst, weight, weightNeg)
+        function rule(oper, src, dst, weight, reverse)
         {
-            return { oper, src, dst, offset: 0, weight,
-                      weightNeg: (weightNeg === undefined ? weight : weightNeg),
-                      reverse: 0, speed: 0, curve: 0, condition: 0 };
+            const w = reverse ? -weight : weight;
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0 };
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
@@ -147,7 +154,7 @@ export const Mixer = {
                 rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
             } else if (options.ailerons === 'independent') {
                 rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
-                rules.push(rule(OP_SET, ROLL, nextServo++, -1000));
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000, true));
             }
 
             if (options.tailControl === 'elevatorOnly') {
@@ -159,7 +166,7 @@ export const Mixer = {
                 const rightTail = nextServo++, leftTail = nextServo++;
                 rules.push(rule(OP_SET, YAW,   rightTail, 1000));
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
-                rules.push(rule(OP_SET, YAW,   leftTail, -1000));
+                rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
                 rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
             }
         } else if (options.layout === 'flyingWing') {
@@ -167,7 +174,7 @@ export const Mixer = {
             rules.push(rule(OP_SET, PITCH, leftElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
-            rules.push(rule(OP_ADD, ROLL,  rightElevon, -1000));
+            rules.push(rule(OP_ADD, ROLL,  rightElevon, 1000, true));
 
             if (options.wingYaw === 'rudder') {
                 rules.push(rule(OP_SET, YAW, nextServo++, 1000));
@@ -186,8 +193,8 @@ export const Mixer = {
             rules.push(rule(OP_SET, RC_THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
-                rules.push(rule(OP_ADD, YAW, 9,      500, 500));
-                rules.push(rule(OP_ADD, YAW, motor2, -500, -500));
+                rules.push(rule(OP_ADD, YAW, 9,      500));
+                rules.push(rule(OP_ADD, YAW, motor2, 500, true));
             }
         }
 
@@ -201,7 +208,6 @@ export const Mixer = {
                 a.weight    == 0 &&
                 a.weightNeg == 0 &&
                 a.offset    == 0 &&
-                a.reverse   == 0 &&
                 a.speed     == 0 &&
                 a.curve     == 0 &&
                 a.condition == 0 );
@@ -265,20 +271,6 @@ export const Mixer = {
     cloneConfig : function (orig)
     {
         return Object.assign({}, orig);
-    },
-
-    overrideEnabled : function (value)
-    {
-        const enabled = ((value >= Mixer.OVERRIDE_MIN && value <= Mixer.OVERRIDE_MAX) || value == Mixer.OVERRIDE_PASSTHROUGH);
-
-        return enabled;
-    },
-
-    passthroughEnabled : function (value)
-    {
-        const enabled = (value == Mixer.OVERRIDE_PASSTHROUGH);
-
-        return enabled;
     },
 
 };

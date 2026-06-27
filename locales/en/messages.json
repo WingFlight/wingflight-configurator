@@ -2737,54 +2737,6 @@
     "mixerRulesNote": {
         "message": "<span class=\"message-negative\">Warning:</span> The Mixer is configured with <strong>custom</strong> rules. Any rule changes must be done in the CLI, with the <code>mixer rule</code> command."
     },
-    "mixerOverrideNote": {
-        "message": "<strong>Note.</strong> Mixer Override forces the mixer inputs to arbitrary positions for setup purposes. The override values are not saved, and will be reset in reboot."
-    },
-    "mixerOverride": {
-        "message": "Mixer Override"
-    },
-    "mixerOverrideHelp": {
-        "message": "This feature is used for setting up the rotor and is part of the <strong>Mixer Calibration</strong> process. When the bypass enable is active the mixer can be commanded to the requested positions directly."
-    },
-    "mixerOverrideEnableSwitch": {
-        "message": "<strong>Enable Mixer Override</strong>"
-    },
-    "mixerOverrideEnableSwitchText": {
-        "message": "Mixer Override forces the mixer inputs to arbitrary positions for setup purposes. If Passthrough is enabled, the positions are controlled by your TX. The override values are not saved, and will be reset in reboot."
-    },
-    "mixerPassthroughEnableSwitch": {
-        "message": "<strong>Enable Mixer Passthrough</strong>"
-    },
-    "mixerOverrideEnable": {
-        "message": "Override"
-    },
-    "mixerPassthroughEnable": {
-        "message": "Passthrough"
-    },
-    "mixerOverrideValue": {
-        "message": "Value"
-    },
-    "mixerOverrideSlider": {
-        "message": ""
-    },
-    "mixerOverrideSliderLeftLabel1": {
-        "message": "Left"
-    },
-    "mixerOverrideSliderRightLabel1": {
-        "message": "Right"
-    },
-    "mixerOverrideSliderLeftLabel2": {
-        "message": "Backward"
-    },
-    "mixerOverrideSliderRightLabel2": {
-        "message": "Forward"
-    },
-    "mixerOverrideSliderLeftLabel3": {
-        "message": "CW"
-    },
-    "mixerOverrideSliderRightLabel3": {
-        "message": "CCW"
-    },
     "mixerRuleNOP": {
         "message": "-"
     },
@@ -2796,9 +2748,6 @@
     },
     "mixerRuleMul": {
         "message": "Mul"
-    },
-    "mixerInputName": {
-        "message": "Control"
     },
     "mixerInputRate": {
         "message": "Scaling"
@@ -3077,10 +3026,10 @@
         "message": "Copies the other operand's current channel reading into this value — set the other operand to a Channel first, move it to the position you want, then click this to capture that exact value."
     },
     "mixerRuleWeight": {
-        "message": "Weight +"
+        "message": "Weight"
     },
-    "mixerRuleWeightNeg": {
-        "message": "Weight -"
+    "mixerRuleDifferential": {
+        "message": "Differential %"
     },
     "mixerRuleOffset": {
         "message": "Offset"

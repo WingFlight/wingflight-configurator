@@ -441,14 +441,6 @@ html[data-theme=dark] .tab-mixer .bottomarea {
     background-color: #393b3a;
 }
 
-html[data-theme=dark] .tab-mixer .mixerOverrideTable tbody tr:nth-child(even) {
-    background-color: #3f3f3f;
-}
-
-html[data-theme=dark] .tab-mixer .mixerOverrideTable tbody tr:nth-child(odd) {
-    background-color: #393939;
-}
-
 
 /* BLACKBOX TAB */
 

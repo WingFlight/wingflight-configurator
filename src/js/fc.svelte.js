@@ -118,7 +118,6 @@ class FlightController {
       enableArmingFlag:           false,
       motorOverrideEnabled:       false,
       servoOverrideEnabled:       false,
-      mixerOverrideEnabled:       false,
       boardIdentifier:            "",
       boardVersion:               0,
       targetCapabilities:         0,
