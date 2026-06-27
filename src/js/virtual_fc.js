@@ -330,7 +330,7 @@ export function applyVirtualConfig() {
   FC.PID_PROFILE.pid_mode = 1;
 
   Object.assign(FC.RC_TUNING, {
-    rates_type: 6,
+    rates_type: 0,
     cyclic_ring: 150,
   });
 }
