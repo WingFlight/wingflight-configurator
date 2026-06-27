@@ -3373,8 +3373,8 @@
     "mixerAddRule": {
         "message": "Add Rule"
     },
-    "mixerLoadPreset": {
-        "message": "Load Preset"
+    "mixerOpenWizard": {
+        "message": "Setup Wizard"
     },
     "mixerRuleMoveUp": {
         "message": "Move up"
@@ -3391,14 +3391,83 @@
     "mixerRuleHintOverride": {
         "message": "Overwrites earlier rule(s) for this output - did you mean Add?"
     },
-    "mixerPresetStandardGlider": {
-        "message": "Standard Glider"
+    "mixerWizardTitle": {
+        "message": "Mixer Setup Wizard"
     },
-    "mixerPresetFlyingWing": {
-        "message": "Flying Wing (Elevons)"
+    "mixerWizardLayoutTitle": {
+        "message": "Wing / Tail Layout"
     },
-    "mixerPresetVTail": {
-        "message": "V-Tail"
+    "mixerWizardLayoutConventional": {
+        "message": "Conventional (separate ailerons and tail)"
+    },
+    "mixerWizardLayoutFlyingWing": {
+        "message": "Flying Wing (elevons, no separate tail)"
+    },
+    "mixerWizardAileronsTitle": {
+        "message": "Ailerons"
+    },
+    "mixerWizardAileronsNone": {
+        "message": "None (e.g. rudder and dihedral glider)"
+    },
+    "mixerWizardAileronsSingle": {
+        "message": "Single servo (shared Y-cable channel)"
+    },
+    "mixerWizardAileronsIndependent": {
+        "message": "Independent left and right servos"
+    },
+    "mixerWizardTailTitle": {
+        "message": "Tail Control"
+    },
+    "mixerWizardTailElevatorOnly": {
+        "message": "Elevator only (no rudder)"
+    },
+    "mixerWizardTailElevatorRudder": {
+        "message": "Elevator and Rudder (conventional or T-tail)"
+    },
+    "mixerWizardTailVTail": {
+        "message": "V-Tail (2 servos, combined pitch and yaw)"
+    },
+    "mixerWizardWingYawTitle": {
+        "message": "Yaw Control"
+    },
+    "mixerWizardWingYawNone": {
+        "message": "None"
+    },
+    "mixerWizardWingYawRudder": {
+        "message": "Rudder (single fin servo)"
+    },
+    "mixerWizardFlapsTitle": {
+        "message": "Flaps"
+    },
+    "mixerWizardFlapsEnable": {
+        "message": "Add a flap servo (driven by an aux channel)"
+    },
+    "mixerWizardMotorsTitle": {
+        "message": "Motors"
+    },
+    "mixerWizardMotors0": {
+        "message": "0 (pure glider)"
+    },
+    "mixerWizardMotors1": {
+        "message": "1"
+    },
+    "mixerWizardMotors2": {
+        "message": "2"
+    },
+    "mixerWizardDiffThrust": {
+        "message": "Use differential thrust for yaw"
+    },
+    "mixerWizardDiffThrustHint": {
+        "message": "Adds extra yaw authority by speeding up one motor and slowing the other, on top of normal throttle."
+    },
+    "mixerWizardOverwriteWarning": {
+        "message": "Applying the wizard replaces all current mixer rules."
+    },
+    "mixerWizardCancel": {
+        "message": "Cancel"
+    },
+    "mixerWizardApply": {
+        "message": "Apply"
     },
     "dialogMixerResetTitle": {
         "message": "<span class=\"message-negative\">WARNING: Mixer Reset</span>"

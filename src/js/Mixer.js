@@ -100,54 +100,6 @@ export const Mixer = {
     OVERRIDE_OFF:  2501,
     OVERRIDE_PASSTHROUGH:  2502,
 
-    //// Mixer rule presets
-    //
-    // Each preset is a starting point loaded into the editable rule table —
-    // not applied directly. Servo/motor numbers and directions are typically
-    // still adjusted by the user afterwards to match their airframe.
-
-    presets: [
-        {
-            id: 1,
-            nameKey: 'mixerPresetStandardGlider',
-            rules: [
-                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
-                { oper: 1, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Roll  -> Servo2 (aileron, reversed)
-                { oper: 1, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Pitch -> Servo3 (elevator)
-                { oper: 1, src: 3,  dst: 4, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Yaw   -> Servo4 (rudder)
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET RC Throttle      -> Motor1
-            ],
-        },
-        {
-            id: 2,
-            nameKey: 'mixerPresetFlyingWing',
-            rules: [
-                { oper: 1, src: 2,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Pitch -> Servo1 (left elevon)
-                { oper: 2, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // ADD Stabilized Roll  -> Servo1
-                { oper: 1, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Pitch -> Servo2 (right elevon)
-                { oper: 2, src: 1,  dst: 2, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // ADD Stabilized Roll  -> Servo2 (reversed)
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET RC Throttle      -> Motor1
-            ],
-        },
-        {
-            id: 3,
-            nameKey: 'mixerPresetVTail',
-            rules: [
-                { oper: 1, src: 1,  dst: 1, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Roll  -> Servo1 (aileron)
-                { oper: 1, src: 3,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Yaw   -> Servo2 (right tail)
-                { oper: 2, src: 2,  dst: 2, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // ADD Stabilized Pitch -> Servo2
-                { oper: 1, src: 3,  dst: 3, offset: 0, weight: -1000, weightNeg: -1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET Stabilized Yaw   -> Servo3 (left tail, reversed)
-                { oper: 2, src: 2,  dst: 3, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // ADD Stabilized Pitch -> Servo3
-                { oper: 1, src: 15, dst: 9, offset: 0, weight:  1000, weightNeg:  1000, reverse: 0, speed: 0, curve: 0, condition: 0 }, // SET RC Throttle      -> Motor1
-            ],
-        },
-    ],
-
-    getPresetById : function (id)
-    {
-        return this.presets.find((p) => p.id === id);
-    },
-
     //// Functions
 
     nullRule: function ()
@@ -186,6 +138,82 @@ export const Mixer = {
         }
 
         return copy;
+    },
+
+    //// Mixer setup wizard
+    //
+    // Composes a starting rule set from a handful of orthogonal airframe
+    // choices, rather than picking from a flat list of named presets. The
+    // result is a starting point loaded into the editable rule table — not
+    // applied directly. Servo/motor numbers and directions are typically
+    // still adjusted by the user afterwards to match their airframe.
+
+    buildWizardRules : function (options)
+    {
+        const rules = [];
+        let nextServo = 1;
+        let nextMotor = 9;
+
+        function rule(oper, src, dst, weight, weightNeg)
+        {
+            return { oper, src, dst, offset: 0, weight,
+                      weightNeg: (weightNeg === undefined ? weight : weightNeg),
+                      reverse: 0, speed: 0, curve: 0, condition: 0 };
+        }
+
+        const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
+        const ROLL = 1, PITCH = 2, YAW = 3, RC_THROTTLE = 15, RC_AUX1 = 16;
+
+        if (options.layout === 'conventional') {
+            if (options.ailerons === 'single') {
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+            } else if (options.ailerons === 'independent') {
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+                rules.push(rule(OP_SET, ROLL, nextServo++, -1000));
+            }
+
+            if (options.tailControl === 'elevatorOnly') {
+                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+            } else if (options.tailControl === 'elevatorRudder') {
+                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
+            } else if (options.tailControl === 'vtail') {
+                const rightTail = nextServo++, leftTail = nextServo++;
+                rules.push(rule(OP_SET, YAW,   rightTail, 1000));
+                rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
+                rules.push(rule(OP_SET, YAW,   leftTail, -1000));
+                rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
+            }
+        } else if (options.layout === 'flyingWing') {
+            const leftElevon = nextServo++, rightElevon = nextServo++;
+            rules.push(rule(OP_SET, PITCH, leftElevon, 1000));
+            rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
+            rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
+            rules.push(rule(OP_ADD, ROLL,  rightElevon, -1000));
+
+            if (options.wingYaw === 'rudder') {
+                rules.push(rule(OP_SET, YAW, nextServo++, 1000));
+            }
+        }
+
+        if (options.flaps) {
+            rules.push(rule(OP_SET, RC_AUX1, nextServo, 1000));
+        }
+
+        if (options.motors >= 1) {
+            rules.push(rule(OP_SET, RC_THROTTLE, nextMotor++, 1000));
+        }
+        if (options.motors >= 2) {
+            const motor2 = nextMotor;
+            rules.push(rule(OP_SET, RC_THROTTLE, motor2, 1000));
+
+            if (options.diffThrustYaw) {
+                rules.push(rule(OP_ADD, YAW, 9,      500, 500));
+                rules.push(rule(OP_ADD, YAW, motor2, -500, -500));
+            }
+        }
+
+        return rules;
     },
 
     isNullRule : function (a) {

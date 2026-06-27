@@ -4,6 +4,7 @@ import wNumb from 'wnumb';
 
 import { MixerCurve } from '@/js/MixerCurve.js';
 import { LogicCondition } from '@/js/LogicCondition.js';
+import MixerWizardDialog from '@/js/MixerWizardDialog.js';
 
 const tab = {
     tabName: 'mixer',
@@ -729,19 +730,8 @@ tab.initialize = function (callback) {
         });
     }
 
-    function populatePresetSelect() {
-        const select = $('#mixerPresetSelect');
-        select.empty();
-
-        Mixer.presets.forEach(function (preset) {
-            select.append($('<option></option>').attr('value', preset.id).text(i18n.getMessage(preset.nameKey)));
-        });
-    }
-
-    function applyPreset(presetId) {
-        const preset = Mixer.getPresetById(presetId);
-        if (!preset) return;
-
+    function applyWizardRules(options) {
+        const generatedRules = Mixer.buildWizardRules(options);
         const ruleCount = FC.MIXER_RULES.length || Mixer.RULE_COUNT;
         const nextRules = [];
 
@@ -749,9 +739,9 @@ tab.initialize = function (callback) {
             nextRules.push(Mixer.nullRule());
         }
 
-        preset.rules.forEach(function (rule, index) {
+        generatedRules.forEach(function (rule, index) {
             if (index < nextRules.length) {
-                nextRules[index] = Mixer.cloneRule(rule);
+                nextRules[index] = rule;
             }
         });
 
@@ -786,8 +776,10 @@ tab.initialize = function (callback) {
 
         // UI Hooks
         data_to_form();
-        populatePresetSelect();
         renderMixerRuleTable();
+
+        self.mixerWizardDialog = new MixerWizardDialog($('#mixerWizardDialog'), applyWizardRules);
+        self.mixerWizardDialog.initialize();
 
         // Hide the buttons toolbar
         $('.tab-mixer').addClass('toolbar_hidden');
@@ -823,9 +815,9 @@ tab.initialize = function (callback) {
             renderMixerRuleTable();
         });
 
-        $('a.mixerLoadPreset').click(function (event) {
+        $('a.mixerOpenWizard').click(function (event) {
             event.preventDefault();
-            applyPreset(parseInt($('#mixerPresetSelect').val(), 10));
+            self.mixerWizardDialog.open();
         });
 
         $('a.reboot').click(function () {
