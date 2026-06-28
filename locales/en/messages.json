@@ -492,6 +492,24 @@
     "tabAuxiliary": {
         "message": "Modes"
     },
+    "tabGroupSetup": {
+        "message": "Setup"
+    },
+    "tabGroupOutputs": {
+        "message": "Outputs"
+    },
+    "tabGroupFlightTuning": {
+        "message": "Flight Tuning"
+    },
+    "tabGroupModesLogic": {
+        "message": "Modes & Logic"
+    },
+    "tabGroupPeripherals": {
+        "message": "Peripherals"
+    },
+    "tabGroupDiagnostics": {
+        "message": "Diagnostics"
+    },
     "logActionHide": {
         "message": "Hide Log"
     },
