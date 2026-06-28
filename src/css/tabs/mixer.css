@@ -43,7 +43,8 @@
     border-radius: 3px;
 }
 
-.tab-mixer .mixerRulesBox {
+.tab-mixer .mixerRulesBox,
+.tab-mixer .mixerAxisGainBox {
     /* .gui_box is "display: table" (shrink-to-fit) by default, which leaves
        width:100% on the table below with no definite width to resolve
        against. This box needs to be a normal full-width block instead. */
@@ -161,6 +162,34 @@
     align-items: center;
     gap: 10px;
     margin-top: 4px;
+}
+
+.tab-mixer .mixerAxisGainTable {
+    width: auto;
+    margin: 0;
+    border: 0;
+    border-collapse: collapse;
+}
+
+.tab-mixer .mixerAxisGainTable td {
+    padding: 3px 0;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.tab-mixer .mixerAxisGainTable td:first-child {
+    width: 60px;
+    padding-right: 12px;
+}
+
+.tab-mixer .mixerAxisGainTable input {
+    width: 80px;
+    text-align: right;
+}
+
+.tab-mixer .mixerAxisGainUnit {
+    padding-left: 6px;
+    color: #626262;
 }
 
 .tab-mixer .mixerConfigTable {

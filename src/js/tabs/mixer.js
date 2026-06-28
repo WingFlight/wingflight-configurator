@@ -41,6 +41,23 @@ function displayToRule(weight, differential, reverse) {
     return { weight: sign * weight, weightNeg: sign * weightNeg };
 }
 
+// Indices into FC.MIXER_INPUTS for the three stabilized axes -- matches the
+// firmware's MIXER_IN_STABILIZED_ROLL/PITCH/YAW wire order (see Mixer.inputNames).
+const AXIS_GAIN_INPUTS = { roll: 1, pitch: 2, yaw: 3 };
+
+const AXIS_GAIN_MIN = 0;
+const AXIS_GAIN_MAX = 200;
+
+// mixerInputs[].rate is a fixed-point multiplier on the wire (1000 = unity);
+// the GUI shows it as a plain percentage.
+function rateToPercent(rate) {
+    return Math.round(rate / 10);
+}
+
+function percentToRate(percent) {
+    return clampInt(percent, AXIS_GAIN_MIN, AXIS_GAIN_MAX) * 10;
+}
+
 const tab = {
     tabName: 'mixer',
     isDirty: false,
@@ -48,6 +65,7 @@ const tab = {
     needReboot: false,
 
     MIXER_RULES_dirty: false,
+    MIXER_INPUTS_dirty: false,
 };
 
 tab.initialize = function (callback) {
@@ -79,6 +97,12 @@ tab.initialize = function (callback) {
     }
 
     function save_data(callback) {
+        function send_mixer_inputs() {
+            if (self.MIXER_INPUTS_dirty)
+                mspHelper.sendMixerInputs(send_mixer_rules);
+            else
+                send_mixer_rules();
+        }
         function send_mixer_rules() {
             if (self.MIXER_RULES_dirty)
                 mspHelper.sendMixerRules(save_eeprom);
@@ -98,6 +122,7 @@ tab.initialize = function (callback) {
         }
         function save_done() {
             self.MIXER_RULES_dirty = false;
+            self.MIXER_INPUTS_dirty = false;
 
             self.isDirty = self.needReboot || self.needSave;
 
@@ -111,12 +136,13 @@ tab.initialize = function (callback) {
             }
         }
 
-        send_mixer_rules();
+        send_mixer_inputs();
     }
 
     function data_to_form() {
 
         $('.tab-mixer .note').hide();
+        $('.mixerAxisGainNote').show();
 
         // Real hardware always reports MIXER_RULE_COUNT (32) rules; pad out the
         // simulator's empty default so the rule editor has slots to add into.
@@ -133,6 +159,7 @@ tab.initialize = function (callback) {
         self.needReboot = false;
 
         self.MIXER_RULES_dirty = false;
+        self.MIXER_INPUTS_dirty = false;
     }
 
     // Full mixer rule editor: every used rule plus one trailing blank slot to add a new one.
@@ -317,6 +344,29 @@ tab.initialize = function (callback) {
         renderMixerRuleTable();
     }
 
+    function renderAxisGain() {
+        const fields = {
+            roll:  $('.axisGainRoll'),
+            pitch: $('.axisGainPitch'),
+            yaw:   $('.axisGainYaw'),
+        };
+
+        Object.keys(AXIS_GAIN_INPUTS).forEach(function (axis) {
+            const input = FC.MIXER_INPUTS[AXIS_GAIN_INPUTS[axis]];
+            if (!input) return;
+
+            const field = fields[axis];
+            field.val(rateToPercent(input.rate));
+            field.on('change', function () {
+                input.rate = percentToRate(field.val());
+                field.val(rateToPercent(input.rate));
+                self.MIXER_INPUTS_dirty = true;
+                self.needSave = true;
+                setDirty();
+            });
+        });
+    }
+
     // Dims any rule row whose assigned condition is currently false, so it's
     // obvious at a glance which rules are actually contributing right now
     // versus just configured but gated off.
@@ -341,6 +391,7 @@ tab.initialize = function (callback) {
         // UI Hooks
         data_to_form();
         renderMixerRuleTable();
+        renderAxisGain();
 
         self.mixerWizardDialog = new MixerWizardDialog($('#mixerWizardDialog'), applyWizardRules);
         self.mixerWizardDialog.initialize();

@@ -2902,6 +2902,21 @@
     "mixerOutputMotor4": {
         "message": "Motor #4"
     },
+    "mixerAxisGainTitle": {
+        "message": "Axis Gain"
+    },
+    "mixerAxisGainHelp": {
+        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is unity gain."
+    },
+    "mixerAxisGainRoll": {
+        "message": "Roll"
+    },
+    "mixerAxisGainPitch": {
+        "message": "Pitch"
+    },
+    "mixerAxisGainYaw": {
+        "message": "Yaw"
+    },
     "mixerRulesTitle": {
         "message": "Mixer Rules"
     },
