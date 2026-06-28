@@ -43,6 +43,126 @@
     border-radius: 3px;
 }
 
+.tab-mixer .mixerRulesBox {
+    /* .gui_box is "display: table" (shrink-to-fit) by default, which leaves
+       width:100% on the table below with no definite width to resolve
+       against. This box needs to be a normal full-width block instead. */
+    display: block;
+    width: 100%;
+}
+
+.tab-mixer .mixerRuleTable {
+    width: 100%;
+    table-layout: fixed;
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 8px;
+}
+
+.tab-mixer .mixerRuleTable th {
+    text-align: left;
+    font-weight: bold;
+    padding: 4px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--subtleAccent);
+}
+
+.tab-mixer .mixerRuleTable td {
+    padding: 3px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--superSubtleAccent);
+}
+
+.tab-mixer .mixerRuleTable select,
+.tab-mixer .mixerRuleTable input:not([type="checkbox"]) {
+    width: 100%;
+}
+
+.tab-mixer .mixerRuleTable input:not([type="checkbox"]) {
+    text-align: right;
+}
+
+.tab-mixer .mixerRuleReverseCell,
+.tab-mixer .mixerRuleReverseHeader {
+    text-align: center;
+}
+
+.tab-mixer .mixerRuleTable input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+.tab-mixer .mixerRuleColIndex     { width: 3%; }
+.tab-mixer .mixerRuleColOutput    { width: 11%; }
+.tab-mixer .mixerRuleColOperator  { width: 7%; }
+.tab-mixer .mixerRuleColInput     { width: 12%; }
+.tab-mixer .mixerRuleColCurve     { width: 9%; }
+.tab-mixer .mixerRuleColWeight    { width: 8%; }
+.tab-mixer .mixerRuleColOffset    { width: 8%; }
+.tab-mixer .mixerRuleColSpeed     { width: 8%; }
+.tab-mixer .mixerRuleColReverse   { width: 6%; }
+.tab-mixer .mixerRuleColCondition { width: 8%; }
+.tab-mixer .mixerRuleColActions   { width: 7%; }
+.tab-mixer .mixerRuleColHint      { width: 8%; }
+
+.tab-mixer .mixerRuleActions {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.tab-mixer .mixerRuleActions a {
+    display: inline-block;
+    width: 1.4em;
+    text-align: center;
+    cursor: pointer;
+    color: #626262;
+    text-decoration: none;
+}
+
+.tab-mixer .mixerRuleActions a:hover {
+    color: #333;
+}
+
+@keyframes mixerRuleMovedFlash {
+    from { background-color: #fff3a0; }
+    to   { background-color: transparent; }
+}
+
+.tab-mixer .mixerRuleTable tr.mixerRuleMoved {
+    animation: mixerRuleMovedFlash 1.2s ease-out;
+}
+
+/* The rule's assigned condition is currently false, so it isn't
+   contributing anything this cycle - dim the whole row (still editable)
+   to make that obvious at a glance rather than just configured-but-inert. */
+.tab-mixer .mixerRuleTable tr.mixerRuleGatedOff {
+    opacity: 0.45;
+}
+
+.tab-mixer .mixerRuleHint {
+    display: block;
+    height: 20px;
+    line-height: 20px;
+    color: var(--warningColor, #b8860b);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-mixer .mixerRuleToolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
 .tab-mixer .mixerConfigTable {
     float: left;
     width: 100%;
@@ -83,156 +203,6 @@
     border-top: 1px dotted var(--superSubtleAccent);
 }
 
-.tab-mixer .override {
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 100%;
-}
-
-.tab-mixer .override .gui_box {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0;
-    min-width: 740px;
-}
-
-.tab-mixer .mixerOverrideNote {
-    padding: 10px 10px;
-}
-
-.tab-mixer .mixerOverrideSwitch {
-    float: left;
-    width: 100%;
-    margin: 0;
-    padding: 1px;
-    border: 0;
-    border-collapse: collapse;
-    table-layout: auto;
-}
-
-.tab-mixer .mixerOverrideSwitch th {
-    height: 10px;
-    font-weight: normal;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    border: 0;
-    padding: 5px 0 2px 0;
-}
-
-.tab-mixer .mixerOverrideSwitch td {
-    padding: 12px 15px 12px 15px;
-    text-align: left;
-    border-bottom: 0;
-}
-
-.tab-mixer .mixerOverrideSwitch tr td:nth-child(1) {
-    min-width: 50px;
-}
-
-.tab-mixer .mixerOverrideSwitch tr td:nth-child(2) {
-    padding-right: 15px;
-}
-
-.tab-mixer .mixerOverrideSwitch tr .td:nth-child(3) {
-    width: 75%;
-}
-
-.tab-mixer .mixerOverrideTable {
-    width: 100%;
-    border: 0;
-    border-collapse: collapse;
-    margin-top: 2px;
-}
-
-.tab-mixer .mixerOverrideTable .trhead {
-    color: var(--quietText);
-    background-color: var(--button-background);
-    text-align: center;
-    font-size: 11px;
-    line-height: 16px;
-    height: 22px;
-    border-top: 1px solid var(--boxBackground);
-}
-
-.tab-mixer .mixerOverrideTable td {
-    padding: 6px 5px 7px 5px;
-    border: 1px solid var(--subtleAccent);
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(1) {
-    width: 120px;
-    text-align: left;
-    border-left: 0;
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(1) span {
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(2) {
-    width: 80px;
-    text-align: center;
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(3) {
-    width: 80px;
-    text-align: center;
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(4) {
-    width: 80px;
-    text-align: left;
-}
-
-.tab-mixer .mixerOverrideTable td:nth-child(5) {
-    height: 75px;
-    padding: 2px 20px 2px 20px;
-    text-align: left;
-    vertical-align: top;
-    border-right: 0;
-}
-
-.tab-mixer .mixerOverrideTable tr:last-child td {
-    border-bottom: 0;
-}
-
-.tab-mixer .mixerOverrideTable tbody tr:nth-child(odd) {
-    background-color: #f8f8f8;
-}
-
-.tab-mixer .mixerOverrideTable tbody tr:nth-child(even) {
-    background-color: #e9e9e9;
-}
-
-.tab-mixer .mixerOverrideSlider {
-    margin-top: 20px;
-}
-
-.tab-mixer .mixerOverrideSlider .noUi-pips {
-    padding: 5px 0 0 0;
-}
-
-.tab-mixer .mixerOverrideSlider .noUi-pips .noUi-marker-large {
-    height: 10px;
-}
-
-.tab-mixer .mixerOverrideSlider .noUi-pips .noUi-value-large {
-    padding-top: 4px;
-}
-
-.tab-mixer .mixerOverrideSliderLeftLabel {
-    float: left;
-    color: #999;
-    padding: 2px 0;
-}
-
-.tab-mixer .mixerOverrideSliderRightLabel {
-    float: right;
-    color: #999;
-    padding: 2px 2px;
-}
-
 .tab-mixer dialog {
     width: 40em;
     border-radius: 5px;
@@ -245,6 +215,34 @@
 
 .tab-mixer dialog h3 {
     margin-bottom: 0.5em;
+}
+
+.tab-mixer .wizardSection {
+    margin-bottom: 12px;
+}
+
+.tab-mixer .wizardSectionTitle {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.tab-mixer .wizardOption {
+    display: block;
+    margin: 2px 0;
+    font-weight: normal;
+}
+
+.tab-mixer .wizardOption input {
+    display: inline-block;
+    width: auto;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.tab-mixer .wizardHint {
+    color: #999;
+    font-size: 11px;
+    margin-top: 2px;
 }
 
 .tab-mixer .mixerMotorisedTailCalibrationNote .note {

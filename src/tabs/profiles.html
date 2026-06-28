@@ -131,21 +131,6 @@
                                     <div class="helpicon cf_tip" i18n_title="profilesErrorRotationHelp"></div>
                                 </td>
                             </tr>
-                            <tr class="errorDecayGround border">
-                                <td>
-                                    <input type="checkbox" id="errorDecayGround" class="toggle" />
-                                </td>
-                                <td colspan="2">
-                                    <span i18n="profilesErrorDecayGround"></span>
-                                    <div class="helpicon cf_tip subhelp" i18n_title="profilesErrorDecayTimeGroundHelp"></div>
-                                    <span class="suboption">
-                                        <input type="number" id="errorDecayTimeGround" step="0.1" min="0.1" max="25.0" />
-                                        <label for="errorDecayTimeGround">
-                                            <span i18n="profilesErrorDecayTime"></span>
-                                        </label>
-                                    </span>
-                                </td>
-                            </tr>
                             <tr class="errorDecayCyclic">
                                 <td>
                                     <input type="number" id="errorDecayTimeCyclic" step="0.1" min="0" max="25" />
@@ -166,6 +151,28 @@
                                         <span i18n="profilesErrorDecayLimitCyclic"></span>
                                     </label>
                                     <div class="helpicon cf_tip" i18n_title="profilesErrorDecayLimitCyclicHelp"></div>
+                                </td>
+                            </tr>
+                            <tr class="fwTpa">
+                                <td>
+                                    <input type="number" id="fwTpaBreakpoint" step="1" min="0" max="100" />
+                                </td>
+                                <td colspan="2">
+                                    <label for="fwTpaBreakpoint">
+                                        <span i18n="profilesFwTpaBreakpoint"></span>
+                                    </label>
+                                    <div class="helpicon cf_tip" i18n_title="profilesFwTpaBreakpointHelp"></div>
+                                </td>
+                            </tr>
+                            <tr class="fwTpa border">
+                                <td>
+                                    <input type="number" id="fwTpaRate" step="1" min="0" max="100" />
+                                </td>
+                                <td colspan="2">
+                                    <label for="fwTpaRate">
+                                        <span i18n="profilesFwTpaRate"></span>
+                                    </label>
+                                    <div class="helpicon cf_tip" i18n_title="profilesFwTpaRateHelp"></div>
                                 </td>
                             </tr>
                             <tr class="itermRelax border">
@@ -238,48 +245,6 @@
                                 <td colspan="2">
                                     <label for="errorLimitYaw">
                                         <span i18n="profilesErrorLimitYaw"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr class="offsetLimit HSI">
-                                <td>
-                                    <input type="number" id="offsetLimitRoll" step="1" min="0" max="180" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="offsetLimitRoll">
-                                        <span i18n="profilesOffsetLimitRoll"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesOffsetLimitHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="offsetLimit HSI border">
-                                <td>
-                                    <input type="number" id="offsetLimitPitch" step="1" min="0" max="180" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="offsetLimitPitch">
-                                        <span i18n="profilesOffsetLimitPitch"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr class="offsetGain HSI">
-                                <td>
-                                    <input type="number" id="offsetGainRoll" step="1" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="offsetGainRoll">
-                                        <span i18n="profilesOffsetGainRoll"></span>
-                                    </label>
-                                    <div class="helpicon cf_tip" i18n_title="profilesOffsetGainHelp"></div>
-                                </td>
-                            </tr>
-                            <tr class="offsetGain HSI border">
-                                <td>
-                                    <input type="number" id="offsetGainPitch" step="1" min="0" max="250" />
-                                </td>
-                                <td colspan="2">
-                                    <label for="offsetGainPitch">
-                                        <span i18n="profilesOffsetGainPitch"></span>
                                     </label>
                                 </td>
                             </tr>
@@ -443,8 +408,6 @@
                             </tr>
                         </table>
                     </div>
-
-                    <div id="svelte-gov-settings" class="spacer_left"></div>
 
                 </div>
             </div>

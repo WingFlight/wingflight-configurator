@@ -412,8 +412,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 }
 
                 if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.RC_TUNING.cyclic_ring = data.readU8();
-                    FC.RC_TUNING.cyclic_polar = Boolean(data.readU8());
+                    data.readU8(); // was cyclic_ring (heli-only, removed)
+                    data.readU8(); // was cyclic_polar (heli-only, removed)
                 }
 
                 break;
@@ -431,8 +431,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     FC.PIDS[i][4] = FC.PIDS_ACTIVE[i][4];
                 }
                 for (let i = 0; i < 2; i++) { // RP
-                    FC.PIDS_ACTIVE[i][5] = data.readU16(); // O-term
-                    FC.PIDS[i][5] = FC.PIDS_ACTIVE[i][5];
+                    data.readU16(); // was O-term (heli-only, removed)
                 }
                 break;
             }
@@ -743,23 +742,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_MIXER_CONFIG: {
-                FC.MIXER_CONFIG.main_rotor_dir = data.readU8();
                 FC.MIXER_CONFIG.tail_rotor_mode = data.readU8();
-                FC.MIXER_CONFIG.tail_motor_idle = data.readU8();
-                FC.MIXER_CONFIG.tail_center_trim = data.read16();
-                FC.MIXER_CONFIG.swash_type = data.readU8();
-                FC.MIXER_CONFIG.swash_ring = data.readU8();
-                FC.MIXER_CONFIG.swash_phase = data.read16();
-                FC.MIXER_CONFIG.blade_pitch_limit = data.readU16();
-                FC.MIXER_CONFIG.swash_trim[0] = data.read16();
-                FC.MIXER_CONFIG.swash_trim[1] = data.read16();
-                FC.MIXER_CONFIG.swash_trim[2] = data.read16();
-                FC.MIXER_CONFIG.coll_rpm_correction = data.readU8();
-                FC.MIXER_CONFIG.coll_geo_correction = data.read8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.MIXER_CONFIG.coll_tilt_correction_pos = data.read8();
-                    FC.MIXER_CONFIG.coll_tilt_correction_neg = data.read8();
-                }
                 break;
             }
 
@@ -1145,28 +1128,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP_SET_RESCUE_PROFILE: {
-                console.log("Rescue Mode Profile settings saved");
-                break;
-            }
-
-            case MSPCodes.MSP_SET_GOVERNOR_PROFILE: {
-                console.log("Governor PRofile settings saved");
-                break;
-            }
-
-            case MSPCodes.MSP_SET_GOVERNOR_CONFIG: {
-                console.log("Governor settings saved");
-                break;
-            }
-
             case MSPCodes.MSP_PID_PROFILE: {
                 FC.PID_PROFILE.pid_mode                      = data.readU8();
-                FC.PID_PROFILE.error_decay_time_ground       = data.readU8();
+                data.readU8(); // was error_decay_time_ground (heli-only, removed)
                 FC.PID_PROFILE.error_decay_time_cyclic       = data.readU8();
-                FC.PID_PROFILE.error_decay_time_yaw          = data.readU8();
+                data.readU8(); // was error_decay_time_yaw (heli-only, removed)
                 FC.PID_PROFILE.error_decay_limit_cyclic      = data.readU8();
-                FC.PID_PROFILE.error_decay_limit_yaw         = data.readU8();
+                data.readU8(); // was error_decay_limit_yaw (heli-only, removed)
                 FC.PID_PROFILE.error_rotation                = data.readU8();
                 FC.PID_PROFILE.errorLimitRoll                = data.readU8();
                 FC.PID_PROFILE.errorLimitPitch               = data.readU8();
@@ -1181,14 +1149,14 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.itermRelaxCutoffRoll          = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffPitch         = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffYaw           = data.readU8();
-                FC.PID_PROFILE.yawStopGainCW                 = data.readU8();
-                FC.PID_PROFILE.yawStopGainCCW                = data.readU8();
-                FC.PID_PROFILE.yawPrecompCutoff              = data.readU8();
-                FC.PID_PROFILE.yawFFCyclicGain               = data.readU8();
-                FC.PID_PROFILE.yawFFCollectiveGain           = data.readU8();
-                FC.PID_PROFILE.yawFFImpulseGain              = data.read8();
-                FC.PID_PROFILE.yawFFImpulseDecay             = data.readU8();
-                FC.PID_PROFILE.pitchFFCollectiveGain         = data.readU8();
+                data.readU8(); // was yawStopGainCW (heli-only, removed)
+                data.readU8(); // was yawStopGainCCW (heli-only, removed)
+                data.readU8(); // was yawPrecompCutoff (heli-only, removed)
+                data.readU8(); // was yawFFCyclicGain (heli-only, removed)
+                data.readU8(); // was yawFFCollectiveGain (heli-only, removed)
+                data.read8();  // was yawFFImpulseGain (heli-only, removed)
+                data.readU8(); // was yawFFImpulseDecay (heli-only, removed)
+                data.readU8(); // was pitchFFCollectiveGain (heli-only, removed)
                 // Angle Mode //
                 FC.PID_PROFILE.levelAngleStrength            = data.readU8();
                 FC.PID_PROFILE.levelAngleLimit               = data.readU8();
@@ -1197,109 +1165,25 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Acro Trainer //
                 FC.PID_PROFILE.acroTrainerGain               = data.readU8();
                 FC.PID_PROFILE.acroTrainerLimit              = data.readU8();
-                // Cyclic CrossCoupling //
-                FC.PID_PROFILE.cyclicCrossCouplingGain       = data.readU8();
-                FC.PID_PROFILE.cyclicCrossCouplingRatio      = data.readU8();
-                FC.PID_PROFILE.cyclicCrossCouplingCutoff     = data.readU8();
-                // Offset limits //
-                FC.PID_PROFILE.offsetLimitRoll               = data.readU8();
-                FC.PID_PROFILE.offsetLimitPitch              = data.readU8();
+                // Cyclic CrossCoupling -- heli-only, removed //
+                data.readU8();
+                data.readU8();
+                data.readU8();
+                // Offset limits -- heli-only, removed //
+                data.readU8();
+                data.readU8();
                 // B-term cutoffs //
                 FC.PID_PROFILE.btermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.btermCutoffPitch              = data.readU8();
                 FC.PID_PROFILE.btermCutoffYaw                = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.PID_PROFILE.yaw_inertia_precomp_gain  = data.readU8();
-                    FC.PID_PROFILE.yaw_inertia_precomp_cutoff= data.readU8();
-                }
+                data.readU8(); // was yaw_inertia_precomp_gain (heli-only, removed)
+                data.readU8(); // was yaw_inertia_precomp_cutoff (heli-only, removed)
+                // Fixed-wing throttle-based gain attenuation //
+                FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
+                FC.PID_PROFILE.fwTpaRate                     = data.readU8();
                 break;
             }
 
-            case MSPCodes.MSP_RESCUE_PROFILE: {
-                FC.PID_PROFILE.rescueMode                    = data.readU8();
-                FC.PID_PROFILE.rescueFlipMode                = data.readU8();
-                FC.PID_PROFILE.rescueFlipGain                = data.readU8();
-                FC.PID_PROFILE.rescueLevelGain               = data.readU8();
-                FC.PID_PROFILE.rescuePullupTime              = data.readU8();
-                FC.PID_PROFILE.rescueClimbTime               = data.readU8();
-                FC.PID_PROFILE.rescueFlipTime                = data.readU8();
-                FC.PID_PROFILE.rescueExitTime                = data.readU8();
-                FC.PID_PROFILE.rescuePullupCollective        = data.readU16();
-                FC.PID_PROFILE.rescueClimbCollective         = data.readU16();
-                FC.PID_PROFILE.rescueHoverCollective         = data.readU16();
-                FC.PID_PROFILE.rescueHoverAltitude           = data.readU16();
-                FC.PID_PROFILE.rescueAltitudePGain           = data.readU16();
-                FC.PID_PROFILE.rescueAltitudeIGain           = data.readU16();
-                FC.PID_PROFILE.rescueAltitudeDGain           = data.readU16();
-                FC.PID_PROFILE.rescueMaxCollective           = data.readU16();
-                FC.PID_PROFILE.rescueMaxRate                 = data.readU16();
-                FC.PID_PROFILE.rescueMaxAccel                = data.readU16();
-                break;
-            }
-
-            case MSPCodes.MSP_GOVERNOR_PROFILE: {
-                FC.GOVERNOR.gov_headspeed                    = data.readU16();
-                FC.GOVERNOR.gov_gain                         = data.readU8();
-                FC.GOVERNOR.gov_p_gain                       = data.readU8();
-                FC.GOVERNOR.gov_i_gain                       = data.readU8();
-                FC.GOVERNOR.gov_d_gain                       = data.readU8();
-                FC.GOVERNOR.gov_f_gain                       = data.readU8();
-                FC.GOVERNOR.gov_tta_gain                     = data.readU8();
-                FC.GOVERNOR.gov_tta_limit                    = data.readU8();
-                FC.GOVERNOR.gov_yaw_ff_weight                = data.readU8();
-                FC.GOVERNOR.gov_cyclic_ff_weight             = data.readU8();
-                FC.GOVERNOR.gov_collective_ff_weight         = data.readU8();
-                FC.GOVERNOR.gov_max_throttle                 = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                    FC.GOVERNOR.gov_min_throttle             = data.readU8();
-                }
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.GOVERNOR.gov_fallback_drop            = data.readU8();
-                    FC.GOVERNOR.gov_flags                    = data.readU16();
-                }
-                break;
-            }
-
-            case MSPCodes.MSP_GOVERNOR_CONFIG: {
-                FC.GOVERNOR.gov_mode                         = data.readU8();
-                FC.GOVERNOR.gov_startup_time                 = data.readU16();
-                FC.GOVERNOR.gov_spoolup_time                 = data.readU16();
-                FC.GOVERNOR.gov_tracking_time                = data.readU16();
-                FC.GOVERNOR.gov_recovery_time                = data.readU16();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.GOVERNOR.gov_throttle_hold_timeout    = data.readU16();
-                } else {
-                    FC.GOVERNOR.gov_zero_throttle_timeout    = data.readU16();
-                }
-                FC.GOVERNOR.gov_lost_headspeed_timeout       = data.readU16();
-                FC.GOVERNOR.gov_autorotation_timeout         = data.readU16();
-                FC.GOVERNOR.gov_autorotation_bailout_time    = data.readU16();
-                FC.GOVERNOR.gov_autorotation_min_entry_time  = data.readU16();
-                FC.GOVERNOR.gov_handover_throttle            = data.readU8();
-                FC.GOVERNOR.gov_pwr_filter                   = data.readU8();
-                FC.GOVERNOR.gov_rpm_filter                   = data.readU8();
-                FC.GOVERNOR.gov_tta_filter                   = data.readU8();
-                FC.GOVERNOR.gov_ff_filter                    = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.GOVERNOR.gov_spoolup_min_throttle     = data.readU8();
-                }
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.GOVERNOR.gov_d_filter                 = data.readU8();
-                    FC.GOVERNOR.gov_spooldown_time           = data.readU16();
-                    FC.GOVERNOR.gov_throttle_type            = data.readU8();
-                                                               data.read8();
-                                                               data.read8();
-                    FC.GOVERNOR.gov_idle_throttle            = data.readU8();
-                    FC.GOVERNOR.gov_auto_throttle            = data.readU8();
-
-                    const throttleCurve = [];
-                    for (let i = 0; i < 9; i++) {
-                        throttleCurve.push(data.readU8());
-                    }
-                    FC.GOVERNOR.gov_bypass_throttle = throttleCurve;
-                }
-                break;
-            }
 
             case MSPCodes.MSP_MIXER_INPUTS: {
                 FC.MIXER_INPUTS = [];
@@ -1316,15 +1200,59 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_RULES: {
                 FC.MIXER_RULES = [];
-                const ruleCount = data.byteLength / 7;
+                const ruleCount = data.byteLength / 13;
                 for (let i = 0; i < ruleCount; i++) {
                     FC.MIXER_RULES.push({
-                        oper:   data.readU8(),
-                        src:    data.readU8(),
-                        dst:    data.readU8(),
-                        offset: data.read16(),
-                        weight: data.read16(),
+                        oper:      data.readU8(),
+                        src:       data.readU8(),
+                        dst:       data.readU8(),
+                        offset:    data.read16(),
+                        weight:    data.read16(),
+                        weightNeg: data.read16(),
+                        speed:     data.readU16(),
+                        curve:     data.readU8(),
+                        condition: data.readU8(),
                     });
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_MIXER_CURVES: {
+                FC.MIXER_CURVES = [];
+                const pointsPerCurve = 9; // MIXER_CURVE_POINTS
+                const curveBytes = 1 + pointsPerCurve * 4; // count:u8 + N x (x:i16 + y:i16)
+                const curveCount = data.byteLength / curveBytes;
+                for (let i = 0; i < curveCount; i++) {
+                    const curve = { count: data.readU8(), points: [] };
+                    for (let p = 0; p < pointsPerCurve; p++) {
+                        curve.points.push({ x: data.read16(), y: data.read16() });
+                    }
+                    FC.MIXER_CURVES.push(curve);
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_LOGIC_CONDITIONS: {
+                FC.LOGIC_CONDITIONS = [];
+                const conditionBytes = 8; // enabled:u8 + operation:u8 + typeA:u8 + valueA:i16 + typeB:u8 + valueB:i16
+                const conditionCount = data.byteLength / conditionBytes;
+                for (let i = 0; i < conditionCount; i++) {
+                    FC.LOGIC_CONDITIONS.push({
+                        enabled:        data.readU8(),
+                        operation:      data.readU8(),
+                        operandAType:   data.readU8(),
+                        operandAValue:  data.read16(),
+                        operandBType:   data.readU8(),
+                        operandBValue:  data.read16(),
+                    });
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_LOGIC_CONDITIONS_STATUS: {
+                FC.LOGIC_CONDITIONS_STATUS = [];
+                for (let i = 0; i < data.byteLength; i++) {
+                    FC.LOGIC_CONDITIONS_STATUS.push(data.readU8());
                 }
                 break;
             }
@@ -1817,23 +1745,7 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
-            buffer.push8(FC.MIXER_CONFIG.main_rotor_dir)
-                .push8(FC.MIXER_CONFIG.tail_rotor_mode)
-                .push8(FC.MIXER_CONFIG.tail_motor_idle)
-                .push16(FC.MIXER_CONFIG.tail_center_trim)
-                .push8(FC.MIXER_CONFIG.swash_type)
-                .push8(FC.MIXER_CONFIG.swash_ring)
-                .push16(FC.MIXER_CONFIG.swash_phase)
-                .push16(FC.MIXER_CONFIG.blade_pitch_limit)
-                .push16(FC.MIXER_CONFIG.swash_trim[0])
-                .push16(FC.MIXER_CONFIG.swash_trim[1])
-                .push16(FC.MIXER_CONFIG.swash_trim[2])
-                .push8(FC.MIXER_CONFIG.coll_rpm_correction)
-                .push8(FC.MIXER_CONFIG.coll_geo_correction);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push8(FC.MIXER_CONFIG.coll_tilt_correction_pos)
-                    .push8(FC.MIXER_CONFIG.coll_tilt_correction_neg);
-            }
+            buffer.push8(FC.MIXER_CONFIG.tail_rotor_mode);
             break;
         }
 
@@ -1854,7 +1766,7 @@ MspHelper.prototype.crunch = function(code) {
                 buffer.push16(parseInt(FC.PIDS[i][4])); // B-term
             }
             for (let i = 0; i < 2; i++) { // RP
-                buffer.push16(parseInt(FC.PIDS[i][5])); // O-term
+                buffer.push16(0); // was O-term (heli-only, removed)
             }
             break;
         }
@@ -1896,8 +1808,8 @@ MspHelper.prototype.crunch = function(code) {
             }
 
             if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push8(FC.RC_TUNING.cyclic_ring)
-                      .push8(Number(FC.RC_TUNING.cyclic_polar));
+                buffer.push8(0) // was cyclic_ring (heli-only, removed)
+                      .push8(0); // was cyclic_polar (heli-only, removed)
             }
 
             break;
@@ -2154,11 +2066,11 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_PID_PROFILE: {
             buffer.push8(FC.PID_PROFILE.pid_mode)
-                .push8(FC.PID_PROFILE.error_decay_time_ground)
+                .push8(0) // was error_decay_time_ground (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_decay_time_cyclic)
-                .push8(FC.PID_PROFILE.error_decay_time_yaw)
+                .push8(0) // was error_decay_time_yaw (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_decay_limit_cyclic)
-                .push8(FC.PID_PROFILE.error_decay_limit_yaw)
+                .push8(0) // was error_decay_limit_yaw (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_rotation)
                 .push8(FC.PID_PROFILE.errorLimitRoll)
                 .push8(FC.PID_PROFILE.errorLimitPitch)
@@ -2173,14 +2085,14 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffPitch)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffYaw)
-                .push8(FC.PID_PROFILE.yawStopGainCW)
-                .push8(FC.PID_PROFILE.yawStopGainCCW)
-                .push8(FC.PID_PROFILE.yawPrecompCutoff)
-                .push8(FC.PID_PROFILE.yawFFCyclicGain)
-                .push8(FC.PID_PROFILE.yawFFCollectiveGain)
-                .push8(FC.PID_PROFILE.yawFFImpulseGain)
-                .push8(FC.PID_PROFILE.yawFFImpulseDecay)
-                .push8(FC.PID_PROFILE.pitchFFCollectiveGain)
+                .push8(0) // was yawStopGainCW (heli-only, removed)
+                .push8(0) // was yawStopGainCCW (heli-only, removed)
+                .push8(0) // was yawPrecompCutoff (heli-only, removed)
+                .push8(0) // was yawFFCyclicGain (heli-only, removed)
+                .push8(0) // was yawFFCollectiveGain (heli-only, removed)
+                .push8(0) // was yawFFImpulseGain (heli-only, removed)
+                .push8(0) // was yawFFImpulseDecay (heli-only, removed)
+                .push8(0) // was pitchFFCollectiveGain (heli-only, removed)
                 // Angle //
                 .push8(FC.PID_PROFILE.levelAngleStrength)
                 .push8(FC.PID_PROFILE.levelAngleLimit)
@@ -2189,105 +2101,23 @@ MspHelper.prototype.crunch = function(code) {
                 // Acro Trainer //
                 .push8(FC.PID_PROFILE.acroTrainerGain)
                 .push8(FC.PID_PROFILE.acroTrainerLimit)
-                // Cyclic Cross-coupling //
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingGain)
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingRatio)
-                .push8(FC.PID_PROFILE.cyclicCrossCouplingCutoff)
-                // Offset limits //
-                .push8(FC.PID_PROFILE.offsetLimitRoll)
-                .push8(FC.PID_PROFILE.offsetLimitPitch)
+                // Cyclic Cross-coupling -- heli-only, removed //
+                .push8(0)
+                .push8(0)
+                .push8(0)
+                // Offset limits -- heli-only, removed //
+                .push8(0)
+                .push8(0)
                 // B-term cutoffs //
                 .push8(FC.PID_PROFILE.btermCutoffRoll)
                 .push8(FC.PID_PROFILE.btermCutoffPitch)
-                .push8(FC.PID_PROFILE.btermCutoffYaw);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push8(FC.PID_PROFILE.yaw_inertia_precomp_gain)
-                    .push8(FC.PID_PROFILE.yaw_inertia_precomp_cutoff);
-            }
-            break;
-        }
-
-        case MSPCodes.MSP_SET_RESCUE_PROFILE: {
-            buffer.push8(FC.PID_PROFILE.rescueMode)
-                .push8(FC.PID_PROFILE.rescueFlipMode)
-                .push8(FC.PID_PROFILE.rescueFlipGain)
-                .push8(FC.PID_PROFILE.rescueLevelGain)
-                .push8(FC.PID_PROFILE.rescuePullupTime)
-                .push8(FC.PID_PROFILE.rescueClimbTime)
-                .push8(FC.PID_PROFILE.rescueFlipTime)
-                .push8(FC.PID_PROFILE.rescueExitTime)
-                .push16(FC.PID_PROFILE.rescuePullupCollective)
-                .push16(FC.PID_PROFILE.rescueClimbCollective)
-                .push16(FC.PID_PROFILE.rescueHoverCollective)
-                .push16(FC.PID_PROFILE.rescueHoverAltitude)
-                .push16(FC.PID_PROFILE.rescueAltitudePGain)
-                .push16(FC.PID_PROFILE.rescueAltitudeIGain)
-                .push16(FC.PID_PROFILE.rescueAltitudeDGain)
-                .push16(FC.PID_PROFILE.rescueMaxCollective)
-                .push16(FC.PID_PROFILE.rescueMaxRate)
-                .push16(FC.PID_PROFILE.rescueMaxAccel);
-            break;
-        }
-
-        case MSPCodes.MSP_SET_GOVERNOR_PROFILE: {
-            buffer.push16(FC.GOVERNOR.gov_headspeed)
-                .push8(FC.GOVERNOR.gov_gain)
-                .push8(FC.GOVERNOR.gov_p_gain)
-                .push8(FC.GOVERNOR.gov_i_gain)
-                .push8(FC.GOVERNOR.gov_d_gain)
-                .push8(FC.GOVERNOR.gov_f_gain)
-                .push8(FC.GOVERNOR.gov_tta_gain)
-                .push8(FC.GOVERNOR.gov_tta_limit)
-                .push8(FC.GOVERNOR.gov_yaw_ff_weight)
-                .push8(FC.GOVERNOR.gov_cyclic_ff_weight)
-                .push8(FC.GOVERNOR.gov_collective_ff_weight)
-                .push8(FC.GOVERNOR.gov_max_throttle);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                buffer.push8(FC.GOVERNOR.gov_min_throttle);
-            }
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push8(FC.GOVERNOR.gov_fallback_drop)
-                    .push16(FC.GOVERNOR.gov_flags);
-            }
-            break;
-        }
-
-        case MSPCodes.MSP_SET_GOVERNOR_CONFIG: {
-            buffer.push8(FC.GOVERNOR.gov_mode)
-                .push16(FC.GOVERNOR.gov_startup_time)
-                .push16(FC.GOVERNOR.gov_spoolup_time)
-                .push16(FC.GOVERNOR.gov_tracking_time)
-                .push16(FC.GOVERNOR.gov_recovery_time);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push16(FC.GOVERNOR.gov_throttle_hold_timeout);
-            } else {
-                buffer.push16(FC.GOVERNOR.gov_zero_throttle_timeout);
-            }
-            buffer.push16(FC.GOVERNOR.gov_lost_headspeed_timeout)
-                .push16(FC.GOVERNOR.gov_autorotation_timeout)
-                .push16(FC.GOVERNOR.gov_autorotation_bailout_time)
-                .push16(FC.GOVERNOR.gov_autorotation_min_entry_time)
-                .push8(FC.GOVERNOR.gov_handover_throttle)
-                .push8(FC.GOVERNOR.gov_pwr_filter)
-                .push8(FC.GOVERNOR.gov_rpm_filter)
-                .push8(FC.GOVERNOR.gov_tta_filter)
-                .push8(FC.GOVERNOR.gov_ff_filter);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push8(FC.GOVERNOR.gov_spoolup_min_throttle);
-            }
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push8(FC.GOVERNOR.gov_d_filter)
-                    .push16(FC.GOVERNOR.gov_spooldown_time)
-                    .push8(FC.GOVERNOR.gov_throttle_type)
-                    .push8(FC.GOVERNOR.gov_idle_collective)
-                    .push8(FC.GOVERNOR.gov_wot_collective)
-                    .push8(FC.GOVERNOR.gov_idle_throttle)
-                    .push8(FC.GOVERNOR.gov_auto_throttle);
-
-                for (const point of FC.GOVERNOR.gov_bypass_throttle) {
-                    buffer.push8(point);
-                }
-            }
+                .push8(FC.PID_PROFILE.btermCutoffYaw)
+                // was yaw_inertia_precomp_gain/cutoff (heli-only, removed) //
+                .push8(0)
+                .push8(0)
+                // Fixed-wing throttle-based gain attenuation //
+                .push8(FC.PID_PROFILE.fwTpaBreakpoint)
+                .push8(FC.PID_PROFILE.fwTpaRate);
             break;
         }
 
@@ -2650,7 +2480,11 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push8(rule.src)
           .push8(rule.dst)
           .push16(rule.offset)
-          .push16(rule.weight);
+          .push16(rule.weight)
+          .push16(rule.weightNeg)
+          .push16(rule.speed)
+          .push8(rule.curve)
+          .push8(rule.condition);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };
@@ -2663,6 +2497,67 @@ MspHelper.prototype.sendMixerRules = function(onCompleteCallback)
     function send_next() {
         if (index < FC.MIXER_RULES.length)
             self.sendMixerRule(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendMixerCurve = function(curveIndex, onCompleteCallback)
+{
+    const curve = FC.MIXER_CURVES[curveIndex];
+    const buffer = [];
+
+    buffer.push8(curveIndex)
+          .push8(curve.count);
+
+    curve.points.forEach(function (point) {
+        buffer.push16(point.x).push16(point.y);
+    });
+
+    MSP.send_message(MSPCodes.MSP_SET_MIXER_CURVE, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendMixerCurves = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.MIXER_CURVES.length)
+            self.sendMixerCurve(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendLogicCondition = function(conditionIndex, onCompleteCallback)
+{
+    const condition = FC.LOGIC_CONDITIONS[conditionIndex];
+    const buffer = [];
+
+    buffer.push8(conditionIndex)
+          .push8(condition.enabled)
+          .push8(condition.operation)
+          .push8(condition.operandAType)
+          .push16(condition.operandAValue)
+          .push8(condition.operandBType)
+          .push16(condition.operandBValue);
+
+    MSP.send_message(MSPCodes.MSP_SET_LOGIC_CONDITION, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendLogicConditions = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.LOGIC_CONDITIONS.length)
+            self.sendLogicCondition(index++, send_next);
         else
             onCompleteCallback();
     }

@@ -83,7 +83,7 @@ export const RateCurve = function () {
         return y;
     }
 
-    this.getRotorflightRates = function (rcCommandf, rcCommandfAbs, srate, rcRate, rcExpo) {
+    this.getWingflightRates = function (rcCommandf, rcCommandfAbs, srate, rcRate, rcExpo) {
         const expof = rcCommandf * (1 - rcExpo) + Math.sign(rcCommandf) * rfPow(rcCommandfAbs, srate) * rcExpo;
 
         return rcRate * expof;
@@ -102,7 +102,7 @@ RateCurve.prototype.rcCommandRawToDegreesPerSecond = function (rcData, ratesType
 
         const rcCommandfAbs = Math.abs(rcCommandf);
 
-        angleRate = this.getRotorflightRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo / 100);
+        angleRate = this.getWingflightRates(rcCommandf, rcCommandfAbs, rate, rcRate, rcExpo / 100);
     }
 
     return angleRate;

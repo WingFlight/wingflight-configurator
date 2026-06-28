@@ -14,7 +14,6 @@ export class Features {
     OSD: 18,
     CMS: 19,
     RX_SPI: 25,
-    GOVERNOR: 26,
     ESC_SENSOR: 27,
     FREQ_SENSOR: 28,
     DYN_NOTCH: 29,

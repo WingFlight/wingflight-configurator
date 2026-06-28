@@ -32,6 +32,12 @@ export const Mixer = {
         'mixerInputRCChannel18',
     ],
 
+    // Collective is a helicopter cyclic/collective-pitch concept inherited from
+    // this firmware's Rotorflight lineage; it has no meaning on a fixed-wing
+    // airframe. The underlying values still exist (firmware keeps them at
+    // zero-rate by default), but they're never offered as a mixer input choice.
+    heliOnlyInputs: [4, 9, 14],
+
     outputNames: [
         'mixerOutputNone',
         'mixerOutputServo1',
@@ -55,43 +61,37 @@ export const Mixer = {
         'mixerRuleMul',
     ],
 
-    swashTypes: [
-        'mixerSwashType0',
-        'mixerSwashType1',
-        'mixerSwashType2',
-        'mixerSwashType3',
-        'mixerSwashType4',
-        'mixerSwashType5',
-        'mixerSwashType6',
-    ],
+    OP_NUL: 0,
+    OP_SET: 1,
+    OP_ADD: 2,
+    OP_MUL: 3,
 
     UNINIT: -1,
 
-    TAIL_MODE_VARIABLE:       0,
-    TAIL_MODE_MOTORIZED:      1,
-    TAIL_MODE_BIDIRECTIONAL:  2,
-
-    SWASH_TYPE_NONE:    0,
-    SWASH_TYPE_THRU:    1,
-    SWASH_TYPE_120:     2,
-    SWASH_TYPE_135:     3,
-    SWASH_TYPE_140:     4,
-    SWASH_TYPE_90L:     5,
-    SWASH_TYPE_90V:     6,
-
     RULE_COUNT: 32,
 
-    OVERRIDE_MIN: -2500,
-    OVERRIDE_MAX:  2500,
-    OVERRIDE_OFF:  2501,
-    OVERRIDE_PASSTHROUGH:  2502,
+    SPEED_MIN: 0,
+    SPEED_MAX: 60000,
 
+    // Weight/weightNeg are signed on the wire (their sign is the rule's only
+    // notion of polarity now that firmware no longer has a separate reverse
+    // bit), but the GUI only ever asks for a magnitude here -- polarity comes
+    // from the Reverse checkbox instead. Firmware allows magnitudes up to
+    // MIXER_WEIGHT_MIN/MAX (10000), but that's a 10x gain on a PWM/RX-driven
+    // rule -- never a deliberate choice in practice, just a typo. Cap the GUI
+    // well below that.
+    WEIGHT_MIN: 0,
+    WEIGHT_MAX: 5000,
+
+    // Matches firmware's MIXER_INPUT_MIN/MAX.
+    OFFSET_MIN: -2500,
+    OFFSET_MAX:  2500,
 
     //// Functions
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, offset: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0 };
     },
 
     cloneRule: function (a)
@@ -101,11 +101,15 @@ export const Mixer = {
 
     compareRule : function (a, b)
     {
-        return( a.oper   === b.oper &&
-                a.src    === b.src &&
-                a.dst    === b.dst &&
-                a.weight === b.weight &&
-                a.offset === b.offset );
+        return( a.oper      === b.oper &&
+                a.src       === b.src &&
+                a.dst       === b.dst &&
+                a.weight    === b.weight &&
+                a.weightNeg === b.weightNeg &&
+                a.offset    === b.offset &&
+                a.speed     === b.speed &&
+                a.curve     === b.curve &&
+                a.condition === b.condition );
     },
 
     cloneRules : function (a)
@@ -122,12 +126,91 @@ export const Mixer = {
         return copy;
     },
 
+    //// Mixer setup wizard
+    //
+    // Composes a starting rule set from a handful of orthogonal airframe
+    // choices, rather than picking from a flat list of named presets. The
+    // result is a starting point loaded into the editable rule table — not
+    // applied directly. Servo/motor numbers and directions are typically
+    // still adjusted by the user afterwards to match their airframe.
+
+    buildWizardRules : function (options)
+    {
+        const rules = [];
+        let nextServo = 1;
+        let nextMotor = 9;
+
+        function rule(oper, src, dst, weight, reverse)
+        {
+            const w = reverse ? -weight : weight;
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0 };
+        }
+
+        const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
+        const ROLL = 1, PITCH = 2, YAW = 3, RC_THROTTLE = 15, RC_AUX1 = 16;
+
+        if (options.layout === 'conventional') {
+            if (options.ailerons === 'single') {
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+            } else if (options.ailerons === 'independent') {
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+                rules.push(rule(OP_SET, ROLL, nextServo++, 1000, true));
+            }
+
+            if (options.tailControl === 'elevatorOnly') {
+                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+            } else if (options.tailControl === 'elevatorRudder') {
+                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
+            } else if (options.tailControl === 'vtail') {
+                const rightTail = nextServo++, leftTail = nextServo++;
+                rules.push(rule(OP_SET, YAW,   rightTail, 1000));
+                rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
+                rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
+                rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
+            }
+        } else if (options.layout === 'flyingWing') {
+            const leftElevon = nextServo++, rightElevon = nextServo++;
+            rules.push(rule(OP_SET, PITCH, leftElevon, 1000));
+            rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
+            rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
+            rules.push(rule(OP_ADD, ROLL,  rightElevon, 1000, true));
+
+            if (options.wingYaw === 'rudder') {
+                rules.push(rule(OP_SET, YAW, nextServo++, 1000));
+            }
+        }
+
+        if (options.flaps) {
+            rules.push(rule(OP_SET, RC_AUX1, nextServo, 1000));
+        }
+
+        if (options.motors >= 1) {
+            rules.push(rule(OP_SET, RC_THROTTLE, nextMotor++, 1000));
+        }
+        if (options.motors >= 2) {
+            const motor2 = nextMotor;
+            rules.push(rule(OP_SET, RC_THROTTLE, motor2, 1000));
+
+            if (options.diffThrustYaw) {
+                rules.push(rule(OP_ADD, YAW, 9,      500));
+                rules.push(rule(OP_ADD, YAW, motor2, 500, true));
+            }
+        }
+
+        return rules;
+    },
+
     isNullRule : function (a) {
-        return( a.oper   == 0 &&
-                a.src    == 0 &&
-                a.dst    == 0 &&
-                a.weight == 0 &&
-                a.offset == 0 );
+        return( a.oper      == 0 &&
+                a.src       == 0 &&
+                a.dst       == 0 &&
+                a.weight    == 0 &&
+                a.weightNeg == 0 &&
+                a.offset    == 0 &&
+                a.speed     == 0 &&
+                a.curve     == 0 &&
+                a.condition == 0 );
     },
 
     isNullMixer : function (a) {
@@ -151,6 +234,24 @@ export const Mixer = {
         return true;
     },
 
+    firstFreeRuleIndex : function (rules)
+    {
+        const self = this;
+
+        for (let i=0; i<rules.length; i++)
+            if (self.isNullRule(rules[i]))
+                return i;
+
+        return -1;
+    },
+
+    swapRules : function (rules, i, j)
+    {
+        const tmp = rules[i];
+        rules[i] = rules[j];
+        rules[j] = tmp;
+    },
+
     cloneInput : function (a)
     {
         return Object.assign({}, a);
@@ -169,25 +270,7 @@ export const Mixer = {
 
     cloneConfig : function (orig)
     {
-        const copy = Object.assign({}, orig);
-
-        copy.swash_trim = Array.from(orig.swash_trim);
-
-        return copy;
-    },
-
-    overrideEnabled : function (value)
-    {
-        const enabled = ((value >= Mixer.OVERRIDE_MIN && value <= Mixer.OVERRIDE_MAX) || value == Mixer.OVERRIDE_PASSTHROUGH);
-
-        return enabled;
-    },
-
-    passthroughEnabled : function (value)
-    {
-        const enabled = (value == Mixer.OVERRIDE_PASSTHROUGH);
-
-        return enabled;
+        return Object.assign({}, orig);
     },
 
 };

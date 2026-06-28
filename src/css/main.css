@@ -1105,6 +1105,24 @@ input[type="number"]::-webkit-inner-spin-button {
     border-bottom: 0;
 }
 
+#tabs li.tab-group-header {
+    margin-top: 8px;
+    padding: 6px 14px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(216, 216, 216, 0.5);
+    background-color: rgba(0, 0, 0, 0.15);
+    border-bottom: 0;
+    cursor: default;
+    user-select: none;
+}
+
+#tabs li.tab-group-header:first-child {
+    margin-top: 0;
+}
+
 #tabs li a {
     font-weight: normal;
     padding-left: 33px;
@@ -1304,6 +1322,18 @@ li.active .ic_adjust {
     background-image: url(/images/icons/cf_icon_adjust_white.svg);
 }
 
+.ic_curves {
+    background-image: url(/images/icons/cf_icon_curves_grey.svg);
+}
+
+.ic_curves:hover {
+    background-image: url(/images/icons/cf_icon_curves_white.svg);
+}
+
+li.active .ic_curves {
+    background-image: url(/images/icons/cf_icon_curves_white.svg);
+}
+
 .ic_servo {
     background-image: url(/images/icons/cf_icon_servo_grey.svg);
 }
@@ -1422,18 +1452,6 @@ li.active .ic_cli {
 
 li.active .ic_motor {
     background-image: url(/images/icons/cf_icon_motor_white.svg);
-}
-
-.ic_governor {
-    background-image: url(/images/icons/cf_icon_governor_grey.svg);
-}
-
-.ic_governor:hover {
-    background-image: url(/images/icons/cf_icon_governor_white.svg);
-}
-
-li.active .ic_governor {
-    background-image: url(/images/icons/cf_icon_governor_white.svg);
 }
 
 .ic_welcome {

@@ -22,7 +22,7 @@ function drawStickPosition(context, color, rcPos, value, maxValue) {
   context.restore();
 }
 
-// Rotorflight is the only supported rates system.
+// Wingflight is the only supported rates system.
 const RATES_DEFAULTS = {
     rcRateDec:    0,
     rcRateDef:    250,
@@ -109,7 +109,7 @@ const tab = {
     currentRateProfile: null,
     currentRates: null,
     RATES_TYPE: {
-        ROTORFLIGHT: 6,
+        WINGFLIGHT: 0,
     },
 
     TAB_NAMES: [
@@ -155,7 +155,7 @@ const tab = {
 
         this.liveData.raw_setpoint_roll = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[0],
-            this.RATES_TYPE.ROTORFLIGHT,
+            this.RATES_TYPE.WINGFLIGHT,
             this.currentRates.roll_srate,
             this.currentRates.roll_rc_rate,
             this.currentRates.roll_rc_expo,
@@ -166,7 +166,7 @@ const tab = {
 
         this.liveData.raw_setpoint_pitch = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[1],
-            this.RATES_TYPE.ROTORFLIGHT,
+            this.RATES_TYPE.WINGFLIGHT,
             this.currentRates.pitch_srate,
             this.currentRates.pitch_rc_rate,
             this.currentRates.pitch_rc_expo,
@@ -177,7 +177,7 @@ const tab = {
 
         this.liveData.raw_setpoint_yaw = this.rateCurve.rcCommandRawToDegreesPerSecond(
             1500 + FC.RC_COMMAND[2],
-            this.RATES_TYPE.ROTORFLIGHT,
+            this.RATES_TYPE.WINGFLIGHT,
             this.currentRates.yaw_srate,
             this.currentRates.yaw_rc_rate,
             this.currentRates.yaw_rc_expo,
@@ -246,8 +246,8 @@ tab.initialize = function (callback) {
 
     function form_to_data() {
 
-        // Rates type: Rotorflight is the only supported rates system.
-        FC.RC_TUNING.rates_type = self.RATES_TYPE.ROTORFLIGHT;
+        // Rates type: Wingflight is the only supported rates system.
+        FC.RC_TUNING.rates_type = self.RATES_TYPE.WINGFLIGHT;
 
         // Rates response time
         FC.RC_TUNING.roll_response_time = getIntegerValue('.tab-rates input[name="roll_response"]');
@@ -270,10 +270,6 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.yaw_dynamic_deadband_gain = getIntegerValue('#yaw-dynamic-deadband-gain');
         FC.RC_TUNING.yaw_dynamic_deadband_filter = getIntegerValue('#yaw-dynamic-deadband-filter', 10);
 
-        // Cyclic Ring / Polar Coordinates are helicopter-only concepts; keep them permanently disabled.
-        FC.RC_TUNING.cyclic_ring = 0;
-        FC.RC_TUNING.cyclic_polar = false;
-
         // catch RC_tuning changes
         const pitch_rc_expo_e = $('.rates_setup input[name="pitch_rc_expo"]');
         const pitch_rc_rate_e = $('.rates_setup input[name="pitch_rc_rate"]');
@@ -295,7 +291,7 @@ tab.initialize = function (callback) {
         FC.RC_TUNING.yaw_rc_rate = getFloatValue(yaw_rc_rate_e);
         FC.RC_TUNING.yaw_srate = getFloatValue(yaw_srate_e);
 
-        // Convert from display units back to Rotorflight's internal units.
+        // Convert from display units back to Wingflight's internal units.
         FC.RC_TUNING.pitch_rc_rate      /= 500;
         FC.RC_TUNING.roll_rc_rate       /= 500;
         FC.RC_TUNING.yaw_rc_rate        /= 500;
@@ -330,7 +326,7 @@ tab.initialize = function (callback) {
         context.save();
         context.strokeStyle = colour;
         context.translate(0, yOffset);
-        self.rateCurve.draw(self.RATES_TYPE.ROTORFLIGHT, rate, rcRate, rcExpo, useSuperExpo, deadband, limit, maxAngularVel, context, opts);
+        self.rateCurve.draw(self.RATES_TYPE.WINGFLIGHT, rate, rcRate, rcExpo, useSuperExpo, deadband, limit, maxAngularVel, context, opts);
         context.restore();
     }
 
@@ -423,7 +419,7 @@ tab.initialize = function (callback) {
             curveContext.clearRect(0, 0, curveWidth, curveHeight);
 
             self.currentRates.max_angular_roll = self.rateCurve.getMaxAngularVel(
-                self.RATES_TYPE.ROTORFLIGHT,
+                self.RATES_TYPE.WINGFLIGHT,
                 self.currentRates.roll_srate,
                 self.currentRates.roll_rc_rate,
                 self.currentRates.roll_rc_expo,
@@ -432,7 +428,7 @@ tab.initialize = function (callback) {
                 self.currentRates.roll_rate_limit,
             );
             self.currentRates.max_angular_pitch = self.rateCurve.getMaxAngularVel(
-                self.RATES_TYPE.ROTORFLIGHT,
+                self.RATES_TYPE.WINGFLIGHT,
                 self.currentRates.pitch_srate,
                 self.currentRates.pitch_rc_rate,
                 self.currentRates.pitch_rc_expo,
@@ -441,7 +437,7 @@ tab.initialize = function (callback) {
                 self.currentRates.pitch_rate_limit,
             );
             self.currentRates.max_angular_yaw = self.rateCurve.getMaxAngularVel(
-                self.RATES_TYPE.ROTORFLIGHT,
+                self.RATES_TYPE.WINGFLIGHT,
                 self.currentRates.yaw_srate,
                 self.currentRates.yaw_rc_rate,
                 self.currentRates.yaw_rc_expo,
@@ -918,7 +914,7 @@ tab.updateRatesLabels = function() {
 
 /*
  * Loads the current rate profile from FC.RC_TUNING into self.currentRates,
- * converting from Rotorflight's internal units to display units.
+ * converting from Wingflight's internal units to display units.
  * Pass resetToDefaults=true to reset the rate curve to factory defaults
  * (used by the "Reset to defaults" button).
  */
@@ -966,7 +962,7 @@ tab.initRatesSystem = function(resetToDefaults) {
         yaw_dynamic_deadband_filter:      FC.RC_TUNING.yaw_dynamic_deadband_filter,
     };
 
-    // Convert from Rotorflight's internal units to display units.
+    // Convert from Wingflight's internal units to display units.
     self.currentRates.roll_rc_rate       *= 500;
     self.currentRates.pitch_rc_rate      *= 500;
     self.currentRates.yaw_rc_rate        *= 500;

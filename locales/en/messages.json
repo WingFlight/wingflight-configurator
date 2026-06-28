@@ -462,11 +462,14 @@
     "tabMotors": {
         "message": "Motors"
     },
-    "tabGovernor": {
-        "message": "Governor"
-    },
     "tabMixer": {
         "message": "Mixer"
+    },
+    "tabCurves": {
+        "message": "Curves"
+    },
+    "tabLogic": {
+        "message": "Conditions"
     },
     "tabLedStrip": {
         "message": "LED Strip"
@@ -488,6 +491,24 @@
     },
     "tabAuxiliary": {
         "message": "Modes"
+    },
+    "tabGroupSetup": {
+        "message": "Setup"
+    },
+    "tabGroupOutputs": {
+        "message": "Outputs"
+    },
+    "tabGroupFlightTuning": {
+        "message": "Flight Tuning"
+    },
+    "tabGroupModesLogic": {
+        "message": "Modes & Logic"
+    },
+    "tabGroupPeripherals": {
+        "message": "Peripherals"
+    },
+    "tabGroupDiagnostics": {
+        "message": "Diagnostics"
     },
     "logActionHide": {
         "message": "Hide Log"
@@ -1670,18 +1691,6 @@
     "profilesPIDModeZeroWarning": {
         "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the <b>Passthrough Mode</b>.<br>Please use the <b>CLI</b> to change the PID settings."
     },
-    "profilesPIDModeOneWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the legacy <b>PID Mode 1</b>.<br>Please use the <b>CLI</b> to change the PID settings."
-    },
-    "profilesPIDModeTwoWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the legacy <b>PID Mode 2</b>."
-    },
-    "profilesPIDModeThreeWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the <b>PID Mode 3</b>."
-    },
-    "profilesPIDModeFourWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the experimental <b>PID Mode 4</b>."
-    },
     "profilesPIDModeCustomWarning": {
         "message": "<span class=\"message-negative\">Warning:</span> The PID Controller is configured manually with parameters that can't be expressed here.<br>Please use the <b>CLI</b> to change the PID settings."
     },
@@ -1940,9 +1949,6 @@
     },
     "receiverTelemetrySensor_ADJUSTMENT": {
         "message": "Adjustment Function"
-    },
-    "receiverTelemetrySensor_GOV_MODE": {
-        "message": "Governor Mode"
     },
     "receiverTelemetrySensor_ARMING_FLAGS": {
         "message": "Arming Flags"
@@ -2204,15 +2210,6 @@
     },
     "receiverTelemetrySensor_ARMING_DISABLE_FLAGS": {
         "message": "Arming Disable Flags"
-    },
-    "receiverTelemetrySensor_RESCUE_STATE": {
-        "message": "Rescue State"
-    },
-    "receiverTelemetrySensor_GOVERNOR_STATE": {
-        "message": "Governor State"
-    },
-    "receiverTelemetrySensor_GOVERNOR_FLAGS": {
-        "message": "Governor Flags"
     },
     "receiverTelemetrySensor_PID_PROFILE": {
         "message": "PID Profile"
@@ -2755,302 +2752,8 @@
     "servoOverrideSlider": {
         "message": ""
     },
-    "mixerCustomNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> The Mixer is configured with a <strong>custom setup</strong> that can't be presented in the GUI. Any configuration changes must be done in the CLI, with the <code>mixer</code> command."
-    },
     "mixerRulesNote": {
         "message": "<span class=\"message-negative\">Warning:</span> The Mixer is configured with <strong>custom</strong> rules. Any rule changes must be done in the CLI, with the <code>mixer rule</code> command."
-    },
-    "mixerBidirNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> <i>Bidirectional tail motor</i> is an experimental feature that requires additional settings in the CLI."
-    },
-    "mixerRebootNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> Some settings require System Reboot to take affect!"
-    },
-    "mixerMotorisedTailCalibrationNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> Yaw calibration should be 100% when using a motorised tail. Do not change this value unless you know what you are doing."
-    },
-    "mixerMainRotorSettings": {
-        "message": "Main Rotor Settings"
-    },
-    "mixerMainRotorDirection": {
-        "message": "Main Rotor Direction"
-    },
-    "mixerMainRotorDirectionHelp": {
-        "message": "Looking from the top of the helicopter, what direction is the main rotor turning? For the majority of helicopters this is clockwise."
-    },
-    "mixerClockwise": {
-        "message": "Clockwise"
-    },
-    "mixerCounterClockwise": {
-        "message": "Counter-Clockwise"
-    },
-    "mixerSwashType": {
-        "message": "Swashplate Type"
-    },
-    "mixerSwashTypeHelp": {
-        "message": "<strong>None:</strong> The mixer is disabled. Custom mixing rules must be set in the CLI. <br><br><strong>Direct:</strong> No mixing, controls are passed through the mixer unchanged for external mixing.<br><br><strong>CCPM:</strong> Cyclic-Collective Pitch Mixing. For cyclic-pitch helicopters with three swashplate servos, at 120&deg;, 135&deg;, or 140&deg; angle.<br><br><strong>FPM:</strong> Fixed Pitch Mixing. For fixed-pitch helicopters with two swashplate servos at 90&deg; angle, either in L or V configuration."
-    },
-    "mixerSwashType0": {
-        "message": "None"
-    },
-    "mixerSwashType1": {
-        "message": "Direct"
-    },
-    "mixerSwashType2": {
-        "message": "CCPM 120&deg;"
-    },
-    "mixerSwashType3": {
-        "message": "CCPM 135&deg;"
-    },
-    "mixerSwashType4": {
-        "message": "CCPM 140&deg;"
-    },
-    "mixerSwashType5": {
-        "message": "FPM 90&deg; L"
-    },
-    "mixerSwashType6": {
-        "message": "FPM 90&deg; V"
-    },
-    "mixerSwashType7": {
-        "message": ""
-    },
-    "mixerSwashType8": {
-        "message": ""
-    },
-    "mixerSwashType9": {
-        "message": ""
-    },
-    "mixerDirectionNormal": {
-        "message": "Normal"
-    },
-    "mixerDirectionReverse": {
-        "message": "Reverse"
-    },
-    "mixerElevatorDirection": {
-        "message": "Elevator Control Direction"
-    },
-    "mixerElevatorDirectionHelp": {
-        "message": "Depending on the elevator servo position and the head design, the direction may be reversed."
-    },
-    "mixerAileronDirection": {
-        "message": "Aileron Control Direction"
-    },
-    "mixerAileronDirectionHelp": {
-        "message": "Depending on the aileron servo position and the head design, the direction may be reversed."
-    },
-    "mixerCollectiveDirection": {
-        "message": "Collective Control Direction"
-    },
-    "mixerCollectiveDirectionHelp": {
-        "message": "Depending on the blade grip control arm position, the collective direction may be reversed. Usually trailing edge control has reversed direction."
-    },
-    "mixerGeometrySettings": {
-        "message": "Main Rotor Geometry"
-    },
-    "mixerCyclicCalibration": {
-        "message": "Cyclic calibration [%]"
-    },
-    "mixerCyclicCalibrationHelp": {
-        "message": "Adjust the cyclic gain to match the mechanical gain in the head design."
-    },
-    "mixerCollectiveCalibration": {
-        "message": "Collective calibration [%]"
-    },
-    "mixerCollectiveCalibrationHelp": {
-        "message": "Adjust the collective gain to match the mechanical gain in the head design."
-    },
-    "mixerCollectiveGeoCorrection": {
-        "message": "Collective Geometry Correction [%]"
-    },
-    "mixerCollectiveGeoCorrectionHelp": {
-        "message": "Adjust until the collective positive and negative deflections are equal."
-    },
-    "mixerTotalPitchLimit": {
-        "message": "Total blade pitch limit [&deg;]"
-    },
-    "mixerTotalPitchLimitHelp": {
-        "message": "Maximum amount of total cyclic + collective blade pitch."
-    },
-    "mixerCyclicLimit": {
-        "message": "Cyclic blade pitch limit [&deg;]"
-    },
-    "mixerCyclicLimitHelp": {
-        "message": "Maximum amount of cyclic blade pitch."
-    },
-    "mixerCollectiveLimit": {
-        "message": "Collective blade pitch limit [&deg;]"
-    },
-    "mixerCollectiveLimitHelp": {
-        "message": "Maximum amount of collective blade pitch."
-    },
-    "mixerSwashRing": {
-        "message": "Swashring"
-    },
-    "mixerSwashRingHelp": {
-        "message": "The swashring limits the maximum angle the swashplate can reach in order to prevent binding. Pitch and Roll axis should be configured individually (via the Mixer input and scaling) to the desired pitch angles (without binding). If however, both the maximum Pitch and Roll are commanded <strong>at the same time</strong>, the Swashplate will have to deflect to a larger angle than either axis individually. This may result in the swashplate binding on the main shaft.<br><br>Increasing the value of Swashring will limit the maximum Swashplate angle when both Pitch and Roll are maximum."
-    },
-    "mixerSwashPhase": {
-        "message": "Swashplate phase angle [&deg;]"
-    },
-    "mixerSwashPhaseHelp": {
-        "message": "The phase offset for the swashplate controls."
-    },
-    "mixerCollectiveTiltCorrectionPos": {
-        "message": "Positive Collective Tilt Correction"
-    },
-    "mixerCollectiveTiltCorrectionNeg": {
-        "message": "Negative Collective Tilt Correction"
-    },
-    "mixerCollectiveTiltCorrectionHelp": {
-        "message": "Corrects cyclic to collective swashplate interaction.<br /><br />At full positive and negative collective pitch, adjust the corresponding values until the swashplate pivot ball remains stationary when increasing cyclic input."
-    },
-    "mixerSwashRollTrim": {
-        "message": "Roll trim [%]"
-    },
-    "mixerSwashPitchTrim": {
-        "message": "Pitch trim [%]"
-    },
-    "mixerSwashCollectiveTrim": {
-        "message": "Collective trim [%]"
-    },
-    "mixerSwashTrimHelp": {
-        "message": "Trim for swashplate linkages. Use only if the linkages are not adjustable."
-    },
-    "mixerTailRotorSettings": {
-        "message": "Tail Rotor Settings"
-    },
-    "mixerTailRotorMode": {
-        "message": "Tail rotor type"
-    },
-    "mixerTailRotorModeHelp": {
-        "message": "<strong>Variable pitch:</strong> Variable pitch tail controlled by a tail servo (Servo#4). <br><strong>Motorised:</strong> The tail has a separate motor (Motor#2) for controlling the yaw.<br><strong>Bi-directional:</strong> Motorised tail operating in bi-directional mode (experimental)."
-    },
-    "mixerTailVariablePitch": {
-        "message": "Variable pitch"
-    },
-    "mixerTailMotorized": {
-        "message": "Motorised"
-    },
-    "mixerTailBidirectional": {
-        "message": "Bidirectional"
-    },
-    "mixerTailRotorDirection": {
-        "message": "Yaw Control Direction"
-    },
-    "mixerTailRotorDirectionHelp": {
-        "message": "Depending on the tail rotor direction and ESC/servo configuration, the yaw direction may be reversed."
-    },
-    "mixerTailRotorCalibration": {
-        "message": "Yaw calibration [%]"
-    },
-    "mixerTailRotorCalibrationHelp": {
-        "message": "Adjust the yaw gain to match the mechanical gain. Usually around 50-150% for servo driven tails, but can be wildly different for motorised tail rotors."
-    },
-    "mixerTailRotorMinYaw": {
-        "message": "CW Yaw Blade Angle Limit"
-    },
-    "mixerTailRotorMinYawHelp": {
-        "message": "An angle limit for clockwise yaw."
-    },
-    "mixerTailRotorMaxYaw": {
-        "message": "CCW Yaw Blade Angle Limit"
-    },
-    "mixerTailRotorMaxYawHelp": {
-        "message": "An angle limit for counter-clockwise yaw."
-    },
-    "mixerTailMotorMinYaw": {
-        "message": "CW yaw limit [%]"
-    },
-    "mixerTailMotorMinYawHelp": {
-        "message": "A limit for clockwise yaw."
-    },
-    "mixerTailMotorMaxYaw": {
-        "message": "CCW yaw limit [%]"
-    },
-    "mixerTailMotorMaxYawHelp": {
-        "message": "A limit for counter-clockwise yaw."
-    },
-    "mixerTailMotorIdle": {
-        "message": "Motor idle throttle [%]"
-    },
-    "mixerTailMotorIdleHelp": {
-        "message": "This is the minimum throttle signal sent to the tail motor. This should be set just high enough that the motor does not stop"
-    },
-    "mixerTailRotorCenterTrim": {
-        "message": "Yaw center trim"
-    },
-    "mixerTailRotorCenterTrimHelp": {
-        "message": "Set tail rotor trim to achieve zero blade pitch with 0° yaw mixer override."
-    },
-    "mixerTailMotorCenterTrim": {
-        "message": "Yaw center offset [%]"
-    },
-    "mixerTailMotorCenterTrimHelp": {
-        "message": "Set tail motor throttle value for zero yaw command."
-    },
-    "mixerSwashLinkTrim": {
-        "message": "Swashplate Trims"
-    },
-    "mixerInputChannels": {
-        "message": "Mixer Control Inputs"
-    },
-    "mixerInputChannelsHelp": {
-        "message": "<strong>Note! This is the right place to limit your controls</strong><br><br>The mixer input rate is for setting the scaling factors to match the mechanical head setup. As every rotor head is different, different scaling values are needed for each setup. <br><strong>Control:</strong> This column contains each of the Stabilized control functions. <br><strong>Minimum:</strong> Set the minimum angle you wish the blade to reach when commanded. <br><strong>Maximum:</strong> Set the maximum angle you wish the blade to reach when commanded. <br><strong>Scaling:</strong> Increase or decrease the scaling value until the helicopter blades match the commanded angle. <br><br><strong>Mixer Input Calibration Process</strong><br><strong>Step 1: </strong>Enable the mixer override by the selector on the 'SYSTEM' tab. The Mixer Override entry will now be visible on this page. <br><strong>Step 2: </strong>Enable the bypass on the Control to be calibrated. <br><strong>Step 3: </strong>Set the Mixer override to an angle (say 10 degrees). <br><strong>Step 4: </strong>Measure the actual blade angle.<br><strong>Step 5: </strong>Set the scaling so the physical blade angle matches the commanded angle."
-    },
-    "mixerOverrideNote": {
-        "message": "<strong>Note.</strong> Mixer Override forces the mixer inputs to arbitrary positions for setup purposes. The override values are not saved, and will be reset in reboot."
-    },
-    "mixerOverride": {
-        "message": "Mixer Override"
-    },
-    "mixerOverrideHelp": {
-        "message": "This feature is used for setting up the rotor and is part of the <strong>Mixer Calibration</strong> process. When the bypass enable is active the mixer can be commanded to the requested positions directly."
-    },
-    "mixerOverrideEnableSwitch": {
-        "message": "<strong>Enable Mixer Override</strong>"
-    },
-    "mixerOverrideEnableSwitchText": {
-        "message": "Mixer Override forces the mixer inputs to arbitrary positions for setup purposes. If Passthrough is enabled, the positions are controlled by your TX. The override values are not saved, and will be reset in reboot."
-    },
-    "mixerPassthroughEnableSwitch": {
-        "message": "<strong>Enable Mixer Passthrough</strong>"
-    },
-    "mixerOverrideEnable": {
-        "message": "Override"
-    },
-    "mixerPassthroughEnable": {
-        "message": "Passthrough"
-    },
-    "mixerOverrideValue": {
-        "message": "Value"
-    },
-    "mixerOverrideSlider": {
-        "message": ""
-    },
-    "mixerOverrideSliderLeftLabel1": {
-        "message": "Left"
-    },
-    "mixerOverrideSliderRightLabel1": {
-        "message": "Right"
-    },
-    "mixerOverrideSliderLeftLabel2": {
-        "message": "Backward"
-    },
-    "mixerOverrideSliderRightLabel2": {
-        "message": "Forward"
-    },
-    "mixerOverrideSliderLeftLabel3": {
-        "message": "CW"
-    },
-    "mixerOverrideSliderRightLabel3": {
-        "message": "CCW"
-    },
-    "mixerOverrideSliderLeftLabel4": {
-        "message": "Down"
-    },
-    "mixerOverrideSliderRightLabel4": {
-        "message": "Up"
     },
     "mixerRuleNOP": {
         "message": "-"
@@ -3063,9 +2766,6 @@
     },
     "mixerRuleMul": {
         "message": "Mul"
-    },
-    "mixerInputName": {
-        "message": "Control"
     },
     "mixerInputRate": {
         "message": "Scaling"
@@ -3176,7 +2876,7 @@
         "message": "Servo #3"
     },
     "mixerOutputServo4": {
-        "message": "Tail Servo"
+        "message": "Servo #4"
     },
     "mixerOutputServo5": {
         "message": "Servo #5"
@@ -3191,7 +2891,7 @@
         "message": "Servo #8"
     },
     "mixerOutputMotor1": {
-        "message": "Motor"
+        "message": "Motor #1"
     },
     "mixerOutputMotor2": {
         "message": "Motor #2"
@@ -3201,6 +2901,267 @@
     },
     "mixerOutputMotor4": {
         "message": "Motor #4"
+    },
+    "mixerRulesTitle": {
+        "message": "Mixer Rules"
+    },
+    "mixerRuleIndex": {
+        "message": "#"
+    },
+    "mixerRuleOutput": {
+        "message": "Output"
+    },
+    "mixerRuleOperator": {
+        "message": "Operator"
+    },
+    "mixerRuleInput": {
+        "message": "Input source"
+    },
+    "mixerRuleCurve": {
+        "message": "Curve"
+    },
+    "mixerCurveNone": {
+        "message": "-"
+    },
+    "mixerCurveLabel": {
+        "message": "Curve $1"
+    },
+    "mixerConditionNone": {
+        "message": "-"
+    },
+    "logicConditionLabel": {
+        "message": "Condition $1"
+    },
+    "curvesTitle": {
+        "message": "Mixer Curves"
+    },
+    "curveReset": {
+        "message": "Reset Curve"
+    },
+    "curveEditorHint": {
+        "message": "Drag points to adjust · click empty space to add · right-click a point to remove"
+    },
+    "curvePointIndex": {
+        "message": "#"
+    },
+    "curvePointX": {
+        "message": "X"
+    },
+    "curvePointY": {
+        "message": "Y"
+    },
+    "curveAddPoint": {
+        "message": "Add Point"
+    },
+    "curvePointCount": {
+        "message": "Points:"
+    },
+    "logicNote": {
+        "message": "Define conditions here, then gate any Mixer Rule on one from its Condition column. A gated rule contributes nothing while its condition is false."
+    },
+    "logicConditionsTitle": {
+        "message": "Conditions"
+    },
+    "logicIndex": {
+        "message": "#"
+    },
+    "logicEnable": {
+        "message": "Enable"
+    },
+    "logicOperator": {
+        "message": "Operator"
+    },
+    "logicOperandA": {
+        "message": "Operand A"
+    },
+    "logicOperandB": {
+        "message": "Operand B"
+    },
+    "logicStatus": {
+        "message": "Status"
+    },
+    "logicOperationTrue": {
+        "message": "Always On"
+    },
+    "logicOperationEqual": {
+        "message": "Equals"
+    },
+    "logicOperationGreaterThan": {
+        "message": "Greater Than"
+    },
+    "logicOperationLowerThan": {
+        "message": "Lower Than"
+    },
+    "logicOperationAnd": {
+        "message": "AND"
+    },
+    "logicOperationOr": {
+        "message": "OR"
+    },
+    "logicOperationXor": {
+        "message": "XOR"
+    },
+    "logicOperationNot": {
+        "message": "NOT"
+    },
+    "logicOperationSticky": {
+        "message": "Latch"
+    },
+    "logicOperationDelay": {
+        "message": "Delay"
+    },
+    "logicOperationEdge": {
+        "message": "Pulse"
+    },
+    "logicOperandTypeValue": {
+        "message": "Value"
+    },
+    "logicOperandTypeChannel": {
+        "message": "Channel"
+    },
+    "logicOperandTypeMode": {
+        "message": "Mode"
+    },
+    "logicOperandTypeCondition": {
+        "message": "Condition"
+    },
+    "logicChannelRoll": {
+        "message": "Roll"
+    },
+    "logicChannelPitch": {
+        "message": "Pitch"
+    },
+    "logicChannelYaw": {
+        "message": "Yaw"
+    },
+    "logicChannelThrottle": {
+        "message": "Throttle"
+    },
+    "logicSetValue": {
+        "message": "Set Value"
+    },
+    "logicSetValueHelp": {
+        "message": "Copies the other operand's current channel reading into this value — set the other operand to a Channel first, move it to the position you want, then click this to capture that exact value."
+    },
+    "mixerRuleWeight": {
+        "message": "Weight"
+    },
+    "mixerRuleDifferential": {
+        "message": "Differential %"
+    },
+    "mixerRuleOffset": {
+        "message": "Offset"
+    },
+    "mixerRuleSpeed": {
+        "message": "Speed"
+    },
+    "mixerRuleReverse": {
+        "message": "Reverse"
+    },
+    "mixerRuleCondition": {
+        "message": "Condition"
+    },
+    "mixerRuleActionsHeader": {
+        "message": ""
+    },
+    "mixerAddRule": {
+        "message": "Add Rule"
+    },
+    "mixerOpenWizard": {
+        "message": "Setup Wizard"
+    },
+    "mixerRuleMoveUp": {
+        "message": "Move up"
+    },
+    "mixerRuleMoveDown": {
+        "message": "Move down"
+    },
+    "mixerRuleDelete": {
+        "message": "Delete rule"
+    },
+    "mixerRuleHintFirstShouldSet": {
+        "message": "First rule for this output - usually should be Set"
+    },
+    "mixerRuleHintOverride": {
+        "message": "Overwrites earlier rule(s) for this output - did you mean Add?"
+    },
+    "mixerWizardTitle": {
+        "message": "Mixer Setup Wizard"
+    },
+    "mixerWizardLayoutTitle": {
+        "message": "Wing / Tail Layout"
+    },
+    "mixerWizardLayoutConventional": {
+        "message": "Conventional (separate ailerons and tail)"
+    },
+    "mixerWizardLayoutFlyingWing": {
+        "message": "Flying Wing (elevons, no separate tail)"
+    },
+    "mixerWizardAileronsTitle": {
+        "message": "Ailerons"
+    },
+    "mixerWizardAileronsNone": {
+        "message": "None (e.g. rudder and dihedral glider)"
+    },
+    "mixerWizardAileronsSingle": {
+        "message": "Single servo (shared Y-cable channel)"
+    },
+    "mixerWizardAileronsIndependent": {
+        "message": "Independent left and right servos"
+    },
+    "mixerWizardTailTitle": {
+        "message": "Tail Control"
+    },
+    "mixerWizardTailElevatorOnly": {
+        "message": "Elevator only (no rudder)"
+    },
+    "mixerWizardTailElevatorRudder": {
+        "message": "Elevator and Rudder (conventional or T-tail)"
+    },
+    "mixerWizardTailVTail": {
+        "message": "V-Tail (2 servos, combined pitch and yaw)"
+    },
+    "mixerWizardWingYawTitle": {
+        "message": "Yaw Control"
+    },
+    "mixerWizardWingYawNone": {
+        "message": "None"
+    },
+    "mixerWizardWingYawRudder": {
+        "message": "Rudder (single fin servo)"
+    },
+    "mixerWizardFlapsTitle": {
+        "message": "Flaps"
+    },
+    "mixerWizardFlapsEnable": {
+        "message": "Add a flap servo (driven by an aux channel)"
+    },
+    "mixerWizardMotorsTitle": {
+        "message": "Motors"
+    },
+    "mixerWizardMotors0": {
+        "message": "0 (pure glider)"
+    },
+    "mixerWizardMotors1": {
+        "message": "1"
+    },
+    "mixerWizardMotors2": {
+        "message": "2"
+    },
+    "mixerWizardDiffThrust": {
+        "message": "Use differential thrust for yaw"
+    },
+    "mixerWizardDiffThrustHint": {
+        "message": "Adds extra yaw authority by speeding up one motor and slowing the other, on top of normal throttle."
+    },
+    "mixerWizardOverwriteWarning": {
+        "message": "Applying the wizard replaces all current mixer rules."
+    },
+    "mixerWizardCancel": {
+        "message": "Cancel"
+    },
+    "mixerWizardApply": {
+        "message": "Apply"
     },
     "dialogMixerResetTitle": {
         "message": "<span class=\"message-negative\">WARNING: Mixer Reset</span>"
@@ -3451,348 +3412,6 @@
     "motorOverrideTitle": {
         "message": "Throttle Override"
     },
-    "govFeatures": {
-        "message": "Governor"
-    },
-    "govSectionGeneral": {
-        "message": "General"
-    },
-    "govSectionThrottle": {
-        "message": "Throttle"
-    },
-    "govSectionThrottleCurve": {
-        "message": "Governor Bypass Throttle Curve"
-    },
-    "govSectionThrottleCurveHelp": {
-        "message": "<p><strong>Governor Bypass Mode</strong> disables all governor functions. When this mode is active, the collective-to-throttle curve is used to determine throttle output.</p><p>See the Governor Bypass section in the Modes tab to configure how the mode is activated.</p>"
-    },
-    "govSectionRampTime": {
-        "message": "Motor Ramp"
-    },
-    "govSectionAutorotation": {
-        "message": "Autorotation"
-    },
-    "govSectionFilters": {
-        "message": "Filters"
-    },
-    "govProfile": {
-        "message": "Governor Settings"
-    },
-    "govConfigurationNote": {
-        "message": "The Governor has both global and profile parameters. See the Profiles tab for profile specific parameters."
-    },
-    "govMode": {
-        "message": "Governor Mode"
-    },
-    "govModeHelp": {
-        "message": "<p><strong>OFF:</strong> Governor is disabled and the throttle from the Tx is passed through to the ESC.</p><p><strong>PASSTHROUGH:</strong> Throttle passthrough from the Tx, with slow spoolup and autorotation control.</p><p><strong>STANDARD:</strong> Motor speed is controlled by the FC. Equivalent to a typical ESC Governor.</p><p><strong>MODE1:</strong> Like STANDARD but with Collective and Cyclic Precompensation (i.e. collective changes are proactively changing the throttle, just like a throttle curve in the Tx).</p><p><strong>MODE2:</strong> Like MODE1, but with proactive battery voltage sag compensation. Requires fast voltage measurement.</p>"
-    },
-    "govModeHelp2": {
-        "message": "<p><strong>OFF:</strong> The governor is disabled. The throttle input is sent directly to the motor.</p><p><strong>LIMIT:</strong> The governor is disabled. Global <em>Idle Throttle</em> and profile <em>Minimum Throttle</em> and <em>Maximum Throttle</em> limits are applied before sending the throttle input to the motor.</p><p><strong>DIRECT:</strong> The governor handles slow spoolup and bailout recovery. Headspeed stabilisation is left to an external governor or throttle curve.</p><p><strong>ELECTRIC:</strong> Complete governor suitable for electric motors.</p><p><strong>NITRO:</strong> Complete governor suitable for internal combustion engines.</p>"
-    },
-    "govThrottleType": {
-        "message": "Throttle Type"
-    },
-    "govThrottleTypeHelp": {
-        "message": "<p><strong>NORMAL:</strong> The throttle input is directly controlling the motor. Once the target headspeed is reached, the governor takes over until the throttle input is reduced below the handover level.</p><p><strong>SWITCH:</strong> While the throttle input is below handover, it directly controls motor output. While above handover, the governor engages and the throttle input is used to adjust the headspeed target.</p><p>SWITCH can only be used with ELECTRIC and NITRO governor mode.</p><p><strong>FUNCTION:</strong> The throttle input is used to select each governor mode.</p>"
-    },
-    "govIdleCollective": {
-        "message": "Collective ➜ Idle Throttle"
-    },
-    "govIdleCollectiveHelp": {
-        "message": "<p>Idle throttle is applied while collective is below this value.</p><p><strong>Note:</strong> This setting is only used when the <i>Throttle Curve</i> parameter in the Governor Profile is active."
-    },
-    "govWotCollective": {
-        "message": "Collective ➜ Full Throttle"
-    },
-    "govWotCollectiveHelp": {
-        "message": "<p>Full throttle is applied while collective is above this value.</p><p><strong>Note:</strong> This setting is only used when the <i>Throttle Curve</i> parameter in the Governor Profile is active."
-    },
-    "govHandoverThrottle": {
-        "message": "Handover Throttle"
-    },
-    "govHandoverThrottleHelp": {
-        "message": "<p>The throttle level above which the governor is activated. Below this level the input throttle is passed to the ESC - above this level the governor is enabled and the input throttle is used for calculating the target headspeed.</p><p><strong>Note:</strong> The motor must be able to start below this throttle level.</p>"
-    },
-    "govHandoverThrottleHelp2": {
-        "message": "<p>While throttle input is above this value, motor control is handed over to the governor.</p><p>While throttle input is below this value, it is sent directly to the motor.</p><p><strong>Note:</strong> The motor must be able to start below this throttle level.</p>"
-    },
-    "govStartupTime": {
-        "message": "Startup Time"
-    },
-    "govStartupTimeHelp": {
-        "message": "Time constant for slow startup, in seconds, measuring the time from zero to full headspeed."
-    },
-    "govStartupTimeHelp2": {
-        "message": "Rate of throttle change during startup, defined as the duration from 0% to 100% throttle."
-    },
-    "govSpoolupTime": {
-        "message": "Spoolup Time"
-    },
-    "govSpoolupTimeHelp": {
-        "message": "Time constant for slow spoolup, in seconds, measuring the time from zero to full headspeed."
-    },
-    "govSpoolupTimeHelp2": {
-        "message": "Rate of throttle change during spoolup, defined as the duration from 0% to 100% throttle."
-    },
-    "govSpooldownTime": {
-        "message": "Spooldown Time"
-    },
-    "govSpooldownTimeHelp": {
-        "message": "Rate of throttle change during spooldown, defined as the duration from 100% to 0% throttle."
-    },
-    "govSpoolupMinThrottle": {
-        "message": "Spoolup Minimum Throttle"
-    },
-    "govSpoolupMinThrottleHelp": {
-        "message": "<p>Minimum throttle output during spoolup.</p><p>For electric motors the default is 5%, for nitro this should be set so the clutch starts to engage for a smooth spoolup 10-15%.</p>"
-    },
-    "govTrackingTime": {
-        "message": "Tracking Time"
-    },
-    "govTrackingTimeHelp": {
-        "message": "Time constant for headspeed changes, in seconds, measuring the time from zero to full headspeed."
-    },
-    "govTrackingTimeHelp2": {
-        "message": "Rate of throttle change when tracking headspeed target changes, defined as the duration from 0% to 100% throttle."
-    },
-    "govRecoveryTime": {
-        "message": "Recovery Time"
-    },
-    "govRecoveryTimeHelp": {
-        "message": "Time constant for recovery spoolup, in seconds, measuring the time from zero to full headspeed."
-    },
-    "govRecoveryTimeHelp2": {
-        "message": "Rate of throttle change during recovery, defined as the duration from 0% to 100% throttle."
-    },
-    "govAutoBailoutTime": {
-        "message": "Bailout Time"
-    },
-    "govAutoBailoutTimeHelp": {
-        "message": "Time constant for autorotation bailout spoolup, in seconds, measuring the time from zero to full headspeed."
-    },
-    "govAutoTimeout": {
-        "message": "Autorotation Timeout"
-    },
-    "govAutoTimeoutHelp": {
-        "message": "<p>The maximum duration autorotation mode may remain engaged.</p><p>When this timeout expires, bailout is no longer available, and starting the motor will result in a normal spoolup.</p><p><strong>Note:</strong> This field must be above zero to enable autorotation mode.</p>"
-    },
-    "govAutoMinEntryTime": {
-        "message": "Autorotation Minimum Flight Time"
-    },
-    "govAutoMinEntryTimeHelp": {
-        "message": "Minimum flight time before autorotation can be engaged."
-    },
-    "govZeroThrottleTimeout": {
-        "message": "Throttle Signal Timeout"
-    },
-    "govZeroThrottleTimeoutHelp": {
-        "message": "Timeout for missing (zero) throttle signal, before shutting down the governor. If the throttle signal returns within this timeout, the governor will perform a recovery spoolup."
-    },
-    "govThrottleHoldTimeout": {
-        "message": "Throttle Hold Timeout"
-    },
-    "govThrottleHoldTimeoutHelp": {
-        "message": "<p>The grace period after activating throttle hold while the governor is active.</p><p>If throttle input is restored within this period, a recovery spoolup will be performed.</p><p>This safeguards against accidental throttle cut activation.</p>"
-    },
-    "govLostHeadspeedTimeout": {
-        "message": "Headspeed Signal Timeout"
-    },
-    "govLostHeadspeedTimeoutHelp": {
-        "message": "Timeout for missing headspeed signal, before spooling down. If the RPM signal returns within this timeout, the governor will perform a recovery spoolup."
-    },
-    "govHeadspeedFilterHz": {
-        "message": "Headspeed Filter Cutoff"
-    },
-    "govHeadspeedFilterHzHelp": {
-        "message": "Cutoff for the headspeed lowpass filter."
-    },
-    "govVoltageFilterHz": {
-        "message": "Battery Voltage Filter Cutoff"
-    },
-    "govVoltageFilterHzHelp": {
-        "message": "Cutoff for the battery voltage lowpass filter."
-    },
-    "govTTAFilterHz": {
-        "message": "TTA Bandwidth"
-    },
-    "govTTAFilterHzHelp": {
-        "message": "Cutoff for the TTA lowpass filter."
-    },
-    "govFFFilterHz": {
-        "message": "Precomp Bandwidth"
-    },
-    "govFFFilterHzHelp": {
-        "message": "Cutoff for the cyclic/collective precompensation lowpass filter."
-    },
-    "govDCutoff": {
-        "message": "D-Term Cutoff"
-    },
-    "govDCutoffHelp": {
-        "message": "Cutoff frequency for the governor D-term filter."
-    },
-    "govHeadspeed": {
-        "message": "Full Headspeed"
-    },
-    "govHeadspeedHelp": {
-        "message": "The governor target headspeed is calculated by multiplying the full headspeed with the throttle input."
-    },
-    "govHeadspeedNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> Changing the headspeed will affect the PID tuning. If you have already tuned the PID Controller Gains, it is likely you will need to repeat the tuning."
-    },
-    "govMaxThrottle": {
-        "message": "Maximum Throttle"
-    },
-    "govMaxThrottleHelp": {
-        "message": "The maximum throttle output the governor may use."
-    },
-    "govMinThrottle": {
-        "message": "Minimum Throttle"
-    },
-    "govMinThrottleHelp": {
-        "message": "The minimum throttle output the governor may use."
-    },
-    "govIdleThrottle": {
-        "message": "Idle Throttle"
-    },
-    "govIdleThrottleHelp": {
-        "message": "<p>The minimum throttle output while the governor <strong><em>is not</em></strong> actively controlling the headspeed.</p><p></p>"
-    },
-    "govAutoThrottle": {
-        "message": "Auto Throttle"
-    },
-    "govAutoThrottleHelp": {
-        "message": "<p>When using NORMAL or SWITCH throttle type, moving the throttle input below this value will cancel autorotation mode, preventing bailout.</p><p>For FUNCTION throttle type, this is the throttle output in autorotation mode.</p>"
-    },
-    "govFallbackDrop": {
-        "message": "Throttle Fallback Drop"
-    },
-    "govFallbackDropHelp": {
-        "message": "Reduce the current motor output by this value in the event the RPM signal is lost."
-    },
-    "govMasterGain": {
-        "message": "Master Gain"
-    },
-    "govMasterGainHelp": {
-        "message": "Master PID loop gain. Usually 10..100"
-    },
-    "govPGain": {
-        "message": "P-gain"
-    },
-    "govPGainHelp": {
-        "message": "PID loop P-term gain. Usually 10..100"
-    },
-    "govIGain": {
-        "message": "I-gain"
-    },
-    "govIGainHelp": {
-        "message": "PID loop I-term gain. Usually 10..100"
-    },
-    "govDGain": {
-        "message": "D-gain"
-    },
-    "govDGainHelp": {
-        "message": "PID loop D-term gain. Usually 0..100"
-    },
-    "govFGain": {
-        "message": "Feedforward Gain"
-    },
-    "govFGainHelp": {
-        "message": "Collective/Cyclic feedforward gain. Usually 0..100"
-    },
-    "govTTAGain": {
-        "message": "Tail Torque Assist (TTA) gain"
-    },
-    "govTTAGainHelp": {
-        "message": "Tail Torque Assist strength (gain). This is a gain applied to increase the headspeed to control the tail in the negative direction (e.g. Motorised tail less than idle speed). Usually 50..150"
-    },
-    "govTTALimit": {
-        "message": "Tail Torque Assist (TTA) limit [%]"
-    },
-    "govTTALimitHelp": {
-        "message": "Tail Torque Assist maximum Headspeed increase. This sets an upper limit how much the headspeed can go over the Full Headspeed. Usually 20..50%."
-    },
-    "govYawPrecomp": {
-        "message": "Yaw"
-    },
-    "govYawPrecompHelp": {
-        "message": "Yaw precompensation weight. Determines how much Yaw is mixed into the feedforward. This helps the governor to maintain the headspeed proactively. Usually 20..100"
-    },
-    "govCyclicPrecomp": {
-        "message": "Cyclic"
-    },
-    "govCyclicPrecompHelp": {
-        "message": "Cyclic precompensation weight. Determines how much cyclic is mixed into the feedforward. This helps the governor to maintain the headspeed proactively. Usually 20..100"
-    },
-    "govCollectivePrecomp": {
-        "message": "Collective"
-    },
-    "govCollectivePrecompHelp": {
-        "message": "Collective precompensation weight. Determines how much collective is mixed into the feedfoward. This helps the governor to maintain the headspeed proactively. Usually 20..100"
-    },
-    "profileGovPIDSection": {
-        "message": "PID"
-    },
-    "profileGovPrecompSection": {
-        "message": "Precompensation"
-    },
-    "profileGovFlagsSection": {
-        "message": "Behaviour"
-    },
-    "govFlag_FALLBACK_PRECOMP": {
-        "message": "Fallback Precompensation"
-    },
-    "govFlag_VOLTAGE_COMP": {
-        "message": "Voltage Compensation"
-    },
-    "govFlag_PID_SPOOLUP": {
-        "message": "Governed Spoolup"
-    },
-    "govFlag_HS_ADJUSTMENT": {
-        "message": "Headspeed Adjustment"
-    },
-    "govFlag_DYN_MIN_THROTTLE": {
-        "message": "Dynamic Minimum Throttle"
-    },
-    "govFlag_AUTOROTATION": {
-        "message": "Autorotation"
-    },
-    "govFlag_SUSPEND": {
-        "message": "Suspend"
-    },
-    "govFlag_BYPASS": {
-        "message": "Bypass"
-    },
-    "govFlagHelp_FALLBACK_PRECOMP": {
-        "message": "Enable precompensation while in the <code>FALLBACK</code> state."
-    },
-    "govFlagHelp_VOLTAGE_COMP": {
-        "message": "<p>Enable battery voltage sag compensation.</p><p><strong>Note:</strong> This setting requires <i>Battery ADC</i> to be used as the <i>Battery Voltage Source</i>. This setting can be found on the <i>Power</i> tab.</p>"
-    },
-    "govFlagHelp_PID_SPOOLUP": {
-        "message": "Enable the governors PID controller during spoolup."
-    },
-    "govFlagHelp_HS_ADJUSTMENT": {
-        "message": "<p>Adjust the target headspeed using the throttle channel.</p><p>When enabled, the target headspeed is calculated by multiplying the <i>Full Headspeed</i> by the input throttle.</p>"
-    },
-    "govFlagHelp_DYN_MIN_THROTTLE": {
-        "message": "Prevent the motor output from dropping drastically during an over-speed."
-    },
-    "govFlagHelp_AUTOROTATION": {
-        "message": "Allow the <code>AUTOROTATION</code> state in this profile."
-    },
-    "govFlagHelp_SUSPEND": {
-        "message": "Disable the PID controller, allowing precompensation to be tuned in isolation."
-    },
-    "govFlagHelp_BYPASS": {
-        "message": "Bypass all governor functionality."
-    },
-    "govThrottleCurveNumPoints": {
-        "message": "Points"
-    },
-    "govThrottleCurveCurrentValue": {
-        "message": "Throttle:"
-    },
     "sensorsInfo": {
         "message": "Keep in mind that using fast update periods and rendering multiple graphs at the same time is resource heavy and will burn your battery quicker if you use a laptop.<br />We recommend to only render graphs for sensors you are interested in while using reasonable update periods."
     },
@@ -4014,9 +3633,6 @@
     },
     "blackboxLog_esc2": {
         "message": "ESC 2"
-    },
-    "blackboxLog_governor": {
-        "message": "Governor"
     },
     "serialLoggingSupportedNote": {
         "message": "You can log to an external logging device (such as an OpenLager) by using a serial port. Configure the port on the Ports tab."
@@ -4750,32 +4366,17 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesOffsetLimitHelp": {
-        "message": "Hard limit for the High Speed Integral offset angle in the PID loop. The absolute offset and thus the O-term will never go above these limits."
+    "profilesFwTpaBreakpoint": {
+        "message": "Throttle Attenuation Breakpoint [%]"
     },
-    "profilesOffsetLimitRoll": {
-        "message": "HSI Offset Limit for Roll Axis [&deg;]"
+    "profilesFwTpaBreakpointHelp": {
+        "message": "Throttle level above which PID gain attenuation starts. Below this throttle level, gains are unaffected. On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so gain is reduced above this breakpoint instead of below it."
     },
-    "profilesOffsetLimitPitch": {
-        "message": "HSI Offset Limit for Pitch Axis [&deg;]"
+    "profilesFwTpaRate": {
+        "message": "Throttle Attenuation Rate [%]"
     },
-    "profilesOffsetGainHelp": {
-        "message": "Gain for the High Speed Integral Offset term (Integral for high speed flight), which is only active at large collective angles. This term of the control loop provides angular stability and safe control following at high speeds, as well as attitude stability on large changes of the collective pitch angle of the rotor disk, which would lead to rapid diving and unwanted attitude changes without HSI. Too low values cause the model to become unstable at high speeds, as well as slow reaction and large attitude changes on collective pitch changes. Too large values can cause oscillation and restlessness at large collective pitch angles. For testing of the lower bounds of the parameter, fly in a straight line <strong> AT SAFE ALTITUDE</strong>, only briefly pull the collective into the negative range and observe the model's reaction. Should the model dive, increase the HSI Offset Gain. For testing the upper bounds of the parameter, give short jabs of elevator and aileron in a high collective vertical climb and observe the model's behavior. If the model swings, wobbles or exerts restlessness after releasing the stick, decrease the HSI Offset Gain."
-    },
-    "profilesOffsetGainRoll": {
-        "message": "HSI Offset Gain for Roll Axis"
-    },
-    "profilesOffsetGainPitch": {
-        "message": "HSI Offset Gain for Pitch Axis"
-    },
-    "profilesErrorDecayGround": {
-        "message": "Ground Error Decay"
-    },
-    "profilesErrorDecayTimeGroundHelp": {
-        "message": "Bleeds off the current controller error when the craft is not airborne. This helps preventing the craft from tipping over on the ground."
-    },
-    "profilesErrorDecayTime": {
-        "message": "Decay Time [s]"
+    "profilesFwTpaRateHelp": {
+        "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
     },
     "profilesErrorDecayTimeCyclic": {
         "message": "Roll/Pitch Error Decay Time [s]"

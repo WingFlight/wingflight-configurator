@@ -161,32 +161,8 @@ export function applyVirtualConfig() {
 
   FC.FEATURE_CONFIG.features.ESC_SENSOR = true;
   FC.FEATURE_CONFIG.features.FREQ_SENSOR = true;
-  FC.FEATURE_CONFIG.features.GOVERNOR = true;
   Object.assign(FC.ESC_SENSOR_CONFIG, {
     protocol: 1,
-  });
-
-  Object.assign(FC.GOVERNOR, {
-    gov_mode: 3,
-    gov_handover_throttle: 20,
-    gov_spoolup_min_throttle: 5,
-    gov_zero_throttle_timeout: 30,
-    gov_lost_headspeed_timeout: 10,
-    gov_startup_time: 200,
-    gov_spoolup_time: 100,
-    gov_tracking_time: 20,
-    gov_recovery_time: 20,
-    gov_autorotation_timeout: 15,
-    gov_autorotation_bailout_time: 0,
-    gov_autorotation_min_entry_time: 50,
-    gov_rpm_filter: 10,
-    gov_pwr_filter: 5,
-    gov_tta_filter: 0,
-    gov_ff_filter: 10,
-    gov_throttle_hold_timeout: 50,
-    gov_d_filter: 50,
-    gov_spooldown_time: 30,
-    gov_bypass_throttle: [0, 25, 50, 75, 100, 125, 150, 175, 200],
   });
 
   Object.assign(FC.MOTOR_TELEMETRY_DATA, {
@@ -234,8 +210,6 @@ export function applyVirtualConfig() {
     "RX_LOST",
     "RX_SET",
   ]);
-
-  FC.MIXER_CONFIG.mixer = 3;
 
   FC.SERVO_CONFIG = new Array(26);
   for (let i = 0; i < FC.SERVO_CONFIG.length; i++) {
@@ -353,11 +327,10 @@ export function applyVirtualConfig() {
     { rate: 0, min: 0, max: 0 },
   ];
 
-  FC.PID_PROFILE.pid_mode = 3;
+  FC.PID_PROFILE.pid_mode = 1;
 
   Object.assign(FC.RC_TUNING, {
-    rates_type: 6,
-    cyclic_ring: 150,
+    rates_type: 0,
   });
 }
 

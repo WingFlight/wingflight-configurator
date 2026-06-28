@@ -1,0 +1,131 @@
+.tab-logic .logicConditionsBox {
+    /* .gui_box is "display: table" (shrink-to-fit) by default, which leaves
+       width:100% on the table below with no definite width to resolve
+       against. This box needs to be a normal full-width block instead. */
+    display: block;
+    width: 100%;
+}
+
+#tab-logic-templates {
+    display: none;
+}
+
+.tab-logic .logicConditionTable {
+    width: 100%;
+    table-layout: fixed;
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 8px;
+}
+
+.tab-logic .logicConditionTable th {
+    text-align: left;
+    font-weight: bold;
+    padding: 4px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--subtleAccent);
+}
+
+.tab-logic .logicConditionTable td {
+    padding: 3px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--superSubtleAccent);
+}
+
+/* Same height for selects and inputs so every row - whichever widget each
+   operand currently shows - lines up consistently with its neighbours. */
+.tab-logic .logicConditionTable select,
+.tab-logic .logicConditionTable input:not([type="checkbox"]) {
+    width: 100%;
+    display: block;
+    height: 20px;
+    line-height: 20px;
+    text-align: right;
+    box-sizing: border-box;
+    border: 1px solid var(--subtleAccent);
+    border-radius: 3px;
+}
+
+.tab-logic .logicConditionTable input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+.tab-logic .logicColIndex        { width: 3%; }
+.tab-logic .logicColEnable       { width: 6%; }
+.tab-logic .logicColOperator     { width: 11%; }
+.tab-logic .logicColOperandType  { width: 12%; }
+.tab-logic .logicColOperandValue { width: 23%; }
+.tab-logic .logicColStatus       { width: 6%; }
+
+/* The number input ("Set Value" alongside it) and the channel select (its
+   live-value readout alongside it) are each a single-line flex row, not a
+   stack - every operand cell is exactly one line tall regardless of which
+   of the four widgets it's currently showing, so operand A and B (and every
+   other row) line up on the same baseline rather than drifting depending on
+   which is a Channel right now. */
+.tab-logic .condOperandAValueNumberGroup,
+.tab-logic .condOperandBValueNumberGroup,
+.tab-logic .condOperandAValueChannelGroup,
+.tab-logic .condOperandBValueChannelGroup {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tab-logic .logicConditionTable .condOperandAValueNumberGroup input,
+.tab-logic .logicConditionTable .condOperandBValueNumberGroup input,
+.tab-logic .logicConditionTable .condOperandAValueChannelGroup select,
+.tab-logic .logicConditionTable .condOperandBValueChannelGroup select {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+}
+
+.tab-logic .condOperandALiveValue,
+.tab-logic .condOperandBLiveValue {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: #626262;
+    white-space: nowrap;
+}
+
+.tab-logic .condOperandASetValue,
+.tab-logic .condOperandBSetValue {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: normal;
+    line-height: 16px;
+    white-space: nowrap;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-logic .logicStatusCell {
+    text-align: center;
+}
+
+.tab-logic .condStatus {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--superSubtleAccent);
+}
+
+.tab-logic .condStatus.logicStatusTrue {
+    background-color: #4caf50;
+}
+
+.tab-logic .condStatus.logicStatusFalse {
+    background-color: var(--subtleAccent);
+}

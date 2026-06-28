@@ -120,16 +120,12 @@ export const MSPCodes = {
 
     MSP_MOTOR_TELEMETRY:            139,
 
-    MSP_HELI_CONFIG:                140,
-    MSP_SET_HELI_CONFIG:            141,
-    MSP_GOVERNOR_CONFIG:            142,
-    MSP_SET_GOVERNOR_CONFIG:        143,
+    // 140, 141 reserved (heli config removed, do not reuse)
+    // 142, 143 reserved (heli governor removed, do not reuse)
     MSP_RPM_FILTER:                 144,
     MSP_SET_RPM_FILTER:             145,
-    MSP_RESCUE_PROFILE:             146,
-    MSP_SET_RESCUE_PROFILE:         147,
-    MSP_GOVERNOR_PROFILE:           148,
-    MSP_SET_GOVERNOR_PROFILE:       149,
+    // 146, 147 reserved (heli rescue removed, do not reuse)
+    // 148, 149 reserved (heli governor removed, do not reuse)
     MSP_LED_STRIP_SETTINGS:         150,
     MSP_SET_LED_STRIP_SETTINGS:     151,
     MSP_BUS_SERVO_CONFIG:           152,
@@ -147,6 +143,11 @@ export const MSPCodes = {
     MSP_GET_MIXER_INPUT:            174,
     MSP_BATTERY_PROFILE:            175,
     MSP_SET_BATTERY_PROFILE:        176,
+    MSP_MIXER_CURVES:               177,
+    MSP_SET_MIXER_CURVE:            178,
+    MSP_LOGIC_CONDITIONS:           197,
+    MSP_SET_LOGIC_CONDITION:        198,
+    MSP_LOGIC_CONDITIONS_STATUS:    199,
 
     MSP_DISPLAYPORT:                182,
 
