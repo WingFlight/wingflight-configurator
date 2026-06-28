@@ -13,7 +13,9 @@ ReleaseChecker.prototype.loadReleaseData = function (processFunction) {
         const releaseDataTimestamp = $.now();
         const cacheReleaseData = result[self._releaseDataTag];
         const cachedReleaseLastUpdate = result[self._releaseLastUpdateTag];
-        if (!cacheReleaseData || !cachedReleaseLastUpdate || releaseDataTimestamp - cachedReleaseLastUpdate > 3600 * 1000) {
+        // An empty array is truthy, so treat a cached-but-empty release list the same as no cache at all.
+        const hasCachedData = Array.isArray(cacheReleaseData) ? cacheReleaseData.length > 0 : !!cacheReleaseData;
+        if (!hasCachedData || !cachedReleaseLastUpdate || releaseDataTimestamp - cachedReleaseLastUpdate > 3600 * 1000) {
             $.get(self._releaseUrl, function (releaseData) {
                 GUI.log(i18n.getMessage('releaseCheckLoaded',[self._releaseName]));
 
@@ -33,9 +35,7 @@ ReleaseChecker.prototype.loadReleaseData = function (processFunction) {
                 self._processReleaseData(cacheReleaseData, processFunction);
             });
         } else {
-            if (cacheReleaseData) {
-                GUI.log(i18n.getMessage('releaseCheckCached',[self._releaseName]));
-            }
+            GUI.log(i18n.getMessage('releaseCheckCached',[self._releaseName]));
 
             self._processReleaseData(cacheReleaseData, processFunction);
         }

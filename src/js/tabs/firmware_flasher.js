@@ -181,7 +181,7 @@ tab.initialize = function (callback) {
 
         function processBoardOptions(releaseData, buildLevel) {
             var releases = {};
-            const filenameExpression = /^wingflight_([\d]+[.][\d]+[.][\d]+((-[A-Za-z][\w]*)|(-[\d]+))?)_([A-Za-z][\w]*)[.]hex$/;
+            const filenameExpression = /^wingflight_([\d]+[.][\d]+[.][\d]+((-[A-Za-z][\w]*)|(-[\d]+(?:[.][\d]+)*))?)_([A-Za-z][\w]*)[.]hex$/;
             releaseData.forEach(function(release) {
                 if (release.prerelease && buildLevel < 2)
                     return;
