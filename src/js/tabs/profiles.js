@@ -184,6 +184,10 @@ tab.initialize = function (callback) {
 
         // Horizon mode
         $('.tab-profiles input[id="horizonModeGain"]').val(FC.PID_PROFILE.horizonLevelStrength);
+
+        // Attitude hold mode
+        $('.tab-profiles input[id="attHoldModeGain"]').val(FC.PID_PROFILE.attHoldGain);
+        $('.tab-profiles input[id="attHoldModeDeadband"]').val(FC.PID_PROFILE.attHoldDeadband);
     }
 
     function form_to_data() {
@@ -231,6 +235,8 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.levelAngleStrength = parseInt($('.tab-profiles input[id="angleModeGain"]').val());
         FC.PID_PROFILE.levelAngleLimit = parseInt($('.tab-profiles input[id="angleModeLimit"]').val());
         FC.PID_PROFILE.horizonLevelStrength = parseInt($('.tab-profiles input[id="horizonModeGain"]').val());
+        FC.PID_PROFILE.attHoldGain = parseInt($('.tab-profiles input[id="attHoldModeGain"]').val());
+        FC.PID_PROFILE.attHoldDeadband = parseInt($('.tab-profiles input[id="attHoldModeDeadband"]').val());
     }
 
     function process_html() {

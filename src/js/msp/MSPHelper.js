@@ -1169,9 +1169,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 data.readU8();
                 data.readU8();
                 data.readU8();
-                // Offset limits -- heli-only, removed //
-                data.readU8();
-                data.readU8();
+                // Attitude hold mode //
+                FC.PID_PROFILE.attHoldGain            = data.readU8();
+                FC.PID_PROFILE.attHoldDeadband        = data.readU8();
                 // B-term cutoffs //
                 FC.PID_PROFILE.btermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.btermCutoffPitch              = data.readU8();
@@ -2105,9 +2105,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(0)
                 .push8(0)
                 .push8(0)
-                // Offset limits -- heli-only, removed //
-                .push8(0)
-                .push8(0)
+                // Attitude hold mode //
+                .push8(FC.PID_PROFILE.attHoldGain)
+                .push8(FC.PID_PROFILE.attHoldDeadband)
                 // B-term cutoffs //
                 .push8(FC.PID_PROFILE.btermCutoffRoll)
                 .push8(FC.PID_PROFILE.btermCutoffPitch)
