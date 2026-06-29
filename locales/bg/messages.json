@@ -6172,21 +6172,21 @@
         "message": "Време на затихване [s]",
         "english": "Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "Време на затихване на грешката [s]",
         "english": "Error Decay time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
+    "profilesItermDecayTimeHelp": {
         "message": "Времева константа за намаляване на натрупаната циклична грешка (I-терм). По-дълго време на затихване прави висенето по-стабилно, но може да намали 3D представянето.",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance."
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "Максимална скорост на затихване на грешката [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
+    "profilesItermDecayLimitHelp": {
         "message": "Максимална скорост на намаляване на натрупаната циклична грешка (I-терм).",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "english": "Maximum bleed-off speed for the accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Време на затихване на грешката [s]",

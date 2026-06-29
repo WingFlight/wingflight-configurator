@@ -7121,24 +7121,24 @@
             "status": "New entry. Please translate!"
         }
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "Error Decay time [s]",
         "english": "Error Decay time [s]",
         "status": "New entry. Please translate!"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
-        "message": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance.",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance.",
+    "profilesItermDecayTimeHelp": {
+        "message": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance.",
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance.",
         "status": "New entry. Please translate!"
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "Error Decay maximum rate [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]",
         "status": "New entry. Please translate!"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
-        "message": "Maximum bleed-off speed for the accumulated cyclic error (I-term).",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term).",
+    "profilesItermDecayLimitHelp": {
+        "message": "Maximum bleed-off speed for the accumulated I-term error.",
+        "english": "Maximum bleed-off speed for the accumulated I-term error.",
         "status": "New entry. Please translate!"
     },
     "profilesErrorDecayTimeYaw": {

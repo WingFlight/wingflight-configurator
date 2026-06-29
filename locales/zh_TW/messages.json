@@ -5824,21 +5824,21 @@
         "message": "衰減時間 [秒]",
         "english": "Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "誤差衰減時間 [秒]",
         "english": "Error Decay time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
+    "profilesItermDecayTimeHelp": {
         "message": "用來消除累積的循環螺距誤差（I-term）的時間常數。較長的衰減時間可以使懸停更穩定，但可能會降低 3D 表現。",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance."
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "誤差衰減最大速率 [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
+    "profilesItermDecayLimitHelp": {
         "message": "累積的循環螺距誤差（I-term）的最大消減速度。",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "english": "Maximum bleed-off speed for the accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "誤差衰減時間 [秒]",

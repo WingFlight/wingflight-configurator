@@ -5824,21 +5824,21 @@
         "message": "Tiempo de decaimiento [s]",
         "english": "Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "Error del tiempo de decaimiento [s]",
         "english": "Error Decay time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
+    "profilesItermDecayTimeHelp": {
         "message": "Tiempo constante para distendir el error acumulativo del cíclico (I-term). Un mayor tiempo de decaimiento hace el estacionario más estable, pero puede reducir las prestaciones en 3D.",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance."
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "Rate Máximo del Error de decaimiento en Cíclico [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
+    "profilesItermDecayLimitHelp": {
         "message": "Velocidad máxima de sangrado para el eeror acumulado en el cíclico (I-term).",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "english": "Maximum bleed-off speed for the accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Error en el tiempo de Decaimiento en Dirección [s]",

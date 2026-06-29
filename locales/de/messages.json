@@ -5824,21 +5824,21 @@
         "message": "Abklingzeit [s]",
         "english": "Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "Fehler-Abklingzeit [s]",
         "english": "Error Decay time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
+    "profilesItermDecayTimeHelp": {
         "message": "Zeitkonstante für das Abklingen des akkumulierten zyklischen Fehlers (I-Anteil). Eine längere Abklingzeit macht den Schwebeflug stabiler, kann aber die 3D-Leistung verringern.",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance."
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "Maximale Fehler-Abklingrate [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
+    "profilesItermDecayLimitHelp": {
         "message": "Maximale Abkling-Geschwindigkeit für den akkumulierten zyklischen Fehler (I-Anteil).",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "english": "Maximum bleed-off speed for the accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Fehler-Abklingzeit [s]",

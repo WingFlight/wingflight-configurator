@@ -5824,21 +5824,21 @@
         "message": "Temps de décroissance [s]",
         "english": "Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclic": {
+    "profilesItermDecayTime": {
         "message": "Temps de décroissance des erreurs [s]",
         "english": "Error Decay time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
+    "profilesItermDecayTimeHelp": {
         "message": "Constante de temps pour éliminer l'erreur cyclique accumulée (terme I). Un temps de décroissance plus long rend le survol plus stable, mais peut réduire les performances 3D.",
-        "english": "Time constant for bleeding off the accumulated cyclic error (I-term). Longer decay time makes hovering more stable, but may reduce 3D performance."
+        "english": "Time constant for bleeding off the accumulated I-term error. Longer decay time makes hovering more stable, but may reduce 3D performance."
     },
-    "profilesErrorDecayLimitCyclic": {
+    "profilesItermDecayLimit": {
         "message": "Taux maximum de décroissance des erreurs [&deg;/s]",
         "english": "Error Decay maximum rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
+    "profilesItermDecayLimitHelp": {
         "message": "Vitesse de purge maximale pour l'erreur cyclique accumulée (terme I).",
-        "english": "Maximum bleed-off speed for the accumulated cyclic error (I-term)."
+        "english": "Maximum bleed-off speed for the accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Temps de décroissance des erreurs [s]",

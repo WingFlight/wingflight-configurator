@@ -4393,17 +4393,17 @@
     "profilesFwTpaRateHelp": {
         "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
     },
-    "profilesErrorDecayTimeCyclic": {
-        "message": "Roll/Pitch Error Decay Time [s]"
+    "profilesItermDecayTime": {
+        "message": "I-Term Decay Time [s]"
     },
-    "profilesErrorDecayTimeCyclicHelp": {
-        "message": "Time constant for bleeding off the accumulated roll/pitch error (I-term). Longer decay time gives a more stable hold, but may reduce responsiveness during aggressive maneuvers."
+    "profilesItermDecayTimeHelp": {
+        "message": "Time constant for bleeding off accumulated I-term error. Longer decay time gives a more stable hold, but may reduce responsiveness during aggressive maneuvers."
     },
-    "profilesErrorDecayLimitCyclic": {
-        "message": "Roll/Pitch Error Decay Max Rate [&deg;/s]"
+    "profilesItermDecayLimit": {
+        "message": "I-Term Decay Max Rate [&deg;/s]"
     },
-    "profilesErrorDecayLimitCyclicHelp": {
-        "message": "Maximum bleed-off speed for the accumulated roll/pitch error (I-term)."
+    "profilesItermDecayLimitHelp": {
+        "message": "Maximum bleed-off speed for accumulated I-term error."
     },
     "profilesErrorDecayTimeYaw": {
         "message": "Error Decay time [s]"

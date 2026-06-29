@@ -1131,9 +1131,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_PID_PROFILE: {
                 FC.PID_PROFILE.pid_mode                      = data.readU8();
                 data.readU8(); // was error_decay_time_ground (heli-only, removed)
-                FC.PID_PROFILE.error_decay_time_cyclic       = data.readU8();
+                FC.PID_PROFILE.iterm_decay_time              = data.readU8();
                 data.readU8(); // was error_decay_time_yaw (heli-only, removed)
-                FC.PID_PROFILE.error_decay_limit_cyclic      = data.readU8();
+                FC.PID_PROFILE.iterm_decay_limit             = data.readU8();
                 data.readU8(); // was error_decay_limit_yaw (heli-only, removed)
                 FC.PID_PROFILE.error_rotation                = data.readU8();
                 FC.PID_PROFILE.errorLimitRoll                = data.readU8();
@@ -2067,9 +2067,9 @@ MspHelper.prototype.crunch = function(code) {
         case MSPCodes.MSP_SET_PID_PROFILE: {
             buffer.push8(FC.PID_PROFILE.pid_mode)
                 .push8(0) // was error_decay_time_ground (heli-only, removed)
-                .push8(FC.PID_PROFILE.error_decay_time_cyclic)
+                .push8(FC.PID_PROFILE.iterm_decay_time)
                 .push8(0) // was error_decay_time_yaw (heli-only, removed)
-                .push8(FC.PID_PROFILE.error_decay_limit_cyclic)
+                .push8(FC.PID_PROFILE.iterm_decay_limit)
                 .push8(0) // was error_decay_limit_yaw (heli-only, removed)
                 .push8(FC.PID_PROFILE.error_rotation)
                 .push8(FC.PID_PROFILE.errorLimitRoll)

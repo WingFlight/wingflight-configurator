@@ -144,8 +144,8 @@ tab.initialize = function (callback) {
             .toggle(semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_9));
 
         // Error decays
-        $('.tab-profiles input[id="errorDecayTimeCyclic"]').val(FC.PID_PROFILE.error_decay_time_cyclic / 10);
-        $('.tab-profiles input[id="errorDecayLimitCyclic"]').val(FC.PID_PROFILE.error_decay_limit_cyclic);
+        $('.tab-profiles input[id="itermDecayTime"]').val(FC.PID_PROFILE.iterm_decay_time / 10);
+        $('.tab-profiles input[id="itermDecayLimit"]').val(FC.PID_PROFILE.iterm_decay_limit);
 
         // Fixed-wing throttle-based gain attenuation
         $('.tab-profiles input[id="fwTpaBreakpoint"]').val(FC.PID_PROFILE.fwTpaBreakpoint);
@@ -212,8 +212,8 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.errorLimitPitch = $('.tab-profiles input[id="errorLimitPitch"]').val();
         FC.PID_PROFILE.errorLimitYaw = $('.tab-profiles input[id="errorLimitYaw"]').val();
 
-        FC.PID_PROFILE.error_decay_time_cyclic = $('.tab-profiles input[id="errorDecayTimeCyclic"]').val() * 10;
-        FC.PID_PROFILE.error_decay_limit_cyclic = $('.tab-profiles input[id="errorDecayLimitCyclic"]').val();
+        FC.PID_PROFILE.iterm_decay_time = $('.tab-profiles input[id="itermDecayTime"]').val() * 10;
+        FC.PID_PROFILE.iterm_decay_limit = $('.tab-profiles input[id="itermDecayLimit"]').val();
 
         FC.PID_PROFILE.fwTpaBreakpoint = parseInt($('.tab-profiles input[id="fwTpaBreakpoint"]').val());
         FC.PID_PROFILE.fwTpaRate = parseInt($('.tab-profiles input[id="fwTpaRate"]').val());
