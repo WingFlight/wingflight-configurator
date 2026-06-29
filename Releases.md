@@ -1,7 +1,3 @@
-# 0.0.2
-
-Add master gain config in mixers
-
 # 0.0.1
 
 This is the first _development snapshot_ of the Wingflight Configurator.
