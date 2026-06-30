@@ -40,7 +40,6 @@
     "controlAxisRoll",
     "controlAxisPitch",
     "controlAxisYaw",
-    "controlAxisCollective",
     "controlAxisThrottle",
   ];
 

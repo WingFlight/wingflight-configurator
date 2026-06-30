@@ -618,9 +618,6 @@ html[data-theme=dark] .tab-rates .YAW .axis_title {
     background-color: #0000A0;
 }
 
-html[data-theme=dark] .tab-rates .COLLECTIVE .axis_title {
-    background-color: #C08000;
-}
 
 html[data-theme=dark] .tab-rates .gui_box span {
     color: white;

@@ -10,8 +10,7 @@ export const CHANNELS = {
   ROLL: 0,
   PITCH: 1,
   YAW: 2,
-  COLLECTIVE: 3,
-  THROTTLE: 4,
+  THROTTLE: 3,
 };
 
 const MAX_AUX_COUNT = 27;
@@ -69,14 +68,6 @@ export const RC_COMMAND = {
       FC.RC_CONFIG.rc_deflection,
     );
   },
-  get collective() {
-    return getProportional(
-      CHANNELS.COLLECTIVE,
-      0,
-      FC.RC_CONFIG.rc_center,
-      FC.RC_CONFIG.rc_deflection,
-    );
-  },
   get throttle() {
     let min = FC.RC_CONFIG.rc_min_throttle;
     if (min === 0) {
@@ -98,8 +89,8 @@ for (let i = 0; i < MAX_AUX_COUNT; i++) {
   RC_COMMAND.aux.push({
     get pwm() {
       let mappedChannel = i;
-      if (i < FC.RC_MAP.length - 5) {
-        mappedChannel = FC.RC_MAP[i + 5];
+      if (i < FC.RC_MAP.length - 4) {
+        mappedChannel = FC.RC_MAP[i + 4];
       }
 
       const raw = FC.RX_CHANNELS[mappedChannel];

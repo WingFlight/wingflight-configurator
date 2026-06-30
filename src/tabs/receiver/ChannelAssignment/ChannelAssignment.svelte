@@ -12,7 +12,6 @@
     "controlAxisRoll",
     "controlAxisPitch",
     "controlAxisYaw",
-    "controlAxisCollective",
     "controlAxisThrottle",
     "controlAxisAux1",
     "controlAxisAux2",
@@ -46,40 +45,42 @@
   const rssiOptions = [
     { value: 0, text: "rssiOptionAUTO" },
     { value: 1, text: "rssiOptionADC" },
-    { value: 6, text: "controlAxisAux1" },
-    { value: 7, text: "controlAxisAux2" },
-    { value: 8, text: "controlAxisAux3" },
-    { value: 9, text: "controlAxisAux4" },
-    { value: 10, text: "controlAxisAux5" },
-    { value: 11, text: "controlAxisAux6" },
-    { value: 12, text: "controlAxisAux7" },
-    { value: 13, text: "controlAxisAux8" },
-    { value: 14, text: "controlAxisAux9" },
-    { value: 15, text: "controlAxisAux10" },
-    { value: 16, text: "controlAxisAux11" },
-    { value: 17, text: "controlAxisAux12" },
-    { value: 18, text: "controlAxisAux13" },
-    { value: 19, text: "controlAxisAux14" },
-    { value: 20, text: "controlAxisAux15" },
-    { value: 21, text: "controlAxisAux16" },
-    { value: 22, text: "controlAxisAux17" },
-    { value: 23, text: "controlAxisAux18" },
-    { value: 24, text: "controlAxisAux19" },
-    { value: 25, text: "controlAxisAux20" },
-    { value: 26, text: "controlAxisAux21" },
-    { value: 27, text: "controlAxisAux22" },
-    { value: 28, text: "controlAxisAux23" },
-    { value: 29, text: "controlAxisAux24" },
-    { value: 30, text: "controlAxisAux25" },
-    { value: 31, text: "controlAxisAux26" },
-    { value: 32, text: "controlAxisAux27" },
+    { value: 5, text: "controlAxisAux1" },
+    { value: 6, text: "controlAxisAux2" },
+    { value: 7, text: "controlAxisAux3" },
+    { value: 8, text: "controlAxisAux4" },
+    { value: 9, text: "controlAxisAux5" },
+    { value: 10, text: "controlAxisAux6" },
+    { value: 11, text: "controlAxisAux7" },
+    { value: 12, text: "controlAxisAux8" },
+    { value: 13, text: "controlAxisAux9" },
+    { value: 14, text: "controlAxisAux10" },
+    { value: 15, text: "controlAxisAux11" },
+    { value: 16, text: "controlAxisAux12" },
+    { value: 17, text: "controlAxisAux13" },
+    { value: 18, text: "controlAxisAux14" },
+    { value: 19, text: "controlAxisAux15" },
+    { value: 20, text: "controlAxisAux16" },
+    { value: 21, text: "controlAxisAux17" },
+    { value: 22, text: "controlAxisAux18" },
+    { value: 23, text: "controlAxisAux19" },
+    { value: 24, text: "controlAxisAux20" },
+    { value: 25, text: "controlAxisAux21" },
+    { value: 26, text: "controlAxisAux22" },
+    { value: 27, text: "controlAxisAux23" },
+    { value: 28, text: "controlAxisAux24" },
+    { value: 29, text: "controlAxisAux25" },
+    { value: 30, text: "controlAxisAux26" },
+    { value: 31, text: "controlAxisAux27" },
   ];
 
+  // Roll/Pitch/Yaw/Throttle/Aux1-3 keep the same physical channel as before;
+  // the channel formerly used for collective (heli-only) is now Aux4.
   const presets = [
-    { label: "ELRS", map: [0, 1, 3, 2, 5, 4, 6, 7] },
-    { label: "FrSky", map: [0, 1, 3, 4, 2, 5, 6, 7] },
-    { label: "Futaba / Hitec", map: [0, 1, 3, 5, 2, 4, 6, 7] },
-    { label: "Spektrum / Graupner / JR", map: [1, 2, 3, 5, 0, 4, 6, 7] },
+    { label: "ELRS", map: [0, 1, 3, 5, 4, 6, 7, 2] },
+    { label: "FrSky", map: [0, 1, 3, 2, 5, 6, 7, 4] },
+    { label: "Futaba / Hitec", map: [0, 1, 3, 2, 4, 6, 7, 5] },
+    { label: "Spektrum / Graupner / JR", map: [1, 2, 3, 0, 4, 6, 7, 5] },
   ];
 
   let selectedPreset = $derived.by(() => {
@@ -118,7 +119,7 @@
       return 1;
     }
 
-    if (FC.RSSI_CONFIG.channel > 5) {
+    if (FC.RSSI_CONFIG.channel > 4) {
       return FC.RSSI_CONFIG.channel;
     }
 
@@ -174,11 +175,11 @@
             () => selectedRssiSource,
             (x) => {
               FC.FEATURE_CONFIG.features.RSSI_ADC = x === 1;
-              FC.RSSI_CONFIG.channel = x > 5 ? x : 0;
+              FC.RSSI_CONFIG.channel = x > 4 ? x : 0;
             }
           }
         >
-          {#each rssiOptions.slice(0, FC.RC.active_channels - 3) as rssiOpt (rssiOpt.value)}
+          {#each rssiOptions.slice(0, FC.RC.active_channels - 2) as rssiOpt (rssiOpt.value)}
             <option value={rssiOpt.value}>{$i18n.t(rssiOpt.text)}</option>
           {/each}
         </select>

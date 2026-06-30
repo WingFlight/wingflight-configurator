@@ -11,7 +11,7 @@ const tab = {
 
     ALWAYS_ON_CH: 255,
 
-    PRIMARY_CHANNEL_COUNT: 5,
+    PRIMARY_CHANNEL_COUNT: 4,
 
     callback_stack: [],
 

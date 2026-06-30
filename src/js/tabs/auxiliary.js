@@ -6,7 +6,7 @@ import * as config from '@/js/config.js';
 const tab = {
     tabName: 'auxiliary',
     isDirty: false,
-    PRIMARY_CHANNEL_COUNT: 5,
+    PRIMARY_CHANNEL_COUNT: 4,
     UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS'],
 };
 
