@@ -2542,6 +2542,9 @@
     "adjustmentsFunctionAcroTrainerGain": {
         "message": "Acro Trainer Gain"
     },
+    "adjustmentsFunctionAttHoldGain": {
+        "message": "Attitude Hold Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },

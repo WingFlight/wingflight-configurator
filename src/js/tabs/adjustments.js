@@ -18,6 +18,15 @@ const tab = {
     toggle_speed: 300,
 };
 
+// `id` must stay positionally aligned with the firmware's adjustmentFunc_e
+// enum (fc/rc_adjustments.h) - this array is indexed directly by that value
+// (self.FUNCTIONS[adjRange.adjFunction]), so entries are never reordered or
+// deleted, only hidden. `hide: true` marks an id the firmware enum still
+// defines but whose get/set is absent from rc_adjustments.c's
+// adjustmentConfigs[] table (mostly heli-only concepts like cyclic/
+// collective/governor/cross-coupling carried over from this firmware's
+// Rotorflight lineage) - selecting one is silently inert, not dangerous,
+// but does nothing on wingflight.
 function getFunctions() {
     const gte12_8 = semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8);
     const gte12_9 = semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9);
@@ -49,9 +58,9 @@ function getFunctions() {
         { id: 23,   name: 'YawI',                       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 24,   name: 'YawD',                       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 25,   name: 'YawF',                       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 26,   name: 'YawCWStopGain',              min: 25,    max: 250,    ticks: 10,   pips: [ 50, 100, 150, 200, 250 ] },
-        { id: 27,   name: 'YawCCWStopGain',             min: 25,    max: 250,    ticks: 10,   pips: [ 50, 100, 150, 200, 250 ] },
-        { id: 28,   name: 'YawCyclicFF',                min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 26,   name: 'YawCWStopGain',              min: 25,    max: 250,    ticks: 10,   pips: [ 50, 100, 150, 200, 250 ], hide: true },
+        { id: 27,   name: 'YawCCWStopGain',             min: 25,    max: 250,    ticks: 10,   pips: [ 50, 100, 150, 200, 250 ], hide: true },
+        { id: 28,   name: 'YawCyclicFF',                min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 29,   name: 'YawCollectiveFF',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 30,   name: 'YawCollectiveDyn',           min: -125,  max: 125,    ticks: 10,   pips: [ -100, -50, 0, 50, 100 ], hide: true },
         { id: 31,   name: 'YawCollectiveDecay',         min: 1,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
@@ -82,15 +91,15 @@ function getFunctions() {
         { id: 56,   name: 'PitchB',                     min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 57,   name: 'RollB',                      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 58,   name: 'YawB',                       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 59,   name: 'PitchO',                     min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 60,   name: 'RollO',                      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 61,   name: 'CrossCouplingGain',          min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 62,   name: 'CrossCouplingRatio',         min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
-        { id: 63,   name: 'CrossCouplingCutoff',        min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 59,   name: 'PitchO',                     min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
+        { id: 60,   name: 'RollO',                      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
+        { id: 61,   name: 'CrossCouplingGain',          min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
+        { id: 62,   name: 'CrossCouplingRatio',         min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
+        { id: 63,   name: 'CrossCouplingCutoff',        min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 64,   name: 'AccTrimPitch',               min: -300,  max: 300,    ticks: 10,   pips: [ -300, -200, -100, 0, 100, 200, 300 ] },
         { id: 65,   name: 'AccTrimRoll',                min: -300,  max: 300,    ticks: 10,   pips: [ -300, -200, -100, 0, 100, 200, 300 ] },
-        { id: 66,   name: 'YawInertiaPrecompGain',      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 67,   name: 'YawInertiaPrecompCutoff',    min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
+        { id: 66,   name: 'YawInertiaPrecompGain',      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
+        { id: 67,   name: 'YawInertiaPrecompCutoff',    min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 68,   name: 'PitchSetpointBoostGain',     min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
         { id: 69,   name: 'RollSetpointBoostGain',      min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
         { id: 70,   name: 'YawSetpointBoostGain',       min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
@@ -98,7 +107,7 @@ function getFunctions() {
         { id: 72,   name: 'YawDynCeilingGain',          min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
         { id: 73,   name: 'YawDynDeadbandGain',         min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
         { id: 74,   name: 'YawDynDeadbandFilter',       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 75,   name: 'YawPrecompCutoff',           min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
+        { id: 75,   name: 'YawPrecompCutoff',           min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 76,   name: 'GovIdleThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 77,   name: 'GovAutoThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 78,   name: 'GovMaxThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
@@ -106,6 +115,7 @@ function getFunctions() {
         { id: 80,   name: 'GovHeadspeed',               min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ], hide: !gte12_9 },
+        { id: 83,   name: 'AttHoldGain',                min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
     ];
 }
 
