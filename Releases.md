@@ -1,3 +1,7 @@
+# 0.0.2
+
+Added in ability to set master gains on roll, pitch and yaw.
+
 # 0.0.1
 
 This is the first _development snapshot_ of the Wingflight Configurator.
