@@ -74,13 +74,11 @@
     { value: 31, text: "controlAxisAux27" },
   ];
 
-  // Roll/Pitch/Yaw/Throttle/Aux1-3 keep the same physical channel as before;
-  // the channel formerly used for collective (heli-only) is now Aux4.
   const presets = [
-    { label: "ELRS", map: [0, 1, 3, 5, 4, 6, 7, 2] },
-    { label: "FrSky", map: [0, 1, 3, 2, 5, 6, 7, 4] },
-    { label: "Futaba / Hitec", map: [0, 1, 3, 2, 4, 6, 7, 5] },
-    { label: "Spektrum / Graupner / JR", map: [1, 2, 3, 0, 4, 6, 7, 5] },
+    { label: "ELRS", map: [0, 1, 3, 2, 4, 5, 6, 7] }, // AETR1234
+    { label: "FrSky", map: [0, 1, 3, 2, 4, 5, 6, 7] }, // AETR1234
+    { label: "Futaba / Hitec", map: [0, 1, 3, 2, 4, 5, 6, 7] }, // AETR1234
+    { label: "Spektrum / Graupner / JR", map: [1, 2, 3, 0, 4, 5, 6, 7] }, // TAER1234
   ];
 
   let selectedPreset = $derived.by(() => {
