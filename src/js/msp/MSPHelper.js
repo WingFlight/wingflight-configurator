@@ -1181,6 +1181,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Fixed-wing throttle-based gain attenuation //
                 FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
                 FC.PID_PROFILE.fwTpaRate                     = data.readU8();
+                // Master gain //
+                FC.PID_PROFILE.masterGain                    = data.readU8();
                 break;
             }
 
@@ -2117,7 +2119,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(0)
                 // Fixed-wing throttle-based gain attenuation //
                 .push8(FC.PID_PROFILE.fwTpaBreakpoint)
-                .push8(FC.PID_PROFILE.fwTpaRate);
+                .push8(FC.PID_PROFILE.fwTpaRate)
+                // Master gain //
+                .push8(FC.PID_PROFILE.masterGain);
             break;
         }
 

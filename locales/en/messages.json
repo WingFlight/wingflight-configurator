@@ -4399,6 +4399,12 @@
     "profilesFwTpaRateHelp": {
         "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
     },
+    "profilesMasterGain": {
+        "message": "Master Gain [%]"
+    },
+    "profilesMasterGainHelp": {
+        "message": "Scales P, I, D and FF on all axes by this percentage, live - useful for quickly finding the right overall gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+    },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
     },
