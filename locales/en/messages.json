@@ -1282,6 +1282,57 @@
     "configurationBoardAlignmentYaw": {
         "message": "Yaw Degrees"
     },
+    "configurationBoardAutoAlignStart": {
+        "message": "Auto Align FC"
+    },
+    "configurationBoardAutoAlignIdle": {
+        "message": "Auto-align idle. Place aircraft steady, then start the procedure."
+    },
+    "configurationBoardAutoAlignStarting": {
+        "message": "Procedure started. Lift the tail by at least 20° and hold briefly."
+    },
+    "configurationBoardAutoAlignWaiting": {
+        "message": "Waiting for tail-up movement (>= 20°)."
+    },
+    "configurationBoardAutoAlignSuccess": {
+        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Save and reboot to persist."
+    },
+    "configurationBoardAutoAlignDisarmRequired": {
+        "message": "Auto-align is only allowed while disarmed."
+    },
+    "configurationBoardAutoAlignTimeout": {
+        "message": "Auto-align timed out. Start again and lift the tail within 15 seconds."
+    },
+    "configurationBoardAutoAlignNoMatch": {
+        "message": "No valid 90° alignment found yet. Hold the aircraft steady before start, then lift mainly the tail."
+    },
+    "configurationBoardAutoAlignUnsupported": {
+        "message": "Auto-align command not supported by this firmware build."
+    },
+    "configurationBoardAutoAlignWizardTitle": {
+        "message": "Flight Controller Auto-Align Wizard"
+    },
+    "configurationBoardAutoAlignWizardStep1": {
+        "message": "Step 1 of 3: Start"
+    },
+    "configurationBoardAutoAlignWizardStep2": {
+        "message": "Step 2 of 3: Lift Tail"
+    },
+    "configurationBoardAutoAlignWizardStep3": {
+        "message": "Step 3 of 3: Result"
+    },
+    "configurationBoardAutoAlignWizardDetailStart": {
+        "message": "Place the aircraft level on a stable surface, keep it disarmed, then start auto-align."
+    },
+    "configurationBoardAutoAlignSuccessCountdown": {
+        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Closing wizard in {3}s."
+    },
+    "configurationBoardAutoAlignWizardRetry": {
+        "message": "Retry"
+    },
+    "configurationBoardAutoAlignWizardClose": {
+        "message": "Close"
+    },
     "configurationSensorAlignmentGyro": {
         "message": "GYRO Alignment"
     },

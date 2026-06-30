@@ -14,6 +14,14 @@ const tab = {
 
 tab.initialize = function (callback) {
     const self = this;
+    const BOARD_AUTO_ALIGN = {
+        IDLE: 0,
+        WAITING_FOR_TAIL_LIFT: 1,
+        SUCCESS: 2,
+        REJECTED_ARMED: 3,
+        TIMEOUT: 4,
+        NO_MATCH: 5,
+    };
 
     const uartNames = {
         0: 'UART1',
@@ -674,6 +682,269 @@ tab.initialize = function (callback) {
         $('input[name="board_align_pitch"]').val(FC.BOARD_ALIGNMENT_CONFIG.pitch);
         $('input[name="board_align_yaw"]').val(FC.BOARD_ALIGNMENT_CONFIG.yaw);
 
+        const boardAutoAlignButton = $('#board-auto-align-start');
+        const boardAutoAlignStatus = $('#board-auto-align-status');
+        const boardAutoAlignWizard = $('#board-auto-align-wizard')[0];
+        const boardAutoAlignWizardStep = $('#board-auto-align-wizard-step');
+        const boardAutoAlignWizardDetail = $('#board-auto-align-wizard-detail');
+        const boardAutoAlignWizardProgress = $('#board-auto-align-progress-fill');
+        const boardAutoAlignWizardRetry = $('#board-auto-align-wizard-retry');
+        const boardAutoAlignWizardClose = $('#board-auto-align-wizard-close');
+        let boardAutoAlignPollTimer = null;
+        let boardAutoAlignAutoCloseTimer = null;
+
+        function setBoardAutoAlignStatus(messageKey, messageArgs = []) {
+            boardAutoAlignStatus.text(i18n.getMessage(messageKey, messageArgs));
+        }
+
+        function setBoardAutoAlignWizard(stepKey, detailKey, progressPercent, detailArgs = [], canRetry = false) {
+            boardAutoAlignWizardStep.text(i18n.getMessage(stepKey));
+            boardAutoAlignWizardDetail.text(i18n.getMessage(detailKey, detailArgs));
+            boardAutoAlignWizardProgress.css('width', `${progressPercent}%`);
+            boardAutoAlignWizardRetry.toggle(canRetry);
+        }
+
+        function showBoardAutoAlignWizard() {
+            if (boardAutoAlignWizard && !boardAutoAlignWizard.open) {
+                boardAutoAlignWizard.showModal();
+            }
+        }
+
+        function closeBoardAutoAlignWizard() {
+            if (boardAutoAlignWizard && boardAutoAlignWizard.open) {
+                boardAutoAlignWizard.close();
+            }
+        }
+
+        function clearBoardAutoAlignPoll() {
+            if (boardAutoAlignPollTimer) {
+                clearTimeout(boardAutoAlignPollTimer);
+                boardAutoAlignPollTimer = null;
+            }
+        }
+
+        function clearBoardAutoAlignAutoClose() {
+            if (boardAutoAlignAutoCloseTimer) {
+                clearInterval(boardAutoAlignAutoCloseTimer);
+                boardAutoAlignAutoCloseTimer = null;
+            }
+        }
+
+        function startBoardAutoAlignAutoCloseCountdown(roll, pitch, yaw, seconds = 3) {
+            clearBoardAutoAlignAutoClose();
+
+            let remaining = seconds;
+            setBoardAutoAlignWizard(
+                'configurationBoardAutoAlignWizardStep3',
+                'configurationBoardAutoAlignSuccessCountdown',
+                100,
+                [roll, pitch, yaw, remaining],
+                false
+            );
+
+            boardAutoAlignAutoCloseTimer = setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearBoardAutoAlignAutoClose();
+                    closeBoardAutoAlignWizard();
+                    return;
+                }
+
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep3',
+                    'configurationBoardAutoAlignSuccessCountdown',
+                    100,
+                    [roll, pitch, yaw, remaining],
+                    false
+                );
+            }, 1000);
+        }
+
+        async function queryBoardAutoAlign(startProcedure = false) {
+            const payload = startProcedure ? [1] : false;
+            const { data } = await MSP.promise(MSPCodes.MSP2_WING_BOARD_AUTO_ALIGN, payload);
+
+            if (!data || data.byteLength < 8) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
+                boardAutoAlignButton.prop('disabled', true);
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep3',
+                    'configurationBoardAutoAlignUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                clearBoardAutoAlignPoll();
+                return;
+            }
+
+            const state = data.readU8();
+            const roll = data.read16();
+            const pitch = data.read16();
+            const yaw = data.read16();
+
+            if (state === BOARD_AUTO_ALIGN.WAITING_FOR_TAIL_LIFT) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignWaiting');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep2',
+                    'configurationBoardAutoAlignWaiting',
+                    60,
+                    [],
+                    false
+                );
+                boardAutoAlignButton.prop('disabled', true);
+                clearBoardAutoAlignPoll();
+                boardAutoAlignPollTimer = setTimeout(() => {
+                    queryBoardAutoAlign(false).catch(() => {
+                        setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
+                        setBoardAutoAlignWizard(
+                            'configurationBoardAutoAlignWizardStep3',
+                            'configurationBoardAutoAlignUnsupported',
+                            100,
+                            [],
+                            false
+                        );
+                        boardAutoAlignButton.prop('disabled', false);
+                        clearBoardAutoAlignPoll();
+                    });
+                }, 250);
+                return;
+            }
+
+            boardAutoAlignButton.prop('disabled', false);
+            clearBoardAutoAlignPoll();
+
+            if (state === BOARD_AUTO_ALIGN.SUCCESS) {
+                FC.BOARD_ALIGNMENT_CONFIG.roll = roll;
+                FC.BOARD_ALIGNMENT_CONFIG.pitch = pitch;
+                FC.BOARD_ALIGNMENT_CONFIG.yaw = yaw;
+
+                $('input[name="board_align_roll"]').val(roll);
+                $('input[name="board_align_pitch"]').val(pitch);
+                $('input[name="board_align_yaw"]').val(yaw);
+
+                setBoardAutoAlignStatus('configurationBoardAutoAlignSuccess', [roll, pitch, yaw]);
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep3',
+                    'configurationBoardAutoAlignSuccessCountdown',
+                    100,
+                    [roll, pitch, yaw, 3],
+                    false
+                );
+                startBoardAutoAlignAutoCloseCountdown(roll, pitch, yaw, 3);
+                setDirty();
+                return;
+            }
+
+            if (state === BOARD_AUTO_ALIGN.REJECTED_ARMED) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignDisarmRequired');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep1',
+                    'configurationBoardAutoAlignDisarmRequired',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            if (state === BOARD_AUTO_ALIGN.TIMEOUT) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignTimeout');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep2',
+                    'configurationBoardAutoAlignTimeout',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            if (state === BOARD_AUTO_ALIGN.NO_MATCH) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignNoMatch');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep2',
+                    'configurationBoardAutoAlignNoMatch',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            clearBoardAutoAlignAutoClose();
+            setBoardAutoAlignStatus('configurationBoardAutoAlignIdle');
+            setBoardAutoAlignWizard(
+                'configurationBoardAutoAlignWizardStep1',
+                'configurationBoardAutoAlignIdle',
+                0,
+                [],
+                false
+            );
+        }
+
+        boardAutoAlignWizardRetry.hide();
+        boardAutoAlignWizardClose.off('click').on('click', function () {
+            clearBoardAutoAlignPoll();
+            clearBoardAutoAlignAutoClose();
+            boardAutoAlignButton.prop('disabled', false);
+            closeBoardAutoAlignWizard();
+        });
+
+        boardAutoAlignWizardRetry.off('click').on('click', function () {
+            clearBoardAutoAlignAutoClose();
+            setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
+            setBoardAutoAlignWizard(
+                'configurationBoardAutoAlignWizardStep1',
+                'configurationBoardAutoAlignStarting',
+                25,
+                [],
+                false
+            );
+            queryBoardAutoAlign(true).catch(() => {
+                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep3',
+                    'configurationBoardAutoAlignUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                boardAutoAlignButton.prop('disabled', false);
+                clearBoardAutoAlignPoll();
+            });
+        });
+
+        boardAutoAlignButton.off('click').on('click', function () {
+            clearBoardAutoAlignAutoClose();
+            showBoardAutoAlignWizard();
+            setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
+            setBoardAutoAlignWizard(
+                'configurationBoardAutoAlignWizardStep1',
+                'configurationBoardAutoAlignStarting',
+                25,
+                [],
+                false
+            );
+            queryBoardAutoAlign(true).catch(() => {
+                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep3',
+                    'configurationBoardAutoAlignUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                boardAutoAlignButton.prop('disabled', false);
+                clearBoardAutoAlignPoll();
+            });
+        });
+
         // fill accel trims
         $('input[id="acc-trim-roll"]').val(FC.CONFIG.accelerometerTrims[1]);
         $('input[id="acc-trim-pitch"]').val(FC.CONFIG.accelerometerTrims[0]);
@@ -745,6 +1016,9 @@ tab.initialize = function (callback) {
         };
 
         self.revert = function (callback) {
+            clearBoardAutoAlignPoll();
+            clearBoardAutoAlignAutoClose();
+            closeBoardAutoAlignWizard();
             callback?.();
         };
 

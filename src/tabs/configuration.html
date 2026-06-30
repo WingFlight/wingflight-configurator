@@ -199,6 +199,10 @@
                                 </div>
                             </div>
                             <div class="sensor_align_content">
+                                <div class="board_auto_align_controls">
+                                    <button type="button" id="board-auto-align-start" i18n="configurationBoardAutoAlignStart"></button>
+                                    <div id="board-auto-align-status" i18n="configurationBoardAutoAlignIdle"></div>
+                                </div>
                                 <div class="select">
                                     <div>
                                         <select id="magalign">
@@ -266,6 +270,19 @@
         </div>
     </div>
 </div>
+
+<dialog id="board-auto-align-wizard" class="board-auto-align-wizard">
+    <h3 i18n="configurationBoardAutoAlignWizardTitle"></h3>
+    <div class="wizard-step" id="board-auto-align-wizard-step" i18n="configurationBoardAutoAlignWizardStep1"></div>
+    <div class="wizard-detail" id="board-auto-align-wizard-detail" i18n="configurationBoardAutoAlignWizardDetailStart"></div>
+    <div class="wizard-progress" aria-hidden="true">
+        <div class="wizard-progress-fill" id="board-auto-align-progress-fill"></div>
+    </div>
+    <div class="wizard-actions">
+        <button type="button" id="board-auto-align-wizard-retry" i18n="configurationBoardAutoAlignWizardRetry"></button>
+        <button type="button" id="board-auto-align-wizard-close" i18n="configurationBoardAutoAlignWizardClose"></button>
+    </div>
+</dialog>
 
 <div id="tab-configuration-templates">
     <table>

@@ -207,6 +207,8 @@ export const MSPCodes = {
     MSP_DEBUGMSG:                   253, // Not used
     MSP_DEBUG:                      254,
 
+    MSP2_WING_BOARD_AUTO_ALIGN:     0x5F00,
+
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
     MSP2_MOTOR_OUTPUT_REORDERING:       0x3001,
