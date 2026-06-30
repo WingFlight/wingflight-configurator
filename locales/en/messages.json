@@ -2545,6 +2545,9 @@
     "adjustmentsFunctionAttHoldGain": {
         "message": "Attitude Hold Gain"
     },
+    "adjustmentsFunctionMasterGain": {
+        "message": "Master Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
