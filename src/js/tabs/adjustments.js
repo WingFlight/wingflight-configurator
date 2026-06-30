@@ -116,6 +116,7 @@ function getFunctions() {
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ], hide: !gte12_9 },
         { id: 83,   name: 'AttHoldGain',                min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
+        { id: 84,   name: 'MasterGain',                 min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },
     ];
 }
 
