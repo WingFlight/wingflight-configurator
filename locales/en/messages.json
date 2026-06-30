@@ -2545,8 +2545,14 @@
     "adjustmentsFunctionAttHoldGain": {
         "message": "Attitude Hold Gain"
     },
-    "adjustmentsFunctionMasterGain": {
-        "message": "Master Gain"
+    "adjustmentsFunctionMasterGainPitch": {
+        "message": "Master Gain Pitch"
+    },
+    "adjustmentsFunctionMasterGainRoll": {
+        "message": "Master Gain Roll"
+    },
+    "adjustmentsFunctionMasterGainYaw": {
+        "message": "Master Gain Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -4399,11 +4405,17 @@
     "profilesFwTpaRateHelp": {
         "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
     },
-    "profilesMasterGain": {
-        "message": "Master Gain [%]"
+    "profilesMasterGainRoll": {
+        "message": "Master Gain for Roll Axis [%]"
+    },
+    "profilesMasterGainPitch": {
+        "message": "Master Gain for Pitch Axis [%]"
+    },
+    "profilesMasterGainYaw": {
+        "message": "Master Gain for Yaw Axis [%]"
     },
     "profilesMasterGainHelp": {
-        "message": "Scales P, I, D and FF on all axes by this percentage, live - useful for quickly finding the right overall gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+        "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
     },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"

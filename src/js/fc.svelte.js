@@ -554,7 +554,9 @@ class FlightController {
       pid_mode:                   0,
       fwTpaBreakpoint:            0,
       fwTpaRate:                  0,
-      masterGain:                 100,
+      masterGainRoll:             100,
+      masterGainPitch:            100,
+      masterGainYaw:              100,
     };
 
     this.SENSOR_CONFIG = {
