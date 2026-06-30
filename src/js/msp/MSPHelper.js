@@ -1181,8 +1181,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Fixed-wing throttle-based gain attenuation //
                 FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
                 FC.PID_PROFILE.fwTpaRate                     = data.readU8();
-                // Master gain //
-                FC.PID_PROFILE.masterGain                    = data.readU8();
+                // Master gain (per axis) //
+                FC.PID_PROFILE.masterGainRoll                = data.readU8();
+                FC.PID_PROFILE.masterGainPitch               = data.readU8();
+                FC.PID_PROFILE.masterGainYaw                 = data.readU8();
                 break;
             }
 
@@ -2120,8 +2122,10 @@ MspHelper.prototype.crunch = function(code) {
                 // Fixed-wing throttle-based gain attenuation //
                 .push8(FC.PID_PROFILE.fwTpaBreakpoint)
                 .push8(FC.PID_PROFILE.fwTpaRate)
-                // Master gain //
-                .push8(FC.PID_PROFILE.masterGain);
+                // Master gain (per axis) //
+                .push8(FC.PID_PROFILE.masterGainRoll)
+                .push8(FC.PID_PROFILE.masterGainPitch)
+                .push8(FC.PID_PROFILE.masterGainYaw);
             break;
         }
 

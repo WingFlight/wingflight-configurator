@@ -151,8 +151,10 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="fwTpaBreakpoint"]').val(FC.PID_PROFILE.fwTpaBreakpoint);
         $('.tab-profiles input[id="fwTpaRate"]').val(FC.PID_PROFILE.fwTpaRate);
 
-        // Master gain
-        $('.tab-profiles input[id="masterGain"]').val(FC.PID_PROFILE.masterGain);
+        // Master gain (per axis)
+        $('.tab-profiles input[id="masterGainRoll"]').val(FC.PID_PROFILE.masterGainRoll);
+        $('.tab-profiles input[id="masterGainPitch"]').val(FC.PID_PROFILE.masterGainPitch);
+        $('.tab-profiles input[id="masterGainYaw"]').val(FC.PID_PROFILE.masterGainYaw);
 
         // I-term relax
         $('.tab-profiles input[id="itermRelaxCutoffRoll"]').val(FC.PID_PROFILE.itermRelaxCutoffRoll);
@@ -225,7 +227,9 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.fwTpaBreakpoint = parseInt($('.tab-profiles input[id="fwTpaBreakpoint"]').val());
         FC.PID_PROFILE.fwTpaRate = parseInt($('.tab-profiles input[id="fwTpaRate"]').val());
 
-        FC.PID_PROFILE.masterGain = parseInt($('.tab-profiles input[id="masterGain"]').val());
+        FC.PID_PROFILE.masterGainRoll = parseInt($('.tab-profiles input[id="masterGainRoll"]').val());
+        FC.PID_PROFILE.masterGainPitch = parseInt($('.tab-profiles input[id="masterGainPitch"]').val());
+        FC.PID_PROFILE.masterGainYaw = parseInt($('.tab-profiles input[id="masterGainYaw"]').val());
 
         FC.PID_PROFILE.error_rotation = $('.tab-profiles input[id="errorRotation"]').is(':checked') ? 1 : 0;
         FC.PID_PROFILE.itermRelaxType = $('.tab-profiles input[id="itermRelax"]').is(':checked') ?
