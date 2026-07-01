@@ -37,7 +37,7 @@ export const Model = function (wrapper, canvas) {
     this.scene.add(this.modelWrapper);
 
     // Load model file, add to scene and render it
-    this.loadGLTF('flying_wing', (model) => {
+    this.loadGLTF('model', (model) => {
         model.scale.set(15, 15, 15);
         this.model = model;
         this.modelWrapper.add(model);

@@ -45,7 +45,7 @@
     o.scene.add(o.camera);
     o.scene.add(o.modelWrapper);
 
-    o.model = await loadGLTF("flying_wing");
+    o.model = await loadGLTF("model");
     o.model.scale.set(15, 15, 15);
     o.modelWrapper.add(o.model);
     o.scene.add(o.modelWrapper);
