@@ -1283,10 +1283,13 @@
         "message": "Yaw Degrees"
     },
     "configurationBoardAutoAlignStart": {
-        "message": "Auto Align FC"
+        "message": "Auto-Align FC"
+    },
+    "configurationBoardAutoAlignHelp": {
+        "message": "Automatically detects the flight controller mounting orientation. Place the aircraft flat, press Start, then briefly lift the tail by at least 20°."
     },
     "configurationBoardAutoAlignIdle": {
-        "message": "Auto-align idle. Place aircraft steady, then start the procedure."
+        "message": "Place aircraft flat and disarmed, then press Start."
     },
     "configurationBoardAutoAlignStarting": {
         "message": "Procedure started. Lift the tail by at least 20° and hold briefly."
@@ -1310,7 +1313,7 @@
         "message": "Auto-align command not supported by this firmware build."
     },
     "configurationBoardAutoAlignWizardTitle": {
-        "message": "Flight Controller Auto-Align Wizard"
+        "message": "Board Auto-Align"
     },
     "configurationBoardAutoAlignWizardStep1": {
         "message": "Step 1 of 3: Start"
@@ -1322,7 +1325,7 @@
         "message": "Step 3 of 3: Result"
     },
     "configurationBoardAutoAlignWizardDetailStart": {
-        "message": "Place the aircraft level on a stable surface, keep it disarmed, then start auto-align."
+        "message": "Place the aircraft level on a stable surface. Keep it disarmed, then press Start."
     },
     "configurationBoardAutoAlignSuccessCountdown": {
         "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Closing wizard in {3}s."

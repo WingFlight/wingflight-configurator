@@ -15,6 +15,8 @@ export default class MixerWizardDialog {
         motorsRadios: null,
         diffThrustSection: null,
         diffThrustCheckbox: null,
+        previewContainer: null,
+        previewLayers: null,
     };
 
     #onApplyCallback;
@@ -54,9 +56,15 @@ export default class MixerWizardDialog {
         this.#dom.motorsRadios = this.#dom.dialog.find('input[name="wizardMotors"]');
         this.#dom.diffThrustSection = this.#dom.dialog.find('.wizardDiffThrustSection');
         this.#dom.diffThrustCheckbox = this.#dom.dialog.find('#wizardDiffThrust');
+        this.#dom.previewContainer = this.#dom.dialog.find('#wizardPreview');
+        this.#dom.previewLayers = this.#dom.dialog.find('#wizardPreviewLayers');
 
-        this.#dom.layoutRadios.on('change', () => this.#updateVisibility());
-        this.#dom.motorsRadios.on('change', () => this.#updateVisibility());
+        this.#dom.layoutRadios.on('change', () => this.#update());
+        this.#dom.motorsRadios.on('change', () => this.#update());
+        this.#dom.aileronsRadios.on('change', () => this.#updatePreview());
+        this.#dom.tailRadios.on('change', () => this.#updatePreview());
+        this.#dom.wingYawRadios.on('change', () => this.#updatePreview());
+        this.#dom.flapsCheckbox.on('change', () => this.#updatePreview());
         this.#dom.buttonApply.on('click', (event) => {
             event.preventDefault();
             this.#onApply();
@@ -65,6 +73,11 @@ export default class MixerWizardDialog {
             event.preventDefault();
             this.#dom.dialog[0].close();
         });
+    }
+
+    #update() {
+        this.#updateVisibility();
+        this.#updatePreview();
     }
 
     #updateVisibility() {
@@ -77,6 +90,44 @@ export default class MixerWizardDialog {
         this.#dom.diffThrustSection.toggle(motors === '2');
     }
 
+    #updatePreview() {
+        const options = this.#readOptions();
+
+        this.#dom.previewContainer.show();
+
+        const layers = [];
+
+        if (options.layout === 'flyingWing') {
+            layers.push('flying_wing_shape');
+            layers.push('flying_wing_aileron');
+
+            if (options.wingYaw === 'rudder') layers.push('flying_wing_rudder');
+            if (options.flaps)               layers.push('flying_wing_flaps');
+            if (options.motors === 1)        layers.push('flying_wing_one_motor');
+            else if (options.motors === 2)   layers.push('flying_wing_two_motor');
+        } else {
+            layers.push('conventional_shape');
+
+            if (options.ailerons !== 'none')              layers.push('conventional_aileron');
+            if (options.tailControl === 'elevatorOnly')   layers.push('conventional_normal_tail_no_rudder');
+            else if (options.tailControl === 'elevatorRudder') layers.push('conventional_normal_tail');
+            else if (options.tailControl === 'vtail')     layers.push('conventional_v_tail');
+
+            if (options.flaps)             layers.push('conventional_flaps');
+            if (options.motors === 1)      layers.push('conventional_one_motor');
+            else if (options.motors === 2) layers.push('conventional_dual_motor');
+        }
+
+        this.#dom.previewLayers.empty();
+        for (const name of layers) {
+            $('<img>')
+                .attr('src', `/images/aircraft_shapes/${name}.svg`)
+                .attr('alt', '')
+                .attr('aria-hidden', 'true')
+                .appendTo(this.#dom.previewLayers);
+        }
+    }
+
     #resetForm() {
         this.#dom.dialog.find('#wizardLayoutConventional').prop('checked', true);
         this.#dom.dialog.find('#wizardAileronsIndependent').prop('checked', true);
@@ -85,7 +136,7 @@ export default class MixerWizardDialog {
         this.#dom.flapsCheckbox.prop('checked', false);
         this.#dom.dialog.find('#wizardMotors1').prop('checked', true);
         this.#dom.diffThrustCheckbox.prop('checked', false);
-        this.#updateVisibility();
+        this.#update();
     }
 
     #readOptions() {

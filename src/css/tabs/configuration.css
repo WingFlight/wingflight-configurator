@@ -210,19 +210,27 @@
 }
 
 .tab-configuration .board_auto_align_controls {
-    padding: 6px 0;
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
 }
 
 .tab-configuration #board-auto-align-start {
-    width: max-content;
-    padding: 4px 10px;
-    border: 1px solid var(--accentBorder, #7a7a7a);
+    padding: 0 8px;
+    line-height: 24px;
+    border: 1px solid var(--button-border);
     border-radius: 3px;
-    background: var(--quietBackground, #f2f2f2);
+    background: var(--button-background);
+    color: #000;
     cursor: pointer;
+    white-space: nowrap;
+}
+
+.tab-configuration #board-auto-align-start:hover {
+    border-color: var(--hoverButton-border);
+    background: var(--hoverButton-background);
 }
 
 .tab-configuration #board-auto-align-start:disabled {
@@ -231,49 +239,43 @@
 }
 
 .tab-configuration #board-auto-align-status {
-    font-size: 11px;
-    color: var(--mutedText, #777);
+    flex-grow: 1;
+    font-size: 12px;
+    color: var(--mutedText);
 }
 
 .board-auto-align-wizard {
-    width: min(420px, calc(100% - 24px));
-    border: 1px solid var(--accentBorder, #7a7a7a);
-    border-radius: 6px;
-    padding: 16px;
-}
-
-.board-auto-align-wizard::backdrop {
-    background: rgba(0, 0, 0, 0.45);
+    width: min(400px, calc(100% - 2em));
 }
 
 .board-auto-align-wizard h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 12px 0;
 }
 
 .board-auto-align-wizard .wizard-step {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .board-auto-align-wizard .wizard-detail {
     font-size: 12px;
-    line-height: 1.4;
+    line-height: 1.5;
     margin-bottom: 12px;
 }
 
 .board-auto-align-wizard .wizard-progress {
     width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    background: #d7d7d7;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--subtleAccent);
     overflow: hidden;
 }
 
 .board-auto-align-wizard .wizard-progress-fill {
     width: 0;
     height: 100%;
-    background: #4f9d69;
+    background: var(--accent);
     transition: width 180ms ease-out;
 }
 
@@ -285,11 +287,18 @@
 }
 
 .board-auto-align-wizard .wizard-actions button {
-    padding: 4px 10px;
-    border: 1px solid var(--accentBorder, #7a7a7a);
+    padding: 0 10px;
+    line-height: 24px;
+    border: 1px solid var(--button-border);
     border-radius: 3px;
-    background: var(--quietBackground, #f2f2f2);
+    background: var(--button-background);
+    color: #000;
     cursor: pointer;
+}
+
+.board-auto-align-wizard .wizard-actions button:hover {
+    border-color: var(--hoverButton-border);
+    background: var(--hoverButton-background);
 }
 
 .tab-configuration .number:last-child,
