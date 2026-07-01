@@ -1,5 +1,6 @@
 <script>
   import { i18n } from "@/js/i18n.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
 
   import escState from "./state.svelte.js";
   import { HandshakeStatus } from "./handshake.js";
@@ -31,6 +32,9 @@
       </button>
     </div>
   {:else}
+    {#if escState.status === HandshakeStatus.POWER_CYCLE}
+      <WarningNote message="escProgrammingStatusPowerCycle" />
+    {/if}
     <div class="spinner"></div>
     <p>{$i18n.t(statusKey)}</p>
     <button class="btn" onclick={() => escState.cancelDetection()}>

@@ -93,7 +93,7 @@ class State {
                     },
                 });
             } else {
-                result = await pollForEsc(this.manufacturer, { signal, timeoutMs: 15000 });
+                result = await this.pollNative(signal);
                 this.status = HandshakeStatus.READY;
             }
             this.applyDetectionResult(result);
@@ -102,6 +102,20 @@ class State {
             this.status = HandshakeStatus.FAILED;
             this.error = err?.message ?? String(err);
         }
+    }
+
+    // Scorpion (the only manufacturer with powerCycleRequired: true) has no soft target-switch
+    // path -- its bootloader only listens for MSP_ESC_PARAMETERS right after power-on, so the
+    // user must physically power-cycle it before detection can succeed. Tell them immediately
+    // rather than making them wait through a silent poll first -- they can't act on a prompt
+    // they haven't seen yet, and every second spent not-yet-power-cycled is a second wasted
+    // against the detection timeout.
+    async pollNative(signal) {
+        if (!this.manufacturer.powerCycleRequired) {
+            return pollForEsc(this.manufacturer, { signal, timeoutMs: 15000 });
+        }
+        this.status = HandshakeStatus.POWER_CYCLE;
+        return pollForEsc(this.manufacturer, { signal, timeoutMs: 45000 });
     }
 
     applyDetectionResult({ raw, parsed }) {

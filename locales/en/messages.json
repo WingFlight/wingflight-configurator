@@ -510,6 +510,9 @@
     "escProgrammingStatusFailed": {
         "message": "Could not detect the ESC. Check wiring/power and try again."
     },
+    "escProgrammingStatusPowerCycle": {
+        "message": "Power-cycle the ESC now (disconnect and reconnect its battery/power) to enter programming mode."
+    },
     "escProgrammingRetry": {
         "message": "Retry"
     },

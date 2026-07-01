@@ -14,6 +14,7 @@ export const HandshakeStatus = {
     SWITCHING: "switching",
     WAITING: "waiting",
     POLLING: "polling",
+    POWER_CYCLE: "power_cycle",
     READY: "ready",
     FAILED: "failed",
 };
