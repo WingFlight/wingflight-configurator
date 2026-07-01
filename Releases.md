@@ -1,5 +1,7 @@
 # 0.0.2
 
+Board Alignment
+Remove collective from channel maps
 Added in ability to set master gains on roll, pitch and yaw.
 
 # 0.0.1
