@@ -29,7 +29,12 @@ function withTimeout(promise, ms) {
     ]);
 }
 
-async function writeTarget(target, { signal, retries = 0, retryDelayMs = 800, timeoutMs = 2500 } = {}) {
+// escSelect4WIfById() in firmware (sensors/esc_sensor.c) blocks for ~2.5s (ESC_INIT_DELAY)
+// entering bootloader mode *before* it acks the MSP write -- a short client timeout here loses
+// that race almost every time, making the write look like it failed when it was just slow, and
+// sends the whole handshake into a retry loop that keeps hitting the same wall ("stuck on
+// Selecting ESC, then times out"). Give it generous headroom above the known firmware delay.
+async function writeTarget(target, { signal, retries = 0, retryDelayMs = 800, timeoutMs = 8000 } = {}) {
     for (let attempt = 0; ; attempt++) {
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
         try {

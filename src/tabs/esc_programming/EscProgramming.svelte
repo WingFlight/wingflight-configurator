@@ -14,14 +14,17 @@
   let loading = $state(true);
   let showToolbar = $derived(escState.view === View.FORM && escState.isDirty());
 
-  // The manufacturer picker's protocol soft-filter reads FC.ESC_SENSOR_CONFIG.protocol.
-  // Without an explicit fetch here, it just showed whatever another tab (e.g. Motors) had last
-  // left that value as -- stale or absent depending on prior navigation, which is exactly why
-  // the filter looked inconsistent (sometimes every manufacturer enabled, sometimes not).
+  // The manufacturer picker's protocol soft-filter reads FC.ESC_SENSOR_CONFIG.protocol, and
+  // the ESC1/ESC2 selector's escTwoAvailable reads FC.MOTOR_CONFIG.motor_count_blheli. Neither
+  // is fetched anywhere else unless another tab (e.g. Motors) happened to load it first -- so
+  // without an explicit fetch here both looked inconsistent/stale depending on prior
+  // navigation (protocol filter sometimes enabling everything; ESC2 sometimes missing even
+  // with two ESCs connected).
   async function refreshAndReset() {
     loading = true;
     escState.reset();
     await MSP.promise(MSPCodes.MSP_ESC_SENSOR_CONFIG);
+    await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     loading = false;
   }
 
