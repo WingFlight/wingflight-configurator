@@ -22,7 +22,7 @@
 
 .tab-curves .curveHint {
     display: block;
-    color: #626262;
+    color: var(--subtleText);
     font-size: 11px;
     margin-bottom: 10px;
 }
@@ -45,7 +45,7 @@
 .tab-curves .curveSvg {
     width: 100%;
     height: 100%;
-    background-color: #fff;
+    background-color: var(--boxBackground);
     border: 1px solid var(--subtleAccent);
     touch-action: none;
 }
@@ -99,19 +99,19 @@
 
 .tab-curves .curvePointTable .curvePointIndex {
     width: 1.8em;
-    color: #626262;
+    color: var(--subtleText);
 }
 
 .tab-curves .curvePointTable .curvePointDelete {
     width: 1.8em;
     text-align: center;
     cursor: pointer;
-    color: #626262;
+    color: var(--subtleText);
     text-decoration: none;
 }
 
 .tab-curves .curvePointTable .curvePointDelete:hover {
-    color: #333;
+    color: var(--linkText);
 }
 
 .tab-curves .curvePointListToolbar {
@@ -132,7 +132,7 @@
 
 .tab-curves .curvePointCountLabel {
     font-size: 11px;
-    color: #626262;
+    color: var(--subtleText);
 }
 
 .tab-curves .curvePointCountGroup select {
@@ -152,17 +152,46 @@
 
 .tab-curves .curveLine {
     fill: none;
-    stroke: #2080d0;
+    stroke: var(--accent);
     stroke-width: 2;
 }
 
 .tab-curves .curvePoint {
-    fill: #2080d0;
-    stroke: #fff;
+    fill: var(--accent);
+    stroke: var(--boxBackground);
     stroke-width: 1.5;
     cursor: pointer;
 }
 
 .tab-curves .curvePoint:hover {
-    fill: #d04020;
+    fill: var(--attention);
+}
+
+html[data-theme=dark] .tab-curves .curveSvg {
+    background-color: #252525;
+    border-color: #747474;
+}
+
+html[data-theme=dark] .tab-curves .curveGrid {
+    stroke: #4b4b4b;
+}
+
+html[data-theme=dark] .tab-curves .curveAxis {
+    stroke: #d6d6d6;
+}
+
+html[data-theme=dark] .tab-curves .curveLine {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+}
+
+html[data-theme=dark] .tab-curves .curvePoint {
+    fill: var(--accent);
+    stroke: #252525;
+    stroke-width: 2;
+}
+
+html[data-theme=dark] .tab-curves .curveCoordLabelBg {
+    fill: #000;
+    opacity: 0.9;
 }
