@@ -245,10 +245,8 @@ tab.initialize = function (callback) {
                 const width = ((FC.RC.channels[i] - barScaleMin) / (barScaleMax - barScaleMin) * 100).clamp(0, 100) + '%';
                 const label = (FC.RC.channels[i]).toFixed(0);
                 let rabel = '';
-                if (i < 4)
+                if (i < 4 && Number.isFinite(FC.RC_COMMAND[i]))
                     rabel = (FC.RC_COMMAND[i] / 5).toFixed(1) + '%';
-                else if (i == 4)
-                    rabel = (FC.RC_COMMAND[i] / 10 + 50).toFixed(1) + '%';
                 updateChannelBar(barElems[i], width, label, rabel);
             }
         }

@@ -31,20 +31,14 @@ export const Mixer = {
 
     heliOnlyInputs: [],
 
+    SERVO_OUTPUT_COUNT: 26,
+    MOTOR_OUTPUT_COUNT: 4,
+    MOTOR_OUTPUT_OFFSET: 27,
+
     outputNames: [
         'mixerOutputNone',
-        'mixerOutputServo1',
-        'mixerOutputServo2',
-        'mixerOutputServo3',
-        'mixerOutputServo4',
-        'mixerOutputServo5',
-        'mixerOutputServo6',
-        'mixerOutputServo7',
-        'mixerOutputServo8',
-        'mixerOutputMotor1',
-        'mixerOutputMotor2',
-        'mixerOutputMotor3',
-        'mixerOutputMotor4',
+        ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
+        ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
     ],
 
     operNames: [
@@ -131,7 +125,7 @@ export const Mixer = {
     {
         const rules = [];
         let nextServo = 1;
-        let nextMotor = 9;
+        let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
 
         function rule(oper, src, dst, weight, reverse)
         {
