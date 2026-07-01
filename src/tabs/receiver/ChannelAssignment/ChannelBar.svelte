@@ -26,8 +26,6 @@
         return RC_COMMAND.pitch?.percent ?? 0;
       case CHANNELS.YAW:
         return RC_COMMAND.yaw?.percent ?? 0;
-      case CHANNELS.COLLECTIVE:
-        return RC_COMMAND.collective?.percent ?? 0;
       case CHANNELS.THROTTLE:
         return RC_COMMAND.throttle?.percent ?? 0;
     }

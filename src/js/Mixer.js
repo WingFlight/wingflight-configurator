@@ -5,17 +5,14 @@ export const Mixer = {
         'mixerInputStabilizedRoll',
         'mixerInputStabilizedPitch',
         'mixerInputStabilizedYaw',
-        'mixerInputStabilizedCollective',
         'mixerInputStabilizedThrottle',
         'mixerInputRCCommandRoll',
         'mixerInputRCCommandPitch',
         'mixerInputRCCommandYaw',
-        'mixerInputRCCommandCollective',
         'mixerInputRCCommandThrottle',
         'mixerInputRCChannelRoll',
         'mixerInputRCChannelPitch',
         'mixerInputRCChannelYaw',
-        'mixerInputRCChannelCollective',
         'mixerInputRCChannelThrottle',
         'mixerInputRCChannelAux1',
         'mixerInputRCChannelAux2',
@@ -32,26 +29,16 @@ export const Mixer = {
         'mixerInputRCChannel18',
     ],
 
-    // Collective is a helicopter cyclic/collective-pitch concept inherited from
-    // this firmware's Rotorflight lineage; it has no meaning on a fixed-wing
-    // airframe. The underlying values still exist (firmware keeps them at
-    // zero-rate by default), but they're never offered as a mixer input choice.
-    heliOnlyInputs: [4, 9, 14],
+    heliOnlyInputs: [],
+
+    SERVO_OUTPUT_COUNT: 26,
+    MOTOR_OUTPUT_COUNT: 4,
+    MOTOR_OUTPUT_OFFSET: 27,
 
     outputNames: [
         'mixerOutputNone',
-        'mixerOutputServo1',
-        'mixerOutputServo2',
-        'mixerOutputServo3',
-        'mixerOutputServo4',
-        'mixerOutputServo5',
-        'mixerOutputServo6',
-        'mixerOutputServo7',
-        'mixerOutputServo8',
-        'mixerOutputMotor1',
-        'mixerOutputMotor2',
-        'mixerOutputMotor3',
-        'mixerOutputMotor4',
+        ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
+        ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
     ],
 
     operNames: [
@@ -138,7 +125,7 @@ export const Mixer = {
     {
         const rules = [];
         let nextServo = 1;
-        let nextMotor = 9;
+        let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
 
         function rule(oper, src, dst, weight, reverse)
         {
@@ -147,7 +134,7 @@ export const Mixer = {
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
-        const ROLL = 1, PITCH = 2, YAW = 3, RC_THROTTLE = 15, RC_AUX1 = 16;
+        const ROLL = 1, PITCH = 2, YAW = 3, CMD_THROTTLE = 8, RC_AUX1 = 13;
 
         if (options.layout === 'conventional') {
             if (options.ailerons === 'single') {
@@ -186,11 +173,11 @@ export const Mixer = {
         }
 
         if (options.motors >= 1) {
-            rules.push(rule(OP_SET, RC_THROTTLE, nextMotor++, 1000));
+            rules.push(rule(OP_SET, CMD_THROTTLE, nextMotor++, 1000));
         }
         if (options.motors >= 2) {
             const motor2 = nextMotor;
-            rules.push(rule(OP_SET, RC_THROTTLE, motor2, 1000));
+            rules.push(rule(OP_SET, CMD_THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
                 rules.push(rule(OP_ADD, YAW, 9,      500));

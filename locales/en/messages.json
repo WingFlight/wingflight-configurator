@@ -2953,6 +2953,60 @@
     "mixerOutputServo8": {
         "message": "Servo #8"
     },
+    "mixerOutputServo9": {
+        "message": "Servo #9"
+    },
+    "mixerOutputServo10": {
+        "message": "Servo #10"
+    },
+    "mixerOutputServo11": {
+        "message": "Servo #11"
+    },
+    "mixerOutputServo12": {
+        "message": "Servo #12"
+    },
+    "mixerOutputServo13": {
+        "message": "Servo #13"
+    },
+    "mixerOutputServo14": {
+        "message": "Servo #14"
+    },
+    "mixerOutputServo15": {
+        "message": "Servo #15"
+    },
+    "mixerOutputServo16": {
+        "message": "Servo #16"
+    },
+    "mixerOutputServo17": {
+        "message": "Servo #17"
+    },
+    "mixerOutputServo18": {
+        "message": "Servo #18"
+    },
+    "mixerOutputServo19": {
+        "message": "Servo #19"
+    },
+    "mixerOutputServo20": {
+        "message": "Servo #20"
+    },
+    "mixerOutputServo21": {
+        "message": "Servo #21"
+    },
+    "mixerOutputServo22": {
+        "message": "Servo #22"
+    },
+    "mixerOutputServo23": {
+        "message": "Servo #23"
+    },
+    "mixerOutputServo24": {
+        "message": "Servo #24"
+    },
+    "mixerOutputServo25": {
+        "message": "Servo #25"
+    },
+    "mixerOutputServo26": {
+        "message": "Servo #26"
+    },
     "mixerOutputMotor1": {
         "message": "Motor #1"
     },

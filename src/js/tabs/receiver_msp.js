@@ -14,18 +14,18 @@ const channelNames = [
     'Roll',
     'Pitch',
     'Yaw',
-    'Collective',
     'Throttle',
     'Aux1',
     'Aux2',
     'Aux3',
+    'Aux4',
 ];
 
 const channelValues = [
     CHANNEL_MID_VALUE,
     CHANNEL_MID_VALUE,
     CHANNEL_MID_VALUE,
-    CHANNEL_MID_VALUE,
+    CHANNEL_MIN_VALUE,
     CHANNEL_MIN_VALUE,
     CHANNEL_MIN_VALUE,
     CHANNEL_MIN_VALUE,

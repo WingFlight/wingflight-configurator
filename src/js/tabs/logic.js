@@ -5,7 +5,7 @@ const tab = {
     isDirty: false,
     needSave: false,
     CONDITIONS_dirty: false,
-    PRIMARY_CHANNEL_COUNT: 5,
+    PRIMARY_CHANNEL_COUNT: 4,
     UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS'],
 };
 
@@ -61,16 +61,13 @@ tab.initialize = function (callback) {
     }
 
     // RC channel choices for the RC_CHANNEL operand type - mirrors the order
-    // the firmware's rcInput[] array uses (Roll, Pitch, Yaw, Collective,
-    // Throttle, then AUX1..). Collective is skipped: it's a helicopter
-    // concept inherited from this firmware's Rotorflight lineage and is
-    // already hidden from every other picker in this app for that reason.
+    // the firmware's rcInput[] array uses (Roll, Pitch, Yaw, Throttle, then AUX1..).
     function channelChoices() {
         const choices = [
             { value: 0, label: i18n.getMessage('logicChannelRoll') },
             { value: 1, label: i18n.getMessage('logicChannelPitch') },
             { value: 2, label: i18n.getMessage('logicChannelYaw') },
-            { value: 4, label: i18n.getMessage('logicChannelThrottle') },
+            { value: 3, label: i18n.getMessage('logicChannelThrottle') },
         ];
 
         const auxChannelCount = Math.max(0, (FC.RC.active_channels || 0) - self.PRIMARY_CHANNEL_COUNT);
