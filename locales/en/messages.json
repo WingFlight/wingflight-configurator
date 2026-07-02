@@ -3508,6 +3508,36 @@
     "motorsMotorPolesHelp": {
         "message": "The <i>pole count</i> is the number of magnets on the motor bell. The manual should give this number. Or you can count the magnets. Do NOT count the stators with the copper wire windings."
     },
+    "motorsSectionLabelIdleGovernor": {
+        "message": "Idle Governor"
+    },
+    "motorsIdleGovernorModeNote": {
+        "message": "These values have no effect on their own. Assign the <i>IDLE UP</i> switch to a channel in the <i>Modes</i> tab &mdash; engaging it (while armed, below the handover throttle, with a valid RPM source) is what actually holds the idle RPM."
+    },
+    "motorsIdleGovernorRpm": {
+        "message": "Idle RPM"
+    },
+    "motorsIdleGovernorRpmHelp": {
+        "message": "Target RPM to hold at idle. Set to 0 to disable the idle governor entirely.<br>Engaging also requires the <i>IDLE UP</i> switch (assign it in the Modes tab) and a valid RPM source."
+    },
+    "motorsIdleGovernorGain": {
+        "message": "Gain"
+    },
+    "motorsIdleGovernorGainHelp": {
+        "message": "Proportional gain used to correct RPM error while the idle governor is holding the target RPM. Increase if the motor is slow to reach the target idle RPM, decrease if it oscillates."
+    },
+    "motorsIdleGovernorHandover": {
+        "message": "Handover Throttle"
+    },
+    "motorsIdleGovernorHandoverHelp": {
+        "message": "Throttle stick position, as a percentage, below which the idle governor takes over. Above this point the pilot has normal direct throttle control."
+    },
+    "motorsIdleGovernorCeiling": {
+        "message": "Throttle Ceiling"
+    },
+    "motorsIdleGovernorCeilingHelp": {
+        "message": "Safety limit on the maximum throttle percentage the idle governor is allowed to command, regardless of RPM error."
+    },
     "motorsThrottleEndpoints": {
         "message": "Throttle Range"
     },

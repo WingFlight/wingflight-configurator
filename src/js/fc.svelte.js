@@ -27,6 +27,7 @@ class FlightController {
   GPS_CONFIG = $state();
   GPS_DATA = $state();
   GPS_RESCUE = $state();
+  IDLE_GOVERNOR_CONFIG = $state();
   LED_COLORS = $state();
   LED_MODE_COLORS = $state();
   LED_STRIP = $state();
@@ -384,6 +385,13 @@ class FlightController {
       use_unsynced_pwm:           false,
       main_rotor_gear_ratio:      [ 1, 1 ],
       tail_rotor_gear_ratio:      [ 1, 1 ],
+    };
+
+    this.IDLE_GOVERNOR_CONFIG = {
+      idle_governor_rpm:          0,
+      idle_governor_gain:         0,
+      idle_governor_handover:     0,
+      idle_governor_ceiling:      0,
     };
 
     this.GPS_CONFIG = {

@@ -462,6 +462,14 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_IDLE_GOVERNOR_CONFIG: {
+                FC.IDLE_GOVERNOR_CONFIG.idle_governor_rpm = data.readU16();
+                FC.IDLE_GOVERNOR_CONFIG.idle_governor_gain = data.readU16();
+                FC.IDLE_GOVERNOR_CONFIG.idle_governor_handover = data.readU8();
+                FC.IDLE_GOVERNOR_CONFIG.idle_governor_ceiling = data.readU8();
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();
@@ -599,6 +607,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
             case MSPCodes.MSP_SET_MOTOR_CONFIG: {
                 console.log('Motor Configuration saved');
+                break;
+            }
+            case MSPCodes.MSP2_WING_SET_IDLE_GOVERNOR_CONFIG: {
+                console.log('Idle Governor Configuration saved');
                 break;
             }
             case MSPCodes.MSP_SET_GPS_CONFIG: {
@@ -1851,6 +1863,14 @@ MspHelper.prototype.crunch = function(code) {
                 buffer.push16(FC.MOTOR_CONFIG.main_rotor_gear_ratio[i]);
             for (let i = 0; i < 2; i++)
                 buffer.push16(FC.MOTOR_CONFIG.tail_rotor_gear_ratio[i]);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_IDLE_GOVERNOR_CONFIG: {
+            buffer.push16(FC.IDLE_GOVERNOR_CONFIG.idle_governor_rpm)
+                .push16(FC.IDLE_GOVERNOR_CONFIG.idle_governor_gain)
+                .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_handover)
+                .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_ceiling);
             break;
         }
 
