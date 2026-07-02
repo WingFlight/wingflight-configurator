@@ -202,8 +202,8 @@ tab.initialize = function (callback) {
             const reverseInput    = row.find('.ruleReverse');
             const conditionSelect = row.find('.ruleCondition');
 
-            Mixer.outputNames.forEach(function (nameKey, i) {
-                outputSelect.append($('<option></option>').attr('value', i).text(i18n.getMessage(nameKey)));
+            Mixer.outputNames.forEach(function (_nameKey, i) {
+                outputSelect.append($('<option></option>').attr('value', i).text(Mixer.outputLabel(i, i18n)));
             });
             Mixer.operNames.slice(1).forEach(function (nameKey, i) {
                 operSelect.append($('<option></option>').attr('value', i + 1).text(i18n.getMessage(nameKey)));

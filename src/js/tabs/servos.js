@@ -17,6 +17,15 @@ const tab = {
     FLAG_GEOCOR: 2,
 };
 
+function getServoDisplayLabel(servoIndex, isBusServo, pwmServoCount) {
+    if (isBusServo) {
+        const busServoNumber = servoIndex - pwmServoCount + 1;
+        return `${busServoNumber}`;
+    }
+
+    return `${servoIndex + 1}`;
+}
+
 tab.initialize = function (callback) {
     const self = this;
 
@@ -28,13 +37,6 @@ tab.initialize = function (callback) {
             .then(() => MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS))
             .then(() => MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE))
             .then(() => MSP.promise(MSPCodes.MSP_SERVO))
-            .then(() => {
-                // Load bus servo config for API 12.9+
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    return MSP.promise(MSPCodes.MSP_BUS_SERVO_CONFIG);
-                }
-                return Promise.resolve();
-            })
             .then(callback);
     }
 
@@ -170,15 +172,9 @@ tab.initialize = function (callback) {
             servoOverride.data('arrayIndex', servoIndex);
             servoOverride.data('isBusServo', isBusServo);
 
-            // Display numbering: bus servos show as #1-#18, PWM servos show as #1-#N
-            let displayIndex;
-            if (isBusServo) {
-                const busServoNumber = servoIndex - pwmServoCount;
-                displayIndex = busServoNumber + 1;
-            } else {
-                displayIndex = servoIndex + 1;
-            }
-            servoOverride.find('.servoOverrideIndex').text(`#${displayIndex}`);
+            servoOverride.find('.servoOverrideIndex').text(
+                getServoDisplayLabel(servoIndex, isBusServo, pwmServoCount, self.BUS_SERVO_OFFSET),
+            );
 
             const servoSlider = noUiSlider.create(servoOverride.find('.servoOverrideSlider').get(0), {
                 exactInput: true,
@@ -288,17 +284,9 @@ tab.initialize = function (callback) {
             servoConfig.data('index', servoIndex);
             servoConfig.data('isBusServo', isBusServo);
 
-            // Display numbering: bus servos show as #1-#18, PWM servos show as #1-#N
-            let displayIndex;
-            if (isBusServo) {
-                // Bus servo: calculate which bus servo this is (0-17) then display as #1-#18
-                const busServoNumber = servoIndex - pwmServoCount;
-                displayIndex = busServoNumber + 1;
-            } else {
-                // PWM servo: display as #1, #2, etc.
-                displayIndex = servoIndex + 1;
-            }
-            servoConfig.find('#index').text(`#${displayIndex}`);
+            servoConfig.find('#index').text(
+                getServoDisplayLabel(servoIndex, isBusServo, pwmServoCount, self.BUS_SERVO_OFFSET),
+            );
             servoConfig.find('#mid').val(SERVO.mid);
             servoConfig.find('#min').val(SERVO.min);
             servoConfig.find('#max').val(SERVO.max);
@@ -308,36 +296,20 @@ tab.initialize = function (callback) {
             servoConfig.find('#speed').val(SERVO.speed);
             servoConfig.find('#reversed').prop('checked', revs);
 
-            // For bus servos, set input constraints and show source
+            // For bus servos, set input constraints and hide the unused rate field.
             if (isBusServo) {
                 servoConfig.find('#mid').attr('min', 1000).attr('max', 2000);
                 servoConfig.find('#min').attr('min', -500).attr('max', -1);
                 servoConfig.find('#max').attr('min', 1).attr('max', 500);
 
-                // Hide rate, show source
+                // Bus servos are always mixer-driven.
                 servoConfig.find('.servoRateColumn').hide();
-                servoConfig.find('.servoSourceColumn').show();
-
-                // Display source: bus servo index in array corresponds to BUS_SERVO_CONFIG index
-                const busServoIndex = servoIndex - pwmServoCount;
-                const sourceType = FC.BUS_SERVO_CONFIG[busServoIndex] || 0;
-                const sourceText = sourceType === 1 ? 'RX' : 'Mixer';
-                servoConfig.find('#source').text(sourceText);
-
-                // Hide geometry correction checkbox for RX source bus servos
-                if (sourceType === 1) {
-                    // Hide geocor checkbox for RX source bus servos, but keep it in DOM to preserve state
-                    servoConfig.find('#geocor').prop('checked', geocor).removeClass('toggle').hide();
-                } else {
-                    // Only set geocor for Mixer source bus servos
-                    servoConfig.find('#geocor').prop('checked', geocor);
-                }
+                servoConfig.find('#geocor').prop('checked', geocor);
             } else {
                 // PWM servos: set geocor normally
                 servoConfig.find('#geocor').prop('checked', geocor);
-                // Show rate, hide source
+                // Show rate for PWM servos.
                 servoConfig.find('.servoRateColumn').show();
-                servoConfig.find('.servoSourceColumn').hide();
             }
 
             servoConfig.find('input').change(function () {

@@ -1,5 +1,8 @@
 export const Mixer = {
 
+    PWM_SERVO_COUNT: 8,
+    BUS_SERVO_OFFSET: 8,
+
     inputNames: [
         'mixerInputNone',
         'mixerInputStabilizedRoll',
@@ -40,6 +43,24 @@ export const Mixer = {
         ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
         ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
     ],
+
+    outputLabel: function (index, i18n) {
+        if (index === 0) {
+            return i18n.getMessage(this.outputNames[index]);
+        }
+
+        if (index >= 1 && index <= this.SERVO_OUTPUT_COUNT) {
+            const servoNumber = index;
+            if (servoNumber <= this.PWM_SERVO_COUNT) {
+                return `PWM Servo #${servoNumber}`;
+            }
+
+            const busServoNumber = servoNumber - this.BUS_SERVO_OFFSET;
+            return `Bus Servo #${busServoNumber}`;
+        }
+
+        return i18n.getMessage(this.outputNames[index]);
+    },
 
     operNames: [
         'mixerRuleNOP',

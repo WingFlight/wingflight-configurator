@@ -225,11 +225,6 @@ export function applyVirtualConfig() {
     };
   }
 
-  FC.BUS_SERVO_CONFIG = new Array(18);
-  for (let i = 0; i < FC.BUS_SERVO_CONFIG.length; i++) {
-    FC.BUS_SERVO_CONFIG[i] = 0; // BUS_SERVO_SOURCE_MIXER
-  }
-
   FC.ADJUSTMENT_RANGES = new Array(42);
   for (let i = 0; i < FC.ADJUSTMENT_RANGES.length; i++) {
     FC.ADJUSTMENT_RANGES[i] = {
