@@ -15,6 +15,7 @@
   import Telemetry from "./Telemetry.svelte";
   import Motor from "./Motor.svelte";
   import RotorSpeed from "./RotorSpeed.svelte";
+  import IdleGovernor from "./IdleGovernor.svelte";
   import Override from "./Override.svelte";
   import motorState from "./state.svelte.js";
 
@@ -36,6 +37,7 @@
     return $state.snapshot({
       MOTOR_CONFIG: FC.MOTOR_CONFIG,
       ESC_SENSOR_CONFIG: FC.ESC_SENSOR_CONFIG,
+      IDLE_GOVERNOR_CONFIG: FC.IDLE_GOVERNOR_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
   }
@@ -57,6 +59,7 @@
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_ESC_SENSOR_CONFIG);
+    await MSP.promise(MSPCodes.MSP2_WING_IDLE_GOVERNOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR);
     await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
     await MSP.promise(MSPCodes.MSP_BATTERY_STATE);
@@ -90,6 +93,7 @@
     await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
     await save(MSPCodes.MSP_SET_MOTOR_CONFIG);
     await save(MSPCodes.MSP_SET_ESC_SENSOR_CONFIG);
+    await save(MSPCodes.MSP2_WING_SET_IDLE_GOVERNOR_CONFIG);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -104,6 +108,7 @@
 
     Object.assign(FC.MOTOR_CONFIG, initialState.MOTOR_CONFIG);
     Object.assign(FC.ESC_SENSOR_CONFIG, initialState.ESC_SENSOR_CONFIG);
+    Object.assign(FC.IDLE_GOVERNOR_CONFIG, initialState.IDLE_GOVERNOR_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
   }
 
@@ -153,6 +158,9 @@
           {#if rpmAvailable}
             <div transition:slide>
               <RotorSpeed />
+            </div>
+            <div transition:slide>
+              <IdleGovernor />
             </div>
           {/if}
         </div>
