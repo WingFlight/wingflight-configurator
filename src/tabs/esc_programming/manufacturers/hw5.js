@@ -161,6 +161,14 @@ function buildWritePayload(displayValues, previousRawBytes) {
     return bytes;
 }
 
+// Ported from escmfg/hw5/init.lua's getEscModel/getEscVersion/getEscFirmware: these three ASCII
+// header fields are already parsed as raw byte ranges above.
+function describeEsc(values) {
+    const firmware = values.firmware_version ? decodeAsciiRun(values.firmware_version, 0, values.firmware_version.length).trim() : "";
+    const model = values.esc_type ? decodeAsciiRun(values.esc_type, 0, values.esc_type.length).trim() : "";
+    return [model || "Hobbywing V5", firmware].filter(Boolean).join(" ");
+}
+
 // Verbatim from ESC_PARAMETERS_HW5.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     253, 0,
@@ -198,6 +206,7 @@ const hw5 = {
     parseRead,
     buildWritePayload,
     simResponse,
+    describeEsc,
 };
 
 registerManufacturer(hw5);

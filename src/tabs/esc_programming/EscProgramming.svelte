@@ -44,7 +44,12 @@
 </script>
 
 {#snippet header()}
-  <h1>{$i18n.t("tabEscProgramming")}</h1>
+  <div class="title">
+    <h1>{$i18n.t("tabEscProgramming")}</h1>
+    {#if escState.view === View.FORM && escState.escLabel}
+      <span class="esc-label">{escState.escLabel}</span>
+    {/if}
+  </div>
   <div class="grow"></div>
   {#if escState.view !== View.PICKER}
     <button class="btn" onclick={refreshAndReset}>
@@ -75,6 +80,22 @@
 </Page>
 
 <style lang="scss">
+  .title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h1 {
+      margin: 0;
+    }
+  }
+
+  .esc-label {
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--color-text-soft);
+  }
+
   .grow {
     flex-grow: 1;
   }

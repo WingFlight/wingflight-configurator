@@ -102,6 +102,44 @@ const pages = [
     },
 ];
 
+// Ported from escmfg/yge/init.lua's getEscModel (escType lookup)/getEscFirmware. The Lua
+// source reads these through a +2 "mspHeaderBytes" byte offset that, worked through against
+// this buffer's actual layout, lands exactly on the esc_type/firmware_version fields below --
+// so this reads those named fields directly instead of re-deriving raw byte offsets.
+const escTypeLabels = {
+    848: "YGE 35 LVT BEC",
+    1616: "YGE 65 LVT BEC",
+    2128: "YGE 85 LVT BEC",
+    2384: "YGE 95 LVT BEC",
+    4944: "YGE 135 LVT BEC",
+    2304: "YGE 90 HVT Opto",
+    4608: "YGE 120 HVT Opto",
+    5712: "YGE 165 HVT",
+    8272: "YGE 205 HVT",
+    8273: "YGE 205 HVT BEC",
+    4177: "YGE Aureus 105",
+    4179: "YGE Aureus 105v2",
+    5025: "YGE Aureus 135",
+    5027: "YGE Aureus 135v2",
+    5457: "YGE Saphir 155",
+    5459: "YGE Saphir 155v2",
+    4689: "YGE Saphir 125",
+    4928: "YGE Opto 135",
+    9552: "YGE Opto 255",
+    16464: "YGE Opto 405",
+};
+
+function describeEsc(values) {
+    const parts = [];
+    if (values.esc_type != null) {
+        parts.push(escTypeLabels[values.esc_type] ?? `YGE ESC (${values.esc_type})`);
+    } else {
+        parts.push("YGE");
+    }
+    if (values.firmware_version != null) parts.push((values.firmware_version / 100000).toFixed(5));
+    return parts.join(" ");
+}
+
 // Verbatim from ESC_PARAMETERS_YGE.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     165, 0, 32, 0,
@@ -142,6 +180,7 @@ const yge = {
     fields,
     pages,
     simResponse,
+    describeEsc,
 };
 
 registerManufacturer(yge);

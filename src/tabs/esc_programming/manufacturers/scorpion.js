@@ -81,6 +81,20 @@ function buildWritePayload(displayValues, previousRawBytes) {
     return payload;
 }
 
+// Ported from escmfg/scorp/init.lua's getEscModel: a null-terminated ASCII string packed
+// across the 32 escinfo_N fields. (getEscVersion/getEscFirmware in the Lua source read through
+// a `page.value` table that a plain response buffer never has, so they always evaluate to 0 --
+// dead code upstream -- and are not replicated here.)
+function describeEsc(values) {
+    let model = "";
+    for (let i = 1; i <= 32; i++) {
+        const byte = values[`escinfo_${i}`];
+        if (!byte) break;
+        model += String.fromCharCode(byte);
+    }
+    return model || "Scorpion";
+}
+
 // Verbatim from ESC_PARAMETERS_SCORPION.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     83, 128,
@@ -118,6 +132,7 @@ const scorpion = {
     pages,
     buildWritePayload,
     simResponse,
+    describeEsc,
 };
 
 registerManufacturer(scorpion);

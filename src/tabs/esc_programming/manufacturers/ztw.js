@@ -85,6 +85,20 @@ const pages = [
     },
 ];
 
+// Ported from escmfg/ztw/init.lua's getEscModel/getEscFirmware: the "model" byte is actually
+// the raw esc_version field (a 1-based index into this capacity table), and the "firmware"
+// is the esc_model field's raw byte split into hi/lo nibbles -- the Lua source's field naming
+// and its header meaning are swapped, so this reads values.esc_version for capacity and
+// values.esc_model for firmware, not the other way around.
+const escCapacityLabels = ["RESERVED", "35A", "65A", "85A", "125A", "155A", "130A", "195A", "300A"];
+
+function describeEsc(values) {
+    const capacity = escCapacityLabels[(values.esc_version ?? 0) - 1] ?? "UNKNOWN";
+    const parts = ["ZTW", capacity];
+    if (values.esc_model != null) parts.push(`SW${values.esc_model >> 4}.${values.esc_model & 0xF}`);
+    return parts.join(" ");
+}
+
 // Verbatim from ESC_PARAMETERS_ZTW.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     221, 0, 23, 3,
@@ -118,6 +132,7 @@ const ztw = {
     fields,
     pages,
     simResponse,
+    describeEsc,
 };
 
 registerManufacturer(ztw);

@@ -206,6 +206,16 @@ function buildWritePayload(displayValues, previousRawBytes) {
     return payload;
 }
 
+// Ported from escmfg/am32/init.lua's getEscFirmware: AM32 has no model name in its response,
+// so the header is just the tool name plus the raw version_major/version_minor bytes.
+function describeEsc(values) {
+    const parts = ["AM32"];
+    if (values.version_major != null && values.version_minor != null) {
+        parts.push(`SW${values.version_major}.${values.version_minor}`);
+    }
+    return parts.join(" ");
+}
+
 // Verbatim from ESC_PARAMETERS_AM32.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     194, 64, 1, 3, 1, 2, 19, 50, 1, 0, 10, 100, 0, 100, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0,
@@ -223,6 +233,7 @@ const am32 = {
     parseRead,
     buildWritePayload,
     simResponse,
+    describeEsc,
     handshake: {
         preSwitchDelayMs: 800,
         switchReadDelayMs: 4000,

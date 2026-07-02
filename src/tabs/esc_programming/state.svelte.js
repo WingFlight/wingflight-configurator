@@ -31,6 +31,11 @@ class State {
     // isDirty()/the Save toolbar stuck showing "dirty" even right after a successful save.
     initialValues = $state(null);
 
+    // Model/version/firmware string identifying the connected ESC, ported from esc_tool.lua's
+    // setModelHeaderText -- shown in the page header once detection succeeds, matching the Lua
+    // tool's persistent "which ESC am I talking to" header line.
+    escLabel = $state("");
+
     rawBuffer = null;
     abortController = null;
 
@@ -58,6 +63,7 @@ class State {
         this.rawBuffer = null;
         this.values = {};
         this.initialValues = null;
+        this.escLabel = "";
     }
 
     selectManufacturer(manufacturer) {
@@ -122,7 +128,17 @@ class State {
         this.rawBuffer = raw;
         this.values = { ...parsed.display };
         this.initialValues = $state.snapshot(this.values);
+        this.escLabel = this.describeConnectedEsc(parsed.values);
         this.view = View.FORM;
+    }
+
+    // Mirrors esc_tool.lua/esc_tool_4way.lua's header text: model/version/firmware from the
+    // manufacturer's describeEsc(), prefixed with "ESC1 -"/"ESC2 -" only for Group A (bridged)
+    // manufacturers, which is where the target actually matters (Group B has one ESC per bus).
+    describeConnectedEsc(values) {
+        const label = this.manufacturer.describeEsc ? this.manufacturer.describeEsc(values) : this.manufacturer.name;
+        if (this.manufacturer.group !== "bridged") return label;
+        return `${this.escTarget === 1 ? "ESC2" : "ESC1"} - ${label}`;
     }
 
     retryDetection() {

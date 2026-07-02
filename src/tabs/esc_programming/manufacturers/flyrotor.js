@@ -116,6 +116,21 @@ const pages = [
     },
 ];
 
+// Ported from escmfg/flrtr/init.lua's getEscModel/getEscFirmware: esc_iap/esc_fw are parsed
+// here as combined little-endian U24s, but the Lua source prints their 3 raw bytes individually
+// as version components -- decompose back into bytes to match (esc_sn's serial-number half of
+// the Lua header is skipped: the reference indices there {13,12,11,9} repeat byte 9, an
+// upstream transcription bug that produces a meaningless value).
+function describeEsc(values) {
+    if (values.esc_model == null) return "FLYROTOR";
+    const iap = values.esc_iap ?? 0;
+    const fw = values.esc_fw ?? 0;
+    const hw = values.esc_hardware ?? 0;
+    const iapStr = `${iap & 0xFF}.${(iap >> 8) & 0xFF}.${(iap >> 16) & 0xFF}`;
+    const fwStr = `${fw & 0xFF}.${(fw >> 8) & 0xFF}.${(fw >> 16) & 0xFF}`;
+    return `FLYROTOR ${values.esc_model}A 1.${hw}/${iapStr} ${fwStr}`;
+}
+
 // Verbatim from ESC_PARAMETERS_FLYROTOR.lua's SIM_RESPONSE, used by virtual_fc.js for dev/testing.
 const simResponse = [
     115, 0, 0,
@@ -164,6 +179,7 @@ const flyrotor = {
     fields,
     pages,
     simResponse,
+    describeEsc,
 };
 
 registerManufacturer(flyrotor);

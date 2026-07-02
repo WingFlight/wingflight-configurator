@@ -148,6 +148,16 @@ function disambiguate(bytes) {
     return bytes[2] === 16; // main_revision at byte offset 2 (after esc_signature, esc_command)
 }
 
+// Ported from escmfg/blheli_s/init.lua's getEscVersion/getEscFirmware.
+function describeEsc(values) {
+    const parts = ["BLHeli_S"];
+    if (values.layout_revision != null) parts.push(`Revision ${values.layout_revision}`);
+    if (values.main_revision != null && values.sub_revision != null) {
+        parts.push(`FW${values.main_revision}.${values.sub_revision}`);
+    }
+    return parts.join(" ");
+}
+
 const blheliS = {
     id: "blheli_s",
     name: "BLHeli_S",
@@ -160,6 +170,7 @@ const blheliS = {
     parseRead,
     buildWritePayload,
     simResponse,
+    describeEsc,
     handshake: {
         preSwitchDelayMs: 800,
         switchReadDelayMs: 5000,
