@@ -32,12 +32,37 @@ export const LogicCondition = {
     OPERAND_TYPE_RC_CHANNEL: 1,
     OPERAND_TYPE_FLIGHT_MODE: 2,
     OPERAND_TYPE_CONDITION: 3,
+    OPERAND_TYPE_SENSOR: 4,
 
     operandTypeNames: [
         'logicOperandTypeValue',
         'logicOperandTypeChannel',
         'logicOperandTypeMode',
         'logicOperandTypeCondition',
+        'logicOperandTypeSensor',
+    ],
+
+    // Selector values for OPERAND_TYPE_SENSOR - matches firmware's logicSensor_e
+    // (pg/logic_condition.h). Fixed, small set of common sensors, unlike
+    // channel/mode/condition choices which are populated dynamically from FC data.
+    SENSOR_ALTITUDE: 0,
+    SENSOR_VOLTAGE: 1,
+    SENSOR_CURRENT: 2,
+    SENSOR_RPM: 3,
+    SENSOR_RSSI: 4,
+    SENSOR_BATTERY_PERCENT: 5,
+    SENSOR_MAH_DRAWN: 6,
+    SENSOR_GPS_SPEED: 7,
+
+    sensorNames: [
+        'logicSensorAltitude',
+        'logicSensorVoltage',
+        'logicSensorCurrent',
+        'logicSensorRpm',
+        'logicSensorRssi',
+        'logicSensorBatteryPercent',
+        'logicSensorMahDrawn',
+        'logicSensorGpsSpeed',
     ],
 
     //// Functions

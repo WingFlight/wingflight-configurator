@@ -91,6 +91,14 @@ tab.initialize = function (callback) {
         return choices;
     }
 
+    // Sensor choices for the SENSOR operand type - fixed list, mirrors
+    // LogicCondition.sensorNames (matches firmware's logicSensor_e).
+    function sensorChoices() {
+        return LogicCondition.sensorNames.map(function (nameKey, i) {
+            return { value: i, label: i18n.getMessage(nameKey) };
+        });
+    }
+
     function populateSelect(select, choices) {
         select.empty();
         choices.forEach(function (choice) {
@@ -120,6 +128,7 @@ tab.initialize = function (callback) {
         widgets.channelGroup.toggle(type === LogicCondition.OPERAND_TYPE_RC_CHANNEL);
         widgets.mode.toggle(type === LogicCondition.OPERAND_TYPE_FLIGHT_MODE);
         widgets.condition.toggle(type === LogicCondition.OPERAND_TYPE_CONDITION);
+        widgets.sensor.toggle(type === LogicCondition.OPERAND_TYPE_SENSOR);
     }
 
     function widgetForType(valueWidgets, type) {
@@ -127,6 +136,7 @@ tab.initialize = function (callback) {
             case LogicCondition.OPERAND_TYPE_RC_CHANNEL:  return valueWidgets.channel;
             case LogicCondition.OPERAND_TYPE_FLIGHT_MODE: return valueWidgets.mode;
             case LogicCondition.OPERAND_TYPE_CONDITION:   return valueWidgets.condition;
+            case LogicCondition.OPERAND_TYPE_SENSOR:      return valueWidgets.sensor;
             default:                                       return valueWidgets.number;
         }
     }
@@ -138,6 +148,7 @@ tab.initialize = function (callback) {
 
         const channels = channelChoices();
         const modes = modeChoices();
+        const sensors = sensorChoices();
 
         FC.LOGIC_CONDITIONS.forEach(function (condition, index) {
             const row = $('#tab-logic-templates .logicConditionTemplate tr').clone();
@@ -154,6 +165,7 @@ tab.initialize = function (callback) {
                 channel:      row.find('.condOperandAValueChannel'),
                 mode:         row.find('.condOperandAValueMode'),
                 condition:    row.find('.condOperandAValueCondition'),
+                sensor:       row.find('.condOperandAValueSensor'),
             };
 
             const operandBTypeSelect = row.find('.condOperandBType');
@@ -165,6 +177,7 @@ tab.initialize = function (callback) {
                 channel:      row.find('.condOperandBValueChannel'),
                 mode:         row.find('.condOperandBValueMode'),
                 condition:    row.find('.condOperandBValueCondition'),
+                sensor:       row.find('.condOperandBValueSensor'),
             };
 
             LogicCondition.operationNames.forEach(function (nameKey, i) {
@@ -180,6 +193,8 @@ tab.initialize = function (callback) {
             populateSelect(operandBWidgets.channel, channels);
             populateSelect(operandAWidgets.mode, modes);
             populateSelect(operandBWidgets.mode, modes);
+            populateSelect(operandAWidgets.sensor, sensors);
+            populateSelect(operandBWidgets.sensor, sensors);
 
             for (let c = 0; c < LogicCondition.CONDITION_COUNT; c++) {
                 operandAWidgets.condition.append($('<option></option>').attr('value', c).text(i18n.getMessage('logicConditionLabel', [c + 1])));
@@ -203,9 +218,9 @@ tab.initialize = function (callback) {
                 const usesA = LogicCondition.usesOperandA(operation);
                 const usesB = LogicCondition.usesOperandB(operation);
 
-                row.find('.condOperandAType, .condOperandAValueNumber, .condOperandAValueChannel, .condOperandAValueMode, .condOperandAValueCondition')
+                row.find('.condOperandAType, .condOperandAValueNumber, .condOperandAValueChannel, .condOperandAValueMode, .condOperandAValueCondition, .condOperandAValueSensor')
                     .prop('disabled', !usesA);
-                row.find('.condOperandBType, .condOperandBValueNumber, .condOperandBValueChannel, .condOperandBValueMode, .condOperandBValueCondition')
+                row.find('.condOperandBType, .condOperandBValueNumber, .condOperandBValueChannel, .condOperandBValueMode, .condOperandBValueCondition, .condOperandBValueSensor')
                     .prop('disabled', !usesB);
 
                 updateSetValueAvailability();
@@ -262,8 +277,8 @@ tab.initialize = function (callback) {
                 updateSetValueAvailability();
                 commit();
             });
-            row.find('.condOperandAValueNumber, .condOperandAValueChannel, .condOperandAValueMode, .condOperandAValueCondition').on('change', commit);
-            row.find('.condOperandBValueNumber, .condOperandBValueChannel, .condOperandBValueMode, .condOperandBValueCondition').on('change', commit);
+            row.find('.condOperandAValueNumber, .condOperandAValueChannel, .condOperandAValueMode, .condOperandAValueCondition, .condOperandAValueSensor').on('change', commit);
+            row.find('.condOperandBValueNumber, .condOperandBValueChannel, .condOperandBValueMode, .condOperandBValueCondition, .condOperandBValueSensor').on('change', commit);
 
             operandAWidgets.setValue.on('click', function (event) {
                 event.preventDefault();
