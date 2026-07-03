@@ -1,3 +1,9 @@
+# 0.0.3
+
+ESC Programing
+Improve telemetry conditions
+IdleUP governor
+
 # 0.0.2
 
 Board Alignment
