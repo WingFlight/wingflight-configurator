@@ -3220,6 +3220,45 @@
     "logicOperandTypeCondition": {
         "message": "Condition"
     },
+    "logicOperandTypeSensor": {
+        "message": "Sensor"
+    },
+    "logicOperandTypeProfile": {
+        "message": "Profile"
+    },
+    "logicSensorAltitude": {
+        "message": "Altitude (m)"
+    },
+    "logicSensorVoltage": {
+        "message": "Battery Voltage (V)"
+    },
+    "logicSensorCurrent": {
+        "message": "Battery Current (A)"
+    },
+    "logicSensorRpm": {
+        "message": "Motor RPM"
+    },
+    "logicSensorRssi": {
+        "message": "RSSI (%)"
+    },
+    "logicSensorBatteryPercent": {
+        "message": "Battery Remaining (%)"
+    },
+    "logicSensorMahDrawn": {
+        "message": "mAh Drawn"
+    },
+    "logicSensorGpsSpeed": {
+        "message": "GPS Speed (m/s)"
+    },
+    "logicProfilePid": {
+        "message": "PID Profile"
+    },
+    "logicProfileRate": {
+        "message": "Rate Profile"
+    },
+    "logicProfileBattery": {
+        "message": "Battery Profile"
+    },
     "logicChannelRoll": {
         "message": "Roll"
     },
