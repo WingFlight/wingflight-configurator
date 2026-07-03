@@ -33,6 +33,7 @@ export const LogicCondition = {
     OPERAND_TYPE_FLIGHT_MODE: 2,
     OPERAND_TYPE_CONDITION: 3,
     OPERAND_TYPE_SENSOR: 4,
+    OPERAND_TYPE_PROFILE: 5,
 
     operandTypeNames: [
         'logicOperandTypeValue',
@@ -40,6 +41,7 @@ export const LogicCondition = {
         'logicOperandTypeMode',
         'logicOperandTypeCondition',
         'logicOperandTypeSensor',
+        'logicOperandTypeProfile',
     ],
 
     // Selector values for OPERAND_TYPE_SENSOR - matches firmware's logicSensor_e
@@ -81,13 +83,42 @@ export const LogicCondition = {
         10, // SENSOR_GPS_SPEED: 0.1m/s units
     ],
 
+    // Selector values for OPERAND_TYPE_PROFILE - matches firmware's
+    // logicProfile_e. A separate top-level operand type from Sensor since
+    // "which profile is active" isn't a live reading, it's a mode-like pick.
+    PROFILE_PID: 0,
+    PROFILE_RATE: 1,
+    PROFILE_BATTERY: 2,
+
+    profileNames: [
+        'logicProfilePid',
+        'logicProfileRate',
+        'logicProfileBattery',
+    ],
+
+    // All three profile kinds support 6 slots.
+    profileCounts: [
+        6, // PROFILE_PID
+        6, // PROFILE_RATE
+        6, // PROFILE_BATTERY
+    ],
+
     //// Functions
 
-    // Wire value = display value * scale. Unknown/out-of-range sensor
-    // indices are treated as unscaled (1) rather than throwing.
+    // Wire value = (display value - offset) * scale. Unknown/out-of-range
+    // sensor indices are treated as unscaled rather than throwing.
     sensorScale: function (sensorIndex)
     {
         return this.sensorScales[sensorIndex] || 1;
+    },
+
+    // Profile indices travel over MSP 0-based (matches getCurrentPidProfileIndex()
+    // and friends) but every other profile picker in this UI (Rates, Power,
+    // Adjustments) shows/accepts 1-based numbers, so a VALUE compared against
+    // one is entered/shown +1 relative to the wire value.
+    profileCount: function (profileIndex)
+    {
+        return this.profileCounts[profileIndex] || 6;
     },
 
     // Whether operandA is meaningful for this operation - false only for

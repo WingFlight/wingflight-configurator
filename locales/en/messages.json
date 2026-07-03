@@ -3223,6 +3223,9 @@
     "logicOperandTypeSensor": {
         "message": "Sensor"
     },
+    "logicOperandTypeProfile": {
+        "message": "Profile"
+    },
     "logicSensorAltitude": {
         "message": "Altitude (m)"
     },
@@ -3246,6 +3249,15 @@
     },
     "logicSensorGpsSpeed": {
         "message": "GPS Speed (m/s)"
+    },
+    "logicProfilePid": {
+        "message": "PID Profile"
+    },
+    "logicProfileRate": {
+        "message": "Rate Profile"
+    },
+    "logicProfileBattery": {
+        "message": "Battery Profile"
     },
     "logicChannelRoll": {
         "message": "Roll"
