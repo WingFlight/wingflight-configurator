@@ -3512,19 +3512,46 @@
         "message": "Idle Governor"
     },
     "motorsIdleGovernorModeNote": {
-        "message": "These values have no effect on their own. Assign the <i>IDLE UP</i> switch to a channel in the <i>Modes</i> tab &mdash; engaging it (while armed, below the handover throttle, with a valid RPM source) is what actually holds the idle RPM."
+        "message": "These values have no effect on their own. Assign the <i>IDLE UP</i> switch to a channel in the <i>Modes</i> tab &mdash; engaging it (while armed and below the handover throttle) is what actually holds the idle output."
+    },
+    "motorsIdleGovernorMode": {
+        "message": "Mode"
+    },
+    "motorsIdleGovernorModeHelp": {
+        "message": "OFF disables the idle governor entirely.<br>RPM closed-loop holds a target RPM using motor RPM feedback &mdash; requires a valid RPM source (bidirectional DShot telemetry, ESC telemetry, or a frequency sensor).<br>Throttle open-loop just holds a fixed throttle percentage &mdash; no RPM source needed, but it won't correct for load or battery sag."
+    },
+    "motorsIdleGovernorModeOff": {
+        "message": "Off"
+    },
+    "motorsIdleGovernorModeRpm": {
+        "message": "RPM"
+    },
+    "motorsIdleGovernorModeThrottle": {
+        "message": "Throttle"
     },
     "motorsIdleGovernorRpm": {
         "message": "Idle RPM"
     },
     "motorsIdleGovernorRpmHelp": {
-        "message": "Target RPM to hold at idle. Set to 0 to disable the idle governor entirely.<br>Engaging also requires the <i>IDLE UP</i> switch (assign it in the Modes tab) and a valid RPM source."
+        "message": "Target RPM to hold at idle. Set to 0 to disable while in RPM mode.<br>Engaging also requires the <i>IDLE UP</i> switch (assign it in the Modes tab) and a valid RPM source."
     },
     "motorsIdleGovernorGain": {
-        "message": "Gain"
+        "message": "P Gain"
     },
     "motorsIdleGovernorGainHelp": {
-        "message": "Proportional gain used to correct RPM error while the idle governor is holding the target RPM. Increase if the motor is slow to reach the target idle RPM, decrease if it oscillates."
+        "message": "Proportional gain used to correct RPM error while the idle governor is holding the target RPM. The RPM error is filtered before this gain is applied for stability. A propeller at idle needs very little correction to hold RPM, especially electric setups, so keep this low &mdash; start around 20 and increase only if the motor is slow to react, decrease if it oscillates. A P gain alone will always settle a bit below the target RPM &mdash; that remaining gap is closed by the I Gain below, not this one."
+    },
+    "motorsIdleGovernorIGain": {
+        "message": "I Gain"
+    },
+    "motorsIdleGovernorIGainHelp": {
+        "message": "Integral gain that slowly closes the remaining gap between the target RPM and where the P gain alone settles. Start around 30; increase if the motor takes too long to reach the exact target RPM, decrease if the RPM slowly drifts past the target and back (a slow oscillation, distinct from the fast one P gain controls)."
+    },
+    "motorsIdleGovernorThrottle": {
+        "message": "Idle Throttle"
+    },
+    "motorsIdleGovernorThrottleHelp": {
+        "message": "Fixed throttle percentage to hold at idle when no RPM sensor is available. Slewed smoothly, same as RPM mode, but does not correct for load or RPM &mdash; just outputs this value while <i>IDLE UP</i> is engaged and below the handover throttle."
     },
     "motorsIdleGovernorHandover": {
         "message": "Handover Throttle"

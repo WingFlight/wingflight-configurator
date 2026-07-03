@@ -388,8 +388,11 @@ class FlightController {
     };
 
     this.IDLE_GOVERNOR_CONFIG = {
+      idle_governor_mode:         0,
       idle_governor_rpm:          0,
       idle_governor_gain:         0,
+      idle_governor_i_gain:       0,
+      idle_governor_throttle:     0,
       idle_governor_handover:     0,
       idle_governor_ceiling:      0,
     };
