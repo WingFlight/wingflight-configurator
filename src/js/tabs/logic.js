@@ -141,6 +141,51 @@ tab.initialize = function (callback) {
         }
     }
 
+    // A VALUE operand being compared against a Sensor sibling is shown/entered
+    // in that sensor's real-world unit (volts, m/s, ...) rather than the raw
+    // wire integer - this is the scale (wire = display * scale) that applies.
+    function pairedScale(siblingTypeSelect, siblingWidgets) {
+        if (parseInt(siblingTypeSelect.val(), 10) === LogicCondition.OPERAND_TYPE_SENSOR) {
+            return LogicCondition.sensorScale(parseInt(siblingWidgets.sensor.val(), 10));
+        }
+        return 1;
+    }
+
+    // Hard-sets a VALUE number widget's step/range/display from a raw wire
+    // value and scale - used on first render and whenever an operand switches
+    // to being a VALUE (no prior on-screen value to preserve).
+    function initNumberWidget(widgets, rawValue, scale) {
+        const decimals = scale > 1 ? Math.round(Math.log10(scale)) : 0;
+        widgets.number.attr('step', scale > 1 ? 1 / scale : 1);
+        widgets.number.attr('min', -32000 / scale);
+        widgets.number.attr('max', 32000 / scale);
+        widgets.number.val((rawValue / scale).toFixed(decimals));
+        widgets.number.data('scale', scale);
+    }
+
+    // Re-scales a VALUE number widget already on screen - e.g. its sibling
+    // just changed from Altitude to GPS Speed - by converting the currently
+    // displayed value back to its raw wire integer using the previous scale,
+    // then redisplaying it at the new scale. A no-op if the scale is unchanged.
+    function setNumberScale(widgets, scale) {
+        const prevScale = widgets.number.data('scale') || 1;
+        if (prevScale === scale) return;
+        const rawValue = Math.round((parseFloat(widgets.number.val()) || 0) * prevScale);
+        initNumberWidget(widgets, rawValue, scale);
+    }
+
+    // Reads an operand's current widget value back into a raw wire integer -
+    // a VALUE operand is entered in real units and needs multiplying by its
+    // paired sensor's scale; every other operand type is already a plain index.
+    function operandRawValue(widgets, type) {
+        const widget = widgetForType(widgets, type);
+        if (type === LogicCondition.OPERAND_TYPE_VALUE) {
+            const scale = widget.data('scale') || 1;
+            return Math.round((parseFloat(widget.val()) || 0) * scale);
+        }
+        return parseInt(widget.val(), 10) || 0;
+    }
+
     function renderConditionTable() {
         const tbody = $('#logicConditionTableBody');
         if (!tbody.length) return;
@@ -213,6 +258,13 @@ tab.initialize = function (callback) {
             widgetForType(operandBWidgets, condition.operandBType).val(condition.operandBValue);
             showOperandWidget(operandBWidgets, condition.operandBType);
 
+            if (condition.operandAType === LogicCondition.OPERAND_TYPE_VALUE) {
+                initNumberWidget(operandAWidgets, condition.operandAValue, pairedScale(operandBTypeSelect, operandBWidgets));
+            }
+            if (condition.operandBType === LogicCondition.OPERAND_TYPE_VALUE) {
+                initNumberWidget(operandBWidgets, condition.operandBValue, pairedScale(operandATypeSelect, operandAWidgets));
+            }
+
             function updateOperandVisibility() {
                 const operation = parseInt(operatorSelect.val(), 10);
                 const usesA = LogicCondition.usesOperandA(operation);
@@ -253,9 +305,9 @@ tab.initialize = function (callback) {
                     enabled:        enableInput.is(':checked') ? 1 : 0,
                     operation:      parseInt(operatorSelect.val(), 10),
                     operandAType:   parseInt(operandATypeSelect.val(), 10),
-                    operandAValue:  parseInt(widgetForType(operandAWidgets, parseInt(operandATypeSelect.val(), 10)).val(), 10) || 0,
+                    operandAValue:  operandRawValue(operandAWidgets, parseInt(operandATypeSelect.val(), 10)),
                     operandBType:   parseInt(operandBTypeSelect.val(), 10),
-                    operandBValue:  parseInt(widgetForType(operandBWidgets, parseInt(operandBTypeSelect.val(), 10)).val(), 10) || 0,
+                    operandBValue:  operandRawValue(operandBWidgets, parseInt(operandBTypeSelect.val(), 10)),
                 };
                 self.CONDITIONS_dirty = true;
                 self.needSave = true;
@@ -268,14 +320,42 @@ tab.initialize = function (callback) {
                 commit();
             });
             operandATypeSelect.on('change', function () {
-                showOperandWidget(operandAWidgets, parseInt(operandATypeSelect.val(), 10));
+                const newType = parseInt(operandATypeSelect.val(), 10);
+                showOperandWidget(operandAWidgets, newType);
+                if (newType === LogicCondition.OPERAND_TYPE_VALUE) {
+                    initNumberWidget(operandAWidgets, 0, pairedScale(operandBTypeSelect, operandBWidgets));
+                }
+                if (parseInt(operandBTypeSelect.val(), 10) === LogicCondition.OPERAND_TYPE_VALUE) {
+                    setNumberScale(operandBWidgets, pairedScale(operandATypeSelect, operandAWidgets));
+                }
                 updateSetValueAvailability();
                 commit();
             });
             operandBTypeSelect.on('change', function () {
-                showOperandWidget(operandBWidgets, parseInt(operandBTypeSelect.val(), 10));
+                const newType = parseInt(operandBTypeSelect.val(), 10);
+                showOperandWidget(operandBWidgets, newType);
+                if (newType === LogicCondition.OPERAND_TYPE_VALUE) {
+                    initNumberWidget(operandBWidgets, 0, pairedScale(operandATypeSelect, operandAWidgets));
+                }
+                if (parseInt(operandATypeSelect.val(), 10) === LogicCondition.OPERAND_TYPE_VALUE) {
+                    setNumberScale(operandAWidgets, pairedScale(operandBTypeSelect, operandBWidgets));
+                }
                 updateSetValueAvailability();
                 commit();
+            });
+            // Choosing a different sensor on one side rescales a VALUE
+            // widget on the other side to match its unit - must run before
+            // the generic commit binding below so commit() reads the
+            // already-rescaled value.
+            operandAWidgets.sensor.on('change', function () {
+                if (parseInt(operandBTypeSelect.val(), 10) === LogicCondition.OPERAND_TYPE_VALUE) {
+                    setNumberScale(operandBWidgets, pairedScale(operandATypeSelect, operandAWidgets));
+                }
+            });
+            operandBWidgets.sensor.on('change', function () {
+                if (parseInt(operandATypeSelect.val(), 10) === LogicCondition.OPERAND_TYPE_VALUE) {
+                    setNumberScale(operandAWidgets, pairedScale(operandBTypeSelect, operandBWidgets));
+                }
             });
             row.find('.condOperandAValueNumber, .condOperandAValueChannel, .condOperandAValueMode, .condOperandAValueCondition, .condOperandAValueSensor').on('change', commit);
             row.find('.condOperandBValueNumber, .condOperandBValueChannel, .condOperandBValueMode, .condOperandBValueCondition, .condOperandBValueSensor').on('change', commit);

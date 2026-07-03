@@ -3227,10 +3227,10 @@
         "message": "Altitude (m)"
     },
     "logicSensorVoltage": {
-        "message": "Battery Voltage (0.1V)"
+        "message": "Battery Voltage (V)"
     },
     "logicSensorCurrent": {
-        "message": "Battery Current (0.1A)"
+        "message": "Battery Current (A)"
     },
     "logicSensorRpm": {
         "message": "Motor RPM"
@@ -3245,7 +3245,7 @@
         "message": "mAh Drawn"
     },
     "logicSensorGpsSpeed": {
-        "message": "GPS Speed (0.1m/s)"
+        "message": "GPS Speed (m/s)"
     },
     "logicChannelRoll": {
         "message": "Roll"
