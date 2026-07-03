@@ -155,7 +155,7 @@ export const Mixer = {
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
-        const ROLL = 1, PITCH = 2, YAW = 3, CMD_THROTTLE = 8, RC_AUX1 = 13;
+        const ROLL = 1, PITCH = 2, YAW = 3, THROTTLE = 4, RC_AUX1 = 13;
 
         if (options.layout === 'conventional') {
             if (options.ailerons === 'single') {
@@ -194,11 +194,11 @@ export const Mixer = {
         }
 
         if (options.motors >= 1) {
-            rules.push(rule(OP_SET, CMD_THROTTLE, nextMotor++, 1000));
+            rules.push(rule(OP_SET, THROTTLE, nextMotor++, 1000));
         }
         if (options.motors >= 2) {
             const motor2 = nextMotor;
-            rules.push(rule(OP_SET, CMD_THROTTLE, motor2, 1000));
+            rules.push(rule(OP_SET, THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
                 rules.push(rule(OP_ADD, YAW, 9,      500));
