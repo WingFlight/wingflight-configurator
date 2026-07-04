@@ -13,6 +13,7 @@ export const LogicCondition = {
     OPERATION_STICKY: 8,
     OPERATION_DELAY: 9,
     OPERATION_EDGE: 10,
+    OPERATION_APPROX_EQUAL: 11,
 
     operationNames: [
         'logicOperationTrue',
@@ -26,6 +27,7 @@ export const LogicCondition = {
         'logicOperationSticky',
         'logicOperationDelay',
         'logicOperationEdge',
+        'logicOperationApproxEqual',
     ],
 
     OPERAND_TYPE_VALUE: 0,
