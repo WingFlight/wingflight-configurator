@@ -159,10 +159,10 @@
             <div transition:slide>
               <RotorSpeed />
             </div>
-            <div transition:slide>
-              <IdleGovernor />
-            </div>
           {/if}
+          <div transition:slide>
+            <IdleGovernor {rpmAvailable} />
+          </div>
         </div>
         <div transition:slide>
           <Override />

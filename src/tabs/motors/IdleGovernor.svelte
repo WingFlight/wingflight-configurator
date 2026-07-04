@@ -10,24 +10,28 @@
   import Tooltip from "@/components/Tooltip.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
 
+  let { rpmAvailable = false } = $props();
+
   const IDLE_GOVERNOR_MODE_OFF = 0;
   const IDLE_GOVERNOR_MODE_RPM = 1;
   const IDLE_GOVERNOR_MODE_THROTTLE = 2;
 
-  let modeOptions = $derived([
-    {
-      value: IDLE_GOVERNOR_MODE_OFF,
-      label: $i18n.t("motorsIdleGovernorModeOff"),
-    },
-    {
-      value: IDLE_GOVERNOR_MODE_RPM,
-      label: $i18n.t("motorsIdleGovernorModeRpm"),
-    },
-    {
-      value: IDLE_GOVERNOR_MODE_THROTTLE,
-      label: $i18n.t("motorsIdleGovernorModeThrottle"),
-    },
-  ]);
+  let modeOptions = $derived(
+    [
+      {
+        value: IDLE_GOVERNOR_MODE_OFF,
+        label: $i18n.t("motorsIdleGovernorModeOff"),
+      },
+      rpmAvailable && {
+        value: IDLE_GOVERNOR_MODE_RPM,
+        label: $i18n.t("motorsIdleGovernorModeRpm"),
+      },
+      {
+        value: IDLE_GOVERNOR_MODE_THROTTLE,
+        label: $i18n.t("motorsIdleGovernorModeThrottle"),
+      },
+    ].filter(Boolean),
+  );
 </script>
 
 <Section label="motorsSectionLabelIdleGovernor">
