@@ -2512,6 +2512,51 @@
     "adjustmentsFunctionNone": {
         "message": "No changes"
     },
+    "adjustmentsGroupProfiles": {
+        "message": "Profile Selection"
+    },
+    "adjustmentsGroupRates": {
+        "message": "Rates"
+    },
+    "adjustmentsGroupRcRates": {
+        "message": "RC Rates"
+    },
+    "adjustmentsGroupRcExpo": {
+        "message": "RC Expo"
+    },
+    "adjustmentsGroupPidGains": {
+        "message": "PID Gains"
+    },
+    "adjustmentsGroupFilters": {
+        "message": "Filters"
+    },
+    "adjustmentsGroupYawDynamics": {
+        "message": "Yaw Dynamics"
+    },
+    "adjustmentsGroupStability": {
+        "message": "Stability"
+    },
+    "adjustmentsGroupMasterGains": {
+        "message": "Master Gains"
+    },
+    "adjustmentsGroupAccTrim": {
+        "message": "Accelerometer Trim"
+    },
+    "adjustmentsGroupSetpointBoost": {
+        "message": "Setpoint Boost"
+    },
+    "adjustmentsGroupCrossCoupling": {
+        "message": "Cross Coupling"
+    },
+    "adjustmentsGroupYawPrecomp": {
+        "message": "Yaw Precomp (Heli)"
+    },
+    "adjustmentsGroupRescue": {
+        "message": "Rescue (Heli)"
+    },
+    "adjustmentsGroupGovernor": {
+        "message": "Governor (Heli)"
+    },
     "adjustmentsFunctionRateProfile": {
         "message": "Rate Profile Selection"
     },

@@ -122,6 +122,36 @@ function getFunctions() {
     ];
 }
 
+// Curates how the "Function" dropdown presents the FUNCTIONS entries: grouped
+// by what they tune, rather than flat firmware-enum order. This is purely a
+// display concern - `ids` reference FUNCTIONS[id] and each id's <option
+// value> stays equal to that id, so FUNCTIONS itself is never reordered.
+// Order within a group is curated by hand (not alphabetized) so related
+// terms - e.g. all P-gains, then all I-gains - stay together.
+//
+// A group is only rendered if at least one of its ids has `hide` falsy
+// (see initAdjustments). Cross Coupling/Rescue/Governor/Yaw Precomp are
+// heli-only concepts (see the FUNCTIONS comment above) whose every id is
+// permanently hidden, so they disappear entirely rather than showing an
+// empty heading.
+const FUNCTION_GROUPS = [
+    { label: 'adjustmentsGroupProfiles', ids: [82, 3, 4, 2, 1] },
+    { label: 'adjustmentsGroupRates', ids: [5, 6, 7] },
+    { label: 'adjustmentsGroupRcRates', ids: [8, 9, 10] },
+    { label: 'adjustmentsGroupRcExpo', ids: [11, 12, 13] },
+    { label: 'adjustmentsGroupPidGains', ids: [14, 18, 22, 15, 19, 23, 16, 20, 24, 17, 21, 25, 56, 57, 58, 59, 60] },
+    { label: 'adjustmentsGroupFilters', ids: [33, 34, 35, 36, 37, 38] },
+    { label: 'adjustmentsGroupYawDynamics', ids: [72, 74, 73] },
+    { label: 'adjustmentsGroupStability', ids: [47, 45, 83, 46] },
+    { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86] },
+    { label: 'adjustmentsGroupAccTrim', ids: [64, 65] },
+    { label: 'adjustmentsGroupSetpointBoost', ids: [71, 68, 69, 70] },
+    { label: 'adjustmentsGroupCrossCoupling', ids: [63, 61, 62] },
+    { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
+    { label: 'adjustmentsGroupRescue', ids: [44, 43, 42, 39, 41, 40] },
+    { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
+];
+
 tab.initialize = function (callback) {
     const self = this;
 
@@ -687,12 +717,36 @@ tab.initialize = function (callback) {
 
     function initAdjustments() {
         const selectFunction = $('#tab-adjustments-templates .adjustmentBody select.function');
-        self.FUNCTIONS.forEach(function(fun, index) {
-            const opt = new Option(i18n.getMessage('adjustmentsFunction' + fun.name), index);
+
+        function buildFunctionOption(id) {
+            const fun = self.FUNCTIONS[id];
+            const opt = new Option(i18n.getMessage('adjustmentsFunction' + fun.name), id);
             if (fun.hide) {
                 opt.style.display = "none";
             }
-            selectFunction.append(opt);
+            return opt;
+        }
+
+        // "None" sits ungrouped at the top; everything else is bucketed by
+        // FUNCTION_GROUPS so related tuning parameters stay together.
+        selectFunction.append(buildFunctionOption(0));
+
+        FUNCTION_GROUPS.forEach(function(group) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = i18n.getMessage(group.label);
+            let hasVisibleOption = false;
+            group.ids.forEach(function(id) {
+                optgroup.append(buildFunctionOption(id));
+                if (!self.FUNCTIONS[id].hide) {
+                    hasVisibleOption = true;
+                }
+            });
+            // Skip groups that are entirely hidden (e.g. heli-only concepts
+            // this firmware doesn't support on wingflight) rather than
+            // showing an empty heading.
+            if (hasVisibleOption) {
+                selectFunction.append(optgroup);
+            }
         });
 
         const enaChannel = $('#tab-adjustments-templates .adjustmentBody select.enaChannel');
