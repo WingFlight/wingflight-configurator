@@ -7,7 +7,7 @@ const tab = {
     tabName: 'auxiliary',
     isDirty: false,
     PRIMARY_CHANNEL_COUNT: 4,
-    UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS'],
+    UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS', 'OSD DISABLE', 'PARALYZE'],
 };
 
 tab.initialize = function (callback) {
@@ -50,19 +50,18 @@ tab.initialize = function (callback) {
         }
     }
 
+    function getModeDisplayName(modeName) {
+        return i18n.existsMessage('mode ' + modeName) ?
+            i18n.getMessage('mode ' + modeName) : modeName;
+    }
+
     function createMode(modeIndex, modeId) {
         const modeTemplate = $('#tab-auxiliary-templates .mode');
         const newMode = modeTemplate.clone();
         const modeName = FC.AUX_CONFIG[modeIndex];
 
-        let modeDesc = i18n.existsMessage('mode ' + modeName) ?
-            i18n.getMessage('mode ' + modeName) : modeName;
-
         $(newMode).attr('id', 'mode-' + modeIndex);
-        $(newMode).find('.name').text(modeName);
-
-        if (modeDesc != modeName)
-            $(newMode).find('.desc').text(modeDesc);
+        $(newMode).find('.name').text(getModeDisplayName(modeName));
 
         $(newMode).data('index', modeIndex);
         $(newMode).data('id', modeId);
@@ -138,7 +137,7 @@ tab.initialize = function (callback) {
 
         for (let index = 1; index < FC.AUX_CONFIG.length; index++) {
             linkOption = linkOptionTemplate.clone();
-            linkOption.text(FC.AUX_CONFIG[index]);
+            linkOption.text(getModeDisplayName(FC.AUX_CONFIG[index]));
             linkOption.val(FC.AUX_CONFIG_IDS[index]);  // set value to mode id
             linkList.append(linkOption);
         }
@@ -358,14 +357,23 @@ tab.initialize = function (callback) {
 
         const modeTableBodyElement = $('.tab-auxiliary .modes');
 
+        // These boxes are either heli-specific (collective/governor recovery),
+        // not used on this platform, or intentionally hidden from users.
+        // GPS Rescue (RTH) is unrelated and stays.
+        const modeIndices = [];
         for (let modeIndex = 0; modeIndex < FC.AUX_CONFIG.length; modeIndex++) {
-
-            // These boxes are heli-specific (collective/governor recovery) and
-            // not used on this platform. GPS Rescue (RTH) is unrelated and stays.
-            if (self.UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
-                continue;
+            if (!self.UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
+                modeIndices.push(modeIndex);
             }
+        }
 
+        // ARM is always the first mode reported by the FC; keep it pinned at
+        // the top of the list and alphabetize the rest by their display name.
+        const armModeIndex = modeIndices.shift();
+        modeIndices.sort((a, b) => getModeDisplayName(FC.AUX_CONFIG[a]).localeCompare(getModeDisplayName(FC.AUX_CONFIG[b])));
+        modeIndices.unshift(armModeIndex);
+
+        for (const modeIndex of modeIndices) {
             const modeId = FC.AUX_CONFIG_IDS[modeIndex];
             const newMode = createMode(modeIndex, modeId);
             modeTableBodyElement.append(newMode);
@@ -394,7 +402,7 @@ tab.initialize = function (callback) {
             }
         }
 
-        const length = Math.max(...(FC.AUX_CONFIG.map(el => el.length)));
+        const length = Math.max(...(FC.AUX_CONFIG.map(el => getModeDisplayName(el).length)));
 
         $('.tab-auxiliary .mode .info').css('min-width', `${Math.round(length * getTextWidth('A'))}px`);
 
@@ -470,14 +478,14 @@ tab.initialize = function (callback) {
                 }
 
                 if (bit_check(FC.CONFIG.mode, i) || (i == 0 && isArmSwitchActive())) {
-                    $('.mode .name').eq(i).data('modeElement').addClass('on').removeClass('off').removeClass('disabled');
+                    modeElement.addClass('on').removeClass('off').removeClass('disabled');
 
                     // ARM mode is a special case
                     if (i == 0) {
-                        $('.mode .name').eq(i).html(FC.AUX_CONFIG[i]);
+                        modeElement.find('.name').html(getModeDisplayName(FC.AUX_CONFIG[i]));
                     }
                 } else {
-                    $('.mode .name').eq(i).data('modeElement').removeClass('on').removeClass('disabled').addClass('off');
+                    modeElement.removeClass('on').removeClass('disabled').addClass('off');
                 }
                 hasUsedMode = true;
             }

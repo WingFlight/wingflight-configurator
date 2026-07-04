@@ -7142,6 +7142,12 @@
     "mode ALTHOLD": {
         "message": "ALTHOLD"
     },
+    "mode ATTHOLD": {
+        "message": "ATTITUDE HOLD"
+    },
+    "mode PASSTHROUGH": {
+        "message": "MANUAL"
+    },
     "mode BEEPER": {
         "message": "BEEPER"
     },
