@@ -765,7 +765,23 @@ tab.initialize = function (callback) {
 
         const adjTable = $('.tab-adjustments table.adjustments');
         FC.ADJUSTMENT_RANGES.forEach(function (adjRange, adjIndex) {
-            adjTable.append(newAdjustment(adjIndex, adjRange));
+            const adjBody = newAdjustment(adjIndex, adjRange);
+            adjTable.append(adjBody);
+
+            // Native <select> with 70+ entries is slow to scan; select2 adds
+            // a type-to-filter search box on top of the same option/optgroup
+            // markup. Initialized after the row is attached to the DOM so
+            // select2 can measure it correctly.
+            adjBody.find('select.function').select2({
+                width: '100%',
+                templateResult(data) {
+                    const fun = self.FUNCTIONS[data.id];
+                    // Hidden functions (unsupported by this firmware build)
+                    // stay out of the search results, same as they're hidden
+                    // from a native <select>'s dropdown.
+                    return (fun && fun.hide) ? null : data.text;
+                },
+            });
         });
     }
 
