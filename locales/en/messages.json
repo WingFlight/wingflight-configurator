@@ -3142,6 +3142,18 @@
     "mixerAxisGainYaw": {
         "message": "Yaw"
     },
+    "mixerAxisInvertTitle": {
+        "message": "Axis Invert"
+    },
+    "mixerAxisInvertHelp": {
+        "message": "Flips the direction of every rule reading that axis at once, handy when setting up a new model without editing each rule's Reverse checkbox individually."
+    },
+    "mixerAxisInvertNormal": {
+        "message": "Normal"
+    },
+    "mixerAxisInvertInverted": {
+        "message": "Inverted"
+    },
     "mixerRulesTitle": {
         "message": "Mixer Rules"
     },

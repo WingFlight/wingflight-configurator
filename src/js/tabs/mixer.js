@@ -49,13 +49,16 @@ const AXIS_GAIN_MIN = 0;
 const AXIS_GAIN_MAX = 200;
 
 // mixerInputs[].rate is a fixed-point multiplier on the wire (1000 = unity);
-// the GUI shows it as a plain percentage.
+// the GUI shows its magnitude as a plain percentage, with a separate Invert
+// checkbox controlling the sign -- inverting here flips every rule reading
+// the axis at once, without having to touch each rule's own Reverse checkbox.
 function rateToPercent(rate) {
-    return Math.round(rate / 10);
+    return Math.round(Math.abs(rate) / 10);
 }
 
-function percentToRate(percent) {
-    return clampInt(percent, AXIS_GAIN_MIN, AXIS_GAIN_MAX) * 10;
+function percentToRate(percent, invert) {
+    const magnitude = clampInt(percent, AXIS_GAIN_MIN, AXIS_GAIN_MAX) * 10;
+    return invert ? -magnitude : magnitude;
 }
 
 const tab = {
@@ -346,24 +349,29 @@ tab.initialize = function (callback) {
 
     function renderAxisGain() {
         const fields = {
-            roll:  $('.axisGainRoll'),
-            pitch: $('.axisGainPitch'),
-            yaw:   $('.axisGainYaw'),
+            roll:  { gain: $('.axisGainRoll'),  invert: $('.axisInvertRoll') },
+            pitch: { gain: $('.axisGainPitch'), invert: $('.axisInvertPitch') },
+            yaw:   { gain: $('.axisGainYaw'),   invert: $('.axisInvertYaw') },
         };
 
         Object.keys(AXIS_GAIN_INPUTS).forEach(function (axis) {
             const input = FC.MIXER_INPUTS[AXIS_GAIN_INPUTS[axis]];
             if (!input) return;
 
-            const field = fields[axis];
-            field.val(rateToPercent(input.rate));
-            field.on('change', function () {
-                input.rate = percentToRate(field.val());
-                field.val(rateToPercent(input.rate));
+            const { gain, invert } = fields[axis];
+            gain.val(rateToPercent(input.rate));
+            invert.val(input.rate < 0 ? '1' : '0');
+
+            function commit() {
+                input.rate = percentToRate(gain.val(), invert.val() === '1');
+                gain.val(rateToPercent(input.rate));
                 self.MIXER_INPUTS_dirty = true;
                 self.needSave = true;
                 setDirty();
-            });
+            }
+
+            gain.on('change', commit);
+            invert.on('change', commit);
         });
     }
 

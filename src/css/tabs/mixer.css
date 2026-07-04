@@ -192,6 +192,28 @@
     color: #626262;
 }
 
+.tab-mixer .mixerAxisInvertTable {
+    width: auto;
+    margin: 0;
+    border: 0;
+    border-collapse: collapse;
+}
+
+.tab-mixer .mixerAxisInvertTable td {
+    padding: 3px 0;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.tab-mixer .mixerAxisInvertTable td:first-child {
+    width: 60px;
+    padding-right: 12px;
+}
+
+.tab-mixer .mixerAxisInvertTable select {
+    width: 100px;
+}
+
 .tab-mixer .mixerConfigTable {
     float: left;
     width: 100%;
