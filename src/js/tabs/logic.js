@@ -1,4 +1,5 @@
 import { LogicCondition } from '@/js/LogicCondition.js';
+import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'logic',
@@ -6,7 +7,6 @@ const tab = {
     needSave: false,
     CONDITIONS_dirty: false,
     PRIMARY_CHANNEL_COUNT: 4,
-    UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS'],
 };
 
 tab.initialize = function (callback) {
@@ -79,13 +79,13 @@ tab.initialize = function (callback) {
     }
 
     // Flight mode (box) choices for the FLIGHT_MODE operand type - same
-    // source and heli-only filter as the Modes tab.
+    // source, heli-only filter, and display names as the Modes tab.
     function modeChoices() {
         const choices = [];
 
         for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
-            if (self.UNUSED_MODES.includes(FC.AUX_CONFIG[i])) continue;
-            choices.push({ value: FC.AUX_CONFIG_IDS[i], label: FC.AUX_CONFIG[i] });
+            if (UNUSED_MODES.includes(FC.AUX_CONFIG[i])) continue;
+            choices.push({ value: FC.AUX_CONFIG_IDS[i], label: getModeDisplayName(FC.AUX_CONFIG[i]) });
         }
 
         return choices;

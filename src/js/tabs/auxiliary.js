@@ -2,12 +2,12 @@ import * as noUiSlider from 'nouislider';
 import wNumb from 'wnumb';
 
 import * as config from '@/js/config.js';
+import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'auxiliary',
     isDirty: false,
     PRIMARY_CHANNEL_COUNT: 4,
-    UNUSED_MODES: ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS', 'OSD DISABLE', 'PARALYZE'],
 };
 
 tab.initialize = function (callback) {
@@ -48,11 +48,6 @@ tab.initialize = function (callback) {
             self.isDirty = true;
             $('.tab-auxiliary').removeClass('toolbar_hidden');
         }
-    }
-
-    function getModeDisplayName(modeName) {
-        return i18n.existsMessage('mode ' + modeName) ?
-            i18n.getMessage('mode ' + modeName) : modeName;
     }
 
     function createMode(modeIndex, modeId) {
@@ -362,7 +357,7 @@ tab.initialize = function (callback) {
         // GPS Rescue (RTH) is unrelated and stays.
         const modeIndices = [];
         for (let modeIndex = 0; modeIndex < FC.AUX_CONFIG.length; modeIndex++) {
-            if (!self.UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
+            if (!UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
                 modeIndices.push(modeIndex);
             }
         }
