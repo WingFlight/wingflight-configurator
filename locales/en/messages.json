@@ -2963,7 +2963,7 @@
         "message": "Collective"
     },
     "mixerInputStabilizedThrottle": {
-        "message": "Throttle"
+        "message": "Stabilized Throttle"
     },
     "mixerInputRCCommandRoll": {
         "message": "Commanded Roll"
@@ -2993,7 +2993,7 @@
         "message": "RC Channel Collective"
     },
     "mixerInputRCChannelThrottle": {
-        "message": "RC Throttle"
+        "message": "RC Throttle (bypass)"
     },
     "mixerInputRCChannelAux1": {
         "message": "RC Channel AUX1"
