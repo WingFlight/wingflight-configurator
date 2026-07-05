@@ -1195,6 +1195,11 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.autoHoverGain                 = data.readU8();
                 FC.PID_PROFILE.autoHoverMaxAngle             = data.readU8();
                 FC.PID_PROFILE.autoHoverMaxRate              = data.readU16();
+                // Cross-axis relax //
+                FC.PID_PROFILE.crossAxisRelaxStrength        = data.remaining() >= 3 ? data.readU8() : 0;
+                FC.PID_PROFILE.crossAxisRelaxLevel           = data.remaining() >= 2 ? data.readU8() : 100;
+                FC.PID_PROFILE.crossAxisRelaxCutoff          = data.remaining() >= 1 ? data.readU8() : 10;
+                FC.PID_PROFILE.crossAxisRelaxPitchStrength   = data.remaining() >= 1 ? data.readU8() : 0;
                 break;
             }
 
@@ -2150,7 +2155,12 @@ MspHelper.prototype.crunch = function(code) {
                 // Auto Hover //
                 .push8(FC.PID_PROFILE.autoHoverGain)
                 .push8(FC.PID_PROFILE.autoHoverMaxAngle)
-                .push16(FC.PID_PROFILE.autoHoverMaxRate);
+                .push16(FC.PID_PROFILE.autoHoverMaxRate)
+                // Cross-axis relax //
+                .push8(FC.PID_PROFILE.crossAxisRelaxStrength)
+                .push8(FC.PID_PROFILE.crossAxisRelaxLevel)
+                .push8(FC.PID_PROFILE.crossAxisRelaxCutoff)
+                .push8(FC.PID_PROFILE.crossAxisRelaxPitchStrength);
             break;
         }
 

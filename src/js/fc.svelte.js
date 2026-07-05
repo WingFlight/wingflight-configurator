@@ -568,6 +568,10 @@ class FlightController {
       autoHoverGain:              0,
       autoHoverMaxAngle:          0,
       autoHoverMaxRate:           0,
+      crossAxisRelaxStrength:     0,
+      crossAxisRelaxPitchStrength: 0,
+      crossAxisRelaxLevel:        100,
+      crossAxisRelaxCutoff:       10,
     };
 
     this.SENSOR_CONFIG = {

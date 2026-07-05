@@ -156,6 +156,12 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="masterGainPitch"]').val(FC.PID_PROFILE.masterGainPitch);
         $('.tab-profiles input[id="masterGainYaw"]').val(FC.PID_PROFILE.masterGainYaw);
 
+        // Cross-axis relax
+        $('.tab-profiles input[id="crossAxisRelaxStrength"]').val(FC.PID_PROFILE.crossAxisRelaxStrength);
+        $('.tab-profiles input[id="crossAxisRelaxPitchStrength"]').val(FC.PID_PROFILE.crossAxisRelaxPitchStrength);
+        $('.tab-profiles input[id="crossAxisRelaxLevel"]').val(FC.PID_PROFILE.crossAxisRelaxLevel);
+        $('.tab-profiles input[id="crossAxisRelaxCutoff"]').val(FC.PID_PROFILE.crossAxisRelaxCutoff);
+
         // I-term relax
         $('.tab-profiles input[id="itermRelaxCutoffRoll"]').val(FC.PID_PROFILE.itermRelaxCutoffRoll);
         $('.tab-profiles input[id="itermRelaxCutoffPitch"]').val(FC.PID_PROFILE.itermRelaxCutoffPitch);
@@ -231,6 +237,11 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.masterGainRoll = parseInt($('.tab-profiles input[id="masterGainRoll"]').val());
         FC.PID_PROFILE.masterGainPitch = parseInt($('.tab-profiles input[id="masterGainPitch"]').val());
         FC.PID_PROFILE.masterGainYaw = parseInt($('.tab-profiles input[id="masterGainYaw"]').val());
+
+        FC.PID_PROFILE.crossAxisRelaxStrength = parseInt($('.tab-profiles input[id="crossAxisRelaxStrength"]').val());
+        FC.PID_PROFILE.crossAxisRelaxPitchStrength = parseInt($('.tab-profiles input[id="crossAxisRelaxPitchStrength"]').val());
+        FC.PID_PROFILE.crossAxisRelaxLevel = parseInt($('.tab-profiles input[id="crossAxisRelaxLevel"]').val());
+        FC.PID_PROFILE.crossAxisRelaxCutoff = parseInt($('.tab-profiles input[id="crossAxisRelaxCutoff"]').val());
 
         FC.PID_PROFILE.error_rotation = $('.tab-profiles input[id="errorRotation"]').is(':checked') ? 1 : 0;
         FC.PID_PROFILE.itermRelaxType = $('.tab-profiles input[id="itermRelax"]').is(':checked') ?

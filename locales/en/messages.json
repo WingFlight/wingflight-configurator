@@ -4741,6 +4741,30 @@
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
     },
+    "profilesCrossAxisRelaxStrength": {
+        "message": "Cross-axis Relax Roll Strength [%]"
+    },
+    "profilesCrossAxisRelaxHelp": {
+        "message": "Maximum roll feedback reduction applied during yaw/rudder stick activity. Use this to let rudder-induced roll coupling feel more natural without reducing normal roll stabilization everywhere."
+    },
+    "profilesCrossAxisRelaxPitchStrength": {
+        "message": "Cross-axis Relax Pitch Strength [%]"
+    },
+    "profilesCrossAxisRelaxPitchHelp": {
+        "message": "Maximum pitch feedback reduction applied during yaw/rudder stick activity. Use this only if rudder-to-elevator coupling feels artificially held."
+    },
+    "profilesCrossAxisRelaxLevel": {
+        "message": "Cross-axis Relax Level"
+    },
+    "profilesCrossAxisRelaxLevelHelp": {
+        "message": "Yaw setpoint level that reaches the configured maximum cross-axis relax strength."
+    },
+    "profilesCrossAxisRelaxCutoff": {
+        "message": "Cross-axis Relax Cutoff [Hz]"
+    },
+    "profilesCrossAxisRelaxCutoffHelp": {
+        "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
+    },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
     },
