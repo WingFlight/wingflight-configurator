@@ -2701,9 +2701,6 @@
     "adjustmentsFunctionAcroTrainerGain": {
         "message": "Acro Trainer Gain"
     },
-    "adjustmentsFunctionAttHoldGain": {
-        "message": "Attitude Hold Gain"
-    },
     "adjustmentsFunctionMasterGainPitch": {
         "message": "Master Gain Pitch"
     },
@@ -4872,18 +4869,6 @@
     },
     "profilesHorizonModeGainHelp": {
         "message": "Horizon Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Horizon Mode"
-    },
-    "profilesAttHoldModeGain": {
-        "message": "Attitude Hold Mode gain"
-    },
-    "profilesAttHoldModeGainHelp": {
-        "message": "Attitude Hold Mode gain. This determines how aggressively the aircraft corrects back to its held attitude once the sticks are centered"
-    },
-    "profilesAttHoldModeDeadband": {
-        "message": "Attitude Hold Mode deadband"
-    },
-    "profilesAttHoldModeDeadbandHelp": {
-        "message": "Attitude Hold Mode deadband. Stick deflection, as a percentage of full travel, below which an axis locks onto its current attitude"
     },
     "rateSetupCopyRateProfile": {
         "message": "Copy rateprofile"

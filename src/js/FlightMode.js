@@ -7,7 +7,7 @@ import { i18n } from '@/js/localization.js';
 // These boxes are either heli-specific (collective/governor recovery), not
 // used on this platform, or intentionally hidden from users. GPS Rescue
 // (RTH) is unrelated and stays.
-export const UNUSED_MODES = ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS', 'OSD DISABLE', 'PARALYZE'];
+export const UNUSED_MODES = ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS', 'OSD DISABLE', 'PARALYZE', 'ATTHOLD'];
 
 export function getModeDisplayName(modeName) {
     return i18n.existsMessage('mode ' + modeName) ?

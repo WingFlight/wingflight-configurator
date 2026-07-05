@@ -538,8 +538,6 @@ class FlightController {
       acroTrainerAngleLimit:      0,
       acroTrainerLimit:           0,
       acroTrainerGain:            0,
-      attHoldGain:                0,
-      attHoldDeadband:            0,
       feedforwardRoll:            0,
       feedforwardPitch:           0,
       feedforwardYaw:             0,
