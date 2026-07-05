@@ -1191,6 +1191,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.masterGainRoll                = data.readU8();
                 FC.PID_PROFILE.masterGainPitch               = data.readU8();
                 FC.PID_PROFILE.masterGainYaw                 = data.readU8();
+                // Auto Hover //
+                FC.PID_PROFILE.autoHoverGain                 = data.readU8();
+                FC.PID_PROFILE.autoHoverMaxAngle             = data.readU8();
+                FC.PID_PROFILE.autoHoverMaxRate              = data.readU16();
                 break;
             }
 
@@ -2142,7 +2146,11 @@ MspHelper.prototype.crunch = function(code) {
                 // Master gain (per axis) //
                 .push8(FC.PID_PROFILE.masterGainRoll)
                 .push8(FC.PID_PROFILE.masterGainPitch)
-                .push8(FC.PID_PROFILE.masterGainYaw);
+                .push8(FC.PID_PROFILE.masterGainYaw)
+                // Auto Hover //
+                .push8(FC.PID_PROFILE.autoHoverGain)
+                .push8(FC.PID_PROFILE.autoHoverMaxAngle)
+                .push16(FC.PID_PROFILE.autoHoverMaxRate);
             break;
         }
 
