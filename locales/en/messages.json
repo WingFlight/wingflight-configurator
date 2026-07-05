@@ -7236,6 +7236,9 @@
         "message": "ATTITUDE HOLD"
     },
     "mode PASSTHROUGH": {
+        "message": "PASSTHROUGH"
+    },
+    "mode MANUAL": {
         "message": "MANUAL"
     },
     "mode BEEPER": {
