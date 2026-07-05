@@ -565,6 +565,9 @@ class FlightController {
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,
+      autoHoverGain:              0,
+      autoHoverMaxAngle:          0,
+      autoHoverMaxRate:           0,
     };
 
     this.SENSOR_CONFIG = {

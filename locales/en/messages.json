@@ -2710,6 +2710,9 @@
     "adjustmentsFunctionMasterGainYaw": {
         "message": "Master Gain Yaw"
     },
+    "adjustmentsFunctionAutoHoverGain": {
+        "message": "Auto Hover Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -4869,6 +4872,24 @@
     },
     "profilesHorizonModeGainHelp": {
         "message": "Horizon Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Horizon Mode"
+    },
+    "profilesAutoHoverGain": {
+        "message": "Auto Hover gain"
+    },
+    "profilesAutoHoverGainHelp": {
+        "message": "Correction strength back to the held vertical (prop-hang) attitude and heading. Higher values return to vertical more aggressively when the sticks are centred."
+    },
+    "profilesAutoHoverMaxAngle": {
+        "message": "Auto Hover max stick angle"
+    },
+    "profilesAutoHoverMaxAngleHelp": {
+        "message": "Maximum degrees the roll/pitch/yaw sticks may deflect the held attitude away from vertical/heading, same idea as Angle Mode's max angle -- centre the sticks and the aircraft springs back to vertical."
+    },
+    "profilesAutoHoverMaxRate": {
+        "message": "Auto Hover max rate"
+    },
+    "profilesAutoHoverMaxRateHelp": {
+        "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
     },
     "rateSetupCopyRateProfile": {
         "message": "Copy rateprofile"

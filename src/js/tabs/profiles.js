@@ -189,6 +189,11 @@ tab.initialize = function (callback) {
 
         // Horizon mode
         $('.tab-profiles input[id="horizonModeGain"]').val(FC.PID_PROFILE.horizonLevelStrength);
+
+        // Auto Hover
+        $('.tab-profiles input[id="autoHoverGain"]').val(FC.PID_PROFILE.autoHoverGain);
+        $('.tab-profiles input[id="autoHoverMaxAngle"]').val(FC.PID_PROFILE.autoHoverMaxAngle);
+        $('.tab-profiles input[id="autoHoverMaxRate"]').val(FC.PID_PROFILE.autoHoverMaxRate);
     }
 
     function form_to_data() {
@@ -240,6 +245,9 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.levelAngleStrength = parseInt($('.tab-profiles input[id="angleModeGain"]').val());
         FC.PID_PROFILE.levelAngleLimit = parseInt($('.tab-profiles input[id="angleModeLimit"]').val());
         FC.PID_PROFILE.horizonLevelStrength = parseInt($('.tab-profiles input[id="horizonModeGain"]').val());
+        FC.PID_PROFILE.autoHoverGain = parseInt($('.tab-profiles input[id="autoHoverGain"]').val());
+        FC.PID_PROFILE.autoHoverMaxAngle = parseInt($('.tab-profiles input[id="autoHoverMaxAngle"]').val());
+        FC.PID_PROFILE.autoHoverMaxRate = parseInt($('.tab-profiles input[id="autoHoverMaxRate"]').val());
     }
 
     function process_html() {
