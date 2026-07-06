@@ -1,3 +1,12 @@
+# 0.0.4
+
+Fix missing channel slot handling.
+Add distinct manual and passthrough modes.
+Add cross-axis relax configuration.
+Add auto-hover flight mode support.
+Remove atthold mode.
+Improve mode and adjustment selection workflows.
+
 # 0.0.3
 
 ESC Programing
