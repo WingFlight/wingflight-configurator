@@ -3190,6 +3190,27 @@
     "curvesTitle": {
         "message": "Mixer Curves"
     },
+    "curvesTitleGain": {
+        "message": "Gain Curves"
+    },
+    "curveCategoryMixer": {
+        "message": "Mixer"
+    },
+    "curveCategoryGain": {
+        "message": "Gain"
+    },
+    "curveCategoryHelpMixer": {
+        "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
+    },
+    "curveCategoryHelpGain": {
+        "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
+    },
+    "curveExplainMixer": {
+        "message": "X axis: this rule's input value.\nY axis: the value used in its place once weighted onto the output.\n\nBoth axes share the rule's own -1000..1000 scale. The default diagonal line passes the input straight through - reshape it for a non-linear response, e.g. more resolution near center or a dead zone."
+    },
+    "curveExplainGain": {
+        "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per-axis on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+    },
     "curveReset": {
         "message": "Reset Curve"
     },
@@ -4743,6 +4764,12 @@
     },
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+    },
+    "profilesGainCurveLabel": {
+        "message": "Gain Curve"
+    },
+    "profilesGainCurveHelp": {
+        "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
     },
     "profilesCrossAxisRelaxStrength": {
         "message": "Cross-axis Relax Roll Strength [%]"

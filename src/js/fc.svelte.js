@@ -24,6 +24,7 @@ class FlightController {
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
+  GAIN_CURVES = $state();
   GPS_CONFIG = $state();
   GPS_DATA = $state();
   GPS_RESCUE = $state();
@@ -193,6 +194,7 @@ class FlightController {
     this.MIXER_INPUTS =             [];
     this.MIXER_RULES =              [];
     this.MIXER_CURVES =             [];
+    this.GAIN_CURVES =              [];
     this.LOGIC_CONDITIONS =         [];
     this.LOGIC_CONDITIONS_STATUS =  [];
     this.MIXER_OVERRIDE =           Array.from({length: 29});
@@ -572,6 +574,9 @@ class FlightController {
       crossAxisRelaxPitchStrength: 0,
       crossAxisRelaxLevel:        100,
       crossAxisRelaxCutoff:       10,
+      gainCurveRoll:              0,
+      gainCurvePitch:             0,
+      gainCurveYaw:               0,
     };
 
     this.SENSOR_CONFIG = {

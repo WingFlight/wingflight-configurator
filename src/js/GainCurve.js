@@ -1,0 +1,214 @@
+export const GainCurve = {
+
+    CURVE_COUNT: 8,
+    POINT_COUNT: 6,
+
+    X_MIN: 0,
+    X_MAX: 1000,
+
+    Y_MIN: 0,
+    Y_MAX: 500,
+
+    // Percent multiplier applied to master_gain when a curve is absent, flat,
+    // or evaluated outside its defined shape - 100 = unscaled (no effect).
+    NEUTRAL: 100,
+
+    //// Functions
+
+    // curve.points always has exactly POINT_COUNT entries, matching the
+    // firmware's fixed-size wire format - count says how many from the front
+    // are active; the rest are unused filler and must never be read/drawn.
+    nullCurve: function ()
+    {
+        const points = [
+            { x: this.X_MIN, y: this.NEUTRAL },
+            { x: this.X_MAX, y: this.NEUTRAL },
+        ];
+
+        while (points.length < this.POINT_COUNT) {
+            points.push({ x: 0, y: 0 });
+        }
+
+        return { count: 2, points: points };
+    },
+
+    clonePoint: function (a)
+    {
+        return Object.assign({}, a);
+    },
+
+    cloneCurve: function (a)
+    {
+        const self = this;
+        return {
+            count: a.count,
+            points: a.points.map(function (point) { return self.clonePoint(point); }),
+        };
+    },
+
+    cloneCurves: function (a)
+    {
+        const self = this;
+        const copy = [];
+
+        if (a) {
+            a.forEach(function (curve) {
+                copy.push(self.cloneCurve(curve));
+            });
+        }
+
+        return copy;
+    },
+
+    comparePoint: function (a, b)
+    {
+        return (a.x === b.x && a.y === b.y);
+    },
+
+    compareCurve: function (a, b)
+    {
+        const self = this;
+
+        if (a.count !== b.count)
+            return false;
+
+        for (let i = 0; i < a.count; i++)
+            if (!self.comparePoint(a.points[i], b.points[i]))
+                return false;
+
+        return true;
+    },
+
+    // Clamp a dragged point so it can never cross its immediate neighbors in x
+    // (the firmware assumes ascending-x points and does no defensive sorting),
+    // and stays within the curve's value range in both axes.
+    clampPoint: function (curve, index, x, y)
+    {
+        const self = this;
+
+        const minX = (index > 0) ? curve.points[index - 1].x + 1 : self.X_MIN;
+        const maxX = (index < curve.count - 1) ? curve.points[index + 1].x - 1 : self.X_MAX;
+
+        return {
+            x: Math.min(Math.max(x, minX), maxX),
+            y: Math.min(Math.max(y, self.Y_MIN), self.Y_MAX),
+        };
+    },
+
+    // Insert a new point in ascending-x order, among the active (first
+    // `count`) points only. Returns false (no change) if the curve is
+    // already at POINT_COUNT, or a point already exists at x. The points
+    // array stays at a fixed POINT_COUNT length - inserting shifts the
+    // active points up and drops the now-stale last (unused) slot.
+    addPoint: function (curve, x, y)
+    {
+        const self = this;
+
+        if (curve.count >= self.POINT_COUNT)
+            return false;
+
+        let index = curve.points.slice(0, curve.count).findIndex(function (point) { return point.x > x; });
+        if (index === -1) index = curve.count;
+
+        if (index > 0 && curve.points[index - 1].x === x)
+            return false;
+
+        curve.points.splice(index, 0, {
+            x: Math.min(Math.max(x, self.X_MIN), self.X_MAX),
+            y: Math.min(Math.max(y, self.Y_MIN), self.Y_MAX),
+        });
+        curve.points.length = self.POINT_COUNT;
+        curve.count++;
+
+        return true;
+    },
+
+    // Convenience for an "Add Point" button (which has no click position to
+    // work from, unlike clicking directly on the plot): finds the widest gap
+    // between adjacent active points and inserts a new point at its x
+    // midpoint, with y taken from the curve's own current value there - so
+    // the new point lands exactly on the existing line instead of creating a
+    // visible kink, and the user can then drag it to reshape the curve.
+    addPointAtLargestGap: function (curve)
+    {
+        const self = this;
+
+        if (curve.count >= self.POINT_COUNT)
+            return false;
+
+        let bestIndex = 0;
+        let bestGap = -1;
+
+        for (let i = 0; i < curve.count - 1; i++) {
+            const gap = curve.points[i + 1].x - curve.points[i].x;
+            if (gap > bestGap) {
+                bestGap = gap;
+                bestIndex = i;
+            }
+        }
+
+        const midX = Math.round((curve.points[bestIndex].x + curve.points[bestIndex + 1].x) / 2);
+        const midY = Math.round(self.evaluate(curve, midX));
+
+        return self.addPoint(curve, midX, midY);
+    },
+
+    // Adjust the curve's active point count to exactly `targetCount` by
+    // repeatedly adding (at the largest gap) or removing (keeping both
+    // endpoints intact as long as possible) interior points.
+    setPointCount: function (curve, targetCount)
+    {
+        const self = this;
+
+        while (curve.count < targetCount) {
+            if (!self.addPointAtLargestGap(curve)) break;
+        }
+        while (curve.count > targetCount) {
+            if (!self.removePoint(curve, curve.count - 2)) break;
+        }
+    },
+
+    // Remove an active point. Returns false (no change) if it would leave
+    // fewer than the 2 points a curve needs to interpolate. The points array
+    // stays at a fixed POINT_COUNT length - removing shifts the remaining
+    // active points down and appends a fresh unused filler slot.
+    removePoint: function (curve, index)
+    {
+        if (curve.count <= 2)
+            return false;
+
+        curve.points.splice(index, 1);
+        curve.points.push({ x: 0, y: 0 });
+        curve.count--;
+
+        return true;
+    },
+
+    // Mirrors the firmware's pidEvaluateGainCurve(): linear interpolation
+    // through ascending-x points, clamped at the ends. Unlike MixerCurve
+    // (where x/y share one signed scale), x here is |stick deflection| *
+    // 1000 and y is a percent multiplier, so out-of-shape results fall back
+    // to NEUTRAL (100%) rather than passing x through unchanged.
+    evaluate: function (curve, x)
+    {
+        const points = curve.points;
+        const n = curve.count;
+
+        if (n < 2) return this.NEUTRAL;
+        if (x <= points[0].x) return points[0].y;
+        if (x >= points[n - 1].x) return points[n - 1].y;
+
+        for (let i = 0; i < n - 1; i++) {
+            const p0 = points[i];
+            const p1 = points[i + 1];
+
+            if (x >= p0.x && x <= p1.x) {
+                const t = (p1.x !== p0.x) ? (x - p0.x) / (p1.x - p0.x) : 0;
+                return p0.y + t * (p1.y - p0.y);
+            }
+        }
+
+        return this.NEUTRAL;
+    },
+
+};

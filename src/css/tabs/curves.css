@@ -6,6 +6,60 @@
     overflow-x: hidden;
 }
 
+.tab-curves .tab-container {
+    border-bottom: 3px solid var(--accent);
+    border-right-width: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: start;
+    width: 100%;
+}
+
+.tab-curves .tab-container > div {
+    background-color: #2e2e2e;
+    padding: 6px 12px;
+    border-right: 1px solid white;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.tab-curves .tab-container > div:first-child {
+    border-top-left-radius: 4px;
+}
+
+.tab-curves .tab-container > div:last-child {
+    border-top-right-radius: 4px;
+}
+
+.tab-curves .tab-container > div a {
+    display: block;
+    color: #999999;
+}
+
+.tab-curves .tab-container > div.active,
+.tab-curves .tab-container > div.active a {
+    background-color: var(--accent);
+    color: #000;
+    transition: none;
+}
+
+html[data-theme=dark] .tab-curves .tab-container > div {
+    background-color: #535655;
+    border-right: 1px solid #393b3a;
+}
+
+html[data-theme=dark] .tab-curves .tab-container > div.active {
+    background-color: var(--accent);
+}
+
+.tab-curves .curveCategoryHelp {
+    display: block;
+    color: var(--subtleText);
+    font-size: 12px;
+    margin: 8px 0 4px;
+}
+
 .tab-curves .curveToolbar {
     display: flex;
     align-items: center;
@@ -33,13 +87,36 @@
     gap: 16px;
     width: 100%;
     box-sizing: border-box;
+    /* Safety clearance so the Save/Revert toolbar (fixed to the bottom of
+       the tab, appearing only once a change is made) never overlaps the
+       plot on shorter viewports. */
+    margin-bottom: 50px;
 }
 
 .tab-curves .curvePlotWrapper {
     width: 100%;
-    max-width: 500px;
-    aspect-ratio: 1 / 1;
+    max-width: 534px;
+    /* Cap height too (not just width) so a wide-but-short viewport can't
+       stretch the plot tall enough to run into the toolbar below it. */
+    max-height: 420px;
+    /* Matches the SVG's 434x416 viewBox (plot area plus its axis-label gutters) */
+    aspect-ratio: 434 / 416;
     flex: 0 1 auto;
+}
+
+.tab-curves .curveExplain {
+    flex: 1 1 200px;
+    min-width: 180px;
+    max-width: 320px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background-color: var(--boxBackground);
+    border: 1px solid var(--subtleAccent);
+    border-radius: 3px;
+    color: var(--subtleText);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-line;
 }
 
 .tab-curves .curveSvg {
@@ -148,6 +225,18 @@
 .tab-curves .curveAxis {
     stroke: var(--subtleAccent);
     stroke-width: 1.5;
+}
+
+.tab-curves .curveAxisLabel {
+    font-size: 11px;
+    fill: var(--subtleText);
+    user-select: none;
+    pointer-events: none;
+}
+
+.tab-curves .curveAxisLabelBold {
+    font-weight: bold;
+    fill: var(--color-text);
 }
 
 .tab-curves .curveLine {
