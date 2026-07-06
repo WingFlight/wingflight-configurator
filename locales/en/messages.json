@@ -3004,6 +3004,9 @@
     "mixerInputRCChannelAux3": {
         "message": "RC Channel AUX3"
     },
+    "mixerInputRCChannel8": {
+        "message": "RC Channel #8"
+    },
     "mixerInputRCChannel9": {
         "message": "RC Channel #9"
     },

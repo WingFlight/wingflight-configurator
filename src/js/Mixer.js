@@ -20,6 +20,7 @@ export const Mixer = {
         'mixerInputRCChannelAux1',
         'mixerInputRCChannelAux2',
         'mixerInputRCChannelAux3',
+        'mixerInputRCChannel8',
         'mixerInputRCChannel9',
         'mixerInputRCChannel10',
         'mixerInputRCChannel11',
