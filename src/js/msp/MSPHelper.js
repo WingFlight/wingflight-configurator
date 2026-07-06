@@ -1200,6 +1200,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.crossAxisRelaxLevel           = data.remaining() >= 2 ? data.readU8() : 100;
                 FC.PID_PROFILE.crossAxisRelaxCutoff          = data.remaining() >= 1 ? data.readU8() : 10;
                 FC.PID_PROFILE.crossAxisRelaxPitchStrength   = data.remaining() >= 1 ? data.readU8() : 0;
+                // Gain curve assignment (per axis) //
+                FC.PID_PROFILE.gainCurveRoll                 = data.remaining() >= 3 ? data.readU8() : 0;
+                FC.PID_PROFILE.gainCurvePitch                = data.remaining() >= 2 ? data.readU8() : 0;
+                FC.PID_PROFILE.gainCurveYaw                  = data.remaining() >= 1 ? data.readU8() : 0;
                 break;
             }
 
@@ -1247,6 +1251,21 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         curve.points.push({ x: data.read16(), y: data.read16() });
                     }
                     FC.MIXER_CURVES.push(curve);
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_GAIN_CURVES: {
+                FC.GAIN_CURVES = [];
+                const pointsPerCurve = 6; // GAIN_CURVE_POINTS
+                const curveBytes = 1 + pointsPerCurve * 4; // count:u8 + N x (x:u16 + y:u16)
+                const curveCount = data.byteLength / curveBytes;
+                for (let i = 0; i < curveCount; i++) {
+                    const curve = { count: data.readU8(), points: [] };
+                    for (let p = 0; p < pointsPerCurve; p++) {
+                        curve.points.push({ x: data.readU16(), y: data.readU16() });
+                    }
+                    FC.GAIN_CURVES.push(curve);
                 }
                 break;
             }
@@ -2160,7 +2179,11 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.crossAxisRelaxStrength)
                 .push8(FC.PID_PROFILE.crossAxisRelaxLevel)
                 .push8(FC.PID_PROFILE.crossAxisRelaxCutoff)
-                .push8(FC.PID_PROFILE.crossAxisRelaxPitchStrength);
+                .push8(FC.PID_PROFILE.crossAxisRelaxPitchStrength)
+                // Gain curve assignment (per axis) //
+                .push8(FC.PID_PROFILE.gainCurveRoll)
+                .push8(FC.PID_PROFILE.gainCurvePitch)
+                .push8(FC.PID_PROFILE.gainCurveYaw);
             break;
         }
 
@@ -2570,6 +2593,36 @@ MspHelper.prototype.sendMixerCurves = function(onCompleteCallback)
     function send_next() {
         if (index < FC.MIXER_CURVES.length)
             self.sendMixerCurve(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendGainCurve = function(curveIndex, onCompleteCallback)
+{
+    const curve = FC.GAIN_CURVES[curveIndex];
+    const buffer = [];
+
+    buffer.push8(curveIndex)
+          .push8(curve.count);
+
+    curve.points.forEach(function (point) {
+        buffer.push16(point.x).push16(point.y);
+    });
+
+    MSP.send_message(MSPCodes.MSP_SET_GAIN_CURVE, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendGainCurves = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.GAIN_CURVES.length)
+            self.sendGainCurve(index++, send_next);
         else
             onCompleteCallback();
     }

@@ -3,6 +3,7 @@ import semver from "semver";
 import {
     API_VERSION_12_9,
 } from "@/js/configurator.svelte.js";
+import { GainCurve } from "@/js/GainCurve.js";
 
 const tab = {
     tabName: 'profiles',
@@ -156,6 +157,10 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="masterGainPitch"]').val(FC.PID_PROFILE.masterGainPitch);
         $('.tab-profiles input[id="masterGainYaw"]').val(FC.PID_PROFILE.masterGainYaw);
 
+        $('.tab-profiles select[id="gainCurveRoll"]').val(FC.PID_PROFILE.gainCurveRoll);
+        $('.tab-profiles select[id="gainCurvePitch"]').val(FC.PID_PROFILE.gainCurvePitch);
+        $('.tab-profiles select[id="gainCurveYaw"]').val(FC.PID_PROFILE.gainCurveYaw);
+
         // Cross-axis relax
         $('.tab-profiles input[id="crossAxisRelaxStrength"]').val(FC.PID_PROFILE.crossAxisRelaxStrength);
         $('.tab-profiles input[id="crossAxisRelaxPitchStrength"]').val(FC.PID_PROFILE.crossAxisRelaxPitchStrength);
@@ -238,6 +243,10 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.masterGainPitch = parseInt($('.tab-profiles input[id="masterGainPitch"]').val());
         FC.PID_PROFILE.masterGainYaw = parseInt($('.tab-profiles input[id="masterGainYaw"]').val());
 
+        FC.PID_PROFILE.gainCurveRoll = parseInt($('.tab-profiles select[id="gainCurveRoll"]').val());
+        FC.PID_PROFILE.gainCurvePitch = parseInt($('.tab-profiles select[id="gainCurvePitch"]').val());
+        FC.PID_PROFILE.gainCurveYaw = parseInt($('.tab-profiles select[id="gainCurveYaw"]').val());
+
         FC.PID_PROFILE.crossAxisRelaxStrength = parseInt($('.tab-profiles input[id="crossAxisRelaxStrength"]').val());
         FC.PID_PROFILE.crossAxisRelaxPitchStrength = parseInt($('.tab-profiles input[id="crossAxisRelaxPitchStrength"]').val());
         FC.PID_PROFILE.crossAxisRelaxLevel = parseInt($('.tab-profiles input[id="crossAxisRelaxLevel"]').val());
@@ -264,6 +273,16 @@ tab.initialize = function (callback) {
     function process_html() {
         // translate to user-selected language
         i18n.localizePage();
+
+        // Gain curve assignment (per axis) - options are populated from the
+        // fixed curve count; curve shapes themselves are edited on the Curves tab
+        ['gainCurveRoll', 'gainCurvePitch', 'gainCurveYaw'].forEach(function (id) {
+            const select = $(`.tab-profiles select[id="${id}"]`);
+            select.append($('<option></option>').attr('value', 0).text(i18n.getMessage('mixerCurveNone')));
+            for (let c = 0; c < GainCurve.CURVE_COUNT; c++) {
+                select.append($('<option></option>').attr('value', c + 1).text(i18n.getMessage('mixerCurveLabel', [c + 1])));
+            }
+        });
 
         // UI Hooks
         data_to_form();

@@ -6,6 +6,60 @@
     overflow-x: hidden;
 }
 
+.tab-curves .tab-container {
+    border-bottom: 3px solid var(--accent);
+    border-right-width: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: start;
+    width: 100%;
+}
+
+.tab-curves .tab-container > div {
+    background-color: #2e2e2e;
+    padding: 6px 12px;
+    border-right: 1px solid white;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.tab-curves .tab-container > div:first-child {
+    border-top-left-radius: 4px;
+}
+
+.tab-curves .tab-container > div:last-child {
+    border-top-right-radius: 4px;
+}
+
+.tab-curves .tab-container > div a {
+    display: block;
+    color: #999999;
+}
+
+.tab-curves .tab-container > div.active,
+.tab-curves .tab-container > div.active a {
+    background-color: var(--accent);
+    color: #000;
+    transition: none;
+}
+
+html[data-theme=dark] .tab-curves .tab-container > div {
+    background-color: #535655;
+    border-right: 1px solid #393b3a;
+}
+
+html[data-theme=dark] .tab-curves .tab-container > div.active {
+    background-color: var(--accent);
+}
+
+.tab-curves .curveCategoryHelp {
+    display: block;
+    color: var(--subtleText);
+    font-size: 12px;
+    margin: 8px 0 4px;
+}
+
 .tab-curves .curveToolbar {
     display: flex;
     align-items: center;

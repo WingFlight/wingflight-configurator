@@ -1,15 +1,56 @@
 import { MixerCurve } from '@/js/MixerCurve.js';
+import { GainCurve } from '@/js/GainCurve.js';
+
+// Evenly spaced tick positions across [min, max], used for both the plot's
+// gridlines and to pick which one is the bold "axis" reference line.
+function ticks(min, max) {
+    return [0, 0.25, 0.5, 0.75, 1].map(function (f) { return min + f * (max - min); });
+}
+
+// One entry per curve pool this tab can edit. Each category owns its own
+// model (point/range semantics), its FC-backed storage array, and how its
+// pool is transferred over MSP - the rendering/interaction code below is
+// otherwise category-agnostic.
+const CATEGORIES = {
+    mixer: {
+        model: MixerCurve,
+        titleKey: 'curvesTitle',
+        helpKey: 'curveCategoryHelpMixer',
+        tabClass: 'curveCategoryMixer',
+        xMin: MixerCurve.CURVE_MIN, xMax: MixerCurve.CURVE_MAX,
+        yMin: MixerCurve.CURVE_MIN, yMax: MixerCurve.CURVE_MAX,
+        xAxisValue: 0, yAxisValue: 0,
+        getArray: function () { return FC.MIXER_CURVES; },
+        sendAll: function (callback) { return mspHelper.sendMixerCurves(callback); },
+    },
+    gain: {
+        model: GainCurve,
+        titleKey: 'curvesTitleGain',
+        helpKey: 'curveCategoryHelpGain',
+        tabClass: 'curveCategoryGain',
+        xMin: GainCurve.X_MIN, xMax: GainCurve.X_MAX,
+        yMin: GainCurve.Y_MIN, yMax: GainCurve.Y_MAX,
+        xAxisValue: 0, yAxisValue: GainCurve.NEUTRAL,
+        getArray: function () { return FC.GAIN_CURVES; },
+        sendAll: function (callback) { return mspHelper.sendGainCurves(callback); },
+    },
+};
 
 const tab = {
     tabName: 'curves',
     isDirty: false,
     needSave: false,
-    CURVES_dirty: false,
+    dirty: { mixer: false, gain: false },
+    selectedCategory: 'mixer',
     selectedCurve: 0,
 };
 
 tab.initialize = function (callback) {
     const self = this;
+
+    function category() {
+        return CATEGORIES[self.selectedCategory];
+    }
 
     function setDirty() {
         if (!self.isDirty) {
@@ -25,16 +66,25 @@ tab.initialize = function (callback) {
     }
 
     function load_data(callback) {
-        MSP.promise(MSPCodes.MSP_MIXER_CURVES)
+        Promise.resolve(true)
+            .then(() => MSP.promise(MSPCodes.MSP_MIXER_CURVES))
+            .then(() => MSP.promise(MSPCodes.MSP_GAIN_CURVES))
             .then(callback);
     }
 
     function save_data(callback) {
-        function send_curves() {
-            if (self.CURVES_dirty)
-                mspHelper.sendMixerCurves(save_eeprom);
-            else
+        const keys = Object.keys(CATEGORIES);
+
+        function send_next(i) {
+            if (i >= keys.length) {
                 save_eeprom();
+                return;
+            }
+            const key = keys[i];
+            if (self.dirty[key])
+                CATEGORIES[key].sendAll(() => send_next(i + 1));
+            else
+                send_next(i + 1);
         }
         function save_eeprom() {
             if (self.needSave)
@@ -48,34 +98,39 @@ tab.initialize = function (callback) {
             save_done();
         }
         function save_done() {
-            self.CURVES_dirty = false;
+            self.dirty = { mixer: false, gain: false };
             self.isDirty = false;
             callback?.();
         }
 
-        send_curves();
+        send_next(0);
     }
 
-    // Map between curve units (-1000..1000) and the SVG viewBox (0..400,
-    // y-flipped since SVG y grows downward but a curve's y should grow up).
-    // Inset by PADDING so points at the extreme corners aren't clipped by
-    // the viewBox edge (a point sitting exactly on the boundary would only
-    // be half/quarter-visible, and barely clickable).
+    // Map between curve units and the SVG viewBox (0..400, y-flipped since
+    // SVG y grows downward but a curve's y should grow up), using the
+    // active category's own x/y ranges. Inset by PADDING so points at the
+    // extreme corners aren't clipped by the viewBox edge (a point sitting
+    // exactly on the boundary would only be half/quarter-visible, and
+    // barely clickable).
     const PLOT_SIZE = 400;
     const PADDING = 20;
     const PLOT_INNER = PLOT_SIZE - PADDING * 2;
 
     function toSvgX(x) {
-        return PADDING + (x - MixerCurve.CURVE_MIN) / (MixerCurve.CURVE_MAX - MixerCurve.CURVE_MIN) * PLOT_INNER;
+        const c = category();
+        return PADDING + (x - c.xMin) / (c.xMax - c.xMin) * PLOT_INNER;
     }
     function toSvgY(y) {
-        return PADDING + PLOT_INNER - (y - MixerCurve.CURVE_MIN) / (MixerCurve.CURVE_MAX - MixerCurve.CURVE_MIN) * PLOT_INNER;
+        const c = category();
+        return PADDING + PLOT_INNER - (y - c.yMin) / (c.yMax - c.yMin) * PLOT_INNER;
     }
     function fromSvgX(sx) {
-        return (sx - PADDING) / PLOT_INNER * (MixerCurve.CURVE_MAX - MixerCurve.CURVE_MIN) + MixerCurve.CURVE_MIN;
+        const c = category();
+        return (sx - PADDING) / PLOT_INNER * (c.xMax - c.xMin) + c.xMin;
     }
     function fromSvgY(sy) {
-        return (PLOT_INNER - (sy - PADDING)) / PLOT_INNER * (MixerCurve.CURVE_MAX - MixerCurve.CURVE_MIN) + MixerCurve.CURVE_MIN;
+        const c = category();
+        return (PLOT_INNER - (sy - PADDING)) / PLOT_INNER * (c.yMax - c.yMin) + c.yMin;
     }
 
     function svgPointFromEvent(svg, event) {
@@ -98,26 +153,32 @@ tab.initialize = function (callback) {
         while (svg.firstChild) svg.removeChild(svg.firstChild);
         while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
 
-        const curve = FC.MIXER_CURVES[self.selectedCurve];
+        const cat = category();
+        const model = cat.model;
+        const curve = cat.getArray()[self.selectedCurve];
 
         updatePointCountSelect(curve);
 
-        // Gridlines every 25%, bold axes through the middle
-        [-1000, -500, 0, 500, 1000].forEach(function (v) {
+        // Gridlines at 5 evenly spaced ticks per axis, bold line through
+        // whichever tick is that axis's meaningful reference value (0 for
+        // mixer curves, but the "no effect" value for gain curves is 100%,
+        // not 0).
+        ticks(cat.xMin, cat.xMax).forEach(function (v) {
             const vLine = ns('line');
             vLine.setAttribute('x1', toSvgX(v));
             vLine.setAttribute('x2', toSvgX(v));
             vLine.setAttribute('y1', 0);
             vLine.setAttribute('y2', PLOT_SIZE);
-            vLine.setAttribute('class', v === 0 ? 'curveAxis' : 'curveGrid');
+            vLine.setAttribute('class', v === cat.xAxisValue ? 'curveAxis' : 'curveGrid');
             svg.appendChild(vLine);
-
+        });
+        ticks(cat.yMin, cat.yMax).forEach(function (v) {
             const hLine = ns('line');
             hLine.setAttribute('y1', toSvgY(v));
             hLine.setAttribute('y2', toSvgY(v));
             hLine.setAttribute('x1', 0);
             hLine.setAttribute('x2', PLOT_SIZE);
-            hLine.setAttribute('class', v === 0 ? 'curveAxis' : 'curveGrid');
+            hLine.setAttribute('class', v === cat.yAxisValue ? 'curveAxis' : 'curveGrid');
             svg.appendChild(hLine);
         });
 
@@ -185,14 +246,14 @@ tab.initialize = function (callback) {
 
             const xInput = document.createElement('input');
             xInput.type = 'number';
-            xInput.min = MixerCurve.CURVE_MIN;
-            xInput.max = MixerCurve.CURVE_MAX;
+            xInput.min = cat.xMin;
+            xInput.max = cat.xMax;
             xInput.step = 10;
 
             const yInput = document.createElement('input');
             yInput.type = 'number';
-            yInput.min = MixerCurve.CURVE_MIN;
-            yInput.max = MixerCurve.CURVE_MAX;
+            yInput.min = cat.yMin;
+            yInput.max = cat.yMax;
             yInput.step = 10;
 
             [xInput, yInput].forEach(function (input) {
@@ -202,14 +263,14 @@ tab.initialize = function (callback) {
             });
 
             function commitFromInputs() {
-                const clamped = MixerCurve.clampPoint(
+                const clamped = model.clampPoint(
                     curve, index,
                     Math.round(parseFloat(xInput.value)) || 0,
                     Math.round(parseFloat(yInput.value)) || 0
                 );
                 Object.assign(curve.points[index], clamped);
                 updateGeometry();
-                self.CURVES_dirty = true;
+                self.dirty[self.selectedCategory] = true;
                 self.needSave = true;
                 setDirty();
             }
@@ -224,8 +285,8 @@ tab.initialize = function (callback) {
             deleteLink.textContent = '✕';
             deleteLink.addEventListener('click', function (event) {
                 event.preventDefault();
-                if (MixerCurve.removePoint(curve, index)) {
-                    self.CURVES_dirty = true;
+                if (model.removePoint(curve, index)) {
+                    self.dirty[self.selectedCategory] = true;
                     self.needSave = true;
                     setDirty();
                     renderCurveSvg();
@@ -263,14 +324,14 @@ tab.initialize = function (callback) {
 
                 function onMove(moveEvent) {
                     const point = svgPointFromEvent(svg, moveEvent);
-                    const clamped = MixerCurve.clampPoint(curve, index, Math.round(point.x), Math.round(point.y));
+                    const clamped = model.clampPoint(curve, index, Math.round(point.x), Math.round(point.y));
                     // Mutate in place (not curve.points[index] = clamped) so the
                     // activePoints slice - which shares the same point objects -
                     // stays in sync without needing a full re-render per frame.
                     Object.assign(curve.points[index], clamped);
                     updateGeometry();
                     showCoordLabel(clamped);
-                    self.CURVES_dirty = true;
+                    self.dirty[self.selectedCategory] = true;
                     self.needSave = true;
                     setDirty();
                 }
@@ -285,8 +346,8 @@ tab.initialize = function (callback) {
 
             circle.addEventListener('contextmenu', function (event) {
                 event.preventDefault();
-                if (MixerCurve.removePoint(curve, index)) {
-                    self.CURVES_dirty = true;
+                if (model.removePoint(curve, index)) {
+                    self.dirty[self.selectedCategory] = true;
                     self.needSave = true;
                     setDirty();
                     renderCurveSvg();
@@ -297,8 +358,8 @@ tab.initialize = function (callback) {
         svg.addEventListener('click', function (event) {
             if (event.target !== svg) return; // clicked a point, not the background
             const point = svgPointFromEvent(svg, event);
-            if (MixerCurve.addPoint(curve, Math.round(point.x), Math.round(point.y))) {
-                self.CURVES_dirty = true;
+            if (model.addPoint(curve, Math.round(point.x), Math.round(point.y))) {
+                self.dirty[self.selectedCategory] = true;
                 self.needSave = true;
                 setDirty();
                 renderCurveSvg();
@@ -306,17 +367,40 @@ tab.initialize = function (callback) {
         });
     }
 
+    function selectCategory(key) {
+        self.selectedCategory = key;
+        self.selectedCurve = 0;
+
+        $('.tab-curves .tab-container .tab').removeClass('active');
+        $('.tab-curves .tab-container .' + CATEGORIES[key].tabClass).addClass('active');
+        $('#curveTitle').text(i18n.getMessage(category().titleKey));
+        $('#curveCategoryHelp').text(i18n.getMessage(category().helpKey));
+
+        populateCurveSelect();
+        renderCurveSvg();
+    }
+
+    function setupCategoryTabs() {
+        Object.keys(CATEGORIES).forEach(function (key) {
+            $('.tab-curves .tab-container .' + CATEGORIES[key].tabClass).on('click', function (event) {
+                event.preventDefault();
+                if (self.selectedCategory !== key)
+                    selectCategory(key);
+            });
+        });
+    }
+
     function populateCurveSelect() {
         const select = $('#curveSelect');
         select.empty();
 
-        for (let i = 0; i < MixerCurve.CURVE_COUNT; i++) {
+        for (let i = 0; i < category().model.CURVE_COUNT; i++) {
             select.append($('<option></option>').attr('value', i).text(i18n.getMessage('mixerCurveLabel', [i + 1])));
         }
 
         select.val(self.selectedCurve);
 
-        select.on('change', function () {
+        select.off('change').on('change', function () {
             self.selectedCurve = parseInt(select.val(), 10);
             renderCurveSvg();
         });
@@ -329,7 +413,7 @@ tab.initialize = function (callback) {
         const select = $('#curvePointCountSelect');
         select.empty();
 
-        for (let n = 2; n <= MixerCurve.POINT_COUNT; n++) {
+        for (let n = 2; n <= category().model.POINT_COUNT; n++) {
             select.append($('<option></option>').attr('value', n).text(n));
         }
 
@@ -339,17 +423,28 @@ tab.initialize = function (callback) {
     function process_html() {
         i18n.localizePage();
 
-        while (FC.MIXER_CURVES.length < MixerCurve.CURVE_COUNT) {
-            FC.MIXER_CURVES.push(MixerCurve.nullCurve());
-        }
+        Object.values(CATEGORIES).forEach(function (cat) {
+            const arr = cat.getArray();
+            while (arr.length < cat.model.CURVE_COUNT) {
+                arr.push(cat.model.nullCurve());
+            }
+        });
 
-        self.origCurves = MixerCurve.cloneCurves(FC.MIXER_CURVES);
+        self.origCurves = {
+            mixer: MixerCurve.cloneCurves(FC.MIXER_CURVES),
+            gain: GainCurve.cloneCurves(FC.GAIN_CURVES),
+        };
         self.isDirty = false;
         self.needSave = false;
-        self.CURVES_dirty = false;
+        self.dirty = { mixer: false, gain: false };
 
         $('.tab-curves').addClass('toolbar_hidden');
+        $('#curveTitle').text(i18n.getMessage(category().titleKey));
+        $('#curveCategoryHelp').text(i18n.getMessage(category().helpKey));
+        $('.tab-curves .tab-container .tab').removeClass('active');
+        $('.tab-curves .tab-container .' + category().tabClass).addClass('active');
 
+        setupCategoryTabs();
         populateCurveSelect();
         renderCurveSvg();
 
@@ -358,15 +453,17 @@ tab.initialize = function (callback) {
         };
 
         self.revert = function (callback) {
-            FC.MIXER_CURVES = self.origCurves;
+            FC.MIXER_CURVES = self.origCurves.mixer;
+            FC.GAIN_CURVES = self.origCurves.gain;
             self.needSave = false;
             save_data(callback);
         };
 
         $('.curveResetBtn').on('click', function (event) {
             event.preventDefault();
-            FC.MIXER_CURVES[self.selectedCurve] = MixerCurve.nullCurve();
-            self.CURVES_dirty = true;
+            const cat = category();
+            cat.getArray()[self.selectedCurve] = cat.model.nullCurve();
+            self.dirty[self.selectedCategory] = true;
             self.needSave = true;
             setDirty();
             renderCurveSvg();
@@ -374,9 +471,10 @@ tab.initialize = function (callback) {
 
         $('.curveAddPointBtn').on('click', function (event) {
             event.preventDefault();
-            const curve = FC.MIXER_CURVES[self.selectedCurve];
-            if (MixerCurve.addPointAtLargestGap(curve)) {
-                self.CURVES_dirty = true;
+            const cat = category();
+            const curve = cat.getArray()[self.selectedCurve];
+            if (cat.model.addPointAtLargestGap(curve)) {
+                self.dirty[self.selectedCategory] = true;
                 self.needSave = true;
                 setDirty();
                 renderCurveSvg();
@@ -384,9 +482,10 @@ tab.initialize = function (callback) {
         });
 
         $('#curvePointCountSelect').on('change', function () {
-            const curve = FC.MIXER_CURVES[self.selectedCurve];
-            MixerCurve.setPointCount(curve, parseInt($(this).val(), 10));
-            self.CURVES_dirty = true;
+            const cat = category();
+            const curve = cat.getArray()[self.selectedCurve];
+            cat.model.setPointCount(curve, parseInt($(this).val(), 10));
+            self.dirty[self.selectedCategory] = true;
             self.needSave = true;
             setDirty();
             renderCurveSvg();

@@ -3190,6 +3190,21 @@
     "curvesTitle": {
         "message": "Mixer Curves"
     },
+    "curvesTitleGain": {
+        "message": "Gain Curves"
+    },
+    "curveCategoryMixer": {
+        "message": "Mixer"
+    },
+    "curveCategoryGain": {
+        "message": "Gain"
+    },
+    "curveCategoryHelpMixer": {
+        "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
+    },
+    "curveCategoryHelpGain": {
+        "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
+    },
     "curveReset": {
         "message": "Reset Curve"
     },
@@ -4743,6 +4758,12 @@
     },
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+    },
+    "profilesGainCurveLabel": {
+        "message": "Gain Curve"
+    },
+    "profilesGainCurveHelp": {
+        "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
     },
     "profilesCrossAxisRelaxStrength": {
         "message": "Cross-axis Relax Roll Strength [%]"
