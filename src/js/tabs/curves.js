@@ -1,10 +1,17 @@
 import { MixerCurve } from '@/js/MixerCurve.js';
 import { GainCurve } from '@/js/GainCurve.js';
 
-// Evenly spaced tick positions across [min, max], used for both the plot's
-// gridlines and to pick which one is the bold "axis" reference line.
-function ticks(min, max) {
-    return [0, 0.25, 0.5, 0.75, 1].map(function (f) { return min + f * (max - min); });
+// Evenly spaced tick positions across [min, max], plus the axis's meaningful
+// reference value (e.g. 100% for a gain curve, which isn't one of the 5
+// evenly spaced points) so it always gets its own labeled gridline rather
+// than only showing up when it happens to coincide with one.
+function ticks(min, max, axisValue) {
+    const t = [0, 0.25, 0.5, 0.75, 1].map(function (f) { return min + f * (max - min); });
+    if (axisValue !== undefined && !t.includes(axisValue)) {
+        t.push(axisValue);
+        t.sort(function (a, b) { return a - b; });
+    }
+    return t;
 }
 
 // One entry per curve pool this tab can edit. Each category owns its own
@@ -16,6 +23,7 @@ const CATEGORIES = {
         model: MixerCurve,
         titleKey: 'curvesTitle',
         helpKey: 'curveCategoryHelpMixer',
+        explainKey: 'curveExplainMixer',
         tabClass: 'curveCategoryMixer',
         xMin: MixerCurve.CURVE_MIN, xMax: MixerCurve.CURVE_MAX,
         yMin: MixerCurve.CURVE_MIN, yMax: MixerCurve.CURVE_MAX,
@@ -27,6 +35,7 @@ const CATEGORIES = {
         model: GainCurve,
         titleKey: 'curvesTitleGain',
         helpKey: 'curveCategoryHelpGain',
+        explainKey: 'curveExplainGain',
         tabClass: 'curveCategoryGain',
         xMin: GainCurve.X_MIN, xMax: GainCurve.X_MAX,
         yMin: GainCurve.Y_MIN, yMax: GainCurve.Y_MAX,
@@ -106,19 +115,24 @@ tab.initialize = function (callback) {
         send_next(0);
     }
 
-    // Map between curve units and the SVG viewBox (0..400, y-flipped since
-    // SVG y grows downward but a curve's y should grow up), using the
-    // active category's own x/y ranges. Inset by PADDING so points at the
-    // extreme corners aren't clipped by the viewBox edge (a point sitting
-    // exactly on the boundary would only be half/quarter-visible, and
-    // barely clickable).
+    // Map between curve units and the SVG viewBox, y-flipped since SVG y
+    // grows downward but a curve's y should grow up, using the active
+    // category's own x/y ranges. Inset by PADDING so points at the extreme
+    // corners aren't clipped by the viewBox edge (a point sitting exactly
+    // on the boundary would only be half/quarter-visible, and barely
+    // clickable). The plot area itself is PLOT_SIZE square, offset right by
+    // GUTTER_X and with GUTTER_Y of extra room below - reserved margin for
+    // the axis tick value labels so the scale is always legible, not just
+    // implied by unlabeled gridlines.
     const PLOT_SIZE = 400;
     const PADDING = 20;
+    const GUTTER_X = 34;
+    const GUTTER_Y = 16;
     const PLOT_INNER = PLOT_SIZE - PADDING * 2;
 
     function toSvgX(x) {
         const c = category();
-        return PADDING + (x - c.xMin) / (c.xMax - c.xMin) * PLOT_INNER;
+        return GUTTER_X + PADDING + (x - c.xMin) / (c.xMax - c.xMin) * PLOT_INNER;
     }
     function toSvgY(y) {
         const c = category();
@@ -126,7 +140,7 @@ tab.initialize = function (callback) {
     }
     function fromSvgX(sx) {
         const c = category();
-        return (sx - PADDING) / PLOT_INNER * (c.xMax - c.xMin) + c.xMin;
+        return (sx - GUTTER_X - PADDING) / PLOT_INNER * (c.xMax - c.xMin) + c.xMin;
     }
     function fromSvgY(sy) {
         const c = category();
@@ -159,11 +173,12 @@ tab.initialize = function (callback) {
 
         updatePointCountSelect(curve);
 
-        // Gridlines at 5 evenly spaced ticks per axis, bold line through
-        // whichever tick is that axis's meaningful reference value (0 for
-        // mixer curves, but the "no effect" value for gain curves is 100%,
-        // not 0).
-        ticks(cat.xMin, cat.xMax).forEach(function (v) {
+        // Gridlines at 5 evenly spaced ticks per axis (plus the axis's own
+        // reference value, see ticks()), bold line through whichever tick is
+        // that reference value (0 for mixer curves, but the "no effect"
+        // value for gain curves is 100%, not 0) - each labeled with its
+        // actual numeric value so the scale is never just implied.
+        ticks(cat.xMin, cat.xMax, cat.xAxisValue).forEach(function (v) {
             const vLine = ns('line');
             vLine.setAttribute('x1', toSvgX(v));
             vLine.setAttribute('x2', toSvgX(v));
@@ -171,15 +186,32 @@ tab.initialize = function (callback) {
             vLine.setAttribute('y2', PLOT_SIZE);
             vLine.setAttribute('class', v === cat.xAxisValue ? 'curveAxis' : 'curveGrid');
             svg.appendChild(vLine);
+
+            const label = ns('text');
+            label.setAttribute('x', toSvgX(v));
+            label.setAttribute('y', PLOT_SIZE + GUTTER_Y - 4);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('class', v === cat.xAxisValue ? 'curveAxisLabel curveAxisLabelBold' : 'curveAxisLabel');
+            label.textContent = Math.round(v);
+            svg.appendChild(label);
         });
-        ticks(cat.yMin, cat.yMax).forEach(function (v) {
+        ticks(cat.yMin, cat.yMax, cat.yAxisValue).forEach(function (v) {
             const hLine = ns('line');
             hLine.setAttribute('y1', toSvgY(v));
             hLine.setAttribute('y2', toSvgY(v));
-            hLine.setAttribute('x1', 0);
-            hLine.setAttribute('x2', PLOT_SIZE);
+            hLine.setAttribute('x1', GUTTER_X);
+            hLine.setAttribute('x2', GUTTER_X + PLOT_SIZE);
             hLine.setAttribute('class', v === cat.yAxisValue ? 'curveAxis' : 'curveGrid');
             svg.appendChild(hLine);
+
+            const label = ns('text');
+            label.setAttribute('x', GUTTER_X - 6);
+            label.setAttribute('y', toSvgY(v));
+            label.setAttribute('text-anchor', 'end');
+            label.setAttribute('dominant-baseline', 'middle');
+            label.setAttribute('class', v === cat.yAxisValue ? 'curveAxisLabel curveAxisLabelBold' : 'curveAxisLabel');
+            label.textContent = Math.round(v);
+            svg.appendChild(label);
         });
 
         const polyline = ns('polyline');
@@ -375,6 +407,7 @@ tab.initialize = function (callback) {
         $('.tab-curves .tab-container .' + CATEGORIES[key].tabClass).addClass('active');
         $('#curveTitle').text(i18n.getMessage(category().titleKey));
         $('#curveCategoryHelp').text(i18n.getMessage(category().helpKey));
+        $('#curveExplain').text(i18n.getMessage(category().explainKey));
 
         populateCurveSelect();
         renderCurveSvg();
@@ -441,6 +474,7 @@ tab.initialize = function (callback) {
         $('.tab-curves').addClass('toolbar_hidden');
         $('#curveTitle').text(i18n.getMessage(category().titleKey));
         $('#curveCategoryHelp').text(i18n.getMessage(category().helpKey));
+        $('#curveExplain').text(i18n.getMessage(category().explainKey));
         $('.tab-curves .tab-container .tab').removeClass('active');
         $('.tab-curves .tab-container .' + category().tabClass).addClass('active');
 
