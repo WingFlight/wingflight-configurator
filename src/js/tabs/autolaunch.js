@@ -27,6 +27,11 @@ tab.initialize = function (callback) {
         }
     }
 
+    function updateThrowDetectionVisibility() {
+        const autoThrottleEnabled = $('#autolaunch-auto-throttle').is(':checked');
+        $('.tab-autolaunch').toggleClass('autolaunch-detection-hidden', !autoThrottleEnabled);
+    }
+
     function writeFields() {
         $('#autolaunch-auto-throttle').prop('checked', !!FC.AUTOLAUNCH_CONFIG.auto_throttle);
         $('#autolaunch-throttle').val(FC.AUTOLAUNCH_CONFIG.launch_throttle);
@@ -36,6 +41,7 @@ tab.initialize = function (callback) {
         $('#autolaunch-detect-time').val(FC.AUTOLAUNCH_CONFIG.detect_time);
         $('#autolaunch-motor-delay').val(FC.AUTOLAUNCH_CONFIG.motor_delay);
         $('#autolaunch-timeout').val(FC.AUTOLAUNCH_CONFIG.timeout);
+        updateThrowDetectionVisibility();
     }
 
     function readFields() {
@@ -64,6 +70,7 @@ tab.initialize = function (callback) {
         writeFields();
 
         $('.tab-autolaunch input').on('change input', setDirty);
+        $('#autolaunch-auto-throttle').on('change', updateThrowDetectionVisibility);
         $('.tab-autolaunch .save').on('click', (event) => {
             event.preventDefault();
             self.save(() => GUI.tab_switch_reload());
