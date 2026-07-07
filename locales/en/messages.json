@@ -1303,11 +1303,23 @@
     "autolaunchDetection": {
         "message": "Launch Detection"
     },
+    "autolaunchOverview": {
+        "message": "Autolaunch is a hand-launch assist: once launch starts, it keeps roll level and holds the configured climb angle until stick takeover (roll/pitch/yaw) or disarm."
+    },
+    "autolaunchOverviewSafety": {
+        "message": "Safety rule: the AUTOLAUNCH switch arms launch assist, but motor permission is confirmed by deliberate throttle stick raise. Motor output stays at 0% until throttle confirmation."
+    },
+    "autolaunchOverviewSequence": {
+        "message": "Expected sequence: 1) Enable AUTOLAUNCH while disarmed, 2) Arm, 3) Raise throttle deliberately, 4) Launch. AUTOLAUNCH must be active at arm time and re-latches only after disarm."
+    },
+    "autolaunchOverviewModes": {
+        "message": "Wait-for-throw ON: throttle confirmation -> throw detection -> motor delay -> spin-up. Wait-for-throw OFF: throttle confirmation -> immediate spin-up. Throw detection fields are used only when ON."
+    },
     "autolaunchAutoThrottle": {
         "message": "Wait for throw before throttle"
     },
     "autolaunchAutoThrottleHelp": {
-        "message": "When enabled, the motor stays off after arming until a throw is detected, then waits the configured motor delay before throttle is applied. When disabled, launch throttle is applied immediately after arming with AUTOLAUNCH active."
+        "message": "When enabled, the motor stays off after throttle confirmation until a throw is detected, then waits the configured motor delay before throttle ramps up. When disabled, throw detection and motor delay are skipped, but throttle confirmation is still required before throttle ramps up."
     },
     "autolaunchThrottle": {
         "message": "Launch throttle"
