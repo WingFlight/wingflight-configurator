@@ -1,0 +1,94 @@
+<div class="tab-autolaunch toolbar_fixed_bottom">
+    <div class="content_wrapper">
+        <div class="cf_column">
+            <div class="tab_title" i18n="tabAutolaunch"></div>
+            <div class="cf_doc_version_bt">
+                <a id="button-documentation"></a>
+            </div>
+        </div>
+
+        <div class="grid-row">
+            <div class="grid-col col6">
+                <div class="gui_box grey">
+                    <div class="gui_box_titlebar">
+                        <div class="spacer_box_title" i18n="autolaunchSettings"></div>
+                    </div>
+                    <div class="spacer_box">
+                        <div class="number">
+                            <div>
+                                <input type="checkbox" id="autolaunch-auto-throttle" class="toggle" />
+                            </div>
+                            <label for="autolaunch-auto-throttle">
+                                <span i18n="autolaunchAutoThrottle"></span>
+                            </label>
+                            <div class="helpicon cf_tip" i18n_title="autolaunchAutoThrottleHelp"></div>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-throttle" min="0" max="100" step="1" />
+                            </div>
+                            <label for="autolaunch-throttle"><span i18n="autolaunchThrottle"></span><span class="units">[%]</span></label>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-climb-angle" min="0" max="45" step="1" />
+                            </div>
+                            <label for="autolaunch-climb-angle"><span i18n="autolaunchClimbAngle"></span><span class="units">[deg]</span></label>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-stick-threshold" min="0" max="100" step="1" />
+                            </div>
+                            <label for="autolaunch-stick-threshold"><span i18n="autolaunchStickThreshold"></span><span class="units">[%]</span></label>
+                            <div class="helpicon cf_tip" i18n_title="autolaunchStickThresholdHelp"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-col col6">
+                <div class="gui_box grey">
+                    <div class="gui_box_titlebar">
+                        <div class="spacer_box_title" i18n="autolaunchDetection"></div>
+                    </div>
+                    <div class="spacer_box">
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-accel-threshold" min="0" max="5000" step="10" />
+                            </div>
+                            <label for="autolaunch-accel-threshold"><span i18n="autolaunchAccelThreshold"></span><span class="units">[cm/s/s]</span></label>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-detect-time" min="0" max="1000" step="10" />
+                            </div>
+                            <label for="autolaunch-detect-time"><span i18n="autolaunchDetectTime"></span><span class="units">[ms]</span></label>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-motor-delay" min="0" max="5000" step="10" />
+                            </div>
+                            <label for="autolaunch-motor-delay"><span i18n="autolaunchMotorDelay"></span><span class="units">[ms]</span></label>
+                            <div class="helpicon cf_tip" i18n_title="autolaunchMotorDelayHelp"></div>
+                        </div>
+                        <div class="number">
+                            <div>
+                                <input type="number" id="autolaunch-timeout" min="0" max="30000" step="100" />
+                            </div>
+                            <label for="autolaunch-timeout"><span i18n="autolaunchTimeout"></span><span class="units">[ms]</span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content_toolbar">
+        <div class="btn revert_btn">
+            <a class="revert" href="#" i18n="buttonRevert"></a>
+        </div>
+        <div class="btn save_btn">
+            <a class="save" href="#" i18n="buttonSave"></a>
+        </div>
+    </div>
+</div>

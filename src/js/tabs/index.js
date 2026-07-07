@@ -1,4 +1,5 @@
 import "./adjustments.js";
+import "./autolaunch.js";
 import "./auxiliary.js";
 import "./beepers.js";
 import "./blackbox.js";

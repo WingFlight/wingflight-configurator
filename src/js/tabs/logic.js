@@ -1,5 +1,5 @@
 import { LogicCondition } from '@/js/LogicCondition.js';
-import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
+import { getModeDisplayName, isModeVisible } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'logic',
@@ -84,7 +84,7 @@ tab.initialize = function (callback) {
         const choices = [];
 
         for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
-            if (UNUSED_MODES.includes(FC.AUX_CONFIG[i])) continue;
+            if (!isModeVisible(FC.AUX_CONFIG[i])) continue;
             choices.push({ value: FC.AUX_CONFIG_IDS[i], label: getModeDisplayName(FC.AUX_CONFIG[i]) });
         }
 

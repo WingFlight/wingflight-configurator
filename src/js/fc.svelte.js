@@ -399,6 +399,17 @@ class FlightController {
       idle_governor_ceiling:      0,
     };
 
+    this.AUTOLAUNCH_CONFIG = {
+      auto_throttle:              0,
+      launch_throttle:            0,
+      climb_angle:                0,
+      stick_threshold:            0,
+      accel_threshold:            0,
+      detect_time:                0,
+      motor_delay:                0,
+      timeout:                    0,
+    };
+
     this.GPS_CONFIG = {
       provider:                   0,
       ublox_sbas:                 0,

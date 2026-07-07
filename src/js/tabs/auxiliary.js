@@ -2,7 +2,7 @@ import * as noUiSlider from 'nouislider';
 import wNumb from 'wnumb';
 
 import * as config from '@/js/config.js';
-import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
+import { getModeDisplayName, isModeVisible } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'auxiliary',
@@ -357,7 +357,7 @@ tab.initialize = function (callback) {
         // GPS Rescue (RTH) is unrelated and stays.
         const modeIndices = [];
         for (let modeIndex = 0; modeIndex < FC.AUX_CONFIG.length; modeIndex++) {
-            if (!UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
+            if (isModeVisible(FC.AUX_CONFIG[modeIndex])) {
                 modeIndices.push(modeIndex);
             }
         }

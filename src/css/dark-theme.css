@@ -301,6 +301,18 @@ html[data-theme=dark] .tab-configuration #interactive_block a.reset:hover {
 }
 
 
+/* AUTOLAUNCH TAB */
+
+html[data-theme=dark] .tab-autolaunch .gui_box span {
+    color: white;
+}
+
+html[data-theme=dark] .tab-autolaunch input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+
 /* FIRMWARE FLASHER TAB */
 
 html[data-theme=dark] .btn .disabled {

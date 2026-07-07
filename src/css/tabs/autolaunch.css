@@ -1,0 +1,93 @@
+.tab-autolaunch {
+    position: relative;
+}
+
+.tab-autolaunch input {
+    border: 1px solid var(--subtleAccent);
+    border-radius: 3px;
+}
+
+.tab-autolaunch .gui_box_titlebar {
+    margin-bottom: 0;
+}
+
+.tab-autolaunch .spacer_box {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 20px);
+    padding: 4px 10px;
+}
+
+.tab-autolaunch .spacer_box > * + * {
+    border-top: 1px dotted var(--superSubtleAccent);
+}
+
+.tab-autolaunch .number {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 4px 0;
+}
+
+.tab-autolaunch .number > :first-child {
+    width: 100px;
+}
+
+.tab-autolaunch .number > :nth-child(2) {
+    flex-grow: 1;
+}
+
+.tab-autolaunch .number input[type="number"] {
+    box-sizing: border-box;
+    width: 100px;
+    padding-left: 3px;
+    height: 22px;
+    line-height: 22px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.tab-autolaunch .number label {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 19px;
+    color: inherit;
+    font-size: 11px;
+}
+
+.tab-autolaunch .gui_box span {
+    font-style: normal;
+    font-weight: normal;
+    line-height: 19px;
+    color: #4f4f4f;
+    font-size: 11px;
+}
+
+.tab-autolaunch .content_toolbar {
+    justify-content: flex-end;
+}
+
+.tab-autolaunch .content_toolbar div:first-child {
+    margin-left: 0;
+}
+
+.tab-autolaunch .number .helpicon {
+    float: none;
+    margin: 0 0 0 auto;
+}
+
+@media only screen and (max-width: 1100px), only screen and (max-device-width: 1100px) {
+    .tab-autolaunch .number label {
+        line-height: 17px;
+    }
+
+    .tab-autolaunch .gui_box span {
+        line-height: 17px;
+    }
+}

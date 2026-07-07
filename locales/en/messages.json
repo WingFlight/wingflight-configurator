@@ -423,6 +423,9 @@
     "tabConfiguration": {
         "message": "Configuration"
     },
+    "tabAutolaunch": {
+        "message": "Autolaunch"
+    },
     "tabPorts": {
         "message": "Serial Ports"
     },
@@ -1287,6 +1290,51 @@
     },
     "feature_RPM_FILTER": {
         "message": "RPM controlled notch filtering"
+    },
+    "feature_AUTOLAUNCH": {
+        "message": "Fixed-wing hand-launch assist"
+    },
+    "featureTip_AUTOLAUNCH": {
+        "message": "Enables the Autolaunch mode and configuration page. Assign the AUTOLAUNCH mode on the Modes tab before arming."
+    },
+    "autolaunchSettings": {
+        "message": "Autolaunch Settings"
+    },
+    "autolaunchDetection": {
+        "message": "Launch Detection"
+    },
+    "autolaunchAutoThrottle": {
+        "message": "Wait for throw before throttle"
+    },
+    "autolaunchAutoThrottleHelp": {
+        "message": "When enabled, the motor stays off after arming until a throw is detected, then waits the configured motor delay before throttle is applied. When disabled, launch throttle is applied immediately after arming with AUTOLAUNCH active."
+    },
+    "autolaunchThrottle": {
+        "message": "Launch throttle"
+    },
+    "autolaunchClimbAngle": {
+        "message": "Climb angle"
+    },
+    "autolaunchStickThreshold": {
+        "message": "Stick takeover threshold"
+    },
+    "autolaunchStickThresholdHelp": {
+        "message": "Roll, pitch, or yaw stick movement beyond this threshold gives full control back to the pilot. Throttle movement does not exit autolaunch."
+    },
+    "autolaunchAccelThreshold": {
+        "message": "Acceleration threshold"
+    },
+    "autolaunchDetectTime": {
+        "message": "Detection time"
+    },
+    "autolaunchMotorDelay": {
+        "message": "Motor delay"
+    },
+    "autolaunchMotorDelayHelp": {
+        "message": "Delay after throw detection before the motor spins up. Used only when wait-for-throw throttle is enabled."
+    },
+    "autolaunchTimeout": {
+        "message": "Launch timeout"
     },
     "configurationFeatureEnabled": {
         "message": "Enabled"
@@ -7270,6 +7318,9 @@
     },
     "mode MANUAL": {
         "message": "MANUAL"
+    },
+    "mode AUTOLAUNCH": {
+        "message": "AUTOLAUNCH"
     },
     "mode BEEPER": {
         "message": "BEEPER"

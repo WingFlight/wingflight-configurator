@@ -423,6 +423,7 @@ function notifyOutdatedVersion(releaseData) {
 export function updateTabList(features) {
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
+    $('#tabs ul.mode-connected li.tab_autolaunch').toggle(features.isEnabled('AUTOLAUNCH'));
 }
 
 function zeroPad(value, width) {

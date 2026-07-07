@@ -473,6 +473,18 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_AUTOLAUNCH_CONFIG: {
+                FC.AUTOLAUNCH_CONFIG.auto_throttle = data.readU8();
+                FC.AUTOLAUNCH_CONFIG.launch_throttle = data.readU8();
+                FC.AUTOLAUNCH_CONFIG.climb_angle = data.readU8();
+                FC.AUTOLAUNCH_CONFIG.stick_threshold = data.readU8();
+                FC.AUTOLAUNCH_CONFIG.accel_threshold = data.readU16();
+                FC.AUTOLAUNCH_CONFIG.detect_time = data.readU16();
+                FC.AUTOLAUNCH_CONFIG.motor_delay = data.readU16();
+                FC.AUTOLAUNCH_CONFIG.timeout = data.readU16();
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();
@@ -1905,6 +1917,18 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_throttle)
                 .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_handover)
                 .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_ceiling);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_AUTOLAUNCH_CONFIG: {
+            buffer.push8(FC.AUTOLAUNCH_CONFIG.auto_throttle ? 1 : 0)
+                .push8(FC.AUTOLAUNCH_CONFIG.launch_throttle)
+                .push8(FC.AUTOLAUNCH_CONFIG.climb_angle)
+                .push8(FC.AUTOLAUNCH_CONFIG.stick_threshold)
+                .push16(FC.AUTOLAUNCH_CONFIG.accel_threshold)
+                .push16(FC.AUTOLAUNCH_CONFIG.detect_time)
+                .push16(FC.AUTOLAUNCH_CONFIG.motor_delay)
+                .push16(FC.AUTOLAUNCH_CONFIG.timeout);
             break;
         }
 

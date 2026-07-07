@@ -9,6 +9,14 @@ import { i18n } from '@/js/localization.js';
 // (RTH) is unrelated and stays.
 export const UNUSED_MODES = ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 'GOVERNOR BYPASS', 'OSD DISABLE', 'PARALYZE', 'ATTHOLD'];
 
+export function isModeVisible(modeName) {
+    if (UNUSED_MODES.includes(modeName)) {
+        return false;
+    }
+
+    return modeName !== 'AUTOLAUNCH' || FC.FEATURE_CONFIG.features.isEnabled('AUTOLAUNCH');
+}
+
 export function getModeDisplayName(modeName) {
     return i18n.existsMessage('mode ' + modeName) ?
         i18n.getMessage('mode ' + modeName) : modeName;
