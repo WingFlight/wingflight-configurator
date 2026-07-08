@@ -1,3 +1,7 @@
+# 0.0.5
+
+Add AUTO TRIM mode display name.
+
 # 0.0.4
 
 Fix missing channel slot handling.
