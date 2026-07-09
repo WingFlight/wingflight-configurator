@@ -205,6 +205,11 @@ tab.initialize = function (callback) {
         $('.tab-profiles input[id="autoHoverGain"]').val(FC.PID_PROFILE.autoHoverGain);
         $('.tab-profiles input[id="autoHoverMaxAngle"]').val(FC.PID_PROFILE.autoHoverMaxAngle);
         $('.tab-profiles input[id="autoHoverMaxRate"]').val(FC.PID_PROFILE.autoHoverMaxRate);
+
+        // Att Hold
+        $('.tab-profiles input[id="attHoldGain"]').val(FC.PID_PROFILE.attHoldGain);
+        $('.tab-profiles input[id="attHoldDeadband"]').val(FC.PID_PROFILE.attHoldDeadband);
+        $('.tab-profiles input[id="attHoldMaxRate"]').val(FC.PID_PROFILE.attHoldMaxRate);
     }
 
     function form_to_data() {
@@ -268,6 +273,9 @@ tab.initialize = function (callback) {
         FC.PID_PROFILE.autoHoverGain = parseInt($('.tab-profiles input[id="autoHoverGain"]').val());
         FC.PID_PROFILE.autoHoverMaxAngle = parseInt($('.tab-profiles input[id="autoHoverMaxAngle"]').val());
         FC.PID_PROFILE.autoHoverMaxRate = parseInt($('.tab-profiles input[id="autoHoverMaxRate"]').val());
+        FC.PID_PROFILE.attHoldGain = parseInt($('.tab-profiles input[id="attHoldGain"]').val());
+        FC.PID_PROFILE.attHoldDeadband = parseInt($('.tab-profiles input[id="attHoldDeadband"]').val());
+        FC.PID_PROFILE.attHoldMaxRate = parseInt($('.tab-profiles input[id="attHoldMaxRate"]').val());
     }
 
     function process_html() {

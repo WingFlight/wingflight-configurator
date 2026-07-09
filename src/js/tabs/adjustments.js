@@ -119,6 +119,7 @@ function getFunctions() {
         { id: 85,   name: 'MasterGainRoll',             min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },
         { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },
         { id: 87,   name: 'AutoHoverGain',              min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 88,   name: 'AttHoldGain',                min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
     ];
 }
 

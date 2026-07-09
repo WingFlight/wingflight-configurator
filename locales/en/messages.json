@@ -2713,6 +2713,9 @@
     "adjustmentsFunctionAutoHoverGain": {
         "message": "Auto Hover Gain"
     },
+    "adjustmentsFunctionAttHoldGain": {
+        "message": "Att Hold Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -4944,6 +4947,24 @@
     },
     "profilesAutoHoverMaxRateHelp": {
         "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
+    },
+    "profilesAttHoldGain": {
+        "message": "Att Hold gain"
+    },
+    "profilesAttHoldGainHelp": {
+        "message": "Correction strength back to the held attitude once the sticks are centred and Att Hold has frozen its target. Higher values return to the held attitude more aggressively."
+    },
+    "profilesAttHoldDeadband": {
+        "message": "Att Hold deadband"
+    },
+    "profilesAttHoldDeadbandHelp": {
+        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which Att Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the aircraft is corrected back to it. Unlike Auto Hover, Att Hold does not bound stick authority -- it holds whatever attitude the aircraft was in the instant every stick returned inside this deadband, at any orientation, not just vertical or level."
+    },
+    "profilesAttHoldMaxRate": {
+        "message": "Att Hold max rate"
+    },
+    "profilesAttHoldMaxRateHelp": {
+        "message": "Safety clamp (deg/s) on how fast Att Hold may rotate the aircraft back toward the frozen attitude once the sticks return inside the deadband."
     },
     "rateSetupCopyRateProfile": {
         "message": "Copy rateprofile"
@@ -7262,8 +7283,8 @@
     "mode ALTHOLD": {
         "message": "ALTHOLD"
     },
-    "mode ATTHOLD": {
-        "message": "ATTITUDE HOLD"
+    "mode ATT HOLD": {
+        "message": "ATT HOLD"
     },
     "mode PASSTHROUGH": {
         "message": "PASSTHROUGH"

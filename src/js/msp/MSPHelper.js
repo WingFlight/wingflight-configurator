@@ -1175,9 +1175,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 data.readU8();
                 data.readU8();
                 data.readU8();
-                // Attitude hold mode -- removed //
-                data.readU8();
-                data.readU8();
+                // Att Hold //
+                FC.PID_PROFILE.attHoldGain                   = data.readU8();
+                FC.PID_PROFILE.attHoldDeadband                = data.readU8();
                 // B-term cutoffs //
                 FC.PID_PROFILE.btermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.btermCutoffPitch              = data.readU8();
@@ -1204,6 +1204,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.gainCurveRoll                 = data.remaining() >= 3 ? data.readU8() : 0;
                 FC.PID_PROFILE.gainCurvePitch                = data.remaining() >= 2 ? data.readU8() : 0;
                 FC.PID_PROFILE.gainCurveYaw                  = data.remaining() >= 1 ? data.readU8() : 0;
+                // Att Hold max rate //
+                FC.PID_PROFILE.attHoldMaxRate                = data.remaining() >= 2 ? data.readU16() : 300;
                 break;
             }
 
@@ -2154,9 +2156,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(0)
                 .push8(0)
                 .push8(0)
-                // Attitude hold mode -- removed //
-                .push8(0)
-                .push8(0)
+                // Att Hold //
+                .push8(FC.PID_PROFILE.attHoldGain)
+                .push8(FC.PID_PROFILE.attHoldDeadband)
                 // B-term cutoffs //
                 .push8(FC.PID_PROFILE.btermCutoffRoll)
                 .push8(FC.PID_PROFILE.btermCutoffPitch)
@@ -2183,7 +2185,9 @@ MspHelper.prototype.crunch = function(code) {
                 // Gain curve assignment (per axis) //
                 .push8(FC.PID_PROFILE.gainCurveRoll)
                 .push8(FC.PID_PROFILE.gainCurvePitch)
-                .push8(FC.PID_PROFILE.gainCurveYaw);
+                .push8(FC.PID_PROFILE.gainCurveYaw)
+                // Att Hold max rate //
+                .push16(FC.PID_PROFILE.attHoldMaxRate);
             break;
         }
 
