@@ -1,6 +1,6 @@
 import semver from "semver";
 
-import { API_VERSION_12_7, API_VERSION_12_9 } from "@/js/configurator.svelte";
+import { API_VERSION_12_7, API_VERSION_12_9, API_VERSION_22_2 } from "@/js/configurator.svelte";
 import * as flightStats from "@/js/flight-stats.js";
 import { getIntegerValue } from "@/js/main.js";
 import { Model } from "@/js/model.js";
@@ -278,6 +278,8 @@ tab.initialize = function (callback) {
         { id: 262144,excl: 262144,  name: 'SBUS_OUT',             type: portTypes.AUTO },
         { id: 524288,excl: 524288,  name: 'FBUS_OUT',             type: portTypes.AUTO },
         { id: 1048576, excl: 1048576, name: 'SPORT_MASTER',       type: portTypes.AUTO },
+        { id: 2097152, excl: 2097152, name: 'FC_LINK_MASTER',     type: portTypes.AUTO },
+        { id: 4194304, excl: 4194304, name: 'FC_LINK_SLAVE',      type: portTypes.AUTO },
         { id: 4,     excl: 4668,    name: 'TELEMETRY_FRSKY',      type: portTypes.TELEM },
         { id: 32,    excl: 4668,    name: 'TELEMETRY_SMARTPORT',  type: portTypes.TELEM },
         { id: 4096,  excl: 4668,    name: 'TELEMETRY_IBUS',       type: portTypes.TELEM },
@@ -487,7 +489,9 @@ tab.initialize = function (callback) {
                     if (
                         (func.name !== 'SBUS_OUT' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) &&
                         (func.name !== 'FBUS_OUT' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) &&
-                        (func.name !== 'SPORT_MASTER' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9))
+                        (func.name !== 'SPORT_MASTER' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) &&
+                        (func.name !== 'FC_LINK_MASTER' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_2)) &&
+                        (func.name !== 'FC_LINK_SLAVE' || semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_2))
                     ) {
                     funcElement.append(`<option value="${func.id}">${funcName}</option>`);
                 }

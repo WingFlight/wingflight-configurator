@@ -1685,6 +1685,12 @@
     "portsFunction_SPORT_MASTER": {
         "message": "S.PORT Master"
     },
+    "portsFunction_FC_LINK_MASTER": {
+        "message": "FC Link (Master)"
+    },
+    "portsFunction_FC_LINK_SLAVE": {
+        "message": "FC Link (Slave)"
+    },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
     },

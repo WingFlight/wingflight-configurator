@@ -56,6 +56,8 @@ export function MspHelper() {
         'SBUS_OUT': 18,
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
+        'FC_LINK_MASTER': 21,
+        'FC_LINK_SLAVE': 22,
     };
 
     self.REBOOT_TYPES = {
