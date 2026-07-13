@@ -333,6 +333,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
+    margin-top: var(--section-gap);
     margin-bottom: var(--section-gap);
   }
 
