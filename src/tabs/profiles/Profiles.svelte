@@ -325,7 +325,6 @@
   }
 
   .help-btn {
-    padding: 4px 8px;
     min-width: 60px;
   }
 
