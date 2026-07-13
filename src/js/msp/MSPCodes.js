@@ -210,8 +210,8 @@ export const MSPCodes = {
     MSP_DEBUG:                      254,
 
     MSP2_WING_BOARD_AUTO_ALIGN:     0x5F00,
-    MSP2_WING_IDLE_GOVERNOR_CONFIG:     0x5F01,
-    MSP2_WING_SET_IDLE_GOVERNOR_CONFIG: 0x5F02,
+    MSP2_WING_GOVERNOR_CONFIG:      0x5F01,
+    MSP2_WING_SET_GOVERNOR_CONFIG:  0x5F02,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

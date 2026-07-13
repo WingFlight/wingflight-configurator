@@ -3634,62 +3634,77 @@
     "motorsMotorPolesHelp": {
         "message": "The <i>pole count</i> is the number of magnets on the motor bell. The manual should give this number. Or you can count the magnets. Do NOT count the stators with the copper wire windings."
     },
-    "motorsSectionLabelIdleGovernor": {
-        "message": "Idle Governor"
+    "motorsSectionLabelGovernor": {
+        "message": "Governor"
     },
-    "motorsIdleGovernorModeNote": {
-        "message": "These values have no effect on their own. Assign the <i>IDLE UP</i> switch to a channel in the <i>Modes</i> tab &mdash; engaging it (while armed and below the handover throttle) is what actually holds the idle output."
+    "motorsGovernorModeNote": {
+        "message": "These values have no effect on their own. Assign the <i>GOVERNOR</i> switch to a channel in the <i>Modes</i> tab &mdash; engaging it is what actually holds the idle output or governs RPM, depending on the mode below."
     },
-    "motorsIdleGovernorMode": {
+    "motorsGovernorMode": {
         "message": "Mode"
     },
-    "motorsIdleGovernorModeHelp": {
-        "message": "OFF disables the idle governor entirely.<br>RPM closed-loop holds a target RPM using motor RPM feedback &mdash; requires a valid RPM source (bidirectional DShot telemetry, ESC telemetry, or a frequency sensor).<br>Throttle open-loop just holds a fixed throttle percentage &mdash; no RPM source needed, but it won't correct for load or battery sag."
+    "motorsGovernorModeHelp": {
+        "message": "OFF disables the governor entirely.<br>RPM closed-loop holds a target RPM at idle (below the handover throttle) using motor RPM feedback &mdash; requires a valid RPM source (bidirectional DShot telemetry, ESC telemetry, or a frequency sensor).<br>Throttle open-loop just holds a fixed throttle percentage at idle &mdash; no RPM source needed, but it won't correct for load or battery sag.<br>RPM Range closed-loop holds a target RPM mapped across the <i>entire</i> throttle stick (Min RPM at 0% &mdash; Max RPM at 100%), for holding engine speed through a whole flight (e.g. dive speed control), not just idle &mdash; also requires a valid RPM source."
     },
-    "motorsIdleGovernorModeOff": {
+    "motorsGovernorModeOff": {
         "message": "Off"
     },
-    "motorsIdleGovernorModeRpm": {
+    "motorsGovernorModeRpm": {
         "message": "RPM"
     },
-    "motorsIdleGovernorModeThrottle": {
+    "motorsGovernorModeThrottle": {
         "message": "Throttle"
     },
-    "motorsIdleGovernorRpm": {
+    "motorsGovernorModeRpmRange": {
+        "message": "RPM Range"
+    },
+    "motorsGovernorRpm": {
         "message": "Idle RPM"
     },
-    "motorsIdleGovernorRpmHelp": {
-        "message": "Target RPM to hold at idle. Set to 0 to disable while in RPM mode.<br>Engaging also requires the <i>IDLE UP</i> switch (assign it in the Modes tab) and a valid RPM source."
+    "motorsGovernorRpmHelp": {
+        "message": "Target RPM to hold at idle. Set to 0 to disable while in RPM mode.<br>Engaging also requires the <i>GOVERNOR</i> switch (assign it in the Modes tab) and a valid RPM source."
     },
-    "motorsIdleGovernorGain": {
+    "motorsGovernorRpmMin": {
+        "message": "Min RPM"
+    },
+    "motorsGovernorRpmMinHelp": {
+        "message": "Target RPM at 0% throttle stick."
+    },
+    "motorsGovernorRpmMax": {
+        "message": "Max RPM"
+    },
+    "motorsGovernorRpmMaxHelp": {
+        "message": "Target RPM at 100% throttle stick. Set to 0 to disable RPM Range mode entirely."
+    },
+    "motorsGovernorGain": {
         "message": "P Gain"
     },
-    "motorsIdleGovernorGainHelp": {
-        "message": "Proportional gain used to correct RPM error while the idle governor is holding the target RPM. The RPM error is filtered before this gain is applied for stability. A propeller at idle needs very little correction to hold RPM, especially electric setups, so keep this low &mdash; start around 20 and increase only if the motor is slow to react, decrease if it oscillates. A P gain alone will always settle a bit below the target RPM &mdash; that remaining gap is closed by the I Gain below, not this one."
+    "motorsGovernorGainHelp": {
+        "message": "Proportional gain used to correct RPM error while the governor is holding the target RPM. The RPM error is filtered before this gain is applied for stability. A propeller at idle needs very little correction to hold RPM, especially electric setups, so keep this low &mdash; start around 20 and increase only if the motor is slow to react, decrease if it oscillates. A P gain alone will always settle a bit below the target RPM &mdash; that remaining gap is closed by the I Gain below, not this one."
     },
-    "motorsIdleGovernorIGain": {
+    "motorsGovernorIGain": {
         "message": "I Gain"
     },
-    "motorsIdleGovernorIGainHelp": {
+    "motorsGovernorIGainHelp": {
         "message": "Integral gain that slowly closes the remaining gap between the target RPM and where the P gain alone settles. Start around 30; increase if the motor takes too long to reach the exact target RPM, decrease if the RPM slowly drifts past the target and back (a slow oscillation, distinct from the fast one P gain controls)."
     },
-    "motorsIdleGovernorThrottle": {
+    "motorsGovernorThrottle": {
         "message": "Idle Throttle"
     },
-    "motorsIdleGovernorThrottleHelp": {
-        "message": "Fixed throttle percentage to hold at idle when no RPM sensor is available. Slewed smoothly, same as RPM mode, but does not correct for load or RPM &mdash; just outputs this value while <i>IDLE UP</i> is engaged and below the handover throttle."
+    "motorsGovernorThrottleHelp": {
+        "message": "Fixed throttle percentage to hold at idle when no RPM sensor is available. Slewed smoothly, same as RPM mode, but does not correct for load or RPM &mdash; just outputs this value while <i>GOVERNOR</i> is engaged and below the handover throttle."
     },
-    "motorsIdleGovernorHandover": {
+    "motorsGovernorHandover": {
         "message": "Handover Throttle"
     },
-    "motorsIdleGovernorHandoverHelp": {
-        "message": "Throttle stick position, as a percentage, below which the idle governor takes over. Above this point the pilot has normal direct throttle control."
+    "motorsGovernorHandoverHelp": {
+        "message": "Throttle stick position, as a percentage, below which the governor takes over. Above this point the pilot has normal direct throttle control. Not used in RPM Range mode, which spans the entire stick."
     },
-    "motorsIdleGovernorCeiling": {
+    "motorsGovernorCeiling": {
         "message": "Throttle Ceiling"
     },
-    "motorsIdleGovernorCeilingHelp": {
-        "message": "Safety limit on the maximum throttle percentage the idle governor is allowed to command, regardless of RPM error."
+    "motorsGovernorCeilingHelp": {
+        "message": "Safety limit on the maximum throttle percentage the governor is allowed to command, regardless of RPM error."
     },
     "motorsThrottleEndpoints": {
         "message": "Throttle Range"

@@ -463,14 +463,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP2_WING_IDLE_GOVERNOR_CONFIG: {
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_mode = data.readU8();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_rpm = data.readU16();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_gain = data.readU16();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_i_gain = data.readU16();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_throttle = data.readU8();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_handover = data.readU8();
-                FC.IDLE_GOVERNOR_CONFIG.idle_governor_ceiling = data.readU8();
+            case MSPCodes.MSP2_WING_GOVERNOR_CONFIG: {
+                FC.GOVERNOR_CONFIG.governor_mode = data.readU8();
+                FC.GOVERNOR_CONFIG.governor_rpm = data.readU16();
+                FC.GOVERNOR_CONFIG.governor_gain = data.readU16();
+                FC.GOVERNOR_CONFIG.governor_i_gain = data.readU16();
+                FC.GOVERNOR_CONFIG.governor_throttle = data.readU8();
+                FC.GOVERNOR_CONFIG.governor_handover = data.readU8();
+                FC.GOVERNOR_CONFIG.governor_ceiling = data.readU8();
+                FC.GOVERNOR_CONFIG.governor_rpm_min = data.readU16();
+                FC.GOVERNOR_CONFIG.governor_rpm_max = data.readU16();
                 break;
             }
 
@@ -613,8 +615,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Motor Configuration saved');
                 break;
             }
-            case MSPCodes.MSP2_WING_SET_IDLE_GOVERNOR_CONFIG: {
-                console.log('Idle Governor Configuration saved');
+            case MSPCodes.MSP2_WING_SET_GOVERNOR_CONFIG: {
+                console.log('Governor Configuration saved');
                 break;
             }
             case MSPCodes.MSP_SET_GPS_CONFIG: {
@@ -1901,14 +1903,16 @@ MspHelper.prototype.crunch = function(code) {
             break;
         }
 
-        case MSPCodes.MSP2_WING_SET_IDLE_GOVERNOR_CONFIG: {
-            buffer.push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_mode)
-                .push16(FC.IDLE_GOVERNOR_CONFIG.idle_governor_rpm)
-                .push16(FC.IDLE_GOVERNOR_CONFIG.idle_governor_gain)
-                .push16(FC.IDLE_GOVERNOR_CONFIG.idle_governor_i_gain)
-                .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_throttle)
-                .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_handover)
-                .push8(FC.IDLE_GOVERNOR_CONFIG.idle_governor_ceiling);
+        case MSPCodes.MSP2_WING_SET_GOVERNOR_CONFIG: {
+            buffer.push8(FC.GOVERNOR_CONFIG.governor_mode)
+                .push16(FC.GOVERNOR_CONFIG.governor_rpm)
+                .push16(FC.GOVERNOR_CONFIG.governor_gain)
+                .push16(FC.GOVERNOR_CONFIG.governor_i_gain)
+                .push8(FC.GOVERNOR_CONFIG.governor_throttle)
+                .push8(FC.GOVERNOR_CONFIG.governor_handover)
+                .push8(FC.GOVERNOR_CONFIG.governor_ceiling)
+                .push16(FC.GOVERNOR_CONFIG.governor_rpm_min)
+                .push16(FC.GOVERNOR_CONFIG.governor_rpm_max);
             break;
         }
 
