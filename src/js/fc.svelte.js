@@ -1,4 +1,5 @@
 import { Features } from "./features.svelte.js";
+import { WiggleFlags } from "./wiggle.svelte.js";
 
 class FlightController {
   ADJUSTMENT_RANGES = $state();
@@ -372,6 +373,7 @@ class FlightController {
     this.ARMING_CONFIG = {
       auto_disarm_delay:          0,
       disarm_kill_switch:         0,
+      wiggle:                     new WiggleFlags(),
     };
 
     this.MOTOR_CONFIG = {

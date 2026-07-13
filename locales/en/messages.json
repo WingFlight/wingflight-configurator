@@ -7151,6 +7151,12 @@
     "configurationMagHardwareHelp": {
         "message": "Enables the Magnetometer (if available). Compass direction is currently not used in Flight Control. It is informative only, available via the Telemetry."
     },
+    "configurationWiggleReady": {
+        "message": "Ready-to-arm surface wiggle"
+    },
+    "configurationWiggleReadyHelp": {
+        "message": "Moves the control surfaces briefly once the aircraft becomes ready to arm (normally right after gyro calibration finishes), as a visual confirmation. Disable if this is not wanted."
+    },
     "configurationPersonalization": {
         "message": "Personalization"
     },

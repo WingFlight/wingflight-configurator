@@ -438,6 +438,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_ARMING_CONFIG: {
                 FC.ARMING_CONFIG.auto_disarm_delay = data.readU8();
+                FC.ARMING_CONFIG.wiggle.bitfield = data.readU32();
                 break;
             }
 
@@ -1876,6 +1877,7 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_ARMING_CONFIG: {
             buffer.push8(FC.ARMING_CONFIG.auto_disarm_delay);
+            buffer.push32(FC.ARMING_CONFIG.wiggle.bitfield);
             break;
         }
 

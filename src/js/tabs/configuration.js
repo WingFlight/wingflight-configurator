@@ -307,6 +307,7 @@ tab.initialize = function (callback) {
         await MSP.promise(MSPCodes.MSP_ADVANCED_CONFIG);
         await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
         await MSP.promise(MSPCodes.MSP_SENSOR_CONFIG);
+        await MSP.promise(MSPCodes.MSP_ARMING_CONFIG);
         await MSP.promise(MSPCodes.MSP_SENSOR_ALIGNMENT);
         await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
         await MSP.promise(MSPCodes.MSP_ACC_TRIM);
@@ -329,6 +330,7 @@ tab.initialize = function (callback) {
         await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
         await save(MSPCodes.MSP_SET_ADVANCED_CONFIG);
         await save(MSPCodes.MSP_SET_SENSOR_CONFIG);
+        await save(MSPCodes.MSP_SET_ARMING_CONFIG);
         await save(MSPCodes.MSP_SET_SENSOR_ALIGNMENT);
         await save(MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG);
         await save(MSPCodes.MSP_SET_ACC_TRIM);
@@ -676,6 +678,7 @@ tab.initialize = function (callback) {
         $('input[id="accHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.acc_hardware !== 1);
         $('input[id="baroHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.baro_hardware !== 1);
         $('input[id="magHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.mag_hardware !== 1);
+        $('input[id="wiggleReadySwitch"]').prop('checked', FC.ARMING_CONFIG.wiggle.READY);
 
         // fill board alignment
         $('input[name="board_align_roll"]').val(FC.BOARD_ALIGNMENT_CONFIG.roll);
@@ -974,6 +977,7 @@ tab.initialize = function (callback) {
             FC.SENSOR_CONFIG.acc_hardware = $('input[id="accHardwareSwitch"]').is(':checked') ? 0 : 1;
             FC.SENSOR_CONFIG.baro_hardware = $('input[id="baroHardwareSwitch"]').is(':checked') ? 0 : 1;
             FC.SENSOR_CONFIG.mag_hardware = $('input[id="magHardwareSwitch"]').is(':checked') ? 0 : 1;
+            FC.ARMING_CONFIG.wiggle.READY = $('input[id="wiggleReadySwitch"]').is(':checked');
 
             FC.BOARD_ALIGNMENT_CONFIG.roll = parseInt($('input[name="board_align_roll"]').val());
             FC.BOARD_ALIGNMENT_CONFIG.pitch = parseInt($('input[name="board_align_pitch"]').val());
