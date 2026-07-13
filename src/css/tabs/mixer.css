@@ -44,6 +44,7 @@
 }
 
 .tab-mixer .mixerRulesBox,
+.tab-mixer .mixerOverrideBox,
 .tab-mixer .mixerAxisGainBox {
     /* .gui_box is "display: table" (shrink-to-fit) by default, which leaves
        width:100% on the table below with no definite width to resolve
@@ -162,6 +163,83 @@
     align-items: center;
     gap: 10px;
     margin-top: 4px;
+}
+
+.tab-mixer .mixerEnableOverride {
+    float: left;
+    width: 100%;
+    margin: 0;
+    padding: 1px;
+    table-layout: auto;
+    border: 0;
+    border-collapse: collapse;
+}
+
+.tab-mixer .mixerEnableOverride tr td {
+    padding: 5px 10px 5px 10px;
+}
+
+.tab-mixer .mixerEnableOverride tr td:nth-child(1) {
+    width: 50px;
+}
+
+.tab-mixer .mixerEnableOverride tr td:nth-child(2) {
+    width: 220px;
+}
+
+.tab-mixer .mixerOverrideRows {
+    clear: both;
+    width: 100%;
+}
+
+.tab-mixer .mixerOverrideTable {
+    width: 100%;
+    border: 0;
+    border-collapse: collapse;
+    margin-top: 2px;
+}
+
+.tab-mixer .mixerOverrideTable .trhead {
+    color: var(--quietText);
+    background-color: var(--button-background);
+    text-align: center;
+    font-size: 11px;
+    line-height: 16px;
+    height: 22px;
+    border-top: 1px solid var(--boxBackground);
+}
+
+.tab-mixer .mixerOverrideTable td {
+    padding: 6px 10px 7px 10px;
+    border: 1px solid var(--subtleAccent);
+}
+
+.tab-mixer .mixerOverrideTable td:nth-child(1) {
+    width: 90px;
+    font-weight: bold;
+    text-align: left;
+    border-left: 0;
+}
+
+.tab-mixer .mixerOverrideTable td:nth-child(2) {
+    width: 65px;
+    text-align: center;
+}
+
+.tab-mixer .mixerOverrideTable td:nth-child(3) {
+    width: 80px;
+    text-align: left;
+}
+
+.tab-mixer .mixerOverrideTable td:nth-child(4) {
+    height: 75px;
+    padding: 2px 20px 2px 20px;
+    text-align: left;
+    border-right: 0;
+}
+
+.tab-mixer .mixerOverrideTable tr:last-child td {
+    border-bottom: 0;
 }
 
 .tab-mixer .mixerAxisGainTable {

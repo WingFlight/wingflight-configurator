@@ -1,3 +1,6 @@
+import * as noUiSlider from 'nouislider';
+import wNumb from 'wnumb';
+
 import { MixerCurve } from '@/js/MixerCurve.js';
 import { LogicCondition } from '@/js/LogicCondition.js';
 import MixerWizardDialog from '@/js/MixerWizardDialog.js';
@@ -61,6 +64,29 @@ function percentToRate(percent, invert) {
     return invert ? -magnitude : magnitude;
 }
 
+// Same three stabilized axes as AXIS_GAIN_INPUTS -- these are the only
+// mixer inputs that drive control surfaces, so they're the only ones
+// exposed for override.
+const OVERRIDE_AXES = [
+    { index: 1, className: 'overrideRoll' },
+    { index: 2, className: 'overridePitch' },
+    { index: 3, className: 'overrideYaw' },
+];
+
+const OVERRIDE_PERCENT_MIN = -100;
+const OVERRIDE_PERCENT_MAX = 100;
+
+// FC.MIXER_OVERRIDE shares the mixer input's own raw scale (1000 = 100%,
+// see mixerSetInput() dividing by 1000.0f in flight/mixer.c) -- the same
+// x10 convention rateToPercent/percentToRate already use for axis gain.
+function overridePercentToRaw(percent) {
+    return clampInt(percent, OVERRIDE_PERCENT_MIN, OVERRIDE_PERCENT_MAX) * 10;
+}
+
+function overrideRawToPercent(raw) {
+    return Math.round(raw / 10);
+}
+
 const tab = {
     tabName: 'mixer',
     isDirty: false,
@@ -96,6 +122,7 @@ tab.initialize = function (callback) {
             .then(() => MSP.promise(MSPCodes.MSP_MIXER_CONFIG))
             .then(() => MSP.promise(MSPCodes.MSP_MIXER_INPUTS))
             .then(() => MSP.promise(MSPCodes.MSP_MIXER_RULES))
+            .then(() => MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE))
             .then(callback);
     }
 
@@ -375,6 +402,101 @@ tab.initialize = function (callback) {
         });
     }
 
+    // Forces a fixed value into a stabilized axis's mixer input, while the
+    // aircraft is disarmed (the FC ignores MIXER_OVERRIDE while armed, see
+    // mixerSetInput() in flight/mixer.c). Meant to be paired with the Axis
+    // Gain box above: enable an axis, command a known %, measure the
+    // resulting surface throw, then adjust that axis's gain to match.
+    function renderOverride() {
+        const table = $('.mixerOverrideTable tbody');
+        table.empty();
+
+        let anyEnabled = false;
+
+        OVERRIDE_AXES.forEach(function (axis) {
+            const row = $('#tab-mixer-templates .mixerOverrideTemplate tr').clone();
+            row.addClass(axis.className);
+
+            const enable = row.find('.mixerOverrideEnable input');
+            const valueInput = row.find('.mixerOverrideInput input');
+            const sliderEl = row.find('.mixerOverrideSlider').get(0);
+
+            row.find('.mixerOverrideAxisName').text(i18n.getMessage(Mixer.inputNames[axis.index]));
+
+            const slider = noUiSlider.create(sliderEl, {
+                range: { min: OVERRIDE_PERCENT_MIN, max: OVERRIDE_PERCENT_MAX },
+                start: 0,
+                step: 1,
+                behaviour: 'snap-drag',
+                pips: {
+                    mode: 'values',
+                    values: [-100, -50, 0, 50, 100],
+                    density: 100 / ((OVERRIDE_PERCENT_MAX - OVERRIDE_PERCENT_MIN) / 25),
+                    stepped: true,
+                    format: wNumb({ decimals: 0 }),
+                },
+            });
+
+            function toggleSlider(enabled) {
+                if (enabled) slider.enable();
+                else slider.disable();
+            }
+
+            slider.on('slide', function (values) {
+                valueInput.val(parseInt(values[0], 10));
+            });
+
+            slider.on('change', function () {
+                valueInput.trigger('change');
+            });
+
+            function commit() {
+                const enabled = enable.is(':checked');
+                const percent = clampInt(valueInput.val(), OVERRIDE_PERCENT_MIN, OVERRIDE_PERCENT_MAX);
+
+                FC.MIXER_OVERRIDE[axis.index] = enabled ? overridePercentToRaw(percent) : Mixer.OVERRIDE_OFF;
+                mspHelper.sendMixerOverride(axis.index);
+            }
+
+            valueInput.on('change', function () {
+                const value = clampInt($(this).val(), OVERRIDE_PERCENT_MIN, OVERRIDE_PERCENT_MAX);
+                valueInput.val(value);
+                slider.set(value, true, true);
+                commit();
+            });
+
+            enable.on('change', function () {
+                const enabled = enable.is(':checked');
+                valueInput.val(0).prop('disabled', !enabled);
+                slider.set(0);
+                toggleSlider(enabled);
+                commit();
+            });
+
+            const rawValue = FC.MIXER_OVERRIDE[axis.index];
+            const enabled = Mixer.overrideEnabled(rawValue);
+            const percent = enabled ? overrideRawToPercent(rawValue) : 0;
+            anyEnabled = anyEnabled || enabled;
+
+            enable.prop('checked', enabled);
+            valueInput.val(percent).prop('disabled', !enabled);
+            slider.set(percent);
+            toggleSlider(enabled);
+
+            table.append(row);
+        });
+
+        const masterSwitch = $('#mixerOverrideEnableSwitch');
+        masterSwitch.prop('checked', anyEnabled);
+        $('.mixerOverrideRows').toggle(anyEnabled);
+
+        masterSwitch.off('change').on('change', function () {
+            const checked = masterSwitch.is(':checked');
+            $('.mixerOverrideRows').toggle(checked);
+            $('.mixerOverrideTable .mixerOverrideEnable input').prop('checked', checked).change();
+        });
+    }
+
     // Dims any rule row whose assigned condition is currently false, so it's
     // obvious at a glance which rules are actually contributing right now
     // versus just configured but gated off.
@@ -399,6 +521,7 @@ tab.initialize = function (callback) {
         // UI Hooks
         data_to_form();
         renderMixerRuleTable();
+        renderOverride();
         renderAxisGain();
 
         self.mixerWizardDialog = new MixerWizardDialog($('#mixerWizardDialog'), applyWizardRules);

@@ -3133,11 +3133,32 @@
     "mixerOutputMotor4": {
         "message": "Motor #4"
     },
+    "mixerOverrideTitle": {
+        "message": "Control Surface Override"
+    },
+    "mixerOverrideHelp": {
+        "message": "Forces a fixed value into a stabilized axis (Roll/Pitch/Yaw) so you can measure the resulting control surface throw without touching the sticks. Only takes effect while disarmed. Use it together with Axis Gain below: enable an axis, command a known % (e.g. 100%), measure the surface with a protractor, then adjust that axis's gain until the measured angle matches what you want."
+    },
+    "mixerEnableOverrideLabel": {
+        "message": "<strong>Enable control surface override</strong>"
+    },
+    "mixerEnableOverrideText": {
+        "message": " <i>Control surface override</i> forces stabilized axes to a fixed value for setup purposes. Only active while disarmed -- override values are not saved, and will be reset after a reboot."
+    },
+    "mixerOverrideAxis": {
+        "message": "Axis"
+    },
+    "mixerOverrideEnable": {
+        "message": "Enable"
+    },
+    "mixerOverrideValue": {
+        "message": "Value (%)"
+    },
     "mixerAxisGainTitle": {
         "message": "Axis Gain"
     },
     "mixerAxisGainHelp": {
-        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is unity gain."
+        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is unity gain. Pair this with Control Surface Override below to calibrate a target throw: enable the override, command a known %, measure the surface, and adjust this gain until the measured angle matches what you want."
     },
     "mixerAxisGainRoll": {
         "message": "Roll"

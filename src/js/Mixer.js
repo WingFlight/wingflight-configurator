@@ -96,6 +96,18 @@ export const Mixer = {
     OFFSET_MIN: -2500,
     OFFSET_MAX:  2500,
 
+    // Matches firmware's MIXER_OVERRIDE_MIN/MAX/OFF (flight/mixer.h). Values
+    // in range are a forced mixer input (raw units, /1000 on the wire);
+    // OFF restores normal RC/mixing control of that input.
+    OVERRIDE_MIN: -2500,
+    OVERRIDE_MAX:  2500,
+    OVERRIDE_OFF:  2501,
+
+    overrideEnabled: function (value)
+    {
+        return value >= Mixer.OVERRIDE_MIN && value <= Mixer.OVERRIDE_MAX;
+    },
+
     //// Functions
 
     nullRule: function ()
