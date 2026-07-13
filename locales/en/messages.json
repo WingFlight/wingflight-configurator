@@ -2824,6 +2824,12 @@
     "servoConfiguration": {
         "message": "Servo Configuration"
     },
+    "servoConfigurationPwm": {
+        "message": "PWM Servo Configuration"
+    },
+    "servoConfigurationBus": {
+        "message": "Bus Servo Configuration"
+    },
     "servoNumber": {
         "message": "Servo"
     },
@@ -2907,6 +2913,12 @@
     },
     "servoOverride": {
         "message": "Servo Override"
+    },
+    "servoOverridePwm": {
+        "message": "PWM Servo Override"
+    },
+    "servoOverrideBus": {
+        "message": "Bus Servo Override"
     },
     "servoOverrideHelp": {
         "message": "Select the servo to be controlled and then move the slider to move the servo arm to the commanded angle."
