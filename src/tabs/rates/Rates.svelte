@@ -84,7 +84,7 @@
   };
 
   let loading = $state(true);
-  let initialState;
+  let initialState = $state(null);
   let mountedRateProfile;
   let statusPollerInterval;
   let rcCommandPollerInterval;
