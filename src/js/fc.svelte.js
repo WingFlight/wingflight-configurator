@@ -22,6 +22,8 @@ class FlightController {
   DEFAULT = $state();
   ESC_SENSOR_CONFIG = $state();
   FAILSAFE_CONFIG = $state();
+  FC_LINK_STATUS = $state();
+  FC_LINK_SYNC_CONFIG = $state();
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
@@ -627,6 +629,27 @@ class FlightController {
       failsafe_switch_mode:           0,
       failsafe_throttle_low_delay:    0,
       failsafe_procedure:             0,
+    };
+
+    this.FC_LINK_STATUS = {
+      enabled:                   false,
+      role:                      0,
+      peerLost:                  true,
+      peerArmed:                 false,
+      peerFailsafeActive:        false,
+      peerRxReceivingSignal:     false,
+      peerSeq:                   0,
+      txHeartbeatSent:           0,
+      rxByteTotal:               0,
+      heartbeatOk:               0,
+      heartbeatChecksumFail:     0,
+    };
+
+    this.FC_LINK_SYNC_CONFIG = {
+      syncMixerServos:           true,
+      syncPidRates:              true,
+      syncRx:                    true,
+      syncOther:                 true,
     };
 
     this.TELEMETRY_CONFIG = {

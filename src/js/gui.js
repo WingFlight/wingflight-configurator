@@ -41,6 +41,7 @@ export const GuiControl = function () {
         'gps',
         'led_strip',
         'blackbox',
+        'fc_link',
         'modes',
         'motors',
         'esc_programming',

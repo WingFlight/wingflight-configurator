@@ -546,6 +546,75 @@
     "tabBlackbox": {
         "message": "Blackbox"
     },
+    "tabFcLink": {
+        "message": "FC Link"
+    },
+    "fcLinkSectionStatus": {
+        "message": "Link Status"
+    },
+    "fcLinkNotEnabled": {
+        "message": "FC Link is not configured on this board."
+    },
+    "fcLinkRole": {
+        "message": "Role"
+    },
+    "fcLinkRoleMaster": {
+        "message": "Master"
+    },
+    "fcLinkRoleSlave": {
+        "message": "Slave"
+    },
+    "fcLinkPeerStatus": {
+        "message": "Peer"
+    },
+    "fcLinkPeerConnected": {
+        "message": "Connected"
+    },
+    "fcLinkPeerLost": {
+        "message": "Lost"
+    },
+    "fcLinkPeerArmed": {
+        "message": "Peer Armed"
+    },
+    "fcLinkPeerFailsafe": {
+        "message": "Peer Failsafe"
+    },
+    "fcLinkPeerRxSignal": {
+        "message": "Peer RX Signal"
+    },
+    "fcLinkHeartbeatSent": {
+        "message": "Heartbeats Sent"
+    },
+    "fcLinkBytesReceived": {
+        "message": "Bytes Received"
+    },
+    "fcLinkHeartbeatOk": {
+        "message": "Heartbeats OK"
+    },
+    "fcLinkHeartbeatChecksumFail": {
+        "message": "Checksum Failures"
+    },
+    "fcLinkSectionSync": {
+        "message": "Base Config Sync"
+    },
+    "fcLinkSectionSyncHelp": {
+        "message": "Choose which categories of base configuration this SLAVE will accept when syncing from the MASTER. Live PID/rate tuning is always mirrored regardless of these settings — this only affects the one-shot base config sync."
+    },
+    "fcLinkSyncMasterOnly": {
+        "message": "Sync categories are configured on the SLAVE board."
+    },
+    "fcLinkSyncMixerServos": {
+        "message": "Mixer / Servos"
+    },
+    "fcLinkSyncPidRates": {
+        "message": "PID / Rates"
+    },
+    "fcLinkSyncRx": {
+        "message": "Receiver"
+    },
+    "fcLinkSyncOther": {
+        "message": "Other"
+    },
     "tabAdjustments": {
         "message": "Adjustments"
     },
