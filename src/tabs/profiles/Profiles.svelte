@@ -18,7 +18,7 @@
   import profilesState from "./state.svelte.js";
 
   let loading = $state(true);
-  let initialState;
+  let initialState = $state(null);
   let mountedProfile;
   let pollerInterval;
 
