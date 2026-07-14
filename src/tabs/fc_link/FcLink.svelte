@@ -197,6 +197,66 @@
               bind:checked={FC.FC_LINK_SYNC_CONFIG.syncRx}
             />
           </Field>
+          <Field id="fc-link-sync-motor">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncMotor")}
+              <HelpIcon>{$i18n.t("fcLinkSyncMotorHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-motor"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncMotor}
+            />
+          </Field>
+          <Field id="fc-link-sync-telemetry">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncTelemetry")}
+              <HelpIcon>{$i18n.t("fcLinkSyncTelemetryHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-telemetry"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncTelemetry}
+            />
+          </Field>
+          <Field id="fc-link-sync-modes-adjustments">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncModesAdjustments")}
+              <HelpIcon>{$i18n.t("fcLinkSyncModesAdjustmentsHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-modes-adjustments"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncModesAdjustments}
+            />
+          </Field>
+          <Field id="fc-link-sync-gps">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncGps")}
+              <HelpIcon>{$i18n.t("fcLinkSyncGpsHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-gps"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncGps}
+            />
+          </Field>
+          <Field id="fc-link-sync-osd">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncOsd")}
+              <HelpIcon>{$i18n.t("fcLinkSyncOsdHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-osd"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncOsd}
+            />
+          </Field>
+          <Field id="fc-link-sync-vtx">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncVtx")}
+              <HelpIcon>{$i18n.t("fcLinkSyncVtxHelp")}</HelpIcon>
+            {/snippet}
+            <Switch
+              id="fc-link-sync-vtx"
+              bind:checked={FC.FC_LINK_SYNC_CONFIG.syncVtx}
+            />
+          </Field>
           <Field id="fc-link-sync-other">
             {#snippet label()}
               {$i18n.t("fcLinkSyncOther")}

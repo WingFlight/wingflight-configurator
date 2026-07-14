@@ -497,6 +497,12 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.FC_LINK_SYNC_CONFIG.syncMixerServos = !!data.readU8();
                 FC.FC_LINK_SYNC_CONFIG.syncPidRates = !!data.readU8();
                 FC.FC_LINK_SYNC_CONFIG.syncRx = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncMotor = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncTelemetry = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncModesAdjustments = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncGps = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncOsd = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncVtx = !!data.readU8();
                 FC.FC_LINK_SYNC_CONFIG.syncOther = !!data.readU8();
                 break;
             }
@@ -1949,6 +1955,12 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push8(FC.FC_LINK_SYNC_CONFIG.syncMixerServos ? 1 : 0)
                 .push8(FC.FC_LINK_SYNC_CONFIG.syncPidRates ? 1 : 0)
                 .push8(FC.FC_LINK_SYNC_CONFIG.syncRx ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncMotor ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncTelemetry ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncModesAdjustments ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncGps ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncOsd ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncVtx ? 1 : 0)
                 .push8(FC.FC_LINK_SYNC_CONFIG.syncOther ? 1 : 0);
             break;
         }

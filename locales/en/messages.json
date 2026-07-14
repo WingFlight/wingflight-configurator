@@ -624,14 +624,50 @@
     "fcLinkSyncRxHelp": {
         "message": "Receiver channel mapping and protocol, stick deadband/smoothing, and failsafe behaviour."
     },
+    "fcLinkSyncMotor": {
+        "message": "Motor"
+    },
+    "fcLinkSyncMotorHelp": {
+        "message": "Throttle range, RPM filtering/gear ratios, and pole count. Motor pin assignment and ESC protocol (DSHOT/PWM) are per-board wiring and are never synced, even with this on."
+    },
+    "fcLinkSyncTelemetry": {
+        "message": "Telemetry"
+    },
+    "fcLinkSyncTelemetryHelp": {
+        "message": "Telemetry sensor/rate settings, and the tuning fields of the SBUS-out/F.Bus-master redundancy-bus outputs (frame rate, telemetry rate, sensor forwarding). Port wiring flags (inverted, pin swap, half-duplex) on all of these are per-board and are never synced, even with this on."
+    },
+    "fcLinkSyncModesAdjustments": {
+        "message": "Modes / Adjustments"
+    },
+    "fcLinkSyncModesAdjustmentsHelp": {
+        "message": "Flight mode (box) activation ranges, adjustment ranges, and logic conditions."
+    },
+    "fcLinkSyncGps": {
+        "message": "GPS"
+    },
+    "fcLinkSyncGpsHelp": {
+        "message": "GPS provider/config, GPS rescue, and home-position settings."
+    },
+    "fcLinkSyncOsd": {
+        "message": "OSD"
+    },
+    "fcLinkSyncOsdHelp": {
+        "message": "OSD layout/elements, display-port offsets, and video standard (PAL/NTSC)."
+    },
+    "fcLinkSyncVtx": {
+        "message": "VTX"
+    },
+    "fcLinkSyncVtxHelp": {
+        "message": "VTX band/channel/power table and settings."
+    },
     "fcLinkSyncOther": {
         "message": "Other"
     },
     "fcLinkSyncOtherHelp": {
-        "message": "Everything else considered safe to share: blackbox, beeper, OSD, telemetry, GPS, VTX, arming, modes and adjustment ranges, and more."
+        "message": "Everything else considered safe to share: blackbox, beeper, arming, battery, pilot name, rangefinder, RC device, scheduler, time, and LED strip colour/mode assignments."
     },
     "fcLinkSyncNeverSyncedNote": {
-        "message": "Regardless of the categories above, some settings are <b>never</b> copied from the MASTER, because they describe this specific board rather than shared tuning: pin/wiring assignments (which pin drives which motor, servo, or receiver), per-unit sensor calibration (accelerometer, compass, current/voltage sensors), board and gyro mounting alignment, and this board's own FC Link port settings (pinswap, inverted, rate, timeout)."
+        "message": "Regardless of the categories above, some settings are <b>never</b> copied from the MASTER, because they describe this specific board rather than shared tuning: pin/wiring assignments (which pin drives which motor, servo, or receiver), port wiring flags (inverted/pin-swap/half-duplex on FC Link, SBUS-out, F.Bus-master, S.Port-master, and telemetry), per-unit sensor calibration (accelerometer, compass, current/voltage sensors), and board and gyro mounting alignment."
     },
     "fcLinkSyncNow": {
         "message": "Sync and Reboot"

@@ -649,6 +649,12 @@ class FlightController {
       syncMixerServos:           true,
       syncPidRates:              true,
       syncRx:                    true,
+      syncMotor:                 true,
+      syncTelemetry:             true,
+      syncModesAdjustments:      true,
+      syncGps:                   true,
+      syncOsd:                   true,
+      syncVtx:                   true,
       syncOther:                 true,
     };
 
