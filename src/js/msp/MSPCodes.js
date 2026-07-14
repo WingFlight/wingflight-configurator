@@ -215,6 +215,7 @@ export const MSPCodes = {
     MSP2_WING_FC_LINK_STATUS:           0x5F03,
     MSP2_WING_FC_LINK_SYNC_CONFIG:      0x5F04,
     MSP2_WING_SET_FC_LINK_SYNC_CONFIG:  0x5F05,
+    MSP2_WING_TRIGGER_FC_LINK_SYNC:     0x5F06,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

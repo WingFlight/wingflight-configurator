@@ -552,6 +552,9 @@
     "fcLinkSectionStatus": {
         "message": "Link Status"
     },
+    "fcLinkSectionStats": {
+        "message": "Link Statistics"
+    },
     "fcLinkNotEnabled": {
         "message": "FC Link is not configured on this board."
     },
@@ -598,7 +601,7 @@
         "message": "Base Config Sync"
     },
     "fcLinkSectionSyncHelp": {
-        "message": "Choose which categories of base configuration this SLAVE will accept when syncing from the MASTER. Live PID/rate tuning is always mirrored regardless of these settings — this only affects the one-shot base config sync."
+        "message": "Choose which categories of base configuration this SLAVE will accept when syncing from the MASTER. Live PID/rate tuning is always mirrored continuously regardless of these settings — this only affects the one-shot base config sync, which runs automatically whenever MASTER's saved config changes in a category enabled below, or on demand via <code>fc_link sync</code>."
     },
     "fcLinkSyncMasterOnly": {
         "message": "Sync categories are configured on the SLAVE board."
@@ -606,14 +609,38 @@
     "fcLinkSyncMixerServos": {
         "message": "Mixer / Servos"
     },
+    "fcLinkSyncMixerServosHelp": {
+        "message": "Mixer rules, curves and inputs, logic conditions, servo endpoints/rate/speed, and rotor governor settings."
+    },
     "fcLinkSyncPidRates": {
         "message": "PID / Rates"
+    },
+    "fcLinkSyncPidRatesHelp": {
+        "message": "PID profiles, rate profiles, stick-gain curves, and gyro/RPM/dynamic-notch filtering. Note: the currently active PID/rate profile is already mirrored live regardless of this setting — this only affects the full saved profile set."
     },
     "fcLinkSyncRx": {
         "message": "Receiver"
     },
+    "fcLinkSyncRxHelp": {
+        "message": "Receiver channel mapping and protocol, stick deadband/smoothing, and failsafe behaviour."
+    },
     "fcLinkSyncOther": {
         "message": "Other"
+    },
+    "fcLinkSyncOtherHelp": {
+        "message": "Everything else considered safe to share: blackbox, beeper, OSD, telemetry, GPS, VTX, arming, modes and adjustment ranges, and more."
+    },
+    "fcLinkSyncNeverSyncedNote": {
+        "message": "Regardless of the categories above, some settings are <b>never</b> copied from the MASTER, because they describe this specific board rather than shared tuning: pin/wiring assignments (which pin drives which motor, servo, or receiver), per-unit sensor calibration (accelerometer, compass, current/voltage sensors), board and gyro mounting alignment, and this board's own FC Link port settings (pinswap, inverted, rate, timeout)."
+    },
+    "fcLinkSyncNow": {
+        "message": "Sync and Reboot"
+    },
+    "fcLinkSyncTriggered": {
+        "message": "FC Link config sync requested from MASTER."
+    },
+    "fcLinkSyncTriggerRefused": {
+        "message": "FC Link sync refused — not a SLAVE, link down, or peer firmware/EEPROM version mismatch."
     },
     "tabAdjustments": {
         "message": "Adjustments"

@@ -8,8 +8,11 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
   import Field from "@/components/Field.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
+  import InfoNote from "@/components/notes/InfoNote.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
 
   const ROLE_MASTER = 0;
@@ -17,6 +20,7 @@
   let loading = $state(true);
   let initialState;
   let pollerInterval;
+  let triggeringSync = $state(false);
 
   let isSlave = $derived(FC.FC_LINK_STATUS.role !== ROLE_MASTER);
 
@@ -53,6 +57,21 @@
 
   function onClickHelp() {
     window.open(getTabHelpURL("tabFcLink"), "_system");
+  }
+
+  async function onTriggerSync() {
+    triggeringSync = true;
+    try {
+      const { data } = await MSP.promise(
+        MSPCodes.MSP2_WING_TRIGGER_FC_LINK_SYNC,
+      );
+      const accepted = !!data.readU8();
+      GUI.log(
+        $i18n.t(accepted ? "fcLinkSyncTriggered" : "fcLinkSyncTriggerRefused"),
+      );
+    } finally {
+      triggeringSync = false;
+    }
   }
 
   export async function onSave() {
@@ -101,89 +120,107 @@
   {:else}
     <div class="content">
       <Section label="fcLinkSectionStatus">
-        <div class="fields">
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkRole")}</span>
-            <span>
-              {isSlave
-                ? $i18n.t("fcLinkRoleSlave")
-                : $i18n.t("fcLinkRoleMaster")}
-            </span>
-          </div>
+        <Field id="fc-link-role" label="fcLinkRole">
+          <span>
+            {isSlave ? $i18n.t("fcLinkRoleSlave") : $i18n.t("fcLinkRoleMaster")}
+          </span>
+        </Field>
 
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkPeerStatus")}</span>
-            <span class="pill" class:active={!FC.FC_LINK_STATUS.peerLost}>
-              {FC.FC_LINK_STATUS.peerLost
-                ? $i18n.t("fcLinkPeerLost")
-                : $i18n.t("fcLinkPeerConnected")}
-            </span>
-          </div>
+        <Field id="fc-link-peer-status" label="fcLinkPeerStatus">
+          <span class="pill" class:active={!FC.FC_LINK_STATUS.peerLost}>
+            {FC.FC_LINK_STATUS.peerLost
+              ? $i18n.t("fcLinkPeerLost")
+              : $i18n.t("fcLinkPeerConnected")}
+          </span>
+        </Field>
 
-          {#if !FC.FC_LINK_STATUS.peerLost}
-            <div class="field">
-              <span class="label">{$i18n.t("fcLinkPeerArmed")}</span>
-              <span>{FC.FC_LINK_STATUS.peerArmed ? "Yes" : "No"}</span>
-            </div>
-            <div class="field">
-              <span class="label">{$i18n.t("fcLinkPeerFailsafe")}</span>
-              <span>{FC.FC_LINK_STATUS.peerFailsafeActive ? "Yes" : "No"}</span>
-            </div>
-            <div class="field">
-              <span class="label">{$i18n.t("fcLinkPeerRxSignal")}</span>
-              <span
-                >{FC.FC_LINK_STATUS.peerRxReceivingSignal ? "Yes" : "No"}</span
-              >
-            </div>
-          {/if}
+        {#if !FC.FC_LINK_STATUS.peerLost}
+          <Field id="fc-link-peer-armed" label="fcLinkPeerArmed">
+            <span>{FC.FC_LINK_STATUS.peerArmed ? "Yes" : "No"}</span>
+          </Field>
+          <Field id="fc-link-peer-failsafe" label="fcLinkPeerFailsafe">
+            <span>{FC.FC_LINK_STATUS.peerFailsafeActive ? "Yes" : "No"}</span>
+          </Field>
+          <Field id="fc-link-peer-rx" label="fcLinkPeerRxSignal">
+            <span>{FC.FC_LINK_STATUS.peerRxReceivingSignal ? "Yes" : "No"}</span
+            >
+          </Field>
+        {/if}
 
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkHeartbeatSent")}</span>
+        <SubSection label="fcLinkSectionStats">
+          <Field id="fc-link-heartbeats-sent" label="fcLinkHeartbeatSent">
             <span>{FC.FC_LINK_STATUS.txHeartbeatSent}</span>
-          </div>
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkBytesReceived")}</span>
+          </Field>
+          <Field id="fc-link-bytes-received" label="fcLinkBytesReceived">
             <span>{FC.FC_LINK_STATUS.rxByteTotal}</span>
-          </div>
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkHeartbeatOk")}</span>
+          </Field>
+          <Field id="fc-link-heartbeats-ok" label="fcLinkHeartbeatOk">
             <span>{FC.FC_LINK_STATUS.heartbeatOk}</span>
-          </div>
-          <div class="field">
-            <span class="label">{$i18n.t("fcLinkHeartbeatChecksumFail")}</span>
+          </Field>
+          <Field id="fc-link-checksum-fail" label="fcLinkHeartbeatChecksumFail">
             <span>{FC.FC_LINK_STATUS.heartbeatChecksumFail}</span>
-          </div>
-        </div>
+          </Field>
+        </SubSection>
       </Section>
 
       <Section label="fcLinkSectionSync" summary="fcLinkSectionSyncHelp">
         {#if !isSlave}
           <p>{$i18n.t("fcLinkSyncMasterOnly")}</p>
         {:else}
-          <Field id="fc-link-sync-mixer-servos" label="fcLinkSyncMixerServos">
+          <Field id="fc-link-sync-mixer-servos">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncMixerServos")}
+              <HelpIcon>{$i18n.t("fcLinkSyncMixerServosHelp")}</HelpIcon>
+            {/snippet}
             <Switch
               id="fc-link-sync-mixer-servos"
               bind:checked={FC.FC_LINK_SYNC_CONFIG.syncMixerServos}
             />
           </Field>
-          <Field id="fc-link-sync-pid-rates" label="fcLinkSyncPidRates">
+          <Field id="fc-link-sync-pid-rates">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncPidRates")}
+              <HelpIcon>{$i18n.t("fcLinkSyncPidRatesHelp")}</HelpIcon>
+            {/snippet}
             <Switch
               id="fc-link-sync-pid-rates"
               bind:checked={FC.FC_LINK_SYNC_CONFIG.syncPidRates}
             />
           </Field>
-          <Field id="fc-link-sync-rx" label="fcLinkSyncRx">
+          <Field id="fc-link-sync-rx">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncRx")}
+              <HelpIcon>{$i18n.t("fcLinkSyncRxHelp")}</HelpIcon>
+            {/snippet}
             <Switch
               id="fc-link-sync-rx"
               bind:checked={FC.FC_LINK_SYNC_CONFIG.syncRx}
             />
           </Field>
-          <Field id="fc-link-sync-other" label="fcLinkSyncOther">
+          <Field id="fc-link-sync-other">
+            {#snippet label()}
+              {$i18n.t("fcLinkSyncOther")}
+              <HelpIcon>{$i18n.t("fcLinkSyncOtherHelp")}</HelpIcon>
+            {/snippet}
             <Switch
               id="fc-link-sync-other"
               bind:checked={FC.FC_LINK_SYNC_CONFIG.syncOther}
             />
           </Field>
+
+          <div class="sync-now">
+            <button
+              class="btn"
+              onclick={onTriggerSync}
+              disabled={triggeringSync || FC.FC_LINK_STATUS.peerLost}
+            >
+              {$i18n.t("fcLinkSyncNow")}
+            </button>
+          </div>
+
+          <div class="note-wrap">
+            <InfoNote message="fcLinkSyncNeverSyncedNote" />
+          </div>
         {/if}
       </Section>
     </div>
@@ -192,33 +229,29 @@
 
 <style lang="scss">
   .content {
-    display: flex;
-    flex-direction: column;
-    max-width: 420px;
-  }
-
-  .fields {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .field {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .label {
-    color: var(--text-secondary, #888);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    column-gap: var(--section-gap);
   }
 
   .pill {
+    font-weight: 600;
+
     color: var(--error-color, #c33);
   }
 
   .pill.active {
     color: var(--success-color, #3a3);
+  }
+
+  .sync-now {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 4px;
+  }
+
+  .note-wrap {
+    padding-bottom: 8px;
   }
 
   .help-btn {
