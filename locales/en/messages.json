@@ -1358,7 +1358,7 @@
         "message": "Waiting for tail-up movement (>= 20°)."
     },
     "configurationBoardAutoAlignSuccess": {
-        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Save and reboot to persist."
+        "message": "Detected board alignment: roll $1°, pitch $2°, yaw $3°. Save and reboot to persist."
     },
     "configurationBoardAutoAlignDisarmRequired": {
         "message": "Auto-align is only allowed while disarmed."
@@ -1394,7 +1394,7 @@
         "message": "Place the aircraft level on a stable surface. Keep it disarmed, then press Start."
     },
     "configurationBoardAutoAlignSuccessCountdown": {
-        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Closing wizard in {3}s."
+        "message": "Detected board alignment: roll $1°, pitch $2°, yaw $3°. Closing wizard in $4s."
     },
     "configurationBoardAutoAlignWizardRetry": {
         "message": "Retry"
@@ -5556,6 +5556,9 @@
     },
     "failsafeSwitchOptionKill": {
         "message": "Kill"
+    },
+    "powerMetersHead": {
+        "message": "Meters"
     },
     "powerBatteryVoltageMeterSource": {
         "message": "Battery Voltage Source"
