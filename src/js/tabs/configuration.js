@@ -21,6 +21,7 @@ tab.initialize = function (callback) {
         REJECTED_ARMED: 3,
         TIMEOUT: 4,
         NO_MATCH: 5,
+        REJECTED_UNCALIBRATED: 6,
     };
 
     const uartNames = {
@@ -692,6 +693,7 @@ tab.initialize = function (callback) {
         const boardAutoAlignWizardDetail = $('#board-auto-align-wizard-detail');
         const boardAutoAlignWizardProgress = $('#board-auto-align-progress-fill');
         const boardAutoAlignWizardRetry = $('#board-auto-align-wizard-retry');
+        const boardAutoAlignWizardCalibrate = $('#board-auto-align-wizard-calibrate');
         const boardAutoAlignWizardClose = $('#board-auto-align-wizard-close');
         let boardAutoAlignPollTimer = null;
         let boardAutoAlignAutoCloseTimer = null;
@@ -700,11 +702,12 @@ tab.initialize = function (callback) {
             boardAutoAlignStatus.text(i18n.getMessage(messageKey, messageArgs));
         }
 
-        function setBoardAutoAlignWizard(stepKey, detailKey, progressPercent, detailArgs = [], canRetry = false) {
+        function setBoardAutoAlignWizard(stepKey, detailKey, progressPercent, detailArgs = [], canRetry = false, canCalibrate = false) {
             boardAutoAlignWizardStep.text(i18n.getMessage(stepKey));
             boardAutoAlignWizardDetail.text(i18n.getMessage(detailKey, detailArgs));
             boardAutoAlignWizardProgress.css('width', `${progressPercent}%`);
             boardAutoAlignWizardRetry.toggle(canRetry);
+            boardAutoAlignWizardCalibrate.toggle(canCalibrate);
         }
 
         function showBoardAutoAlignWizard() {
@@ -854,6 +857,20 @@ tab.initialize = function (callback) {
                 return;
             }
 
+            if (state === BOARD_AUTO_ALIGN.REJECTED_UNCALIBRATED) {
+                clearBoardAutoAlignAutoClose();
+                setBoardAutoAlignStatus('configurationBoardAutoAlignUncalibrated');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep1',
+                    'configurationBoardAutoAlignUncalibrated',
+                    100,
+                    [],
+                    false,
+                    true
+                );
+                return;
+            }
+
             if (state === BOARD_AUTO_ALIGN.TIMEOUT) {
                 clearBoardAutoAlignAutoClose();
                 setBoardAutoAlignStatus('configurationBoardAutoAlignTimeout');
@@ -892,6 +909,7 @@ tab.initialize = function (callback) {
         }
 
         boardAutoAlignWizardRetry.hide();
+        boardAutoAlignWizardCalibrate.hide();
         boardAutoAlignWizardClose.off('click').on('click', function () {
             clearBoardAutoAlignPoll();
             clearBoardAutoAlignAutoClose();
@@ -921,6 +939,53 @@ tab.initialize = function (callback) {
                 boardAutoAlignButton.prop('disabled', false);
                 clearBoardAutoAlignPoll();
             });
+        });
+
+        boardAutoAlignWizardCalibrate.off('click').on('click', function () {
+            clearBoardAutoAlignAutoClose();
+            clearBoardAutoAlignPoll();
+
+            setBoardAutoAlignStatus('configurationBoardAutoAlignCalibrating');
+            setBoardAutoAlignWizard(
+                'configurationBoardAutoAlignWizardStep1',
+                'configurationBoardAutoAlignCalibrating',
+                10,
+                [],
+                false
+            );
+
+            // Same pattern as setup.js's calibrateAccel handler: the MCU is
+            // locked in a blocking loop for the duration of the
+            // calibration and can't process other MSP traffic, so this
+            // wizard's own poll timer must stay cleared (done above) until
+            // the fixed wait below has elapsed.
+            MSP.send_message(MSPCodes.MSP_ACC_CALIBRATION, false, false, function () {
+                GUI.log(i18n.getMessage('initialSetupAccelCalibStarted'));
+            });
+
+            GUI.timeout_add('board_auto_align_calibrate_wait', function () {
+                GUI.log(i18n.getMessage('initialSetupAccelCalibEnded'));
+                setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
+                setBoardAutoAlignWizard(
+                    'configurationBoardAutoAlignWizardStep1',
+                    'configurationBoardAutoAlignStarting',
+                    25,
+                    [],
+                    false
+                );
+                queryBoardAutoAlign(true).catch(() => {
+                    setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
+                    setBoardAutoAlignWizard(
+                        'configurationBoardAutoAlignWizardStep3',
+                        'configurationBoardAutoAlignUnsupported',
+                        100,
+                        [],
+                        false
+                    );
+                    boardAutoAlignButton.prop('disabled', false);
+                    clearBoardAutoAlignPoll();
+                });
+            }, 2000);
         });
 
         boardAutoAlignButton.off('click').on('click', function () {

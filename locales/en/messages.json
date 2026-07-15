@@ -1372,6 +1372,12 @@
     "configurationBoardAutoAlignUnsupported": {
         "message": "Auto-align command not supported by this firmware build."
     },
+    "configurationBoardAutoAlignUncalibrated": {
+        "message": "Accelerometer has not been calibrated on this board yet. Auto-align needs a calibrated accelerometer to give a reliable result — calibrate now, then try again."
+    },
+    "configurationBoardAutoAlignCalibrating": {
+        "message": "Calibrating accelerometer — keep the aircraft level and still…"
+    },
     "configurationBoardAutoAlignWizardTitle": {
         "message": "Board Auto-Align"
     },
@@ -1392,6 +1398,9 @@
     },
     "configurationBoardAutoAlignWizardRetry": {
         "message": "Retry"
+    },
+    "configurationBoardAutoAlignWizardCalibrate": {
+        "message": "Calibrate Accelerometer"
     },
     "configurationBoardAutoAlignWizardClose": {
         "message": "Close"
