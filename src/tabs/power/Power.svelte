@@ -541,84 +541,97 @@
         </Field>
       </Section>
 
-      <Section label="powerVoltageHead">
-        {#each FC.VOLTAGE_METERS as meter (meter.id)}
-          {@const config = voltageConfigFor(meter.id)}
-          <div class="meter-row">
-            <div class="meter-header">
-              <span>{$i18n.t(`powerVoltageId${meter.id}`)}</span>
-              <span
-                >{$i18n.t("powerVoltageValue", {
-                  1: meter.voltage.toFixed(meter.voltage < 4 ? 3 : 2),
-                })}</span
-              >
-            </div>
-            {#if config?.sensorType === 1}
-              <Field id={`power-vscale-${meter.id}`} label="powerVoltageScale">
-                <NumberInput
+      {#if FC.VOLTAGE_METERS.length > 0}
+        <Section label="powerVoltageHead">
+          {#each FC.VOLTAGE_METERS as meter (meter.id)}
+            {@const config = voltageConfigFor(meter.id)}
+            <div class="meter-card">
+              <div class="meter-header">
+                <span>{$i18n.t(`powerVoltageId${meter.id}`)}</span>
+                <span
+                  >{$i18n.t("powerVoltageValue", {
+                    1: meter.voltage.toFixed(meter.voltage < 4 ? 3 : 2),
+                  })}</span
+                >
+              </div>
+              {#if config?.sensorType === 1}
+                <Field
                   id={`power-vscale-${meter.id}`}
-                  bind:value={config.vbatscale}
-                  min={0}
-                  max={65535}
-                  step={1}
-                  onchange={() => sendVoltageMeterConfig(meter.id)}
-                />
-              </Field>
-              <Field id={`power-vdiv-${meter.id}`} label="powerVoltageDivider">
-                <NumberInput
+                  label="powerVoltageScale"
+                >
+                  <NumberInput
+                    id={`power-vscale-${meter.id}`}
+                    bind:value={config.vbatscale}
+                    min={0}
+                    max={65535}
+                    step={1}
+                    onchange={() => sendVoltageMeterConfig(meter.id)}
+                  />
+                </Field>
+                <Field
                   id={`power-vdiv-${meter.id}`}
-                  bind:value={config.vbatresdivval}
-                  min={1}
-                  max={65535}
-                  step={1}
-                  onchange={() => sendVoltageMeterConfig(meter.id)}
-                />
-              </Field>
-            {/if}
-          </div>
-        {/each}
-      </Section>
-
-      <Section label="powerAmperageHead">
-        {#each FC.CURRENT_METERS as meter (meter.id)}
-          {@const config = currentConfigFor(meter.id)}
-          <div class="meter-row">
-            <div class="meter-header">
-              <span>{$i18n.t(`powerAmperageId${meter.id}`)}</span>
-              <span
-                >{$i18n.t("powerAmperageValue", {
-                  1: meter.amperage.toFixed(2),
-                })}</span
-              >
+                  label="powerVoltageDivider"
+                >
+                  <NumberInput
+                    id={`power-vdiv-${meter.id}`}
+                    bind:value={config.vbatresdivval}
+                    min={1}
+                    max={65535}
+                    step={1}
+                    onchange={() => sendVoltageMeterConfig(meter.id)}
+                  />
+                </Field>
+              {/if}
             </div>
-            {#if config?.sensorType === 1}
-              <Field id={`power-ascale-${meter.id}`} label="powerAmperageScale">
-                <NumberInput
+          {/each}
+        </Section>
+      {/if}
+
+      {#if FC.CURRENT_METERS.length > 0}
+        <Section label="powerAmperageHead">
+          {#each FC.CURRENT_METERS as meter (meter.id)}
+            {@const config = currentConfigFor(meter.id)}
+            <div class="meter-card">
+              <div class="meter-header">
+                <span>{$i18n.t(`powerAmperageId${meter.id}`)}</span>
+                <span
+                  >{$i18n.t("powerAmperageValue", {
+                    1: meter.amperage.toFixed(2),
+                  })}</span
+                >
+              </div>
+              {#if config?.sensorType === 1}
+                <Field
                   id={`power-ascale-${meter.id}`}
-                  bind:value={config.scale}
-                  min={-16000}
-                  max={16000}
-                  step={1}
-                  onchange={() => sendCurrentMeterConfig(meter.id)}
-                />
-              </Field>
-              <Field
-                id={`power-aoffset-${meter.id}`}
-                label="powerAmperageOffset"
-              >
-                <NumberInput
+                  label="powerAmperageScale"
+                >
+                  <NumberInput
+                    id={`power-ascale-${meter.id}`}
+                    bind:value={config.scale}
+                    min={-16000}
+                    max={16000}
+                    step={1}
+                    onchange={() => sendCurrentMeterConfig(meter.id)}
+                  />
+                </Field>
+                <Field
                   id={`power-aoffset-${meter.id}`}
-                  bind:value={config.offset}
-                  min={-32000}
-                  max={32000}
-                  step={1}
-                  onchange={() => sendCurrentMeterConfig(meter.id)}
-                />
-              </Field>
-            {/if}
-          </div>
-        {/each}
-      </Section>
+                  label="powerAmperageOffset"
+                >
+                  <NumberInput
+                    id={`power-aoffset-${meter.id}`}
+                    bind:value={config.offset}
+                    min={-32000}
+                    max={32000}
+                    step={1}
+                    onchange={() => sendCurrentMeterConfig(meter.id)}
+                  />
+                </Field>
+              {/if}
+            </div>
+          {/each}
+        </Section>
+      {/if}
     </div>
   </div>
 </Page>
@@ -782,21 +795,26 @@
     color: var(--color-text-soft);
   }
 
-  .meter-row {
-    padding-bottom: 4px;
+  .meter-card {
+    border-radius: 2px;
+    padding: 4px;
+
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
 
     &:not(:last-child) {
-      margin-bottom: 4px;
-      border-bottom: 1px dotted var(--color-border);
+      margin-bottom: 8px;
     }
   }
 
   .meter-header {
     display: flex;
     justify-content: space-between;
-    padding: 4px 8px;
+    padding: 4px 8px 8px;
+    margin-bottom: 4px;
     font-weight: 600;
     font-size: 0.85rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .warning {
