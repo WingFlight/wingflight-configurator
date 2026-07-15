@@ -775,6 +775,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM: {
+                FC.BOARD_MOUNT_TRIM.roll = data.read16(); // decidegrees, -3600 - 3600
+                FC.BOARD_MOUNT_TRIM.pitch = data.read16(); // decidegrees, -3600 - 3600
+                FC.BOARD_MOUNT_TRIM.yaw = data.read16(); // decidegrees, -3600 - 3600
+                break;
+            }
+
             case MSPCodes.MSP_SET_REBOOT: {
                 const rebootType = data.read8();
                 if ((rebootType === self.REBOOT_TYPES.MSC) || (rebootType === self.REBOOT_TYPES.MSC_UTC)) {
@@ -1796,6 +1803,13 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push16(FC.BOARD_ALIGNMENT_CONFIG.roll)
                 .push16(FC.BOARD_ALIGNMENT_CONFIG.pitch)
                 .push16(FC.BOARD_ALIGNMENT_CONFIG.yaw);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_BOARD_MOUNT_TRIM: {
+            buffer.push16(FC.BOARD_MOUNT_TRIM.roll)
+                .push16(FC.BOARD_MOUNT_TRIM.pitch)
+                .push16(FC.BOARD_MOUNT_TRIM.yaw);
             break;
         }
 

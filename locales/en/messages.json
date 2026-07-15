@@ -1342,6 +1342,27 @@
     "configurationBoardAlignmentYaw": {
         "message": "Yaw Degrees"
     },
+    "configurationBoardAlignmentSectionTitle": {
+        "message": "Board Alignment"
+    },
+    "configurationBoardAlignmentSectionHelp": {
+        "message": "Coarse correction for how the FC is physically mounted on the airframe, typically in 90° steps. Auto-Align FC can detect this automatically."
+    },
+    "configurationBoardMountTrim": {
+        "message": "Mounting Trim"
+    },
+    "configurationBoardMountTrimHelp": {
+        "message": "Fine correction (in degrees) for a mounting surface that isn't perfectly level, applied AFTER the board alignment above. Use this instead of adjusting board alignment for small, non-90° corrections -- it always corrects the same physical axis, regardless of the board alignment set above."
+    },
+    "configurationBoardMountTrimRoll": {
+        "message": "Roll Trim"
+    },
+    "configurationBoardMountTrimPitch": {
+        "message": "Pitch Trim"
+    },
+    "configurationBoardMountTrimYaw": {
+        "message": "Yaw Trim"
+    },
     "configurationBoardAutoAlignStart": {
         "message": "Auto-Align FC"
     },

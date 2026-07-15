@@ -311,6 +311,7 @@ tab.initialize = function (callback) {
         await MSP.promise(MSPCodes.MSP_ARMING_CONFIG);
         await MSP.promise(MSPCodes.MSP_SENSOR_ALIGNMENT);
         await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
+        await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
         await MSP.promise(MSPCodes.MSP_ACC_TRIM);
         await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
 
@@ -334,6 +335,7 @@ tab.initialize = function (callback) {
         await save(MSPCodes.MSP_SET_ARMING_CONFIG);
         await save(MSPCodes.MSP_SET_SENSOR_ALIGNMENT);
         await save(MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG);
+        await save(MSPCodes.MSP2_WING_SET_BOARD_MOUNT_TRIM);
         await save(MSPCodes.MSP_SET_ACC_TRIM);
         await save(MSPCodes.MSP_SET_SERIAL_CONFIG);
 
@@ -698,6 +700,11 @@ tab.initialize = function (callback) {
         $('input[name="board_align_pitch"]').val(FC.BOARD_ALIGNMENT_CONFIG.pitch);
         $('input[name="board_align_yaw"]').val(FC.BOARD_ALIGNMENT_CONFIG.yaw);
 
+        // fill mounting trim (decidegrees on the wire, decimal degrees in the UI)
+        $('input[name="board_mount_trim_roll"]').val(FC.BOARD_MOUNT_TRIM.roll / 10);
+        $('input[name="board_mount_trim_pitch"]').val(FC.BOARD_MOUNT_TRIM.pitch / 10);
+        $('input[name="board_mount_trim_yaw"]').val(FC.BOARD_MOUNT_TRIM.yaw / 10);
+
         const boardAutoAlignButton = $('#board-auto-align-start');
         const boardAutoAlignWizard = $('#board-auto-align-wizard')[0];
         const boardAutoAlignWizardStep = $('#board-auto-align-wizard-step');
@@ -1038,6 +1045,10 @@ tab.initialize = function (callback) {
             FC.BOARD_ALIGNMENT_CONFIG.roll = parseInt($('input[name="board_align_roll"]').val());
             FC.BOARD_ALIGNMENT_CONFIG.pitch = parseInt($('input[name="board_align_pitch"]').val());
             FC.BOARD_ALIGNMENT_CONFIG.yaw = parseInt($('input[name="board_align_yaw"]').val());
+
+            FC.BOARD_MOUNT_TRIM.roll = Math.round(parseFloat($('input[name="board_mount_trim_roll"]').val()) * 10);
+            FC.BOARD_MOUNT_TRIM.pitch = Math.round(parseFloat($('input[name="board_mount_trim_pitch"]').val()) * 10);
+            FC.BOARD_MOUNT_TRIM.yaw = Math.round(parseFloat($('input[name="board_mount_trim_yaw"]').val()) * 10);
 
             FC.CONFIG.accelerometerTrims[1] = parseInt($('input[id="acc-trim-roll"]').val());
             FC.CONFIG.accelerometerTrims[0] = parseInt($('input[id="acc-trim-pitch"]').val());

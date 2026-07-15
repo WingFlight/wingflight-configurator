@@ -393,6 +393,26 @@
     margin-top: 4px;
 }
 
+.tab-configuration .board_mount_trim_content {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dotted var(--superSubtleAccent);
+}
+
+.tab-configuration .align_section_title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: normal;
+    color: #4f4f4f;
+    margin-bottom: 4px;
+}
+
+.tab-configuration .board_mount_trim_content .board_align_inputs input {
+    width: 5em;
+}
+
 .tab-configuration #gyro-frequency {
     box-sizing: border-box;
     border: none;

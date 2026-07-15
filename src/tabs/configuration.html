@@ -180,6 +180,10 @@
                             <div class="helpicon cf_tip" i18n_title="configurationBoardAlignmentHelp"></div>
                         </div>
                         <div class="spacer_box">
+                           <div class="align_section_title">
+                                <span i18n="configurationBoardAlignmentSectionTitle"></span>
+                                <div class="helpicon cf_tip" i18n_title="configurationBoardAlignmentSectionHelp"></div>
+                            </div>
                            <div class="board_align_row">
                                 <div class="board_align_inputs">
                                     <label>
@@ -208,6 +212,37 @@
                                 <div class="board_auto_align_controls">
                                     <button type="button" id="board-auto-align-start" i18n="configurationBoardAutoAlignStart"></button>
                                     <div class="helpicon cf_tip" i18n_title="configurationBoardAutoAlignHelp"></div>
+                                </div>
+                            </div>
+                            <div class="board_mount_trim_content">
+                                <div class="align_section_title">
+                                    <span i18n="configurationBoardMountTrim"></span>
+                                    <div class="helpicon cf_tip" i18n_title="configurationBoardMountTrimHelp"></div>
+                                </div>
+                                <div class="board_align_row">
+                                    <div class="board_align_inputs">
+                                        <label>
+                                            <input type="number" name="board_mount_trim_roll" step="0.1" min="-360" max="360" />
+                                            <div class="alignicon roll"></div>
+                                            <span i18n="configurationBoardMountTrimRoll"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="board_align_inputs">
+                                        <label>
+                                            <input type="number" name="board_mount_trim_pitch" step="0.1" min="-360" max="360" />
+                                            <div class="alignicon pitch"></div>
+                                            <span i18n="configurationBoardMountTrimPitch"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="board_align_inputs">
+                                        <label>
+                                            <input type="number" name="board_mount_trim_yaw" step="0.1" min="-360" max="360" />
+                                            <div class="alignicon yaw"></div>
+                                            <span i18n="configurationBoardMountTrimYaw"></span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="sensor_align_content">
