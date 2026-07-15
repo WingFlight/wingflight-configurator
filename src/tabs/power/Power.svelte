@@ -448,16 +448,13 @@
                 >
                   {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
                 </button>
-                <div class="profile-capacity-input">
-                  <NumberInput
-                    id={`power-capacity-${i}`}
-                    bind:value={FC.BATTERY_CONFIG.capacities[i]}
-                    min={0}
-                    max={40000}
-                    step={10}
-                  />
-                  <span class="unit">mAh</span>
-                </div>
+                <NumberInput
+                  id={`power-capacity-${i}`}
+                  bind:value={FC.BATTERY_CONFIG.capacities[i]}
+                  min={0}
+                  max={40000}
+                  step={10}
+                />
               </div>
             {/each}
           </div>
@@ -779,17 +776,6 @@
   .profile-capacity.active .profile-activate {
     color: var(--color-text-inverse, #000);
     background-color: var(--color-accent, var(--accent));
-  }
-
-  .profile-capacity-input {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .profile-capacity-input .unit {
-    font-size: 0.7rem;
-    color: var(--color-text-soft);
   }
 
   .meter-row {
