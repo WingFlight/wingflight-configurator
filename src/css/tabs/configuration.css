@@ -217,7 +217,7 @@
     padding: 4px 0;
 }
 
-.tab-configuration #board-auto-align-start {
+.tab-configuration .board_auto_align_controls button {
     padding: 0 8px;
     line-height: 24px;
     border: 1px solid var(--button-border);
@@ -228,12 +228,12 @@
     white-space: nowrap;
 }
 
-.tab-configuration #board-auto-align-start:hover {
+.tab-configuration .board_auto_align_controls button:hover {
     border-color: var(--hoverButton-border);
     background: var(--hoverButton-background);
 }
 
-.tab-configuration #board-auto-align-start:disabled {
+.tab-configuration .board_auto_align_controls button:disabled {
     opacity: 0.6;
     cursor: default;
 }
