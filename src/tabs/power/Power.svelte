@@ -363,20 +363,6 @@
       </Section>
 
       <Section label="powerBatteryHead">
-        <Field id="power-vbat-source" label="powerBatteryVoltageMeterSource">
-          <Select
-            id="power-vbat-source"
-            bind:value={FC.BATTERY_CONFIG.voltageMeterSource}
-            options={voltageMeterTypeOptions}
-          />
-        </Field>
-        <Field id="power-current-source" label="powerBatteryCurrentMeterSource">
-          <Select
-            id="power-current-source"
-            bind:value={FC.BATTERY_CONFIG.currentMeterSource}
-            options={currentMeterTypeOptions}
-          />
-        </Field>
         <Field
           id="power-min-cell-voltage"
           label="powerBatteryMinimumCellVoltage"
@@ -538,97 +524,101 @@
     </div>
 
     <div class="column">
-      {#if FC.VOLTAGE_METERS.length > 0}
-        <Section label="powerVoltageHead">
-          {#each FC.VOLTAGE_METERS as meter (meter.id)}
-            {@const config = voltageConfigFor(meter.id)}
-            <div class="meter-row">
-              <div class="meter-header">
-                <span>{$i18n.t(`powerVoltageId${meter.id}`)}</span>
-                <span
-                  >{$i18n.t("powerVoltageValue", {
-                    1: meter.voltage.toFixed(meter.voltage < 4 ? 3 : 2),
-                  })}</span
-                >
-              </div>
-              {#if config?.sensorType === 1}
-                <Field
-                  id={`power-vscale-${meter.id}`}
-                  label="powerVoltageScale"
-                >
-                  <NumberInput
-                    id={`power-vscale-${meter.id}`}
-                    bind:value={config.vbatscale}
-                    min={0}
-                    max={65535}
-                    step={1}
-                    onchange={() => sendVoltageMeterConfig(meter.id)}
-                  />
-                </Field>
-                <Field
-                  id={`power-vdiv-${meter.id}`}
-                  label="powerVoltageDivider"
-                >
-                  <NumberInput
-                    id={`power-vdiv-${meter.id}`}
-                    bind:value={config.vbatresdivval}
-                    min={1}
-                    max={65535}
-                    step={1}
-                    onchange={() => sendVoltageMeterConfig(meter.id)}
-                  />
-                </Field>
-              {/if}
-            </div>
-          {/each}
-        </Section>
-      {/if}
+      <Section label="powerMetersHead">
+        <Field id="power-vbat-source" label="powerBatteryVoltageMeterSource">
+          <Select
+            id="power-vbat-source"
+            bind:value={FC.BATTERY_CONFIG.voltageMeterSource}
+            options={voltageMeterTypeOptions}
+          />
+        </Field>
+        <Field id="power-current-source" label="powerBatteryCurrentMeterSource">
+          <Select
+            id="power-current-source"
+            bind:value={FC.BATTERY_CONFIG.currentMeterSource}
+            options={currentMeterTypeOptions}
+          />
+        </Field>
+      </Section>
 
-      {#if FC.CURRENT_METERS.length > 0}
-        <Section label="powerAmperageHead">
-          {#each FC.CURRENT_METERS as meter (meter.id)}
-            {@const config = currentConfigFor(meter.id)}
-            <div class="meter-row">
-              <div class="meter-header">
-                <span>{$i18n.t(`powerAmperageId${meter.id}`)}</span>
-                <span
-                  >{$i18n.t("powerAmperageValue", {
-                    1: meter.amperage.toFixed(2),
-                  })}</span
-                >
-              </div>
-              {#if config?.sensorType === 1}
-                <Field
-                  id={`power-ascale-${meter.id}`}
-                  label="powerAmperageScale"
-                >
-                  <NumberInput
-                    id={`power-ascale-${meter.id}`}
-                    bind:value={config.scale}
-                    min={-16000}
-                    max={16000}
-                    step={1}
-                    onchange={() => sendCurrentMeterConfig(meter.id)}
-                  />
-                </Field>
-                <Field
-                  id={`power-aoffset-${meter.id}`}
-                  label="powerAmperageOffset"
-                >
-                  <NumberInput
-                    id={`power-aoffset-${meter.id}`}
-                    bind:value={config.offset}
-                    min={-32000}
-                    max={32000}
-                    step={1}
-                    onchange={() => sendCurrentMeterConfig(meter.id)}
-                  />
-                </Field>
-              {/if}
+      <Section label="powerVoltageHead">
+        {#each FC.VOLTAGE_METERS as meter (meter.id)}
+          {@const config = voltageConfigFor(meter.id)}
+          <div class="meter-row">
+            <div class="meter-header">
+              <span>{$i18n.t(`powerVoltageId${meter.id}`)}</span>
+              <span
+                >{$i18n.t("powerVoltageValue", {
+                  1: meter.voltage.toFixed(meter.voltage < 4 ? 3 : 2),
+                })}</span
+              >
             </div>
-          {/each}
-        </Section>
-      {/if}
+            {#if config?.sensorType === 1}
+              <Field id={`power-vscale-${meter.id}`} label="powerVoltageScale">
+                <NumberInput
+                  id={`power-vscale-${meter.id}`}
+                  bind:value={config.vbatscale}
+                  min={0}
+                  max={65535}
+                  step={1}
+                  onchange={() => sendVoltageMeterConfig(meter.id)}
+                />
+              </Field>
+              <Field id={`power-vdiv-${meter.id}`} label="powerVoltageDivider">
+                <NumberInput
+                  id={`power-vdiv-${meter.id}`}
+                  bind:value={config.vbatresdivval}
+                  min={1}
+                  max={65535}
+                  step={1}
+                  onchange={() => sendVoltageMeterConfig(meter.id)}
+                />
+              </Field>
+            {/if}
+          </div>
+        {/each}
+      </Section>
+
+      <Section label="powerAmperageHead">
+        {#each FC.CURRENT_METERS as meter (meter.id)}
+          {@const config = currentConfigFor(meter.id)}
+          <div class="meter-row">
+            <div class="meter-header">
+              <span>{$i18n.t(`powerAmperageId${meter.id}`)}</span>
+              <span
+                >{$i18n.t("powerAmperageValue", {
+                  1: meter.amperage.toFixed(2),
+                })}</span
+              >
+            </div>
+            {#if config?.sensorType === 1}
+              <Field id={`power-ascale-${meter.id}`} label="powerAmperageScale">
+                <NumberInput
+                  id={`power-ascale-${meter.id}`}
+                  bind:value={config.scale}
+                  min={-16000}
+                  max={16000}
+                  step={1}
+                  onchange={() => sendCurrentMeterConfig(meter.id)}
+                />
+              </Field>
+              <Field
+                id={`power-aoffset-${meter.id}`}
+                label="powerAmperageOffset"
+              >
+                <NumberInput
+                  id={`power-aoffset-${meter.id}`}
+                  bind:value={config.offset}
+                  min={-32000}
+                  max={32000}
+                  step={1}
+                  onchange={() => sendCurrentMeterConfig(meter.id)}
+                />
+              </Field>
+            {/if}
+          </div>
+        {/each}
+      </Section>
     </div>
   </div>
 </Page>
