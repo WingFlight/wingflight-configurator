@@ -2,7 +2,8 @@ import * as noUiSlider from 'nouislider';
 import wNumb from 'wnumb';
 
 import * as config from '@/js/config.js';
-import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
+import { CONFIGURATOR } from '@/js/configurator.svelte.js';
+import { UNUSED_MODES, EXPERT_MODES, getModeDisplayName, getModeDescription } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'auxiliary',
@@ -56,7 +57,14 @@ tab.initialize = function (callback) {
         const modeName = FC.AUX_CONFIG[modeIndex];
 
         $(newMode).attr('id', 'mode-' + modeIndex);
-        $(newMode).find('.name').text(getModeDisplayName(modeName));
+        $(newMode).find('.name-text').text(getModeDisplayName(modeName));
+
+        const description = getModeDescription(modeName);
+        if (description) {
+            $(newMode).find('.helpicon').attr('title', description);
+        } else {
+            $(newMode).find('.helpicon').remove();
+        }
 
         $(newMode).data('index', modeIndex);
         $(newMode).data('id', modeId);
@@ -354,12 +362,14 @@ tab.initialize = function (callback) {
 
         // These boxes are either heli-specific (collective/governor recovery),
         // not used on this platform, or intentionally hidden from users.
-        // GPS Rescue (RTH) is unrelated and stays.
+        // GPS Rescue (RTH) is unrelated and stays. Expert-only boxes are
+        // hidden unless the user has Expert Mode enabled.
         const modeIndices = [];
         for (let modeIndex = 0; modeIndex < FC.AUX_CONFIG.length; modeIndex++) {
-            if (!UNUSED_MODES.includes(FC.AUX_CONFIG[modeIndex])) {
-                modeIndices.push(modeIndex);
-            }
+            const modeName = FC.AUX_CONFIG[modeIndex];
+            if (UNUSED_MODES.includes(modeName)) continue;
+            if (EXPERT_MODES.includes(modeName) && !CONFIGURATOR.expertMode) continue;
+            modeIndices.push(modeIndex);
         }
 
         // ARM is always the first mode reported by the FC; keep it pinned at
@@ -477,7 +487,7 @@ tab.initialize = function (callback) {
 
                     // ARM mode is a special case
                     if (i == 0) {
-                        modeElement.find('.name').html(getModeDisplayName(FC.AUX_CONFIG[i]));
+                        modeElement.find('.name-text').text(getModeDisplayName(FC.AUX_CONFIG[i]));
                     }
                 } else {
                     modeElement.removeClass('on').removeClass('disabled').addClass('off');

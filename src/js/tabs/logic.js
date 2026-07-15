@@ -1,5 +1,6 @@
 import { LogicCondition } from '@/js/LogicCondition.js';
-import { UNUSED_MODES, getModeDisplayName } from '@/js/FlightMode.js';
+import { CONFIGURATOR } from '@/js/configurator.svelte.js';
+import { UNUSED_MODES, EXPERT_MODES, getModeDisplayName } from '@/js/FlightMode.js';
 
 const tab = {
     tabName: 'logic',
@@ -84,8 +85,10 @@ tab.initialize = function (callback) {
         const choices = [];
 
         for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
-            if (UNUSED_MODES.includes(FC.AUX_CONFIG[i])) continue;
-            choices.push({ value: FC.AUX_CONFIG_IDS[i], label: getModeDisplayName(FC.AUX_CONFIG[i]) });
+            const modeName = FC.AUX_CONFIG[i];
+            if (UNUSED_MODES.includes(modeName)) continue;
+            if (EXPERT_MODES.includes(modeName) && !CONFIGURATOR.expertMode) continue;
+            choices.push({ value: FC.AUX_CONFIG_IDS[i], label: getModeDisplayName(modeName) });
         }
 
         return choices;

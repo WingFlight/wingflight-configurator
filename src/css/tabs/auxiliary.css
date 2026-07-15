@@ -87,6 +87,10 @@ html[data-theme="dark"] .tab-auxiliary .mode.disabled .info {
 }
 
 .tab-auxiliary .mode .info .name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     font-weight: bold;
     font-size: 1.0em;
 }
@@ -94,6 +98,12 @@ html[data-theme="dark"] .tab-auxiliary .mode.disabled .info {
 .tab-auxiliary .mode .info .desc {
     font-weight: normal;
     font-size: 0.9em;
+}
+
+.tab-auxiliary .mode .info .helpicon {
+    flex: none;
+    float: none;
+    margin: 0;
 }
 
 .tab-auxiliary .mode .info .buttons {
