@@ -550,7 +550,7 @@
 
   .channel-label {
     min-width: 90px;
-    font-size: 0.85em;
+    font-size: 0.8rem;
     color: var(--color-text-soft);
   }
 
@@ -616,7 +616,7 @@
 
   .step-label {
     color: var(--color-text-soft);
-    font-size: 0.85em;
+    font-size: 0.8rem;
   }
 
   @media only screen and (max-width: 768px) {
