@@ -584,6 +584,11 @@ tab.initialize = function (callback) {
         ];
 
         const orientation_mag_e = $('#magalign');
+        // Hide the whole .sensor_align_content wrapper, not just the inner
+        // .select -- it's what carries the .spacer_box > * + * divider
+        // border, so hiding only the select would leave an orphaned line.
+        const magAlignWrapper = $('.sensor_align_content');
+        const magHardwareSwitch = $('input[id="magHardwareSwitch"]');
 
         for (let i = 0; i < alignments.length; i++) {
             orientation_mag_e.append(`<option value="${(i+1)}">${alignments[i]}</option>`);
@@ -595,6 +600,12 @@ tab.initialize = function (callback) {
             let value = parseInt($(this).val());
             FC.SENSOR_ALIGNMENT.align_mag = value;
         });
+
+        function updateMagAlignVisibility() {
+            magAlignWrapper.toggle(magHardwareSwitch.is(':checked'));
+        }
+
+        magHardwareSwitch.on('change', updateMagAlignVisibility);
 
         // Gyro and PID update
         const gyroTextElement = $('#gyro-frequency');
@@ -679,6 +690,7 @@ tab.initialize = function (callback) {
         $('input[id="accHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.acc_hardware !== 1);
         $('input[id="baroHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.baro_hardware !== 1);
         $('input[id="magHardwareSwitch"]').prop('checked', FC.SENSOR_CONFIG.mag_hardware !== 1);
+        updateMagAlignVisibility();
         $('input[id="wiggleReadySwitch"]').prop('checked', FC.ARMING_CONFIG.wiggle.READY);
 
         // fill board alignment
@@ -687,7 +699,6 @@ tab.initialize = function (callback) {
         $('input[name="board_align_yaw"]').val(FC.BOARD_ALIGNMENT_CONFIG.yaw);
 
         const boardAutoAlignButton = $('#board-auto-align-start');
-        const boardAutoAlignStatus = $('#board-auto-align-status');
         const boardAutoAlignWizard = $('#board-auto-align-wizard')[0];
         const boardAutoAlignWizardStep = $('#board-auto-align-wizard-step');
         const boardAutoAlignWizardDetail = $('#board-auto-align-wizard-detail');
@@ -697,10 +708,6 @@ tab.initialize = function (callback) {
         const boardAutoAlignWizardClose = $('#board-auto-align-wizard-close');
         let boardAutoAlignPollTimer = null;
         let boardAutoAlignAutoCloseTimer = null;
-
-        function setBoardAutoAlignStatus(messageKey, messageArgs = []) {
-            boardAutoAlignStatus.text(i18n.getMessage(messageKey, messageArgs));
-        }
 
         function setBoardAutoAlignWizard(stepKey, detailKey, progressPercent, detailArgs = [], canRetry = false, canCalibrate = false) {
             boardAutoAlignWizardStep.text(i18n.getMessage(stepKey));
@@ -772,7 +779,6 @@ tab.initialize = function (callback) {
 
             if (!data || data.byteLength < 8) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
                 boardAutoAlignButton.prop('disabled', true);
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep3',
@@ -792,7 +798,6 @@ tab.initialize = function (callback) {
 
             if (state === BOARD_AUTO_ALIGN.WAITING_FOR_TAIL_LIFT) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignWaiting');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep2',
                     'configurationBoardAutoAlignWaiting',
@@ -804,7 +809,6 @@ tab.initialize = function (callback) {
                 clearBoardAutoAlignPoll();
                 boardAutoAlignPollTimer = setTimeout(() => {
                     queryBoardAutoAlign(false).catch(() => {
-                        setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
                         setBoardAutoAlignWizard(
                             'configurationBoardAutoAlignWizardStep3',
                             'configurationBoardAutoAlignUnsupported',
@@ -831,7 +835,6 @@ tab.initialize = function (callback) {
                 $('input[name="board_align_pitch"]').val(pitch);
                 $('input[name="board_align_yaw"]').val(yaw);
 
-                setBoardAutoAlignStatus('configurationBoardAutoAlignSuccess', [roll, pitch, yaw]);
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep3',
                     'configurationBoardAutoAlignSuccessCountdown',
@@ -846,7 +849,6 @@ tab.initialize = function (callback) {
 
             if (state === BOARD_AUTO_ALIGN.REJECTED_ARMED) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignDisarmRequired');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep1',
                     'configurationBoardAutoAlignDisarmRequired',
@@ -859,7 +861,6 @@ tab.initialize = function (callback) {
 
             if (state === BOARD_AUTO_ALIGN.REJECTED_UNCALIBRATED) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignUncalibrated');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep1',
                     'configurationBoardAutoAlignUncalibrated',
@@ -873,7 +874,6 @@ tab.initialize = function (callback) {
 
             if (state === BOARD_AUTO_ALIGN.TIMEOUT) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignTimeout');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep2',
                     'configurationBoardAutoAlignTimeout',
@@ -886,7 +886,6 @@ tab.initialize = function (callback) {
 
             if (state === BOARD_AUTO_ALIGN.NO_MATCH) {
                 clearBoardAutoAlignAutoClose();
-                setBoardAutoAlignStatus('configurationBoardAutoAlignNoMatch');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep2',
                     'configurationBoardAutoAlignNoMatch',
@@ -898,7 +897,6 @@ tab.initialize = function (callback) {
             }
 
             clearBoardAutoAlignAutoClose();
-            setBoardAutoAlignStatus('configurationBoardAutoAlignIdle');
             setBoardAutoAlignWizard(
                 'configurationBoardAutoAlignWizardStep1',
                 'configurationBoardAutoAlignIdle',
@@ -919,7 +917,6 @@ tab.initialize = function (callback) {
 
         boardAutoAlignWizardRetry.off('click').on('click', function () {
             clearBoardAutoAlignAutoClose();
-            setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
             setBoardAutoAlignWizard(
                 'configurationBoardAutoAlignWizardStep1',
                 'configurationBoardAutoAlignStarting',
@@ -928,7 +925,6 @@ tab.initialize = function (callback) {
                 false
             );
             queryBoardAutoAlign(true).catch(() => {
-                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep3',
                     'configurationBoardAutoAlignUnsupported',
@@ -945,7 +941,6 @@ tab.initialize = function (callback) {
             clearBoardAutoAlignAutoClose();
             clearBoardAutoAlignPoll();
 
-            setBoardAutoAlignStatus('configurationBoardAutoAlignCalibrating');
             setBoardAutoAlignWizard(
                 'configurationBoardAutoAlignWizardStep1',
                 'configurationBoardAutoAlignCalibrating',
@@ -965,7 +960,6 @@ tab.initialize = function (callback) {
 
             GUI.timeout_add('board_auto_align_calibrate_wait', function () {
                 GUI.log(i18n.getMessage('initialSetupAccelCalibEnded'));
-                setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep1',
                     'configurationBoardAutoAlignStarting',
@@ -974,7 +968,6 @@ tab.initialize = function (callback) {
                     false
                 );
                 queryBoardAutoAlign(true).catch(() => {
-                    setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
                     setBoardAutoAlignWizard(
                         'configurationBoardAutoAlignWizardStep3',
                         'configurationBoardAutoAlignUnsupported',
@@ -991,7 +984,6 @@ tab.initialize = function (callback) {
         boardAutoAlignButton.off('click').on('click', function () {
             clearBoardAutoAlignAutoClose();
             showBoardAutoAlignWizard();
-            setBoardAutoAlignStatus('configurationBoardAutoAlignStarting');
             setBoardAutoAlignWizard(
                 'configurationBoardAutoAlignWizardStep1',
                 'configurationBoardAutoAlignStarting',
@@ -1000,7 +992,6 @@ tab.initialize = function (callback) {
                 false
             );
             queryBoardAutoAlign(true).catch(() => {
-                setBoardAutoAlignStatus('configurationBoardAutoAlignUnsupported');
                 setBoardAutoAlignWizard(
                     'configurationBoardAutoAlignWizardStep3',
                     'configurationBoardAutoAlignUnsupported',
