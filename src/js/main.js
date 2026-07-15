@@ -333,6 +333,10 @@ export function startProcess() {
         .on('change', function () {
             CONFIGURATOR.expertMode = this.checked;
             config.set({'expertMode': this.checked});
+            // Svelte tabs react to expertMode automatically, but the legacy
+            // jQuery tabs (e.g. Modes, Logic) build their DOM once on load
+            // and need a reload to pick up the new expert-mode filtering.
+            GUI.tab_switch_allowed(() => GUI.tab_switch_reload());
         })
         .prop('checked', CONFIGURATOR.expertMode);
 

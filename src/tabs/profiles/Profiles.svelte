@@ -245,7 +245,9 @@
       {#if showPidBoxes}
         <PidGains />
       {/if}
-      <LevelingSettings />
+      {#if CONFIGURATOR.expertMode}
+        <LevelingSettings />
+      {/if}
     </div>
     <div>
       {#if showPidBoxes}

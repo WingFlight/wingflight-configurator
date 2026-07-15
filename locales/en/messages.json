@@ -7406,11 +7406,20 @@
     "mode ARM": {
         "message": "ARM"
     },
+    "modeHelp ARM": {
+        "message": "Arms the motors and control surfaces for flight. Arming can be blocked while any arming-disable condition (calibration, failsafe, PREARM, etc.) is active."
+    },
     "mode ANGLE": {
         "message": "ANGLE"
     },
+    "modeHelp ANGLE": {
+        "message": "Self-levels the aircraft to match your stick input to a bank/pitch angle, and limits how far it can tilt. The easiest mode for beginners."
+    },
     "mode HORIZON": {
         "message": "HORIZON"
+    },
+    "modeHelp HORIZON": {
+        "message": "Self-levels near center stick like Angle mode, but hands off to full manual rate control as you move the sticks further, allowing flips and rolls."
     },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
@@ -7418,20 +7427,38 @@
     "mode ATT HOLD": {
         "message": "ATT HOLD"
     },
+    "modeHelp ATT HOLD": {
+        "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
+    },
     "mode PASSTHROUGH": {
         "message": "PASSTHROUGH"
+    },
+    "modeHelp PASSTHROUGH": {
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo - fully manual flying."
     },
     "mode MANUAL": {
         "message": "MANUAL"
     },
+    "modeHelp MANUAL": {
+        "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
+    },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
+    },
+    "modeHelp AUTO TRIM": {
+        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the new center. Switching off before disarming cancels the change."
     },
     "mode BEEPER": {
         "message": "BEEPER"
     },
+    "modeHelp BEEPER": {
+        "message": "Sounds the buzzer on demand to help locate the aircraft."
+    },
     "mode LEDLOW": {
         "message": "LEDLOW"
+    },
+    "modeHelp LEDLOW": {
+        "message": "Turns off the LED strip while active."
     },
     "mode CALIB": {
         "message": "CALIB"
@@ -7442,17 +7469,32 @@
     "mode TELEMETRY": {
         "message": "TELEMETRY"
     },
+    "modeHelp TELEMETRY": {
+        "message": "Enables telemetry output on a port that's shared with another function. Otherwise telemetry follows the arm state automatically."
+    },
     "mode BLACKBOX": {
         "message": "BLACKBOX"
+    },
+    "modeHelp BLACKBOX": {
+        "message": "Starts and stops blackbox logging - used when logging is set to switch-controlled, or to pause/resume normal logging."
     },
     "mode FAILSAFE": {
         "message": "FAILSAFE"
     },
+    "modeHelp FAILSAFE": {
+        "message": "Manually triggers the configured failsafe behavior. Useful for testing your failsafe settings on the bench."
+    },
     "mode BLACKBOX ERASE": {
         "message": "BLACKBOX ERASE"
     },
+    "modeHelp BLACKBOX ERASE": {
+        "message": "Erases the onboard blackbox flash storage while held on."
+    },
     "mode PREARM": {
         "message": "PREARM"
+    },
+    "modeHelp PREARM": {
+        "message": "A safety switch that must be enabled before you can arm, to prevent accidental arming."
     },
     "mode PARALYZE": {
         "message": "PARALYZE"
@@ -7460,8 +7502,14 @@
     "mode GPS RESCUE": {
         "message": "GPS RESCUE"
     },
+    "modeHelp GPS RESCUE": {
+        "message": "Automatically flies the aircraft back toward its recorded home position using GPS."
+    },
     "mode TRAINER": {
         "message": "TRAINER"
+    },
+    "modeHelp TRAINER": {
+        "message": "Acro Trainer: flies in rate mode but automatically limits how far the aircraft can bank or pitch, without full self-leveling."
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
@@ -7469,8 +7517,26 @@
     "mode STICK COMMANDS DISABLE": {
         "message": "STICK COMMANDS DISABLE"
     },
+    "modeHelp STICK COMMANDS DISABLE": {
+        "message": "Blocks stick-gesture commands (arm/disarm, menu access) while active, to prevent accidental triggers."
+    },
     "mode BEEPER MUTE": {
         "message": "BEEPER MUTE"
+    },
+    "modeHelp BEEPER MUTE": {
+        "message": "Silences the beeper entirely, overriding any other beeper trigger."
+    },
+    "mode AUTO HOVER": {
+        "message": "AUTO HOVER"
+    },
+    "modeHelp AUTO HOVER": {
+        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Att Hold while active."
+    },
+    "mode GOVERNOR": {
+        "message": "GOVERNOR"
+    },
+    "modeHelp GOVERNOR": {
+        "message": "Enables the throttle governor, which regulates motor RPM (or holds a fixed idle throttle) instead of passing the throttle stick straight through."
     },
     "mode RESCUE": {
         "message": "RESCUE"
