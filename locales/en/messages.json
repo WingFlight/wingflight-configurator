@@ -2500,6 +2500,21 @@
     "adjustmentRangeStep": {
         "message": "Step:"
     },
+    "adjustmentsSlotLabel": {
+        "message": "Adjustment {{index}}"
+    },
+    "adjustmentsSlotCount": {
+        "message": "{{used}} / {{total}} configured"
+    },
+    "adjustmentsAddButton": {
+        "message": "Add Adjustment"
+    },
+    "adjustmentsRemoveButton": {
+        "message": "Remove adjustment"
+    },
+    "adjustmentsEmptyState": {
+        "message": "No adjustments configured yet. Click \"Add Adjustment\" to set up a switch that changes a value in flight."
+    },
     "adjustmentsMin": {
         "message": "Min"
     },
