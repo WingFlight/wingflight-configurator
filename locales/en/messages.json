@@ -1363,6 +1363,54 @@
     "configurationBoardMountTrimYaw": {
         "message": "Yaw Trim"
     },
+    "configurationBoardMountTrimAutoStart": {
+        "message": "Auto-Detect Trim"
+    },
+    "configurationBoardMountTrimAutoHelp": {
+        "message": "Automatically detects roll and pitch mounting trim (yaw can't be measured from a resting accelerometer, and stays manual). Place the aircraft level and disarmed, then press Start and don't touch it."
+    },
+    "configurationBoardMountTrimAutoIdle": {
+        "message": "Place aircraft level and disarmed, then press Start."
+    },
+    "configurationBoardMountTrimAutoStarting": {
+        "message": "Procedure started. Hold the aircraft still and level."
+    },
+    "configurationBoardMountTrimAutoSampling": {
+        "message": "Sampling — keep the aircraft still…"
+    },
+    "configurationBoardMountTrimAutoSuccessCountdown": {
+        "message": "Detected mounting trim: roll {0}°, pitch {1}°. Closing wizard in {2}s."
+    },
+    "configurationBoardMountTrimAutoDisarmRequired": {
+        "message": "Auto-detect is only allowed while disarmed."
+    },
+    "configurationBoardMountTrimAutoUncalibrated": {
+        "message": "Accelerometer has not been calibrated on this board yet. Auto-detect needs a calibrated accelerometer to give a reliable result — calibrate now, then try again."
+    },
+    "configurationBoardMountTrimAutoTimeout": {
+        "message": "Timed out waiting for a stable reading. Rest the aircraft on a level surface without touching it, then try again."
+    },
+    "configurationBoardMountTrimAutoOutOfRange": {
+        "message": "Residual tilt is too large for a mounting trim (over 30°). This usually means the Board Alignment above is wrong — try Auto-Align FC first, then retry this."
+    },
+    "configurationBoardMountTrimAutoUnsupported": {
+        "message": "Auto-detect command not supported by this firmware build."
+    },
+    "configurationBoardMountTrimAutoCalibrating": {
+        "message": "Calibrating accelerometer — keep the aircraft level and still…"
+    },
+    "configurationBoardMountTrimAutoWizardTitle": {
+        "message": "Mounting Trim Auto-Detect"
+    },
+    "configurationBoardMountTrimAutoWizardStep1": {
+        "message": "Step 1 of 2: Start"
+    },
+    "configurationBoardMountTrimAutoWizardStep2": {
+        "message": "Step 2 of 2: Result"
+    },
+    "configurationBoardMountTrimAutoWizardDetailStart": {
+        "message": "Place the aircraft level on a stable surface. Keep it disarmed, then press Start."
+    },
     "configurationBoardAutoAlignStart": {
         "message": "Auto-Align FC"
     },

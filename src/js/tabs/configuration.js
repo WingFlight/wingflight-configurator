@@ -24,6 +24,16 @@ tab.initialize = function (callback) {
         REJECTED_UNCALIBRATED: 6,
     };
 
+    const BOARD_MOUNT_TRIM_AUTO = {
+        IDLE: 0,
+        SAMPLING: 1,
+        SUCCESS: 2,
+        REJECTED_ARMED: 3,
+        REJECTED_UNCALIBRATED: 4,
+        TIMEOUT: 5,
+        OUT_OF_RANGE: 6,
+    };
+
     const uartNames = {
         0: 'UART1',
         1: 'UART2',
@@ -1008,6 +1018,305 @@ tab.initialize = function (callback) {
                 );
                 boardAutoAlignButton.prop('disabled', false);
                 clearBoardAutoAlignPoll();
+            });
+        });
+
+        const boardMountTrimAutoButton = $('#board-mount-trim-auto-start');
+        const boardMountTrimAutoWizard = $('#board-mount-trim-auto-wizard')[0];
+        const boardMountTrimAutoWizardStep = $('#board-mount-trim-auto-wizard-step');
+        const boardMountTrimAutoWizardDetail = $('#board-mount-trim-auto-wizard-detail');
+        const boardMountTrimAutoWizardProgress = $('#board-mount-trim-auto-progress-fill');
+        const boardMountTrimAutoWizardRetry = $('#board-mount-trim-auto-wizard-retry');
+        const boardMountTrimAutoWizardCalibrate = $('#board-mount-trim-auto-wizard-calibrate');
+        const boardMountTrimAutoWizardClose = $('#board-mount-trim-auto-wizard-close');
+        let boardMountTrimAutoPollTimer = null;
+        let boardMountTrimAutoAutoCloseTimer = null;
+
+        function setBoardMountTrimAutoWizard(stepKey, detailKey, progressPercent, detailArgs = [], canRetry = false, canCalibrate = false) {
+            boardMountTrimAutoWizardStep.text(i18n.getMessage(stepKey));
+            boardMountTrimAutoWizardDetail.text(i18n.getMessage(detailKey, detailArgs));
+            boardMountTrimAutoWizardProgress.css('width', `${progressPercent}%`);
+            boardMountTrimAutoWizardRetry.toggle(canRetry);
+            boardMountTrimAutoWizardCalibrate.toggle(canCalibrate);
+        }
+
+        function showBoardMountTrimAutoWizard() {
+            if (boardMountTrimAutoWizard && !boardMountTrimAutoWizard.open) {
+                boardMountTrimAutoWizard.showModal();
+            }
+        }
+
+        function closeBoardMountTrimAutoWizard() {
+            if (boardMountTrimAutoWizard && boardMountTrimAutoWizard.open) {
+                boardMountTrimAutoWizard.close();
+            }
+        }
+
+        function clearBoardMountTrimAutoPoll() {
+            if (boardMountTrimAutoPollTimer) {
+                clearTimeout(boardMountTrimAutoPollTimer);
+                boardMountTrimAutoPollTimer = null;
+            }
+        }
+
+        function clearBoardMountTrimAutoAutoClose() {
+            if (boardMountTrimAutoAutoCloseTimer) {
+                clearInterval(boardMountTrimAutoAutoCloseTimer);
+                boardMountTrimAutoAutoCloseTimer = null;
+            }
+        }
+
+        function startBoardMountTrimAutoCloseCountdown(rollDeg, pitchDeg, seconds = 3) {
+            clearBoardMountTrimAutoAutoClose();
+
+            let remaining = seconds;
+            setBoardMountTrimAutoWizard(
+                'configurationBoardMountTrimAutoWizardStep2',
+                'configurationBoardMountTrimAutoSuccessCountdown',
+                100,
+                [rollDeg, pitchDeg, remaining],
+                false
+            );
+
+            boardMountTrimAutoAutoCloseTimer = setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearBoardMountTrimAutoAutoClose();
+                    closeBoardMountTrimAutoWizard();
+                    return;
+                }
+
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep2',
+                    'configurationBoardMountTrimAutoSuccessCountdown',
+                    100,
+                    [rollDeg, pitchDeg, remaining],
+                    false
+                );
+            }, 1000);
+        }
+
+        async function queryBoardMountTrimAuto(startProcedure = false) {
+            const payload = startProcedure ? [1] : false;
+            const { data } = await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM_AUTO, payload);
+
+            if (!data || data.byteLength < 6) {
+                clearBoardMountTrimAutoAutoClose();
+                boardMountTrimAutoButton.prop('disabled', true);
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep2',
+                    'configurationBoardMountTrimAutoUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                clearBoardMountTrimAutoPoll();
+                return;
+            }
+
+            const state = data.readU8();
+            const rollTrimDecidegrees = data.read16();
+            const pitchTrimDecidegrees = data.read16();
+            const stabilityPercent = data.readU8();
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.SAMPLING) {
+                clearBoardMountTrimAutoAutoClose();
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep1',
+                    'configurationBoardMountTrimAutoSampling',
+                    Math.max(10, stabilityPercent),
+                    [],
+                    false
+                );
+                boardMountTrimAutoButton.prop('disabled', true);
+                clearBoardMountTrimAutoPoll();
+                boardMountTrimAutoPollTimer = setTimeout(() => {
+                    queryBoardMountTrimAuto(false).catch(() => {
+                        setBoardMountTrimAutoWizard(
+                            'configurationBoardMountTrimAutoWizardStep2',
+                            'configurationBoardMountTrimAutoUnsupported',
+                            100,
+                            [],
+                            false
+                        );
+                        boardMountTrimAutoButton.prop('disabled', false);
+                        clearBoardMountTrimAutoPoll();
+                    });
+                }, 250);
+                return;
+            }
+
+            boardMountTrimAutoButton.prop('disabled', false);
+            clearBoardMountTrimAutoPoll();
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.SUCCESS) {
+                FC.BOARD_MOUNT_TRIM.roll = rollTrimDecidegrees;
+                FC.BOARD_MOUNT_TRIM.pitch = pitchTrimDecidegrees;
+
+                const rollDeg = rollTrimDecidegrees / 10;
+                const pitchDeg = pitchTrimDecidegrees / 10;
+                $('input[name="board_mount_trim_roll"]').val(rollDeg);
+                $('input[name="board_mount_trim_pitch"]').val(pitchDeg);
+
+                startBoardMountTrimAutoCloseCountdown(rollDeg, pitchDeg, 3);
+                setDirty();
+                return;
+            }
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.REJECTED_ARMED) {
+                clearBoardMountTrimAutoAutoClose();
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep1',
+                    'configurationBoardMountTrimAutoDisarmRequired',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.REJECTED_UNCALIBRATED) {
+                clearBoardMountTrimAutoAutoClose();
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep1',
+                    'configurationBoardMountTrimAutoUncalibrated',
+                    100,
+                    [],
+                    false,
+                    true
+                );
+                return;
+            }
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.TIMEOUT) {
+                clearBoardMountTrimAutoAutoClose();
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep1',
+                    'configurationBoardMountTrimAutoTimeout',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            if (state === BOARD_MOUNT_TRIM_AUTO.OUT_OF_RANGE) {
+                clearBoardMountTrimAutoAutoClose();
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep2',
+                    'configurationBoardMountTrimAutoOutOfRange',
+                    100,
+                    [],
+                    true
+                );
+                return;
+            }
+
+            clearBoardMountTrimAutoAutoClose();
+            setBoardMountTrimAutoWizard(
+                'configurationBoardMountTrimAutoWizardStep1',
+                'configurationBoardMountTrimAutoIdle',
+                0,
+                [],
+                false
+            );
+        }
+
+        boardMountTrimAutoWizardRetry.hide();
+        boardMountTrimAutoWizardCalibrate.hide();
+        boardMountTrimAutoWizardClose.off('click').on('click', function () {
+            clearBoardMountTrimAutoPoll();
+            clearBoardMountTrimAutoAutoClose();
+            boardMountTrimAutoButton.prop('disabled', false);
+            closeBoardMountTrimAutoWizard();
+        });
+
+        boardMountTrimAutoWizardRetry.off('click').on('click', function () {
+            clearBoardMountTrimAutoAutoClose();
+            setBoardMountTrimAutoWizard(
+                'configurationBoardMountTrimAutoWizardStep1',
+                'configurationBoardMountTrimAutoStarting',
+                10,
+                [],
+                false
+            );
+            queryBoardMountTrimAuto(true).catch(() => {
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep2',
+                    'configurationBoardMountTrimAutoUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                boardMountTrimAutoButton.prop('disabled', false);
+                clearBoardMountTrimAutoPoll();
+            });
+        });
+
+        boardMountTrimAutoWizardCalibrate.off('click').on('click', function () {
+            clearBoardMountTrimAutoAutoClose();
+            clearBoardMountTrimAutoPoll();
+
+            setBoardMountTrimAutoWizard(
+                'configurationBoardMountTrimAutoWizardStep1',
+                'configurationBoardMountTrimAutoCalibrating',
+                10,
+                [],
+                false
+            );
+
+            // Same pattern as the board auto-align wizard's Calibrate handler: the
+            // MCU is locked in a blocking loop for the duration of the
+            // calibration and can't process other MSP traffic, so this
+            // wizard's own poll timer must stay cleared (done above) until
+            // the fixed wait below has elapsed.
+            MSP.send_message(MSPCodes.MSP_ACC_CALIBRATION, false, false, function () {
+                GUI.log(i18n.getMessage('initialSetupAccelCalibStarted'));
+            });
+
+            GUI.timeout_add('board_mount_trim_auto_calibrate_wait', function () {
+                GUI.log(i18n.getMessage('initialSetupAccelCalibEnded'));
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep1',
+                    'configurationBoardMountTrimAutoStarting',
+                    10,
+                    [],
+                    false
+                );
+                queryBoardMountTrimAuto(true).catch(() => {
+                    setBoardMountTrimAutoWizard(
+                        'configurationBoardMountTrimAutoWizardStep2',
+                        'configurationBoardMountTrimAutoUnsupported',
+                        100,
+                        [],
+                        false
+                    );
+                    boardMountTrimAutoButton.prop('disabled', false);
+                    clearBoardMountTrimAutoPoll();
+                });
+            }, 2000);
+        });
+
+        boardMountTrimAutoButton.off('click').on('click', function () {
+            clearBoardMountTrimAutoAutoClose();
+            showBoardMountTrimAutoWizard();
+            setBoardMountTrimAutoWizard(
+                'configurationBoardMountTrimAutoWizardStep1',
+                'configurationBoardMountTrimAutoStarting',
+                10,
+                [],
+                false
+            );
+            queryBoardMountTrimAuto(true).catch(() => {
+                setBoardMountTrimAutoWizard(
+                    'configurationBoardMountTrimAutoWizardStep2',
+                    'configurationBoardMountTrimAutoUnsupported',
+                    100,
+                    [],
+                    false
+                );
+                boardMountTrimAutoButton.prop('disabled', false);
+                clearBoardMountTrimAutoPoll();
             });
         });
 

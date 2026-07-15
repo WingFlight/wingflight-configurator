@@ -243,6 +243,11 @@
                                             <span i18n="configurationBoardMountTrimYaw"></span>
                                         </label>
                                     </div>
+
+                                    <div class="board_auto_align_controls">
+                                        <button type="button" id="board-mount-trim-auto-start" i18n="configurationBoardMountTrimAutoStart"></button>
+                                        <div class="helpicon cf_tip" i18n_title="configurationBoardMountTrimAutoHelp"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="sensor_align_content">
@@ -314,7 +319,7 @@
     </div>
 </div>
 
-<dialog id="board-auto-align-wizard" class="board-auto-align-wizard">
+<dialog id="board-auto-align-wizard" class="wizard-dialog">
     <h3 i18n="configurationBoardAutoAlignWizardTitle"></h3>
     <div class="wizard-step" id="board-auto-align-wizard-step" i18n="configurationBoardAutoAlignWizardStep1"></div>
     <div class="wizard-detail" id="board-auto-align-wizard-detail" i18n="configurationBoardAutoAlignWizardDetailStart"></div>
@@ -325,6 +330,20 @@
         <button type="button" id="board-auto-align-wizard-calibrate" i18n="configurationBoardAutoAlignWizardCalibrate"></button>
         <button type="button" id="board-auto-align-wizard-retry" i18n="configurationBoardAutoAlignWizardRetry"></button>
         <button type="button" id="board-auto-align-wizard-close" i18n="configurationBoardAutoAlignWizardClose"></button>
+    </div>
+</dialog>
+
+<dialog id="board-mount-trim-auto-wizard" class="wizard-dialog">
+    <h3 i18n="configurationBoardMountTrimAutoWizardTitle"></h3>
+    <div class="wizard-step" id="board-mount-trim-auto-wizard-step" i18n="configurationBoardMountTrimAutoWizardStep1"></div>
+    <div class="wizard-detail" id="board-mount-trim-auto-wizard-detail" i18n="configurationBoardMountTrimAutoWizardDetailStart"></div>
+    <div class="wizard-progress" aria-hidden="true">
+        <div class="wizard-progress-fill" id="board-mount-trim-auto-progress-fill"></div>
+    </div>
+    <div class="wizard-actions">
+        <button type="button" id="board-mount-trim-auto-wizard-calibrate" i18n="configurationBoardAutoAlignWizardCalibrate"></button>
+        <button type="button" id="board-mount-trim-auto-wizard-retry" i18n="configurationBoardAutoAlignWizardRetry"></button>
+        <button type="button" id="board-mount-trim-auto-wizard-close" i18n="configurationBoardAutoAlignWizardClose"></button>
     </div>
 </dialog>
 
