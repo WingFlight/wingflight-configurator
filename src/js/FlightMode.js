@@ -11,7 +11,7 @@ export const UNUSED_MODES = ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 
 
 // Lower-level/diagnostic boxes that are only worth showing to users who've
 // opted into Expert Mode - kept out of the way of a normal setup.
-export const EXPERT_MODES = ['BLACKBOX', 'BLACKBOX ERASE', 'BEEPER', 'BEEPER MUTE', 'FAILSAFE', 'PASSTHROUGH', 'PREARM', 'TRAINER'];
+export const EXPERT_MODES = ['BLACKBOX', 'BLACKBOX ERASE', 'BEEPER', 'BEEPER MUTE', 'FAILSAFE', 'GPS BEEP SATELLITE COUNT', 'PASSTHROUGH', 'PREARM', 'TRAINER'];
 
 export function getModeDisplayName(modeName) {
     return i18n.existsMessage('mode ' + modeName) ?

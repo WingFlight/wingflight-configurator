@@ -7472,6 +7472,9 @@
     "modeHelp BEEPER MUTE": {
         "message": "Silences the beeper entirely, overriding any other beeper trigger."
     },
+    "modeHelp GPS BEEP SATELLITE COUNT": {
+        "message": "Beeps out the current number of GPS satellites in view while active."
+    },
     "mode AUTO HOVER": {
         "message": "AUTO HOVER"
     },
