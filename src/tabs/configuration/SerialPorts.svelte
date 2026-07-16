@@ -6,6 +6,7 @@
   import {
     API_VERSION_12_7,
     API_VERSION_12_9,
+    API_VERSION_22_2,
   } from "@/js/configurator.svelte.js";
 
   import {
@@ -52,6 +53,11 @@
       if (
         func.name === "SPORT_MASTER" &&
         !semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
+      )
+        continue;
+      if (
+        (func.name === "FC_LINK_MASTER" || func.name === "FC_LINK_SLAVE") &&
+        !semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_2)
       )
         continue;
 

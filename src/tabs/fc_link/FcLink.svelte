@@ -4,6 +4,7 @@
 
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
+  import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
@@ -18,7 +19,7 @@
   const ROLE_MASTER = 0;
 
   let loading = $state(true);
-  let initialState;
+  let initialState = $state();
   let pollerInterval;
   let triggeringSync = $state(false);
 
