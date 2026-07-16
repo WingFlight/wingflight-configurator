@@ -39,7 +39,9 @@
   let modelRef;
   let boardAlignmentRef;
   let yawFix = $state(0);
+  let modelPollingPaused = $state(false);
   let fastInterval;
+  let attitudePollInFlight = false;
 
   let hasModelId = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7));
   let hasFlightStats = $derived(
@@ -118,6 +120,26 @@
     updateTabList(FC.FEATURE_CONFIG.features);
   }
 
+  async function pollAttitudeAndRender() {
+    if (modelPollingPaused || attitudePollInFlight) {
+      return;
+    }
+
+    attitudePollInFlight = true;
+    try {
+      const result = await Promise.race([
+        MSP.promise(MSPCodes.MSP_ATTITUDE).then(() => "received"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
+      ]);
+
+      if (result === "received") {
+        renderModelTick();
+      }
+    } finally {
+      attitudePollInFlight = false;
+    }
+  }
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_NAME);
@@ -144,10 +166,7 @@
     loading = false;
     await tick();
 
-    fastInterval = setInterval(async () => {
-      await MSP.promise(MSPCodes.MSP_ATTITUDE);
-      renderModelTick();
-    }, 50);
+    fastInterval = setInterval(pollAttitudeAndRender, 50);
   });
 
   onDestroy(() => {
@@ -455,6 +474,7 @@
         <BoardAlignment
           bind:this={boardAlignmentRef}
           magHardwareEnabled={FC.SENSOR_CONFIG.mag_hardware !== 1}
+          onModelPollingPausedChange={(paused) => (modelPollingPaused = paused)}
         />
       </Section>
 
