@@ -1,3 +1,15 @@
+# 0.0.6
+
+Complete the Svelte rewrite of the configurator - all remaining tabs (Mixer, Rates, Profiles, Servos, Sensors, Status, Setup, Power, Logic/Conditions, and more) converted from legacy HTML/JS.
+Add Mounting-surface Trim UI (manual entry and auto-detect wizard).
+Add throttle range governor support.
+Add ready-to-arm surface wiggle.
+Add progressive row disclosure to the Conditions tab, matching Adjustments.
+Improve Modes page with expert mode and contextual help.
+Hide advanced Profiles and Board Alignment options behind expert mode.
+Fix save bar not displaying and Profiles page save button.
+Remove legacy API hooks.
+
 # 0.0.5
 
 Add AUTO TRIM mode display name.
