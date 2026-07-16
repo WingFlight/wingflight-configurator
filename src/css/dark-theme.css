@@ -411,37 +411,6 @@ html[data-theme=dark] .tab-led-strip .gridSections .block {
     border: none;
 }
 
-/* MIXER TAB */
-
-html[data-theme=dark] .tab-mixer .gui_box span {
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer .subtitle {
-    color: #3a3a3a;
-    background-color: #a0a0a0;
-}
-
-html[data-theme=dark] .tab-mixer input:disabled,
-html[data-theme=dark] .tab-mixer select:disabled {
-    color: #595959;
-}
-
-html[data-theme=dark] .tab-mixer table input {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer table select {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer .bottomarea {
-    background-color: #393b3a;
-}
-
-
 /* BLACKBOX TAB */
 
 html[data-theme=dark] .tab-blackbox .regular-button.disabled {
