@@ -141,6 +141,7 @@ export function configuration_backup(callback) {
                 configuration.LED_STRIP = jQuery.extend(true, [], FC.LED_STRIP);
                 configuration.LED_COLORS = jQuery.extend(true, [], FC.LED_COLORS);
                 configuration.BOARD_ALIGNMENT_CONFIG = jQuery.extend(true, {}, FC.BOARD_ALIGNMENT_CONFIG);
+                configuration.BOARD_MOUNT_TRIM = jQuery.extend(true, {}, FC.BOARD_MOUNT_TRIM);
                 configuration.CRAFT_NAME = FC.CONFIG.name;
                 configuration.DISPLAY_NAME = FC.CONFIG.displayName;
                 configuration.MIXER_CONFIG = jQuery.extend(true, {}, FC.MIXER_CONFIG);
@@ -187,6 +188,8 @@ export function configuration_backup(callback) {
             return MSP.promise(MSPCodes.MSP_NAME);
         }).then(function() {
             return MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
+        }).then(function() {
+            return MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
         }).then(function() {
             return MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
         }).then(function() {
@@ -774,6 +777,7 @@ export function configuration_restore(callback) {
                     uniqueData.push(MSPCodes.MSP_SET_MIXER_CONFIG);
                     uniqueData.push(MSPCodes.MSP_SET_BEEPER_CONFIG);
                     uniqueData.push(MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG);
+                    uniqueData.push(MSPCodes.MSP2_WING_SET_BOARD_MOUNT_TRIM);
                     uniqueData.push(MSPCodes.MSP_SET_ADVANCED_CONFIG);
 
                     if (semver.gte(FC.CONFIG.apiVersion, "1.8.0")) {
@@ -811,6 +815,7 @@ export function configuration_restore(callback) {
                     FC.GPS_CONFIG = configuration.GPS_CONFIG;
                     FC.RSSI_CONFIG = configuration.RSSI_CONFIG;
                     FC.BOARD_ALIGNMENT_CONFIG = configuration.BOARD_ALIGNMENT_CONFIG;
+                    FC.BOARD_MOUNT_TRIM = configuration.BOARD_MOUNT_TRIM;
                     FC.CONFIG.name = configuration.CRAFT_NAME;
                     FC.CONFIG.displayName = configuration.DISPLAY_NAME;
                     FC.MIXER_CONFIG = configuration.MIXER_CONFIG;

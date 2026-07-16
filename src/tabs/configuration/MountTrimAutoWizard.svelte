@@ -8,14 +8,14 @@
 
   let { onButtonDisabled, onDirty, onClose } = $props();
 
-  const BOARD_AUTO_ALIGN = {
+  const BOARD_MOUNT_TRIM_AUTO = {
     IDLE: 0,
-    WAITING_FOR_TAIL_LIFT: 1,
+    SAMPLING: 1,
     SUCCESS: 2,
     REJECTED_ARMED: 3,
-    TIMEOUT: 4,
-    NO_MATCH: 5,
-    REJECTED_UNCALIBRATED: 6,
+    REJECTED_UNCALIBRATED: 4,
+    TIMEOUT: 5,
+    OUT_OF_RANGE: 6,
   };
 
   let dialogEl;
@@ -31,11 +31,11 @@
   // MSP.promise() never rejects and has no timeout of its own on a real
   // (non-virtual) connection -- a single dropped/slow reply on the serial
   // link left this polling loop awaiting forever, which showed up as the
-  // wizard permanently stuck mid-procedure. Race it against a local
-  // timeout (same pattern as Configuration.svelte's attitude poll) and,
-  // when it fires, resolve with null so the caller can just retry on the
-  // next tick instead of hanging.
-  function sendBoardAutoAlignQuery(startProcedure) {
+  // wizard permanently stuck on "Step 1: Sampling". Race it against a
+  // local timeout (same pattern as Configuration.svelte's attitude poll)
+  // and, when it fires, resolve with null so the caller can just retry on
+  // the next tick instead of hanging.
+  function sendBoardMountTrimAutoQuery(startProcedure) {
     const payload = startProcedure ? [1] : false;
 
     return new Promise((resolve) => {
@@ -51,7 +51,7 @@
 
       timeout = setTimeout(() => finish(null), 1000);
       MSP.send_message(
-        MSPCodes.MSP2_WING_BOARD_AUTO_ALIGN,
+        MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM_AUTO,
         payload,
         false,
         finish,
@@ -60,8 +60,6 @@
     });
   }
 
-  // Mirrors legacy's i18n.getMessage(key, [a, b, ...]) -- the Svelte i18n
-  // store doesn't have that array-to-{1,2,...}-object convenience wrapper.
   function t(key, args = []) {
     const params = {};
     args.forEach((value, i) => (params[i + 1] = value));
@@ -93,15 +91,15 @@
     autoCloseTimer = null;
   }
 
-  function startAutoCloseCountdown(roll, pitch, yaw, seconds = 3) {
+  function startAutoCloseCountdown(rollDeg, pitchDeg, seconds = 3) {
     clearAutoClose();
 
     let remaining = seconds;
     setWizard(
-      "configurationBoardAutoAlignWizardStep3",
-      "configurationBoardAutoAlignSuccessCountdown",
+      "configurationBoardMountTrimAutoWizardStep2",
+      "configurationBoardMountTrimAutoSuccessCountdown",
       100,
-      [roll, pitch, yaw, remaining],
+      [rollDeg, pitchDeg, remaining],
     );
 
     autoCloseTimer = setInterval(() => {
@@ -111,27 +109,28 @@
         dialogEl.close();
         return;
       }
+
       setWizard(
-        "configurationBoardAutoAlignWizardStep3",
-        "configurationBoardAutoAlignSuccessCountdown",
+        "configurationBoardMountTrimAutoWizardStep2",
+        "configurationBoardMountTrimAutoSuccessCountdown",
         100,
-        [roll, pitch, yaw, remaining],
+        [rollDeg, pitchDeg, remaining],
       );
     }, 1000);
   }
 
   function onQueryFailed() {
     setWizard(
-      "configurationBoardAutoAlignWizardStep3",
-      "configurationBoardAutoAlignUnsupported",
+      "configurationBoardMountTrimAutoWizardStep2",
+      "configurationBoardMountTrimAutoUnsupported",
       100,
     );
     onButtonDisabled(false);
     clearPoll();
   }
 
-  async function queryBoardAutoAlign(startProcedure = false) {
-    const response = await sendBoardAutoAlignQuery(startProcedure);
+  async function queryBoardMountTrimAuto(startProcedure = false) {
+    const response = await sendBoardMountTrimAutoQuery(startProcedure);
 
     if (!response) {
       // No reply within the timeout -- don't give up on a single missed
@@ -139,19 +138,19 @@
       clearAutoClose();
       clearPoll();
       pollTimer = setTimeout(() => {
-        queryBoardAutoAlign(false).catch(onQueryFailed);
+        queryBoardMountTrimAuto(false).catch(onQueryFailed);
       }, 250);
       return;
     }
 
     const { data } = response;
 
-    if (!data || data.byteLength < 8) {
+    if (!data || data.byteLength < 6) {
       clearAutoClose();
       onButtonDisabled(true);
       setWizard(
-        "configurationBoardAutoAlignWizardStep3",
-        "configurationBoardAutoAlignUnsupported",
+        "configurationBoardMountTrimAutoWizardStep2",
+        "configurationBoardMountTrimAutoUnsupported",
         100,
       );
       clearPoll();
@@ -159,21 +158,21 @@
     }
 
     const state = data.readU8();
-    const roll = data.read16();
-    const pitch = data.read16();
-    const yaw = data.read16();
+    const rollTrimDecidegrees = data.read16();
+    const pitchTrimDecidegrees = data.read16();
+    const stabilityPercent = data.readU8();
 
-    if (state === BOARD_AUTO_ALIGN.WAITING_FOR_TAIL_LIFT) {
+    if (state === BOARD_MOUNT_TRIM_AUTO.SAMPLING) {
       clearAutoClose();
       setWizard(
-        "configurationBoardAutoAlignWizardStep2",
-        "configurationBoardAutoAlignWaiting",
-        60,
+        "configurationBoardMountTrimAutoWizardStep1",
+        "configurationBoardMountTrimAutoSampling",
+        Math.max(10, stabilityPercent),
       );
       onButtonDisabled(true);
       clearPoll();
       pollTimer = setTimeout(() => {
-        queryBoardAutoAlign(false).catch(onQueryFailed);
+        queryBoardMountTrimAuto(false).catch(onQueryFailed);
       }, 250);
       return;
     }
@@ -181,27 +180,23 @@
     onButtonDisabled(false);
     clearPoll();
 
-    if (state === BOARD_AUTO_ALIGN.SUCCESS) {
-      FC.BOARD_ALIGNMENT_CONFIG.roll = roll;
-      FC.BOARD_ALIGNMENT_CONFIG.pitch = pitch;
-      FC.BOARD_ALIGNMENT_CONFIG.yaw = yaw;
+    if (state === BOARD_MOUNT_TRIM_AUTO.SUCCESS) {
+      FC.BOARD_MOUNT_TRIM.roll = rollTrimDecidegrees;
+      FC.BOARD_MOUNT_TRIM.pitch = pitchTrimDecidegrees;
 
-      setWizard(
-        "configurationBoardAutoAlignWizardStep3",
-        "configurationBoardAutoAlignSuccessCountdown",
-        100,
-        [roll, pitch, yaw, 3],
-      );
-      startAutoCloseCountdown(roll, pitch, yaw, 3);
+      const rollDeg = rollTrimDecidegrees / 10;
+      const pitchDeg = pitchTrimDecidegrees / 10;
+
+      startAutoCloseCountdown(rollDeg, pitchDeg, 3);
       onDirty?.();
       return;
     }
 
-    if (state === BOARD_AUTO_ALIGN.REJECTED_ARMED) {
+    if (state === BOARD_MOUNT_TRIM_AUTO.REJECTED_ARMED) {
       clearAutoClose();
       setWizard(
-        "configurationBoardAutoAlignWizardStep1",
-        "configurationBoardAutoAlignDisarmRequired",
+        "configurationBoardMountTrimAutoWizardStep1",
+        "configurationBoardMountTrimAutoDisarmRequired",
         100,
         [],
         true,
@@ -209,11 +204,11 @@
       return;
     }
 
-    if (state === BOARD_AUTO_ALIGN.REJECTED_UNCALIBRATED) {
+    if (state === BOARD_MOUNT_TRIM_AUTO.REJECTED_UNCALIBRATED) {
       clearAutoClose();
       setWizard(
-        "configurationBoardAutoAlignWizardStep1",
-        "configurationBoardAutoAlignUncalibrated",
+        "configurationBoardMountTrimAutoWizardStep1",
+        "configurationBoardMountTrimAutoUncalibrated",
         100,
         [],
         false,
@@ -222,11 +217,11 @@
       return;
     }
 
-    if (state === BOARD_AUTO_ALIGN.TIMEOUT) {
+    if (state === BOARD_MOUNT_TRIM_AUTO.TIMEOUT) {
       clearAutoClose();
       setWizard(
-        "configurationBoardAutoAlignWizardStep2",
-        "configurationBoardAutoAlignTimeout",
+        "configurationBoardMountTrimAutoWizardStep1",
+        "configurationBoardMountTrimAutoTimeout",
         100,
         [],
         true,
@@ -234,11 +229,11 @@
       return;
     }
 
-    if (state === BOARD_AUTO_ALIGN.NO_MATCH) {
+    if (state === BOARD_MOUNT_TRIM_AUTO.OUT_OF_RANGE) {
       clearAutoClose();
       setWizard(
-        "configurationBoardAutoAlignWizardStep2",
-        "configurationBoardAutoAlignNoMatch",
+        "configurationBoardMountTrimAutoWizardStep2",
+        "configurationBoardMountTrimAutoOutOfRange",
         100,
         [],
         true,
@@ -248,8 +243,8 @@
 
     clearAutoClose();
     setWizard(
-      "configurationBoardAutoAlignWizardStep1",
-      "configurationBoardAutoAlignIdle",
+      "configurationBoardMountTrimAutoWizardStep1",
+      "configurationBoardMountTrimAutoIdle",
       0,
     );
   }
@@ -257,11 +252,11 @@
   function onClickRetry() {
     clearAutoClose();
     setWizard(
-      "configurationBoardAutoAlignWizardStep1",
-      "configurationBoardAutoAlignStarting",
-      25,
+      "configurationBoardMountTrimAutoWizardStep1",
+      "configurationBoardMountTrimAutoStarting",
+      10,
     );
-    queryBoardAutoAlign(true).catch(onQueryFailed);
+    queryBoardMountTrimAuto(true).catch(onQueryFailed);
   }
 
   function onClickCalibrate() {
@@ -269,29 +264,25 @@
     clearPoll();
 
     setWizard(
-      "configurationBoardAutoAlignWizardStep1",
-      "configurationBoardAutoAlignCalibrating",
+      "configurationBoardMountTrimAutoWizardStep1",
+      "configurationBoardMountTrimAutoCalibrating",
       10,
     );
 
-    // Same pattern as Setup's accel calibration: the MCU is locked in a
-    // blocking loop for the duration of the calibration and can't process
-    // other MSP traffic, so the poll timer must stay cleared until the
-    // fixed wait below has elapsed.
     MSP.send_message(MSPCodes.MSP_ACC_CALIBRATION, false, false, () => {
       GUI.log($i18n.t("initialSetupAccelCalibStarted"));
     });
 
     GUI.timeout_add(
-      "board_auto_align_calibrate_wait",
+      "board_mount_trim_auto_calibrate_wait",
       () => {
         GUI.log($i18n.t("initialSetupAccelCalibEnded"));
         setWizard(
-          "configurationBoardAutoAlignWizardStep1",
-          "configurationBoardAutoAlignStarting",
-          25,
+          "configurationBoardMountTrimAutoWizardStep1",
+          "configurationBoardMountTrimAutoStarting",
+          10,
         );
-        queryBoardAutoAlign(true).catch(onQueryFailed);
+        queryBoardMountTrimAuto(true).catch(onQueryFailed);
       },
       2000,
     );
@@ -323,16 +314,16 @@
   onMount(() => {
     dialogEl.showModal();
     setWizard(
-      "configurationBoardAutoAlignWizardStep1",
-      "configurationBoardAutoAlignStarting",
-      25,
+      "configurationBoardMountTrimAutoWizardStep1",
+      "configurationBoardMountTrimAutoStarting",
+      10,
     );
-    queryBoardAutoAlign(true).catch(onQueryFailed);
+    queryBoardMountTrimAuto(true).catch(onQueryFailed);
   });
 </script>
 
 <dialog bind:this={dialogEl} onclose={handleDialogClose}>
-  <h3>{$i18n.t("configurationBoardAutoAlignWizardTitle")}</h3>
+  <h3>{$i18n.t("configurationBoardMountTrimAutoWizardTitle")}</h3>
   <div class="wizard-step">{wizardStep}</div>
   <div class="wizard-detail">{wizardDetail}</div>
   <div class="wizard-progress" aria-hidden="true">

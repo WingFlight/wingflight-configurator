@@ -39,7 +39,10 @@
   let modelRef;
   let boardAlignmentRef;
   let yawFix = $state(0);
+  let modelPollingPaused = $state(false);
   let fastInterval;
+  let attitudePollInFlight = false;
+  let dirtyRevision = $state(0);
 
   let hasModelId = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7));
   let hasFlightStats = $derived(
@@ -75,12 +78,14 @@
       SENSOR_CONFIG: FC.SENSOR_CONFIG,
       ARMING_CONFIG: { wiggle_ready: FC.ARMING_CONFIG.wiggle.READY },
       BOARD_ALIGNMENT_CONFIG: FC.BOARD_ALIGNMENT_CONFIG,
+      BOARD_MOUNT_TRIM: FC.BOARD_MOUNT_TRIM,
       SENSOR_ALIGNMENT: { align_mag: FC.SENSOR_ALIGNMENT.align_mag },
       SERIAL_CONFIG: FC.SERIAL_CONFIG,
     });
   }
 
   let changes = $derived.by(() => {
+    dirtyRevision;
     if (!initialState) return [];
     return diff(initialState, snapshotState());
   });
@@ -93,6 +98,43 @@
     const y = (FC.SENSOR_DATA.kinematics[2] * -1.0 - yawFix) * DEG2RAD;
     const z = FC.SENSOR_DATA.kinematics[0] * -1.0 * DEG2RAD;
     modelRef?.rotateTo(x, y, z);
+  }
+
+  function markDirty() {
+    dirtyRevision += 1;
+  }
+
+  function pollAttitudeAndRender() {
+    if (modelPollingPaused || attitudePollInFlight) {
+      return;
+    }
+
+    attitudePollInFlight = true;
+    let settled = false;
+    let timeout;
+
+    function finish(response) {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout);
+      attitudePollInFlight = false;
+
+      if (response) {
+        renderModelTick();
+      }
+    }
+
+    timeout = setTimeout(() => finish(), 750);
+    MSP.send_message(
+      MSPCodes.MSP_ATTITUDE,
+      false,
+      false,
+      (response) => finish(response),
+      true,
+    );
   }
 
   function onResetYaw() {
@@ -128,6 +170,7 @@
     await MSP.promise(MSPCodes.MSP_ARMING_CONFIG);
     await MSP.promise(MSPCodes.MSP_SENSOR_ALIGNMENT);
     await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
+    await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_ACC_TRIM);
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
 
@@ -142,10 +185,7 @@
     loading = false;
     await tick();
 
-    fastInterval = setInterval(async () => {
-      await MSP.promise(MSPCodes.MSP_ATTITUDE);
-      renderModelTick();
-    }, 50);
+    fastInterval = setInterval(pollAttitudeAndRender, 50);
   });
 
   onDestroy(() => {
@@ -167,6 +207,7 @@
     await save(MSPCodes.MSP_SET_ARMING_CONFIG);
     await save(MSPCodes.MSP_SET_SENSOR_ALIGNMENT);
     await save(MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG);
+    await save(MSPCodes.MSP2_WING_SET_BOARD_MOUNT_TRIM);
     await save(MSPCodes.MSP_SET_ACC_TRIM);
     await save(MSPCodes.MSP_SET_SERIAL_CONFIG);
 
@@ -199,6 +240,7 @@
     Object.assign(FC.SENSOR_CONFIG, snapshot.SENSOR_CONFIG);
     FC.ARMING_CONFIG.wiggle.READY = snapshot.ARMING_CONFIG.wiggle_ready;
     Object.assign(FC.BOARD_ALIGNMENT_CONFIG, snapshot.BOARD_ALIGNMENT_CONFIG);
+    Object.assign(FC.BOARD_MOUNT_TRIM, snapshot.BOARD_MOUNT_TRIM);
     Object.assign(FC.SENSOR_ALIGNMENT, snapshot.SENSOR_ALIGNMENT);
     FC.SERIAL_CONFIG.ports.forEach((port, i) =>
       Object.assign(port, snapshot.SERIAL_CONFIG.ports[i]),
@@ -451,6 +493,8 @@
         <BoardAlignment
           bind:this={boardAlignmentRef}
           magHardwareEnabled={FC.SENSOR_CONFIG.mag_hardware !== 1}
+          onDirty={markDirty}
+          onModelPollingPausedChange={(paused) => (modelPollingPaused = paused)}
         />
       </Section>
 

@@ -13,6 +13,7 @@ class FlightController {
   BEEPER_CONFIG = $state();
   BLACKBOX = $state();
   BOARD_ALIGNMENT_CONFIG = $state();
+  BOARD_MOUNT_TRIM = $state();
   CONFIG = $state();
   COPY_PROFILE = $state();
   CURRENT_METERS = $state();
@@ -203,6 +204,13 @@ class FlightController {
     this.MIXER_OVERRIDE =           Array.from({length: 29});
 
     this.BOARD_ALIGNMENT_CONFIG = {
+      roll:                       0,
+      pitch:                      0,
+      yaw:                        0,
+    };
+
+    // Fine mounting-surface trim (decidegrees), applied after BOARD_ALIGNMENT_CONFIG
+    this.BOARD_MOUNT_TRIM = {
       roll:                       0,
       pitch:                      0,
       yaw:                        0,
