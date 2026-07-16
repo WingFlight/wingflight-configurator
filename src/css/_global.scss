@@ -93,11 +93,17 @@ select {
 }
 
 %button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 2px;
   // Fixed height (matching input/select below) so buttons render at a
   // consistent size regardless of the ambient font-size of whatever
   // context they're placed in - padding alone made height drift per-tab.
+  // flex centering (rather than relying on line-height alone) keeps the
+  // label centered even when a grid stretches the button taller than its
+  // own content, e.g. when a sibling button's label wraps to two lines.
   height: 1.5rem;
   line-height: 1.5rem;
   padding: 0 8px;
