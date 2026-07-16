@@ -43,3 +43,10 @@ export function numberBounds(transform) {
 // RC channel choices for the RC_CHANNEL operand type -- mirrors the order
 // the firmware's rcInput[] array uses (Roll, Pitch, Yaw, Throttle, then AUX1..).
 export const PRIMARY_CHANNEL_COUNT = 4;
+
+// A condition slot counts as "configured" once it differs from the
+// firmware-default null condition -- mirrors adjFunction > 0 in the
+// Adjustments tab, used to decide which slots start out visible.
+export function isConditionUsed(condition) {
+  return !LogicCondition.compareCondition(condition, LogicCondition.nullCondition());
+}
