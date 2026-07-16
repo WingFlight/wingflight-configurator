@@ -1379,7 +1379,7 @@
         "message": "Sampling — keep the aircraft still…"
     },
     "configurationBoardMountTrimAutoSuccessCountdown": {
-        "message": "Detected mounting trim: roll {0}°, pitch {1}°. Closing wizard in {2}s."
+        "message": "Detected mounting trim: roll $1°, pitch $2°. Closing wizard in $3s."
     },
     "configurationBoardMountTrimAutoDisarmRequired": {
         "message": "Auto-detect is only allowed while disarmed."
