@@ -13,7 +13,7 @@
   import MountTrimAutoWizard from "./MountTrimAutoWizard.svelte";
   import { SENSOR_ALIGNMENTS } from "./util.js";
 
-  let { magHardwareEnabled, onDirty, onModelPollingPausedChange } = $props();
+  let { magHardwareEnabled, onDirty } = $props();
 
   let magAlignOptions = $derived([
     { value: 0, label: $i18n.t("configurationSensorAlignmentDefaultOption") },
@@ -33,7 +33,6 @@
   }
 
   function closeMountTrimAutoWizard() {
-    onModelPollingPausedChange?.(false);
     if (!mountTrimAutoWizardInstance) return;
     const instance = mountTrimAutoWizardInstance;
     mountTrimAutoWizardInstance = null;
@@ -59,7 +58,6 @@
 
   function onClickMountTrimAuto() {
     closeMountTrimAutoWizard();
-    onModelPollingPausedChange?.(true);
     mountTrimAutoWizardInstance = mount(MountTrimAutoWizard, {
       target: document.body,
       props: {

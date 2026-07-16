@@ -39,9 +39,9 @@
   let modelRef;
   let boardAlignmentRef;
   let yawFix = $state(0);
-  let modelPollingPaused = $state(false);
   let fastInterval;
   let attitudePollInFlight = false;
+  let dirtyRevision = $state(0);
 
   let hasModelId = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7));
   let hasFlightStats = $derived(
@@ -84,6 +84,7 @@
   }
 
   let changes = $derived.by(() => {
+    dirtyRevision;
     if (!initialState) return [];
     return diff(initialState, snapshotState());
   });
@@ -96,6 +97,43 @@
     const y = (FC.SENSOR_DATA.kinematics[2] * -1.0 - yawFix) * DEG2RAD;
     const z = FC.SENSOR_DATA.kinematics[0] * -1.0 * DEG2RAD;
     modelRef?.rotateTo(x, y, z);
+  }
+
+  function markDirty() {
+    dirtyRevision += 1;
+  }
+
+  function pollAttitudeAndRender() {
+    if (attitudePollInFlight) {
+      return;
+    }
+
+    attitudePollInFlight = true;
+    let settled = false;
+    let timeout;
+
+    function finish(response) {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout);
+      attitudePollInFlight = false;
+
+      if (response) {
+        renderModelTick();
+      }
+    }
+
+    timeout = setTimeout(() => finish(), 750);
+    MSP.send_message(
+      MSPCodes.MSP_ATTITUDE,
+      false,
+      false,
+      (response) => finish(response),
+      true,
+    );
   }
 
   function onResetYaw() {
@@ -118,26 +156,6 @@
 
   function onFeatureChange() {
     updateTabList(FC.FEATURE_CONFIG.features);
-  }
-
-  async function pollAttitudeAndRender() {
-    if (modelPollingPaused || attitudePollInFlight) {
-      return;
-    }
-
-    attitudePollInFlight = true;
-    try {
-      const result = await Promise.race([
-        MSP.promise(MSPCodes.MSP_ATTITUDE).then(() => "received"),
-        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
-      ]);
-
-      if (result === "received") {
-        renderModelTick();
-      }
-    } finally {
-      attitudePollInFlight = false;
-    }
   }
 
   onMount(async () => {
@@ -474,7 +492,7 @@
         <BoardAlignment
           bind:this={boardAlignmentRef}
           magHardwareEnabled={FC.SENSOR_CONFIG.mag_hardware !== 1}
-          onModelPollingPausedChange={(paused) => (modelPollingPaused = paused)}
+          onDirty={markDirty}
         />
       </Section>
 
