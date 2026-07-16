@@ -4,7 +4,6 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
-  import Field from "@/components/Field.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
@@ -13,7 +12,7 @@
   import MountTrimAutoWizard from "./MountTrimAutoWizard.svelte";
   import { SENSOR_ALIGNMENTS } from "./util.js";
 
-  let { magHardwareEnabled, onDirty } = $props();
+  let { magHardwareEnabled, onDirty, onModelPollingPausedChange } = $props();
 
   let magAlignOptions = $derived([
     { value: 0, label: $i18n.t("configurationSensorAlignmentDefaultOption") },
@@ -25,11 +24,23 @@
   let autoAlignWizardInstance = null;
   let mountTrimAutoWizardInstance = null;
 
+  // Both wizards poll their own MSP2_WING_BOARD_*_AUTO status every 250ms
+  // while open. Pausing the 3D model's MSP_ATTITUDE poll for that window
+  // avoids contending with that traffic on a real (non-instant) serial
+  // link, which previously showed up as edits to the roll/pitch/yaw/trim
+  // fields getting clobbered mid-interaction.
+  function updateModelPollingPaused() {
+    onModelPollingPausedChange?.(
+      !!autoAlignWizardInstance || !!mountTrimAutoWizardInstance,
+    );
+  }
+
   function closeAutoAlignWizard() {
     if (!autoAlignWizardInstance) return;
     const instance = autoAlignWizardInstance;
     autoAlignWizardInstance = null;
     unmount(instance);
+    updateModelPollingPaused();
   }
 
   function closeMountTrimAutoWizard() {
@@ -37,6 +48,7 @@
     const instance = mountTrimAutoWizardInstance;
     mountTrimAutoWizardInstance = null;
     unmount(instance);
+    updateModelPollingPaused();
   }
 
   function onClickAutoAlign() {
@@ -54,6 +66,7 @@
         onClose: closeAutoAlignWizard,
       },
     });
+    updateModelPollingPaused();
   }
 
   function onClickMountTrimAuto() {
@@ -66,6 +79,7 @@
         onClose: closeMountTrimAutoWizard,
       },
     });
+    updateModelPollingPaused();
   }
 
   function decidegreesToDegrees(value) {
@@ -74,6 +88,12 @@
 
   function degreesToDecidegrees(value) {
     return Math.round(Number(value) * 10);
+  }
+
+  function onClickResetMountTrim() {
+    FC.BOARD_MOUNT_TRIM.roll = 0;
+    FC.BOARD_MOUNT_TRIM.pitch = 0;
+    FC.BOARD_MOUNT_TRIM.yaw = 0;
   }
 
   export function cleanup() {
@@ -189,19 +209,23 @@
         {$i18n.t("configurationBoardMountTrimAutoStart")}
       </button>
       <HelpIcon>{$i18n.t("configurationBoardMountTrimAutoHelp")}</HelpIcon>
+      <button class="btn" onclick={onClickResetMountTrim}>
+        {$i18n.t("configurationBoardMountTrimReset")}
+      </button>
     </div>
   </div>
 </div>
 
 {#if magHardwareEnabled}
   <div class="mag-align">
-    <Field id="mag-align" label="configurationSensorAlignmentMag">
-      <Select
-        id="mag-align"
-        bind:value={FC.SENSOR_ALIGNMENT.align_mag}
-        options={magAlignOptions}
-      />
-    </Field>
+    <div class="section-title">
+      <span>{$i18n.t("configurationSensorAlignmentMag")}</span>
+    </div>
+    <Select
+      id="mag-align"
+      bind:value={FC.SENSOR_ALIGNMENT.align_mag}
+      options={magAlignOptions}
+    />
   </div>
 {/if}
 
@@ -259,6 +283,7 @@
 
   .auto-align {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px;
   }

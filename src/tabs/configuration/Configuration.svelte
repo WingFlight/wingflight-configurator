@@ -39,6 +39,7 @@
   let modelRef;
   let boardAlignmentRef;
   let yawFix = $state(0);
+  let modelPollingPaused = $state(false);
   let fastInterval;
   let attitudePollInFlight = false;
   let dirtyRevision = $state(0);
@@ -104,7 +105,7 @@
   }
 
   function pollAttitudeAndRender() {
-    if (attitudePollInFlight) {
+    if (modelPollingPaused || attitudePollInFlight) {
       return;
     }
 
@@ -493,6 +494,7 @@
           bind:this={boardAlignmentRef}
           magHardwareEnabled={FC.SENSOR_CONFIG.mag_hardware !== 1}
           onDirty={markDirty}
+          onModelPollingPausedChange={(paused) => (modelPollingPaused = paused)}
         />
       </Section>
 
