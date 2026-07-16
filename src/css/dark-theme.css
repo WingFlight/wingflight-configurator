@@ -562,22 +562,6 @@ html[data-theme=dark] .tab-power .smartfuel-configuration select {
 }
 
 
-/* SENSORS TAB */
-
-html[data-theme=dark] .tab-sensors .plot_control {
-    background-color: #2f2f2f;
-}
-
-html[data-theme=dark] .tab-sensors .plot_control select {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-sensors text {
-    fill: white;
-}
-
-
 /* SERVOS TAB */
 
 html[data-theme=dark] .tab-servos .gui_box span {
