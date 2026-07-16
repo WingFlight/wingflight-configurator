@@ -53,7 +53,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 130%;
+    font-size: 1.1rem;
     border-bottom: 1px solid var(--accent);
     line-height: 28px;
     height: 36px;

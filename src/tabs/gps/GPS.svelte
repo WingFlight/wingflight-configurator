@@ -436,19 +436,19 @@
   }
 
   .gps-fix :global(.gpsFixTrue) {
-    background-color: #56ac1d;
+    background-color: var(--color-status-good);
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 3px;
+    border-radius: 2px;
   }
 
   .gps-fix :global(.gpsFixFalse) {
-    background-color: #e60000;
+    background-color: var(--color-status-bad);
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 3px;
+    border-radius: 2px;
   }
 
   table.cf_table {
@@ -467,7 +467,7 @@
 
   progress {
     width: 100%;
-    border-radius: 3px;
+    border-radius: 2px;
   }
 
   .gps-map {

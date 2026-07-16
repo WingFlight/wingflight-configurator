@@ -601,7 +601,7 @@
     padding: 2px 6px;
     text-align: right;
     font-family: var(--font-mono);
-    border-radius: 3px;
+    border-radius: 2px;
 
     color: var(--color-text);
     background-color: var(--color-input-bg);

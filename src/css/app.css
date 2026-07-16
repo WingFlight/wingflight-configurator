@@ -4,6 +4,12 @@
   --section-padding: 8px;
 
   --color-shadow: rgba(0, 0, 0, 0.2);
+
+  /* Status-badge colors (e.g. GPS fix indicator) - theme-independent by
+     design, matching the value already duplicated as raw hex across
+     main.css/blackbox.css/status.css. */
+  --color-status-good: #56ac1d;
+  --color-status-bad: #e60000;
 }
 
 ::-webkit-scrollbar {
@@ -108,7 +114,7 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
-  --val-neutral-hue: 248;
+  --val-neutral-hue: 220;
   --val-neutral-sat: 5%;
   --val-accent-hue: 0;
 

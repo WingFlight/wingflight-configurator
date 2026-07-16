@@ -220,7 +220,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     color: var(--mutedText);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
   }
 </style>

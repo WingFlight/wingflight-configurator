@@ -13,10 +13,10 @@
   {#each visible as beeper (beeper.bit)}
     <Field id={`${idPrefix}-${beeper.name}`} label={rowLabel}>
       {#snippet rowLabel()}
-        <div class="beeper-label">
-          <span class="name">{beeper.name}</span>
-          <span class="desc">{$i18n.t(`beeper_${beeper.name}`)}</span>
-        </div>
+        <span class="name">{beeper.name}</span>
+      {/snippet}
+      {#snippet tooltip()}
+        {$i18n.t(`beeper_${beeper.name}`)}
       {/snippet}
       <Switch
         id={`${idPrefix}-${beeper.name}`}
@@ -32,20 +32,8 @@
 </div>
 
 <style lang="scss">
-  .beeper-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 4px 0;
-  }
-
   .name {
     font-weight: 600;
     font-size: 0.8rem;
-  }
-
-  .desc {
-    font-size: 0.75rem;
-    color: var(--color-text-soft);
   }
 </style>

@@ -95,7 +95,13 @@ select {
 %button {
   border: none;
   border-radius: 2px;
-  padding: 8px;
+  // Fixed height (matching input/select below) so buttons render at a
+  // consistent size regardless of the ambient font-size of whatever
+  // context they're placed in - padding alone made height drift per-tab.
+  height: 1.5rem;
+  line-height: 1.5rem;
+  padding: 0 8px;
+  font-size: 0.8rem;
   transition: var(--animation-speed);
 
   color: var(--color-btn-fg);
@@ -115,5 +121,11 @@ select {
 
   &:active {
     background-color: var(--color-btn-bg-active);
+  }
+
+  @media only screen and (max-width: 480px) {
+    height: 2rem;
+    line-height: 2rem;
+    font-size: 1rem;
   }
 }
