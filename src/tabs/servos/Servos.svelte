@@ -1,8 +1,6 @@
 <script>
-  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
 
-  import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -16,8 +14,7 @@
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
-  const MAX_SERVOS = 8;
-  const MAX_SERVOS_12_9 = 26;
+  const MAX_SERVOS = 26;
   const BUS_SERVO_OFFSET = 8;
   const BUS_SERVO_CHANNELS = 18;
   const OVERRIDE_OFF = 2001;
@@ -30,12 +27,6 @@
 
   let overrideEnabled = $state(false);
 
-  let hasExtendedServoScale = $derived(
-    semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
-  let supportsBusServos = $derived(
-    semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
   let hasFbusOrSbus = $derived(
     FC.SERIAL_CONFIG.ports.some(
       (port) =>
@@ -43,8 +34,8 @@
         port.functions.includes("SBUS_OUT"),
     ),
   );
-  let maxServos = $derived(supportsBusServos ? MAX_SERVOS_12_9 : MAX_SERVOS);
-  let busActive = $derived(supportsBusServos && hasFbusOrSbus);
+  let maxServos = MAX_SERVOS;
+  let busActive = $derived(hasFbusOrSbus);
 
   // FC.CONFIG.servoCount includes bus servos once FBUS/SBUS is active, so it
   // can't be used directly to bound "PWM-only" logic (unusual-value
@@ -136,7 +127,7 @@
           servo.max < 150
         )
           unusualLimit = true;
-        const scaleMin = hasExtendedServoScale ? 50 : 150;
+        const scaleMin = 50;
         if (
           servo.rneg < scaleMin ||
           servo.rneg > 375 ||
@@ -290,24 +281,14 @@
     {/if}
 
     <div class="table-scroll">
-      <ServoConfigTable
-        servos={pwmServos}
-        {hasExtendedServoScale}
-        {onFieldChange}
-        {onRateChange}
-      />
+      <ServoConfigTable servos={pwmServos} {onFieldChange} {onRateChange} />
     </div>
   </Section>
 
   {#if busActive}
     <Section label="servoConfigurationBus">
       <div class="table-scroll">
-        <ServoConfigTable
-          servos={busServos}
-          {hasExtendedServoScale}
-          {onFieldChange}
-          {onRateChange}
-        />
+        <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
       </div>
     </Section>
   {/if}

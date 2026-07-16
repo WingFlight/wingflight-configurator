@@ -7,12 +7,12 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  let { servos, hasExtendedServoScale, onFieldChange, onRateChange } = $props();
+  let { servos, onFieldChange, onRateChange } = $props();
 
   const FLAG_REVERSE = 1;
   const FLAG_GEOCOR = 2;
 
-  let scaleMin = $derived(hasExtendedServoScale ? 50 : 100);
+  const scaleMin = 50;
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
   // table instance is homogeneous (all PWM or all bus), so hide the whole

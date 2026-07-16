@@ -1,8 +1,6 @@
 <script>
-  import semver from "semver";
   import { slide } from "svelte/transition";
 
-  import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
@@ -10,8 +8,6 @@
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
-
-  let gte_12_9 = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9));
 
   let initial_rc_min_throttle = FC.RC_CONFIG.rc_min_throttle;
   let initial_rc_max_throttle = FC.RC_CONFIG.rc_max_throttle;
@@ -21,7 +17,7 @@
   );
 </script>
 
-{#snippet throttle_gte_12_9()}
+{#snippet throttle()}
   <SubSection label="receiverSettingsThrottleChannel">
     <Field
       id="auto-throttle-range"
@@ -96,62 +92,6 @@
   </SubSection>
 {/snippet}
 
-{#snippet throttle()}
-  <SubSection label="receiverSettingsThrottleChannel">
-    <Field id="receiver-arm-throttle" label="receiverArmingThrottle" unit="μs">
-      {#snippet tooltip()}
-        <Tooltip
-          help="receiverHelpArmingThrottle"
-          attrs={[
-            { name: "genericDefault", value: "1050μs" },
-            { name: "genericRange", value: "850μs - 1500μs" },
-          ]}
-        />
-      {/snippet}
-      <NumberInput
-        id="receiver-arm-throttle"
-        min="850"
-        max="1500"
-        bind:value={FC.RC_CONFIG.rc_arm_throttle}
-      />
-    </Field>
-    <Field id="receiver-zero-throttle" label="receiverZeroThrottle" unit="μs">
-      {#snippet tooltip()}
-        <Tooltip
-          help="receiverHelpZeroThrottle"
-          attrs={[
-            { name: "genericDefault", value: "1100μs" },
-            { name: "genericRange", value: "850μs - 1500μs" },
-          ]}
-        />
-      {/snippet}
-      <NumberInput
-        id="receiver-zero-throttle"
-        min="850"
-        max="1500"
-        bind:value={FC.RC_CONFIG.rc_min_throttle}
-      />
-    </Field>
-    <Field id="receiver-full-throttle" label="receiverFullThrottle" unit="μs">
-      {#snippet tooltip()}
-        <Tooltip
-          help="receiverHelpFullThrottle"
-          attrs={[
-            { name: "genericDefault", value: "1900μs" },
-            { name: "genericRange", value: "1500μs - 2150μs" },
-          ]}
-        />
-      {/snippet}
-      <NumberInput
-        id="receiver-full-throttle"
-        min="1500"
-        max="2150"
-        bind:value={FC.RC_CONFIG.rc_max_throttle}
-      />
-    </Field>
-  </SubSection>
-{/snippet}
-
 <Section label="receiverSettings">
   <SubSection>
     <Field id="receiver-stick-center" label="receiverStickCenter" unit="μs">
@@ -198,59 +138,30 @@
       unit="μs"
     >
       {#snippet tooltip()}
-        {#if gte_12_9}
-          <Tooltip
-            help="receiverHelpCyclicDeadband"
-            attrs={[
-              { name: "genericDefault", value: "5μs" },
-              { name: "genericRange", value: "0μs - 100μs" },
-            ]}
-          />
-        {:else}
-          <Tooltip
-            help="receiverHelpCyclicDeadband"
-            attrs={[
-              { name: "genericDefault", value: "2μs" },
-              { name: "genericRange", value: "0μs - 32μs" },
-            ]}
-          />
-        {/if}
+        <Tooltip
+          help="receiverHelpCyclicDeadband"
+          attrs={[
+            { name: "genericDefault", value: "5μs" },
+            { name: "genericRange", value: "0μs - 100μs" },
+          ]}
+        />
       {/snippet}
-      {#if gte_12_9}
-        <NumberInput
-          id="receiver-cyclic-deadband"
-          min="0"
-          max="100"
-          bind:value={FC.RC_CONFIG.rc_deadband}
-        />
-      {:else}
-        <NumberInput
-          id="receiver-cyclic-deadband"
-          min="0"
-          max="32"
-          bind:value={FC.RC_CONFIG.rc_deadband}
-        />
-      {/if}
+      <NumberInput
+        id="receiver-cyclic-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.RC_CONFIG.rc_deadband}
+      />
     </Field>
     <Field id="receiver-yaw-deadband" label="receiverYawDeadband" unit="μs">
       {#snippet tooltip()}
-        {#if gte_12_9}
-          <Tooltip
-            help="receiverHelpYawDeadband"
-            attrs={[
-              { name: "genericDefault", value: "5μs" },
-              { name: "genericRange", value: "0μs - 100μs" },
-            ]}
-          />
-        {:else}
-          <Tooltip
-            help="receiverHelpYawDeadband"
-            attrs={[
-              { name: "genericDefault", value: "2μs" },
-              { name: "genericRange", value: "0μs - 100μs" },
-            ]}
-          />
-        {/if}
+        <Tooltip
+          help="receiverHelpYawDeadband"
+          attrs={[
+            { name: "genericDefault", value: "5μs" },
+            { name: "genericRange", value: "0μs - 100μs" },
+          ]}
+        />
       {/snippet}
       <NumberInput
         id="receiver-yaw-deadband"
@@ -260,11 +171,7 @@
       />
     </Field>
   </SubSection>
-  {#if gte_12_9}
-    {@render throttle_gte_12_9()}
-  {:else}
-    {@render throttle()}
-  {/if}
+  {@render throttle()}
 </Section>
 
 <style lang="scss">

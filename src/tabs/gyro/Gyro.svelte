@@ -1,5 +1,4 @@
 <script>
-  import semver from "semver";
   import { slide } from "svelte/transition";
   import { onMount } from "svelte";
   import diff from "microdiff";
@@ -17,9 +16,7 @@
   import NotchFilter from "./NotchFilter.svelte";
 
   import {
-    parseRpmFilterConfig1,
     parseRpmFilterConfig2,
-    generateRpmFilterConfig1,
     generateRpmFilterConfig2,
     NOTCH_COUNT,
   } from "./filter_config.js";
@@ -60,20 +57,10 @@
 
   let notches = $state(null);
   let enabled = $derived(FC.FEATURE_CONFIG.features.RPM_FILTER);
-  let custom = $derived.by(() => {
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-      return enabled && FC.FILTER_CONFIG.rpm_preset === 0;
-    }
-
-    return enabled;
-  });
+  let custom = $derived(enabled && FC.FILTER_CONFIG.rpm_preset === 0);
 
   function parseNotches() {
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-      notches = parseRpmFilterConfig2($state.snapshot(FC.RPM_FILTER_CONFIG_V2));
-    } else {
-      notches = parseRpmFilterConfig1($state.snapshot(FC.RPM_FILTER_CONFIG));
-    }
+    notches = parseRpmFilterConfig2($state.snapshot(FC.RPM_FILTER_CONFIG_V2));
   }
 
   onMount(async () => {
@@ -83,11 +70,7 @@
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
 
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-      await mspHelper.requestRpmFilterBanks();
-    } else {
-      await MSP.promise(MSPCodes.MSP_RPM_FILTER);
-    }
+    await mspHelper.requestRpmFilterBanks();
 
     parseNotches();
     initialState = snapshotState();
@@ -103,11 +86,7 @@
       MSPCodes.MSP_SET_FILTER_CONFIG,
       mspHelper.crunch(MSPCodes.MSP_SET_FILTER_CONFIG),
     );
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-      await mspHelper.sendRPMFiltersV2();
-    } else {
-      await mspHelper.sendRPMFilters();
-    }
+    await mspHelper.sendRPMFiltersV2();
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -121,12 +100,8 @@
       return;
     }
 
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-      if (custom) {
-        FC.RPM_FILTER_CONFIG_V2 = generateRpmFilterConfig2(notches);
-      }
-    } else {
-      FC.RPM_FILTER_CONFIG = generateRpmFilterConfig1(notches);
+    if (custom) {
+      FC.RPM_FILTER_CONFIG_V2 = generateRpmFilterConfig2(notches);
     }
   });
 
@@ -180,7 +155,7 @@
       <DynamicFilter {FC} />
     </div>
     <div>
-      <RpmFilter {FC} {notches} />
+      <RpmFilter {FC} />
       {#if custom}
         <div transition:slide>
           <CustomNotches {FC} {notches} {onResetNotches} />
