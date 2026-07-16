@@ -152,7 +152,7 @@
     height: 100%;
 
     :global(html[data-theme="light"]) & {
-      background-color: var(--color-neutral-100);
+      background-color: var(--color-neutral-200);
       background-image:
         linear-gradient(
           to right,

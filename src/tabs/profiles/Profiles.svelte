@@ -340,7 +340,7 @@
 
   .profile-tab {
     @extend %button;
-    padding: 6px 14px;
+    padding: 0 14px;
 
     &.active {
       color: var(--color-text-inverse, #000);
