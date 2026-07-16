@@ -108,7 +108,7 @@
     max-width: 240px;
     padding: 8px;
     text-wrap: wrap;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 400;
     line-height: 18px;
     border-radius: 2px;

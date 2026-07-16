@@ -1,5 +1,4 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
@@ -68,74 +67,72 @@
     </Field>
   </SubSection>
 
-  {#if CONFIGURATOR.expertMode}
-    <SubSection>
-      <Field id="auto-hover-gain" label="profilesAutoHoverGain">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAutoHoverGainHelp")}
-        {/snippet}
-        <NumberInput
-          id="auto-hover-gain"
-          min="0"
-          max="250"
-          bind:value={FC.PID_PROFILE.autoHoverGain}
-        />
-      </Field>
-      <Field id="auto-hover-max-angle" label="profilesAutoHoverMaxAngle">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAutoHoverMaxAngleHelp")}
-        {/snippet}
-        <NumberInput
-          id="auto-hover-max-angle"
-          min="0"
-          max="90"
-          bind:value={FC.PID_PROFILE.autoHoverMaxAngle}
-        />
-      </Field>
-      <Field id="auto-hover-max-rate" label="profilesAutoHoverMaxRate">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAutoHoverMaxRateHelp")}
-        {/snippet}
-        <NumberInput
-          id="auto-hover-max-rate"
-          min="0"
-          max="1800"
-          bind:value={FC.PID_PROFILE.autoHoverMaxRate}
-        />
-      </Field>
-      <Field id="att-hold-gain" label="profilesAttHoldGain">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAttHoldGainHelp")}
-        {/snippet}
-        <NumberInput
-          id="att-hold-gain"
-          min="0"
-          max="250"
-          bind:value={FC.PID_PROFILE.attHoldGain}
-        />
-      </Field>
-      <Field id="att-hold-deadband" label="profilesAttHoldDeadband">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAttHoldDeadbandHelp")}
-        {/snippet}
-        <NumberInput
-          id="att-hold-deadband"
-          min="0"
-          max="100"
-          bind:value={FC.PID_PROFILE.attHoldDeadband}
-        />
-      </Field>
-      <Field id="att-hold-max-rate" label="profilesAttHoldMaxRate">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAttHoldMaxRateHelp")}
-        {/snippet}
-        <NumberInput
-          id="att-hold-max-rate"
-          min="0"
-          max="1800"
-          bind:value={FC.PID_PROFILE.attHoldMaxRate}
-        />
-      </Field>
-    </SubSection>
-  {/if}
+  <SubSection>
+    <Field id="auto-hover-gain" label="profilesAutoHoverGain">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverGainHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-gain"
+        min="0"
+        max="250"
+        bind:value={FC.PID_PROFILE.autoHoverGain}
+      />
+    </Field>
+    <Field id="auto-hover-max-angle" label="profilesAutoHoverMaxAngle">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverMaxAngleHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-max-angle"
+        min="0"
+        max="90"
+        bind:value={FC.PID_PROFILE.autoHoverMaxAngle}
+      />
+    </Field>
+    <Field id="auto-hover-max-rate" label="profilesAutoHoverMaxRate">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverMaxRateHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-max-rate"
+        min="0"
+        max="1800"
+        bind:value={FC.PID_PROFILE.autoHoverMaxRate}
+      />
+    </Field>
+    <Field id="att-hold-gain" label="profilesAttHoldGain">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAttHoldGainHelp")}
+      {/snippet}
+      <NumberInput
+        id="att-hold-gain"
+        min="0"
+        max="250"
+        bind:value={FC.PID_PROFILE.attHoldGain}
+      />
+    </Field>
+    <Field id="att-hold-deadband" label="profilesAttHoldDeadband">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAttHoldDeadbandHelp")}
+      {/snippet}
+      <NumberInput
+        id="att-hold-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.PID_PROFILE.attHoldDeadband}
+      />
+    </Field>
+    <Field id="att-hold-max-rate" label="profilesAttHoldMaxRate">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAttHoldMaxRateHelp")}
+      {/snippet}
+      <NumberInput
+        id="att-hold-max-rate"
+        min="0"
+        max="1800"
+        bind:value={FC.PID_PROFILE.attHoldMaxRate}
+      />
+    </Field>
+  </SubSection>
 </Section>

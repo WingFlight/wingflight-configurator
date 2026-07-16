@@ -995,7 +995,7 @@
         "message": "<a href=\"https://discord.gg/aEyyAJTXRw/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions."
     },
     "defaultFacebookText": {
-        "message": "<a href=\"https://www.facebook.com/groups/rotorflight\" target=\"_blank\" rel=\"noopener noreferrer\">Facebook Group</a> is a good place for hanging out with other RF pilots."
+        "message": "<a href=\"https://www.facebook.com/groups/wingflight/\" target=\"_blank\" rel=\"noopener noreferrer\">Facebook Group</a> is a good place for hanging out with other RF pilots."
     },
     "defaultContributingHead": {
         "message": "Contributing"
@@ -1490,7 +1490,7 @@
         "message": "Waiting for tail-up movement (>= 20°)."
     },
     "configurationBoardAutoAlignSuccess": {
-        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Save and reboot to persist."
+        "message": "Detected board alignment: roll $1°, pitch $2°, yaw $3°. Save and reboot to persist."
     },
     "configurationBoardAutoAlignDisarmRequired": {
         "message": "Auto-align is only allowed while disarmed."
@@ -1503,6 +1503,12 @@
     },
     "configurationBoardAutoAlignUnsupported": {
         "message": "Auto-align command not supported by this firmware build."
+    },
+    "configurationBoardAutoAlignUncalibrated": {
+        "message": "Accelerometer has not been calibrated on this board yet. Auto-align needs a calibrated accelerometer to give a reliable result — calibrate now, then try again."
+    },
+    "configurationBoardAutoAlignCalibrating": {
+        "message": "Calibrating accelerometer — keep the aircraft level and still…"
     },
     "configurationBoardAutoAlignWizardTitle": {
         "message": "Board Auto-Align"
@@ -1520,10 +1526,13 @@
         "message": "Place the aircraft level on a stable surface. Keep it disarmed, then press Start."
     },
     "configurationBoardAutoAlignSuccessCountdown": {
-        "message": "Detected board alignment: roll {0}°, pitch {1}°, yaw {2}°. Closing wizard in {3}s."
+        "message": "Detected board alignment: roll $1°, pitch $2°, yaw $3°. Closing wizard in $4s."
     },
     "configurationBoardAutoAlignWizardRetry": {
         "message": "Retry"
+    },
+    "configurationBoardAutoAlignWizardCalibrate": {
+        "message": "Calibrate Accelerometer"
     },
     "configurationBoardAutoAlignWizardClose": {
         "message": "Close"
@@ -2628,6 +2637,21 @@
     },
     "adjustmentRangeStep": {
         "message": "Step:"
+    },
+    "adjustmentsSlotLabel": {
+        "message": "Adjustment {{index}}"
+    },
+    "adjustmentsSlotCount": {
+        "message": "{{used}} / {{total}} configured"
+    },
+    "adjustmentsAddButton": {
+        "message": "Add Adjustment"
+    },
+    "adjustmentsRemoveButton": {
+        "message": "Remove adjustment"
+    },
+    "adjustmentsEmptyState": {
+        "message": "No adjustments configured yet. Click \"Add Adjustment\" to set up a switch that changes a value in flight."
     },
     "adjustmentsMin": {
         "message": "Min"
@@ -5671,6 +5695,9 @@
     "failsafeSwitchOptionKill": {
         "message": "Kill"
     },
+    "powerMetersHead": {
+        "message": "Meters"
+    },
     "powerBatteryVoltageMeterSource": {
         "message": "Battery Voltage Source"
     },
@@ -7466,11 +7493,20 @@
     "mode ARM": {
         "message": "ARM"
     },
+    "modeHelp ARM": {
+        "message": "Arms the motors and control surfaces for flight. Arming can be blocked while any arming-disable condition (calibration, failsafe, PREARM, etc.) is active."
+    },
     "mode ANGLE": {
         "message": "ANGLE"
     },
+    "modeHelp ANGLE": {
+        "message": "Self-levels the aircraft to match your stick input to a bank/pitch angle, and limits how far it can tilt. The easiest mode for beginners."
+    },
     "mode HORIZON": {
         "message": "HORIZON"
+    },
+    "modeHelp HORIZON": {
+        "message": "Self-levels near center stick like Angle mode, but hands off to full manual rate control as you move the sticks further, allowing flips and rolls."
     },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
@@ -7478,20 +7514,38 @@
     "mode ATT HOLD": {
         "message": "ATT HOLD"
     },
+    "modeHelp ATT HOLD": {
+        "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
+    },
     "mode PASSTHROUGH": {
         "message": "PASSTHROUGH"
+    },
+    "modeHelp PASSTHROUGH": {
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo - fully manual flying."
     },
     "mode MANUAL": {
         "message": "MANUAL"
     },
+    "modeHelp MANUAL": {
+        "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
+    },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
+    },
+    "modeHelp AUTO TRIM": {
+        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the new center. Switching off before disarming cancels the change."
     },
     "mode BEEPER": {
         "message": "BEEPER"
     },
+    "modeHelp BEEPER": {
+        "message": "Sounds the buzzer on demand to help locate the aircraft."
+    },
     "mode LEDLOW": {
         "message": "LEDLOW"
+    },
+    "modeHelp LEDLOW": {
+        "message": "Turns off the LED strip while active."
     },
     "mode CALIB": {
         "message": "CALIB"
@@ -7502,17 +7556,32 @@
     "mode TELEMETRY": {
         "message": "TELEMETRY"
     },
+    "modeHelp TELEMETRY": {
+        "message": "Enables telemetry output on a port that's shared with another function. Otherwise telemetry follows the arm state automatically."
+    },
     "mode BLACKBOX": {
         "message": "BLACKBOX"
+    },
+    "modeHelp BLACKBOX": {
+        "message": "Starts and stops blackbox logging - used when logging is set to switch-controlled, or to pause/resume normal logging."
     },
     "mode FAILSAFE": {
         "message": "FAILSAFE"
     },
+    "modeHelp FAILSAFE": {
+        "message": "Manually triggers the configured failsafe behavior. Useful for testing your failsafe settings on the bench."
+    },
     "mode BLACKBOX ERASE": {
         "message": "BLACKBOX ERASE"
     },
+    "modeHelp BLACKBOX ERASE": {
+        "message": "Erases the onboard blackbox flash storage while held on."
+    },
     "mode PREARM": {
         "message": "PREARM"
+    },
+    "modeHelp PREARM": {
+        "message": "A safety switch that must be enabled before you can arm, to prevent accidental arming."
     },
     "mode PARALYZE": {
         "message": "PARALYZE"
@@ -7520,8 +7589,14 @@
     "mode GPS RESCUE": {
         "message": "GPS RESCUE"
     },
+    "modeHelp GPS RESCUE": {
+        "message": "Automatically flies the aircraft back toward its recorded home position using GPS."
+    },
     "mode TRAINER": {
         "message": "TRAINER"
+    },
+    "modeHelp TRAINER": {
+        "message": "Acro Trainer: flies in rate mode but automatically limits how far the aircraft can bank or pitch, without full self-leveling."
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
@@ -7529,8 +7604,29 @@
     "mode STICK COMMANDS DISABLE": {
         "message": "STICK COMMANDS DISABLE"
     },
+    "modeHelp STICK COMMANDS DISABLE": {
+        "message": "Blocks stick-gesture commands (arm/disarm, menu access) while active, to prevent accidental triggers."
+    },
     "mode BEEPER MUTE": {
         "message": "BEEPER MUTE"
+    },
+    "modeHelp BEEPER MUTE": {
+        "message": "Silences the beeper entirely, overriding any other beeper trigger."
+    },
+    "modeHelp GPS BEEP SATELLITE COUNT": {
+        "message": "Beeps out the current number of GPS satellites in view while active."
+    },
+    "mode AUTO HOVER": {
+        "message": "AUTO HOVER"
+    },
+    "modeHelp AUTO HOVER": {
+        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Att Hold while active."
+    },
+    "mode GOVERNOR": {
+        "message": "GOVERNOR"
+    },
+    "modeHelp GOVERNOR": {
+        "message": "Enables the throttle governor, which regulates motor RPM (or holds a fixed idle throttle) instead of passing the throttle stick straight through."
     },
     "mode RESCUE": {
         "message": "RESCUE"

@@ -152,7 +152,7 @@
     height: 100%;
 
     :global(html[data-theme="light"]) & {
-      background-color: var(--color-neutral-100);
+      background-color: var(--color-neutral-200);
       background-image:
         linear-gradient(
           to right,
@@ -220,7 +220,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     color: var(--mutedText);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
   }
 </style>

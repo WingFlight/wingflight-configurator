@@ -41,7 +41,7 @@
     left: 80px;
     top: 49px;
     color: #d8d8d8;
-    font-size: 10px;
+    font-size: 0.7rem;
     min-width: 210px;
     display: flex;
     flex-direction: column;
