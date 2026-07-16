@@ -1,8 +1,3 @@
-export const API_VERSION_12_6 = "12.6.0";
-export const API_VERSION_12_7 = "12.7.0";
-export const API_VERSION_12_8 = "12.8.0";
-export const API_VERSION_12_9 = "12.9.0";
-
 export const API_VERSION_22_0 = "22.0.0";
 export const API_VERSION_22_1 = "22.1.0";
 

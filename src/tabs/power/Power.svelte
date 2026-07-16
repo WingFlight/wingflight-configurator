@@ -1,13 +1,11 @@
 <script>
   import diff from "microdiff";
-  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSP } from "@/js/msp.svelte.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
-  import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend.js";
 
@@ -34,10 +32,6 @@
   let showAmpCalib = $state(false);
   let newVbatScale = $state(0);
   let newAmpScale = $state(0);
-
-  let smartFuelSupported = $derived(
-    semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
 
   function snapshotState() {
     return $state.snapshot({
@@ -67,8 +61,7 @@
   );
 
   let profileChanged = $derived(
-    smartFuelSupported &&
-      FC.BATTERY_STATE.batteryProfile !== savedBatteryProfile,
+    FC.BATTERY_STATE.batteryProfile !== savedBatteryProfile,
   );
 
   let dirty = $derived(changes.length > 0 || profileChanged);
@@ -82,7 +75,7 @@
   );
 
   let smartFuelTuningEnabled = $derived(
-    smartFuelSupported && [1, 3].includes(FC.SMARTFUEL_CONFIG.mode),
+    [1, 3].includes(FC.SMARTFUEL_CONFIG.mode),
   );
 
   let voltageMeterTypeOptions = $derived(
@@ -208,9 +201,7 @@
     await MSP.promise(MSPCodes.MSP_VOLTAGE_METERS);
     await MSP.promise(MSPCodes.MSP_CURRENT_METERS);
     await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG);
-    if (smartFuelSupported) {
-      await MSP.promise(MSPCodes.MSP2_SMARTFUEL_CONFIG);
-    }
+    await MSP.promise(MSPCodes.MSP2_SMARTFUEL_CONFIG);
     await MSP.promise(MSPCodes.MSP_VOLTAGE_METER_CONFIG);
     await MSP.promise(MSPCodes.MSP_CURRENT_METER_CONFIG);
 
@@ -242,12 +233,10 @@
       MSPCodes.MSP_SET_BATTERY_CONFIG,
       mspHelper.crunch(MSPCodes.MSP_SET_BATTERY_CONFIG),
     );
-    if (smartFuelSupported) {
-      await MSP.promise(
-        MSPCodes.MSP2_SET_SMARTFUEL_CONFIG,
-        mspHelper.crunch(MSPCodes.MSP2_SET_SMARTFUEL_CONFIG),
-      );
-    }
+    await MSP.promise(
+      MSPCodes.MSP2_SET_SMARTFUEL_CONFIG,
+      mspHelper.crunch(MSPCodes.MSP2_SET_SMARTFUEL_CONFIG),
+    );
     await sendVoltageConfig();
     await sendCurrentConfig();
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
@@ -418,109 +407,95 @@
           />
         </Field>
 
-        {#if smartFuelSupported}
-          <div class="profile-capacities">
-            {#each Array.from({ length: 6 }) as _, i (i)}
-              <div
-                class={[
-                  "profile-capacity",
-                  i === FC.BATTERY_STATE.batteryProfile && "active",
-                ]}
+        <div class="profile-capacities">
+          {#each Array.from({ length: 6 }) as _, i (i)}
+            <div
+              class={[
+                "profile-capacity",
+                i === FC.BATTERY_STATE.batteryProfile && "active",
+              ]}
+            >
+              <button
+                type="button"
+                class="profile-activate"
+                onclick={() => activateBatteryProfile(i)}
               >
-                <button
-                  type="button"
-                  class="profile-activate"
-                  onclick={() => activateBatteryProfile(i)}
-                >
-                  {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
-                </button>
-                <div class="profile-capacity-input">
-                  <NumberInput
-                    id={`power-capacity-${i}`}
-                    bind:value={FC.BATTERY_CONFIG.capacities[i]}
-                    min={0}
-                    max={40000}
-                    step={10}
-                  />
-                  <span class="unit">mAh</span>
-                </div>
+                {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
+              </button>
+              <div class="profile-capacity-input">
+                <NumberInput
+                  id={`power-capacity-${i}`}
+                  bind:value={FC.BATTERY_CONFIG.capacities[i]}
+                  min={0}
+                  max={40000}
+                  step={10}
+                />
+                <span class="unit">mAh</span>
               </div>
-            {/each}
-          </div>
-        {:else}
-          <Field id="power-capacity" label="powerBatteryCapacity">
+            </div>
+          {/each}
+        </div>
+      </Section>
+
+      <Section label="powerSmartFuelHead" summary="powerSmartFuelSourceHelp">
+        <Field id="power-smartfuel-source" label="powerSmartFuelSource">
+          <Select
+            id="power-smartfuel-source"
+            bind:value={FC.SMARTFUEL_CONFIG.mode}
+            options={smartFuelSourceOptions}
+          />
+        </Field>
+        {#if smartFuelTuningEnabled}
+          <Field
+            id="power-smartfuel-vdrop"
+            label="powerSmartFuelVoltageDropRate"
+            unit="mV/s"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="powerSmartFuelVoltageDropRateHelp" />
+            {/snippet}
             <NumberInput
-              id="power-capacity"
-              bind:value={FC.BATTERY_CONFIG.capacity}
+              id="power-smartfuel-vdrop"
+              bind:value={FC.SMARTFUEL_CONFIG.voltageDropRate}
               min={0}
-              max={20000}
-              step={50}
+              max={250}
+              step={1}
+            />
+          </Field>
+          <Field
+            id="power-smartfuel-cdrop"
+            label="powerSmartFuelChargeDropRate"
+            unit="%/s"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="powerSmartFuelChargeDropRateHelp" />
+            {/snippet}
+            <NumberInput
+              id="power-smartfuel-cdrop"
+              bind:value={getChargeDropRate, setChargeDropRate}
+              min={0}
+              max={2.5}
+              step={0.01}
+            />
+          </Field>
+          <Field
+            id="power-smartfuel-sag"
+            label="powerSmartFuelSagGain"
+            unit="%"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="powerSmartFuelSagGainHelp" />
+            {/snippet}
+            <NumberInput
+              id="power-smartfuel-sag"
+              bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+              min={0}
+              max={100}
+              step={1}
             />
           </Field>
         {/if}
       </Section>
-
-      {#if smartFuelSupported}
-        <Section label="powerSmartFuelHead" summary="powerSmartFuelSourceHelp">
-          <Field id="power-smartfuel-source" label="powerSmartFuelSource">
-            <Select
-              id="power-smartfuel-source"
-              bind:value={FC.SMARTFUEL_CONFIG.mode}
-              options={smartFuelSourceOptions}
-            />
-          </Field>
-          {#if smartFuelTuningEnabled}
-            <Field
-              id="power-smartfuel-vdrop"
-              label="powerSmartFuelVoltageDropRate"
-              unit="mV/s"
-            >
-              {#snippet tooltip()}
-                <Tooltip help="powerSmartFuelVoltageDropRateHelp" />
-              {/snippet}
-              <NumberInput
-                id="power-smartfuel-vdrop"
-                bind:value={FC.SMARTFUEL_CONFIG.voltageDropRate}
-                min={0}
-                max={250}
-                step={1}
-              />
-            </Field>
-            <Field
-              id="power-smartfuel-cdrop"
-              label="powerSmartFuelChargeDropRate"
-              unit="%/s"
-            >
-              {#snippet tooltip()}
-                <Tooltip help="powerSmartFuelChargeDropRateHelp" />
-              {/snippet}
-              <NumberInput
-                id="power-smartfuel-cdrop"
-                bind:value={getChargeDropRate, setChargeDropRate}
-                min={0}
-                max={2.5}
-                step={0.01}
-              />
-            </Field>
-            <Field
-              id="power-smartfuel-sag"
-              label="powerSmartFuelSagGain"
-              unit="%"
-            >
-              {#snippet tooltip()}
-                <Tooltip help="powerSmartFuelSagGainHelp" />
-              {/snippet}
-              <NumberInput
-                id="power-smartfuel-sag"
-                bind:value={FC.SMARTFUEL_CONFIG.sagGain}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </Field>
-          {/if}
-        </Section>
-      {/if}
     </div>
 
     <div class="column">

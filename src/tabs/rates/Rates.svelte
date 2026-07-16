@@ -1,9 +1,8 @@
 <script>
   import diff from "microdiff";
-  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
 
-  import { API_VERSION_12_9, CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -39,48 +38,25 @@
   };
 
   const DYNAMICS_DEFAULTS = {
-    DYNAMICS_4_5: {
-      roll_setpoint_boost_gain: 0,
-      pitch_setpoint_boost_gain: 0,
-      yaw_setpoint_boost_gain: 0,
-      collective_setpoint_boost_gain: 0,
-      roll_setpoint_boost_cutoff: 15,
-      pitch_setpoint_boost_cutoff: 15,
-      yaw_setpoint_boost_cutoff: 90,
-      collective_setpoint_boost_cutoff: 15,
-      yaw_dynamic_ceiling_gain: 30,
-      yaw_dynamic_deadband_gain: 30,
-      yaw_dynamic_deadband_filter: 60,
-      roll_response_time: 0,
-      pitch_response_time: 0,
-      yaw_response_time: 0,
-      collective_response_time: 0,
-      roll_accel_limit: 0,
-      pitch_accel_limit: 0,
-      yaw_accel_limit: 0,
-      collective_accel_limit: 0,
-    },
-    DYNAMICS_4_6: {
-      roll_setpoint_boost_gain: 0,
-      pitch_setpoint_boost_gain: 0,
-      yaw_setpoint_boost_gain: 0,
-      collective_setpoint_boost_gain: 0,
-      roll_setpoint_boost_cutoff: 15,
-      pitch_setpoint_boost_cutoff: 15,
-      yaw_setpoint_boost_cutoff: 90,
-      collective_setpoint_boost_cutoff: 15,
-      yaw_dynamic_ceiling_gain: 0,
-      yaw_dynamic_deadband_gain: 10,
-      yaw_dynamic_deadband_filter: 60,
-      roll_response_time: 0,
-      pitch_response_time: 0,
-      yaw_response_time: 0,
-      collective_response_time: 0,
-      roll_accel_limit: 0,
-      pitch_accel_limit: 0,
-      yaw_accel_limit: 0,
-      collective_accel_limit: 0,
-    },
+    roll_setpoint_boost_gain: 0,
+    pitch_setpoint_boost_gain: 0,
+    yaw_setpoint_boost_gain: 0,
+    collective_setpoint_boost_gain: 0,
+    roll_setpoint_boost_cutoff: 15,
+    pitch_setpoint_boost_cutoff: 15,
+    yaw_setpoint_boost_cutoff: 90,
+    collective_setpoint_boost_cutoff: 15,
+    yaw_dynamic_ceiling_gain: 0,
+    yaw_dynamic_deadband_gain: 10,
+    yaw_dynamic_deadband_filter: 60,
+    roll_response_time: 0,
+    pitch_response_time: 0,
+    yaw_response_time: 0,
+    collective_response_time: 0,
+    roll_accel_limit: 0,
+    pitch_accel_limit: 0,
+    yaw_accel_limit: 0,
+    collective_accel_limit: 0,
   };
 
   let loading = $state(true);
@@ -322,10 +298,7 @@
     FC.RC_TUNING.yaw_rc_expo = RATES_DEFAULTS.yawExpoDef / 100;
     FC.RC_TUNING.pitch_rc_expo = RATES_DEFAULTS.expoDef / 100;
 
-    const dynamicsDefaults = semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-      ? DYNAMICS_DEFAULTS.DYNAMICS_4_6
-      : DYNAMICS_DEFAULTS.DYNAMICS_4_5;
-    Object.assign(FC.RC_TUNING, dynamicsDefaults);
+    Object.assign(FC.RC_TUNING, DYNAMICS_DEFAULTS);
 
     resetDialogEl.close();
   }

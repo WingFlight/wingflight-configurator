@@ -1,12 +1,7 @@
 <script>
   import diff from "microdiff";
-  import semver from "semver";
   import { onMount, onDestroy, tick } from "svelte";
 
-  import {
-    API_VERSION_12_7,
-    API_VERSION_12_9,
-  } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { Features } from "@/js/features.svelte.js";
   import * as flightStats from "@/js/flight-stats.js";
@@ -43,11 +38,6 @@
   let fastInterval;
   let attitudePollInFlight = false;
   let dirtyRevision = $state(0);
-
-  let hasModelId = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7));
-  let hasFlightStats = $derived(
-    semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
 
   let flightStatsEnabled = $derived(
     FC.FLIGHT_STATS.stats_min_armed_time_s >= 0,
@@ -173,13 +163,8 @@
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_ACC_TRIM);
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
-
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-      await MSP.promise(MSPCodes.MSP_PILOT_CONFIG);
-    }
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-      await MSP.promise(MSPCodes.MSP_FLIGHT_STATS);
-    }
+    await MSP.promise(MSPCodes.MSP_PILOT_CONFIG);
+    await MSP.promise(MSPCodes.MSP_FLIGHT_STATS);
 
     initialState = snapshotState();
     loading = false;
@@ -210,13 +195,8 @@
     await save(MSPCodes.MSP2_WING_SET_BOARD_MOUNT_TRIM);
     await save(MSPCodes.MSP_SET_ACC_TRIM);
     await save(MSPCodes.MSP_SET_SERIAL_CONFIG);
-
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-      await save(MSPCodes.MSP_SET_PILOT_CONFIG);
-    }
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-      await save(MSPCodes.MSP_SET_FLIGHT_STATS);
-    }
+    await save(MSPCodes.MSP_SET_PILOT_CONFIG);
+    await save(MSPCodes.MSP_SET_FLIGHT_STATS);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -284,92 +264,83 @@
             bind:value={FC.CONFIG.name}
           />
         </Field>
-        {#if hasModelId}
-          <Field
+        <Field
+          id="model-id"
+          label="configuration.personalisation.model_id.label"
+        >
+          <NumberInput
             id="model-id"
-            label="configuration.personalisation.model_id.label"
+            bind:value={FC.PILOT_CONFIG.model_id}
+            min={0}
+            max={99}
+            step={1}
+          />
+        </Field>
+      </Section>
+
+      <Section label="configuration.flight_stats.heading">
+        <Field
+          id="enable-flight-stats"
+          label="configuration.flight_stats.enable.label"
+        >
+          <Switch
+            id="enable-flight-stats"
+            checked={flightStatsEnabled}
+            onchange={(e) => onFlightStatsEnabledChange(e.target.checked)}
+          />
+        </Field>
+        {#if flightStatsEnabled}
+          <Field
+            id="min-armed-time"
+            label="configuration.flight_stats.min_armed_time.label"
+            unit="s"
           >
+            {#snippet tooltip()}
+              <Tooltip help="configuration.flight_stats.min_armed_time.help" />
+            {/snippet}
             <NumberInput
-              id="model-id"
-              bind:value={FC.PILOT_CONFIG.model_id}
+              id="min-armed-time"
+              bind:value={FC.FLIGHT_STATS.stats_min_armed_time_s}
               min={0}
               max={99}
               step={1}
             />
           </Field>
+          <div class="flight-stats-display">
+            <table>
+              <tbody>
+                <tr>
+                  <th
+                    >{$i18n.t(
+                      "configuration.flight_stats.flight_count.label",
+                    )}</th
+                  >
+                  <td>{FC.FLIGHT_STATS.stats_total_flights}</td>
+                </tr>
+                <tr>
+                  <th
+                    >{$i18n.t(
+                      "configuration.flight_stats.flight_time.label",
+                    )}</th
+                  >
+                  <td>{flightStats.getDuration()}</td>
+                </tr>
+                <tr>
+                  <th>{$i18n.t("configuration.flight_stats.distance.label")}</th
+                  >
+                  <td
+                    >{FC.FLIGHT_STATS.stats_total_dist_m.toLocaleString()} m</td
+                  >
+                </tr>
+              </tbody>
+            </table>
+            <div class="grow"></div>
+            <button class="btn" onclick={onResetFlightStats}>
+              {$i18n.t("configuration.flight_stats.reset.label")}
+            </button>
+          </div>
         {/if}
       </Section>
-
-      {#if hasFlightStats}
-        <Section label="configuration.flight_stats.heading">
-          <Field
-            id="enable-flight-stats"
-            label="configuration.flight_stats.enable.label"
-          >
-            <Switch
-              id="enable-flight-stats"
-              checked={flightStatsEnabled}
-              onchange={(e) => onFlightStatsEnabledChange(e.target.checked)}
-            />
-          </Field>
-          {#if flightStatsEnabled}
-            <Field
-              id="min-armed-time"
-              label="configuration.flight_stats.min_armed_time.label"
-              unit="s"
-            >
-              {#snippet tooltip()}
-                <Tooltip
-                  help="configuration.flight_stats.min_armed_time.help"
-                />
-              {/snippet}
-              <NumberInput
-                id="min-armed-time"
-                bind:value={FC.FLIGHT_STATS.stats_min_armed_time_s}
-                min={0}
-                max={99}
-                step={1}
-              />
-            </Field>
-            <div class="flight-stats-display">
-              <table>
-                <tbody>
-                  <tr>
-                    <th
-                      >{$i18n.t(
-                        "configuration.flight_stats.flight_count.label",
-                      )}</th
-                    >
-                    <td>{FC.FLIGHT_STATS.stats_total_flights}</td>
-                  </tr>
-                  <tr>
-                    <th
-                      >{$i18n.t(
-                        "configuration.flight_stats.flight_time.label",
-                      )}</th
-                    >
-                    <td>{flightStats.getDuration()}</td>
-                  </tr>
-                  <tr>
-                    <th
-                      >{$i18n.t(
-                        "configuration.flight_stats.distance.label",
-                      )}</th
-                    >
-                    <td
-                      >{FC.FLIGHT_STATS.stats_total_dist_m.toLocaleString()} m</td
-                    >
-                  </tr>
-                </tbody>
-              </table>
-              <div class="grow"></div>
-              <button class="btn" onclick={onResetFlightStats}>
-                {$i18n.t("configuration.flight_stats.reset.label")}
-              </button>
-            </div>
-          {/if}
-        </Section>
-      {/if}
 
       <Section label="configurationSystem">
         <Field id="gyro-frequency" label="configurationGyroSyncDenom">

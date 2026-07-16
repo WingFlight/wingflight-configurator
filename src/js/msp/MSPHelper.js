@@ -1,11 +1,3 @@
-import semver from "semver";
-
-import {
-    API_VERSION_12_7,
-    API_VERSION_12_8,
-    API_VERSION_12_9,
-} from "@/js/configurator.svelte.js";
-
 // Used for LED_STRIP
 const ledDirectionLetters    = ['n', 'e', 's', 'w', 'u', 'd'];      // in LSB bit order
 const ledBaseFunctionLetters = ['c', 'f', 'a', 'l', 's', 'g', 'r']; // in LSB bit
@@ -275,9 +267,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.BATTERY_STATE.voltage = data.readU16() / 100;    // V
                 FC.BATTERY_STATE.amperage = data.readU16() / 100;   // A
                 FC.BATTERY_STATE.chargeLevel = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.BATTERY_STATE.batteryProfile = data.readU8();
-                }
+                FC.BATTERY_STATE.batteryProfile = data.readU8();
                 break;
             }
 
@@ -339,13 +329,11 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.BATTERY_CONFIG.vbatwarningcellvoltage = data.readU16() / 100;
                 FC.BATTERY_CONFIG.lvcPercentage = data.readU8();
                 FC.BATTERY_CONFIG.mahWarningPercentage = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    const capacities = [];
-                    for (let i = 0; i < 6; i++) {
-                        capacities.push(data.readU16());
-                    }
-                    FC.BATTERY_CONFIG.capacities = capacities;
+                const capacities = [];
+                for (let i = 0; i < 6; i++) {
+                    capacities.push(data.readU16());
                 }
+                FC.BATTERY_CONFIG.capacities = capacities;
                 break;
             }
 
@@ -396,25 +384,21 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.RC_TUNING.collective_response_time = data.readU8();
                 FC.RC_TUNING.collective_accel_limit = data.readU16();
 
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.RC_TUNING.roll_setpoint_boost_gain = data.readU8();
-                    FC.RC_TUNING.roll_setpoint_boost_cutoff = data.readU8();
-                    FC.RC_TUNING.pitch_setpoint_boost_gain = data.readU8();
-                    FC.RC_TUNING.pitch_setpoint_boost_cutoff = data.readU8();
-                    FC.RC_TUNING.yaw_setpoint_boost_gain = data.readU8();
-                    FC.RC_TUNING.yaw_setpoint_boost_cutoff = data.readU8();
-                    FC.RC_TUNING.collective_setpoint_boost_gain = data.readU8();
-                    FC.RC_TUNING.collective_setpoint_boost_cutoff = data.readU8();
+                FC.RC_TUNING.roll_setpoint_boost_gain = data.readU8();
+                FC.RC_TUNING.roll_setpoint_boost_cutoff = data.readU8();
+                FC.RC_TUNING.pitch_setpoint_boost_gain = data.readU8();
+                FC.RC_TUNING.pitch_setpoint_boost_cutoff = data.readU8();
+                FC.RC_TUNING.yaw_setpoint_boost_gain = data.readU8();
+                FC.RC_TUNING.yaw_setpoint_boost_cutoff = data.readU8();
+                FC.RC_TUNING.collective_setpoint_boost_gain = data.readU8();
+                FC.RC_TUNING.collective_setpoint_boost_cutoff = data.readU8();
 
-                    FC.RC_TUNING.yaw_dynamic_ceiling_gain = data.readU8();
-                    FC.RC_TUNING.yaw_dynamic_deadband_gain = data.readU8();
-                    FC.RC_TUNING.yaw_dynamic_deadband_filter = data.readU8();
-                }
+                FC.RC_TUNING.yaw_dynamic_ceiling_gain = data.readU8();
+                FC.RC_TUNING.yaw_dynamic_deadband_gain = data.readU8();
+                FC.RC_TUNING.yaw_dynamic_deadband_filter = data.readU8();
 
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    data.readU8(); // was cyclic_ring (heli-only, removed)
-                    data.readU8(); // was cyclic_polar (heli-only, removed)
-                }
+                data.readU8(); // was cyclic_ring (heli-only, removed)
+                data.readU8(); // was cyclic_polar (heli-only, removed)
 
                 break;
             }
@@ -567,14 +551,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.ESC_SENSOR_CONFIG.hw4_current_offset = data.readU16();
                 FC.ESC_SENSOR_CONFIG.hw4_current_gain = data.readU8();
                 FC.ESC_SENSOR_CONFIG.hw4_voltage_gain = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                    FC.ESC_SENSOR_CONFIG.pinswap = Boolean(data.readU8());
-                }
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.ESC_SENSOR_CONFIG.voltage_correction = data.read8();
-                    FC.ESC_SENSOR_CONFIG.current_correction = data.read8();
-                    FC.ESC_SENSOR_CONFIG.consumption_correction = data.read8();
-                }
+                FC.ESC_SENSOR_CONFIG.pinswap = Boolean(data.readU8());
+                FC.ESC_SENSOR_CONFIG.voltage_correction = data.read8();
+                FC.ESC_SENSOR_CONFIG.current_correction = data.read8();
+                FC.ESC_SENSOR_CONFIG.consumption_correction = data.read8();
                 break;
             }
 
@@ -911,9 +891,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PILOT_CONFIG.model_param2_value = data.readU16();
                 FC.PILOT_CONFIG.model_param3_type = data.readU8();
                 FC.PILOT_CONFIG.model_param3_value = data.readU16();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                    FC.PILOT_CONFIG.model_flags = data.readU32();
-                }
+                FC.PILOT_CONFIG.model_flags = data.readU32();
                 break;
             }
 
@@ -1037,9 +1015,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.RX_CONFIG.rxSpiProtocol = data.readU8();
                 FC.RX_CONFIG.rxSpiId = data.readU32();
                 FC.RX_CONFIG.rxSpiRfChannelCount = data.readU8();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                    FC.RX_CONFIG.serialrx_pinswap = Boolean(data.readU8());
-                }
+                FC.RX_CONFIG.serialrx_pinswap = Boolean(data.readU8());
                 break;
             }
 
@@ -1071,18 +1047,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TELEMETRY_CONFIG.telemetry_inverted = Boolean(data.readU8());
                 FC.TELEMETRY_CONFIG.telemetry_halfduplex = Boolean(data.readU8());
                 FC.TELEMETRY_CONFIG.telemetry_sensors = data.readU32();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                    FC.TELEMETRY_CONFIG.telemetry_pinswap = Boolean(data.readU8());
-                    FC.TELEMETRY_CONFIG.crsf_telemetry_mode = data.readU8();
-                    FC.TELEMETRY_CONFIG.crsf_telemetry_rate = data.readU16();
-                    FC.TELEMETRY_CONFIG.crsf_telemetry_ratio = data.readU16();
+                FC.TELEMETRY_CONFIG.telemetry_pinswap = Boolean(data.readU8());
+                FC.TELEMETRY_CONFIG.crsf_telemetry_mode = data.readU8();
+                FC.TELEMETRY_CONFIG.crsf_telemetry_rate = data.readU16();
+                FC.TELEMETRY_CONFIG.crsf_telemetry_ratio = data.readU16();
 
-                    const telemetry_sensors_list = [];
-                    for (let i = 0; i < self.CRSF_TELEMETRY_SENSOR_LENGTH; i++) {
-                        telemetry_sensors_list.push(data.readU8());
-                    }
-                    FC.TELEMETRY_CONFIG.telemetry_sensors_list = telemetry_sensors_list;
+                const telemetry_sensors_list = [];
+                for (let i = 0; i < self.CRSF_TELEMETRY_SENSOR_LENGTH; i++) {
+                    telemetry_sensors_list.push(data.readU8());
                 }
+                FC.TELEMETRY_CONFIG.telemetry_sensors_list = telemetry_sensors_list;
                 break;
             }
 
@@ -1499,11 +1473,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.BLACKBOX.blackboxMode = data.readU8();
                 FC.BLACKBOX.blackboxDenom = data.readU16();
                 FC.BLACKBOX.blackboxFields = data.readU32();
-                if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                    FC.BLACKBOX.blackboxInitialEraseKiB = data.readU16();
-                    FC.BLACKBOX.blackboxRollingErase = data.readU8();
-                    FC.BLACKBOX.blackboxGracePeriod = data.readU8();
-                }
+                FC.BLACKBOX.blackboxInitialEraseKiB = data.readU16();
+                FC.BLACKBOX.blackboxRollingErase = data.readU8();
+                FC.BLACKBOX.blackboxGracePeriod = data.readU8();
                 break;
             }
 
@@ -1850,24 +1822,20 @@ MspHelper.prototype.crunch = function(code) {
                   .push8(Math.round(FC.RC_TUNING.collective_srate * 100))
                   .push8(FC.RC_TUNING.collective_response_time)
                   .push16(FC.RC_TUNING.collective_accel_limit);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-               buffer.push8(FC.RC_TUNING.roll_setpoint_boost_gain)
-                     .push8(FC.RC_TUNING.roll_setpoint_boost_cutoff)
-                     .push8(FC.RC_TUNING.pitch_setpoint_boost_gain)
-                     .push8(FC.RC_TUNING.pitch_setpoint_boost_cutoff)
-                     .push8(FC.RC_TUNING.yaw_setpoint_boost_gain)
-                     .push8(FC.RC_TUNING.yaw_setpoint_boost_cutoff)
-                     .push8(FC.RC_TUNING.collective_setpoint_boost_gain)
-                     .push8(FC.RC_TUNING.collective_setpoint_boost_cutoff)
-                     .push8(FC.RC_TUNING.yaw_dynamic_ceiling_gain)
-                     .push8(FC.RC_TUNING.yaw_dynamic_deadband_gain)
-                     .push8(FC.RC_TUNING.yaw_dynamic_deadband_filter);
-            }
+            buffer.push8(FC.RC_TUNING.roll_setpoint_boost_gain)
+                  .push8(FC.RC_TUNING.roll_setpoint_boost_cutoff)
+                  .push8(FC.RC_TUNING.pitch_setpoint_boost_gain)
+                  .push8(FC.RC_TUNING.pitch_setpoint_boost_cutoff)
+                  .push8(FC.RC_TUNING.yaw_setpoint_boost_gain)
+                  .push8(FC.RC_TUNING.yaw_setpoint_boost_cutoff)
+                  .push8(FC.RC_TUNING.collective_setpoint_boost_gain)
+                  .push8(FC.RC_TUNING.collective_setpoint_boost_cutoff)
+                  .push8(FC.RC_TUNING.yaw_dynamic_ceiling_gain)
+                  .push8(FC.RC_TUNING.yaw_dynamic_deadband_gain)
+                  .push8(FC.RC_TUNING.yaw_dynamic_deadband_filter);
 
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push8(0) // was cyclic_ring (heli-only, removed)
-                      .push8(0); // was cyclic_polar (heli-only, removed)
-            }
+            buffer.push8(0) // was cyclic_ring (heli-only, removed)
+                  .push8(0); // was cyclic_polar (heli-only, removed)
 
             break;
         }
@@ -1966,11 +1934,7 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_BATTERY_CONFIG: {
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push16(FC.BATTERY_CONFIG.capacities[0]);
-            } else {
-                buffer.push16(FC.BATTERY_CONFIG.capacity);
-            }
+            buffer.push16(FC.BATTERY_CONFIG.capacities[0]);
             buffer.push8(FC.BATTERY_CONFIG.cellCount)
                   .push8(FC.BATTERY_CONFIG.voltageMeterSource)
                   .push8(FC.BATTERY_CONFIG.currentMeterSource)
@@ -1980,10 +1944,8 @@ MspHelper.prototype.crunch = function(code) {
                   .push16(Math.round(FC.BATTERY_CONFIG.vbatwarningcellvoltage * 100))
                   .push8(FC.BATTERY_CONFIG.lvcPercentage)
                   .push8(FC.BATTERY_CONFIG.mahWarningPercentage);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                for (let i = 0; i < 6; i++) {
-                    buffer.push16(FC.BATTERY_CONFIG.capacities[i]);
-                }
+            for (let i = 0; i < 6; i++) {
+                buffer.push16(FC.BATTERY_CONFIG.capacities[i]);
             }
             break;
         }
@@ -2012,14 +1974,10 @@ MspHelper.prototype.crunch = function(code) {
                   .push16(FC.ESC_SENSOR_CONFIG.hw4_current_offset)
                   .push8(FC.ESC_SENSOR_CONFIG.hw4_current_gain)
                   .push8(FC.ESC_SENSOR_CONFIG.hw4_voltage_gain);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                buffer.push8(Number(FC.ESC_SENSOR_CONFIG.pinswap));
-            }
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push8(FC.ESC_SENSOR_CONFIG.voltage_correction)
-                      .push8(FC.ESC_SENSOR_CONFIG.current_correction)
-                      .push8(FC.ESC_SENSOR_CONFIG.consumption_correction);
-            }
+            buffer.push8(Number(FC.ESC_SENSOR_CONFIG.pinswap));
+            buffer.push8(FC.ESC_SENSOR_CONFIG.voltage_correction)
+                  .push8(FC.ESC_SENSOR_CONFIG.current_correction)
+                  .push8(FC.ESC_SENSOR_CONFIG.consumption_correction);
             break;
         }
 
@@ -2032,9 +1990,7 @@ MspHelper.prototype.crunch = function(code) {
                   .push8(FC.RX_CONFIG.rxSpiProtocol)
                   .push32(FC.RX_CONFIG.rxSpiId)
                   .push8(FC.RX_CONFIG.rxSpiRfChannelCount);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                buffer.push8(Number(FC.RX_CONFIG.serialrx_pinswap));
-            }
+            buffer.push8(Number(FC.RX_CONFIG.serialrx_pinswap));
             break;
         }
 
@@ -2052,14 +2008,12 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push8(Number(FC.TELEMETRY_CONFIG.telemetry_inverted))
                 .push8(Number(FC.TELEMETRY_CONFIG.telemetry_halfduplex))
                 .push32(FC.TELEMETRY_CONFIG.telemetry_sensors);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-                buffer.push8(Number(FC.TELEMETRY_CONFIG.telemetry_pinswap))
-                      .push8(FC.TELEMETRY_CONFIG.crsf_telemetry_mode)
-                      .push16(FC.TELEMETRY_CONFIG.crsf_telemetry_rate)
-                      .push16(FC.TELEMETRY_CONFIG.crsf_telemetry_ratio);
-                for (let i = 0; i < self.CRSF_TELEMETRY_SENSOR_LENGTH; i++) {
-                    buffer.push8(FC.TELEMETRY_CONFIG.telemetry_sensors_list[i] ?? 0);
-                }
+            buffer.push8(Number(FC.TELEMETRY_CONFIG.telemetry_pinswap))
+                  .push8(FC.TELEMETRY_CONFIG.crsf_telemetry_mode)
+                  .push16(FC.TELEMETRY_CONFIG.crsf_telemetry_rate)
+                  .push16(FC.TELEMETRY_CONFIG.crsf_telemetry_ratio);
+            for (let i = 0; i < self.CRSF_TELEMETRY_SENSOR_LENGTH; i++) {
+                buffer.push8(FC.TELEMETRY_CONFIG.telemetry_sensors_list[i] ?? 0);
             }
             break;
         }
@@ -2257,9 +2211,7 @@ MspHelper.prototype.crunch = function(code) {
                   .push16(FC.PILOT_CONFIG.model_param2_value)
                   .push8(FC.PILOT_CONFIG.model_param3_type)
                   .push16(FC.PILOT_CONFIG.model_param3_value);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)) {
-                buffer.push32(FC.PILOT_CONFIG.model_flags);
-            }
+            buffer.push32(FC.PILOT_CONFIG.model_flags);
             break;
         }
 
@@ -2276,11 +2228,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.BLACKBOX.blackboxMode)
                 .push16(FC.BLACKBOX.blackboxDenom)
                 .push32(FC.BLACKBOX.blackboxFields);
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-                buffer.push16(FC.BLACKBOX.blackboxInitialEraseKiB)
-                    .push8(FC.BLACKBOX.blackboxRollingErase)
-                    .push8(FC.BLACKBOX.blackboxGracePeriod);
-            }
+            buffer.push16(FC.BLACKBOX.blackboxInitialEraseKiB)
+                .push8(FC.BLACKBOX.blackboxRollingErase)
+                .push8(FC.BLACKBOX.blackboxGracePeriod);
             break;
         }
 

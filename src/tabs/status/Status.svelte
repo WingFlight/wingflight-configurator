@@ -1,14 +1,9 @@
 <script>
-  import semver from "semver";
   import { onMount, onDestroy, tick } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
-  import {
-    API_VERSION_12_8,
-    API_VERSION_12_9,
-  } from "@/js/configurator.svelte.js";
   import * as flightStats from "@/js/flight-stats.js";
 
   import Page from "@/components/Page.svelte";
@@ -64,9 +59,7 @@
       "BAD_RX_RECOVERY",
       "BOXFAILSAFE",
       "GOVERNOR",
-      semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)
-        ? "RPM_SIGNAL"
-        : "CRASH",
+      "RPM_SIGNAL",
       "THROTTLE",
       "ANGLE",
       "BOOT_GRACE_TIME",
@@ -85,9 +78,7 @@
       "DSHOT_BITBANG",
       "ACC_CALIB",
       "MOTOR_PROTO",
-      ...(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-        ? ["OVERRIDE"]
-        : []),
+      "OVERRIDE",
       "ARM_SWITCH",
     ];
   }
@@ -104,10 +95,6 @@
 
   let fastInterval;
   let slowInterval;
-
-  let showFlightStats = $derived(
-    semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
 
   let numChs = $derived(Math.min(FC.RC.active_channels ?? 0, 18));
   let numBars = $derived(Math.max(numChs, 8));
@@ -299,16 +286,14 @@
             <td>{$i18n.t("statusBoardName")}</td>
             <td>{FC.CONFIG.boardName}</td>
           </tr>
-          {#if showFlightStats}
-            <tr>
-              <td>{$i18n.t("statusFlightCount")}</td>
-              <td>{FC.FLIGHT_STATS.stats_total_flights.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td>{$i18n.t("statusFlightTime")}</td>
-              <td>{flightStats.getDuration()}</td>
-            </tr>
-          {/if}
+          <tr>
+            <td>{$i18n.t("statusFlightCount")}</td>
+            <td>{FC.FLIGHT_STATS.stats_total_flights.toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td>{$i18n.t("statusFlightTime")}</td>
+            <td>{flightStats.getDuration()}</td>
+          </tr>
         </tbody>
       </table>
     </Section>
