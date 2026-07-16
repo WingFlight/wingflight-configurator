@@ -3508,6 +3508,18 @@
     "logicConditionsTitle": {
         "message": "Conditions"
     },
+    "logicSlotCount": {
+        "message": "{{used}} / {{total}} configured"
+    },
+    "logicAddButton": {
+        "message": "Add Condition"
+    },
+    "logicRemoveButton": {
+        "message": "Remove condition"
+    },
+    "logicEmptyState": {
+        "message": "No conditions configured yet. Click \"Add Condition\" to set up a condition you can gate a mixer rule on."
+    },
     "logicIndex": {
         "message": "#"
     },

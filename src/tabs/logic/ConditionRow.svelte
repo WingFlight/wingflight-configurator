@@ -19,6 +19,7 @@
     profileOptions,
     conditionOptions,
     onCommit,
+    onRemove,
   } = $props();
 
   const VALUE = LogicCondition.OPERAND_TYPE_VALUE;
@@ -252,12 +253,23 @@
   <span class="col-status" class:active class:inactive={!active}>
     {active ? "TRUE" : "FALSE"}
   </span>
+
+  <span class="col-remove">
+    <button
+      type="button"
+      class="remove-btn"
+      aria-label={$i18n.t("logicRemoveButton")}
+      onclick={onRemove}
+    >
+      <em class="fas fa-trash"></em>
+    </button>
+  </span>
 </div>
 
 <style lang="scss">
   .row {
     display: grid;
-    grid-template-columns: 32px 44px 130px 1fr 1fr 70px;
+    grid-template-columns: 32px 44px 130px 1fr 1fr 70px 32px;
     align-items: start;
     column-gap: 10px;
     padding: 10px 8px;
@@ -322,6 +334,24 @@
     &.inactive {
       background-color: var(--color-status-bad);
       color: white;
+    }
+  }
+
+  .col-remove {
+    display: flex;
+    justify-content: center;
+    padding-top: 2px;
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    padding: 4px 6px;
+    cursor: pointer;
+    color: var(--color-text-soft);
+
+    &:hover {
+      color: var(--color-danger, var(--accent));
     }
   }
 </style>

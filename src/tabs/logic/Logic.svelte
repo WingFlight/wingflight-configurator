@@ -18,12 +18,15 @@
   import HelpIcon from "@/components/HelpIcon.svelte";
 
   import ConditionRow from "./ConditionRow.svelte";
-  import { PRIMARY_CHANNEL_COUNT } from "./util.js";
+  import { PRIMARY_CHANNEL_COUNT, isConditionUsed } from "./util.js";
 
   let loading = $state(true);
   let initialState = $state();
   let rcPollerInterval;
   let statusPollerInterval;
+
+  let initialVisibleSlots = [];
+  let visibleSlots = $state([]);
 
   function snapshotState() {
     return $state.snapshot({ LOGIC_CONDITIONS: FC.LOGIC_CONDITIONS });
@@ -35,6 +38,13 @@
   });
   let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
+
+  let slotCount = $derived(FC.LOGIC_CONDITIONS?.length ?? 0);
+  let hiddenSlots = $derived(
+    Array.from({ length: slotCount }, (_, i) => i).filter(
+      (i) => !visibleSlots.includes(i),
+    ),
+  );
 
   let channelOptions = $derived([
     { value: 0, label: $i18n.t("logicChannelRoll") },
@@ -91,6 +101,19 @@
     })),
   );
 
+  function addCondition() {
+    if (hiddenSlots.length === 0) {
+      return;
+    }
+    const next = Math.min(...hiddenSlots);
+    visibleSlots = [...visibleSlots, next].sort((a, b) => a - b);
+  }
+
+  function removeCondition(index) {
+    FC.LOGIC_CONDITIONS[index] = LogicCondition.nullCondition();
+    visibleSlots = visibleSlots.filter((i) => i !== index);
+  }
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_RC);
     await MSP.promise(MSPCodes.MSP_BOXIDS);
@@ -100,6 +123,11 @@
     while (FC.LOGIC_CONDITIONS.length < LogicCondition.CONDITION_COUNT) {
       FC.LOGIC_CONDITIONS.push(LogicCondition.nullCondition());
     }
+
+    initialVisibleSlots = FC.LOGIC_CONDITIONS.map((c, i) => i).filter((i) =>
+      isConditionUsed(FC.LOGIC_CONDITIONS[i]),
+    );
+    visibleSlots = [...initialVisibleSlots];
 
     initialState = snapshotState();
     loading = false;
@@ -128,6 +156,7 @@
 
   export async function onRevert() {
     Object.assign(FC.LOGIC_CONDITIONS, initialState.LOGIC_CONDITIONS);
+    visibleSlots = [...initialVisibleSlots];
   }
 
   export function isDirty() {
@@ -148,30 +177,56 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <Section label="logicConditionsTitle">
-    <div class="header-row">
-      <span></span>
-      <span>{$i18n.t("logicEnable")}</span>
-      <span>{$i18n.t("logicOperator")}</span>
-      <span>{$i18n.t("logicOperandA")}</span>
-      <span>{$i18n.t("logicOperandB")}</span>
-      <span>{$i18n.t("logicStatus")}</span>
+    <div class="toolbox">
+      <span class="slot-count"
+        >{$i18n.t("logicSlotCount", {
+          used: visibleSlots.length,
+          total: slotCount,
+        })}</span
+      >
+      <div class="grow"></div>
+      <button
+        class="btn add-btn"
+        disabled={hiddenSlots.length === 0}
+        onclick={addCondition}
+      >
+        <em class="fas fa-plus"></em>
+        {$i18n.t("logicAddButton")}
+      </button>
     </div>
 
-    {#each FC.LOGIC_CONDITIONS as condition, index (index)}
-      <ConditionRow
-        {condition}
-        {index}
-        active={!!FC.LOGIC_CONDITIONS_STATUS?.[index]}
-        {channelOptions}
-        {modeOptions}
-        {sensorOptions}
-        {profileOptions}
-        {conditionOptions}
-        onCommit={(newCondition) => {
-          FC.LOGIC_CONDITIONS[index] = newCondition;
-        }}
-      />
-    {/each}
+    {#if visibleSlots.length === 0}
+      <div class="empty-state">
+        <p>{$i18n.t("logicEmptyState")}</p>
+      </div>
+    {:else}
+      <div class="header-row">
+        <span></span>
+        <span>{$i18n.t("logicEnable")}</span>
+        <span>{$i18n.t("logicOperator")}</span>
+        <span>{$i18n.t("logicOperandA")}</span>
+        <span>{$i18n.t("logicOperandB")}</span>
+        <span>{$i18n.t("logicStatus")}</span>
+        <span></span>
+      </div>
+
+      {#each visibleSlots as index (index)}
+        <ConditionRow
+          condition={FC.LOGIC_CONDITIONS[index]}
+          {index}
+          active={!!FC.LOGIC_CONDITIONS_STATUS?.[index]}
+          {channelOptions}
+          {modeOptions}
+          {sensorOptions}
+          {profileOptions}
+          {conditionOptions}
+          onCommit={(newCondition) => {
+            FC.LOGIC_CONDITIONS[index] = newCondition;
+          }}
+          onRemove={() => removeCondition(index)}
+        />
+      {/each}
+    {/if}
   </Section>
 </Page>
 
@@ -190,7 +245,7 @@
 
   .header-row {
     display: grid;
-    grid-template-columns: 32px 44px 130px 1fr 1fr 70px;
+    grid-template-columns: 32px 44px 130px 1fr 1fr 70px 32px;
     column-gap: 10px;
     padding: 4px 8px;
     font-weight: 600;
@@ -199,5 +254,32 @@
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));
     border-bottom: 1px solid var(--color-border);
+  }
+
+  .toolbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: var(--section-gap);
+  }
+
+  .slot-count {
+    font-weight: 600;
+    color: var(--color-text-soft);
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--color-text-soft);
+
+    border: 1px dashed var(--color-border);
+    border-radius: 4px;
   }
 </style>
