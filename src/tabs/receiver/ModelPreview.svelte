@@ -81,7 +81,7 @@
     right: 0;
     margin: 8px;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 0.9rem;
     padding: 6px 12px;
     transition: var(--animation-speed);
 

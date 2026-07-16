@@ -1,33 +1,38 @@
+import { mount, unmount } from "svelte";
+
+import PrivacyPolicy from "@/tabs/privacy_policy/PrivacyPolicy.svelte";
+
 const tab = {
-    tabName: 'privacy_policy',
-};
+  tabName: "privacy_policy",
+  svelteComponent: null,
 
-tab.initialize = function (callback) {
-    const tabFile = `/src/tabs/privacy_policy.html`;
+  initialize(callback) {
+    const target = document.querySelector("#content");
+    target.innerHTML = "";
+    this.svelteComponent = mount(PrivacyPolicy, { target });
 
-    $('#content').html('<div id="tab-static"><div id="tab-static-contents"></div>');
+    GUI.content_ready(callback);
+  },
 
-    $('#tab-static-contents').load(tabFile, function () {
-        i18n.localizePage();
-        GUI.content_ready(callback);
-    });
-
-};
-
-tab.cleanup = function (callback) {
+  cleanup(callback) {
+    if (this.svelteComponent) {
+      unmount(this.svelteComponent);
+      this.svelteComponent = null;
+    }
     callback?.();
+  },
 };
 
 TABS[tab.tabName] = tab;
 
 if (import.meta.hot) {
-    import.meta.hot.accept((newModule) => {
-        if (newModule && GUI.active_tab === tab.tabName) {
-          TABS[tab.tabName].initialize();
-        }
-    });
+  import.meta.hot.accept((newModule) => {
+    if (newModule && GUI.active_tab === tab.tabName) {
+      TABS[tab.tabName].initialize();
+    }
+  });
 
-    import.meta.hot.dispose(() => {
-        tab.cleanup();
-    });
+  import.meta.hot.dispose(() => {
+    tab.cleanup();
+  });
 }

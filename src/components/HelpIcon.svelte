@@ -32,7 +32,7 @@
   }
 
   .icon {
-    font-size: 14px;
+    font-size: 0.9rem;
     padding: 2px;
 
     :global(html[data-theme="light"]) & {
