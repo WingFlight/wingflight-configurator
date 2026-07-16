@@ -299,7 +299,7 @@
 
   .meter-label {
     min-width: 34px;
-    font-size: 10px;
+    font-size: 0.7rem;
     font-weight: 600;
     text-align: right;
 

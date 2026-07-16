@@ -3,7 +3,7 @@
     --darkAccent: #8f0000ff;
     --subtleAccent: #c0c0c0;
     --superSubtleAccent: #595959;
-    --quietHeader: #939682;
+    --quietHeader: #303236;
     --defaultText: #ffffff;
     --subtleText: #c0c0c0;
     --mutedText: #d6d6d6;
@@ -203,50 +203,6 @@ html[data-theme=dark] .tab-adjustments .adjustmentBody .value-box {
 }
 
 
-/* AUXILIARY TAB */
-
-html[data-theme=dark] .tab-auxiliary .toolbox {
-    color: white;
-}
-
-html[data-theme=dark] .tab-auxiliary .mode {
-    background-color: #393b3a;
-}
-
-html[data-theme=dark] .tab-auxiliary .mode .info {
-    border-bottom: 5px solid #393b3a;
-    background-color: #9e9e9e;
-    color: white;
-}
-
-html[data-theme=dark] .tab-auxiliary .ranges {
-    border-bottom: 5px solid #393b3a;
-    background-color: #676767;
-}
-
-html[data-theme=dark] .tab-auxiliary .range {
-    background-color: #484848;
-}
-
-html[data-theme=dark] .tab-auxiliary .link {
-    background-color: #484848;
-}
-
-html[data-theme=dark] .tab-auxiliary .range .channel,.logic,.linkedTo {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-auxiliary .buttons a {
-    background-color: #333333;
-    color: white;
-}
-
-html[data-theme=dark] .tab-auxiliary .buttons a:hover {
-    background-color: var(--hoverButton-background);
-}
-
-
 /* BEEPERS TAB */
 
 html[data-theme=dark] .tab-beepers .gui_box span {
@@ -410,37 +366,6 @@ html[data-theme=dark] .tab-led-strip .gridSections,
 html[data-theme=dark] .tab-led-strip .gridSections .block {
     border: none;
 }
-
-/* MIXER TAB */
-
-html[data-theme=dark] .tab-mixer .gui_box span {
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer .subtitle {
-    color: #3a3a3a;
-    background-color: #a0a0a0;
-}
-
-html[data-theme=dark] .tab-mixer input:disabled,
-html[data-theme=dark] .tab-mixer select:disabled {
-    color: #595959;
-}
-
-html[data-theme=dark] .tab-mixer table input {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer table select {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-mixer .bottomarea {
-    background-color: #393b3a;
-}
-
 
 /* BLACKBOX TAB */
 
@@ -637,22 +562,6 @@ html[data-theme=dark] .tab-power .smartfuel-configuration select {
 }
 
 
-/* SENSORS TAB */
-
-html[data-theme=dark] .tab-sensors .plot_control {
-    background-color: #2f2f2f;
-}
-
-html[data-theme=dark] .tab-sensors .plot_control select {
-    background-color: #3a3a3a;
-    color: white;
-}
-
-html[data-theme=dark] .tab-sensors text {
-    fill: white;
-}
-
-
 /* SERVOS TAB */
 
 html[data-theme=dark] .tab-servos .gui_box span {
@@ -695,36 +604,6 @@ html[data-theme=dark] .tab-servos .servoOverride tbody tr:nth-child(odd) {
 
 html[data-theme=dark] .tab-servos .servoOverride tbody tr:nth-child(even) {
     background-color: #393939;
-}
-
-
-/* STATUS TAB */
-
-html[data-theme=dark] .tab-status #interactive_block {
-    background-color: #393b3a;
-}
-
-html[data-theme=dark] .tab-status .attitude_info {
-    color: white;
-}
-
-html[data-theme=dark] .tab-status #interactive_block a.reset {
-    color: white;
-    background-color: #575757;
-}
-
-html[data-theme=dark] .tab-status #interactive_block a.reset:hover {
-    background-color: #393b3a;
-}
-
-html[data-theme=dark] .tab-status .bars .bar {
-    background-color: #393b3a;
-    border: 1px solid #c0c0c0;
-}
-
-html[data-theme=dark] .tab-status .bars .label1,
-html[data-theme=dark] .tab-status .bars .label2 {
-    color: white;
 }
 
 

@@ -91,7 +91,7 @@
   }
 
   .esc-label {
-    font-size: 0.8em;
+    font-size: 0.8rem;
     font-weight: 400;
     color: var(--color-text-soft);
   }
