@@ -1,7 +1,3 @@
-import semver from "semver";
-
-import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
-
 export function getSmartPortSensors() {
   return [
     {
@@ -108,9 +104,8 @@ export function getSmartPortSensors() {
       sensors: [
         { name: "PID_PROFILE" },
         { name: "RATES_PROFILE" },
-        ...(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-          ? [{ name: "BATTERY_PROFILE" }, { name: "LED_PROFILE" }]
-          : []),
+        { name: "BATTERY_PROFILE" },
+        { name: "LED_PROFILE" },
       ],
     },
     {

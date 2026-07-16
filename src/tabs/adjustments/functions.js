@@ -1,8 +1,3 @@
-import semver from 'semver';
-
-import { API_VERSION_12_8, API_VERSION_12_9 } from '@/js/configurator.svelte.js';
-import { FC } from '@/js/fc.svelte.js';
-
 // `id` must stay positionally aligned with the firmware's adjustmentFunc_e
 // enum (fc/rc_adjustments.h) - this array is indexed directly by that value
 // (FUNCTIONS[adjRange.adjFunction]), so entries are never reordered or
@@ -13,9 +8,6 @@ import { FC } from '@/js/fc.svelte.js';
 // Rotorflight lineage) - selecting one is silently inert, not dangerous,
 // but does nothing on wingflight.
 export function getFunctions() {
-    const gte12_8 = semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8);
-    const gte12_9 = semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9);
-
     return [
         { id: 0,    name: 'None',                       min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ] },
         { id: 1,    name: 'RateProfile',                min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
@@ -85,13 +77,13 @@ export function getFunctions() {
         { id: 65,   name: 'AccTrimRoll',                min: -300,  max: 300,    ticks: 10,   pips: [ -300, -200, -100, 0, 100, 200, 300 ] },
         { id: 66,   name: 'YawInertiaPrecompGain',      min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 67,   name: 'YawInertiaPrecompCutoff',    min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
-        { id: 68,   name: 'PitchSetpointBoostGain',     min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 69,   name: 'RollSetpointBoostGain',      min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 70,   name: 'YawSetpointBoostGain',       min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
+        { id: 68,   name: 'PitchSetpointBoostGain',     min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 69,   name: 'RollSetpointBoostGain',      min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 70,   name: 'YawSetpointBoostGain',       min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 71,   name: 'CollectiveSetpointBoostGain',min: 0,     max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
-        { id: 72,   name: 'YawDynCeilingGain',          min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 73,   name: 'YawDynDeadbandGain',         min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
-        { id: 74,   name: 'YawDynDeadbandFilter',       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: !gte12_8 },
+        { id: 72,   name: 'YawDynCeilingGain',          min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 73,   name: 'YawDynDeadbandGain',         min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 74,   name: 'YawDynDeadbandFilter',       min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 75,   name: 'YawPrecompCutoff',           min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 76,   name: 'GovIdleThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 77,   name: 'GovAutoThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
@@ -99,7 +91,7 @@ export function getFunctions() {
         { id: 79,   name: 'GovMinThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
         { id: 80,   name: 'GovHeadspeed',               min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
-        { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ], hide: !gte12_9 },
+        { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 84,   name: 'MasterGainPitch',            min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },
         { id: 85,   name: 'MasterGainRoll',             min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },
         { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 200,    ticks: 25,   pips: [ 25, 50, 75, 100, 125, 150, 175, 200 ] },

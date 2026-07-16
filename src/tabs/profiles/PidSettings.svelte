@@ -1,7 +1,5 @@
 <script>
-  import semver from "semver";
-
-  import { API_VERSION_12_9, CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { GainCurve } from "@/js/GainCurve.js";
@@ -12,10 +10,6 @@
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
-
-  let showErrorRotation = $derived(
-    semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_9),
-  );
 
   let gainCurveOptions = $derived([
     { value: 0, label: $i18n.t("mixerCurveNone") },
@@ -46,23 +40,6 @@
 </script>
 
 <Section label="profilesPidSettings">
-  {#if CONFIGURATOR.expertMode && showErrorRotation}
-    <SubSection>
-      <Field id="error-rotation" label="profilesErrorRotation">
-        {#snippet tooltip()}
-          {$i18n.t("profilesErrorRotationHelp")}
-        {/snippet}
-        <Switch
-          id="error-rotation"
-          bind:checked={
-            () => FC.PID_PROFILE.error_rotation !== 0,
-            (v) => (FC.PID_PROFILE.error_rotation = v ? 1 : 0)
-          }
-        />
-      </Field>
-    </SubSection>
-  {/if}
-
   {#if CONFIGURATOR.expertMode}
     <SubSection>
       <Field id="iterm-decay-time" label="profilesItermDecayTime">

@@ -1,12 +1,6 @@
 <script>
-  import semver from "semver";
-
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import {
-    API_VERSION_12_7,
-    API_VERSION_12_9,
-  } from "@/js/configurator.svelte.js";
 
   import {
     BAUD_RATE_OPTIONS,
@@ -39,22 +33,6 @@
     const options = [];
 
     for (const func of PORT_FUNCTIONS) {
-      if (
-        func.name === "SBUS_OUT" &&
-        !semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)
-      )
-        continue;
-      if (
-        func.name === "FBUS_OUT" &&
-        !semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-      )
-        continue;
-      if (
-        func.name === "SPORT_MASTER" &&
-        !semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-      )
-        continue;
-
       options.push({
         value: func.id,
         label: $i18n.t(`portsFunction_${func.name}`),

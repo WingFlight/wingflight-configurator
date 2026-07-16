@@ -1,7 +1,3 @@
-import semver from "semver";
-
-import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
-
 export function getNativeCrsfSensors() {
   return [
     {
@@ -11,9 +7,8 @@ export function getNativeCrsfSensors() {
         { name: "ATTITUDE" },
         { name: "ALTITUDE" },
         { name: "GPS" },
-        ...(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-          ? [{ name: "RPM" }, { name: "TEMP" }]
-          : []),
+        { name: "RPM" },
+        { name: "TEMP" },
       ],
     },
   ];
@@ -139,9 +134,7 @@ export function getCustomCrsfSensors() {
       sensors: [
         { name: "PID_PROFILE" },
         { name: "RATES_PROFILE" },
-        ...(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9)
-          ? [{ name: "BATTERY_PROFILE" }]
-          : []),
+        { name: "BATTERY_PROFILE" },
         { name: "LED_PROFILE" },
       ],
     },

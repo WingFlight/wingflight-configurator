@@ -1,8 +1,6 @@
 <script>
-  import semver from "semver";
   import { slide } from "svelte/transition";
 
-  import { API_VERSION_12_7 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
@@ -13,10 +11,7 @@
 
   let { telemetry, resetTelemetry } = $props();
   let enabled = $derived(FC.FEATURE_CONFIG.features.TELEMETRY);
-  let crsfSettings = $derived(
-    telemetry.proto === "crsf" &&
-      semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7),
-  );
+  let crsfSettings = $derived(telemetry.proto === "crsf");
 </script>
 
 <Section label="receiverTelemetrySettings">
@@ -42,14 +37,12 @@
           bind:checked={FC.TELEMETRY_CONFIG.telemetry_halfduplex}
         />
       </Field>
-      {#if semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)}
-        <Field id="telemetry-pinswap" label="receiverTelemetryPinSwap">
-          <Switch
-            id="telemetry-pinswap"
-            bind:checked={FC.TELEMETRY_CONFIG.telemetry_pinswap}
-          />
-        </Field>
-      {/if}
+      <Field id="telemetry-pinswap" label="receiverTelemetryPinSwap">
+        <Switch
+          id="telemetry-pinswap"
+          bind:checked={FC.TELEMETRY_CONFIG.telemetry_pinswap}
+        />
+      </Field>
     </SubSection>
   {/if}
   {#if enabled && !telemetry.external && crsfSettings}

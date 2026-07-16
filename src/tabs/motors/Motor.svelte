@@ -1,11 +1,9 @@
 <script>
-  import semver from "semver";
   import { onDestroy } from "svelte";
   import { slide } from "svelte/transition";
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { API_VERSION_12_9 } from "@/js/configurator.svelte.js";
 
   import Section from "@/components/Section.svelte";
   import Meter from "@/components/Meter.svelte";
@@ -113,10 +111,7 @@
   let overrideIntervalId;
   $effect(() => {
     if (motorState.overrideEnabled) {
-      if (
-        semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_9) &&
-        !overrideIntervalId
-      ) {
+      if (!overrideIntervalId) {
         overrideIntervalId = setInterval(() => {
           mspHelper.sendMotorOverride(index);
         }, 250);

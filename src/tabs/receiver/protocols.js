@@ -1,9 +1,3 @@
-import semver from "semver";
-import {
-  API_VERSION_12_7,
-  API_VERSION_12_8,
-  API_VERSION_12_9,
-} from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte";
 import { createEnum } from "@/js/utils/common.js";
 import {
@@ -30,42 +24,18 @@ function getCrsfTelemetry() {
     };
   }
 
-  if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-    return {
-      proto: "crsf",
-      type: TelemetryType.UNORDERED_LIST,
-      sensors: getNativeCrsfSensors(),
-    };
-  }
-
   return {
     proto: "crsf",
-    type: TelemetryType.BITFIELD,
-    mask: 0x0010378f,
+    type: TelemetryType.UNORDERED_LIST,
+    sensors: getNativeCrsfSensors(),
   };
 }
 
 function getSmartportTelemetry() {
-  if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-    return {
-      proto: "smartport",
-      type: TelemetryType.ORDERED_LIST,
-      sensors: getSmartPortSensors(),
-    };
-  }
-
-  if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)) {
-    return {
-      proto: "smartport",
-      type: TelemetryType.BITFIELD,
-      mask: 0xffffffff,
-    };
-  }
-
   return {
     proto: "smartport",
-    type: TelemetryType.BITFIELD,
-    mask: 0x007fffff,
+    type: TelemetryType.ORDERED_LIST,
+    sensors: getSmartPortSensors(),
   };
 }
 
@@ -102,9 +72,6 @@ export const RX_PROTOCOLS = [
     id: 15,
     feature: "RX_SERIAL",
     telemetry: { type: TelemetryType.TOGGLE },
-    get hide() {
-      return semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_7);
-    },
   },
   {
     name: "FrSky F.PORT",
@@ -121,9 +88,6 @@ export const RX_PROTOCOLS = [
     get telemetry() {
       return getSmartportTelemetry();
     },
-    get hide() {
-      return semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_7);
-    },
   },
   {
     name: "FrSky FBUS",
@@ -131,9 +95,6 @@ export const RX_PROTOCOLS = [
     feature: "RX_SERIAL",
     get telemetry() {
       return getSmartportTelemetry();
-    },
-    get hide() {
-      return semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_7);
     },
   },
   {
@@ -162,20 +123,10 @@ export const RX_PROTOCOLS = [
     name: "ImmersionRC GHOST",
     id: 14,
     feature: "RX_SERIAL",
-    get telemetry() {
-      if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-        return {
-          proto: "ghst",
-          type: TelemetryType.UNORDERED_LIST,
-          sensors: GHOST_SENSORS,
-        };
-      }
-
-      return {
-        proto: "ghst",
-        type: TelemetryType.BITFIELD,
-        mask: 0x00003607,
-      };
+    telemetry: {
+      proto: "ghst",
+      type: TelemetryType.UNORDERED_LIST,
+      sensors: GHOST_SENSORS,
     },
   },
   {
@@ -199,17 +150,11 @@ export const RX_PROTOCOLS = [
     id: 19,
     feature: "RX_SERIAL",
     telemetry: { type: TelemetryType.TOGGLE },
-    get hide() {
-      return semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_9);
-    },
   },
   {
     name: "JR XBUS Mode A",
     id: 18,
     feature: "RX_SERIAL",
-    get hide() {
-      return semver.lt(FC.CONFIG.apiVersion, API_VERSION_12_8);
-    },
   },
   {
     name: "JR XBUS Mode B",
@@ -304,18 +249,9 @@ export const EXTERNAL_TELEMETRY_PROTOCOLS = [
   {
     name: "FrSky Hub",
     id: 4,
-    get telemetry() {
-      if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)) {
-        return {
-          type: TelemetryType.UNORDERED_LIST,
-          sensors: HUB_SENSORS,
-        };
-      }
-
-      return {
-        type: TelemetryType.BITFIELD,
-        mask: 0x00003e77,
-      };
+    telemetry: {
+      type: TelemetryType.UNORDERED_LIST,
+      sensors: HUB_SENSORS,
     },
   },
   {

@@ -1,9 +1,7 @@
 <script>
-  import semver from "semver";
   import { slide } from "svelte/transition";
 
   import { FC } from "@/js/fc.svelte.js";
-  import { API_VERSION_12_7, API_VERSION_12_8 } from "@/js/configurator.svelte";
 
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
@@ -51,21 +49,19 @@
           />
         </Field>
 
-        {#if semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)}
-          <Field id="esc-telemetry-pinswap" label="motorsEscTelemetryPinswap">
-            {#snippet tooltip()}
-              <Tooltip help="motorsEscTelemetryPinswapHelp" />
-            {/snippet}
-            <Switch
-              id="esc-telemetry-pinswap"
-              bind:checked={FC.ESC_SENSOR_CONFIG.pinswap}
-            />
-          </Field>
-        {/if}
+        <Field id="esc-telemetry-pinswap" label="motorsEscTelemetryPinswap">
+          {#snippet tooltip()}
+            <Tooltip help="motorsEscTelemetryPinswapHelp" />
+          {/snippet}
+          <Switch
+            id="esc-telemetry-pinswap"
+            bind:checked={FC.ESC_SENSOR_CONFIG.pinswap}
+          />
+        </Field>
       </SubSection>
     </div>
   {/if}
-  {#if motorState.telemEnabled && semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)}
+  {#if motorState.telemEnabled}
     <div transition:slide>
       <SubSection label="motorsSectionSensorCorrection">
         <Field id="voltage-correction" label="motorsVoltageCorrection" unit="%">

@@ -1,10 +1,3 @@
-import semver from "semver";
-
-import {
-  API_VERSION_12_7,
-  API_VERSION_12_9,
-} from "@/js/configurator.svelte.js";
-
 export const DEBUG_AXIS = [
   "0 / ROLL",
   "1 / PITCH",
@@ -52,7 +45,7 @@ export const LOG_RATES = {
   0: [1, 2, 4, 8, 16, 32, 64, 128, 256],
 };
 
-export function getDebugModes(apiVersion) {
+export function getDebugModes() {
   return [
     "NONE",
     "CYCLETIME",
@@ -133,7 +126,7 @@ export function getDebugModes(apiVersion) {
     "ERROR_DECAY",
     "HS_OFFSET",
     "HS_BLEED",
-    ...(semver.gte(apiVersion, API_VERSION_12_9) ? ["GOV_MOTOR"] : []),
+    "GOV_MOTOR",
     "USER1",
     "USER2",
     "USER3",
@@ -141,8 +134,8 @@ export function getDebugModes(apiVersion) {
   ];
 }
 
-export function getLogFields(apiVersion) {
-  const fields = [
+export function getLogFields() {
+  return [
     "command",
     "setpoint",
     "mixer",
@@ -162,13 +155,10 @@ export function getLogFields(apiVersion) {
     "vbec",
     "vbus",
     "temps",
+    "esc",
+    "bec",
+    "esc2",
   ];
-
-  if (semver.gte(apiVersion, API_VERSION_12_7)) {
-    fields.push("esc", "bec", "esc2");
-  }
-
-  return fields;
 }
 
 export function formatFilesizeKilobytes(kilobytes) {

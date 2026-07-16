@@ -1,7 +1,4 @@
 <script>
-  import semver from "semver";
-
-  import { API_VERSION_12_8 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
@@ -65,7 +62,7 @@
   });
 
   let debugModeOptions = $derived.by(() => {
-    const names = getDebugModes(FC.CONFIG.apiVersion);
+    const names = getDebugModes();
     const unknown = $i18n.t("blackboxDebugModeUnknown");
 
     const options = [];
@@ -84,19 +81,15 @@
     DEBUG_AXIS.map((label, value) => ({ value, label })),
   );
 
-  let logFields = $derived(getLogFields(FC.CONFIG.apiVersion));
+  let logFields = $derived(getLogFields());
 
   let showMode = $derived(FC.BLACKBOX.blackboxDevice !== 0);
   let showRateAndFlags = $derived(showMode && FC.BLACKBOX.blackboxMode !== 0);
   let showGracePeriod = $derived(
     showMode &&
-      (FC.BLACKBOX.blackboxMode === 1 || FC.BLACKBOX.blackboxMode === 2) &&
-      semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8),
+      (FC.BLACKBOX.blackboxMode === 1 || FC.BLACKBOX.blackboxMode === 2),
   );
-  let showEraseOptions = $derived(
-    FC.BLACKBOX.blackboxDevice === 1 &&
-      semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8),
-  );
+  let showEraseOptions = $derived(FC.BLACKBOX.blackboxDevice === 1);
 
   let initialEraseMax = $derived(
     Math.min(64, FC.DATAFLASH.totalSize / 1024 / 1024),

@@ -1,8 +1,6 @@
 <script>
-  import semver from "semver";
   import { slide } from "svelte/transition";
 
-  import { API_VERSION_12_7 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import Switch from "@/components/Switch.svelte";
   import Field from "@/components/Field.svelte";
@@ -59,17 +57,15 @@
             bind:checked={FC.RX_CONFIG.serialrx_halfduplex}
           />
         </Field>
-        {#if semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_7)}
-          <Field id="receiver-serialrx-pinswap" label="receiverSerialPinSwap">
-            {#snippet tooltip()}
-              <Tooltip help="receiverSerialPinSwapHelp" />
-            {/snippet}
-            <Switch
-              id="receiver-serialrx-pinswap"
-              bind:checked={FC.RX_CONFIG.serialrx_pinswap}
-            />
-          </Field>
-        {/if}
+        <Field id="receiver-serialrx-pinswap" label="receiverSerialPinSwap">
+          {#snippet tooltip()}
+            <Tooltip help="receiverSerialPinSwapHelp" />
+          {/snippet}
+          <Switch
+            id="receiver-serialrx-pinswap"
+            bind:checked={FC.RX_CONFIG.serialrx_pinswap}
+          />
+        </Field>
       </SubSection>
     </div>
   {/if}

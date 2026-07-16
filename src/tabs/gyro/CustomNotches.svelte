@@ -1,5 +1,4 @@
 <script>
-  import semver from "semver";
   import { i18n } from "@/js/i18n.js";
   import ErrorNote from "@/components/notes/ErrorNote.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
@@ -10,7 +9,6 @@
 
   let { FC, notches = $bindable(), onResetNotches } = $props();
 
-  let multiAxis = $derived(semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8));
   let axis = $state(0);
 
   const axisProps = [
@@ -64,9 +62,7 @@
       >
         <option value={1}>{$i18n.t("gyroRpmFilterNotchTypeSingle")}</option>
         <option value={2}>{$i18n.t("gyroRpmFilterNotchTypeDouble")}</option>
-        {#if semver.gte(FC.CONFIG.apiVersion, API_VERSION_12_8)}
-          <option value={3}>{$i18n.t("gyroRpmFilterNotchTypeTriple")}</option>
-        {/if}
+        <option value={3}>{$i18n.t("gyroRpmFilterNotchTypeTriple")}</option>
       </select>
     </Field>
   {/snippet}
@@ -97,12 +93,9 @@
 
 <div class="wrapper">
   <div class="container">
-    <div
-      class={["header", multiAxis && "multi-axis"]}
-      style:border-color={axisColor}
-    >
+    <div class={["header", "multi-axis"]} style:border-color={axisColor}>
       <div class="title">{$i18n.t("gyroRpmFilterBanks")}</div>
-      {#if notches && multiAxis}
+      {#if notches}
         <ul>
           {#each axisProps as axisProp, i (axisProp)}
             <button
