@@ -623,36 +623,6 @@ html[data-theme=dark] .tab-servos .servoOverride tbody tr:nth-child(even) {
 }
 
 
-/* STATUS TAB */
-
-html[data-theme=dark] .tab-status #interactive_block {
-    background-color: #393b3a;
-}
-
-html[data-theme=dark] .tab-status .attitude_info {
-    color: white;
-}
-
-html[data-theme=dark] .tab-status #interactive_block a.reset {
-    color: white;
-    background-color: #575757;
-}
-
-html[data-theme=dark] .tab-status #interactive_block a.reset:hover {
-    background-color: #393b3a;
-}
-
-html[data-theme=dark] .tab-status .bars .bar {
-    background-color: #393b3a;
-    border: 1px solid #c0c0c0;
-}
-
-html[data-theme=dark] .tab-status .bars .label1,
-html[data-theme=dark] .tab-status .bars .label2 {
-    color: white;
-}
-
-
 /* SELECT2 */
 
 html[data-theme=dark] .select2-container .select2-selection--single .select2-selection__rendered {

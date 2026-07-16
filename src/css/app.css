@@ -7,7 +7,7 @@
 
   /* Status-badge colors (e.g. GPS fix indicator) - theme-independent by
      design, matching the value already duplicated as raw hex across
-     main.css/blackbox.css/status.css. */
+     main.css/blackbox.css. */
   --color-status-good: #56ac1d;
   --color-status-bad: #e60000;
 }
