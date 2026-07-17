@@ -612,6 +612,9 @@
     "usbDeviceCloseFail": {
         "message": "<span class=\"message-negative\">Failed</span> to close USB device"
     },
+    "usbDeviceClaimFail": {
+        "message": "<span class=\"message-negative\">Failed</span> to claim USB device!"
+    },
     "usbDeviceUdevNotice": {
         "message": "Are <strong>udev rules</strong> installed correctly? See docs for instructions"
     },
