@@ -1,3 +1,7 @@
+# 0.0.7
+
+Fix arming confirmation dialog rendering raw HTML tags as literal text, and add button spacing.
+
 # 0.0.6
 
 Complete the Svelte rewrite of the configurator - all remaining tabs (Mixer, Rates, Profiles, Servos, Sensors, Status, Setup, Power, Logic/Conditions, and more) converted from legacy HTML/JS.
