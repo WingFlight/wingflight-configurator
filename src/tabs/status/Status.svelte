@@ -433,7 +433,8 @@
 <dialog bind:this={confirmDialogEl}>
   <h3>{$i18n.t("dialogConfirmArmingTitle")}</h3>
   <div class="content">
-    <p>{$i18n.t("dialogConfirmArmingNote")}</p>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <p>{@html $i18n.t("dialogConfirmArmingNote")}</p>
   </div>
   <div class="buttons">
     <button class="btn" onclick={onConfirmArming}>
@@ -458,6 +459,28 @@
     :global(strong) {
       font-weight: 700;
     }
+  }
+
+  dialog {
+    width: 32em;
+    border-radius: 5px;
+  }
+
+  dialog .content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  dialog .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 1.5em;
+  }
+
+  dialog h3 {
+    margin-bottom: 0.5em;
   }
 
   .top-grid {
