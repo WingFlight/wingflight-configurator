@@ -33,10 +33,32 @@ import * as utilsCommon from "@/js/utils/common.js";
 import "@/js/injected_methods.js";
 import "@/js/tabs/index.js";
 
+// Import all CSS files for proper styling
+// Node modules CSS
+import "jbox/dist/jBox.min.css";
+import "switchery-latest/dist/switchery.min.css";
+import "select2/dist/css/select2.min.css";
+
+// Core CSS files
 import "multiple-select/dist/multiple-select.css";
 import "nouislider/dist/nouislider.css";
 import "@/css/slider.css";
 import "@/css/app.css";
+import "@/css/main.css";
+import "@/css/dark-theme.css";
+
+// Tab-specific CSS
+import "@/css/tabs/static_tab.css";
+import "@/css/tabs/help.css";
+import "@/css/tabs/cli.css";
+import "@/css/tabs/presets.css";
+import "@/css/tabs/power.css";
+import "@/css/tabs/auxiliary.css";
+
+// Component CSS
+import "@/css/dropdown-lists/css/style_lists.css";
+import "@/css/switchery_custom.css";
+import "@/css/select2_custom.css";
 
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";

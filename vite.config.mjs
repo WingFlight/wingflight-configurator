@@ -94,6 +94,29 @@ export default defineConfig({
         });
       },
     },
+    {
+      name: "web-html-cleanup",
+      apply: "serve",
+      transformIndexHtml: {
+        handler(html) {
+          // For web backend, remove CSS link tags that are imported in main.svelte.js
+          // Keep public asset links (fonts, fontawesome, libraries)
+          if (backend === "web") {
+            // Remove stylesheet links for /src/css/ paths (being imported as JS modules)
+            html = html.replace(
+              /<link[^>]*href=["']\/src\/css\/[^"']*["'][^>]*>/g,
+              "",
+            );
+            // Remove stylesheet links for /node_modules/ CSS (being imported in JS)
+            html = html.replace(
+              /<link[^>]*href=["']\/node_modules\/[^"']*\.css["'][^>]*>/g,
+              "",
+            );
+          }
+          return html;
+        },
+      },
+    },
   ],
   resolve: {
     alias: {
