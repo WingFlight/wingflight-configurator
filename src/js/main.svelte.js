@@ -47,13 +47,11 @@ import "@/css/app.css";
 import "@/css/main.css";
 import "@/css/dark-theme.css";
 
-// Tab-specific CSS
+// Tab-specific CSS (only existing files)
 import "@/css/tabs/static_tab.css";
 import "@/css/tabs/help.css";
 import "@/css/tabs/cli.css";
 import "@/css/tabs/presets.css";
-import "@/css/tabs/power.css";
-import "@/css/tabs/auxiliary.css";
 
 // Component CSS
 import "@/css/dropdown-lists/css/style_lists.css";
