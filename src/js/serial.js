@@ -395,6 +395,7 @@ export const serial = {
                 const port = self.webSerialPort;
                 const reader = self.webSerialReader;
                 const writer = self.webSerialWriter;
+                const readableClosed = self.webSerialReadableClosed;
 
                 self.webSerialPort = false;
                 self.webSerialReader = false;
@@ -402,6 +403,12 @@ export const serial = {
 
                 Promise.resolve()
                     .then(() => reader?.cancel())
+                    .catch(() => {})
+                    // Wait for readWebSerialLoop's own finally block to actually
+                    // release the reader lock before closing -- cancel() only
+                    // unblocks the pending read(), it doesn't itself guarantee
+                    // the lock is released by the time this chain continues.
+                    .then(() => readableClosed)
                     .catch(() => {})
                     .then(() => writer?.releaseLock())
                     .then(() => port.close())

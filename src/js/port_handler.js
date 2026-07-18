@@ -311,33 +311,6 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    if (__BACKEND__ === "web") {
-        // Permanent picker-trigger option, mirroring Betaflight's separate
-        // "request permission" action: real, already-authorized ports are
-        // listed above as their own options (populated from
-        // navigator.serial.getPorts(), no prompt); selecting this one and
-        // clicking Connect is what calls navigator.serial.requestPort() and
-        // shows the browser's native device chooser -- see
-        // serial.js's connectWebSerial/requestWebSerialPort.
-        this.portPickerElement.append($("<option/>", {
-            value: "requestserial",
-            text: i18n.getMessage('portsSelectAddSerialDevice'),
-            data: {isRequestSerial: true},
-        }));
-
-        // Permanent fixture (like "virtual"/"manual" below), not conditionally
-        // added/removed based on detection like the nwjs path's DFU option --
-        // see check_web_usb_devices for why.
-        this.portPickerElement.append($("<option/>", {
-            value: "DFU",
-            text: "DFU",
-            data: {isDFU: true},
-            // also expose as a real HTML attribute so non-jQuery consumers
-            // (e.g. the Svelte firmware flasher) can read it via .dataset
-            'data-is-dfu': 'true',
-        }));
-    }
-
     if (__BACKEND__ === "web" || import.meta.env.DEV) {
         this.portPickerElement.append($("<option/>", {
            value: 'virtual',
@@ -351,6 +324,38 @@ PortHandler.updatePortSelect = function (ports) {
         text: i18n.getMessage('portsSelectManual'),
         data: {isManual: true},
     }));
+
+    if (__BACKEND__ === "web") {
+        // Mirrors Betaflight Configurator's device picker: real,
+        // already-authorized devices are listed above as their own options
+        // (populated silently from navigator.serial.getPorts(), no browser
+        // prompt), separated from two permanent, explicit "request
+        // permission" entries -- selecting one of these and clicking
+        // Connect/Flash is what actually calls
+        // navigator.serial.requestPort()/navigator.usb.requestDevice() and
+        // shows the native device chooser. DFU's option stays a single
+        // fixed entry (not enumerated per-device) since
+        // stm32usbdfu.js's connectWebUsb already resolves to whichever
+        // authorized device matches, independent of picker selection.
+        this.portPickerElement.append(
+            $("<option/>", { text: '──────────' }).prop('disabled', true),
+        );
+
+        this.portPickerElement.append($("<option/>", {
+            value: "requestserial",
+            text: i18n.getMessage('portsSelectAddSerialDevice'),
+            data: {isRequestSerial: true},
+        }));
+
+        this.portPickerElement.append($("<option/>", {
+            value: "DFU",
+            text: i18n.getMessage('portsSelectAddDfuDevice'),
+            data: {isDFU: true},
+            // also expose as a real HTML attribute so non-jQuery consumers
+            // (e.g. the Svelte firmware flasher) can read it via .dataset
+            'data-is-dfu': 'true',
+        }));
+    }
 
     this.setPortsInputWidth();
     return ports;
