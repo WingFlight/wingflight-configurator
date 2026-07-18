@@ -2,23 +2,27 @@
 // Betaflight Configurator passes to navigator.serial.requestPort() -- without
 // filters Chrome's device picker lists every serial port on the system,
 // including ones that can never be a flight controller.
+// NOTE: the Web Serial API's SerialPortFilter uses usbVendorId/usbProductId
+// (not vendorId/productId, which is WebUSB's USBDeviceFilter naming) --
+// requestPort() throws "A filter must provide a property to filter by" if a
+// filter object has neither.
 const webSerialDeviceFilters = [
-    { vendorId: 1027, productId: 24577 }, // FTDI FT232R USB UART
-    { vendorId: 1155, productId: 12886 }, // STM32 in HID mode
-    { vendorId: 1155, productId: 14158 }, // STM Electronics STLink Virtual COM Port (NUCLEO boards)
-    { vendorId: 1155, productId: 22336 }, // STM Electronics Virtual COM Port
-    { vendorId: 4292, productId: 60000 }, // Silicon Labs CP210x
-    { vendorId: 4292, productId: 60001 }, // Silicon Labs CP210x
-    { vendorId: 4292, productId: 60002 }, // Silicon Labs CP210x
-    { vendorId: 10473, productId: 394 }, // GD32 VCP
-    { vendorId: 11836, productId: 22336 }, // AT32 VCP
-    { vendorId: 12619, productId: 22336 }, // APM32 VCP
-    { vendorId: 11914, productId: 9 }, // Raspberry Pi Pico VCP
-    { vendorId: 6790, productId: 29986 }, // CH340 USB-to-Serial (variant)
-    { vendorId: 6790, productId: 29987 }, // CH340 USB-to-Serial
-    { vendorId: 6790, productId: 21795 }, // CH341 USB-to-Serial
-    { vendorId: 6790, productId: 30084 }, // CH340S USB-to-Serial
-    { vendorId: 14743, productId: 22336 }, // X32 VCP
+    { usbVendorId: 1027, usbProductId: 24577 }, // FTDI FT232R USB UART
+    { usbVendorId: 1155, usbProductId: 12886 }, // STM32 in HID mode
+    { usbVendorId: 1155, usbProductId: 14158 }, // STM Electronics STLink Virtual COM Port (NUCLEO boards)
+    { usbVendorId: 1155, usbProductId: 22336 }, // STM Electronics Virtual COM Port
+    { usbVendorId: 4292, usbProductId: 60000 }, // Silicon Labs CP210x
+    { usbVendorId: 4292, usbProductId: 60001 }, // Silicon Labs CP210x
+    { usbVendorId: 4292, usbProductId: 60002 }, // Silicon Labs CP210x
+    { usbVendorId: 10473, usbProductId: 394 }, // GD32 VCP
+    { usbVendorId: 11836, usbProductId: 22336 }, // AT32 VCP
+    { usbVendorId: 12619, usbProductId: 22336 }, // APM32 VCP
+    { usbVendorId: 11914, usbProductId: 9 }, // Raspberry Pi Pico VCP
+    { usbVendorId: 6790, usbProductId: 29986 }, // CH340 USB-to-Serial (variant)
+    { usbVendorId: 6790, usbProductId: 29987 }, // CH340 USB-to-Serial
+    { usbVendorId: 6790, usbProductId: 21795 }, // CH341 USB-to-Serial
+    { usbVendorId: 6790, usbProductId: 30084 }, // CH340S USB-to-Serial
+    { usbVendorId: 14743, usbProductId: 22336 }, // X32 VCP
 ];
 
 // Names deliberately embed the substrings PortHandler.portRecognized() (in
