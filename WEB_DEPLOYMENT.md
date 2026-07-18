@@ -85,17 +85,23 @@ The application is automatically deployed to GitHub Pages at:
 https://WingFlight.github.io/wingflight-configurator/
 ```
 
-#### Version URLs
+#### Available URLs
 
-- **Latest (Master Branch)**
+- **Master Branch** (latest development)
   ```
-  https://WingFlight.github.io/wingflight-configurator/latest/
+  https://WingFlight.github.io/wingflight-configurator/master/
   ```
 
-- **Release Versions (Tags)**
+- **Latest Stable Release** (recommended for most users)
   ```
-  https://WingFlight.github.io/wingflight-configurator/v1.0.0/
-  https://WingFlight.github.io/wingflight-configurator/v1.1.0/
+  https://WingFlight.github.io/wingflight-configurator/stable/
+  ```
+
+- **Specific Release Versions**
+  ```
+  https://WingFlight.github.io/wingflight-configurator/1.0.0/
+  https://WingFlight.github.io/wingflight-configurator/1.1.0/
+  https://WingFlight.github.io/wingflight-configurator/2.0.0-rc1/
   ```
 
 ### Deployment Workflow
@@ -104,19 +110,32 @@ The `.github/workflows/deploy-web.yml` workflow:
 
 1. **Triggers**:
    - Push to `feature/web-deployment` branch (for development)
-   - Push to `master` branch (for latest)
-   - Push of version tags `v*` (for releases)
+   - Push to `master` branch (deployed to `/master/`)
+   - Push of version tags `v*` (deployed to `/<version>/`)
 
 2. **Build Steps**:
    - Install dependencies
-   - Determine version from git ref
+   - Determine version from git ref:
+     - **Master branch** → `version=master`
+     - **Tag `v1.0.0`** → `version=1.0.0` (strips `v` prefix)
+     - **Pre-release tag `v1.0.0-rc1`** → `version=1.0.0-rc1`
    - Build with appropriate base path
    - Create versioned directory structure
 
 3. **Deployment Steps**:
-   - Upload build artifacts to GitHub Pages
-   - Generate version index
-   - Deploy to live site
+   - For **Master** branch:
+     - Deploy to `/master/`
+   - For **Version tags**:
+     - Deploy to `/<version>/`
+     - If it's a stable release (no pre-release identifiers), also deploy to `/stable/`
+   - Upload to GitHub Pages
+
+### Stable Release Detection
+
+A release is considered **stable** if the version tag:
+- ✅ Does NOT contain: `-rc`, `-alpha`, `-beta`, `-pre`
+- ✅ Examples: `v1.0.0`, `v2.1.3`, `v1.0.0-final`
+- ❌ Pre-releases stay in `/<version>/` only: `v1.0.0-rc1`, `v1.0.0-beta2`
 
 ## Features & Limitations
 

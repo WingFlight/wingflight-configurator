@@ -26,6 +26,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       is_release: ${{ steps.version.outputs.is_release }}
+      is_stable: ${{ steps.version.outputs.is_stable }}
 
     steps:
       - name: Check out repository
@@ -59,17 +60,27 @@ jobs:
         id: version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/}"
+            # Strip 'v' prefix from tag
+            VERSION="${GITHUB_REF#refs/tags/v}"
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "is_release=true" >> $GITHUB_OUTPUT
+            
+            # Check if this is a stable release (no pre-release identifiers)
+            if [[ ! "$VERSION" =~ (-rc|-alpha|-beta|-pre) ]]; then
+              echo "is_stable=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_stable=false" >> $GITHUB_OUTPUT
+            fi
             echo "Build type: Release ($VERSION)"
           elif [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
-            echo "version=latest" >> $GITHUB_OUTPUT
+            echo "version=master" >> $GITHUB_OUTPUT
             echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "Build type: Latest (master branch)"
+            echo "is_stable=false" >> $GITHUB_OUTPUT
+            echo "Build type: Master branch"
           else
             echo "version=dev" >> $GITHUB_OUTPUT
             echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "is_stable=false" >> $GITHUB_OUTPUT
             echo "Build type: Development"
           fi
 
@@ -115,13 +126,20 @@ jobs:
           mkdir -p gh-pages/${{ needs.build.outputs.version }}
           cp -r deploy/* gh-pages/${{ needs.build.outputs.version }}/
           echo "Deployment prepared for: ${{ needs.build.outputs.version }}"
+          
+          # Also deploy to /stable/ if this is a stable release
+          if [[ "${{ needs.build.outputs.is_stable }}" == "true" ]]; then
+            mkdir -p gh-pages/stable
+            cp -r deploy/* gh-pages/stable/
+            echo "Deployment prepared for: stable (version ${{ needs.build.outputs.version }})"
+          fi
 
-      - name: Organize deployment for latest build
+      - name: Organize deployment for master build
         if: needs.build.outputs.is_release == 'false'
         run: |
-          mkdir -p gh-pages/latest
-          cp -r deploy/* gh-pages/latest/
-          echo "Deployment prepared for: latest"
+          mkdir -p gh-pages/master
+          cp -r deploy/* gh-pages/master/
+          echo "Deployment prepared for: master"
 
       - name: Create index of available versions
         run: |
@@ -176,7 +194,8 @@ jobs:
             
             <h2>Available Versions</h2>
             <ul class="version-list">
-              <li><strong><a href="./latest/">Latest (Master Branch)</a></strong></li>
+              <li><strong><a href="./master/">Master Branch</a></strong></li>
+              <li><strong><a href="./stable/">Latest Stable Release</a></strong></li>
               <li id="releases-container"></li>
             </ul>
             
@@ -210,7 +229,10 @@ jobs:
       - name: Print deployment info
         run: |
           echo "✅ Web app deployed successfully!"
-          echo "Latest: https://${{ github.repository_owner }}.github.io/wingflight-configurator/latest/"
+          echo "Master: https://${{ github.repository_owner }}.github.io/wingflight-configurator/master/"
           if [[ "${{ needs.build.outputs.is_release }}" == "true" ]]; then
-            echo "Release: https://${{ github.repository_owner }}.github.io/wingflight-configurator/${{ needs.build.outputs.version }}/"
+            echo "Version: https://${{ github.repository_owner }}.github.io/wingflight-configurator/${{ needs.build.outputs.version }}/"
+            if [[ "${{ needs.build.outputs.is_stable }}" == "true" ]]; then
+              echo "Stable: https://${{ github.repository_owner }}.github.io/wingflight-configurator/stable/"
+            fi
           fi
