@@ -2813,7 +2813,7 @@
         "message": "Auto Hover Gain"
     },
     "adjustmentsFunctionAttHoldGain": {
-        "message": "Att Hold Gain"
+        "message": "Attitude Hold Gain"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -4903,35 +4903,26 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesFwTpaBreakpoint": {
-        "message": "Throttle Attenuation Breakpoint [%]"
+    "profilesFwTpaHelp": {
+        "message": "Baseline throttle attenuation scale, optionally shaped further by a curve from the Curves tab (evaluated on throttle, 0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. 100% with no curve assigned means no attenuation."
     },
-    "profilesFwTpaBreakpointHelp": {
-        "message": "Throttle level above which PID gain attenuation starts. Below this throttle level, gains are unaffected. On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so gain is reduced above this breakpoint instead of below it."
+    "profilesMasterGainGroup": {
+        "message": "Master Gains"
     },
-    "profilesFwTpaRate": {
-        "message": "Throttle Attenuation Rate [%]"
-    },
-    "profilesFwTpaRateHelp": {
-        "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
-    },
-    "profilesMasterGainRoll": {
-        "message": "Master Gain for Roll Axis [%]"
-    },
-    "profilesMasterGainPitch": {
-        "message": "Master Gain for Pitch Axis [%]"
-    },
-    "profilesMasterGainYaw": {
-        "message": "Master Gain for Yaw Axis [%]"
+    "profilesMasterGainColumn": {
+        "message": "Gain [%]"
     },
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
     },
-    "profilesGainCurveLabel": {
-        "message": "Gain Curve"
+    "profilesGainCurveColumn": {
+        "message": "Curve"
     },
     "profilesGainCurveHelp": {
         "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+    },
+    "profilesCrossAxisRelaxGroup": {
+        "message": "Cross-axis Relax"
     },
     "profilesCrossAxisRelaxStrength": {
         "message": "Cross-axis Relax Roll Strength [%]"
@@ -4956,6 +4947,9 @@
     },
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
+    },
+    "profilesItermDecayGroup": {
+        "message": "I-Term Decay"
     },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
@@ -5020,6 +5014,9 @@
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
     },
+    "profilesGyroCutoffGroup": {
+        "message": "PID Loop Bandwidth"
+    },
     "profilesGyroCutoffHelp": {
         "message": "PID Loop overall bandwidth in Hz"
     },
@@ -5032,6 +5029,9 @@
     "profilesGyroCutoffYaw": {
         "message": "Yaw Bandwidth"
     },
+    "profilesDtermCutoffGroup": {
+        "message": "D-term Cutoff"
+    },
     "profilesDtermCutoffHelp": {
         "message": "D-term Cutoff Frequency in Hz"
     },
@@ -5043,6 +5043,9 @@
     },
     "profilesDtermCutoffYaw": {
         "message": "Yaw D-term Cutoff"
+    },
+    "profilesBtermCutoffGroup": {
+        "message": "B-term Cutoff"
     },
     "profilesBtermCutoffHelp": {
         "message": "B-term Cutoff Frequency in Hz"
@@ -5059,6 +5062,15 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
+    "profilesAcroTrainerGroup": {
+        "message": "Acro Trainer"
+    },
+    "profilesAutoHoverGroup": {
+        "message": "Auto Hover"
+    },
+    "profilesAttHoldGroup": {
+        "message": "Attitude Hold"
+    },
     "profilesAcroTrainerGain": {
         "message": "Acro Trainer gain"
     },
@@ -5070,6 +5082,9 @@
     },
     "profilesAcroTrainerLimitHelp": {
         "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the helicopter will pitch/roll to"
+    },
+    "profilesAngleHorizonGroup": {
+        "message": "Angle / Horizon Mode"
     },
     "profilesAngleModeGain": {
         "message": "Angle Mode leveling gain"
@@ -5108,22 +5123,22 @@
         "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
     },
     "profilesAttHoldGain": {
-        "message": "Att Hold gain"
+        "message": "Attitude Hold gain"
     },
     "profilesAttHoldGainHelp": {
-        "message": "Correction strength back to the held attitude once the sticks are centred and Att Hold has frozen its target. Higher values return to the held attitude more aggressively."
+        "message": "Correction strength back to the held attitude once the sticks are centred and Attitude Hold has frozen its target. Higher values return to the held attitude more aggressively."
     },
     "profilesAttHoldDeadband": {
-        "message": "Att Hold deadband"
+        "message": "Attitude Hold deadband"
     },
     "profilesAttHoldDeadbandHelp": {
-        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which Att Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the aircraft is corrected back to it. Unlike Auto Hover, Att Hold does not bound stick authority -- it holds whatever attitude the aircraft was in the instant every stick returned inside this deadband, at any orientation, not just vertical or level."
+        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which Attitude Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the aircraft is corrected back to it. Unlike Auto Hover, Attitude Hold does not bound stick authority -- it holds whatever attitude the aircraft was in the instant every stick returned inside this deadband, at any orientation, not just vertical or level."
     },
     "profilesAttHoldMaxRate": {
-        "message": "Att Hold max rate"
+        "message": "Attitude Hold max rate"
     },
     "profilesAttHoldMaxRateHelp": {
-        "message": "Safety clamp (deg/s) on how fast Att Hold may rotate the aircraft back toward the frozen attitude once the sticks return inside the deadband."
+        "message": "Safety clamp (deg/s) on how fast Attitude Hold may rotate the aircraft back toward the frozen attitude once the sticks return inside the deadband."
     },
     "rateSetupCopyRateProfile": {
         "message": "Copy rateprofile"
@@ -7461,7 +7476,7 @@
         "message": "ALTHOLD"
     },
     "mode ATT HOLD": {
-        "message": "ATT HOLD"
+        "message": "ATTITUDE HOLD"
     },
     "modeHelp ATT HOLD": {
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
@@ -7569,7 +7584,7 @@
         "message": "AUTO HOVER"
     },
     "modeHelp AUTO HOVER": {
-        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Att Hold while active."
+        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Attitude Hold while active."
     },
     "mode GOVERNOR": {
         "message": "GOVERNOR"
