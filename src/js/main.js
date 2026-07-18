@@ -16,6 +16,11 @@ if (__BACKEND__ === "nwjs") {
         useGlobalNodeFunctions();
         appReady();
     });
+} else if (__BACKEND__ === "web") {
+    // For web backend, initialize when DOM is ready
+    jQuery(function () {
+        appReady();
+    });
 }
 
 function useGlobalNodeFunctions() {
