@@ -41,6 +41,7 @@ const publicAssetPrefixes = [
   "images",
   "locales",
   "libraries",
+  "node_modules",
   "fontawesome",
   "fonts",
   "opensans_webfontkit",
@@ -79,6 +80,7 @@ const publicSymlinkTargets = [
   ["images", "src/images"],
   ["libraries", "libraries"],
   ["locales", "locales"],
+  ["fontawesome", "public/fontawesome"],
 ];
 
 const mimeTypes = new Map([
