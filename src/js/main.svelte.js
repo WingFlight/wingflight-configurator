@@ -2,6 +2,7 @@ import "multiple-select";
 import { mount } from "svelte";
 
 import { Beepers } from "@/js/Beepers.js";
+import { installChromeStorageShimIfMissing } from "@/js/chromeStorageShim.js";
 import { CliAutoComplete } from "@/js/CliAutoComplete.js";
 import { ConfigInserter } from "@/js/ConfigInserter.js";
 import { DarkTheme } from "@/js/DarkTheme.js";
@@ -61,6 +62,13 @@ import "@/css/select2_custom.css";
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
+
+// FirmwareCache/release_checker/FirmwareFlasher all persist via
+// chrome.storage.local unconditionally, which only exists under the
+// nwjs/cordova backends. Install a localStorage-backed shim before any tab
+// can mount so the Firmware Flasher tab doesn't crash under a plain
+// browser (the "web" backend).
+installChromeStorageShimIfMissing();
 
 // Browser compatibility check for web deployment
 if (__BACKEND__ === "web") {
