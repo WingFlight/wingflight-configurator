@@ -11,8 +11,29 @@ const commitHash = child_process
   .toString()
   .trim();
 
+// Determine backend from environment or command-line mode
+const getBackend = () => {
+  const mode = process.env.VITE_APP_BACKEND || "nwjs";
+  if (["nwjs", "cordova", "web"].includes(mode)) {
+    return mode;
+  }
+  console.warn(`Unknown backend "${mode}", defaulting to "nwjs"`);
+  return "nwjs";
+};
+
+// Determine base path for deployment
+const getBasePath = () => {
+  if (process.env.VITE_APP_VERSION) {
+    return `/${process.env.VITE_APP_VERSION}/`;
+  }
+  return "./";
+};
+
+const backend = getBackend();
+const basePath = getBasePath();
+
 export default defineConfig({
-  base: "./",
+  base: basePath,
   build: {
     target: "chrome119",
     outDir: "./bundle",
@@ -71,7 +92,7 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
-    __BACKEND__: JSON.stringify("nwjs"),
+    __BACKEND__: JSON.stringify(backend),
     __COMMIT_HASH__: JSON.stringify(commitHash),
   },
   server: {

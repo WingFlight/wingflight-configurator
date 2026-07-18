@@ -1,0 +1,216 @@
+name: Deploy Web App
+
+on:
+  push:
+    branches:
+      - 'feature/web-deployment'
+      - 'master'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Web App
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_release: ${{ steps.version.outputs.is_release }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Determine version and build type
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Build type: Release ($VERSION)"
+          elif [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
+            echo "version=latest" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Build type: Latest (master branch)"
+          else
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Build type: Development"
+          fi
+
+      - name: Update version in package.json for releases
+        if: steps.version.outputs.is_release == 'true'
+        run: |
+          sed -i 's/"version": "0.0.0"/"version": "${{ steps.version.outputs.version }}"/' package.json
+
+      - name: Initialize build environment
+        run: make init
+
+      - name: Build web app
+        env:
+          VITE_APP_BACKEND: web
+          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
+        run: pnpm run build:web:versioned
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-app-${{ steps.version.outputs.version }}
+          path: bundle/
+          retention-days: 5
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: web-app-${{ needs.build.outputs.version }}
+          path: deploy/
+
+      - name: Organize deployment for versioned builds
+        if: needs.build.outputs.is_release == 'true'
+        run: |
+          mkdir -p gh-pages/${{ needs.build.outputs.version }}
+          cp -r deploy/* gh-pages/${{ needs.build.outputs.version }}/
+          echo "Deployment prepared for: ${{ needs.build.outputs.version }}"
+
+      - name: Organize deployment for latest build
+        if: needs.build.outputs.is_release == 'false'
+        run: |
+          mkdir -p gh-pages/latest
+          cp -r deploy/* gh-pages/latest/
+          echo "Deployment prepared for: latest"
+
+      - name: Create index of available versions
+        run: |
+          cat > gh-pages/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Wingflight Configurator Versions</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+              }
+              h1 { color: #333; }
+              .version-list { list-style: none; padding: 0; }
+              .version-list li {
+                background: white;
+                padding: 12px 16px;
+                margin: 8px 0;
+                border-radius: 6px;
+                border-left: 4px solid #007bff;
+              }
+              a {
+                color: #007bff;
+                text-decoration: none;
+                font-weight: 500;
+              }
+              a:hover { text-decoration: underline; }
+              .note {
+                background-color: #e7f3ff;
+                border: 1px solid #b3d9ff;
+                padding: 12px;
+                border-radius: 4px;
+                margin: 20px 0;
+                font-size: 14px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>🛩️ Wingflight Configurator - Web Versions</h1>
+            
+            <div class="note">
+              <strong>⚠️ Browser Requirements:</strong><br>
+              This web app requires a Chromium-based browser (Chrome, Edge, Brave, Opera).
+              Device access features (serial, USB) will not work in Firefox or Safari.
+            </div>
+            
+            <h2>Available Versions</h2>
+            <ul class="version-list">
+              <li><strong><a href="./latest/">Latest (Master Branch)</a></strong></li>
+              <li id="releases-container"></li>
+            </ul>
+            
+            <script>
+              // List releases from directory (will be added by deployment script)
+              fetch('./releases.json')
+                .then(r => r.json())
+                .then(releases => {
+                  const container = document.getElementById('releases-container');
+                  releases.forEach(version => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="./${version}/">${version}</a>`;
+                    container.parentElement.appendChild(li);
+                  });
+                })
+                .catch(e => console.log('Release list not available'));
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: gh-pages/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Print deployment info
+        run: |
+          echo "✅ Web app deployed successfully!"
+          echo "Latest: https://${{ github.repository_owner }}.github.io/wingflight-configurator/latest/"
+          if [[ "${{ needs.build.outputs.is_release }}" == "true" ]]; then
+            echo "Release: https://${{ github.repository_owner }}.github.io/wingflight-configurator/${{ needs.build.outputs.version }}/"
+          fi

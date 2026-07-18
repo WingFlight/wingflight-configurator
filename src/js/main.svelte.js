@@ -42,6 +42,15 @@ import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
 
+// Browser compatibility check for web deployment
+if (__BACKEND__ === "web") {
+  const { initBrowserCompat } = await import("@/js/browser-compat.js");
+  initBrowserCompat({
+    showBanner: true,
+    containerId: "app",
+  });
+}
+
 globalThis.GUI = new GuiControl();
 
 // TODO: Remove these items from the global namespace.
