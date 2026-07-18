@@ -16,7 +16,6 @@
   import PidBandwidth from "./PidBandwidth.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
   import MasterGains from "./MasterGains.svelte";
-  import profilesState from "./state.svelte.js";
 
   let loading = $state(true);
   let initialState = $state(null);
@@ -41,12 +40,7 @@
     return diff(initialState, snapshotState());
   });
 
-  let profileSwitched = $derived(
-    profilesState.savedProfile !== undefined &&
-      FC.CONFIG.profile !== profilesState.savedProfile,
-  );
-
-  let dirty = $derived(changes.length > 0 || profileSwitched);
+  let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
   let pidWarning = $derived.by(() => {
@@ -78,10 +72,6 @@
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
     await MSP.promise(MSPCodes.MSP_SENSOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG);
-
-    if (profilesState.savedProfile === undefined) {
-      profilesState.savedProfile = FC.CONFIG.profile;
-    }
 
     mountedProfile = FC.CONFIG.profile;
     initialState = snapshotState();
@@ -181,19 +171,10 @@
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
-    profilesState.savedProfile = FC.CONFIG.profile;
     initialState = snapshotState();
   }
 
   export async function onRevert() {
-    if (FC.CONFIG.profile !== profilesState.savedProfile) {
-      const target = profilesState.savedProfile;
-      await MSP.promise(MSPCodes.MSP_SELECT_SETTING, [target]);
-      GUI.log($i18n.t("profilesActivateProfile", { 1: target + 1 }));
-      GUI.tab_switch_reload();
-      return;
-    }
-
     FC.PIDS.forEach((axis, i) => Object.assign(axis, initialState.PIDS[i]));
     Object.assign(FC.PID_PROFILE, initialState.PID_PROFILE);
   }
