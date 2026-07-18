@@ -16,6 +16,12 @@ export const PortHandler = new function () {
 };
 
 PortHandler.initialize = function (showAllPorts) {
+    // Skip port handler initialization on web backend
+    // Serial APIs are not available in browsers
+    if (__BACKEND__ === "web") {
+        return;
+    }
+
     const portPickerElementSelector = "div#port-picker #port";
     this.portPickerElement = $(portPickerElementSelector);
     this.selectList = document.querySelector(portPickerElementSelector);

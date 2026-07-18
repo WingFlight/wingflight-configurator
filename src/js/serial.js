@@ -26,6 +26,16 @@ export const serial = {
     },
     connectSerial: function (path, options, callback) {
         const self = this;
+
+        // Web backend doesn't have access to Chrome serial API
+        if (__BACKEND__ === "web") {
+            console.warn("Serial connection not available in web backend");
+            if (typeof callback === "function") {
+                callback(null);
+            }
+            return;
+        }
+
         self.connectionType = 'serial';
 
         chrome.serial.connect(path, options, function (connectionInfo) {

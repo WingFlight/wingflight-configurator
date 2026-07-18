@@ -5,6 +5,13 @@ import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
 
 export async function handleConnectClick() {
+    // Web backend doesn't support serial connections through traditional Chrome APIs
+    // WebSerial API requires different implementation
+    if (__BACKEND__ === "web") {
+        alert("Serial connection is not yet available in the web version.\n\nThis is a preview deployment. Please use the desktop application for full functionality.");
+        return;
+    }
+
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
         const thisElement = $(this);
