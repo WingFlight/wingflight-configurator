@@ -116,11 +116,16 @@ PortHandler.check_usb_devices = function (callback) {
 // WebUSB has no chrome.usb-style declarative permissions: navigator.usb.getDevices()
 // only reports devices the user has already granted access to via a prior
 // requestDevice() gesture (triggered later, from the Flash button, since that's a
-// real click). Unlike the nwjs path above, the DFU option is kept selectable
-// regardless of detection (mirroring serial.js's always-present "Web Serial"
-// placeholder) so there's something to click that leads to the permission prompt
-// in the first place -- dfu_available itself still reflects real detection, since
-// STM32.connect()'s post-reboot fallback logic depends on it being accurate.
+// real click). Unlike the nwjs path above, this never touches the port picker's
+// DOM itself -- the "DFU" option is a permanent fixture added by
+// updatePortSelect (like "virtual"/"manual") specifically so it can't race
+// against check_serial_devices's own rebuilds of the same <select> (which is
+// exactly what happened when this used to call a destructive .empty()-based
+// rebuild here: whichever check finished last on a given poll wiped out
+// whatever the other one had just added, intermittently losing the "Web
+// Serial" option entirely). dfu_available itself still reflects real
+// detection, since STM32.connect()'s post-reboot fallback logic depends on it
+// being accurate.
 PortHandler.check_web_usb_devices = async function (callback) {
     const self = this;
 
@@ -134,10 +139,6 @@ PortHandler.check_web_usb_devices = async function (callback) {
         } catch {
             matched = [];
         }
-    }
-
-    if (!self.portPickerElement.children("[value='DFU']").length) {
-        self.rebuildPortPickerOptions(matched[0]?.productName ? `DFU - ${matched[0].productName}` : "DFU");
     }
 
     self.dfu_available = matched.length > 0;
@@ -307,6 +308,20 @@ PortHandler.updatePortSelect = function (ports) {
             value: ports[i].path,
             text: portText,
             data: {isManual: false},
+        }));
+    }
+
+    if (__BACKEND__ === "web") {
+        // Permanent fixture (like "virtual"/"manual" below), not conditionally
+        // added/removed based on detection like the nwjs path's DFU option --
+        // see check_web_usb_devices for why.
+        this.portPickerElement.append($("<option/>", {
+            value: "DFU",
+            text: "DFU",
+            data: {isDFU: true},
+            // also expose as a real HTML attribute so non-jQuery consumers
+            // (e.g. the Svelte firmware flasher) can read it via .dataset
+            'data-is-dfu': 'true',
         }));
     }
 
