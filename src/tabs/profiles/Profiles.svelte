@@ -15,6 +15,7 @@
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
+  import MasterGains from "./MasterGains.svelte";
   import profilesState from "./state.svelte.js";
 
   let loading = $state(true);
@@ -244,17 +245,16 @@
     <div>
       {#if showPidBoxes}
         <PidGains />
+        <MasterGains />
       {/if}
       {#if CONFIGURATOR.expertMode}
         <LevelingSettings />
       {/if}
     </div>
     <div>
-      {#if showPidBoxes}
+      {#if showPidBoxes && CONFIGURATOR.expertMode}
         <PidSettings />
-        {#if CONFIGURATOR.expertMode}
-          <PidBandwidth />
-        {/if}
+        <PidBandwidth />
       {/if}
     </div>
   </div>

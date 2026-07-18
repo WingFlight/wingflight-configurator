@@ -4903,35 +4903,26 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesFwTpaGainLabel": {
-        "message": "Throttle Attenuation Gain [%]"
+    "profilesFwTpaHelp": {
+        "message": "Baseline throttle attenuation scale, optionally shaped further by a curve from the Curves tab (evaluated on throttle, 0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. 100% with no curve assigned means no attenuation."
     },
-    "profilesFwTpaGainHelp": {
-        "message": "Baseline scale for the throttle-based P/D gain attenuation, further shaped by the optional curve below. 100% applies the curve (if any) at full effect; lower values reduce the overall effect, same as Master Gain does for the per-axis curve."
+    "profilesMasterGainGroup": {
+        "message": "Master Gains"
     },
-    "profilesFwTpaCurveLabel": {
-        "message": "Throttle Attenuation Curve"
-    },
-    "profilesFwTpaCurveHelp": {
-        "message": "Optionally shapes the throttle attenuation gain above by throttle, using a curve edited on the Curves tab. The curve is evaluated on throttle (0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. \"-\" means no curve is assigned and the gain above applies unshaped."
-    },
-    "profilesMasterGainRoll": {
-        "message": "Master Gain for Roll Axis [%]"
-    },
-    "profilesMasterGainPitch": {
-        "message": "Master Gain for Pitch Axis [%]"
-    },
-    "profilesMasterGainYaw": {
-        "message": "Master Gain for Yaw Axis [%]"
+    "profilesMasterGainColumn": {
+        "message": "Gain [%]"
     },
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
     },
-    "profilesGainCurveLabel": {
-        "message": "Gain Curve"
+    "profilesGainCurveColumn": {
+        "message": "Curve"
     },
     "profilesGainCurveHelp": {
         "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+    },
+    "profilesCrossAxisRelaxGroup": {
+        "message": "Cross-axis Relax"
     },
     "profilesCrossAxisRelaxStrength": {
         "message": "Cross-axis Relax Roll Strength [%]"
@@ -4956,6 +4947,9 @@
     },
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
+    },
+    "profilesItermDecayGroup": {
+        "message": "I-Term Decay"
     },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
@@ -5020,6 +5014,9 @@
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
     },
+    "profilesGyroCutoffGroup": {
+        "message": "PID Loop Bandwidth"
+    },
     "profilesGyroCutoffHelp": {
         "message": "PID Loop overall bandwidth in Hz"
     },
@@ -5032,6 +5029,9 @@
     "profilesGyroCutoffYaw": {
         "message": "Yaw Bandwidth"
     },
+    "profilesDtermCutoffGroup": {
+        "message": "D-term Cutoff"
+    },
     "profilesDtermCutoffHelp": {
         "message": "D-term Cutoff Frequency in Hz"
     },
@@ -5043,6 +5043,9 @@
     },
     "profilesDtermCutoffYaw": {
         "message": "Yaw D-term Cutoff"
+    },
+    "profilesBtermCutoffGroup": {
+        "message": "B-term Cutoff"
     },
     "profilesBtermCutoffHelp": {
         "message": "B-term Cutoff Frequency in Hz"
@@ -5059,6 +5062,15 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
+    "profilesAcroTrainerGroup": {
+        "message": "Acro Trainer"
+    },
+    "profilesAutoHoverGroup": {
+        "message": "Auto Hover"
+    },
+    "profilesAttHoldGroup": {
+        "message": "Att Hold"
+    },
     "profilesAcroTrainerGain": {
         "message": "Acro Trainer gain"
     },
@@ -5070,6 +5082,9 @@
     },
     "profilesAcroTrainerLimitHelp": {
         "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the helicopter will pitch/roll to"
+    },
+    "profilesAngleHorizonGroup": {
+        "message": "Angle / Horizon Mode"
     },
     "profilesAngleModeGain": {
         "message": "Angle Mode leveling gain"
