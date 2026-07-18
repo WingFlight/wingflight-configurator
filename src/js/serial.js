@@ -9,6 +9,11 @@ export const serial = {
     connectionType: 'serial', // 'serial' or 'tcp' or 'virtual'
     connectionIP:   '127.0.0.1',
     connectionPort: 5761,
+    webSerialPort:  false,
+    webSerialReader: false,
+    webSerialWriter: false,
+    webSerialReadableClosed: false,
+    webSerialWritableClosed: false,
 
     transmitting:   false,
     outputBuffer:   [],
@@ -27,12 +32,8 @@ export const serial = {
     connectSerial: function (path, options, callback) {
         const self = this;
 
-        // Web backend doesn't have access to Chrome serial API
         if (__BACKEND__ === "web") {
-            console.warn("Serial connection not available in web backend");
-            if (typeof callback === "function") {
-                callback(null);
-            }
+            self.connectWebSerial(options, callback);
             return;
         }
 
@@ -152,6 +153,71 @@ export const serial = {
             }
         });
     },
+    connectWebSerial: async function (options, callback) {
+        const self = this;
+
+        if (!('serial' in navigator)) {
+            console.warn('Web Serial API is not available in this browser');
+            callback?.(false);
+            return;
+        }
+
+        self.connectionType = 'serial';
+
+        try {
+            const port = await navigator.serial.requestPort();
+            await port.open({ baudRate: options?.bitrate || 115200 });
+
+            self.webSerialPort = port;
+            self.webSerialWriter = port.writable.getWriter();
+            self.connected = true;
+            self.connectionId = 'webserial';
+            self.bitrate = options?.bitrate || 115200;
+            self.bytesReceived = 0;
+            self.bytesSent = 0;
+            self.failed = 0;
+
+            self.webSerialReadableClosed = self.readWebSerialLoop(port);
+
+            console.log(`${self.connectionType}: web serial connection opened, Baud: ${self.bitrate}`);
+            callback?.({ connectionId: self.connectionId, bitrate: self.bitrate });
+        } catch (error) {
+            console.warn('Web Serial connection failed', error);
+            callback?.(false);
+        }
+    },
+    readWebSerialLoop: async function (port) {
+        const self = this;
+
+        try {
+            while (port.readable && self.connected) {
+                const reader = port.readable.getReader();
+                self.webSerialReader = reader;
+
+                try {
+                    while (self.connected) {
+                        const { value, done } = await reader.read();
+                        if (done) {
+                            break;
+                        }
+                        if (value) {
+                            self.onReceive.dispatch({
+                                connectionId: self.connectionId,
+                                data: value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength),
+                            });
+                        }
+                    }
+                } finally {
+                    reader.releaseLock();
+                    self.webSerialReader = false;
+                }
+            }
+        } catch (error) {
+            if (self.connected) {
+                self.onReceiveError.dispatch({ connectionId: self.connectionId, error: error.name || 'system_error' });
+            }
+        }
+    },
     connectTcp: function (ip, port, options, callback) {
         const self = this;
         self.connectionIP = ip;
@@ -231,7 +297,31 @@ export const serial = {
             for (let i = (self.onReceiveError.listeners.length - 1); i >= 0; i--) {
                 self.onReceiveError.removeListener(self.onReceiveError.listeners[i]);
             }
-            if (self.connectionType !== 'virtual') {
+            if (__BACKEND__ === "web" && self.webSerialPort) {
+                const port = self.webSerialPort;
+                const reader = self.webSerialReader;
+                const writer = self.webSerialWriter;
+
+                self.webSerialPort = false;
+                self.webSerialReader = false;
+                self.webSerialWriter = false;
+
+                Promise.resolve()
+                    .then(() => reader?.cancel())
+                    .catch(() => {})
+                    .then(() => writer?.releaseLock())
+                    .then(() => port.close())
+                    .then(() => {
+                        console.log(`${self.connectionType}: closed web serial connection, Sent: ${self.bytesSent} bytes, Received: ${self.bytesReceived} bytes`);
+                        self.connectionId = false;
+                        self.bitrate = 0;
+                        callback?.(true);
+                    })
+                    .catch((error) => {
+                        console.warn('Web Serial disconnect failed', error);
+                        callback?.(false);
+                    });
+            } else if (self.connectionType !== 'virtual') {
                 if (self.connectionType === 'tcp') {
                     chrome.sockets.tcp.disconnect(self.connectionId, function () {
                         checkChromeRuntimeError();
@@ -266,6 +356,11 @@ export const serial = {
         }
     },
     getDevices: function (callback) {
+        if (__BACKEND__ === "web") {
+            callback([{ path: 'webserial', displayName: 'Web Serial' }]);
+            return;
+        }
+
         chrome.serial.getDevices(function (devices_array) {
             const devices = [];
             devices_array.forEach(function (device) {
@@ -279,6 +374,11 @@ export const serial = {
         });
     },
     getInfo: function (callback) {
+        if (__BACKEND__ === "web" && this.webSerialPort) {
+            callback({ connectionId: this.connectionId, bitrate: this.bitrate, paused: false });
+            return;
+        }
+
         const chromeType = (this.connectionType === 'serial') ? chrome.serial : chrome.sockets.tcp;
         chromeType.getInfo(this.connectionId, callback);
     },
@@ -298,6 +398,25 @@ export const serial = {
                         error: 'undefined',
                     });
                 }
+                return;
+            }
+
+            if (__BACKEND__ === "web" && self.webSerialWriter) {
+                self.webSerialWriter.write(new Uint8Array(_data)).then(() => {
+                    const bytesSent = _data.byteLength;
+                    self.bytesSent += bytesSent;
+                    _callback?.({ bytesSent });
+                    self.outputBuffer.shift();
+
+                    if (self.outputBuffer.length) {
+                        _send();
+                    } else {
+                        self.transmitting = false;
+                    }
+                }).catch((error) => {
+                    self.errorHandler(error.name || 'undefined', 'send');
+                    _callback?.({ bytesSent: 0, error: error.name || 'undefined' });
+                });
                 return;
             }
 
@@ -362,11 +481,21 @@ export const serial = {
         listeners: [],
 
         addListener: function (function_reference) {
+            if (__BACKEND__ === "web") {
+                this.listeners.push(function_reference);
+                return;
+            }
+
             const chromeType = (serial.connectionType === 'serial') ? chrome.serial : chrome.sockets.tcp;
             chromeType.onReceive.addListener(function_reference);
             this.listeners.push(function_reference);
         },
         removeListener: function (function_reference) {
+            if (__BACKEND__ === "web") {
+                this.listeners = this.listeners.filter((listener) => listener !== function_reference);
+                return;
+            }
+
             const chromeType = (serial.connectionType === 'serial') ? chrome.serial : chrome.sockets.tcp;
             for (let i = (this.listeners.length - 1); i >= 0; i--) {
                 if (this.listeners[i] == function_reference) {
@@ -376,17 +505,30 @@ export const serial = {
                     break;
                 }
             }
-        }
+        },
+        dispatch: function (info) {
+            this.listeners.forEach((listener) => listener(info));
+        },
     },
     onReceiveError: {
         listeners: [],
 
         addListener: function (function_reference) {
+            if (__BACKEND__ === "web") {
+                this.listeners.push(function_reference);
+                return;
+            }
+
             const chromeType = (serial.connectionType === 'serial') ? chrome.serial : chrome.sockets.tcp;
             chromeType.onReceiveError.addListener(function_reference);
             this.listeners.push(function_reference);
         },
         removeListener: function (function_reference) {
+            if (__BACKEND__ === "web") {
+                this.listeners = this.listeners.filter((listener) => listener !== function_reference);
+                return;
+            }
+
             const chromeType = (serial.connectionType === 'serial') ? chrome.serial : chrome.sockets.tcp;
             for (let i = (this.listeners.length - 1); i >= 0; i--) {
                 if (this.listeners[i] == function_reference) {
@@ -396,7 +538,10 @@ export const serial = {
                     break;
                 }
             }
-        }
+        },
+        dispatch: function (info) {
+            this.listeners.forEach((listener) => listener(info));
+        },
     },
     emptyOutputBuffer: function () {
         this.outputBuffer = [];

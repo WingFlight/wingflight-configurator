@@ -9,10 +9,10 @@
     "lint": "eslint src \"./*.mjs\"",
     "lint:fix": "eslint --fix src \"./*.mjs\"",
     "start": "concurrently --kill-others \"pnpm vite\" \"pnpm gulp dev_client\"",
-    "build": "VITE_APP_BACKEND=nwjs vite build",
-    "build:web": "VITE_APP_BACKEND=web vite build",
-    "build:web:versioned": "VITE_APP_BACKEND=web VITE_APP_VERSION=$npm_package_version vite build",
-    "build:cordova": "VITE_APP_BACKEND=cordova vite build",
+    "build": "node scripts/vite-build.mjs nwjs",
+    "build:web": "node scripts/vite-build.mjs web",
+    "build:web:versioned": "node scripts/vite-build.mjs web versioned",
+    "build:cordova": "node scripts/vite-build.mjs cordova",
     "prepare": "husky || true"
   },
   "window": {

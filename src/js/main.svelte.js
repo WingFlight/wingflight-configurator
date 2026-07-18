@@ -69,23 +69,6 @@ if (__BACKEND__ === "web") {
     showBanner: true,
     containerId: "app",
   });
-
-  // Hide serial connection UI for web backend
-  // Serial connection requires platform-specific APIs not available in browser
-  document.addEventListener("DOMContentLoaded", () => {
-    const portPicker = document.getElementById("port-picker");
-    const connectBtn = document.querySelector(".connect_b a.connect");
-
-    if (portPicker) {
-      portPicker.style.display = "none";
-    }
-
-    if (connectBtn) {
-      connectBtn.style.opacity = "0.5";
-      connectBtn.style.cursor = "not-allowed";
-      connectBtn.title = "Serial connection not available in web version";
-    }
-  });
 }
 
 globalThis.GUI = new GuiControl();
