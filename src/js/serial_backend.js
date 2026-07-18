@@ -4,6 +4,31 @@ import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
 
+async function requestWebSerialDeviceFromPicker() {
+    const el = $('div#port-picker #port');
+
+    // Mirrors Betaflight resetting its selectedDevice back to "noselection"
+    // after firing a permission request, success or not -- this option is a
+    // momentary trigger, never a real, sticky selection. We have no
+    // "noselection" placeholder, so fall back to whatever isn't itself
+    // "requestserial" (falling back to it would re-open the picker in a loop
+    // the moment .trigger('change') below re-fires this same handler).
+    const fallbackValue = el.find('option').not('[value="requestserial"]').first().val();
+
+    try {
+        const entry = await serial.requestWebSerialPort();
+
+        serial.getDevices((ports) => {
+            PortHandler.updatePortSelect(ports);
+            PortHandler.initialPorts = ports;
+            el.val(entry.path).trigger('change');
+        });
+    } catch (error) {
+        console.warn('Web Serial permission request failed or was cancelled', error);
+        el.val(fallbackValue).trigger('change');
+    }
+}
+
 export async function handleConnectClick() {
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
@@ -99,6 +124,14 @@ export function initializeSerialBackend() {
 
     $('div#port-picker #port').on("change", function() {
         GUI.updateManualPortVisibility();
+
+        // Mirrors Betaflight Configurator: choosing this entry is itself the
+        // gesture that shows the browser's native device chooser -- no
+        // separate Connect click needed, same as selecting an "I can't
+        // find..." option does there.
+        if (__BACKEND__ === "web" && $(this).find(':selected').data().isRequestSerial) {
+            requestWebSerialDeviceFromPicker();
+        }
     });
 
     $('div.connect_controls a.connect').on("click", function () {
@@ -153,8 +186,13 @@ export function initializeSerialBackend() {
     });
 
     // Show all ports
-    if (GUI.operating_system === 'Android') {
-        // port filtering does not work on Android as port names do not get populated on Android
+    if (GUI.operating_system === 'Android' || __BACKEND__ === "web") {
+        // Port filtering does not work on Android as port names do not get
+        // populated there; on the web backend PortHandler.check_serial_devices
+        // already skips the recognized-name filter entirely (every
+        // already-authorized WebSerial device is real and explicitly
+        // user-granted, so there's nothing to filter down from), making this
+        // toggle a no-op.
         GUI.show_all_ports = true;
         $('div #show-all-ports-switch').hide();
     } else {

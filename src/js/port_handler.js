@@ -319,11 +319,17 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    this.portPickerElement.append($("<option/>", {
-        value: 'manual',
-        text: i18n.getMessage('portsSelectManual'),
-        data: {isManual: true},
-    }));
+    if (__BACKEND__ !== "web") {
+        // Manual entry means typing a raw OS device path or tcp:// address,
+        // which only makes sense against chrome.serial/chrome.sockets.tcp --
+        // neither exists in a real browser, so this option can't do anything
+        // useful (or anything at all) under the web backend.
+        this.portPickerElement.append($("<option/>", {
+            value: 'manual',
+            text: i18n.getMessage('portsSelectManual'),
+            data: {isManual: true},
+        }));
+    }
 
     if (__BACKEND__ === "web") {
         // Mirrors Betaflight Configurator's device picker: real,
