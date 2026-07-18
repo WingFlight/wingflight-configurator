@@ -52,7 +52,7 @@ export async function handleConnectClick() {
         }
 
         if (selectedPort.data().isDFU) {
-            $('select#baud').hide();
+            $('#baudselect').hide();
         } else if (portName !== '0') {
             if (!clicks) {
                 console.log(`${serial.connectionType}: connecting to: ${portName}`);
@@ -107,10 +107,15 @@ export function initializeSerialBackend() {
             $('#firmware-virtual-option').hide();
         }
         if (selected_port.data().isDFU) {
-            $('select#baud').hide();
+            // Hide the whole #baudselect wrapper, not just the <select> --
+            // the wrapping .dropdown.dropdown-dark box still renders its own
+            // styled border/arrow even with the <select> inside it hidden,
+            // which otherwise leaves an empty-looking dropdown box next to
+            // Auto-Connect whenever DFU is selected.
+            $('#baudselect').hide();
         }
         else {
-            $('select#baud').show();
+            $('#baudselect').show();
         }
     };
 
