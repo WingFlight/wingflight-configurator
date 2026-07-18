@@ -16,7 +16,6 @@
   import RateCurveChart from "./RateCurveChart.svelte";
   import Dynamics from "./Dynamics.svelte";
   import RatePreview from "./RatePreview.svelte";
-  import ratesState from "./state.svelte.js";
 
   // Firmware disambiguates "select PID profile N" vs "select rate profile N"
   // via this offset added to the profile index on MSP_SELECT_SETTING.
@@ -86,12 +85,7 @@
     return diff(initialState, snapshotState());
   });
 
-  let rateProfileSwitched = $derived(
-    ratesState.savedRateProfile !== undefined &&
-      FC.CONFIG.rateProfile !== ratesState.savedRateProfile,
-  );
-
-  let dirty = $derived(changes.length > 0 || rateProfileSwitched);
+  let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
   let rateProfileTabs = $derived(
@@ -199,10 +193,6 @@
     await MSP.promise(MSPCodes.MSP_RC_TUNING);
     await MSP.promise(MSPCodes.MSP_RC_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
-
-    if (ratesState.savedRateProfile === undefined) {
-      ratesState.savedRateProfile = FC.CONFIG.rateProfile;
-    }
 
     mountedRateProfile = FC.CONFIG.rateProfile;
     initialState = snapshotState();
@@ -315,21 +305,10 @@
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
-    ratesState.savedRateProfile = FC.CONFIG.rateProfile;
     initialState = snapshotState();
   }
 
   export async function onRevert() {
-    if (FC.CONFIG.rateProfile !== ratesState.savedRateProfile) {
-      const target = ratesState.savedRateProfile;
-      await MSP.promise(MSPCodes.MSP_SELECT_SETTING, [
-        target + RATE_PROFILE_MASK,
-      ]);
-      GUI.log($i18n.t("rateSetupActivateProfile", { 1: target + 1 }));
-      GUI.tab_switch_reload();
-      return;
-    }
-
     Object.assign(FC.RC_TUNING, initialState.RC_TUNING);
   }
 

@@ -9,7 +9,7 @@
 </script>
 
 <Section label="profilesPidBandwidth">
-  <SubSection>
+  <SubSection label="profilesGyroCutoffGroup">
     <Field id="gyro-cutoff-roll" label="profilesGyroCutoffRoll" unit="Hz">
       {#snippet tooltip()}
         {$i18n.t("profilesGyroCutoffHelp")}
@@ -39,7 +39,7 @@
     </Field>
   </SubSection>
 
-  <SubSection>
+  <SubSection label="profilesDtermCutoffGroup">
     <Field id="dterm-cutoff-roll" label="profilesDtermCutoffRoll" unit="Hz">
       {#snippet tooltip()}
         {$i18n.t("profilesDtermCutoffHelp")}
@@ -69,7 +69,7 @@
     </Field>
   </SubSection>
 
-  <SubSection>
+  <SubSection label="profilesBtermCutoffGroup">
     <Field id="bterm-cutoff-roll" label="profilesBtermCutoffRoll" unit="Hz">
       {#snippet tooltip()}
         {$i18n.t("profilesBtermCutoffHelp")}

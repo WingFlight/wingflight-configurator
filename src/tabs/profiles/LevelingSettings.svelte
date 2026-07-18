@@ -9,7 +9,7 @@
 </script>
 
 <Section label="profilesLevelingSettings">
-  <SubSection>
+  <SubSection label="profilesAcroTrainerGroup">
     <Field id="acro-trainer-gain" label="profilesAcroTrainerGain">
       {#snippet tooltip()}
         {$i18n.t("profilesAcroTrainerGainHelp")}
@@ -32,6 +32,9 @@
         bind:value={FC.PID_PROFILE.acroTrainerLimit}
       />
     </Field>
+  </SubSection>
+
+  <SubSection label="profilesAngleHorizonGroup">
     <Field id="angle-mode-gain" label="profilesAngleModeGain">
       {#snippet tooltip()}
         {$i18n.t("profilesAngleModeGainHelp")}
@@ -67,7 +70,7 @@
     </Field>
   </SubSection>
 
-  <SubSection>
+  <SubSection label="profilesAutoHoverGroup">
     <Field id="auto-hover-gain" label="profilesAutoHoverGain">
       {#snippet tooltip()}
         {$i18n.t("profilesAutoHoverGainHelp")}
@@ -101,6 +104,9 @@
         bind:value={FC.PID_PROFILE.autoHoverMaxRate}
       />
     </Field>
+  </SubSection>
+
+  <SubSection label="profilesAttHoldGroup">
     <Field id="att-hold-gain" label="profilesAttHoldGain">
       {#snippet tooltip()}
         {$i18n.t("profilesAttHoldGainHelp")}

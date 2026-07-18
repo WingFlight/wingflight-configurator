@@ -1168,9 +1168,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.btermCutoffYaw                = data.readU8();
                 data.readU8(); // was yaw_inertia_precomp_gain (heli-only, removed)
                 data.readU8(); // was yaw_inertia_precomp_cutoff (heli-only, removed)
-                // Fixed-wing throttle-based gain attenuation //
-                FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
-                FC.PID_PROFILE.fwTpaRate                     = data.readU8();
+                // Fixed-wing throttle-based gain attenuation (gain + curve index) //
+                FC.PID_PROFILE.fwTpaGain                     = data.readU8();
+                FC.PID_PROFILE.fwTpaCurve                    = data.readU8();
                 // Master gain (per axis) //
                 FC.PID_PROFILE.masterGainRoll                = data.readU8();
                 FC.PID_PROFILE.masterGainPitch               = data.readU8();
@@ -2140,9 +2140,9 @@ MspHelper.prototype.crunch = function(code) {
                 // was yaw_inertia_precomp_gain/cutoff (heli-only, removed) //
                 .push8(0)
                 .push8(0)
-                // Fixed-wing throttle-based gain attenuation //
-                .push8(FC.PID_PROFILE.fwTpaBreakpoint)
-                .push8(FC.PID_PROFILE.fwTpaRate)
+                // Fixed-wing throttle-based gain attenuation (gain + curve index) //
+                .push8(FC.PID_PROFILE.fwTpaGain)
+                .push8(FC.PID_PROFILE.fwTpaCurve)
                 // Master gain (per axis) //
                 .push8(FC.PID_PROFILE.masterGainRoll)
                 .push8(FC.PID_PROFILE.masterGainPitch)
