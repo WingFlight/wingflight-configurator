@@ -45,6 +45,7 @@ const publicAssetPrefixes = [
   "fontawesome",
   "fonts",
   "opensans_webfontkit",
+  "resources",
 ];
 
 const legacyBrowserScripts = [
@@ -81,6 +82,7 @@ const publicSymlinkTargets = [
   ["libraries", "libraries"],
   ["locales", "locales"],
   ["fontawesome", "node_modules/@fortawesome/fontawesome-free"],
+  ["resources", "resources"],
 ];
 
 const mimeTypes = new Map([
