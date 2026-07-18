@@ -4,6 +4,7 @@ import * as config from "@/js/config.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
+import { mountComponents } from "@/js/main.svelte.js";
 
 globalThis.TABS = {};
 
@@ -39,6 +40,9 @@ export function appReady() {
     $('.firmware_b a.flash').removeClass('disabled');
 
     i18n.init().then(function() {
+        // Mount Svelte components after i18n is initialized
+        // This ensures they can use translations immediately
+        mountComponents();
         startProcess();
         initializeSerialBackend();
     });

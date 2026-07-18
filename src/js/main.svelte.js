@@ -86,10 +86,16 @@ Object.assign(globalThis, {
   usbDevices,
 });
 
-mount(BatteryLegend, { target: document.querySelector("#battery-legend") });
-mount(StatusBar, { target: document.querySelector("#status-bar") });
-mount(Logo, { target: document.querySelector("#logo-desktop") });
-mount(Logo, { target: document.querySelector("#logo-mobile") });
+/**
+ * Mount Svelte components after i18n is initialized
+ * This prevents components from trying to use i18n before it's ready
+ */
+export function mountComponents() {
+  mount(BatteryLegend, { target: document.querySelector("#battery-legend") });
+  mount(StatusBar, { target: document.querySelector("#status-bar") });
+  mount(Logo, { target: document.querySelector("#logo-desktop") });
+  mount(Logo, { target: document.querySelector("#logo-mobile") });
+}
 
 if (__BACKEND__ === "cordova") {
   (async () => {
