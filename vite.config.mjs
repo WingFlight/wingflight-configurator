@@ -63,6 +63,24 @@ export default defineConfig({
   plugins: [
     svelte(),
     {
+      name: "suppress-sourcemap-warnings",
+      apply: "serve",
+      configResolved(config) {
+        // Suppress source map warnings for node_modules in dev server
+        const logger = config.logger;
+        const originalWarn = logger.warn;
+        logger.warn = (msg, options) => {
+          if (
+            typeof msg === "string" &&
+            msg.includes("Failed to load source map")
+          ) {
+            return;
+          }
+          originalWarn(msg, options);
+        };
+      },
+    },
+    {
       name: "locale-watch",
       configureServer(server) {
         server.watcher.on("change", (file) => {
