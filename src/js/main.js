@@ -330,6 +330,16 @@ export function startProcess() {
 
     CONFIGURATOR.expertMode = config.get('expertMode') ?? false;
     $('#expert-mode input')
+        .prop('checked', CONFIGURATOR.expertMode)
+        // .prop() doesn't fire a change event, but GuiControl.switchery()
+        // (called from content_ready, on an independent tab-load timeline)
+        // may have already wrapped this checkbox in a Switchery toggle
+        // widget that only repositions itself on 'change' -- if that race
+        // resolves before this line runs, the visual toggle is left
+        // showing the wrong state. Trigger before binding our own handler
+        // below so this only reaches Switchery's listener (if already
+        // attached), not ours, and doesn't cause a spurious tab reload.
+        .trigger('change')
         .on('change', function () {
             CONFIGURATOR.expertMode = this.checked;
             config.set({'expertMode': this.checked});
@@ -337,8 +347,7 @@ export function startProcess() {
             // jQuery tabs (e.g. Modes, Logic) build their DOM once on load
             // and need a reload to pick up the new expert-mode filtering.
             GUI.tab_switch_allowed(() => GUI.tab_switch_reload());
-        })
-        .prop('checked', CONFIGURATOR.expertMode);
+        });
 
     CliAutoComplete.setEnabled(config.get('cliAutoComplete') ?? true);
 
