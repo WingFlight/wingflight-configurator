@@ -27,6 +27,7 @@
   );
   let darkTheme = $state(DarkTheme.configEnabled);
 
+  const showConfiguratorUpdateOptions = __BACKEND__ !== "web";
   const showCordovaOption = GUI.isCordova() && cordovaUI.canChangeUI;
 
   const timeoutOptions = [100, 500, 1000, 1500, 2500, 5000].map((v) => ({
@@ -78,16 +79,18 @@
 
 <Page {header}>
   <Section label="tabOptions">
-    <Field
-      id="opt-check-unstable-versions"
-      label="checkForConfiguratorUnstableVersions"
-    >
-      <Switch
+    {#if showConfiguratorUpdateOptions}
+      <Field
         id="opt-check-unstable-versions"
-        bind:checked={checkUnstableVersions}
-        onchange={onCheckUnstableVersionsChange}
-      />
-    </Field>
+        label="checkForConfiguratorUnstableVersions"
+      >
+        <Switch
+          id="opt-check-unstable-versions"
+          bind:checked={checkUnstableVersions}
+          onchange={onCheckUnstableVersionsChange}
+        />
+      </Field>
+    {/if}
     <Field id="opt-remember-last-tab" label="rememberLastTab">
       <Switch
         id="opt-remember-last-tab"

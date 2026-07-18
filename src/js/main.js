@@ -377,6 +377,10 @@ export function setDarkTheme(enabled) {
 }
 
 export function checkForConfiguratorUpdates() {
+    if (__BACKEND__ === "web") {
+        return;
+    }
+
     const releaseChecker = new ReleaseChecker('configurator', 'https://api.github.com/repos/WingFlight/wingflight-configurator/releases');
 
     releaseChecker.loadReleaseData(notifyOutdatedVersion);
