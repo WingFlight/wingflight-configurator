@@ -4,16 +4,42 @@ import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
 
+// Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
+// connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
+// permission the moment DFU is selected -- mirrors Betaflight showing the
+// device chooser immediately on selecting its DFU picker option, rather than
+// waiting for the user to click Flash. Silent (no popup) if a matching device
+// is already authorized, so it's safe to run on every DFU selection.
+async function requestWebUsbDeviceFromPicker() {
+    if (!('usb' in navigator)) {
+        return;
+    }
+
+    try {
+        const isMatch = (d) => usbDevices.filters.some((f) => d.vendorId === f.vendorId && d.productId === f.productId);
+        let device = (await navigator.usb.getDevices()).find(isMatch);
+        if (!device) {
+            device = await navigator.usb.requestDevice({ filters: usbDevices.filters });
+        }
+        console.log(`USB DFU device authorized: ${device.productName}`);
+    } catch (error) {
+        console.warn('WebUSB DFU permission request failed or was cancelled', error);
+    }
+}
+
+// Mirrors Betaflight resetting its selectedDevice back to "noselection" after
+// firing a permission request, success or not -- these options are momentary
+// triggers, never a real, sticky selection. We have no "noselection"
+// placeholder, so fall back to whatever isn't itself one of the trigger
+// options (falling back to one would re-open its picker in a loop the moment
+// .trigger('change') re-fires this same handler).
+function firstNonTriggerPortValue(el) {
+    return el.find('option').not('[value="requestserial"], [value="requestbluetooth"]').first().val();
+}
+
 async function requestWebSerialDeviceFromPicker() {
     const el = $('div#port-picker #port');
-
-    // Mirrors Betaflight resetting its selectedDevice back to "noselection"
-    // after firing a permission request, success or not -- this option is a
-    // momentary trigger, never a real, sticky selection. We have no
-    // "noselection" placeholder, so fall back to whatever isn't itself
-    // "requestserial" (falling back to it would re-open the picker in a loop
-    // the moment .trigger('change') below re-fires this same handler).
-    const fallbackValue = el.find('option').not('[value="requestserial"]').first().val();
+    const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestWebSerialPort();
@@ -25,6 +51,24 @@ async function requestWebSerialDeviceFromPicker() {
         });
     } catch (error) {
         console.warn('Web Serial permission request failed or was cancelled', error);
+        el.val(fallbackValue).trigger('change');
+    }
+}
+
+async function requestWebBluetoothDeviceFromPicker() {
+    const el = $('div#port-picker #port');
+    const fallbackValue = firstNonTriggerPortValue(el);
+
+    try {
+        const entry = await serial.requestBluetoothPort();
+
+        serial.getDevices((ports) => {
+            PortHandler.updatePortSelect(ports);
+            PortHandler.initialPorts = ports;
+            el.val(entry.path).trigger('change');
+        });
+    } catch (error) {
+        console.warn('Web Bluetooth permission request failed or was cancelled', error);
         el.val(fallbackValue).trigger('change');
     }
 }
@@ -134,8 +178,15 @@ export function initializeSerialBackend() {
         // gesture that shows the browser's native device chooser -- no
         // separate Connect click needed, same as selecting an "I can't
         // find..." option does there.
-        if (__BACKEND__ === "web" && $(this).find(':selected').data().isRequestSerial) {
-            requestWebSerialDeviceFromPicker();
+        if (__BACKEND__ === "web") {
+            const selectedData = $(this).find(':selected').data();
+            if (selectedData.isRequestSerial) {
+                requestWebSerialDeviceFromPicker();
+            } else if (selectedData.isRequestBluetooth) {
+                requestWebBluetoothDeviceFromPicker();
+            } else if (selectedData.isDFU) {
+                requestWebUsbDeviceFromPicker();
+            }
         }
     });
 

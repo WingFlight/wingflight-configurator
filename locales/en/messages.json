@@ -115,6 +115,10 @@
         "message": "--- I can't find my DFU device ---",
         "description": "Web-only port picker option that triggers the browser's native DFU (WebUSB) device chooser"
     },
+    "portsSelectAddBluetoothDevice": {
+        "message": "--- I can't find my Bluetooth device ---",
+        "description": "Web-only port picker option that triggers the browser's native Bluetooth device chooser"
+    },
     "portsSelectManual": {
         "message": "Manual Selection"
     },

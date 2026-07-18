@@ -333,14 +333,15 @@ PortHandler.updatePortSelect = function (ports) {
 
     if (__BACKEND__ === "web") {
         // Mirrors Betaflight Configurator's device picker: real,
-        // already-authorized devices are listed above as their own options
-        // (populated silently from navigator.serial.getPorts(), no browser
-        // prompt), separated from two permanent, explicit "request
-        // permission" entries -- selecting one of these and clicking
-        // Connect/Flash is what actually calls
-        // navigator.serial.requestPort()/navigator.usb.requestDevice() and
-        // shows the native device chooser. DFU's option stays a single
-        // fixed entry (not enumerated per-device) since
+        // already-authorized devices (serial + Bluetooth) are listed above as
+        // their own options (populated silently from
+        // navigator.serial.getPorts()/navigator.bluetooth.getDevices(), no
+        // browser prompt), separated from permanent, explicit "request
+        // permission" entries -- selecting one of these immediately calls
+        // navigator.serial.requestPort()/navigator.bluetooth.requestDevice()/
+        // navigator.usb.requestDevice() (see serial_backend.js's port-picker
+        // change handler) and shows the native device chooser. DFU's option
+        // stays a single fixed entry (not enumerated per-device) since
         // stm32usbdfu.js's connectWebUsb already resolves to whichever
         // authorized device matches, independent of picker selection.
         this.portPickerElement.append(
@@ -352,6 +353,14 @@ PortHandler.updatePortSelect = function (ports) {
             text: i18n.getMessage('portsSelectAddSerialDevice'),
             data: {isRequestSerial: true},
         }));
+
+        if ('bluetooth' in navigator) {
+            this.portPickerElement.append($("<option/>", {
+                value: "requestbluetooth",
+                text: i18n.getMessage('portsSelectAddBluetoothDevice'),
+                data: {isRequestBluetooth: true},
+            }));
+        }
 
         this.portPickerElement.append($("<option/>", {
             value: "DFU",

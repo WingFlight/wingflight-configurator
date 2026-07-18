@@ -64,6 +64,68 @@ function createWebSerialPortEntry(port) {
     };
 }
 
+// Common BLE UART-bridge profiles (serviceUuid + read/write characteristic
+// UUIDs), mirroring Betaflight Configurator's device list -- these are the
+// GATT services flight-controller Bluetooth/BLE modules typically expose.
+const bleDeviceProfiles = [
+    {
+        name: 'CC2541',
+        serviceUuid: '0000ffe0-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '0000ffe1-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
+    },
+    {
+        name: 'HC-05',
+        serviceUuid: '00001101-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '00001101-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '00001101-0000-1000-8000-00805f9b34fb',
+    },
+    {
+        name: 'HM-10',
+        serviceUuid: '0000ffe1-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '0000ffe1-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '0000ffe1-0000-1000-8000-00805f9b34fb',
+    },
+    {
+        name: 'HM-11',
+        serviceUuid: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+        writeCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+        readCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+    },
+    {
+        name: 'Nordic NRF',
+        serviceUuid: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+        writeCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+        readCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+    },
+    {
+        name: 'SpeedyBee V1',
+        serviceUuid: '00001000-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '00001001-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '00001002-0000-1000-8000-00805f9b34fb',
+    },
+    {
+        name: 'SpeedyBee V2',
+        serviceUuid: '0000abf0-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '0000abf1-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '0000abf2-0000-1000-8000-00805f9b34fb',
+    },
+    {
+        name: 'DroneBridge',
+        serviceUuid: '0000db32-0000-1000-8000-00805f9b34fb',
+        writeCharacteristic: '0000db33-0000-1000-8000-00805f9b34fb',
+        readCharacteristic: '0000db34-0000-1000-8000-00805f9b34fb',
+    },
+];
+
+function createBluetoothPortEntry(device) {
+    return {
+        path: `bluetooth_${device.id}`,
+        displayName: device.name || 'Bluetooth device',
+        port: device,
+    };
+}
+
 export const serial = {
     connected:      false,
     connectionId:   false,
@@ -81,6 +143,13 @@ export const serial = {
     webSerialReadableClosed: false,
     webSerialWritableClosed: false,
     webSerialPorts: [],
+    bluetoothPorts: [],
+    bleDevice: false,
+    bleServer: false,
+    bleService: false,
+    bleDeviceProfile: false,
+    bleWriteCharacteristic: false,
+    bleReadCharacteristic: false,
 
     transmitting:   false,
     outputBuffer:   [],
@@ -92,6 +161,8 @@ export const serial = {
             self.connectTcp(testUrl[1], testUrl[2], options, callback);
         } else if (path === 'virtual') {
             self.connectVirtual(callback);
+        } else if (__BACKEND__ === "web" && (path === 'requestbluetooth' || path.startsWith('bluetooth_'))) {
+            self.connectWebBluetooth(path, callback);
         } else {
             self.connectSerial(path, options, callback);
         }
@@ -280,6 +351,110 @@ export const serial = {
         }
         return entry;
     },
+    // Web Bluetooth has no reliable equivalent of getPorts()/getDevices() on a
+    // normal Chrome install -- navigator.bluetooth.getDevices() only returns
+    // anything under an experimental "persistent permissions" flag most users
+    // won't have enabled, so unlike WebSerial/WebUSB this can't silently
+    // rediscover a previously-granted device across a page reload. Feature-
+    // detected here so it transparently starts working if/when that lands as
+    // a shipped feature; until then bluetoothPorts only grows via
+    // requestBluetoothPort() for the lifetime of the page.
+    loadBluetoothPorts: async function () {
+        if (typeof navigator.bluetooth?.getDevices !== 'function') {
+            return this.bluetoothPorts;
+        }
+        try {
+            const devices = await navigator.bluetooth.getDevices();
+            this.bluetoothPorts = devices.map(createBluetoothPortEntry);
+        } catch (error) {
+            console.warn('Failed to load previously-granted Bluetooth devices', error);
+        }
+        return this.bluetoothPorts;
+    },
+    requestBluetoothPort: async function () {
+        const optionalServices = bleDeviceProfiles.map((profile) => profile.serviceUuid);
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices });
+        let entry = this.bluetoothPorts.find((p) => p.port === device);
+        if (!entry) {
+            entry = createBluetoothPortEntry(device);
+            this.bluetoothPorts.push(entry);
+        }
+        return entry;
+    },
+    connectWebBluetooth: async function (path, callback) {
+        const self = this;
+
+        if (!('bluetooth' in navigator)) {
+            console.warn('Web Bluetooth API is not available in this browser');
+            callback?.(false);
+            return;
+        }
+
+        self.connectionType = 'bluetooth';
+
+        try {
+            let entry = self.bluetoothPorts.find((p) => p.path === path);
+            if (!entry) {
+                entry = await self.requestBluetoothPort();
+            }
+
+            const device = entry.port;
+            device.addEventListener('gattserverdisconnected', self.handleBluetoothDisconnect);
+
+            const server = await device.gatt.connect();
+            const services = await server.getPrimaryServices();
+            const service = services.find((s) => bleDeviceProfiles.some((p) => p.serviceUuid === s.uuid));
+            const deviceProfile = bleDeviceProfiles.find((p) => p.serviceUuid === service?.uuid);
+
+            if (!service || !deviceProfile) {
+                throw new Error('No recognized BLE UART service found on this device');
+            }
+
+            const characteristics = await service.getCharacteristics();
+            const writeCharacteristic = characteristics.find((c) => c.uuid === deviceProfile.writeCharacteristic);
+            const readCharacteristic = characteristics.find((c) => c.uuid === deviceProfile.readCharacteristic);
+
+            if (!writeCharacteristic || !readCharacteristic) {
+                throw new Error('Expected read/write characteristics not found');
+            }
+
+            readCharacteristic.addEventListener('characteristicvaluechanged', self.handleBluetoothNotification);
+            await readCharacteristic.startNotifications();
+
+            self.bleDevice = device;
+            self.bleServer = server;
+            self.bleService = service;
+            self.bleDeviceProfile = deviceProfile;
+            self.bleWriteCharacteristic = writeCharacteristic;
+            self.bleReadCharacteristic = readCharacteristic;
+
+            self.connected = true;
+            self.connectionId = entry.path;
+            self.bitrate = 115200;
+            self.bytesReceived = 0;
+            self.bytesSent = 0;
+            self.failed = 0;
+
+            console.log(`${self.connectionType}: Bluetooth connection opened with ID: ${self.connectionId} (${deviceProfile.name})`);
+            callback?.({ connectionId: self.connectionId, bitrate: self.bitrate });
+        } catch (error) {
+            console.warn('Web Bluetooth connection failed', error);
+            callback?.(false);
+        }
+    },
+    handleBluetoothNotification: function (event) {
+        const self = serial;
+        const dataView = event.target.value;
+        const buffer = dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength);
+        self.onReceive.dispatch({ connectionId: self.connectionId, data: buffer });
+    },
+    handleBluetoothDisconnect: function () {
+        const self = serial;
+        if (self.connected) {
+            console.log(`${self.connectionType}: Bluetooth device disconnected externally`);
+            self.disconnect();
+        }
+    },
     readWebSerialLoop: async function (port) {
         const self = this;
 
@@ -422,6 +597,38 @@ export const serial = {
                         console.warn('Web Serial disconnect failed', error);
                         callback?.(false);
                     });
+            } else if (__BACKEND__ === "web" && self.bleDevice) {
+                const device = self.bleDevice;
+                const readCharacteristic = self.bleReadCharacteristic;
+
+                self.bleDevice = false;
+                self.bleServer = false;
+                self.bleService = false;
+                self.bleDeviceProfile = false;
+                self.bleWriteCharacteristic = false;
+                self.bleReadCharacteristic = false;
+
+                (async () => {
+                    try {
+                        device.removeEventListener('gattserverdisconnected', self.handleBluetoothDisconnect);
+                        if (readCharacteristic) {
+                            readCharacteristic.removeEventListener('characteristicvaluechanged', self.handleBluetoothNotification);
+                            if (device.gatt?.connected) {
+                                await readCharacteristic.stopNotifications().catch(() => {});
+                            }
+                        }
+                        if (device.gatt?.connected) {
+                            device.gatt.disconnect();
+                        }
+                        console.log(`${self.connectionType}: closed Bluetooth connection, Sent: ${self.bytesSent} bytes, Received: ${self.bytesReceived} bytes`);
+                        self.connectionId = false;
+                        self.bitrate = 0;
+                        callback?.(true);
+                    } catch (error) {
+                        console.warn('Web Bluetooth disconnect failed', error);
+                        callback?.(false);
+                    }
+                })();
             } else if (self.connectionType !== 'virtual') {
                 if (self.connectionType === 'tcp') {
                     chrome.sockets.tcp.disconnect(self.connectionId, function () {
@@ -458,13 +665,13 @@ export const serial = {
     },
     getDevices: function (callback) {
         if (__BACKEND__ === "web") {
-            if (!('serial' in navigator)) {
-                callback([]);
-                return;
-            }
+            const serialPorts = 'serial' in navigator ? this.loadWebSerialPorts() : Promise.resolve([]);
+            const bluetoothPorts = 'bluetooth' in navigator ? this.loadBluetoothPorts() : Promise.resolve([]);
 
-            this.loadWebSerialPorts()
-                .then((ports) => callback(ports.map((p) => ({ path: p.path, displayName: p.displayName }))))
+            Promise.all([serialPorts, bluetoothPorts])
+                .then(([sPorts, btPorts]) =>
+                    callback([...sPorts, ...btPorts].map((p) => ({ path: p.path, displayName: p.displayName }))),
+                )
                 .catch(() => callback([]));
             return;
         }
@@ -482,7 +689,7 @@ export const serial = {
         });
     },
     getInfo: function (callback) {
-        if (__BACKEND__ === "web" && this.webSerialPort) {
+        if (__BACKEND__ === "web" && (this.webSerialPort || this.bleDevice)) {
             callback({ connectionId: this.connectionId, bitrate: this.bitrate, paused: false });
             return;
         }
@@ -511,6 +718,28 @@ export const serial = {
 
             if (__BACKEND__ === "web" && self.webSerialWriter) {
                 self.webSerialWriter.write(new Uint8Array(_data)).then(() => {
+                    const bytesSent = _data.byteLength;
+                    self.bytesSent += bytesSent;
+                    _callback?.({ bytesSent });
+                    self.outputBuffer.shift();
+
+                    if (self.outputBuffer.length) {
+                        _send();
+                    } else {
+                        self.transmitting = false;
+                    }
+                }).catch((error) => {
+                    self.errorHandler(error.name || 'undefined', 'send');
+                    _callback?.({ bytesSent: 0, error: error.name || 'undefined' });
+                });
+                return;
+            }
+
+            if (__BACKEND__ === "web" && self.bleWriteCharacteristic) {
+                // There is no writable stream in the Web Bluetooth API -- each
+                // write is its own GATT operation, queued the same way the
+                // outputBuffer already serializes chrome.serial/WebSerial sends.
+                self.bleWriteCharacteristic.writeValue(new Uint8Array(_data)).then(() => {
                     const bytesSent = _data.byteLength;
                     self.bytesSent += bytesSent;
                     _callback?.({ bytesSent });
