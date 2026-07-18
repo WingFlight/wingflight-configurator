@@ -73,7 +73,7 @@ PortHandler.check_serial_devices = function () {
     const self = this;
 
     serial.getDevices(function(currentPorts) {
-        if (!self.showingAllPorts) {
+        if (__BACKEND__ !== "web" && !self.showingAllPorts) {
             currentPorts = currentPorts.filter((p) => portRecognized(p.displayName, p.path));
         }
         // on initialization of the port selector (i.e. app startup or toggling whether to show all ports), only select a detected port, don't auto-connect
@@ -112,7 +112,7 @@ PortHandler.check_usb_devices = function (callback) {
                     'data-is-dfu': 'true',
                 }));
 
-                if (import.meta.env.DEV) {
+                if (__BACKEND__ === "web" || import.meta.env.DEV) {
                     self.portPickerElement.append($('<option/>', {
                        value: 'virtual',
                        text: i18n.getMessage('portsSelectVirtual'),
@@ -270,7 +270,7 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    if (import.meta.env.DEV) {
+    if (__BACKEND__ === "web" || import.meta.env.DEV) {
         this.portPickerElement.append($("<option/>", {
            value: 'virtual',
            text: i18n.getMessage('portsSelectVirtual'),

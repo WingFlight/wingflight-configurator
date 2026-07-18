@@ -80,7 +80,7 @@ const publicSymlinkTargets = [
   ["images", "src/images"],
   ["libraries", "libraries"],
   ["locales", "locales"],
-  ["fontawesome", "public/fontawesome"],
+  ["fontawesome", "node_modules/@fortawesome/fontawesome-free"],
 ];
 
 const mimeTypes = new Map([
@@ -211,7 +211,10 @@ async function copySymlinkTargetsToBundle() {
 
       await fs.rm(targetRoot, { force: true, recursive: true });
       await fs.mkdir(path.dirname(targetRoot), { recursive: true });
-      await fs.cp(sourceRoot, targetRoot, { recursive: true });
+      await fs.cp(sourceRoot, targetRoot, {
+        dereference: true,
+        recursive: true,
+      });
     }),
   );
 }
