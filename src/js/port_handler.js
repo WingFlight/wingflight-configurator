@@ -32,8 +32,11 @@ PortHandler.initialize = function (showAllPorts) {
 PortHandler.check = function () {
     const self = this;
 
-    self.check_usb_devices();
-    self.check_serial_devices();
+    // Skip hardware port checks on web backend
+    if (__BACKEND__ !== "web") {
+        self.check_usb_devices();
+        self.check_serial_devices();
+    }
 
     GUI.updateManualPortVisibility();
 
