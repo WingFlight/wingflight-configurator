@@ -31,7 +31,7 @@
   // legacy's mutable `adjRange.adjType`. It deliberately is NOT re-derived
   // from adjFunction on every change, because a user must be able to select
   // "Mapped"/"Stepped" *before* picking a function (which starts at None).
-  let adjType = $state(
+  let adjType = $derived.by(() =>
     adjRange.adjFunction > 0 ? (adjRange.adjStep > 0 ? 2 : 1) : 0,
   );
 

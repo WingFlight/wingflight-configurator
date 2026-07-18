@@ -6,7 +6,7 @@
 
   let { beepers, mask = $bindable(), idPrefix } = $props();
 
-  const visible = beepers._beepers.filter((b) => b.visible);
+  const visible = $derived(beepers._beepers.filter((b) => b.visible));
 </script>
 
 <div class="beeper-list">
