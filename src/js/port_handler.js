@@ -312,6 +312,19 @@ PortHandler.updatePortSelect = function (ports) {
     }
 
     if (__BACKEND__ === "web") {
+        // Permanent picker-trigger option, mirroring Betaflight's separate
+        // "request permission" action: real, already-authorized ports are
+        // listed above as their own options (populated from
+        // navigator.serial.getPorts(), no prompt); selecting this one and
+        // clicking Connect is what calls navigator.serial.requestPort() and
+        // shows the browser's native device chooser -- see
+        // serial.js's connectWebSerial/requestWebSerialPort.
+        this.portPickerElement.append($("<option/>", {
+            value: "requestserial",
+            text: i18n.getMessage('portsSelectAddSerialDevice'),
+            data: {isRequestSerial: true},
+        }));
+
         // Permanent fixture (like "virtual"/"manual" below), not conditionally
         // added/removed based on detection like the nwjs path's DFU option --
         // see check_web_usb_devices for why.

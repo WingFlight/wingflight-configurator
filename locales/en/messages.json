@@ -107,6 +107,10 @@
     "disconnect": {
         "message": "Disconnect"
     },
+    "portsSelectAddSerialDevice": {
+        "message": "Add Serial Device...",
+        "description": "Web-only port picker option that triggers the browser's native serial device chooser"
+    },
     "portsSelectManual": {
         "message": "Manual Selection"
     },

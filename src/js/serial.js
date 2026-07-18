@@ -1,3 +1,69 @@
+// Flight-controller-adjacent USB-serial VID/PIDs, mirroring the filter set
+// Betaflight Configurator passes to navigator.serial.requestPort() -- without
+// filters Chrome's device picker lists every serial port on the system,
+// including ones that can never be a flight controller.
+const webSerialDeviceFilters = [
+    { vendorId: 1027, productId: 24577 }, // FTDI FT232R USB UART
+    { vendorId: 1155, productId: 12886 }, // STM32 in HID mode
+    { vendorId: 1155, productId: 14158 }, // STM Electronics STLink Virtual COM Port (NUCLEO boards)
+    { vendorId: 1155, productId: 22336 }, // STM Electronics Virtual COM Port
+    { vendorId: 4292, productId: 60000 }, // Silicon Labs CP210x
+    { vendorId: 4292, productId: 60001 }, // Silicon Labs CP210x
+    { vendorId: 4292, productId: 60002 }, // Silicon Labs CP210x
+    { vendorId: 10473, productId: 394 }, // GD32 VCP
+    { vendorId: 11836, productId: 22336 }, // AT32 VCP
+    { vendorId: 12619, productId: 22336 }, // APM32 VCP
+    { vendorId: 11914, productId: 9 }, // Raspberry Pi Pico VCP
+    { vendorId: 6790, productId: 29986 }, // CH340 USB-to-Serial (variant)
+    { vendorId: 6790, productId: 29987 }, // CH340 USB-to-Serial
+    { vendorId: 6790, productId: 21795 }, // CH341 USB-to-Serial
+    { vendorId: 6790, productId: 30084 }, // CH340S USB-to-Serial
+    { vendorId: 14743, productId: 22336 }, // X32 VCP
+];
+
+// Names deliberately embed the substrings PortHandler.portRecognized() (in
+// port_handler.js) matches on ("STM", "CP210") so auto-select-on-detect keeps
+// working the same way it does for the nwjs/chrome.serial device list.
+const webSerialVendorNames = {
+    1027: 'FTDI',
+    1155: 'STM Electronics',
+    4292: 'Silicon Labs CP210x',
+    6790: 'WCH CH340',
+    11836: 'AT32',
+    12619: 'Geehy APM32',
+    11914: 'Raspberry Pi Pico',
+    14743: 'X-CORE LABS',
+};
+
+// Stable id per physical SerialPort object. Chrome reuses the same SerialPort
+// instance across an MCU-reboot USB re-enumeration, so keying the id off
+// object identity (rather than array index) yields an id that survives
+// device-list rebuilds -- unlike a bare counter that would reset every poll.
+const webSerialPortIds = new WeakMap();
+let webSerialNextPortId = 0;
+
+function getStableWebSerialId(port) {
+    let id = webSerialPortIds.get(port);
+    if (id === undefined) {
+        id = `webserial_${webSerialNextPortId++}`;
+        webSerialPortIds.set(port, id);
+    }
+    return id;
+}
+
+function createWebSerialPortEntry(port) {
+    const info = port.getInfo?.() || {};
+    const vendorName = webSerialVendorNames[info.usbVendorId];
+    const displayName = vendorName
+        ? `${vendorName} (VID:${info.usbVendorId} PID:${info.usbProductId})`
+        : 'Web Serial device';
+    return {
+        path: getStableWebSerialId(port),
+        displayName,
+        port,
+    };
+}
+
 export const serial = {
     connected:      false,
     connectionId:   false,
@@ -14,6 +80,7 @@ export const serial = {
     webSerialWriter: false,
     webSerialReadableClosed: false,
     webSerialWritableClosed: false,
+    webSerialPorts: [],
 
     transmitting:   false,
     outputBuffer:   [],
@@ -33,7 +100,7 @@ export const serial = {
         const self = this;
 
         if (__BACKEND__ === "web") {
-            self.connectWebSerial(options, callback);
+            self.connectWebSerial(path, options, callback);
             return;
         }
 
@@ -153,7 +220,15 @@ export const serial = {
             }
         });
     },
-    connectWebSerial: async function (options, callback) {
+    // path is either the stable id of an already-authorized SerialPort (from a
+    // prior requestWebSerialPort() grant, listed directly in the port picker
+    // by getDevices() below) or the fixed "requestserial" picker-trigger value
+    // -- in which case no matching entry exists yet, and requestWebSerialPort()
+    // is what actually shows the browser's native device chooser. This mirrors
+    // Betaflight's separation between silently reusing a granted device and
+    // explicitly requesting a new one, so a device the user already paired
+    // never re-prompts on subsequent connects.
+    connectWebSerial: async function (path, options, callback) {
         const self = this;
 
         if (!('serial' in navigator)) {
@@ -165,13 +240,18 @@ export const serial = {
         self.connectionType = 'serial';
 
         try {
-            const port = await navigator.serial.requestPort();
+            let entry = self.webSerialPorts.find((p) => p.path === path);
+            if (!entry) {
+                entry = await self.requestWebSerialPort();
+            }
+
+            const port = entry.port;
             await port.open({ baudRate: options?.bitrate || 115200 });
 
             self.webSerialPort = port;
             self.webSerialWriter = port.writable.getWriter();
             self.connected = true;
-            self.connectionId = 'webserial';
+            self.connectionId = entry.path;
             self.bitrate = options?.bitrate || 115200;
             self.bytesReceived = 0;
             self.bytesSent = 0;
@@ -185,6 +265,20 @@ export const serial = {
             console.warn('Web Serial connection failed', error);
             callback?.(false);
         }
+    },
+    loadWebSerialPorts: async function () {
+        const ports = await navigator.serial.getPorts();
+        this.webSerialPorts = ports.map(createWebSerialPortEntry);
+        return this.webSerialPorts;
+    },
+    requestWebSerialPort: async function () {
+        const userPort = await navigator.serial.requestPort({ filters: webSerialDeviceFilters });
+        let entry = this.webSerialPorts.find((p) => p.port === userPort);
+        if (!entry) {
+            entry = createWebSerialPortEntry(userPort);
+            this.webSerialPorts.push(entry);
+        }
+        return entry;
     },
     readWebSerialLoop: async function (port) {
         const self = this;
@@ -357,7 +451,14 @@ export const serial = {
     },
     getDevices: function (callback) {
         if (__BACKEND__ === "web") {
-            callback([{ path: 'webserial', displayName: 'Web Serial' }]);
+            if (!('serial' in navigator)) {
+                callback([]);
+                return;
+            }
+
+            this.loadWebSerialPorts()
+                .then((ports) => callback(ports.map((p) => ({ path: p.path, displayName: p.displayName }))))
+                .catch(() => callback([]));
             return;
         }
 
