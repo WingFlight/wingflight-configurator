@@ -32,9 +32,7 @@ PortHandler.initialize = function (showAllPorts) {
 PortHandler.check = function () {
     const self = this;
 
-    if (__BACKEND__ !== "web") {
-        self.check_usb_devices();
-    }
+    self.check_usb_devices();
 
     self.check_serial_devices();
 
@@ -90,43 +88,18 @@ PortHandler.check_serial_devices = function () {
 
 PortHandler.check_usb_devices = function (callback) {
     const self = this;
+
+    if (__BACKEND__ === "web") {
+        self.check_web_usb_devices(callback);
+        return;
+    }
+
     chrome.usb.getDevices(usbDevices, function (result) {
 
         const dfuElement = self.portPickerElement.children("[value='DFU']");
         if (result?.length) {
             if (!dfuElement.length) {
-                self.portPickerElement.empty();
-                let usbText;
-                if (result[0].productName) {
-                    usbText = (`DFU - ${result[0].productName}`);
-                } else {
-                    usbText = "DFU";
-                }
-
-                self.portPickerElement.append($('<option/>', {
-                    value: "DFU",
-                    text: usbText,
-                    data: {isDFU: true},
-                    // also expose as a real HTML attribute so non-jQuery consumers
-                    // (e.g. the Svelte firmware flasher) can read it via .dataset
-                    'data-is-dfu': 'true',
-                }));
-
-                if (__BACKEND__ === "web" || import.meta.env.DEV) {
-                    self.portPickerElement.append($('<option/>', {
-                       value: 'virtual',
-                       text: i18n.getMessage('portsSelectVirtual'),
-                       data: {isVirtual: true},
-                    }));
-                }
-
-                self.portPickerElement.append($('<option/>', {
-                    value: 'manual',
-                    text: i18n.getMessage('portsSelectManual'),
-                    data: {isManual: true},
-                }));
-                self.portPickerElement.val('DFU').change();
-                self.setPortsInputWidth();
+                self.rebuildPortPickerOptions(result[0].productName ? `DFU - ${result[0].productName}` : "DFU");
             }
             self.dfu_available = true;
         } else {
@@ -136,16 +109,83 @@ PortHandler.check_usb_devices = function (callback) {
             }
             self.dfu_available = false;
         }
-        if(callback) {
-            callback(self.dfu_available);
-        }
-        if (!$('option:selected', self.portPickerElement).data().isDFU) {
-            if (!(GUI.connected_to || GUI.connect_lock)) {
-                FC.resetState();
-            }
-            self.portPickerElement.trigger('change');
-        }
+        self.finishUsbDeviceCheck(callback);
     });
+};
+
+// WebUSB has no chrome.usb-style declarative permissions: navigator.usb.getDevices()
+// only reports devices the user has already granted access to via a prior
+// requestDevice() gesture (triggered later, from the Flash button, since that's a
+// real click). Unlike the nwjs path above, the DFU option is kept selectable
+// regardless of detection (mirroring serial.js's always-present "Web Serial"
+// placeholder) so there's something to click that leads to the permission prompt
+// in the first place -- dfu_available itself still reflects real detection, since
+// STM32.connect()'s post-reboot fallback logic depends on it being accurate.
+PortHandler.check_web_usb_devices = async function (callback) {
+    const self = this;
+
+    let matched = [];
+    if ('usb' in navigator) {
+        try {
+            const devices = await navigator.usb.getDevices();
+            matched = devices.filter((d) =>
+                usbDevices.filters.some((f) => f.vendorId === d.vendorId && f.productId === d.productId),
+            );
+        } catch {
+            matched = [];
+        }
+    }
+
+    if (!self.portPickerElement.children("[value='DFU']").length) {
+        self.rebuildPortPickerOptions(matched[0]?.productName ? `DFU - ${matched[0].productName}` : "DFU");
+    }
+
+    self.dfu_available = matched.length > 0;
+    self.finishUsbDeviceCheck(callback);
+};
+
+PortHandler.rebuildPortPickerOptions = function (dfuText) {
+    const self = this;
+    self.portPickerElement.empty();
+
+    self.portPickerElement.append($('<option/>', {
+        value: "DFU",
+        text: dfuText,
+        data: {isDFU: true},
+        // also expose as a real HTML attribute so non-jQuery consumers
+        // (e.g. the Svelte firmware flasher) can read it via .dataset
+        'data-is-dfu': 'true',
+    }));
+
+    if (__BACKEND__ === "web" || import.meta.env.DEV) {
+        self.portPickerElement.append($('<option/>', {
+           value: 'virtual',
+           text: i18n.getMessage('portsSelectVirtual'),
+           data: {isVirtual: true},
+        }));
+    }
+
+    self.portPickerElement.append($('<option/>', {
+        value: 'manual',
+        text: i18n.getMessage('portsSelectManual'),
+        data: {isManual: true},
+    }));
+    self.portPickerElement.val('DFU').change();
+    self.setPortsInputWidth();
+};
+
+PortHandler.finishUsbDeviceCheck = function (callback) {
+    const self = this;
+
+    if (callback) {
+        callback(self.dfu_available);
+    }
+    if (!$('option:selected', self.portPickerElement).data().isDFU) {
+        if (!(GUI.connected_to || GUI.connect_lock)) {
+            FC.resetState();
+        }
+        self.portPickerElement.trigger('change');
+    }
 };
 
 /**
