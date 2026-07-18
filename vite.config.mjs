@@ -23,11 +23,11 @@ const getBackend = () => {
 };
 
 const getBasePath = (backend) => {
-  if (process.env.VITE_APP_VERSION) {
-    return `/${process.env.VITE_APP_VERSION}/`;
-  }
-
   if (backend === "web") {
+    if (process.env.VITE_APP_VERSION) {
+      return `/${pkg.name}/${process.env.VITE_APP_VERSION}/`;
+    }
+
     return `/${pkg.name}/`;
   }
 

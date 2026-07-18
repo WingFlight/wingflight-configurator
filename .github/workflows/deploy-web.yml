@@ -3,34 +3,67 @@ name: Deploy Web App
 on:
   push:
     branches:
-      - 'feature/web-deployment'
-      - 'master'
+      - master
+      - feature/**
+      - bugfix/**
+      - experiment/**
+      - release/**
     tags:
-      - 'v*'
+      - "*"
   workflow_dispatch:
+    inputs:
+      deployment_path:
+        description: "Optional deployment path override"
+        required: false
+        type: string
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build Web App
+  deploy:
+    name: Build and Deploy Web App
     runs-on: ubuntu-latest
 
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      is_release: ${{ steps.version.outputs.is_release }}
-      is_stable: ${{ steps.version.outputs.is_stable }}
-
     steps:
-      - name: Check out repository
+      - name: Checkout source
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine deployment path
+        id: path
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.deployment_path }}" ]; then
+            DEPLOY_PATH="${{ github.event.inputs.deployment_path }}"
+            UPDATE_LATEST="false"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            DEPLOY_PATH="$VERSION"
+            if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              UPDATE_LATEST="true"
+            else
+              UPDATE_LATEST="false"
+            fi
+          elif [ "${{ github.ref_name }}" = "master" ]; then
+            DEPLOY_PATH="master"
+            UPDATE_LATEST="false"
+          else
+            DEPLOY_PATH="${{ github.ref_name }}"
+            DEPLOY_PATH="$(echo "$DEPLOY_PATH" | sed -E 's#[^A-Za-z0-9._-]+#-#g')"
+            UPDATE_LATEST="false"
+          fi
+
+          echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
+          echo "update_latest=$UPDATE_LATEST" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $DEPLOY_PATH"
+          echo "Update latest: $UPDATE_LATEST"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -41,12 +74,12 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: Get pnpm store directory
         shell: bash
-        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
 
       - name: Setup pnpm cache
         uses: actions/cache@v5
@@ -56,183 +89,93 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Determine version and build type
-        id: version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            # Strip 'v' prefix from tag
-            VERSION="${GITHUB_REF#refs/tags/v}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "is_release=true" >> $GITHUB_OUTPUT
-            
-            # Check if this is a stable release (no pre-release identifiers)
-            if [[ ! "$VERSION" =~ (-rc|-alpha|-beta|-pre) ]]; then
-              echo "is_stable=true" >> $GITHUB_OUTPUT
-            else
-              echo "is_stable=false" >> $GITHUB_OUTPUT
-            fi
-            echo "Build type: Release ($VERSION)"
-          elif [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
-            echo "version=master" >> $GITHUB_OUTPUT
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "is_stable=false" >> $GITHUB_OUTPUT
-            echo "Build type: Master branch"
-          else
-            echo "version=dev" >> $GITHUB_OUTPUT
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "is_stable=false" >> $GITHUB_OUTPUT
-            echo "Build type: Development"
-          fi
-
-      - name: Update version in package.json for releases
-        if: steps.version.outputs.is_release == 'true'
-        run: |
-          sed -i 's/"version": "0.0.0"/"version": "${{ steps.version.outputs.version }}"/' package.json
-
-      - name: Initialize build environment
-        run: make init
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build web app
         env:
           VITE_APP_BACKEND: web
-          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
-        run: pnpm run build:web:versioned
+          VITE_APP_VERSION: ${{ steps.path.outputs.deploy_path }}
+        run: pnpm exec vite build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
+      - name: Checkout GitHub Pages branch
+        uses: actions/checkout@v6
         with:
-          name: web-app-${{ steps.version.outputs.version }}
-          path: bundle/
-          retention-days: 5
+          ref: gh-pages
+          path: pages
 
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v7
-        with:
-          name: web-app-${{ needs.build.outputs.version }}
-          path: deploy/
-
-      - name: Organize deployment for versioned builds
-        if: needs.build.outputs.is_release == 'true'
+      - name: Copy build to deployment path
+        shell: bash
         run: |
-          mkdir -p gh-pages/${{ needs.build.outputs.version }}
-          cp -r deploy/* gh-pages/${{ needs.build.outputs.version }}/
-          echo "Deployment prepared for: ${{ needs.build.outputs.version }}"
-          
-          # Also deploy to /stable/ if this is a stable release
-          if [[ "${{ needs.build.outputs.is_stable }}" == "true" ]]; then
-            mkdir -p gh-pages/stable
-            cp -r deploy/* gh-pages/stable/
-            echo "Deployment prepared for: stable (version ${{ needs.build.outputs.version }})"
-          fi
+          DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
 
-      - name: Organize deployment for master build
-        if: needs.build.outputs.is_release == 'false'
+          rm -rf "pages/$DEPLOY_PATH"
+          mkdir -p "pages/$DEPLOY_PATH"
+          cp -R bundle/. "pages/$DEPLOY_PATH/"
+
+      - name: Update latest stable deployment
+        if: steps.path.outputs.update_latest == 'true'
+        shell: bash
         run: |
-          mkdir -p gh-pages/master
-          cp -r deploy/* gh-pages/master/
-          echo "Deployment prepared for: master"
+          rm -rf pages/latest
+          mkdir -p pages/latest
+          cp -R bundle/. pages/latest/
 
-      - name: Create index of available versions
+      - name: Generate deployment index
+        shell: bash
         run: |
-          cat > gh-pages/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Wingflight Configurator Versions</title>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                max-width: 800px;
-                margin: 50px auto;
-                padding: 20px;
-                background-color: #f5f5f5;
-              }
-              h1 { color: #333; }
-              .version-list { list-style: none; padding: 0; }
-              .version-list li {
-                background: white;
-                padding: 12px 16px;
-                margin: 8px 0;
-                border-radius: 6px;
-                border-left: 4px solid #007bff;
-              }
-              a {
-                color: #007bff;
-                text-decoration: none;
-                font-weight: 500;
-              }
-              a:hover { text-decoration: underline; }
-              .note {
-                background-color: #e7f3ff;
-                border: 1px solid #b3d9ff;
-                padding: 12px;
-                border-radius: 4px;
-                margin: 20px 0;
-                font-size: 14px;
-              }
-            </style>
-          </head>
-          <body>
-            <h1>🛩️ Wingflight Configurator - Web Versions</h1>
-            
-            <div class="note">
-              <strong>⚠️ Browser Requirements:</strong><br>
-              This web app requires a Chromium-based browser (Chrome, Edge, Brave, Opera).
-              Device access features (serial, USB) will not work in Firefox or Safari.
-            </div>
-            
-            <h2>Available Versions</h2>
-            <ul class="version-list">
-              <li><strong><a href="./master/">Master Branch</a></strong></li>
-              <li><strong><a href="./stable/">Latest Stable Release</a></strong></li>
-              <li id="releases-container"></li>
-            </ul>
-            
-            <script>
-              // List releases from directory (will be added by deployment script)
-              fetch('./releases.json')
-                .then(r => r.json())
-                .then(releases => {
-                  const container = document.getElementById('releases-container');
-                  releases.forEach(version => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="./${version}/">${version}</a>`;
-                    container.parentElement.appendChild(li);
-                  });
-                })
-                .catch(e => console.log('Release list not available'));
-            </script>
-          </body>
-          </html>
-          EOF
+          cd pages
 
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: gh-pages/
+          {
+            echo '<!doctype html>'
+            echo '<html lang="en">'
+            echo '<head>'
+            echo '  <meta charset="utf-8">'
+            echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
+            echo '  <title>Wingflight Configurator Deployments</title>'
+            echo '  <style>'
+            echo '    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 3rem auto; max-width: 52rem; padding: 0 1rem; line-height: 1.5; }'
+            echo '    h1 { margin-bottom: 0.25rem; }'
+            echo '    .note { background: #eef6ff; border: 1px solid #b8dcff; border-radius: 0.5rem; padding: 1rem; }'
+            echo '    li { margin: 0.35rem 0; }'
+            echo '  </style>'
+            echo '</head>'
+            echo '<body>'
+            echo '  <h1>Wingflight Configurator Deployments</h1>'
+            echo '  <p class="note">Web Serial requires a Chromium-based browser and HTTPS. GitHub Pages provides HTTPS automatically.</p>'
+            echo '  <ul>'
+            for dir in */ ; do
+              name="${dir%/}"
+              if [ -f "$dir/index.html" ]; then
+                echo "    <li><a href=\"./$name/\">$name</a></li>"
+              fi
+            done | sort
+            echo '  </ul>'
+            echo '</body>'
+            echo '</html>'
+          } > index.html
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Print deployment info
+      - name: Commit deployment
+        shell: bash
         run: |
-          echo "✅ Web app deployed successfully!"
-          echo "Master: https://${{ github.repository_owner }}.github.io/wingflight-configurator/master/"
-          if [[ "${{ needs.build.outputs.is_release }}" == "true" ]]; then
-            echo "Version: https://${{ github.repository_owner }}.github.io/wingflight-configurator/${{ needs.build.outputs.version }}/"
-            if [[ "${{ needs.build.outputs.is_stable }}" == "true" ]]; then
-              echo "Stable: https://${{ github.repository_owner }}.github.io/wingflight-configurator/stable/"
-            fi
+          cd pages
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "deploy: ${{ steps.path.outputs.deploy_path }} from ${{ github.sha }}" || exit 0
+          git push origin gh-pages
+
+      - name: Print deployment URLs
+        shell: bash
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
+
+          echo "Deployment index: https://$OWNER.github.io/$REPO/"
+          echo "Deployment: https://$OWNER.github.io/$REPO/$DEPLOY_PATH/"
+          if [ "${{ steps.path.outputs.update_latest }}" = "true" ]; then
+            echo "Latest stable: https://$OWNER.github.io/$REPO/latest/"
           fi
