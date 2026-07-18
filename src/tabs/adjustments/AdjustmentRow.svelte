@@ -118,7 +118,7 @@
     format: wNumb({ decimals: 0 }),
   };
 
-  const initialValSliderOpts = {
+  const initialValSliderOpts = $derived({
     range: { min: adjConfig.min, max: adjConfig.max },
     step: 1,
     connect: true,
@@ -130,7 +130,7 @@
       density: density(adjConfig.min, adjConfig.max, adjConfig.ticks),
       stepped: true,
     },
-  };
+  });
 
   // --- live RC channel visualization ---
 
