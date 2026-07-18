@@ -2,7 +2,7 @@ import semver from "semver";
 
 import * as config from "@/js/config.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
-import { i18n } from "@/js/i18n.js";
+import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 
 globalThis.TABS = {};
