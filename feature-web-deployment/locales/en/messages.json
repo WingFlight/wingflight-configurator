@@ -108,8 +108,12 @@
         "message": "Disconnect"
     },
     "portsSelectAddSerialDevice": {
-        "message": "Add Serial Device...",
+        "message": "--- I can't find my USB device ---",
         "description": "Web-only port picker option that triggers the browser's native serial device chooser"
+    },
+    "portsSelectAddDfuDevice": {
+        "message": "--- I can't find my DFU device ---",
+        "description": "Web-only port picker option that triggers the browser's native DFU (WebUSB) device chooser"
     },
     "portsSelectManual": {
         "message": "Manual Selection"
