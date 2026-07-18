@@ -4903,17 +4903,17 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesFwTpaBreakpoint": {
-        "message": "Throttle Attenuation Breakpoint [%]"
+    "profilesFwTpaGainLabel": {
+        "message": "Throttle Attenuation Gain [%]"
     },
-    "profilesFwTpaBreakpointHelp": {
-        "message": "Throttle level above which PID gain attenuation starts. Below this throttle level, gains are unaffected. On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so gain is reduced above this breakpoint instead of below it."
+    "profilesFwTpaGainHelp": {
+        "message": "Baseline scale for the throttle-based P/D gain attenuation, further shaped by the optional curve below. 100% applies the curve (if any) at full effect; lower values reduce the overall effect, same as Master Gain does for the per-axis curve."
     },
-    "profilesFwTpaRate": {
-        "message": "Throttle Attenuation Rate [%]"
+    "profilesFwTpaCurveLabel": {
+        "message": "Throttle Attenuation Curve"
     },
-    "profilesFwTpaRateHelp": {
-        "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
+    "profilesFwTpaCurveHelp": {
+        "message": "Optionally shapes the throttle attenuation gain above by throttle, using a curve edited on the Curves tab. The curve is evaluated on throttle (0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. \"-\" means no curve is assigned and the gain above applies unshaped."
     },
     "profilesMasterGainRoll": {
         "message": "Master Gain for Roll Axis [%]"

@@ -71,26 +71,25 @@
     </SubSection>
 
     <SubSection>
-      <Field id="fw-tpa-breakpoint" label="profilesFwTpaBreakpoint">
+      <Field id="fw-tpa-gain" label="profilesFwTpaGainLabel">
         {#snippet tooltip()}
-          {$i18n.t("profilesFwTpaBreakpointHelp")}
+          {$i18n.t("profilesFwTpaGainHelp")}
         {/snippet}
         <NumberInput
-          id="fw-tpa-breakpoint"
-          min="0"
-          max="100"
-          bind:value={FC.PID_PROFILE.fwTpaBreakpoint}
+          id="fw-tpa-gain"
+          min="25"
+          max="200"
+          bind:value={FC.PID_PROFILE.fwTpaGain}
         />
       </Field>
-      <Field id="fw-tpa-rate" label="profilesFwTpaRate">
+      <Field id="fw-tpa-curve" label="profilesFwTpaCurveLabel">
         {#snippet tooltip()}
-          {$i18n.t("profilesFwTpaRateHelp")}
+          {$i18n.t("profilesFwTpaCurveHelp")}
         {/snippet}
-        <NumberInput
-          id="fw-tpa-rate"
-          min="0"
-          max="100"
-          bind:value={FC.PID_PROFILE.fwTpaRate}
+        <Select
+          id="fw-tpa-curve"
+          options={gainCurveOptions}
+          bind:value={FC.PID_PROFILE.fwTpaCurve}
         />
       </Field>
     </SubSection>
