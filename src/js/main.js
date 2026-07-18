@@ -151,7 +151,7 @@ export function startProcess() {
     // our view is reactive to model changes
     // updateTopBarVersion();
 
-    if (!GUI.isOther()) {
+    if (!GUI.isOther() && __BACKEND__ !== "web") {
         checkForConfiguratorUpdates();
     }
 
