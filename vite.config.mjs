@@ -233,6 +233,9 @@ export default defineConfig({
         "src/main_cordova.html": "src/main_cordova.html",
         "src/tabs/receiver_msp.html": "src/tabs/receiver_msp.html",
         "src/tabs/map.html": "src/tabs/map.html",
+        "src/tabs/cli.html": "src/tabs/cli.html",
+        "src/tabs/help.html": "src/tabs/help.html",
+        "src/tabs/presets/presets.html": "src/tabs/presets/presets.html",
       },
       output: {
         entryFileNames: `assets/[name].js`,
