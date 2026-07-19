@@ -77,6 +77,12 @@ if (__BACKEND__ === "web") {
     showBanner: true,
     containerId: "app",
   });
+
+  if (import.meta.env.PROD && "serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js", { scope: "./" });
+    });
+  }
 }
 
 globalThis.GUI = new GuiControl();

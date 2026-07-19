@@ -4,7 +4,7 @@ This document describes the web deployment of Wingflight Configurator for use in
 
 ## Overview
 
-Wingflight Configurator has been adapted to run as a web application using modern browser APIs for device communication. The app is deployed automatically via GitHub Actions to GitHub Pages with support for versioned releases.
+Wingflight Configurator has been adapted to run as a web application using modern browser APIs for device communication. The app is deployed automatically via GitHub Actions to GitHub Pages with support for versioned releases, and can be installed as a Progressive Web App (PWA) in supported browsers.
 
 ## Browser Requirements
 
@@ -17,7 +17,7 @@ Wingflight Configurator has been adapted to run as a web application using moder
 ### ❌ Unsupported Browsers
 - **Firefox** - Limited WebSerial/WebUSB support
 - **Safari** - No WebSerial/WebUSB support
-- **Mobile browsers** - Device access not available
+- **Mobile browsers** - PWA installation may work, but device access is generally not available
 
 ## Required Browser APIs
 
@@ -29,6 +29,26 @@ The web app requires the following browser APIs to be available:
 | **WebUSB API** | USB device access (flashing) | Chrome, Edge, Brave, Opera |
 | **Web Storage API** | Local configuration storage | All modern browsers |
 | **Fetch API** | HTTP requests | All modern browsers |
+
+## Progressive Web App Support
+
+The web build includes PWA metadata and a service worker:
+
+- `public/manifest.webmanifest` provides the install manifest, app name, colors, display mode, and icons.
+- `public/service-worker.js` caches the app shell and same-origin static assets for repeat visits and basic offline loading.
+- `src/js/main.svelte.js` registers the service worker only for production web builds.
+- The manifest and service worker use relative paths and scope so `/master/`, `/latest/`, and specific release versions remain isolated from each other.
+
+PWA installation improves launch behavior and allows the app to open in standalone mode, but it does not change browser support for WebSerial or WebUSB. Device connection and flashing features still require browser and operating-system support for those APIs.
+
+### Offline Behavior
+
+The PWA service worker provides basic app-shell caching:
+
+- Previously loaded static assets can be served from cache.
+- Navigation uses network-first behavior and falls back to cached `index.html` when offline.
+- Device communication still requires a compatible browser context and supported hardware APIs.
+- Firmware downloads, remote resources, and first-time loads still require network access unless already cached by a previous visit.
 
 ## Browser Compatibility Checking
 
@@ -156,7 +176,7 @@ A release is considered **stable** if the version tag:
 ### ❌ Not Supported in Web Version
 - Desktop application features (system integration, file dialogs)
 - Cordova/Mobile specific features
-- Offline caching (limited to browser cache)
+- PWA app-shell caching for repeat visits and basic offline loading
 
 ## Development
 

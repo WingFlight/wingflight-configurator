@@ -336,6 +336,31 @@ export default defineConfig({
       },
     },
     {
+      name: "stamp-service-worker-version",
+      apply: "build",
+      async writeBundle() {
+        if (backend !== "web") {
+          return;
+        }
+
+        const serviceWorkerPath = path.resolve("bundle", "service-worker.js");
+
+        try {
+          const serviceWorker = await fs.readFile(serviceWorkerPath, "utf8");
+          await fs.writeFile(
+            serviceWorkerPath,
+            serviceWorker
+              .replaceAll("__APP_VERSION__", pkg.version)
+              .replaceAll("__COMMIT_HASH__", commitHash),
+          );
+        } catch (error) {
+          if (error.code !== "ENOENT") {
+            throw error;
+          }
+        }
+      },
+    },
+    {
       name: "rewrite-public-asset-urls",
       apply: "build",
       async writeBundle(_, bundle) {
