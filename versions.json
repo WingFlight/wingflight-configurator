@@ -2,11 +2,6 @@
   "entries": [
     {
       "type": "branch",
-      "name": "bundle",
-      "path": "./bundle/"
-    },
-    {
-      "type": "branch",
       "name": "feature-web-deployment",
       "path": "./feature-web-deployment/"
     }
