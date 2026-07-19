@@ -1,16 +1,14 @@
 {
   "entries": [
     {
-      "type": "stable",
-      "name": "Latest Stable",
-      "path": "./latest/",
-      "notes": "Recommended for all users"
+      "type": "branch",
+      "name": "bundle",
+      "path": "./bundle/"
     },
     {
-      "type": "master",
-      "name": "master",
-      "path": "./master/",
-      "notes": "Latest development build"
+      "type": "branch",
+      "name": "feature-web-deployment",
+      "path": "./feature-web-deployment/"
     }
   ]
 }
