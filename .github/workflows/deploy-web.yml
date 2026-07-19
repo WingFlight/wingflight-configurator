@@ -10,6 +10,7 @@ on:
       - release/**
     tags:
       - "*"
+  delete:
   workflow_dispatch:
     inputs:
       deployment_path:
@@ -27,6 +28,7 @@ concurrency:
 jobs:
   deploy:
     name: Build and Deploy Web App
+    if: github.event_name != 'delete'
     runs-on: ubuntu-latest
 
     steps:
@@ -177,3 +179,83 @@ jobs:
           if [ "${{ steps.path.outputs.update_latest }}" = "true" ]; then
             echo "Latest stable: https://cfg.wingflight.org/latest/"
           fi
+
+  cleanup-deleted-branch:
+    name: Cleanup Deleted Branch Deployment
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub Pages branch
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: pages
+
+      - name: Determine deployment path
+        id: path
+        shell: bash
+        run: |
+          DEPLOY_PATH="${{ github.event.ref }}"
+          DEPLOY_PATH="$(echo "$DEPLOY_PATH" | sed -E 's#[^A-Za-z0-9._-]+#-#g')"
+
+          echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
+          echo "Deleting deployment path: $DEPLOY_PATH"
+
+      - name: Delete deployment directory
+        shell: bash
+        run: |
+          DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
+
+          if [ -d "pages/$DEPLOY_PATH" ]; then
+            rm -rf "pages/$DEPLOY_PATH"
+            echo "Deleted pages/$DEPLOY_PATH"
+          else
+            echo "No deployment found for pages/$DEPLOY_PATH"
+          fi
+
+      - name: Regenerate deployment index
+        shell: bash
+        run: |
+          cd pages
+
+          {
+            echo '<!doctype html>'
+            echo '<html lang="en">'
+            echo '<head>'
+            echo '  <meta charset="utf-8">'
+            echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
+            echo '  <title>Wingflight Configurator Deployments</title>'
+            echo '  <style>'
+            echo '    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 3rem auto; max-width: 52rem; padding: 0 1rem; line-height: 1.5; }'
+            echo '    h1 { margin-bottom: 0.25rem; }'
+            echo '    .note { background: #eef6ff; border: 1px solid #b8dcff; border-radius: 0.5rem; padding: 1rem; }'
+            echo '    li { margin: 0.35rem 0; }'
+            echo '  </style>'
+            echo '</head>'
+            echo '<body>'
+            echo '  <h1>Wingflight Configurator Deployments</h1>'
+            echo '  <p class="note">Web Serial requires a Chromium-based browser and HTTPS. GitHub Pages provides HTTPS automatically.</p>'
+            echo '  <ul>'
+            for dir in */ ; do
+              name="${dir%/}"
+              if [ -f "$dir/index.html" ]; then
+                echo "    <li><a href=\"./$name/\">$name</a></li>"
+              fi
+            done | sort
+            echo '  </ul>'
+            echo '</body>'
+            echo '</html>'
+          } > index.html
+
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          cd pages
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "cleanup: remove deployment for deleted branch ${{ github.event.ref }}" || exit 0
+          git push origin gh-pages
