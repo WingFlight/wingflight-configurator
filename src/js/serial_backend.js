@@ -325,11 +325,13 @@ function finishClose() {
 }
 
 function setConnectionTimeout() {
-    // disconnect after 10 seconds with error if we don't get IDENT data
+    // After 10 seconds with no IDENT data, the FC either isn't speaking MSP
+    // at all or is already sitting in a CLI shell -- fall back to CLI mode
+    // the same way an explicitly unsupported/invalid firmware version does,
+    // rather than just disconnecting with a log message nobody sees.
     GUI.timeout_add('connecting', function () {
         if (!CONFIGURATOR.connectionValid) {
-            GUI.log(i18n.getMessage('noConfigurationReceived'));
-            $('div.connect_controls a.connect').trigger("click"); // disconnect
+            showConnectWarningDialogAndConnectCli('noConfigurationReceived');
         }
     }, 10000);
 }
