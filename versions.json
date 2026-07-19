@@ -1,7 +1,9 @@
-[
-  {
-    "version": "feature-web-deployment",
-    "path": "feature-web-deployment/",
-    "latest": false
-  }
-]
+{
+  "entries": [
+    {
+      "type": "branch",
+      "name": "feature-web-deployment",
+      "path": "./feature-web-deployment/"
+    }
+  ]
+}
