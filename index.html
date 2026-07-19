@@ -61,9 +61,16 @@
       align-items: center;
     }
 
-    .nav-logo img {
-      height: 40px;
-      width: auto;
+    .nav-logo-text {
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+    .nav-logo-text em {
+      font-style: normal;
+      color: var(--red);
     }
 
     .nav-links {
@@ -113,22 +120,6 @@
         radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212, 0, 0, 0.12) 0%, transparent 70%),
         linear-gradient(180deg, #0f0f0f 0%, #141414 100%);
       z-index: 0;
-    }
-
-    .hero-wing-bg {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.04;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .hero-wing-bg img {
-      width: 75%;
-      max-width: 900px;
     }
 
     .hero > * { position: relative; z-index: 1; }
@@ -461,14 +452,16 @@
       gap: 24px;
     }
 
-    .footer-logo img {
-      height: 26px;
-      width: auto;
-      opacity: 0.7;
-      transition: opacity 0.2s;
+    .footer-logo-text {
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.2s;
     }
-
-    .footer-logo:hover img { opacity: 1; }
+    .footer-logo-text em { font-style: normal; color: var(--red); }
+    .footer-logo:hover .footer-logo-text { color: rgba(255,255,255,0.9); }
 
     .footer-tagline {
       font-size: 0.82rem;
@@ -519,7 +512,7 @@
   <!-- ── Navigation ──────────────────────────────────────────── -->
   <nav>
     <a href="#" class="nav-logo">
-      <img src="wingflight-resources/logos_svg/wf_logo_dark_white.svg" alt="Wingflight">
+      <span class="nav-logo-text">Wing<em>flight</em></span>
     </a>
     <ul class="nav-links">
       <li><a href="#versions">Versions</a></li>
@@ -530,9 +523,6 @@
   <!-- ── Hero ────────────────────────────────────────────────── -->
   <header class="hero">
     <div class="hero-bg"></div>
-    <div class="hero-wing-bg">
-      <img src="wingflight-resources/logos_svg/light-wide-1.svg" alt="">
-    </div>
 
     <span class="hero-eyebrow">Open Source Flight Control</span>
     <h1>Wingflight<br><em>Configurator</em></h1>
@@ -588,7 +578,7 @@
       <div class="footer-top">
         <div>
           <a href="https://nanoheli.net/wingflight/" target="_blank" rel="noopener" class="footer-logo">
-            <img src="wingflight-resources/logos_svg/wf_logo_dark_white.svg" alt="Wingflight">
+            <span class="footer-logo-text">Wing<em>flight</em></span>
           </a>
           <p class="footer-tagline">Advanced Open Source Flight Control for Winged Aircraft</p>
         </div>

@@ -1,0 +1,4 @@
+node_modules/
+wingflight-resources/
+.vite/
+nwjs_cache/
