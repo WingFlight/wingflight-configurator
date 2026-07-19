@@ -170,12 +170,10 @@ jobs:
       - name: Print deployment URLs
         shell: bash
         run: |
-          OWNER="${{ github.repository_owner }}"
-          REPO="${{ github.event.repository.name }}"
           DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
 
-          echo "Deployment index: https://$OWNER.github.io/$REPO/"
-          echo "Deployment: https://$OWNER.github.io/$REPO/$DEPLOY_PATH/"
+          echo "Deployment index: https://cfg.wingflight.org/"
+          echo "Deployment: https://cfg.wingflight.org/$DEPLOY_PATH/"
           if [ "${{ steps.path.outputs.update_latest }}" = "true" ]; then
-            echo "Latest stable: https://$OWNER.github.io/$REPO/latest/"
+            echo "Latest stable: https://cfg.wingflight.org/latest/"
           fi

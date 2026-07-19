@@ -79,29 +79,29 @@ pnpm run build:web:versioned
 
 ### GitHub Pages URLs
 
-The application is automatically deployed to GitHub Pages at:
+The application is automatically deployed to GitHub Pages, served from the custom domain `cfg.wingflight.org` (via the `CNAME` file on the `gh-pages` branch):
 
 ```
-https://WingFlight.github.io/wingflight-configurator/
+https://cfg.wingflight.org/
 ```
 
 #### Available URLs
 
 - **Master Branch** (latest development)
   ```
-  https://WingFlight.github.io/wingflight-configurator/master/
+  https://cfg.wingflight.org/master/
   ```
 
 - **Latest Stable Release** (recommended for most users)
   ```
-  https://WingFlight.github.io/wingflight-configurator/stable/
+  https://cfg.wingflight.org/latest/
   ```
 
 - **Specific Release Versions**
   ```
-  https://WingFlight.github.io/wingflight-configurator/1.0.0/
-  https://WingFlight.github.io/wingflight-configurator/1.1.0/
-  https://WingFlight.github.io/wingflight-configurator/2.0.0-rc1/
+  https://cfg.wingflight.org/1.0.0/
+  https://cfg.wingflight.org/1.1.0/
+  https://cfg.wingflight.org/2.0.0-rc1/
   ```
 
 ### Deployment Workflow
@@ -127,7 +127,7 @@ The `.github/workflows/deploy-web.yml` workflow:
      - Deploy to `/master/`
    - For **Version tags**:
      - Deploy to `/<version>/`
-     - If it's a stable release (no pre-release identifiers), also deploy to `/stable/`
+     - If it's a stable release (no pre-release identifiers), also deploy to `/latest/`
    - Upload to GitHub Pages
 
 ### Stable Release Detection
