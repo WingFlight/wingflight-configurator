@@ -132,32 +132,10 @@ jobs:
           import json, os, re
 
           entries = []
-          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.exists(os.path.join(d, 'index.html'))]
+          SKIP_DIRS = {'bundle', 'logos', 'public', 'node_modules', '.git'}
+          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
-              entries.append({"type": "stable", "name": "Latest Stable", "path": "./latest/", "notes": "Recommended for all users"})
-
-          if 'master' in dirs:
-              entries.append({"type": "master", "name": "master", "path": "./master/", "notes": "Latest development build"})
-
-          semver_dirs = sorted(
-              [d for d in dirs if re.match(r'^\d+\.\d+\.\d+$', d)],
-              key=lambda v: [int(x) for x in v.split('.')],
-              reverse=True
-          )
-          for d in semver_dirs:
-              entries.append({"type": "release", "name": f"v{d}", "tag": f"v{d}", "path": f"./{d}/"})
-
-          exclude = {'latest', 'master'} | set(semver_dirs)
-          for d in sorted(d for d in dirs if d not in exclude):
-              entries.append({"type": "branch", "name": d, "path": f"./{d}/"})
-
-          with open('versions.json', 'w') as f:
-              json.dump({"entries": entries}, f, indent=2)
-              f.write('\n')
-          EOF
-
-      - name: Commit deployment
         shell: bash
         run: |
           cd pages
@@ -222,32 +200,10 @@ jobs:
           import json, os, re
 
           entries = []
-          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.exists(os.path.join(d, 'index.html'))]
+          SKIP_DIRS = {'bundle', 'logos', 'public', 'node_modules', '.git'}
+          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
-              entries.append({"type": "stable", "name": "Latest Stable", "path": "./latest/", "notes": "Recommended for all users"})
-
-          if 'master' in dirs:
-              entries.append({"type": "master", "name": "master", "path": "./master/", "notes": "Latest development build"})
-
-          semver_dirs = sorted(
-              [d for d in dirs if re.match(r'^\d+\.\d+\.\d+$', d)],
-              key=lambda v: [int(x) for x in v.split('.')],
-              reverse=True
-          )
-          for d in semver_dirs:
-              entries.append({"type": "release", "name": f"v{d}", "tag": f"v{d}", "path": f"./{d}/"})
-
-          exclude = {'latest', 'master'} | set(semver_dirs)
-          for d in sorted(d for d in dirs if d not in exclude):
-              entries.append({"type": "branch", "name": d, "path": f"./{d}/"})
-
-          with open('versions.json', 'w') as f:
-              json.dump({"entries": entries}, f, indent=2)
-              f.write('\n')
-          EOF
-
-      - name: Commit cleanup
         shell: bash
         run: |
           cd pages
