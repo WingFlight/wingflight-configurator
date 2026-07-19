@@ -1,6 +1,12 @@
 {
   "entries": [
     {
+      "type": "master",
+      "name": "master",
+      "path": "./master/",
+      "notes": "Latest development build"
+    },
+    {
       "type": "branch",
       "name": "feature-web-deployment",
       "path": "./feature-web-deployment/"
