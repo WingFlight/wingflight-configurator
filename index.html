@@ -61,16 +61,9 @@
       align-items: center;
     }
 
-    .nav-logo-text {
-      font-size: 1.1rem;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #ffffff;
-    }
-    .nav-logo-text em {
-      font-style: normal;
-      color: var(--red);
+    .nav-logo img {
+      height: 36px;
+      width: auto;
     }
 
     .nav-links {
@@ -120,6 +113,22 @@
         radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212, 0, 0, 0.12) 0%, transparent 70%),
         linear-gradient(180deg, #0f0f0f 0%, #141414 100%);
       z-index: 0;
+    }
+
+    .hero-wing-bg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.045;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero-wing-bg img {
+      width: 70%;
+      max-width: 860px;
+      filter: brightness(0) invert(1);
     }
 
     .hero > * { position: relative; z-index: 1; }
@@ -412,8 +421,24 @@
       font-size: 0.82rem;
     }
 
-    /* Empty state */
-    .versions-empty {
+    /* Card icon decoration */
+    .version-card-icon {
+      position: absolute;
+      bottom: -12px;
+      right: -12px;
+      width: 90px;
+      height: 90px;
+      opacity: 0.06;
+      pointer-events: none;
+      transform: rotate(-10deg);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .version-card:hover .version-card-icon {
+      opacity: 0.1;
+      transform: rotate(-8deg) scale(1.05);
+    }
+    .version-card.featured .version-card-icon { opacity: 0.09; }
+    .version-card.featured:hover .version-card-icon { opacity: 0.14; }
       grid-column: 1 / -1;
       padding: 32px;
       text-align: center;
@@ -452,16 +477,13 @@
       gap: 24px;
     }
 
-    .footer-logo-text {
-      font-size: 1rem;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.55);
-      transition: color 0.2s;
+    .footer-logo img {
+      height: 24px;
+      width: auto;
+      opacity: 0.55;
+      transition: opacity 0.2s;
     }
-    .footer-logo-text em { font-style: normal; color: var(--red); }
-    .footer-logo:hover .footer-logo-text { color: rgba(255,255,255,0.9); }
+    .footer-logo:hover img { opacity: 0.9; }
 
     .footer-tagline {
       font-size: 0.82rem;
@@ -512,7 +534,7 @@
   <!-- ── Navigation ──────────────────────────────────────────── -->
   <nav>
     <a href="#" class="nav-logo">
-      <span class="nav-logo-text">Wing<em>flight</em></span>
+      <img src="logos/logos_svg/wf_logo_dark_white.svg" alt="Wingflight">
     </a>
     <ul class="nav-links">
       <li><a href="#versions">Versions</a></li>
@@ -523,6 +545,10 @@
   <!-- ── Hero ────────────────────────────────────────────────── -->
   <header class="hero">
     <div class="hero-bg"></div>
+
+    <div class="hero-wing-bg">
+      <img src="logos/logos_svg/light-wide-2-compact.svg" alt="">
+    </div>
 
     <span class="hero-eyebrow">Open Source Flight Control</span>
     <h1>Wingflight<br><em>Configurator</em></h1>
@@ -578,7 +604,7 @@
       <div class="footer-top">
         <div>
           <a href="https://nanoheli.net/wingflight/" target="_blank" rel="noopener" class="footer-logo">
-            <span class="footer-logo-text">Wing<em>flight</em></span>
+            <img src="logos/logos_svg/wf_logo_dark_white.svg" alt="Wingflight">
           </a>
           <p class="footer-tagline">Advanced Open Source Flight Control for Winged Aircraft</p>
         </div>
@@ -634,6 +660,7 @@
       if (notes) meta += `<span>${ICON_CLOCK} ${notes}</span>`;
 
       card.innerHTML = `
+        <img class="version-card-icon" src="logos/wf_icon.svg" alt="" aria-hidden="true">
         <span class="version-badge ${badgeClass}">${badgeLabel}</span>
         <div class="version-name">${name}</div>
         ${meta ? `<div class="version-meta">${meta}</div>` : ''}
@@ -675,6 +702,12 @@
       const branches = entries.filter(e => e.type === 'branch');
 
       pinned.forEach(e => pinnedRow.appendChild(makeCard(e, true)));
+      // Add wing icon to all rendered cards
+      pinnedRow.querySelectorAll('.version-card:not(:has(.version-card-icon))').forEach(c => {
+        const img = document.createElement('img');
+        img.className = 'version-card-icon'; img.src = 'logos/wf_icon.svg'; img.alt = ''; img.setAttribute('aria-hidden','true');
+        c.prepend(img);
+      });
       if (!pinned.length) pinnedRow.innerHTML = '<div class="versions-empty">No builds deployed yet.</div>';
 
       // ── Render Release Versions ──────────────────────────────────
