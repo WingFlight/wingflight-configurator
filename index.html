@@ -414,11 +414,61 @@
       gap: 7px;
     }
 
-    .version-card .btn {
-      margin-top: auto;
-      align-self: flex-start;
-      padding: 10px 22px;
-      font-size: 0.82rem;
+    .version-card .btn { display: none; } /* replaced by card-launch */
+
+    /* ── Card launch bar ──────────────────────────────────────── */
+    .card-launch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      /* bleed to card edges */
+      margin: auto -28px -26px;
+      padding: 13px 22px 13px 28px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 0 0 10px 10px;
+      transition: background 0.22s, color 0.22s, border-color 0.22s;
+      flex-shrink: 0;
+    }
+    .card-launch:hover {
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.9);
+    }
+    .card-launch-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.22s, background 0.22s, transform 0.22s;
+    }
+    .card-launch:hover .card-launch-icon {
+      border-color: rgba(255,255,255,0.35);
+      transform: translateX(3px);
+    }
+    /* Featured variant */
+    .version-card.featured .card-launch {
+      border-top-color: rgba(212,0,0,0.25);
+      color: rgba(255,140,140,0.7);
+    }
+    .version-card.featured .card-launch:hover {
+      background: rgba(212,0,0,0.1);
+      color: #fff;
+    }
+    .version-card.featured .card-launch .card-launch-icon {
+      border-color: rgba(212,0,0,0.35);
+    }
+    .version-card.featured .card-launch:hover .card-launch-icon {
+      background: rgba(212,0,0,0.2);
+      border-color: rgba(212,0,0,0.6);
     }
 
     /* Card icon decoration */
@@ -664,7 +714,14 @@
         <span class="version-badge ${badgeClass}">${badgeLabel}</span>
         <div class="version-name">${name}</div>
         ${meta ? `<div class="version-meta">${meta}</div>` : ''}
-        <a href="${path}" class="btn ${btnClass}">Open Configurator &rarr;</a>
+        <a href="${path}" class="card-launch">
+          Open Configurator
+          <span class="card-launch-icon">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2.5 6h7M6.5 3l3 3-3 3"/>
+            </svg>
+          </span>
+        </a>
       `;
       return card;
     }
