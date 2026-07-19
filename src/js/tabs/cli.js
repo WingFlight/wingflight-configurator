@@ -46,7 +46,7 @@ tab.initialize = function (callback) {
 
     self.cliEngine = new CliEngine();
 
-    $('#content').load("/src/tabs/cli.html", function () {
+    $('#content').load(`${import.meta.env.BASE_URL}src/tabs/cli.html`, function () {
 
         // translate to user-selected language
         i18n.localizePage();

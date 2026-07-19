@@ -2,7 +2,9 @@ import semver from "semver";
 
 import * as config from "@/js/config.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
+import { mountComponents } from "@/js/main.svelte.js";
 
 globalThis.TABS = {};
 
@@ -14,6 +16,11 @@ if (__BACKEND__ === "nwjs") {
 
     jQuery(function () {
         useGlobalNodeFunctions();
+        appReady();
+    });
+} else if (__BACKEND__ === "web") {
+    // For web backend, initialize when DOM is ready
+    jQuery(function () {
         appReady();
     });
 }
@@ -33,6 +40,9 @@ export function appReady() {
     $('.firmware_b a.flash').removeClass('disabled');
 
     i18n.init().then(function() {
+        // Mount Svelte components after i18n is initialized
+        // This ensures they can use translations immediately
+        mountComponents();
         startProcess();
         initializeSerialBackend();
     });
@@ -145,7 +155,7 @@ export function startProcess() {
     // our view is reactive to model changes
     // updateTopBarVersion();
 
-    if (!GUI.isOther()) {
+    if (!GUI.isOther() && __BACKEND__ !== "web") {
         checkForConfiguratorUpdates();
     }
 
@@ -157,9 +167,7 @@ export function startProcess() {
     // log library versions in console to make version tracking easier
     console.log(`Libraries: jQuery - ${$.fn.jquery}`);
 
-    if (GUI.isCordova()) {
-        UI_PHONES.init();
-    }
+    UI_PHONES.init();
 
     const ui_tabs = $('#tabs > ul');
     $('a', ui_tabs).click(function () {
@@ -376,6 +384,10 @@ export function setDarkTheme(enabled) {
 }
 
 export function checkForConfiguratorUpdates() {
+    if (__BACKEND__ === "web") {
+        return;
+    }
+
     const releaseChecker = new ReleaseChecker('configurator', 'https://api.github.com/repos/WingFlight/wingflight-configurator/releases');
 
     releaseChecker.loadReleaseData(notifyOutdatedVersion);

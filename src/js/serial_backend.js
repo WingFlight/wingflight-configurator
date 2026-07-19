@@ -4,6 +4,75 @@ import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
 
+// Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
+// connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
+// permission the moment DFU is selected -- mirrors Betaflight showing the
+// device chooser immediately on selecting its DFU picker option, rather than
+// waiting for the user to click Flash. Silent (no popup) if a matching device
+// is already authorized, so it's safe to run on every DFU selection.
+async function requestWebUsbDeviceFromPicker() {
+    if (!('usb' in navigator)) {
+        return;
+    }
+
+    try {
+        const isMatch = (d) => usbDevices.filters.some((f) => d.vendorId === f.vendorId && d.productId === f.productId);
+        let device = (await navigator.usb.getDevices()).find(isMatch);
+        if (!device) {
+            device = await navigator.usb.requestDevice({ filters: usbDevices.filters });
+        }
+        console.log(`USB DFU device authorized: ${device.productName}`);
+    } catch (error) {
+        console.warn('WebUSB DFU permission request failed or was cancelled', error);
+    }
+}
+
+// Mirrors Betaflight resetting its selectedDevice back to "noselection" after
+// firing a permission request, success or not -- these options are momentary
+// triggers, never a real, sticky selection. We have no "noselection"
+// placeholder, so fall back to whatever isn't itself one of the trigger
+// options (falling back to one would re-open its picker in a loop the moment
+// .trigger('change') re-fires this same handler).
+function firstNonTriggerPortValue(el) {
+    return el.find('option').not('[value="requestserial"], [value="requestbluetooth"]').first().val();
+}
+
+async function requestWebSerialDeviceFromPicker() {
+    const el = $('div#port-picker #port');
+    const fallbackValue = firstNonTriggerPortValue(el);
+
+    try {
+        const entry = await serial.requestWebSerialPort();
+
+        serial.getDevices((ports) => {
+            PortHandler.updatePortSelect(ports);
+            PortHandler.initialPorts = ports;
+            el.val(entry.path).trigger('change');
+        });
+    } catch (error) {
+        console.warn('Web Serial permission request failed or was cancelled', error);
+        el.val(fallbackValue).trigger('change');
+    }
+}
+
+async function requestWebBluetoothDeviceFromPicker() {
+    const el = $('div#port-picker #port');
+    const fallbackValue = firstNonTriggerPortValue(el);
+
+    try {
+        const entry = await serial.requestBluetoothPort();
+
+        serial.getDevices((ports) => {
+            PortHandler.updatePortSelect(ports);
+            PortHandler.initialPorts = ports;
+            el.val(entry.path).trigger('change');
+        });
+    } catch (error) {
+        console.warn('Web Bluetooth permission request failed or was cancelled', error);
+        el.val(fallbackValue).trigger('change');
+    }
+}
+
 export async function handleConnectClick() {
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
@@ -27,7 +96,7 @@ export async function handleConnectClick() {
         }
 
         if (selectedPort.data().isDFU) {
-            $('select#baud').hide();
+            $('#baudselect').hide();
         } else if (portName !== '0') {
             if (!clicks) {
                 console.log(`${serial.connectionType}: connecting to: ${portName}`);
@@ -82,10 +151,15 @@ export function initializeSerialBackend() {
             $('#firmware-virtual-option').hide();
         }
         if (selected_port.data().isDFU) {
-            $('select#baud').hide();
+            // Hide the whole #baudselect wrapper, not just the <select> --
+            // the wrapping .dropdown.dropdown-dark box still renders its own
+            // styled border/arrow even with the <select> inside it hidden,
+            // which otherwise leaves an empty-looking dropdown box next to
+            // Auto-Connect whenever DFU is selected.
+            $('#baudselect').hide();
         }
         else {
-            $('select#baud').show();
+            $('#baudselect').show();
         }
     };
 
@@ -99,6 +173,21 @@ export function initializeSerialBackend() {
 
     $('div#port-picker #port').on("change", function() {
         GUI.updateManualPortVisibility();
+
+        // Mirrors Betaflight Configurator: choosing this entry is itself the
+        // gesture that shows the browser's native device chooser -- no
+        // separate Connect click needed, same as selecting an "I can't
+        // find..." option does there.
+        if (__BACKEND__ === "web") {
+            const selectedData = $(this).find(':selected').data();
+            if (selectedData.isRequestSerial) {
+                requestWebSerialDeviceFromPicker();
+            } else if (selectedData.isRequestBluetooth) {
+                requestWebBluetoothDeviceFromPicker();
+            } else if (selectedData.isDFU) {
+                requestWebUsbDeviceFromPicker();
+            }
+        }
     });
 
     $('div.connect_controls a.connect').on("click", function () {
@@ -153,8 +242,13 @@ export function initializeSerialBackend() {
     });
 
     // Show all ports
-    if (GUI.operating_system === 'Android') {
-        // port filtering does not work on Android as port names do not get populated on Android
+    if (GUI.operating_system === 'Android' || __BACKEND__ === "web") {
+        // Port filtering does not work on Android as port names do not get
+        // populated there; on the web backend PortHandler.check_serial_devices
+        // already skips the recognized-name filter entirely (every
+        // already-authorized WebSerial device is real and explicitly
+        // user-granted, so there's nothing to filter down from), making this
+        // toggle a no-op.
         GUI.show_all_ports = true;
         $('div #show-all-ports-switch').hide();
     } else {
@@ -231,11 +325,13 @@ function finishClose() {
 }
 
 function setConnectionTimeout() {
-    // disconnect after 10 seconds with error if we don't get IDENT data
+    // After 10 seconds with no IDENT data, the FC either isn't speaking MSP
+    // at all or is already sitting in a CLI shell -- fall back to CLI mode
+    // the same way an explicitly unsupported/invalid firmware version does,
+    // rather than just disconnecting with a log message nobody sees.
     GUI.timeout_add('connecting', function () {
         if (!CONFIGURATOR.connectionValid) {
-            GUI.log(i18n.getMessage('noConfigurationReceived'));
-            $('div.connect_controls a.connect').trigger("click"); // disconnect
+            showConnectWarningDialogAndConnectCli('noConfigurationReceived');
         }
     }, 10000);
 }

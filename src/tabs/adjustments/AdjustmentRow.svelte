@@ -31,7 +31,7 @@
   // legacy's mutable `adjRange.adjType`. It deliberately is NOT re-derived
   // from adjFunction on every change, because a user must be able to select
   // "Mapped"/"Stepped" *before* picking a function (which starts at None).
-  let adjType = $state(
+  let adjType = $derived.by(() =>
     adjRange.adjFunction > 0 ? (adjRange.adjStep > 0 ? 2 : 1) : 0,
   );
 
@@ -118,7 +118,7 @@
     format: wNumb({ decimals: 0 }),
   };
 
-  const initialValSliderOpts = {
+  const initialValSliderOpts = $derived({
     range: { min: adjConfig.min, max: adjConfig.max },
     step: 1,
     connect: true,
@@ -130,7 +130,7 @@
       density: density(adjConfig.min, adjConfig.max, adjConfig.ticks),
       stepped: true,
     },
-  };
+  });
 
   // --- live RC channel visualization ---
 

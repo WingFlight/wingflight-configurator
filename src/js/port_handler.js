@@ -33,6 +33,7 @@ PortHandler.check = function () {
     const self = this;
 
     self.check_usb_devices();
+
     self.check_serial_devices();
 
     GUI.updateManualPortVisibility();
@@ -70,7 +71,7 @@ PortHandler.check_serial_devices = function () {
     const self = this;
 
     serial.getDevices(function(currentPorts) {
-        if (!self.showingAllPorts) {
+        if (__BACKEND__ !== "web" && !self.showingAllPorts) {
             currentPorts = currentPorts.filter((p) => portRecognized(p.displayName, p.path));
         }
         // on initialization of the port selector (i.e. app startup or toggling whether to show all ports), only select a detected port, don't auto-connect
@@ -87,43 +88,18 @@ PortHandler.check_serial_devices = function () {
 
 PortHandler.check_usb_devices = function (callback) {
     const self = this;
+
+    if (__BACKEND__ === "web") {
+        self.check_web_usb_devices(callback);
+        return;
+    }
+
     chrome.usb.getDevices(usbDevices, function (result) {
 
         const dfuElement = self.portPickerElement.children("[value='DFU']");
         if (result?.length) {
             if (!dfuElement.length) {
-                self.portPickerElement.empty();
-                let usbText;
-                if (result[0].productName) {
-                    usbText = (`DFU - ${result[0].productName}`);
-                } else {
-                    usbText = "DFU";
-                }
-
-                self.portPickerElement.append($('<option/>', {
-                    value: "DFU",
-                    text: usbText,
-                    data: {isDFU: true},
-                    // also expose as a real HTML attribute so non-jQuery consumers
-                    // (e.g. the Svelte firmware flasher) can read it via .dataset
-                    'data-is-dfu': 'true',
-                }));
-
-                if (import.meta.env.DEV) {
-                    self.portPickerElement.append($('<option/>', {
-                       value: 'virtual',
-                       text: i18n.getMessage('portsSelectVirtual'),
-                       data: {isVirtual: true},
-                    }));
-                }
-
-                self.portPickerElement.append($('<option/>', {
-                    value: 'manual',
-                    text: i18n.getMessage('portsSelectManual'),
-                    data: {isManual: true},
-                }));
-                self.portPickerElement.val('DFU').change();
-                self.setPortsInputWidth();
+                self.rebuildPortPickerOptions(result[0].productName ? `DFU - ${result[0].productName}` : "DFU");
             }
             self.dfu_available = true;
         } else {
@@ -133,16 +109,84 @@ PortHandler.check_usb_devices = function (callback) {
             }
             self.dfu_available = false;
         }
-        if(callback) {
-            callback(self.dfu_available);
-        }
-        if (!$('option:selected', self.portPickerElement).data().isDFU) {
-            if (!(GUI.connected_to || GUI.connect_lock)) {
-                FC.resetState();
-            }
-            self.portPickerElement.trigger('change');
-        }
+        self.finishUsbDeviceCheck(callback);
     });
+};
+
+// WebUSB has no chrome.usb-style declarative permissions: navigator.usb.getDevices()
+// only reports devices the user has already granted access to via a prior
+// requestDevice() gesture (triggered later, from the Flash button, since that's a
+// real click). Unlike the nwjs path above, this never touches the port picker's
+// DOM itself -- the "DFU" option is a permanent fixture added by
+// updatePortSelect (like "virtual"/"manual") specifically so it can't race
+// against check_serial_devices's own rebuilds of the same <select> (which is
+// exactly what happened when this used to call a destructive .empty()-based
+// rebuild here: whichever check finished last on a given poll wiped out
+// whatever the other one had just added, intermittently losing the "Web
+// Serial" option entirely). dfu_available itself still reflects real
+// detection, since STM32.connect()'s post-reboot fallback logic depends on it
+// being accurate.
+PortHandler.check_web_usb_devices = async function (callback) {
+    const self = this;
+
+    let matched = [];
+    if ('usb' in navigator) {
+        try {
+            const devices = await navigator.usb.getDevices();
+            matched = devices.filter((d) =>
+                usbDevices.filters.some((f) => f.vendorId === d.vendorId && f.productId === d.productId),
+            );
+        } catch {
+            matched = [];
+        }
+    }
+
+    self.dfu_available = matched.length > 0;
+    self.finishUsbDeviceCheck(callback);
+};
+
+PortHandler.rebuildPortPickerOptions = function (dfuText) {
+    const self = this;
+    self.portPickerElement.empty();
+
+    self.portPickerElement.append($('<option/>', {
+        value: "DFU",
+        text: dfuText,
+        data: {isDFU: true},
+        // also expose as a real HTML attribute so non-jQuery consumers
+        // (e.g. the Svelte firmware flasher) can read it via .dataset
+        'data-is-dfu': 'true',
+    }));
+
+    if (import.meta.env.DEV) {
+        self.portPickerElement.append($('<option/>', {
+           value: 'virtual',
+           text: i18n.getMessage('portsSelectVirtual'),
+           data: {isVirtual: true},
+        }));
+    }
+
+    self.portPickerElement.append($('<option/>', {
+        value: 'manual',
+        text: i18n.getMessage('portsSelectManual'),
+        data: {isManual: true},
+    }));
+    self.portPickerElement.val('DFU').change();
+    self.setPortsInputWidth();
+};
+
+PortHandler.finishUsbDeviceCheck = function (callback) {
+    const self = this;
+
+    if (callback) {
+        callback(self.dfu_available);
+    }
+    if (!$('option:selected', self.portPickerElement).data().isDFU) {
+        if (!(GUI.connected_to || GUI.connect_lock)) {
+            FC.resetState();
+        }
+        self.portPickerElement.trigger('change');
+    }
 };
 
 /**
@@ -275,11 +319,58 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    this.portPickerElement.append($("<option/>", {
-        value: 'manual',
-        text: i18n.getMessage('portsSelectManual'),
-        data: {isManual: true},
-    }));
+    if (__BACKEND__ !== "web") {
+        // Manual entry means typing a raw OS device path or tcp:// address,
+        // which only makes sense against chrome.serial/chrome.sockets.tcp --
+        // neither exists in a real browser, so this option can't do anything
+        // useful (or anything at all) under the web backend.
+        this.portPickerElement.append($("<option/>", {
+            value: 'manual',
+            text: i18n.getMessage('portsSelectManual'),
+            data: {isManual: true},
+        }));
+    }
+
+    if (__BACKEND__ === "web") {
+        // Mirrors Betaflight Configurator's device picker: real,
+        // already-authorized devices (serial + Bluetooth) are listed above as
+        // their own options (populated silently from
+        // navigator.serial.getPorts()/navigator.bluetooth.getDevices(), no
+        // browser prompt), separated from permanent, explicit "request
+        // permission" entries -- selecting one of these immediately calls
+        // navigator.serial.requestPort()/navigator.bluetooth.requestDevice()/
+        // navigator.usb.requestDevice() (see serial_backend.js's port-picker
+        // change handler) and shows the native device chooser. DFU's option
+        // stays a single fixed entry (not enumerated per-device) since
+        // stm32usbdfu.js's connectWebUsb already resolves to whichever
+        // authorized device matches, independent of picker selection.
+        this.portPickerElement.append(
+            $("<option/>", { text: i18n.getMessage('portsSelectPleaseSelect') }).prop('disabled', true),
+        );
+
+        this.portPickerElement.append($("<option/>", {
+            value: "requestserial",
+            text: i18n.getMessage('portsSelectAddSerialDevice'),
+            data: {isRequestSerial: true},
+        }));
+
+        if ('bluetooth' in navigator) {
+            this.portPickerElement.append($("<option/>", {
+                value: "requestbluetooth",
+                text: i18n.getMessage('portsSelectAddBluetoothDevice'),
+                data: {isRequestBluetooth: true},
+            }));
+        }
+
+        this.portPickerElement.append($("<option/>", {
+            value: "DFU",
+            text: i18n.getMessage('portsSelectAddDfuDevice'),
+            data: {isDFU: true},
+            // also expose as a real HTML attribute so non-jQuery consumers
+            // (e.g. the Svelte firmware flasher) can read it via .dataset
+            'data-is-dfu': 'true',
+        }));
+    }
 
     this.setPortsInputWidth();
     return ports;

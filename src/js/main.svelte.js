@@ -2,6 +2,7 @@ import "multiple-select";
 import { mount } from "svelte";
 
 import { Beepers } from "@/js/Beepers.js";
+import { installChromeStorageShimIfMissing } from "@/js/chromeStorageShim.js";
 import { CliAutoComplete } from "@/js/CliAutoComplete.js";
 import { ConfigInserter } from "@/js/ConfigInserter.js";
 import { DarkTheme } from "@/js/DarkTheme.js";
@@ -33,14 +34,56 @@ import * as utilsCommon from "@/js/utils/common.js";
 import "@/js/injected_methods.js";
 import "@/js/tabs/index.js";
 
+// Import all CSS files for proper styling
+// Node modules CSS
+import "jbox/dist/jBox.min.css";
+import "switchery-latest/dist/switchery.min.css";
+import "select2/dist/css/select2.min.css";
+
+// Core CSS files
 import "multiple-select/dist/multiple-select.css";
 import "nouislider/dist/nouislider.css";
 import "@/css/slider.css";
 import "@/css/app.css";
+import "@/css/main.css";
+import "@/css/dark-theme.css";
+
+// Tab-specific CSS (only existing files)
+import "@/css/tabs/static_tab.css";
+import "@/css/tabs/help.css";
+import "@/css/tabs/cli.css";
+import "@/css/tabs/presets.css";
+
+// Component CSS
+import "@/css/dropdown-lists/css/style_lists.css";
+import "@/css/switchery_custom.css";
+import "@/css/select2_custom.css";
 
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
+
+// FirmwareCache/release_checker/FirmwareFlasher all persist via
+// chrome.storage.local unconditionally, which only exists under the
+// nwjs/cordova backends. Install a localStorage-backed shim before any tab
+// can mount so the Firmware Flasher tab doesn't crash under a plain
+// browser (the "web" backend).
+installChromeStorageShimIfMissing();
+
+// Browser compatibility check for web deployment
+if (__BACKEND__ === "web") {
+  const { initBrowserCompat } = await import("@/js/browser-compat.js");
+  initBrowserCompat({
+    showBanner: true,
+    containerId: "app",
+  });
+
+  if (import.meta.env.PROD && "serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js", { scope: "./" });
+    });
+  }
+}
 
 globalThis.GUI = new GuiControl();
 
@@ -77,10 +120,16 @@ Object.assign(globalThis, {
   usbDevices,
 });
 
-mount(BatteryLegend, { target: document.querySelector("#battery-legend") });
-mount(StatusBar, { target: document.querySelector("#status-bar") });
-mount(Logo, { target: document.querySelector("#logo-desktop") });
-mount(Logo, { target: document.querySelector("#logo-mobile") });
+/**
+ * Mount Svelte components after i18n is initialized
+ * This prevents components from trying to use i18n before it's ready
+ */
+export function mountComponents() {
+  mount(BatteryLegend, { target: document.querySelector("#battery-legend") });
+  mount(StatusBar, { target: document.querySelector("#status-bar") });
+  mount(Logo, { target: document.querySelector("#logo-desktop") });
+  mount(Logo, { target: document.querySelector("#logo-mobile") });
+}
 
 if (__BACKEND__ === "cordova") {
   (async () => {

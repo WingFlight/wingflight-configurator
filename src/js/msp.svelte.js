@@ -370,7 +370,7 @@ export const MSP = {
                 if (!serial.connected || CONFIGURATOR.cliEngineActive) {
                     console.log('Cancelling MSP request');
 
-                    const i = MSP.callbacks.findIndex(obj);
+                    const i = MSP.callbacks.indexOf(obj);
                     MSP.callbacks.splice(i, 1);
                     clearInterval(obj.timer);
 
@@ -381,7 +381,7 @@ export const MSP = {
                     return;
                 }
 
-                serial.send(bufferOut, false);
+                serial.send(bufferOut);
             }, 2500); // we should be able to define timeout in the future
         }
 

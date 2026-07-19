@@ -36,13 +36,13 @@
   // all of these and writes one whole rule object, matching mixer.js's
   // commit(), including its "any touched field defaults the displayed
   // operator to Set" behaviour for a still-blank row.
-  let dst = $state(rule.dst);
-  let oper = $state(rule.oper || Mixer.OP_SET);
-  let src = $state(rule.src);
-  let curve = $state(rule.curve);
-  let offset = $state(rule.offset);
-  let speed = $state(rule.speed);
-  let condition = $state(rule.condition);
+  let dst = $state();
+  let oper = $state();
+  let src = $state();
+  let curve = $state();
+  let offset = $state();
+  let speed = $state();
+  let condition = $state();
   let weight = $state(0);
   let differential = $state(0);
   let reverse = $state(false);
