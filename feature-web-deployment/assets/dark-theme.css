@@ -28,7 +28,7 @@
 }
 
 html[data-theme=dark] .background_paper {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/paper-dark.png);
+    background-image: url(/feature-web-deployment/images/paper-dark.png);
 }
 
 html[data-theme=dark] body {
@@ -114,24 +114,24 @@ html[data-theme=dark] .default_btn a.disabled {
 }
 
 html[data-theme=dark] .helpicon {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/icons/cf_icon_info_white.svg);
+    background-image: url(/feature-web-deployment/images/icons/cf_icon_info_white.svg);
     opacity: 0.3;
 }
 html[data-theme=dark] .cf .helpicon {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
+    background-image: url(/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
     opacity: 0.4;
 }
 html[data-theme=dark] .cf .helpicon:hover {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
+    background-image: url(/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
     opacity: 1;
 }
 
 html[data-theme=dark] .gui_box_titlebar .helpicon {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
+    background-image: url(/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
 }
 
 html[data-theme=dark] .subtitle .helpicon {
-    background-image: url(/wingflight-configurator/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
+    background-image: url(/feature-web-deployment/images/icons/cf_icon_info_grey.svg);
 }
 
 html[data-theme=dark] .cf_table td {

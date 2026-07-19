@@ -134,7 +134,7 @@ html[data-theme="dark"] .tab-presets .ms-drop {
   background-color: rgba(0, 0, 0, 0.8);
   margin-top: 0;
   flex-grow: 1;
-  background-image: url("/wingflight-configurator/feature-web-deployment/images/light-wide-1.svg");
+  background-image: url("/feature-web-deployment/images/light-wide-1.svg");
   background-repeat: no-repeat;
   background-position: 50% 80%;
   background-size: 600px;
@@ -352,7 +352,7 @@ html[data-theme="dark"] .tab-presets .ms-drop {
   height: 28px;
   margin-right: 12px;
   background-repeat: no-repeat;
-  background-image: url(../../../wingflight-configurator/feature-web-deployment/images/icons/cf_icon_search_rf_blue.svg);
+  background-image: url(../../../feature-web-deployment/images/icons/cf_icon_search_rf_blue.svg);
 }
 #presets_search_bar_wrapper {
   display: flex;
@@ -674,7 +674,7 @@ html[data-theme="dark"] .tab-presets .ms-drop {
 }
 
 .preset_panel_star {
-  background-image: url(../../../wingflight-configurator/feature-web-deployment/images/icons/star_rf_blue.svg);
+  background-image: url(../../../feature-web-deployment/images/icons/star_rf_blue.svg);
   width: 25px;
   min-width: 25px;
   height: 25px;
@@ -778,7 +778,7 @@ html[data-theme="dark"] .tab-presets .ms-drop {
 }
 
 .presets_source_panel_no_editing_selected {
-  background-image: url(../../../wingflight-configurator/feature-web-deployment/images/icons/cf_icon_check_rf_blue.svg);
+  background-image: url(../../../feature-web-deployment/images/icons/cf_icon_check_rf_blue.svg);
   width: 30px;
   height: 30px;
   display: inline-block;
