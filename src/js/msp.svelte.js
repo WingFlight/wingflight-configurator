@@ -381,7 +381,7 @@ export const MSP = {
                     return;
                 }
 
-                serial.send(bufferOut, false);
+                serial.send(bufferOut);
             }, 2500); // we should be able to define timeout in the future
         }
 
