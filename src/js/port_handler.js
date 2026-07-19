@@ -345,7 +345,7 @@ PortHandler.updatePortSelect = function (ports) {
         // stm32usbdfu.js's connectWebUsb already resolves to whichever
         // authorized device matches, independent of picker selection.
         this.portPickerElement.append(
-            $("<option/>", { text: '──────────' }).prop('disabled', true),
+            $("<option/>", { text: i18n.getMessage('portsSelectPleaseSelect') }).prop('disabled', true),
         );
 
         this.portPickerElement.append($("<option/>", {
