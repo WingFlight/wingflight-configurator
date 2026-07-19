@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "type": "stable",
+      "name": "Latest Stable",
+      "path": "./bundle/",
+      "tag": "v0.1.0",
+      "date": "2026-07-19",
+      "notes": "Recommended for all users"
+    },
+    {
+      "type": "master",
+      "name": "master",
+      "path": "./master/",
+      "date": "2026-07-19",
+      "notes": "Latest development build"
+    }
+  ]
+}
