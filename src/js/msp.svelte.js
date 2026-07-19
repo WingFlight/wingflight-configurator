@@ -370,7 +370,7 @@ export const MSP = {
                 if (!serial.connected || CONFIGURATOR.cliEngineActive) {
                     console.log('Cancelling MSP request');
 
-                    const i = MSP.callbacks.findIndex(obj);
+                    const i = MSP.callbacks.indexOf(obj);
                     MSP.callbacks.splice(i, 1);
                     clearInterval(obj.timer);
 
