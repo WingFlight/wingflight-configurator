@@ -2,8 +2,11 @@ name: Snapshot
 
 on:
   push:
-    tags:
-      - 'snapshot/*'
+    branches:
+      # Disabled native compiler workflow. Previous active tags:
+      # tags:
+      #   - 'snapshot/*'
+      - 'disabled/native-compiler-workflows-do-not-run'
 
 jobs:
 
@@ -408,4 +411,3 @@ jobs:
         gh release create ${{ env.GIT_TAG }} --prerelease --notes-file Notes.md --title "Wingflight Configurator Snapshot ${{ env.GIT_VER }}" wingflight-configurator*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
