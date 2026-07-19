@@ -158,7 +158,7 @@ PortHandler.rebuildPortPickerOptions = function (dfuText) {
         'data-is-dfu': 'true',
     }));
 
-    if (__BACKEND__ === "web" || import.meta.env.DEV) {
+    if (import.meta.env.DEV) {
         self.portPickerElement.append($('<option/>', {
            value: 'virtual',
            text: i18n.getMessage('portsSelectVirtual'),
@@ -311,7 +311,7 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    if (__BACKEND__ === "web" || import.meta.env.DEV) {
+    if (import.meta.env.DEV) {
         this.portPickerElement.append($("<option/>", {
            value: 'virtual',
            text: i18n.getMessage('portsSelectVirtual'),
