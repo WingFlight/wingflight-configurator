@@ -57,33 +57,37 @@ const publicAssetPrefixes = [
 ];
 
 const legacyBrowserScripts = [
-  ["node_modules/lru_map/lru.js", "node_modules/lru_map/lru.js"],
-  [
-    "node_modules/jquery/dist/jquery.min.js",
-    "node_modules/jquery/dist/jquery.min.js",
-  ],
-  ["node_modules/jbox/dist/jBox.min.js", "node_modules/jbox/dist/jBox.min.js"],
+  ["node_modules/lru_map/lru.js", "assets/vendor/lru.js"],
+  ["node_modules/jquery/dist/jquery.min.js", "assets/vendor/jquery.min.js"],
+  ["node_modules/jbox/dist/jBox.min.js", "assets/vendor/jBox.min.js"],
   [
     "node_modules/jquery-ui-npm/jquery-ui.min.js",
-    "node_modules/jquery-ui-npm/jquery-ui.min.js",
+    "assets/vendor/jquery-ui.min.js",
   ],
   [
     "node_modules/switchery-latest/dist/switchery.min.js",
-    "node_modules/switchery-latest/dist/switchery.min.js",
+    "assets/vendor/switchery.min.js",
   ],
   [
     "node_modules/jquery-textcomplete/dist/jquery.textcomplete.min.js",
-    "node_modules/jquery-textcomplete/dist/jquery.textcomplete.min.js",
+    "assets/vendor/jquery.textcomplete.min.js",
   ],
   [
     "node_modules/jquery-touchswipe/jquery.touchSwipe.min.js",
-    "node_modules/jquery-touchswipe/jquery.touchSwipe.min.js",
+    "assets/vendor/jquery.touchSwipe.min.js",
   ],
   [
     "node_modules/select2/dist/js/select2.min.js",
-    "node_modules/select2/dist/js/select2.min.js",
+    "assets/vendor/select2.min.js",
   ],
 ];
+
+const legacyBrowserScriptRewrites = new Map(
+  legacyBrowserScripts.map(([sourcePath, targetPath]) => [
+    `/${sourcePath.replaceAll("\\", "/")}`,
+    `/${targetPath.replaceAll("\\", "/")}`,
+  ]),
+);
 
 const publicSymlinkTargets = [
   ["images", "src/images"],
@@ -160,6 +164,13 @@ function normalizeDuplicateBasePath(content) {
   const duplicatePrefix = `${normalizedBasePath}${normalizedBasePath}`;
 
   return content.replaceAll(duplicatePrefix, normalizedBasePath);
+}
+
+function rewriteLegacyBrowserScriptUrls(content) {
+  return Array.from(legacyBrowserScriptRewrites.entries()).reduce(
+    (result, [from, to]) => result.replaceAll(from, to),
+    content,
+  );
 }
 
 function createSymlinkTargetMiddleware(root) {
@@ -387,6 +398,8 @@ export default defineConfig({
             let rewrittenContent = rewritePublicAssetUrls(fileContent, {
               css: output.fileName.endsWith(".css"),
             });
+
+            rewrittenContent = rewriteLegacyBrowserScriptUrls(rewrittenContent);
 
             if (output.fileName.endsWith(".html")) {
               rewrittenContent = rewriteInlineCssDataUris(rewrittenContent);
