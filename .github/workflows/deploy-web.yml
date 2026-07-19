@@ -136,6 +136,32 @@ jobs:
           dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
+            entries.append({'version': 'latest', 'path': 'latest/', 'latest': True})
+            dirs.remove('latest')
+
+          version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
+
+          version_dirs = sorted(
+            [d for d in dirs if version_pattern.match(d)],
+            reverse=True,
+          )
+          branch_dirs = sorted(d for d in dirs if d not in version_dirs)
+
+          entries.extend(
+            {'version': version, 'path': f'{version}/', 'latest': False}
+            for version in version_dirs
+          )
+          entries.extend(
+            {'version': branch, 'path': f'{branch}/', 'latest': False}
+            for branch in branch_dirs
+          )
+
+          with open('versions.json', 'w', encoding='utf-8') as handle:
+            json.dump(entries, handle, indent=2)
+            handle.write('\n')
+          EOF
+
+      - name: Commit GitHub Pages changes
         shell: bash
         run: |
           cd pages
@@ -204,6 +230,32 @@ jobs:
           dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
+            entries.append({'version': 'latest', 'path': 'latest/', 'latest': True})
+            dirs.remove('latest')
+
+          version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
+
+          version_dirs = sorted(
+            [d for d in dirs if version_pattern.match(d)],
+            reverse=True,
+          )
+          branch_dirs = sorted(d for d in dirs if d not in version_dirs)
+
+          entries.extend(
+            {'version': version, 'path': f'{version}/', 'latest': False}
+            for version in version_dirs
+          )
+          entries.extend(
+            {'version': branch, 'path': f'{branch}/', 'latest': False}
+            for branch in branch_dirs
+          )
+
+          with open('versions.json', 'w', encoding='utf-8') as handle:
+            json.dump(entries, handle, indent=2)
+            handle.write('\n')
+          EOF
+
+      - name: Commit Cleanup Changes
         shell: bash
         run: |
           cd pages
