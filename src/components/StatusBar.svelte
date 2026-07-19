@@ -33,7 +33,10 @@
       {FC.CONFIG.flightControllerIdentifier}
     </span>
   {/if}
-  <span>{$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}</span>
+  <span class="configurator-version">
+    <span>{$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}</span>
+    <span class="build-label">Branch/tag: {CONFIGURATOR.buildLabel}</span>
+  </span>
 </div>
 
 <style lang="scss">
@@ -70,5 +73,17 @@
       padding: 0 12px;
       flex-shrink: 0;
     }
+  }
+
+  .configurator-version {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 10px;
+  }
+
+  .build-label {
+    font-size: 10px;
+    opacity: 0.75;
   }
 </style>

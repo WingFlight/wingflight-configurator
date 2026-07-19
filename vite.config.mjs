@@ -13,6 +13,14 @@ const commitHash = child_process
   .toString()
   .trim();
 
+const buildLabel =
+  process.env.VITE_APP_BUILD_LABEL ||
+  child_process
+    .execSync("git branch --show-current || git describe --tags --exact-match")
+    .toString()
+    .trim() ||
+  commitHash;
+
 const getBackend = () => {
   const mode = process.env.VITE_APP_BACKEND || "nwjs";
   if (["nwjs", "cordova", "web"].includes(mode)) {
@@ -423,6 +431,7 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_LABEL__: JSON.stringify(buildLabel),
     __BACKEND__: JSON.stringify(backend),
     __COMMIT_HASH__: JSON.stringify(commitHash),
   },

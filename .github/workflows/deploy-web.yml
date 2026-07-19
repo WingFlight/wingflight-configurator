@@ -98,6 +98,7 @@ jobs:
         env:
           VITE_APP_BACKEND: web
           VITE_APP_VERSION: ${{ steps.path.outputs.deploy_path }}
+          VITE_APP_BUILD_LABEL: ${{ github.ref_name }}
         run: pnpm exec vite build
 
       - name: Checkout GitHub Pages branch
