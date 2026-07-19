@@ -136,8 +136,22 @@ jobs:
           dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
-            entries.append({'version': 'latest', 'path': 'latest/', 'latest': True})
+            entries.append({
+              'type': 'stable',
+              'name': 'Latest Stable',
+              'path': './latest/',
+              'notes': 'Recommended for all users',
+            })
             dirs.remove('latest')
+
+          if 'master' in dirs:
+            entries.append({
+              'type': 'master',
+              'name': 'master',
+              'path': './master/',
+              'notes': 'Latest development build',
+            })
+            dirs.remove('master')
 
           version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
 
@@ -148,16 +162,16 @@ jobs:
           branch_dirs = sorted(d for d in dirs if d not in version_dirs)
 
           entries.extend(
-            {'version': version, 'path': f'{version}/', 'latest': False}
+            {'type': 'release', 'name': version, 'path': f'./{version}/'}
             for version in version_dirs
           )
           entries.extend(
-            {'version': branch, 'path': f'{branch}/', 'latest': False}
+            {'type': 'branch', 'name': branch, 'path': f'./{branch}/'}
             for branch in branch_dirs
           )
 
           with open('versions.json', 'w', encoding='utf-8') as handle:
-            json.dump(entries, handle, indent=2)
+            json.dump({'entries': entries}, handle, indent=2)
             handle.write('\n')
           EOF
 
@@ -230,8 +244,22 @@ jobs:
           dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
 
           if 'latest' in dirs:
-            entries.append({'version': 'latest', 'path': 'latest/', 'latest': True})
+            entries.append({
+              'type': 'stable',
+              'name': 'Latest Stable',
+              'path': './latest/',
+              'notes': 'Recommended for all users',
+            })
             dirs.remove('latest')
+
+          if 'master' in dirs:
+            entries.append({
+              'type': 'master',
+              'name': 'master',
+              'path': './master/',
+              'notes': 'Latest development build',
+            })
+            dirs.remove('master')
 
           version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
 
@@ -242,16 +270,16 @@ jobs:
           branch_dirs = sorted(d for d in dirs if d not in version_dirs)
 
           entries.extend(
-            {'version': version, 'path': f'{version}/', 'latest': False}
+            {'type': 'release', 'name': version, 'path': f'./{version}/'}
             for version in version_dirs
           )
           entries.extend(
-            {'version': branch, 'path': f'{branch}/', 'latest': False}
+            {'type': 'branch', 'name': branch, 'path': f'./{branch}/'}
             for branch in branch_dirs
           )
 
           with open('versions.json', 'w', encoding='utf-8') as handle:
-            json.dump(entries, handle, indent=2)
+            json.dump({'entries': entries}, handle, indent=2)
             handle.write('\n')
           EOF
 
