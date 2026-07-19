@@ -34,6 +34,10 @@
       FC.FILTER_CONFIG.gyro_lowpass_dyn_min_hz <
         FC.FILTER_CONFIG.gyro_lowpass_dyn_max_hz,
   );
+  const lowpass1DynEnabledInitial =
+    FC.FILTER_CONFIG.gyro_lowpass_dyn_min_hz > 0 &&
+    FC.FILTER_CONFIG.gyro_lowpass_dyn_min_hz <
+      FC.FILTER_CONFIG.gyro_lowpass_dyn_max_hz;
 
   let lowpass2Enabled = $derived(FC.FILTER_CONFIG.gyro_lowpass2_type > 0);
 
