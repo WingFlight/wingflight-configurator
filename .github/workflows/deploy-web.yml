@@ -124,39 +124,38 @@ jobs:
           mkdir -p pages/latest
           cp -R bundle/. pages/latest/
 
-      - name: Generate deployment index
+      - name: Generate versions.json
         shell: bash
         run: |
           cd pages
+          python3 - <<'EOF'
+          import json, os, re
 
-          {
-            echo '<!doctype html>'
-            echo '<html lang="en">'
-            echo '<head>'
-            echo '  <meta charset="utf-8">'
-            echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
-            echo '  <title>Wingflight Configurator Deployments</title>'
-            echo '  <style>'
-            echo '    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 3rem auto; max-width: 52rem; padding: 0 1rem; line-height: 1.5; }'
-            echo '    h1 { margin-bottom: 0.25rem; }'
-            echo '    .note { background: #eef6ff; border: 1px solid #b8dcff; border-radius: 0.5rem; padding: 1rem; }'
-            echo '    li { margin: 0.35rem 0; }'
-            echo '  </style>'
-            echo '</head>'
-            echo '<body>'
-            echo '  <h1>Wingflight Configurator Deployments</h1>'
-            echo '  <p class="note">Web Serial requires a Chromium-based browser and HTTPS. GitHub Pages provides HTTPS automatically.</p>'
-            echo '  <ul>'
-            for dir in */ ; do
-              name="${dir%/}"
-              if [ -f "$dir/index.html" ]; then
-                echo "    <li><a href=\"./$name/\">$name</a></li>"
-              fi
-            done | sort
-            echo '  </ul>'
-            echo '</body>'
-            echo '</html>'
-          } > index.html
+          entries = []
+          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.exists(os.path.join(d, 'index.html'))]
+
+          if 'latest' in dirs:
+              entries.append({"type": "stable", "name": "Latest Stable", "path": "./latest/", "notes": "Recommended for all users"})
+
+          if 'master' in dirs:
+              entries.append({"type": "master", "name": "master", "path": "./master/", "notes": "Latest development build"})
+
+          semver_dirs = sorted(
+              [d for d in dirs if re.match(r'^\d+\.\d+\.\d+$', d)],
+              key=lambda v: [int(x) for x in v.split('.')],
+              reverse=True
+          )
+          for d in semver_dirs:
+              entries.append({"type": "release", "name": f"v{d}", "tag": f"v{d}", "path": f"./{d}/"})
+
+          exclude = {'latest', 'master'} | set(semver_dirs)
+          for d in sorted(d for d in dirs if d not in exclude):
+              entries.append({"type": "branch", "name": d, "path": f"./{d}/"})
+
+          with open('versions.json', 'w') as f:
+              json.dump({"entries": entries}, f, indent=2)
+              f.write('\n')
+          EOF
 
       - name: Commit deployment
         shell: bash
@@ -215,39 +214,38 @@ jobs:
             echo "No deployment found for pages/$DEPLOY_PATH"
           fi
 
-      - name: Regenerate deployment index
+      - name: Regenerate versions.json
         shell: bash
         run: |
           cd pages
+          python3 - <<'EOF'
+          import json, os, re
 
-          {
-            echo '<!doctype html>'
-            echo '<html lang="en">'
-            echo '<head>'
-            echo '  <meta charset="utf-8">'
-            echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
-            echo '  <title>Wingflight Configurator Deployments</title>'
-            echo '  <style>'
-            echo '    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 3rem auto; max-width: 52rem; padding: 0 1rem; line-height: 1.5; }'
-            echo '    h1 { margin-bottom: 0.25rem; }'
-            echo '    .note { background: #eef6ff; border: 1px solid #b8dcff; border-radius: 0.5rem; padding: 1rem; }'
-            echo '    li { margin: 0.35rem 0; }'
-            echo '  </style>'
-            echo '</head>'
-            echo '<body>'
-            echo '  <h1>Wingflight Configurator Deployments</h1>'
-            echo '  <p class="note">Web Serial requires a Chromium-based browser and HTTPS. GitHub Pages provides HTTPS automatically.</p>'
-            echo '  <ul>'
-            for dir in */ ; do
-              name="${dir%/}"
-              if [ -f "$dir/index.html" ]; then
-                echo "    <li><a href=\"./$name/\">$name</a></li>"
-              fi
-            done | sort
-            echo '  </ul>'
-            echo '</body>'
-            echo '</html>'
-          } > index.html
+          entries = []
+          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.exists(os.path.join(d, 'index.html'))]
+
+          if 'latest' in dirs:
+              entries.append({"type": "stable", "name": "Latest Stable", "path": "./latest/", "notes": "Recommended for all users"})
+
+          if 'master' in dirs:
+              entries.append({"type": "master", "name": "master", "path": "./master/", "notes": "Latest development build"})
+
+          semver_dirs = sorted(
+              [d for d in dirs if re.match(r'^\d+\.\d+\.\d+$', d)],
+              key=lambda v: [int(x) for x in v.split('.')],
+              reverse=True
+          )
+          for d in semver_dirs:
+              entries.append({"type": "release", "name": f"v{d}", "tag": f"v{d}", "path": f"./{d}/"})
+
+          exclude = {'latest', 'master'} | set(semver_dirs)
+          for d in sorted(d for d in dirs if d not in exclude):
+              entries.append({"type": "branch", "name": d, "path": f"./{d}/"})
+
+          with open('versions.json', 'w') as f:
+              json.dump({"entries": entries}, f, indent=2)
+              f.write('\n')
+          EOF
 
       - name: Commit cleanup
         shell: bash
