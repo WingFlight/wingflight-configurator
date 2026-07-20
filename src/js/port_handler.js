@@ -13,6 +13,8 @@ export const PortHandler = new function () {
     this.port_removed_callbacks = [];
     this.dfu_available = false;
     this.showingAllPorts = false;
+    this.lastConnectedPort = null;  // Track the last connected port for auto-reconnect
+    this.reconnectTimeoutId = null; // Track reconnect timeout to prevent multiple attempts
 };
 
 PortHandler.initialize = function (showAllPorts) {
@@ -199,11 +201,23 @@ PortHandler.removePort = function(currentPorts) {
 
     if (removePorts.length) {
         console.log(`PortHandler - Removed: ${JSON.stringify(removePorts)}`);
-        // disconnect "UI" - routine can't fire during atmega32u4 reboot procedure !!!
+        // Handle disconnect and state cleanup for removed ports
         if (GUI.connected_to) {
             for (let i = 0; i < removePorts.length; i++) {
-                if (removePorts[i] === GUI.connected_to) {
-                    $('div#header_btns a.connect').click();
+                if (removePorts[i].path === GUI.connected_to || removePorts[i] === GUI.connected_to) {
+                    // Track the removed port for potential auto-reconnect when it reappears
+                    self.lastConnectedPort = GUI.connected_to;
+                    console.log(`PortHandler - Device disconnected due to removal: ${self.lastConnectedPort}`);
+                    
+                    // Attempt to trigger disconnect button click
+                    const connectBtn = $('div#header_btns a.connect');
+                    if (connectBtn.length) {
+                        connectBtn.click();
+                    } else {
+                        // Fallback: If button click doesn't work (e.g., during reboot), force state cleanup
+                        console.warn('PortHandler - Connect button not found, forcing disconnect state cleanup');
+                        self._forceDisconnectStateCleanup();
+                    }
                 }
             }
         }
@@ -251,14 +265,31 @@ PortHandler.detectPort = function(currentPorts) {
             }
         }
 
-        // auto-connect if enabled
-        if (GUI.auto_connect && !GUI.connecting_to && !GUI.connected_to) {
-            // start connect procedure. We need firmware flasher protection over here
-            if (GUI.active_tab !== 'firmware_flasher') {
-                GUI.timeout_add('auto-connect_timeout', function () {
-                    $('div#header_btns a.connect').click();
-                }, config.get('connectionTimeout') ?? 100); // timeout so bus have time to initialize after being detected by the system
+        // auto-connect if enabled - improved logic for reconnection after device reboot
+        const shouldAutoConnect = GUI.auto_connect && !GUI.connecting_to && !GUI.connected_to && GUI.active_tab !== 'firmware_flasher';
+        const isLastConnectedPortReappearing = self.lastConnectedPort && newPorts.some(p => p.path === self.lastConnectedPort);
+        
+        if (shouldAutoConnect || isLastConnectedPortReappearing) {
+            // Clear the tracked port since we're attempting to reconnect
+            if (isLastConnectedPortReappearing) {
+                console.log(`PortHandler - Previously connected device reappeared, initiating auto-reconnect`);
+                // If the specific port reappeared, select it
+                const portOption = currentPorts.find(p => p.path === self.lastConnectedPort);
+                if (portOption) {
+                    self.portPickerElement.val(self.lastConnectedPort);
+                }
+                self.lastConnectedPort = null;
             }
+            
+            // start connect procedure with a delay to allow bus to initialize
+            if (self.reconnectTimeoutId) {
+                clearTimeout(self.reconnectTimeoutId);
+            }
+            const connectionTimeout = config.get('connectionTimeout') ?? 100;
+            self.reconnectTimeoutId = GUI.timeout_add('auto-connect_timeout', function () {
+                self.reconnectTimeoutId = null;
+                $('div#header_btns a.connect').click();
+            }, connectionTimeout);
         }
         // trigger callbacks
         for (let i = (self.port_detected_callbacks.length - 1); i >= 0; i--) {
@@ -390,6 +421,33 @@ PortHandler.selectPort = function(ports) {
             }
         }
     }
+};
+
+/**
+ * Internal helper: Force disconnect state cleanup when normal disconnect flow fails
+ * This is called as a fallback when the connect button click doesn't work during device reboot
+ */
+PortHandler._forceDisconnectStateCleanup = function() {
+    // Directly clear connection state variables
+    GUI.connected_to = false;
+    GUI.connecting_to = false;
+    
+    // Reset CONFIGURATOR connection flags
+    if (typeof CONFIGURATOR !== 'undefined') {
+        CONFIGURATOR.connectionValid = false;
+        CONFIGURATOR.cliEngineValid = false;
+        CONFIGURATOR.cliEngineActive = false;
+    }
+    
+    // Update UI to reflect disconnected state
+    $('div.connect_controls a.connect').removeClass('active');
+    $('div.connect_controls div.connect_state').text(i18n.getMessage('connect'));
+    $('div#port-picker #port').prop('disabled', false);
+    if (!GUI.auto_connect) {
+        $('div#port-picker #baud').prop('disabled', false);
+    }
+    
+    console.log('PortHandler - Forced disconnect state cleanup completed');
 };
 
 PortHandler.setPortsInputWidth = function() {

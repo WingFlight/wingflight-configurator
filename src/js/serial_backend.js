@@ -300,6 +300,7 @@ function finishClose() {
 
     GUI.reboot_in_progress = false;
     GUI.connected_to = false;
+    GUI.connecting_to = false;  // Ensure connecting_to is also cleared for auto-reconnect to work
     GUI.allowedTabs = GUI.defaultAllowedTabsWhenDisconnected.slice();
 
     // close problems dialog
@@ -349,6 +350,12 @@ async function onOpen(openInfo) {
 
         // reset connecting_to
         GUI.connecting_to = false;
+        
+        // Clear port tracking since we've successfully reconnected
+        if (typeof PortHandler !== 'undefined' && PortHandler.lastConnectedPort) {
+            PortHandler.lastConnectedPort = null;
+        }
+        
         GUI.log(i18n.getMessage('serialPortOpened', serial.connectionType === 'serial' ? [serial.connectionId] : [openInfo.socketId]));
 
         // save selected port if the port differs
@@ -433,6 +440,11 @@ function showConnectWarningDialog(messageKey, ...params) {
 function onOpenVirtual() {
     GUI.connected_to = GUI.connecting_to;
     GUI.connecting_to = false;
+
+    // Clear port tracking since we've successfully reconnected
+    if (typeof PortHandler !== 'undefined' && PortHandler.lastConnectedPort) {
+        PortHandler.lastConnectedPort = null;
+    }
 
     CONFIGURATOR.connectionValid = true;
 
