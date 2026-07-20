@@ -171,14 +171,34 @@ export function initializeSerialBackend() {
 
     $('#port-override').val(config.get('portOverride'));
 
-    $('div#port-picker #port').on("change", function() {
+    $('div#port-picker #port').off("change.wfPortPicker").on("change.wfPortPicker", function(event) {
         GUI.updateManualPortVisibility();
 
         // Mirrors Betaflight Configurator: choosing this entry is itself the
         // gesture that shows the browser's native device chooser -- no
         // separate Connect click needed, same as selecting an "I can't
         // find..." option does there.
-        if (__BACKEND__ === "web") {
+        //
+        // Guarded on event.originalEvent (only set for a real, native change
+        // dispatched by the browser from an actual user selection) so that
+        // programmatic `.trigger('change')` calls elsewhere -- e.g.
+        // PortHandler's periodic USB poll, which re-triggers 'change' on
+        // every check to refresh manual-port-visibility state -- never
+        // re-open the native device chooser on their own. Without this, if
+        // the picker's selection ever lands on "Add serial device" (which
+        // happens automatically whenever the authorized-port list is
+        // temporarily empty, e.g. right after a connected device reboots),
+        // the very next poll's synthetic trigger would pop Chrome's blocking
+        // device-selection prompt with no user interaction at all.
+        //
+        // Namespaced (.wfPortPicker) and pre-unbound with .off() so that if
+        // initializeSerialBackend() ever runs more than once for the same
+        // page (e.g. a dev-mode HMR update swapping this module without a
+        // full reload), we don't end up with two listeners stacked on the
+        // same element -- a stale, pre-fix copy left over from an earlier
+        // version of this handler would otherwise keep firing forever
+        // alongside the current one.
+        if (__BACKEND__ === "web" && event.originalEvent) {
             const selectedData = $(this).find(':selected').data();
             if (selectedData.isRequestSerial) {
                 requestWebSerialDeviceFromPicker();

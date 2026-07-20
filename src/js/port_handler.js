@@ -285,11 +285,13 @@ PortHandler.detectPort = function(currentPorts) {
             if (self.reconnectTimeoutId) {
                 clearTimeout(self.reconnectTimeoutId);
             }
-            const connectionTimeout = config.get('connectionTimeout') ?? 100;
+            // [IMPROVED] Use longer delay for device reappearance to ensure USB device and port list stabilize
+            // Regular auto-connect uses connectionTimeout (~100ms), but reconnection needs more time
+            const reconnectDelay = isLastConnectedPortReappearing ? 500 : (config.get('connectionTimeout') ?? 100);
             self.reconnectTimeoutId = GUI.timeout_add('auto-connect_timeout', function () {
                 self.reconnectTimeoutId = null;
                 $('div#header_btns a.connect').click();
-            }, connectionTimeout);
+            }, reconnectDelay);
         }
         // trigger callbacks
         for (let i = (self.port_detected_callbacks.length - 1); i >= 0; i--) {

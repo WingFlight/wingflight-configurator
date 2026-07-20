@@ -160,12 +160,28 @@ export const serial = {
 
     connect: function (path, options, callback) {
         const self = this;
+
+        // "requestserial"/"requestbluetooth"/"DFU" are the port picker's
+        // permission-request trigger options, not real, connectable devices --
+        // they're only meant to be acted on by a genuine user selecting them
+        // (handled in serial_backend.js's picker change listener). If one of
+        // them is still the picker's selected value when connect() is reached
+        // from an unattended path (e.g. the auto-reconnect timer), fail
+        // quietly rather than risk falling through to a requestDevice()-style
+        // fallback that would pop a native browser device chooser with no
+        // user interaction at all.
+        if (__BACKEND__ === "web" && (path === 'requestserial' || path === 'requestbluetooth' || path === 'DFU')) {
+            console.warn(`serial.connect: refusing to auto-connect to reserved picker value "${path}"`);
+            callback?.(false);
+            return;
+        }
+
         const testUrl = path.match(/^tcp:\/\/([A-Za-z0-9.-]+)(?::(\d+))?$/);
         if (testUrl) {
             self.connectTcp(testUrl[1], testUrl[2], options, callback);
         } else if (path === 'virtual') {
             self.connectVirtual(callback);
-        } else if (__BACKEND__ === "web" && (path === 'requestbluetooth' || path.startsWith('bluetooth_'))) {
+        } else if (__BACKEND__ === "web" && path.startsWith('bluetooth_')) {
             self.connectWebBluetooth(path, callback);
         } else {
             self.connectSerial(path, options, callback);
@@ -317,7 +333,21 @@ export const serial = {
         try {
             let entry = self.webSerialPorts.find((p) => p.path === path);
             if (!entry) {
-                entry = await self.requestWebSerialPort();
+                // Cache miss (e.g. reconnecting to a device whose port list
+                // hasn't been refreshed since it reappeared) -- refresh from
+                // the browser before giving up.
+                await self.loadWebSerialPorts();
+                entry = self.webSerialPorts.find((p) => p.path === path);
+            }
+
+            if (!entry) {
+                // Deliberately not falling back to requestWebSerialPort() here:
+                // that shows Chrome's native device chooser, which would pop
+                // up unattended during auto-reconnect. Fail quietly instead
+                // and let the user retry/select manually.
+                console.warn(`WebSerial port not found: ${path}`);
+                callback?.(false);
+                return;
             }
 
             const port = entry.port;
@@ -399,7 +429,15 @@ export const serial = {
         try {
             let entry = self.bluetoothPorts.find((p) => p.path === path);
             if (!entry) {
-                entry = await self.requestBluetoothPort();
+                // Deliberately not falling back to requestBluetoothPort() here:
+                // that shows the browser's native Bluetooth device chooser,
+                // which would pop up unattended during auto-reconnect. Fail
+                // quietly instead -- pairing a new device is only ever
+                // initiated by a genuine user selection of "Add bluetooth
+                // device" in the picker.
+                console.warn(`WebBluetooth port not found: ${path}`);
+                callback?.(false);
+                return;
             }
 
             const device = entry.port;
