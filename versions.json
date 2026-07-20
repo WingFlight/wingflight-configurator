@@ -5,6 +5,11 @@
       "name": "master",
       "path": "./master/",
       "notes": "Latest development build"
+    },
+    {
+      "type": "branch",
+      "name": "feature-master-gain",
+      "path": "./feature-master-gain/"
     }
   ]
 }
