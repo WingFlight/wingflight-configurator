@@ -2657,6 +2657,9 @@
     "adjustmentsGroupAccTrim": {
         "message": "Accelerometer Trim"
     },
+    "adjustmentsGroupServoTrims": {
+        "message": "Servo Trims"
+    },
     "adjustmentsGroupSetpointBoost": {
         "message": "Setpoint Boost"
     },
@@ -2830,6 +2833,15 @@
     },
     "adjustmentsFunctionAttHoldGain": {
         "message": "Attitude Hold Gain"
+    },
+    "adjustmentsFunctionServoTrimRoll": {
+        "message": "Servo Trim Roll"
+    },
+    "adjustmentsFunctionServoTrimPitch": {
+        "message": "Servo Trim Pitch"
+    },
+    "adjustmentsFunctionServoTrimYaw": {
+        "message": "Servo Trim Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"

@@ -98,6 +98,9 @@ export function getFunctions() {
         { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
         { id: 87,   name: 'AutoHoverGain',              min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 88,   name: 'AttHoldGain',                min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 89,   name: 'ServoTrimRoll',              min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
+        { id: 90,   name: 'ServoTrimPitch',             min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
+        { id: 91,   name: 'ServoTrimYaw',               min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
     ];
 }
 
@@ -124,6 +127,7 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupStability', ids: [47, 45, 46, 87, 88] },
     { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86] },
     { label: 'adjustmentsGroupAccTrim', ids: [64, 65] },
+    { label: 'adjustmentsGroupServoTrims', ids: [89, 90, 91] },
     { label: 'adjustmentsGroupSetpointBoost', ids: [71, 68, 69, 70] },
     { label: 'adjustmentsGroupCrossCoupling', ids: [63, 61, 62] },
     { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
