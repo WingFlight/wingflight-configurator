@@ -2657,6 +2657,9 @@
     "adjustmentsGroupAccTrim": {
         "message": "Accelerometer Trim"
     },
+    "adjustmentsGroupServoTrims": {
+        "message": "Servo Trims"
+    },
     "adjustmentsGroupSetpointBoost": {
         "message": "Setpoint Boost"
     },
@@ -2830,6 +2833,15 @@
     },
     "adjustmentsFunctionAttHoldGain": {
         "message": "Attitude Hold Gain"
+    },
+    "adjustmentsFunctionServoTrimRoll": {
+        "message": "Servo Trim Roll"
+    },
+    "adjustmentsFunctionServoTrimPitch": {
+        "message": "Servo Trim Pitch"
+    },
+    "adjustmentsFunctionServoTrimYaw": {
+        "message": "Servo Trim Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -4936,6 +4948,9 @@
     },
     "profilesGainCurveHelp": {
         "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+    },
+    "profilesEffectivePidGainsHelp": {
+        "message": "Read-only preview of the PID gains that are actually used after Master Gain scaling. This helps you see the effective tune while adjusting Master Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100. Boost (B) is shown unchanged because Master Gain does not scale it."
     },
     "profilesCrossAxisRelaxGroup": {
         "message": "Cross-axis Relax"
