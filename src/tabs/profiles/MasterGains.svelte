@@ -47,6 +47,7 @@
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
       expertOnly: true,
+      gainMax: 200,
     },
   ];
 
@@ -93,7 +94,7 @@
             <td>
               <NumberInput
                 min="25"
-                max="200"
+                max={axis.gainMax ?? 1000}
                 bind:value={FC.PID_PROFILE[axis.gainKey]}
               />
             </td>
