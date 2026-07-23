@@ -1128,7 +1128,7 @@
         "description": "Message that pops up to describe the REBOOT_REQ arming disable flag"
     },
     "statusArmingDisableFlagsTooltipDSHOT_BITBANG": {
-        "message": "'Bitbanged Dshot' funktioniert nicht richtig. Bitte die Konfiguration auf Timerkonflikte prüfen. Siehe Timer Excel Sheet <a href=\"https://github.com/rotorflight/rotorflight/wiki/Custom-defaults-remapping-spreadsheet\"",
+        "message": "'Bitbanged Dshot' funktioniert nicht richtig. Bitte die Konfiguration auf Timerkonflikte prüfen.",
         "english": "Bitbanged DSHOT is not working properly and the motors can't be controlled. Likely caused by a timer conflict with other features enabled on the flight controller.",
         "description": "Message that pops up to describe the DSHOT_BITBANG arming disable flag"
     },
@@ -1152,7 +1152,7 @@
         "english": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNUNG!</strong> <strong>ARMING ist AKTIV.</strong> Fliege niemals mit verbundenem Konfigurator!</strong>",
+        "message": "<strong class=\"message-negative\">WARNUNG!</strong> <strong>ARMING ist AKTIV.</strong> Fliege niemals mit verbundenem Konfigurator!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
     },
     "statusEnableArming": {
@@ -1288,7 +1288,7 @@
         "english": "All settings saved in EEPROM."
     },
     "initialSetupDangerText": {
-        "message": "<strong>Achtung:</strong> Um Verletzungen zu vermeiden <strong>ALLE Rotorblätter entfernen</strong> bevor das System scharfgeschaltet (Arming) wird.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>FLIEGE DEIN FLUGGERÄT NIEMALS MIT ANGESCHLOSSENEM KONFIGURATOR!</strong>",
+        "message": "<strong>Achtung:</strong> Um Verletzungen zu vermeiden <strong>ALLE Rotorblätter entfernen</strong> bevor das System scharfgeschaltet (Arming) wird.<strong class=\"message-negative\"><br/>FLIEGE DEIN FLUGGERÄT NIEMALS MIT ANGESCHLOSSENEM KONFIGURATOR!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
     },
     "initialSetupDangerTitle": {
@@ -1991,7 +1991,7 @@
         "english": "<span class=\"message-negative\">Warning:</span> The PID Controlled is in the new <b>PID Mode 3</b> with HSI."
     },
     "profilesPIDModeCustomWarning": {
-        "message": "<span class=\"message-negative\">Warnung:</span> Der PID-Regler ist manuell mit Parametern konfiguriert, die hier nicht dargestellt werden können .<br>Bitte verwende das <b>CLI</b um die PID-Einstellungen zu ändern.",
+        "message": "<span class=\"message-negative\">Warnung:</span> Der PID-Regler ist manuell mit Parametern konfiguriert, die hier nicht dargestellt werden können .<br>Bitte verwende das <b>CLI</b> um die PID-Einstellungen zu ändern.",
         "english": "<span class=\"message-negative\">Warning:</span> The PID Controller is configured manually with parameters that can't be expressed here.<br>Please use the <b>CLI</b> to change the PID settings."
     },
     "profilesPIDGains": {
@@ -4596,7 +4596,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Hinweis:</strong> Beim Verlassen der CLI-Registerkarte oder beim Klicken des Feldes \"Trennen\" wird <strong>Automatisch</strong>  <strong>Beenden</strong> an den Flight-Controller gesendet. Mit der neuesten Firmware wird dieser dadurch <strong>neu gestartet</strong> und nicht gespeicherte Änderungen gehen <strong>verloren</strong>. <p><strong><span class=\"message-negative\">Warnung:</span></strong> Einige CLI-Befehle können dazu führen, dass willkürliche Signale an die ESCs gesendet werden. Dadurch könnten die Motoren anlaufen, wenn ein Akku angeschlossen ist. <strong>Bevor Befehle ins CLI eingegeben werden muss unbedingt sichergestellt werden, dass kein Akku angeschlossen ist.</strong>",
+        "message": "<strong>Hinweis:</strong> Beim Verlassen der CLI-Registerkarte oder beim Klicken des Feldes \"Trennen\" wird <strong>Automatisch</strong>  <strong>Beenden</strong> an den Flight-Controller gesendet. Mit der neuesten Firmware wird dieser dadurch <strong>neu gestartet</strong> und nicht gespeicherte Änderungen gehen <strong>verloren</strong>. <br /><br /><strong><span class=\"message-negative\">Warnung:</span></strong> Einige CLI-Befehle können dazu führen, dass willkürliche Signale an die ESCs gesendet werden. Dadurch könnten die Motoren anlaufen, wenn ein Akku angeschlossen ist. <strong>Bevor Befehle ins CLI eingegeben werden muss unbedingt sichergestellt werden, dass kein Akku angeschlossen ist.</strong>",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -5197,7 +5197,7 @@
         "english": "You are about to flash a <strong>development build of the firmware</strong>. These builds are a work-in-progress, and any of the following can be the case:<strong><ul><li>the firmware does not work at all;</li><li>the firmware is not flyable;</li><li>there are safety issues with the firmware, for example flyaways</li><li>the firmware can cause the flight controller to become unresponsive, or damaged</li></ul></strong>If you proceed with flashing this firmware, <strong>you are assuming full responsibility for the risk of any of the above happening</strong>. Furthermore you acknowledge that it is necessary to perform <strong>thorough bench tests with rotor blades removed</strong> before any attempts to fly this firmware."
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "Ich habe Obenstehendes gelesen und <strong>ich übernehme die volle Verantwortung<strong> für das Flashen der instabilen Firmware",
+        "message": "Ich habe Obenstehendes gelesen und <strong>ich übernehme die volle Verantwortung</strong> für das Flashen der instabilen Firmware",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {

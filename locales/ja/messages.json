@@ -1397,7 +1397,7 @@
         "status": "New entry. Please translate!"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
+        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -1564,7 +1564,7 @@
         "status": "New entry. Please translate!"
     },
     "initialSetupDangerText": {
-        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
+        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -5788,7 +5788,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>注:</strong> CLI: コマンドライン タブを離れるか、切断を押すと<strong>自動的</strong>にFCボードへ \"<strong>exit</strong>\" 命令を送ります。最新ファームウェアでは、これによりコントローラが<strong>再起動</strong>し、保存していない設定変更はすべて<strong>失われます</strong>。<p><strong><span class=\"message-negative\">警告:</span></strong> CLIのコマンドによっては、モーター出力ピンに任意の信号が送信される場合があります。バッテリーが接続されていると、モーターが回転する可能性があります。したがって<strong>CLIでコマンドを入力する前に、バッテリーが接続されていないという確認</strong>を強くお勧めします。",
+        "message": "<strong>注:</strong> CLI: コマンドライン タブを離れるか、切断を押すと<strong>自動的</strong>にFCボードへ \"<strong>exit</strong>\" 命令を送ります。最新ファームウェアでは、これによりコントローラが<strong>再起動</strong>し、保存していない設定変更はすべて<strong>失われます</strong>。<br /><br /><strong><span class=\"message-negative\">警告:</span></strong> CLIのコマンドによっては、モーター出力ピンに任意の信号が送信される場合があります。バッテリーが接続されていると、モーターが回転する可能性があります。したがって<strong>CLIでコマンドを入力する前に、バッテリーが接続されていないという確認</strong>を強くお勧めします。",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -6481,7 +6481,7 @@
         }
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "上記を確認し、<strong>自己責任において<strong>未検証ファームウェアをフラッシュします",
+        "message": "上記を確認し、<strong>自己責任において</strong>未検証ファームウェアをフラッシュします",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {

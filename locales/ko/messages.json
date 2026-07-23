@@ -1397,7 +1397,7 @@
         "status": "New entry. Please translate!"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
+        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -1564,7 +1564,7 @@
         "status": "New entry. Please translate!"
     },
     "initialSetupDangerText": {
-        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
+        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -5788,7 +5788,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>노트:</strong> CLI 탭을 빠져 나가거나 연결끊기를 누르면 <strong>자동으로</strong>보드에 \"<strong>exit</strong>\"를 보냅니다. 최신 펌웨어를 사용하면 컨트롤러를 <strong>재시작</strong>하고, 저장되지 않은 변경은 <strong>상실</strong>합니다. <p><strong><span class=\"message-negative\">경고:</span></strong> CLI에서 일부 명령은 임의로 신호를 모터 출력 핀으로 보내는 결과를 초래할 수 있습니다. 이것은 만약 배터리가 연결된 상태에서 모터의 회전을 유발할 수 있습니다. 그러므로 <strong>CLI에서 명령을 입력하기 전에 배터리를 연결하지 말 것을</strong> 강력히 권장합니다.",
+        "message": "<strong>노트:</strong> CLI 탭을 빠져 나가거나 연결끊기를 누르면 <strong>자동으로</strong>보드에 \"<strong>exit</strong>\"를 보냅니다. 최신 펌웨어를 사용하면 컨트롤러를 <strong>재시작</strong>하고, 저장되지 않은 변경은 <strong>상실</strong>합니다. <br /><br /><strong><span class=\"message-negative\">경고:</span></strong> CLI에서 일부 명령은 임의로 신호를 모터 출력 핀으로 보내는 결과를 초래할 수 있습니다. 이것은 만약 배터리가 연결된 상태에서 모터의 회전을 유발할 수 있습니다. 그러므로 <strong>CLI에서 명령을 입력하기 전에 배터리를 연결하지 말 것을</strong> 강력히 권장합니다.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -6481,7 +6481,7 @@
         }
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "나는 위의 내용을 읽었으며 불안정한 펌웨어를 플래시하는 것에 대하여 <strong>모든 책임을 집니다<strong>.",
+        "message": "나는 위의 내용을 읽었으며 불안정한 펌웨어를 플래시하는 것에 대하여 <strong>모든 책임을 집니다</strong>.",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {
