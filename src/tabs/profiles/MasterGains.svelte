@@ -10,6 +10,7 @@
   import Select from "@/components/Select.svelte";
   import {
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
+    adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
   } from "./adjustmentState.js";
@@ -143,7 +144,9 @@
                 {/if}
                 {#if adjustment}
                   <span class="adjustment-badge">
-                    {adjustment.active ? "LIVE" : "ADJ"}
+                    {adjustment.active
+                      ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                      : "ADJ"}
                   </span>
                 {/if}
               </div>
@@ -239,7 +242,7 @@
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
     border-radius: 3px;
     background-color: var(--color-accent, var(--accent));
-    color: var(--color-text-inverse, #000);
+    color: var(--color-text-inverse, #fff);
     font-size: 0.62rem;
     font-weight: 700;
     line-height: 1rem;
