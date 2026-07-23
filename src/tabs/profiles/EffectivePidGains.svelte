@@ -46,6 +46,14 @@
     return curveIndex > 0 ? FC.GAIN_CURVES?.[curveIndex - 1] : null;
   }
 
+  function displayCurveForAxis(axisIndex) {
+    return curveForAxis(axisIndex) ?? GainCurve.nullCurve();
+  }
+
+  function hasConfiguredCurve(axisIndex) {
+    return curveForAxis(axisIndex) != null;
+  }
+
   function runtimeMasterGain(axisIndex) {
     return (
       runtimeGains?.axes?.[axisIndex]?.masterGain ??
@@ -80,10 +88,7 @@
   }
 
   function curveMax(axisIndex) {
-    const curve = curveForAxis(axisIndex);
-    if (!curve) {
-      return GainCurve.Y_MAX;
-    }
+    const curve = displayCurveForAxis(axisIndex);
 
     const masterGains = [
       profileMasterGain(axisIndex),
@@ -123,10 +128,7 @@
     masterGain = runtimeMasterGain(axisIndex),
     termScale = 100,
   ) {
-    const curve = curveForAxis(axisIndex);
-    if (!curve) {
-      return "";
-    }
+    const curve = displayCurveForAxis(axisIndex);
 
     return curve.points
       .slice(0, curve.count)
@@ -149,9 +151,9 @@
   }
 
   function curveMarker(axisIndex, termScale = 100) {
-    const curve = curveForAxis(axisIndex);
+    const curve = displayCurveForAxis(axisIndex);
     const position = runtimeGains?.axes?.[axisIndex]?.gainCurvePosition;
-    if (!curve || !Number.isFinite(position)) {
+    if (!Number.isFinite(position)) {
       return null;
     }
 
@@ -258,94 +260,97 @@
               </td>
             {/each}
             <td class="curve-cell">
-              {#if curveForAxis(axisIndex)}
-                <div class="curve-preview-wrap">
-                  <svg
-                    class="curve-preview"
-                    class:expanded={curveExpanded}
-                    viewBox="0 0 {CURVE_PREVIEW_WIDTH} {curvePreviewHeight()}"
-                    style="height: {curvePreviewHeight()}px"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      class="curve-frame"
-                      x="1"
-                      y="1"
-                      width={CURVE_PREVIEW_WIDTH - 2}
-                      height={curvePreviewHeight() - 2}
-                      rx="2"
-                    ></rect>
-                    <line
-                      class="curve-neutral"
-                      x1={CURVE_PREVIEW_PAD}
-                      y1={neutralLineY(axisIndex)}
-                      x2={CURVE_PREVIEW_WIDTH - CURVE_PREVIEW_PAD}
-                      y2={neutralLineY(axisIndex)}
-                    ></line>
-                    {#if hasRuntimeMasterGainDelta(axisIndex)}
-                      <path
-                        class="curve-profile"
-                        d={curvePath(axisIndex, profileMasterGain(axisIndex))}
-                      ></path>
-                    {/if}
-                    <path class="curve-live" d={curvePath(axisIndex)}></path>
-                    {#if hasRuntimeThrottleDelta()}
-                      <path
-                        class="curve-throttle"
-                        d={curvePath(
-                          axisIndex,
-                          runtimeMasterGain(axisIndex),
-                          runtimeThrottleGain(),
-                        )}
-                      ></path>
-                    {/if}
-                    {#if curveMarker(axisIndex)}
-                      <line
-                        class="curve-pointer"
-                        x1={curveMarker(axisIndex).x}
-                        y1={curvePreviewHeight() - CURVE_PREVIEW_PAD}
-                        x2={curveMarker(axisIndex).x}
-                        y2={curveMarker(axisIndex).y}
-                      ></line>
-                      <circle
-                        cx={curveMarker(axisIndex).x}
-                        cy={curveMarker(axisIndex).y}
-                        r="3"
-                      ></circle>
-                    {/if}
-                    {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
-                      <circle
-                        class="throttle-marker"
-                        cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
-                        cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
-                        r="2.4"
-                      ></circle>
-                    {/if}
-                  </svg>
-                  <span class="curve-live-label">base</span>
+              <div
+                class="curve-preview-wrap"
+                class:curve-placeholder={!hasConfiguredCurve(axisIndex)}
+              >
+                <svg
+                  class="curve-preview"
+                  class:expanded={curveExpanded}
+                  viewBox="0 0 {CURVE_PREVIEW_WIDTH} {curvePreviewHeight()}"
+                  style="height: {curvePreviewHeight()}px"
+                  aria-hidden="true"
+                >
+                  <rect
+                    class="curve-frame"
+                    x="1"
+                    y="1"
+                    width={CURVE_PREVIEW_WIDTH - 2}
+                    height={curvePreviewHeight() - 2}
+                    rx="2"
+                  ></rect>
+                  <line
+                    class="curve-neutral"
+                    x1={CURVE_PREVIEW_PAD}
+                    y1={neutralLineY(axisIndex)}
+                    x2={CURVE_PREVIEW_WIDTH - CURVE_PREVIEW_PAD}
+                    y2={neutralLineY(axisIndex)}
+                  ></line>
                   {#if hasRuntimeMasterGainDelta(axisIndex)}
-                    <span
-                      class="curve-gain-label"
-                      class:gain-higher={runtimeMasterGain(axisIndex) >
-                        profileMasterGain(axisIndex)}
-                      class:gain-lower={runtimeMasterGain(axisIndex) <
-                        profileMasterGain(axisIndex)}
-                    >
-                      {formatMasterGain(runtimeMasterGain(axisIndex))}%
-                    </span>
+                    <path
+                      class="curve-profile"
+                      d={curvePath(axisIndex, profileMasterGain(axisIndex))}
+                    ></path>
                   {/if}
+                  <path class="curve-live" d={curvePath(axisIndex)}></path>
                   {#if hasRuntimeThrottleDelta()}
-                    <span
-                      class="curve-throttle-label"
-                      class:tpa-higher={runtimeThrottleGain() > 100}
-                      class:tpa-lower={runtimeThrottleGain() < 100}
-                      title="P/D throttle attenuation"
-                    >
-                      TPA {formatThrottleGain(runtimeThrottleGain())}%
-                    </span>
+                    <path
+                      class="curve-throttle"
+                      d={curvePath(
+                        axisIndex,
+                        runtimeMasterGain(axisIndex),
+                        runtimeThrottleGain(),
+                      )}
+                    ></path>
                   {/if}
-                </div>
-              {/if}
+                  {#if curveMarker(axisIndex)}
+                    <line
+                      class="curve-pointer"
+                      x1={curveMarker(axisIndex).x}
+                      y1={curvePreviewHeight() - CURVE_PREVIEW_PAD}
+                      x2={curveMarker(axisIndex).x}
+                      y2={curveMarker(axisIndex).y}
+                    ></line>
+                    <circle
+                      cx={curveMarker(axisIndex).x}
+                      cy={curveMarker(axisIndex).y}
+                      r="3"
+                    ></circle>
+                  {/if}
+                  {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
+                    <circle
+                      class="throttle-marker"
+                      cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
+                      cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
+                      r="2.4"
+                    ></circle>
+                  {/if}
+                </svg>
+                <span class="curve-live-label">
+                  {hasConfiguredCurve(axisIndex) ? "base" : "flat"}
+                </span>
+                {#if hasRuntimeMasterGainDelta(axisIndex)}
+                  <span
+                    class="curve-gain-label"
+                    class:gain-higher={runtimeMasterGain(axisIndex) >
+                      profileMasterGain(axisIndex)}
+                    class:gain-lower={runtimeMasterGain(axisIndex) <
+                      profileMasterGain(axisIndex)}
+                  >
+                    {formatMasterGain(runtimeMasterGain(axisIndex))}%
+                  </span>
+                {/if}
+                {#if hasRuntimeThrottleDelta()}
+                  <span
+                    class="curve-throttle-label"
+                    class:tpa-higher={runtimeThrottleGain() > 100}
+                    class:tpa-lower={runtimeThrottleGain() < 100}
+                    title="P/D throttle attenuation"
+                  >
+                    TPA {formatThrottleGain(runtimeThrottleGain())}%
+                  </span>
+                {/if}
+              </div>
             </td>
           </tr>
         {/each}
@@ -475,6 +480,14 @@
     position: relative;
     display: inline-block;
     width: min(100%, 260px);
+  }
+
+  .curve-preview-wrap.curve-placeholder {
+    opacity: 0.58;
+  }
+
+  .curve-preview-wrap.curve-placeholder .curve-live {
+    stroke-dasharray: 5 3;
   }
 
   .curve-preview {
