@@ -55,10 +55,6 @@
     return curveForAxis(axisIndex) ?? GainCurve.nullCurve();
   }
 
-  function hasConfiguredCurve(axisIndex) {
-    return curveForAxis(axisIndex) != null;
-  }
-
   function runtimeMasterGain(axisIndex) {
     return (
       runtimeGains?.axes?.[axisIndex]?.masterGain ??
@@ -265,10 +261,7 @@
               </td>
             {/each}
             <td class="curve-cell">
-              <div
-                class="curve-preview-wrap"
-                class:curve-placeholder={!hasConfiguredCurve(axisIndex)}
-              >
+              <div class="curve-preview-wrap">
                 <svg
                   class="curve-preview"
                   class:expanded={curveExpanded}
@@ -483,14 +476,6 @@
     position: relative;
     display: inline-block;
     width: min(100%, 260px);
-  }
-
-  .curve-preview-wrap.curve-placeholder {
-    opacity: 0.58;
-  }
-
-  .curve-preview-wrap.curve-placeholder .curve-live {
-    stroke-dasharray: 5 3;
   }
 
   .curve-preview {
