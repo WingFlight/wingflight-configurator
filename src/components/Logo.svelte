@@ -12,15 +12,18 @@
       {$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}
     </span>
     <span class="build-label">Branch/tag: {CONFIGURATOR.buildLabel}</span>
-    {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier}
+    {#if (FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier) || hardwareName}
       <span>
-        {$i18n.t("versionLabelFirmware")}: {FC.CONFIG.buildVersion}
-        {FC.CONFIG.flightControllerIdentifier}
-      </span>
-    {/if}
-    {#if hardwareName}
-      <span>
-        {$i18n.t("versionLabelTarget")}: {hardwareName}
+        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier}
+          {$i18n.t("versionLabelFirmware")}: {FC.CONFIG.buildVersion}
+          {FC.CONFIG.flightControllerIdentifier}
+        {/if}
+        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier && hardwareName}
+          &middot;
+        {/if}
+        {#if hardwareName}
+          {$i18n.t("versionLabelTarget")}: {hardwareName}
+        {/if}
       </span>
     {/if}
   </div>
