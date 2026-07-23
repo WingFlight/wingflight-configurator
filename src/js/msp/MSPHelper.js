@@ -460,6 +460,47 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS: {
+                const gains = ["P", "I", "D", "F", "B"];
+                const version = data.readU8();
+                const runtimeGains = {
+                    version,
+                    pidMode: data.readU8(),
+                    fwTpa: data.readU32() / 100,
+                    axes: [],
+                };
+
+                for (let axis = 0; axis < 3; axis++) {
+                    const raw = {};
+                    const effective = {};
+
+                    for (const gain of gains) {
+                        raw[gain] = data.readU16();
+                    }
+
+                    const masterGain = data.readU16();
+                    const gainCurve = data.readU32() / 100;
+                    const gainCurvePosition = version >= 2 && data.remaining() >= 24
+                        ? data.readU32() / 100
+                        : null;
+
+                    for (const gain of gains) {
+                        effective[gain] = data.readU32() / 100;
+                    }
+
+                    runtimeGains.axes.push({
+                        raw,
+                        masterGain,
+                        gainCurve,
+                        gainCurvePosition,
+                        effective,
+                    });
+                }
+
+                FC.PID_RUNTIME_GAINS = runtimeGains;
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();

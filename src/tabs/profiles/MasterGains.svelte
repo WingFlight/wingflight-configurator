@@ -8,6 +8,11 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
+  import {
+    MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
+    adjustmentTitle,
+    getAdjustmentState,
+  } from "./adjustmentState.js";
 
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation
@@ -43,6 +48,8 @@
       key: "throttle",
       axisClass: "THROTTLE",
       label: "controlAxisThrottle",
+      uppercase: true,
+      suffix: "TPA",
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
@@ -58,6 +65,21 @@
       label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
     })),
   ]);
+
+  function masterGainAdjustmentState(axisIndex) {
+    return axisIndex < MASTER_GAIN_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(MASTER_GAIN_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
+
+  function runtimeMasterGain(axisIndex) {
+    const value = FC.PID_RUNTIME_GAINS?.axes?.[axisIndex]?.masterGain;
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function showRuntimeMasterGain(axisIndex, adjustment) {
+    return adjustment?.active && runtimeMasterGain(axisIndex) != null;
+  }
 </script>
 
 <Section label="profilesMasterGainGroup">
@@ -80,23 +102,51 @@
       </tr>
     </thead>
     <tbody>
-      {#each MASTER_GAIN_AXES as axis (axis.key)}
+      {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
         {#if !axis.expertOnly || CONFIGURATOR.expertMode}
+          {@const adjustment = masterGainAdjustmentState(axisIndex)}
           <tr>
             <td class="axis {axis.axisClass}">
               <span class="axis-label">
-                {$i18n.t(axis.label)}
+                {axis.uppercase
+                  ? $i18n.t(axis.label).toUpperCase()
+                  : $i18n.t(axis.label)}
+                {#if axis.suffix}
+                  ({axis.suffix})
+                {/if}
                 {#if axis.help}
                   <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
                 {/if}
               </span>
             </td>
             <td>
-              <NumberInput
-                min="25"
-                max={axis.gainMax ?? 1000}
-                bind:value={FC.PID_PROFILE[axis.gainKey]}
-              />
+              <div
+                class="runtime-control"
+                class:runtime-controlled={adjustment}
+                class:runtime-active={adjustment?.active}
+                title={adjustmentTitle(adjustment)}
+              >
+                {#if showRuntimeMasterGain(axisIndex, adjustment)}
+                  <div class="runtime-value-field">
+                    <span class="step-button fas fa-minus"></span>
+                    <span class="runtime-value"
+                      >{runtimeMasterGain(axisIndex)}</span
+                    >
+                    <span class="step-button fas fa-plus"></span>
+                  </div>
+                {:else}
+                  <NumberInput
+                    min="25"
+                    max={axis.gainMax ?? 1000}
+                    bind:value={FC.PID_PROFILE[axis.gainKey]}
+                  />
+                {/if}
+                {#if adjustment}
+                  <span class="adjustment-badge">
+                    {adjustment.active ? "LIVE" : "ADJ"}
+                  </span>
+                {/if}
+              </div>
             </td>
             <td>
               <Select
@@ -137,6 +187,73 @@
   td {
     padding: 4px 12px;
     text-align: left;
+  }
+
+  .runtime-control {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .runtime-controlled {
+    padding-right: 2px;
+  }
+
+  .runtime-active {
+    opacity: 1;
+  }
+
+  .runtime-value-field {
+    display: flex;
+    max-width: 120px;
+  }
+
+  .step-button,
+  .runtime-value {
+    height: 1.5rem;
+    line-height: 1.5rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-input-bg-disabled);
+    color: var(--color-text-soft);
+    font-size: 0.8rem;
+  }
+
+  .step-button {
+    width: 2rem;
+    text-align: center;
+  }
+
+  .runtime-value {
+    width: 100%;
+    min-width: 4.5rem;
+    padding: 0 8px;
+    text-align: right;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .adjustment-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: 3px;
+    background-color: var(--color-accent, var(--accent));
+    color: var(--color-text-inverse, #000);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  .runtime-control:not(.runtime-active) .adjustment-badge {
+    background-color: transparent;
+    color: var(--color-text-soft);
+  }
+
+  .runtime-control.runtime-active .runtime-value-field {
+    opacity: 0.62;
   }
 
   .axis {

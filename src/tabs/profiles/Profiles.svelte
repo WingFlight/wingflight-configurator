@@ -22,6 +22,7 @@
   let initialState = $state(null);
   let mountedProfile;
   let pollerInterval;
+  let runtimeGainsSupported = true;
 
   let copyDialogEl;
   let resetDialogEl;
@@ -66,11 +67,27 @@
       .map((i) => ({ value: i, label: $i18n.t(`profilesSubTab${i + 1}`) })),
   );
 
+  async function updateRuntimeGains() {
+    if (!runtimeGainsSupported) {
+      return;
+    }
+
+    const response = await MSP.promise(MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS);
+    if (!response || response.length === 0) {
+      runtimeGainsSupported = false;
+      FC.PID_RUNTIME_GAINS = null;
+    }
+  }
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
+    await MSP.promise(MSPCodes.MSP_RC);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_PID_TUNING);
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
+    await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
+    await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
+    await updateRuntimeGains();
     await MSP.promise(MSPCodes.MSP_SENSOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG);
 
@@ -80,6 +97,8 @@
 
     pollerInterval = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_STATUS);
+      await MSP.promise(MSPCodes.MSP_RC);
+      await updateRuntimeGains();
 
       if (FC.CONFIG.profile !== mountedProfile) {
         mountedProfile = FC.CONFIG.profile;

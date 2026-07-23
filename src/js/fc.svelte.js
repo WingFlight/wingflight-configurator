@@ -55,6 +55,7 @@ class FlightController {
   PIDS_ACTIVE = $state();
   PID_NAMES = $state();
   PID_PROFILE = $state();
+  PID_RUNTIME_GAINS = $state();
   PILOT_CONFIG = $state();
   RC = $state();
   RC_COMMAND = $state();
@@ -238,6 +239,7 @@ class FlightController {
       controller:                 0,
     };
 
+    this.PID_RUNTIME_GAINS = null;
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});
     this.PIDS = Array.from({length: 3});
