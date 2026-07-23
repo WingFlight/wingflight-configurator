@@ -11,6 +11,7 @@
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
 
+  import EffectivePidGains from "./EffectivePidGains.svelte";
   import PidGains from "./PidGains.svelte";
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
@@ -225,6 +226,7 @@
   <div class="content">
     <div>
       {#if showPidBoxes}
+        <EffectivePidGains />
         <PidGains />
         <MasterGains />
       {/if}
