@@ -3395,6 +3395,12 @@
     "curvePointCount": {
         "message": "Points:"
     },
+    "curveEndpointXLocked": {
+        "message": "The first and last point are pinned to the curve's domain extent - only Y can be adjusted here"
+    },
+    "curveEndpointNoDelete": {
+        "message": "The first and last point can't be deleted - they define the curve's domain extent"
+    },
     "logicNote": {
         "message": "Define conditions here, then gate any Mixer Rule on one from its Condition column. A gated rule contributes nothing while its condition is false."
     },
