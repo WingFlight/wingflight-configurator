@@ -222,6 +222,7 @@
           </thead>
           <tbody>
             {#each curve.points.slice(0, curve.count) as point, index (index)}
+              {@const isEndpoint = index === 0 || index === curve.count - 1}
               <tr>
                 <td class="point-index">{index + 1}</td>
                 <td>
@@ -230,6 +231,10 @@
                     min={category.xMin}
                     max={category.xMax}
                     step="10"
+                    disabled={isEndpoint}
+                    title={isEndpoint
+                      ? $i18n.t("curveEndpointXLocked")
+                      : undefined}
                     bind:value={
                       () => point.x,
                       (v) => onPointFieldChange(index, v, point.y)
@@ -252,6 +257,10 @@
                   <button
                     class="delete"
                     onclick={() => onDeletePoint(index)}
+                    disabled={isEndpoint}
+                    title={isEndpoint
+                      ? $i18n.t("curveEndpointNoDelete")
+                      : undefined}
                     aria-label="Delete point"
                   >
                     <span class="fas fa-times"></span>
