@@ -1936,7 +1936,7 @@
         "message": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
+        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
     "profilesBoost": {
@@ -2075,7 +2075,7 @@
         "message": "Telemetry Packet Ratio"
     },
     "receiverHelpCrsfTelemetryMode": {
-        "message": "Enables the Custom Rotorflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for helicopter use."
+        "message": "Enables the Custom Rotorflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for your aircraft."
     },
     "receiverHelpCrsfTelemetryRate": {
         "message": "Radio link packet rate for telemetry. Set this to the same value as the ELRS packet rate in the Tx."
@@ -3747,7 +3747,7 @@
         "message": "Throttle Protocol"
     },
     "motorsEscProtocolHelp": {
-        "message": "Select your ESC protocol.<br>Traditional helicopter ESCs use PWM. Drone ESCs may use other protocols, like DSHOT. <br>Make sure the protocol is supported by your ESC."
+        "message": "Select your ESC protocol.<br>Older ESCs use PWM. Newer ESCs may use other protocols, like DSHOT. <br>Make sure the protocol is supported by your ESC."
     },
     "motorsEscProtocolDisabled": {
         "message": "Please select a protocol appropriate for your ESCs. $t(escProtocolDisabledMessage.message)"
@@ -5046,7 +5046,7 @@
         "message": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
+        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
@@ -5112,13 +5112,13 @@
         "message": "Acro Trainer gain"
     },
     "profilesAcroTrainerGainHelp": {
-        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the helicopter tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
+        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the aircraft tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
     },
     "profilesAcroTrainerLimit": {
         "message": "Acro Trainer angle limit"
     },
     "profilesAcroTrainerLimitHelp": {
-        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the helicopter will pitch/roll to"
+        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the aircraft will pitch/roll to"
     },
     "profilesAngleHorizonGroup": {
         "message": "Angle / Horizon Mode"
@@ -5127,19 +5127,19 @@
         "message": "Angle Mode leveling gain"
     },
     "profilesAngleModeGainHelp": {
-        "message": "Angle Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Angle Mode"
+        "message": "Angle Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Angle Mode"
     },
     "profilesAngleModeLimit": {
         "message": "Angle Mode maximum angle"
     },
     "profilesAngleModeLimitHelp": {
-        "message": "Angle Mode maximum angle. Helicopter is limited to this angle when in Angle mode"
+        "message": "Angle Mode maximum angle. The aircraft is limited to this angle when in Angle mode"
     },
     "profilesHorizonModeGain": {
         "message": "Horizon Mode leveling gain"
     },
     "profilesHorizonModeGainHelp": {
-        "message": "Horizon Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Horizon Mode"
+        "message": "Horizon Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Horizon Mode"
     },
     "profilesAutoHoverGain": {
         "message": "Auto Hover gain"
@@ -5346,7 +5346,7 @@
         "message": "Notch Maximum Frequency"
     },
     "gyroDynamicNotchMaxHzHelp": {
-        "message": "Set this to the highest incoming noise frequency that is needed to be filtered. Should be 10-20% higher than the max tail rotor frequency, but no higher than 250Hz, if filter rate is 1k. If filter rate is 2k or higher, then 330-500 Hz can be used, especially for smaller helis with a motorised tail (higher range means less precision and lower performance)."
+        "message": "Set this to the highest incoming noise frequency that is needed to be filtered. Should be 10-20% higher than the max propeller/motor noise frequency, but no higher than 250Hz, if filter rate is 1k. If filter rate is 2k or higher, then 330-500 Hz can be used, especially for smaller aircraft (higher range means less precision and lower performance)."
     },
     "gyroDTermLowpassFiltersGroup": {
         "message": "D Term Lowpass Filters"
@@ -5445,7 +5445,7 @@
         "message": "RPM Filter Notches"
     },
     "gyroRpmFilterHelp": {
-        "message": "Every rotating part on a helicopter generates vibrations, which can significantly affect the performance of the flight control loops. The <i>RPM Filter</i> utilizes the motor's RPM signal and the model's gear ratios to precisely eliminate these vibrations from the gyro's output, enabling the control loops to operate on the true motion of the aircraft. This method introduces substantially less delay than traditional vibration filtering, enhancing overall flight performance."
+        "message": "Every rotating part on an aircraft generates vibrations, which can significantly affect the performance of the flight control loops. The <i>RPM Filter</i> utilizes the motor's RPM signal and the model's gear ratios to precisely eliminate these vibrations from the gyro's output, enabling the control loops to operate on the true motion of the aircraft. This method introduces substantially less delay than traditional vibration filtering, enhancing overall flight performance."
     },
     "gyroRpmFilterMainRotorGroup": {
         "message": "Main Rotor"
@@ -7977,7 +7977,7 @@
         "description": "Warning message that shows up at the top of the presets tab"
     },
     "presets_sources_dialog_warning": {
-        "message": "<span class=\"message-negative\">WARNING!</span> Using third party preset sources could be dangerous.<br/>Make sure you add and use only trusted sources. Malicious or bad preset sources can break your helicopter configuration and potentially harm your devices.",
+        "message": "<span class=\"message-negative\">WARNING!</span> Using third party preset sources could be dangerous.<br/>Make sure you add and use only trusted sources. Malicious or bad preset sources can break your aircraft configuration and potentially harm your devices.",
         "description": "Warning message that shows up at the top of the preset sources dialog"
     },
     "presetsWarningWrongVersionConfirmation": {
