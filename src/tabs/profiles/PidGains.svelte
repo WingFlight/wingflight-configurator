@@ -30,57 +30,64 @@
 </script>
 
 <Section label="profilesPidGains">
-  <table class="grid">
-    <thead>
-      <tr>
-        <th></th>
-        {#each GAINS as gain (gain.key)}
-          <th>
-            <span class="header-label">
-              {$i18n.t(gain.label)}
-              <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
-            </span>
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#each AXES as axis, axisIndex (axis)}
+  <div class="table-scroll">
+    <table class="grid">
+      <thead>
         <tr>
-          <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
-          {#each GAINS as gain, gainIndex (gain.key)}
-            {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
-            <td>
-              <div
-                class="runtime-control"
-                class:runtime-controlled={adjustment}
-                class:runtime-active={adjustment?.active}
-                title={adjustmentTitle(adjustment)}
-              >
-                <NumberInput
-                  min="0"
-                  max="1000"
-                  bind:value={FC.PIDS[axisIndex][gainIndex]}
-                />
-                {#if adjustment}
-                  <span class="adjustment-badge">
-                    {adjustment.active
-                      ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                      : "ADJ"}
-                  </span>
-                {/if}
-              </div>
-            </td>
+          <th></th>
+          {#each GAINS as gain (gain.key)}
+            <th>
+              <span class="header-label">
+                {$i18n.t(gain.label)}
+                <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+              </span>
+            </th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {#each AXES as axis, axisIndex (axis)}
+          <tr>
+            <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
+            {#each GAINS as gain, gainIndex (gain.key)}
+              {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
+              <td>
+                <div
+                  class="runtime-control"
+                  class:runtime-controlled={adjustment}
+                  class:runtime-active={adjustment?.active}
+                  title={adjustmentTitle(adjustment)}
+                >
+                  <NumberInput
+                    min="0"
+                    max="1000"
+                    bind:value={FC.PIDS[axisIndex][gainIndex]}
+                  />
+                  {#if adjustment}
+                    <span class="adjustment-badge">
+                      {adjustment.active
+                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                        : "ADJ"}
+                    </span>
+                  {/if}
+                </div>
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </Section>
 
 <style lang="scss">
+  .table-scroll {
+    overflow-x: auto;
+  }
+
   .grid {
     width: 100%;
+    min-width: 480px;
     border-collapse: collapse;
   }
 

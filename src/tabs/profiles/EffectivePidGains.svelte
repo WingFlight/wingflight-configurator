@@ -400,11 +400,13 @@
 
   .effective-pids-content {
     padding: 4px;
+    overflow-x: auto;
     background-color: var(--color-surface);
   }
 
   .grid {
     width: 100%;
+    min-width: 760px;
     border-collapse: collapse;
   }
 

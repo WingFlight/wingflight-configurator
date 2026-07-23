@@ -84,88 +84,95 @@
 </script>
 
 <Section label="profilesMasterGainGroup">
-  <table class="grid">
-    <thead>
-      <tr>
-        <th></th>
-        <th>
-          <span class="header-label">
-            {$i18n.t("profilesMasterGainColumn")}
-            <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
-          </span>
-        </th>
-        <th>
-          <span class="header-label">
-            {$i18n.t("profilesGainCurveColumn")}
-            <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
-          </span>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-        {#if !axis.expertOnly || CONFIGURATOR.expertMode}
-          {@const adjustment = masterGainAdjustmentState(axisIndex)}
-          <tr>
-            <td class="axis {axis.axisClass}">
-              <span class="axis-label">
-                {axis.uppercase
-                  ? $i18n.t(axis.label).toUpperCase()
-                  : $i18n.t(axis.label)}
-                {#if axis.suffix}
-                  ({axis.suffix})
-                {/if}
-                {#if axis.help}
-                  <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
-                {/if}
-              </span>
-            </td>
-            <td>
-              <div
-                class="runtime-control"
-                class:runtime-controlled={adjustment}
-                class:runtime-active={adjustment?.active}
-                title={adjustmentTitle(adjustment)}
-              >
-                {#if showRuntimeMasterGain(axisIndex, adjustment)}
-                  <div class="runtime-value-field">
-                    <span class="step-button fas fa-minus"></span>
-                    <span class="runtime-value"
-                      >{runtimeMasterGain(axisIndex)}</span
-                    >
-                    <span class="step-button fas fa-plus"></span>
-                  </div>
-                {:else}
-                  <NumberInput
-                    min="25"
-                    max={axis.gainMax ?? 1000}
-                    bind:value={FC.PID_PROFILE[axis.gainKey]}
-                  />
-                {/if}
-                {#if adjustment}
-                  <span class="adjustment-badge">
-                    {adjustment.active
-                      ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                      : "ADJ"}
-                  </span>
-                {/if}
-              </div>
-            </td>
-            <td>
-              <Select
-                options={gainCurveOptions}
-                bind:value={FC.PID_PROFILE[axis.curveKey]}
-              />
-            </td>
-          </tr>
-        {/if}
-      {/each}
-    </tbody>
-  </table>
+  <div class="table-scroll">
+    <table class="grid">
+      <thead>
+        <tr>
+          <th></th>
+          <th>
+            <span class="header-label">
+              {$i18n.t("profilesMasterGainColumn")}
+              <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
+            </span>
+          </th>
+          <th>
+            <span class="header-label">
+              {$i18n.t("profilesGainCurveColumn")}
+              <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
+          {#if !axis.expertOnly || CONFIGURATOR.expertMode}
+            {@const adjustment = masterGainAdjustmentState(axisIndex)}
+            <tr>
+              <td class="axis {axis.axisClass}">
+                <span class="axis-label">
+                  {axis.uppercase
+                    ? $i18n.t(axis.label).toUpperCase()
+                    : $i18n.t(axis.label)}
+                  {#if axis.suffix}
+                    ({axis.suffix})
+                  {/if}
+                  {#if axis.help}
+                    <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
+                  {/if}
+                </span>
+              </td>
+              <td>
+                <div
+                  class="runtime-control"
+                  class:runtime-controlled={adjustment}
+                  class:runtime-active={adjustment?.active}
+                  title={adjustmentTitle(adjustment)}
+                >
+                  {#if showRuntimeMasterGain(axisIndex, adjustment)}
+                    <div class="runtime-value-field">
+                      <span class="step-button fas fa-minus"></span>
+                      <span class="runtime-value"
+                        >{runtimeMasterGain(axisIndex)}</span
+                      >
+                      <span class="step-button fas fa-plus"></span>
+                    </div>
+                  {:else}
+                    <NumberInput
+                      min="25"
+                      max={axis.gainMax ?? 1000}
+                      bind:value={FC.PID_PROFILE[axis.gainKey]}
+                    />
+                  {/if}
+                  {#if adjustment}
+                    <span class="adjustment-badge">
+                      {adjustment.active
+                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                        : "ADJ"}
+                    </span>
+                  {/if}
+                </div>
+              </td>
+              <td>
+                <Select
+                  options={gainCurveOptions}
+                  bind:value={FC.PID_PROFILE[axis.curveKey]}
+                />
+              </td>
+            </tr>
+          {/if}
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </Section>
 
 <style lang="scss">
+  .table-scroll {
+    overflow-x: auto;
+  }
+
   .grid {
+    min-width: 480px;
     border-collapse: collapse;
   }
 

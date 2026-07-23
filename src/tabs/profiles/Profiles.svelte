@@ -56,6 +56,7 @@
   });
 
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
+  let showSettingsColumn = $derived(showPidBoxes && CONFIGURATOR.expertMode);
 
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
@@ -242,7 +243,7 @@
     </div>
   {/if}
 
-  <div class="content">
+  <div class="content" class:single-column={!showSettingsColumn}>
     <div>
       {#if showPidBoxes}
         <EffectivePidGains />
@@ -253,12 +254,12 @@
         <LevelingSettings />
       {/if}
     </div>
-    <div>
-      {#if showPidBoxes && CONFIGURATOR.expertMode}
+    {#if showSettingsColumn}
+      <div>
         <PidSettings />
         <PidBandwidth />
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
 </Page>
 
@@ -360,10 +361,23 @@
     border: 1px solid var(--color-border-accent);
   }
 
+  // Single column is the default at every width. The PID tables in the
+  // left column need real room before a two-column split is worth it
+  // (the widest, Effective PID Gains, wants ~800px before its own
+  // horizontal scroll goes away), so two columns only kick in once
+  // there's comfortably enough space for both - otherwise a narrow
+  // split just forces every table into its scrollable fallback, which
+  // is worse than stacking full-width.
   .content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: 1fr;
     column-gap: var(--section-gap);
+  }
+
+  @media only screen and (min-width: 1500px) {
+    .content:not(.single-column) {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    }
   }
 
   dialog {
