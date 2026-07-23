@@ -1176,7 +1176,7 @@
         "english": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">ВНИМАНИЕ!</strong> <strong>АКТИВИРАНЕТО е ВКЛЮЧЕНО.</strong> Никога не летете с модела докато конфигураторът е свързан!</strong>",
+        "message": "<strong class=\"message-negative\">ВНИМАНИЕ!</strong> <strong>АКТИВИРАНЕТО е ВКЛЮЧЕНО.</strong> Никога не летете с модела докато конфигураторът е свързан!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
     },
     "statusEnableArming": {
@@ -4948,7 +4948,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Забележка:</strong> Напускането на CLI таба или натискането на Disconnect <strong>автоматично</strong> ще изпрати \"<strong>exit</strong>\" към платката. С последния фърмуер това ще накара контролера да <strong>рестартира</strong> и незапазените промени ще бъдат <strong>загубени</strong>.<p><strong><span class=\"message-negative\">Предупреждение:</span></strong> Някои команди в CLI могат да доведат до произволни сигнали по моторните изходни пинове. Това може да причини завъртане на моторите ако е включена батерия. Затова силно се препоръчва да се уверите, че <strong>няма свързана батерия преди да въвеждате команди в CLI</strong>.",
+        "message": "<strong>Забележка:</strong> Напускането на CLI таба или натискането на Disconnect <strong>автоматично</strong> ще изпрати \"<strong>exit</strong>\" към платката. С последния фърмуер това ще накара контролера да <strong>рестартира</strong> и незапазените промени ще бъдат <strong>загубени</strong>.<br /><br /><strong><span class=\"message-negative\">Предупреждение:</span></strong> Някои команди в CLI могат да доведат до произволни сигнали по моторните изходни пинове. Това може да причини завъртане на моторите ако е включена батерия. Затова силно се препоръчва да се уверите, че <strong>няма свързана батерия преди да въвеждате команди в CLI</strong>.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {

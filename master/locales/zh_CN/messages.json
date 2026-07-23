@@ -1152,7 +1152,7 @@
         "english": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">警告！</strong> <strong>已允许解锁</strong> 永远不要在连接配置器的情况下飞行!</strong>",
+        "message": "<strong class=\"message-negative\">警告！</strong> <strong>已允许解锁</strong> 永远不要在连接配置器的情况下飞行!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
     },
     "statusEnableArming": {
@@ -1288,7 +1288,7 @@
         "english": "All settings saved in EEPROM."
     },
     "initialSetupDangerText": {
-        "message": "<strong>注意：</strong> 为了防止受伤，在解锁、启动电机之前<strong>，请卸下所有桨叶</strong>。<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>永远不要在连接电脑的情况下启动您的直升机！</strong>",
+        "message": "<strong>注意：</strong> 为了防止受伤，在解锁、启动电机之前<strong>，请卸下所有桨叶</strong>。<strong class=\"message-negative\"><br/>永远不要在连接电脑的情况下启动您的直升机！</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
     },
     "initialSetupDangerTitle": {
@@ -3320,7 +3320,7 @@
         "english": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
     },
     "servoUnusualLimitsWarning": {
-        "message": "<span class=\"message-negative\"警告：</span> 舵机的 <i>限制</i> 设置为异常值。请检查！",
+        "message": "<span class=\"message-negative\">警告：</span> 舵机的 <i>限制</i> 设置为异常值。请检查！",
         "english": "<span class=\"message-negative\">Warning:</span> The servo <i>Limits</i> are set to unusual values. Please check!"
     },
     "servoUnusualScalesWarning": {
@@ -4600,7 +4600,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>注意：</strong>退出 CLI 页面或者点击断开连接将<strong>自动</strong>向飞控发送“<strong>退出</strong>”指令。在最新的固件中这将使飞控<strong>重启</strong>并且未保存的设置将会<strong>丢失</strong>。<p><strong><span class=\"message-negative\">警告：</span></strong>CLI中的某些命令可能导致电机输出引脚发出随机指令。如果连接电池，这有可能导致电机旋转。因此，强烈建议<strong>在 CLI 中输入命令之前确保未连接电池</strong>。",
+        "message": "<strong>注意：</strong>退出 CLI 页面或者点击断开连接将<strong>自动</strong>向飞控发送“<strong>退出</strong>”指令。在最新的固件中这将使飞控<strong>重启</strong>并且未保存的设置将会<strong>丢失</strong>。<br /><br /><strong><span class=\"message-negative\">警告：</span></strong>CLI中的某些命令可能导致电机输出引脚发出随机指令。如果连接电池，这有可能导致电机旋转。因此，强烈建议<strong>在 CLI 中输入命令之前确保未连接电池</strong>。",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -5201,7 +5201,7 @@
         "english": "You are about to flash a <strong>development build of the firmware</strong>. These builds are a work-in-progress, and any of the following can be the case:<strong><ul><li>the firmware does not work at all;</li><li>the firmware is not flyable;</li><li>there are safety issues with the firmware, for example flyaways</li><li>the firmware can cause the flight controller to become unresponsive, or damaged</li></ul></strong>If you proceed with flashing this firmware, <strong>you are assuming full responsibility for the risk of any of the above happening</strong>. Furthermore you acknowledge that it is necessary to perform <strong>thorough bench tests with rotor blades removed</strong> before any attempts to fly this firmware."
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "我已阅读上述声明并且<strong>我自愿承担刷入不稳定版本固件的一切后果<strong>",
+        "message": "我已阅读上述声明并且<strong>我自愿承担刷入不稳定版本固件的一切后果</strong>",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {
@@ -5881,7 +5881,7 @@
         "english": "I-term Relax Type"
     },
     "profilesItermRelaxTypeHelp": {
-        "message": "选择使用 I-Term 释放的轴。<br><strong>RP: 横滚，俯仰<br><strong>RPY:</strong> 横滚，俯仰，航向",
+        "message": "选择使用 I-Term 释放的轴。<br><strong>RP:</strong> 横滚，俯仰<br><strong>RPY:</strong> 横滚，俯仰，航向",
         "english": "Choose the axes in which this is active. <br><strong>RP:</strong> Roll, Pitch <br><strong>RPY:</strong> Roll, Pitch, Yaw."
     },
     "profilesItermRelaxTypeOptionRP": {
