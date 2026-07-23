@@ -46,6 +46,11 @@
     return curveIndex > 0 ? FC.GAIN_CURVES?.[curveIndex - 1] : null;
   }
 
+  function curveLabel(axisIndex) {
+    const curveIndex = Number(FC.PID_PROFILE[GAIN_CURVE_KEYS[axisIndex]]) || 0;
+    return curveIndex > 0 ? `Curve ${curveIndex}` : "Flat";
+  }
+
   function displayCurveForAxis(axisIndex) {
     return curveForAxis(axisIndex) ?? GainCurve.nullCurve();
   }
@@ -326,9 +331,7 @@
                     ></circle>
                   {/if}
                 </svg>
-                <span class="curve-live-label">
-                  {hasConfiguredCurve(axisIndex) ? "base" : "flat"}
-                </span>
+                <span class="curve-live-label">{curveLabel(axisIndex)}</span>
                 {#if hasRuntimeMasterGainDelta(axisIndex)}
                   <span
                     class="curve-gain-label"
