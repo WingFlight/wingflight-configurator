@@ -362,6 +362,15 @@ export const serial = {
             self.bytesSent = 0;
             self.failed = 0;
 
+            // Web Serial has no "onReceiveError"-style callback of its own --
+            // readWebSerialLoop() synthesizes one by dispatching onReceiveError
+            // when reader.read() throws (e.g. the device vanishing after a DFU
+            // reboot). Without a listener here that error is dropped silently:
+            // self.connected stays true and the UI never notices the port died.
+            self.onReceiveError.addListener(function watch_for_on_receive_errors(info) {
+                self.errorHandler(info.error, 'receive');
+            });
+
             self.webSerialReadableClosed = self.readWebSerialLoop(port);
 
             console.log(`${self.connectionType}: web serial connection opened, Baud: ${self.bitrate}`);
