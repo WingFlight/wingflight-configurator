@@ -48,6 +48,7 @@ export function getAdjustmentState(adjFunction) {
 
     return {
       active: result.active,
+      adjType,
       slotIndex,
       channel: range.adjChannel,
     };

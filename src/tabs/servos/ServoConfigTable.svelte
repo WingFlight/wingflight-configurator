@@ -51,12 +51,16 @@
     }).filter(Boolean);
   }
 
-  // While a ServoTrim adjustment is actively being driven live over the AUX
-  // channel, the FC keeps overwriting Mid via the polled
-  // MSP_SERVO_CONFIGURATIONS response -- disable editing to avoid the field
-  // fighting with the live value.
+  // While a Stepped ServoTrim adjustment is actively incrementing/
+  // decrementing, the FC persists the change and the polled
+  // MSP_SERVO_CONFIGURATIONS response overwrites Mid with it -- disable
+  // editing to avoid the field fighting with the live value. Mapped
+  // adjustments only bias the runtime servo output and never rewrite the
+  // stored Mid value, so they don't need to block editing.
   function midDisabled(servo) {
-    return servoTrimAdjustments(servo).some((trim) => trim.adjustment.active);
+    return servoTrimAdjustments(servo).some(
+      (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
+    );
   }
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
