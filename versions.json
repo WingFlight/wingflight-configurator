@@ -5,11 +5,6 @@
       "name": "master",
       "path": "./master/",
       "notes": "Latest development build"
-    },
-    {
-      "type": "branch",
-      "name": "feature-harden-usb",
-      "path": "./feature-harden-usb/"
     }
   ]
 }
