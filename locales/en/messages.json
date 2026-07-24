@@ -3822,16 +3822,16 @@
         "message": "Mode"
     },
     "motorsGovernorModeHelp": {
-        "message": "OFF disables the governor entirely.<br>RPM closed-loop holds a target RPM at idle (below the handover throttle) using motor RPM feedback &mdash; requires a valid RPM source (bidirectional DShot telemetry, ESC telemetry, or a frequency sensor).<br>Throttle open-loop just holds a fixed throttle percentage at idle &mdash; no RPM source needed, but it won't correct for load or battery sag.<br>RPM Range closed-loop holds a target RPM mapped across the <i>entire</i> throttle stick (Min RPM at 0% &mdash; Max RPM at 100%), for holding engine speed through a whole flight (e.g. dive speed control), not just idle &mdash; also requires a valid RPM source."
+        "message": "<p><b>Off:</b> disables the governor entirely.</p><p><b>RPM Idle/Max:</b> holds the target idle RPM below handover throttle using motor RPM feedback. Above handover, the optional max RPM limit can prevent overspeed.</p><p><b>Throttle Idle:</b> holds a fixed throttle percentage at idle. No RPM source is needed, but it will not correct for load or battery sag.</p><p><b>RPM Range:</b> maps the throttle stick to a target RPM range, from Min RPM at 0% to Max RPM at 100%, for governing engine speed through the whole flight.</p><p><b>RPM source:</b> RPM modes require bidirectional DShot telemetry, ESC telemetry, or a frequency sensor.</p>"
     },
     "motorsGovernorModeOff": {
         "message": "Off"
     },
     "motorsGovernorModeRpm": {
-        "message": "RPM"
+        "message": "RPM Idle/Max"
     },
     "motorsGovernorModeThrottle": {
-        "message": "Throttle"
+        "message": "Throttle Idle"
     },
     "motorsGovernorModeRpmRange": {
         "message": "RPM Range"
@@ -3853,6 +3853,12 @@
     },
     "motorsGovernorRpmMaxHelp": {
         "message": "Target RPM at 100% throttle stick. Set to 0 to disable RPM Range mode entirely."
+    },
+    "motorsGovernorRpmMaxLimit": {
+        "message": "Max RPM limit"
+    },
+    "motorsGovernorRpmMaxLimitHelp": {
+        "message": "Optional maximum RPM limit used above the handover throttle while in RPM Idle/Max mode. Set to 0 to disable max RPM limiting."
     },
     "motorsGovernorGain": {
         "message": "P Gain"
