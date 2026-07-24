@@ -27,14 +27,58 @@ async function requestWebUsbDeviceFromPicker() {
     }
 }
 
+const webPickerCommandValues = ['requestserial', 'requestbluetooth', 'DFU'];
+
+function isWebPickerCommandValue(value) {
+    return webPickerCommandValues.includes(String(value));
+}
+
 // Mirrors Betaflight resetting its selectedDevice back to "noselection" after
 // firing a permission request, success or not -- these options are momentary
-// triggers, never a real, sticky selection. We have no "noselection"
-// placeholder, so fall back to whatever isn't itself one of the trigger
-// options (falling back to one would re-open its picker in a loop the moment
-// .trigger('change') re-fires this same handler).
+// triggers, never a real, sticky selection. Prefer the previously selected
+// real port when it still exists; otherwise use the existing "0" no-selection
+// sentinel so selecting "Add serial device" again can fire another change.
 function firstNonTriggerPortValue(el) {
-    return el.find('option').not('[value="requestserial"], [value="requestbluetooth"]').first().val();
+    const previousValue = el.data('lastNonTriggerValue');
+    if (previousValue) {
+        const previousOption = el.find('option').filter((_, option) => option.value === previousValue);
+        if (previousOption.length && !previousOption.prop('disabled')) {
+            return previousValue;
+        }
+    }
+
+    const firstRealPort = el.find('option').filter((_, option) =>
+        option.value !== '0' &&
+        !option.disabled &&
+        !isWebPickerCommandValue(option.value),
+    ).first().val();
+
+    return firstRealPort || '0';
+}
+
+function selectFallbackPort(el, fallbackValue) {
+    el.val(fallbackValue || '0').trigger('change');
+}
+
+function selectRequestedPort(el, ports, entry, cachedPorts, fallbackValue) {
+    if (!cachedPorts.some((port) => port.path === entry.path)) {
+        cachedPorts.push(entry);
+    }
+
+    const updatedPorts = ports.some((port) => port.path === entry.path)
+        ? ports
+        : [...ports, { path: entry.path, displayName: entry.displayName }];
+
+    PortHandler.updatePortSelect(updatedPorts);
+    PortHandler.initialPorts = updatedPorts;
+    el.val(entry.path);
+
+    if (el.val() !== entry.path) {
+        selectFallbackPort(el, fallbackValue);
+        return;
+    }
+
+    el.trigger('change');
 }
 
 async function requestWebSerialDeviceFromPicker() {
@@ -45,13 +89,11 @@ async function requestWebSerialDeviceFromPicker() {
         const entry = await serial.requestWebSerialPort();
 
         serial.getDevices((ports) => {
-            PortHandler.updatePortSelect(ports);
-            PortHandler.initialPorts = ports;
-            el.val(entry.path).trigger('change');
+            selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
         });
     } catch (error) {
         console.warn('Web Serial permission request failed or was cancelled', error);
-        el.val(fallbackValue).trigger('change');
+        selectFallbackPort(el, fallbackValue);
     }
 }
 
@@ -63,13 +105,11 @@ async function requestWebBluetoothDeviceFromPicker() {
         const entry = await serial.requestBluetoothPort();
 
         serial.getDevices((ports) => {
-            PortHandler.updatePortSelect(ports);
-            PortHandler.initialPorts = ports;
-            el.val(entry.path).trigger('change');
+            selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
         });
     } catch (error) {
         console.warn('Web Bluetooth permission request failed or was cancelled', error);
-        el.val(fallbackValue).trigger('change');
+        selectFallbackPort(el, fallbackValue);
     }
 }
 
@@ -207,6 +247,10 @@ export function initializeSerialBackend() {
             } else if (selectedData.isDFU) {
                 requestWebUsbDeviceFromPicker();
             }
+        }
+
+        if (__BACKEND__ === "web" && !isWebPickerCommandValue(this.value) && this.value !== '0') {
+            $(this).data('lastNonTriggerValue', this.value);
         }
     });
 
