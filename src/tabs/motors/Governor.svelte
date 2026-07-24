@@ -17,6 +17,17 @@
   const GOVERNOR_MODE_THROTTLE = 2;
   const GOVERNOR_MODE_RPM_RANGE = 3;
 
+  let rpmMode = $derived(
+    FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM,
+  );
+  let throttleMode = $derived(
+    FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_THROTTLE,
+  );
+  let rpmRangeMode = $derived(
+    FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM_RANGE,
+  );
+  let rpmControlMode = $derived(rpmMode || rpmRangeMode);
+
   let modeOptions = $derived(
     [
       {
@@ -55,7 +66,7 @@
       />
     </Field>
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM}
+    {#if rpmMode}
       <Field id="governor-rpm" label="motorsGovernorRpm" unit="RPM">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorRpmHelp" />
@@ -67,9 +78,21 @@
           bind:value={FC.GOVERNOR_CONFIG.governor_rpm}
         />
       </Field>
+
+      <Field id="governor-rpm-max" label="motorsGovernorRpmMaxLimit" unit="RPM">
+        {#snippet tooltip()}
+          <Tooltip help="motorsGovernorRpmMaxLimitHelp" />
+        {/snippet}
+        <NumberInput
+          id="governor-rpm-max"
+          min="0"
+          max="50000"
+          bind:value={FC.GOVERNOR_CONFIG.governor_rpm_max}
+        />
+      </Field>
     {/if}
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM_RANGE}
+    {#if rpmRangeMode}
       <Field id="governor-rpm-min" label="motorsGovernorRpmMin" unit="RPM">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorRpmMinHelp" />
@@ -95,7 +118,7 @@
       </Field>
     {/if}
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM || FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM_RANGE}
+    {#if rpmControlMode}
       <Field id="governor-gain" label="motorsGovernorGain">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorGainHelp" />
@@ -121,7 +144,7 @@
       </Field>
     {/if}
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_THROTTLE}
+    {#if throttleMode}
       <Field id="governor-throttle" label="motorsGovernorThrottle" unit="%">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorThrottleHelp" />
@@ -135,7 +158,7 @@
       </Field>
     {/if}
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_RPM || FC.GOVERNOR_CONFIG.governor_mode === GOVERNOR_MODE_THROTTLE}
+    {#if rpmMode || throttleMode}
       <Field id="governor-handover" label="motorsGovernorHandover" unit="%">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorHandoverHelp" />
