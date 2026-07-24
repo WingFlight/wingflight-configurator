@@ -14,6 +14,13 @@ export const PID_ADJUSTMENT_FUNCTIONS = [
 
 export const MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [85, 84, 86]; // Roll/Pitch/Yaw
 
+// Roll/Pitch/Yaw, same order as MASTER_GAIN_ADJUSTMENT_FUNCTIONS. Unlike the
+// PID/MasterGain functions, these aren't tied to a fixed slot (motor/PID
+// axis) - they trim whichever servo output(s) FC.MIXER_RULES currently mixes
+// from the corresponding stabilized axis input, so callers need to resolve
+// the affected servo(s) themselves (see Servos tab).
+export const SERVO_TRIM_ADJUSTMENT_FUNCTIONS = [89, 90, 91]; // Roll/Pitch/Yaw
+
 function auxChannelValue(channel) {
   return channel >= 0 && channel < ALWAYS_ON_CH
     ? FC.RC.channels[channel + PRIMARY_CHANNEL_COUNT]

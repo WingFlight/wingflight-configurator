@@ -9,7 +9,7 @@
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
-  } from "./adjustmentState.js";
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   const AXES = ["ROLL", "PITCH", "YAW"];
   const GAINS = [

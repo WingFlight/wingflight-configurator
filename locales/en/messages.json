@@ -2966,6 +2966,9 @@
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
     },
+    "servoTrimColumn": {
+        "message": "ADJ"
+    },
     "servoMin": {
         "message": "Min"
     },

@@ -13,7 +13,7 @@
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
-  } from "./adjustmentState.js";
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation

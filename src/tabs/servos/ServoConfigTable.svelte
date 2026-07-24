@@ -2,6 +2,12 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import {
+    SERVO_TRIM_ADJUSTMENT_FUNCTIONS,
+    adjustmentChannelLabel,
+    adjustmentTitle,
+    getAdjustmentState,
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
@@ -14,6 +20,45 @@
 
   const scaleMin = 50;
 
+  // Roll/Pitch/Yaw, same order as SERVO_TRIM_ADJUSTMENT_FUNCTIONS.
+  const SERVO_TRIM_AXIS_LABELS = ["R", "P", "Y"];
+
+  // ServoTrimRoll/Pitch/Yaw aren't tied to a fixed servo slot like
+  // PID/MasterGain adjustments -- they trim whichever servo(s)
+  // FC.MIXER_RULES currently mixes from the corresponding stabilized axis
+  // input (src 1/2/3, see AxisConfig.svelte). dst uses the same 1-based raw
+  // servo slot numbering as servo.mspIndex (dst - 1 === mspIndex) for both
+  // PWM and bus servos.
+  function axisAffectsServo(axisSrc, mspIndex) {
+    return (FC.MIXER_RULES ?? []).some(
+      (rule) => rule.src === axisSrc && rule.dst - 1 === mspIndex,
+    );
+  }
+
+  // A servo can be mixed from more than one stabilized axis at once (e.g. a
+  // flying-wing elevon mixes both Roll and Pitch), so this returns every
+  // applicable, currently-configured trim rather than just the first match.
+  function servoTrimAdjustments(servo) {
+    return SERVO_TRIM_ADJUSTMENT_FUNCTIONS.map((adjFunction, axisIndex) => {
+      if (!axisAffectsServo(axisIndex + 1, servo.mspIndex)) {
+        return null;
+      }
+
+      const adjustment = getAdjustmentState(adjFunction);
+      return adjustment
+        ? { axisLabel: SERVO_TRIM_AXIS_LABELS[axisIndex], adjustment }
+        : null;
+    }).filter(Boolean);
+  }
+
+  // While a ServoTrim adjustment is actively being driven live over the AUX
+  // channel, the FC keeps overwriting Mid via the polled
+  // MSP_SERVO_CONFIGURATIONS response -- disable editing to avoid the field
+  // fighting with the live value.
+  function midDisabled(servo) {
+    return servoTrimAdjustments(servo).some((trim) => trim.adjustment.active);
+  }
+
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
   // table instance is homogeneous (all PWM or all bus), so hide the whole
   // column rather than leaving an empty cell in every row.
@@ -25,11 +70,11 @@
   // independently and doesn't have that failure mode.
   let gridColumns = $derived.by(() => {
     if (!CONFIGURATOR.expertMode) {
-      return "44px 118px 118px 118px 118px 118px 84px 1fr";
+      return "44px 118px 70px 118px 118px 118px 118px 84px 1fr";
     }
     return isBusTable
-      ? "44px 118px 118px 118px 118px 118px 118px 84px 84px 1fr"
-      : "44px 118px 118px 118px 118px 118px 118px 118px 84px 84px 1fr";
+      ? "44px 118px 70px 118px 118px 118px 118px 118px 84px 84px 1fr"
+      : "44px 118px 70px 118px 118px 118px 118px 118px 118px 84px 84px 1fr";
   });
 
   function bounds(servo, field) {
@@ -80,6 +125,7 @@
       <span>{$i18n.t("servoMid")}</span>
       <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
     </span>
+    <span>{$i18n.t("servoTrimColumn")}</span>
     <span class="header-label-flex">
       <span>{$i18n.t("servoMin")}</span>
       <HelpIcon>{$i18n.t("servoMinHelp")}</HelpIcon>
@@ -135,8 +181,23 @@
         <NumberInput
           {...bounds(servo, "mid")}
           bind:value={config.mid}
+          disabled={midDisabled(servo)}
           onchange={() => onFieldChange(servo.index)}
         />
+      </span>
+      <span class="servo-trim-badges">
+        {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+          <span
+            class="adjustment-badge"
+            class:runtime-active={trim.adjustment.active}
+            title={adjustmentTitle(trim.adjustment)}
+          >
+            {trim.axisLabel}
+            {trim.adjustment.active
+              ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+              : "ADJ"}
+          </span>
+        {/each}
       </span>
       <span>
         <NumberInput
@@ -229,6 +290,33 @@
     display: grid;
     align-items: center;
     column-gap: 4px;
+  }
+
+  .servo-trim-badges {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .adjustment-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: 3px;
+    background-color: transparent;
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  .adjustment-badge.runtime-active {
+    background-color: var(--color-accent, var(--accent));
+    color: var(--color-text-inverse, #fff);
   }
 
   .header-row {
