@@ -22,6 +22,16 @@ async function requestWebUsbDeviceFromPicker() {
             device = await navigator.usb.requestDevice({ filters: usbDevices.filters });
         }
         console.log(`USB DFU device authorized: ${device.productName}`);
+
+        // getDevices() matching an already-authorized device (e.g. from an
+        // earlier Flash) resolves silently -- no browser popup at all -- so
+        // without this, selecting "DFU" can appear to do nothing. Mirror the
+        // nwjs/chrome.usb picker's behavior of relabeling the option with the
+        // device name so there's a visible sign the board was actually found.
+        GUI.log(i18n.getMessage('usbDeviceOpened', [device.productName || device.serialNumber || 'DFU']));
+        $('div#port-picker #port option[value="DFU"]').text(
+            device.productName ? `DFU - ${device.productName}` : 'DFU',
+        );
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
     }
