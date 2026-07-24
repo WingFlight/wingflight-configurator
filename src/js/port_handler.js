@@ -381,7 +381,7 @@ PortHandler.updatePortSelect = function (ports) {
             $("<option/>", {
                 value: "0",
                 text: i18n.getMessage('portsSelectPleaseSelect'),
-            }).prop('disabled', true),
+            }),
         );
 
         this.portPickerElement.append($("<option/>", {
