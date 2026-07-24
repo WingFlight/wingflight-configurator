@@ -64,17 +64,25 @@
   // column rather than leaving an empty cell in every row.
   let isBusTable = $derived(servos.length > 0 && servos[0].isBusServo);
 
+  // Only show the Trim column if at least one servo in this table actually
+  // has a ServoTrim adjustment configured for it -- otherwise it's just an
+  // empty column taking up space.
+  let hasTrimAdjustments = $derived(
+    servos.some((servo) => servoTrimAdjustments(servo).length > 0),
+  );
+
   // CSS Grid instead of a <table>: HTML tables with border-collapse are
   // prone to sub-pixel row-height rounding that visibly accumulates over
   // many rows (fine at row 1, drifted by row 10+) -- a grid sizes every row
   // independently and doesn't have that failure mode.
   let gridColumns = $derived.by(() => {
+    const trimColumn = hasTrimAdjustments ? "70px " : "";
     if (!CONFIGURATOR.expertMode) {
-      return "44px 118px 70px 118px 118px 118px 118px 84px 1fr";
+      return `44px 118px ${trimColumn}118px 118px 118px 118px 84px 1fr`;
     }
     return isBusTable
-      ? "44px 118px 70px 118px 118px 118px 118px 118px 84px 84px 1fr"
-      : "44px 118px 70px 118px 118px 118px 118px 118px 118px 84px 84px 1fr";
+      ? `44px 118px ${trimColumn}118px 118px 118px 118px 118px 84px 84px 1fr`
+      : `44px 118px ${trimColumn}118px 118px 118px 118px 118px 118px 84px 84px 1fr`;
   });
 
   function bounds(servo, field) {
@@ -125,7 +133,12 @@
       <span>{$i18n.t("servoMid")}</span>
       <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
     </span>
-    <span>{$i18n.t("servoTrimColumn")}</span>
+    {#if hasTrimAdjustments}
+      <span class="header-label-flex">
+        <span>{$i18n.t("servoTrimColumn")}</span>
+        <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
+      </span>
+    {/if}
     <span class="header-label-flex">
       <span>{$i18n.t("servoMin")}</span>
       <HelpIcon>{$i18n.t("servoMinHelp")}</HelpIcon>
@@ -185,20 +198,22 @@
           onchange={() => onFieldChange(servo.index)}
         />
       </span>
-      <span class="servo-trim-badges">
-        {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-          <span
-            class="adjustment-badge"
-            class:runtime-active={trim.adjustment.active}
-            title={adjustmentTitle(trim.adjustment)}
-          >
-            {trim.axisLabel}
-            {trim.adjustment.active
-              ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-              : "ADJ"}
-          </span>
-        {/each}
-      </span>
+      {#if hasTrimAdjustments}
+        <span class="servo-trim-badges">
+          {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+            <span
+              class="adjustment-badge"
+              class:runtime-active={trim.adjustment.active}
+              title={adjustmentTitle(trim.adjustment)}
+            >
+              {trim.axisLabel}
+              {trim.adjustment.active
+                ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+                : "ADJ"}
+            </span>
+          {/each}
+        </span>
+      {/if}
       <span>
         <NumberInput
           {...bounds(servo, "min")}

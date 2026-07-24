@@ -2967,7 +2967,10 @@
         "message": "Center position in µs. The servo arm should be level in this position."
     },
     "servoTrimColumn": {
-        "message": "ADJ"
+        "message": "Trim"
+    },
+    "servoTrimColumnHelp": {
+        "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
     },
     "servoMin": {
         "message": "Min"
