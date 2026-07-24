@@ -5,6 +5,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
   import { LogicCondition } from "@/js/LogicCondition.js";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import {
@@ -162,12 +163,19 @@
   export function isDirty() {
     return dirty;
   }
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabLogic"), "_system");
+  }
 </script>
 
 {#snippet header()}
   <h1>{$i18n.t("tabLogic")}</h1>
   <div class="grow"></div>
   <HelpIcon>{$i18n.t("logicNote")}</HelpIcon>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 {#snippet toolbar()}
@@ -241,6 +249,11 @@
 
   .btn {
     @extend %button;
+  }
+
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
   }
 
   .header-row {

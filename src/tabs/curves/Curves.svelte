@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { GainCurve } from "@/js/GainCurve.js";
 
@@ -156,10 +157,18 @@
   export function isDirty() {
     return anyDirty;
   }
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabCurves"), "_system");
+  }
 </script>
 
 {#snippet header()}
   <h1>{$i18n.t("tabCurves")}</h1>
+  <div class="grow"></div>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 {#snippet toolbar()}
@@ -296,6 +305,15 @@
 
   .btn {
     @extend %button;
+  }
+
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
+  }
+
+  .grow {
+    flex-grow: 1;
   }
 
   .category-tabs {

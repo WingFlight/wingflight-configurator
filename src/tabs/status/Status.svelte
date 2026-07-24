@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
   import * as flightStats from "@/js/flight-stats.js";
 
   import Page from "@/components/Page.svelte";
@@ -238,10 +239,18 @@
     clearInterval(fastInterval);
     clearInterval(slowInterval);
   });
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabStatus"), "_system");
+  }
 </script>
 
 {#snippet header()}
   <h1>{$i18n.t("tabStatus")}</h1>
+  <div class="grow"></div>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 <Page {header} {loading}>
@@ -453,6 +462,11 @@
 
   .btn {
     @extend %button;
+  }
+
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
   }
 
   .arm-danger {

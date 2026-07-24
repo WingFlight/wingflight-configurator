@@ -4,6 +4,7 @@
   import { i18n } from "@/js/i18n.js";
   import Page from "@/components/Page.svelte";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
 
   import escState, { View } from "./state.svelte.js";
   import ManufacturerPicker from "./ManufacturerPicker.svelte";
@@ -41,6 +42,10 @@
   export function isDirty() {
     return escState.view === View.FORM && escState.isDirty();
   }
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabEscProgramming"), "_system");
+  }
 </script>
 
 {#snippet header()}
@@ -56,6 +61,9 @@
       {$i18n.t("escProgrammingChangeEsc")}
     </button>
   {/if}
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 {#snippet toolbar()}
@@ -102,6 +110,11 @@
 
   .btn {
     @extend %button;
+  }
+
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
   }
 
   .armed-warning {
