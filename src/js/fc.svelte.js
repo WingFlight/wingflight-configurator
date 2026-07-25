@@ -192,6 +192,7 @@ class FlightController {
 
     this.MIXER_CONFIG = {
       tail_rotor_mode:            0,
+      model_type:                 0,
     };
 
     this.MIXER_INPUTS =             [];

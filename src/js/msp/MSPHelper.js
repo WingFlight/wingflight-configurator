@@ -773,6 +773,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.tail_rotor_mode = data.readU8();
+                FC.MIXER_CONFIG.model_type = data.remaining() >= 1 ? data.readU8() : 0;
                 break;
             }
 
@@ -1809,6 +1810,7 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.tail_rotor_mode);
+            buffer.push8(FC.MIXER_CONFIG.model_type);
             break;
         }
 
@@ -2549,6 +2551,11 @@ MspHelper.prototype.sendMixerInputs = function(onCompleteCallback)
     }
 
     send_next();
+};
+
+MspHelper.prototype.sendMixerConfig = function(onCompleteCallback)
+{
+    MSP.send_message(MSPCodes.MSP_SET_MIXER_CONFIG, this.crunch(MSPCodes.MSP_SET_MIXER_CONFIG), false, onCompleteCallback);
 };
 
 MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
