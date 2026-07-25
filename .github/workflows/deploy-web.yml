@@ -9,7 +9,8 @@ on:
       - experiment/**
       - release/**
     tags:
-      - "*"
+      - "release/**"
+      - "snapshot/**"
   delete:
   workflow_dispatch:
     inputs:
@@ -45,13 +46,30 @@ jobs:
             DEPLOY_PATH="${{ github.event.inputs.deployment_path }}"
             UPDATE_LATEST="false"
           elif [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION="${{ github.ref_name }}"
-            VERSION="${VERSION#v}"
-            DEPLOY_PATH="$VERSION"
-            if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              UPDATE_LATEST="true"
-            else
+            TAG="${{ github.ref_name }}"
+            if [[ "$TAG" == release/* ]]; then
+              VERSION="${TAG#release/}"
+              DEPLOY_PATH="release/$VERSION"
+              if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                UPDATE_LATEST="true"
+              else
+                UPDATE_LATEST="false"
+              fi
+            elif [[ "$TAG" == snapshot/* ]]; then
+              VERSION="${TAG#snapshot/}"
+              DEPLOY_PATH="snapshot/$VERSION"
               UPDATE_LATEST="false"
+            else
+              # Fallback for any bare vX.Y.Z-style tag, kept for backward
+              # compatibility even though the trigger above no longer
+              # matches anything but release/** and snapshot/**.
+              VERSION="${TAG#v}"
+              DEPLOY_PATH="$VERSION"
+              if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                UPDATE_LATEST="true"
+              else
+                UPDATE_LATEST="false"
+              fi
             fi
           elif [ "${{ github.ref_name }}" = "master" ]; then
             DEPLOY_PATH="master"
@@ -124,56 +142,15 @@ jobs:
           mkdir -p pages/latest
           cp -R bundle/. pages/latest/
 
+      - name: Sync landing page
+        shell: bash
+        run: cp .github/pages/index.html pages/index.html
+
       - name: Generate versions.json
         shell: bash
         run: |
           cd pages
-          python3 - <<'EOF'
-          import json, os, re
-
-          entries = []
-          SKIP_DIRS = {'bundle', 'logos', 'public', 'node_modules', '.git'}
-          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
-
-          if 'latest' in dirs:
-            entries.append({
-              'type': 'stable',
-              'name': 'Latest Stable',
-              'path': './latest/',
-              'notes': 'Recommended for all users',
-            })
-            dirs.remove('latest')
-
-          if 'master' in dirs:
-            entries.append({
-              'type': 'master',
-              'name': 'master',
-              'path': './master/',
-              'notes': 'Latest development build',
-            })
-            dirs.remove('master')
-
-          version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
-
-          version_dirs = sorted(
-            [d for d in dirs if version_pattern.match(d)],
-            reverse=True,
-          )
-          branch_dirs = sorted(d for d in dirs if d not in version_dirs)
-
-          entries.extend(
-            {'type': 'release', 'name': version, 'path': f'./{version}/'}
-            for version in version_dirs
-          )
-          entries.extend(
-            {'type': 'branch', 'name': branch, 'path': f'./{branch}/'}
-            for branch in branch_dirs
-          )
-
-          with open('versions.json', 'w', encoding='utf-8') as handle:
-            json.dump({'entries': entries}, handle, indent=2)
-            handle.write('\n')
-          EOF
+          python3 ../.github/scripts/generate_versions.py
 
       - name: Commit GitHub Pages changes
         shell: bash
@@ -204,6 +181,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
       - name: Checkout GitHub Pages branch
         uses: actions/checkout@v6
         with:
@@ -232,56 +212,15 @@ jobs:
             echo "No deployment found for pages/$DEPLOY_PATH"
           fi
 
+      - name: Sync landing page
+        shell: bash
+        run: cp .github/pages/index.html pages/index.html
+
       - name: Regenerate versions.json
         shell: bash
         run: |
           cd pages
-          python3 - <<'EOF'
-          import json, os, re
-
-          entries = []
-          SKIP_DIRS = {'bundle', 'logos', 'public', 'node_modules', '.git'}
-          dirs = [d for d in os.listdir('.') if os.path.isdir(d) and d not in SKIP_DIRS and os.path.exists(os.path.join(d, 'index.html'))]
-
-          if 'latest' in dirs:
-            entries.append({
-              'type': 'stable',
-              'name': 'Latest Stable',
-              'path': './latest/',
-              'notes': 'Recommended for all users',
-            })
-            dirs.remove('latest')
-
-          if 'master' in dirs:
-            entries.append({
-              'type': 'master',
-              'name': 'master',
-              'path': './master/',
-              'notes': 'Latest development build',
-            })
-            dirs.remove('master')
-
-          version_pattern = re.compile(r'^\d+\.\d+\.\d+(?:[-._A-Za-z0-9]*)?$')
-
-          version_dirs = sorted(
-            [d for d in dirs if version_pattern.match(d)],
-            reverse=True,
-          )
-          branch_dirs = sorted(d for d in dirs if d not in version_dirs)
-
-          entries.extend(
-            {'type': 'release', 'name': version, 'path': f'./{version}/'}
-            for version in version_dirs
-          )
-          entries.extend(
-            {'type': 'branch', 'name': branch, 'path': f'./{branch}/'}
-            for branch in branch_dirs
-          )
-
-          with open('versions.json', 'w', encoding='utf-8') as handle:
-            json.dump({'entries': entries}, handle, indent=2)
-            handle.write('\n')
-          EOF
+          python3 ../.github/scripts/generate_versions.py
 
       - name: Commit Cleanup Changes
         shell: bash
