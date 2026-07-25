@@ -147,6 +147,103 @@ export const Mixer = {
         return copy;
     },
 
+    //// Model types
+    //
+    // Mirrors mixerConfig_t.model_type in firmware (pg/mixer.h) -- purely
+    // descriptive there, but here it also drives which simplified sub-options
+    // the Mixer tab shows and what those sub-options mean in terms of
+    // buildWizardRules' {layout, ailerons, tailControl, wingYaw} option
+    // shape. Every type but CUSTOM exposes flaps/motors/diffThrustYaw
+    // identically (see SimplifiedMixerForm.svelte), so those aren't modeled
+    // here. Each of ailerons/tailControl/wingYaw is either omitted (not
+    // applicable to this layout), `{ fixed }` (forced, no control shown), or
+    // `{ options, default }` (user picks from a Select).
+
+    MODEL_TYPE_REGULAR_AIRPLANE: 0,
+    MODEL_TYPE_FLYING_WING: 1,
+    MODEL_TYPE_V_TAIL_AIRPLANE: 2,
+    MODEL_TYPE_DELTA_WING: 3,
+    MODEL_TYPE_RUDDER_ELEVATOR_TRAINER: 4,
+    MODEL_TYPE_CUSTOM: 5,
+
+    MODEL_TYPES: [
+        {
+            value: 0,
+            key: 'REGULAR_AIRPLANE',
+            labelKey: 'mixerModelTypeRegularAirplane',
+            images: ['conventional_shape', 'conventional_aileron', 'conventional_normal_tail'],
+            layout: 'conventional',
+            ailerons: { options: ['none', 'single', 'independent'], default: 'independent' },
+            tailControl: { options: ['elevatorOnly', 'elevatorRudder'], default: 'elevatorRudder' },
+        },
+        {
+            value: 1,
+            key: 'FLYING_WING',
+            labelKey: 'mixerModelTypeFlyingWing',
+            images: ['flying_wing_shape', 'flying_wing_aileron'],
+            layout: 'flyingWing',
+            wingYaw: { options: ['none', 'rudder'], default: 'rudder' },
+        },
+        {
+            value: 2,
+            key: 'V_TAIL_AIRPLANE',
+            labelKey: 'mixerModelTypeVTailAirplane',
+            images: ['conventional_shape', 'conventional_aileron', 'conventional_v_tail'],
+            layout: 'conventional',
+            ailerons: { options: ['none', 'single', 'independent'], default: 'independent' },
+            tailControl: { fixed: 'vtail' },
+        },
+        {
+            value: 3,
+            key: 'DELTA_WING',
+            labelKey: 'mixerModelTypeDeltaWing',
+            // No distinct delta-wing silhouette asset exists yet -- reuses
+            // flying-wing art (the elevon rule generation is identical).
+            // Cosmetic approximation until dedicated art is added.
+            images: ['flying_wing_shape', 'flying_wing_aileron'],
+            layout: 'flyingWing',
+            wingYaw: { options: ['none', 'rudder'], default: 'rudder' },
+        },
+        {
+            value: 4,
+            key: 'RUDDER_ELEVATOR_TRAINER',
+            labelKey: 'mixerModelTypeRudderElevatorTrainer',
+            images: ['conventional_shape', 'conventional_normal_tail'],
+            layout: 'conventional',
+            ailerons: { fixed: 'none' },
+            tailControl: { fixed: 'elevatorRudder' },
+        },
+        {
+            value: 5,
+            key: 'CUSTOM',
+            labelKey: 'mixerModelTypeCustom',
+            images: [],
+        },
+    ],
+
+    modelTypeInfo: function (value)
+    {
+        return Mixer.MODEL_TYPES.find((t) => t.value === value) || Mixer.MODEL_TYPES[0];
+    },
+
+    // Shared by the Custom-mode wizard dialog and the named-model-type
+    // simplified form -- both stage a freshly generated rule set into a
+    // rule table padded/truncated to match the currently loaded rule count.
+    buildRuleTableFromOptions: function (options, currentRules)
+    {
+        const generatedRules = Mixer.buildWizardRules(options);
+        const ruleCount = (currentRules && currentRules.length) || Mixer.RULE_COUNT;
+        const nextRules = Array.from({ length: ruleCount }, () => Mixer.nullRule());
+
+        generatedRules.forEach((rule, index) => {
+            if (index < nextRules.length) {
+                nextRules[index] = rule;
+            }
+        });
+
+        return nextRules;
+    },
+
     //// Mixer setup wizard
     //
     // Composes a starting rule set from a handful of orthogonal airframe

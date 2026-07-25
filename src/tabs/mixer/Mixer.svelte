@@ -15,6 +15,8 @@
   import AxisConfig from "./AxisConfig.svelte";
   import OverridePanel from "./OverridePanel.svelte";
   import WizardDialog from "./WizardDialog.svelte";
+  import ModelTypePicker from "./ModelTypePicker.svelte";
+  import SimplifiedMixerForm from "./SimplifiedMixerForm.svelte";
 
   let loading = $state(true);
   let initialState = $state();
@@ -38,6 +40,9 @@
   });
   let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
+  let isCustom = $derived(
+    FC.MIXER_CONFIG.model_type === Mixer.MODEL_TYPE_CUSTOM,
+  );
 
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
@@ -66,9 +71,13 @@
   });
 
   export async function onSave() {
+    const configDirty = changes.some((c) => c.path[0] === "MIXER_CONFIG");
     const inputsDirty = changes.some((c) => c.path[0] === "MIXER_INPUTS");
     const rulesDirty = changes.some((c) => c.path[0] === "MIXER_RULES");
 
+    if (configDirty) {
+      await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    }
     if (inputsDirty) {
       await new Promise((resolve) => mspHelper.sendMixerInputs(resolve));
     }
@@ -93,17 +102,7 @@
   }
 
   function onWizardApply(options) {
-    const generatedRules = Mixer.buildWizardRules(options);
-    const ruleCount = FC.MIXER_RULES.length || Mixer.RULE_COUNT;
-    const nextRules = Array.from({ length: ruleCount }, () => Mixer.nullRule());
-
-    generatedRules.forEach((rule, index) => {
-      if (index < nextRules.length) {
-        nextRules[index] = rule;
-      }
-    });
-
-    FC.MIXER_RULES = nextRules;
+    FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
   }
 
   function onClickHelp() {
@@ -125,8 +124,14 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
+  <ModelTypePicker />
+
   <Section label="mixerRulesTitle">
-    <RuleTable onOpenWizard={() => wizardRef.open()} />
+    {#if isCustom}
+      <RuleTable onOpenWizard={() => wizardRef.open()} />
+    {:else}
+      <SimplifiedMixerForm />
+    {/if}
   </Section>
 
   <div class="axis-row">

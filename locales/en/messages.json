@@ -3575,6 +3575,45 @@
     "mixerOpenWizard": {
         "message": "Setup Wizard"
     },
+    "mixerModelTypeTitle": {
+        "message": "Model Type"
+    },
+    "mixerChangeModelType": {
+        "message": "Change Model Type"
+    },
+    "mixerModelTypeRegularAirplane": {
+        "message": "Regular Airplane"
+    },
+    "mixerModelTypeFlyingWing": {
+        "message": "Flying Wing"
+    },
+    "mixerModelTypeVTailAirplane": {
+        "message": "V-Tail Airplane"
+    },
+    "mixerModelTypeDeltaWing": {
+        "message": "Delta Wing"
+    },
+    "mixerModelTypeRudderElevatorTrainer": {
+        "message": "Rudder/Elevator Trainer"
+    },
+    "mixerModelTypeCustom": {
+        "message": "Custom"
+    },
+    "mixerEditConfiguration": {
+        "message": "Edit Configuration"
+    },
+    "mixerEditConfigurationTitle": {
+        "message": "Edit Mixer Configuration"
+    },
+    "mixerChannelSummaryEmpty": {
+        "message": "No mixer rules generated yet for this model type. Use Edit Configuration to generate a starting mix."
+    },
+    "mixerChannelSummaryOutput": {
+        "message": "Output"
+    },
+    "mixerChannelSummaryInput": {
+        "message": "Input"
+    },
     "mixerRuleMoveUp": {
         "message": "Move up"
     },
