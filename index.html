@@ -102,7 +102,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 171px 24px 80px;
+      padding: 140px 24px 64px;
       overflow: hidden;
     }
 
@@ -252,35 +252,6 @@
       margin-bottom: 56px;
     }
 
-    /* Category blocks: Release Versions / Branches */
-    .category-block {
-      margin-bottom: 52px;
-    }
-    .category-block:last-child { margin-bottom: 0; }
-
-    .category-heading {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 18px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .category-heading .cat-accent {
-      display: inline-block;
-      width: 18px;
-      height: 2px;
-      background: var(--red);
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
     .category-count {
       margin-left: auto;
       font-size: 0.7rem;
@@ -382,11 +353,67 @@
       border: 1px solid rgba(255,255,255,0.14);
     }
 
-    .badge-branch {
+    .badge-snapshot {
+      background: rgba(255, 170, 0, 0.12);
+      color: #ffb84d;
+      border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+
+    .badge-branch, .badge-pr {
       background: rgba(160, 119, 255, 0.1);
       color: #c4aaff;
       border: 1px solid rgba(160, 119, 255, 0.28);
     }
+
+    /* ── Version tabs ─────────────────────────────────────────── */
+    .version-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border-gray, rgba(255,255,255,0.1));
+      flex-wrap: wrap;
+    }
+
+    .version-tab {
+      appearance: none;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      padding: 10px 18px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transform: translateY(1px);
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .version-tab:hover { color: var(--text); }
+
+    .version-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--red);
+    }
+
+    .version-tab .category-count {
+      font-size: 0.7rem;
+      margin-left: 0;
+    }
+
+    .version-tab:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .version-tab:disabled:hover { color: var(--text-muted); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -601,7 +628,7 @@
     </div>
 
     <span class="hero-eyebrow">Open Source Flight Control</span>
-    <h1>Wingflight<br><em>Configurator</em></h1>
+    <h1>Wingflight <em>Configurator</em></h1>
     <p class="hero-sub">Browser-based configuration tool for Wingflight flight controllers. Advanced stabilization for gliders, sport aircraft, and jets.</p>
     <div class="hero-actions">
       <a href="#versions" class="btn btn-primary">
@@ -620,29 +647,31 @@
     <div class="container">
       <div class="section-label">Available Builds</div>
       <h2 class="section-title">Select a Version</h2>
-      <p class="section-sub">Stable and master are always available. Release versions and branches are listed below as they are deployed.</p>
+      <p class="section-sub">Stable and master are always available. Releases, snapshots, and development builds are listed below as they are deployed.</p>
 
       <!-- Pinned: Stable + Master -->
       <div class="pinned-row" id="pinned-row"></div>
 
-      <!-- Release Versions category -->
-      <div class="category-block" id="releases-block" style="display:none">
-        <div class="category-heading">
-          <span class="cat-accent"></span>
-          Release Versions
-          <span class="category-count" id="releases-count"></span>
-        </div>
-        <div class="versions-grid" id="releases-grid"></div>
+      <div class="version-tabs" id="version-tabs" role="tablist">
+        <button class="version-tab" id="tab-release" data-panel="panel-release" role="tab">
+          Release <span class="category-count" id="release-count"></span>
+        </button>
+        <button class="version-tab" id="tab-snapshot" data-panel="panel-snapshot" role="tab">
+          Snapshot <span class="category-count" id="snapshot-count"></span>
+        </button>
+        <button class="version-tab" id="tab-development" data-panel="panel-development" role="tab">
+          Development <span class="category-count" id="development-count"></span>
+        </button>
       </div>
 
-      <!-- Branches category -->
-      <div class="category-block" id="branches-block" style="display:none">
-        <div class="category-heading">
-          <span class="cat-accent"></span>
-          Branches
-          <span class="category-count" id="branches-count"></span>
-        </div>
-        <div class="versions-grid" id="branches-grid"></div>
+      <div class="tab-panel" id="panel-release" role="tabpanel">
+        <div class="versions-grid" id="release-grid"></div>
+      </div>
+      <div class="tab-panel" id="panel-snapshot" role="tabpanel">
+        <div class="versions-grid" id="snapshot-grid"></div>
+      </div>
+      <div class="tab-panel" id="panel-development" role="tabpanel">
+        <div class="versions-grid" id="development-grid"></div>
       </div>
 
     </div>
@@ -676,13 +705,16 @@
     // ── versions.json schema ─────────────────────────────────────
     // {
     //   "entries": [
-    //     { "type": "stable",  "name": "Latest Stable", "path": "./bundle/",  "tag": "v1.0.0",  "date": "2026-07-01", "notes": "Recommended for all users" },
-    //     { "type": "master",  "name": "master",        "path": "./master/",  "date": "2026-07-19", "notes": "Latest development build" },
-    //     { "type": "release", "name": "v1.0.0",        "path": "./v1.0.0/", "date": "2026-07-01", "notes": "First flyable release" },
-    //     { "type": "branch",  "name": "feature/xyz",   "path": "./feature-xyz/", "date": "2026-06-20" }
+    //     { "type": "stable",   "name": "Latest Stable", "path": "./latest/",       "tag": "v1.0.0", "date": "2026-07-01", "notes": "Recommended for all users" },
+    //     { "type": "master",   "name": "master",        "path": "./master/",       "date": "2026-07-19", "notes": "Latest development build" },
+    //     { "type": "release",  "name": "0.0.9",         "path": "./release/0.0.9/", "date": "2026-07-01", "notes": "First flyable release" },
+    //     { "type": "snapshot", "name": "0.0.9",         "path": "./snapshot/0.0.9/", "date": "2026-07-24" },
+    //     { "type": "branch",   "name": "feature/xyz",   "path": "./feature-xyz/", "date": "2026-06-20" },
+    //     { "type": "pr",       "name": "42",            "path": "./pr/42/",       "date": "2026-06-20" }
     //   ]
     // }
-    // type: "stable" | "master" | "release" | "branch"
+    // type: "stable" | "master" | "release" | "snapshot" | "branch" | "pr"
+    // Tabs group release / snapshot / development (branch + pr).
     // ─────────────────────────────────────────────────────────────
 
     const ICON_CLOCK = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>`;
@@ -700,8 +732,8 @@
       const featured = type === 'stable' || type === 'master';
       card.className = 'version-card' + (featured ? ' featured' : '');
 
-      const badgeClass = { stable: 'badge-stable', master: 'badge-master', release: 'badge-release', branch: 'badge-branch' }[type] || 'badge-release';
-      const badgeLabel = { stable: 'Stable', master: 'Master', release: 'Release', branch: 'Branch' }[type] || type;
+      const badgeClass = { stable: 'badge-stable', master: 'badge-master', release: 'badge-release', snapshot: 'badge-snapshot', branch: 'badge-branch', pr: 'badge-pr' }[type] || 'badge-release';
+      const badgeLabel = { stable: 'Stable', master: 'Master', release: 'Release', snapshot: 'Snapshot', branch: 'Branch', pr: 'Pull Request' }[type] || type;
       const btnClass   = featured ? 'btn-primary' : 'btn-ghost';
 
       let meta = '';
@@ -727,13 +759,14 @@
     }
 
     (async () => {
-      const pinnedRow     = document.getElementById('pinned-row');
-      const releasesBlock = document.getElementById('releases-block');
-      const releasesGrid  = document.getElementById('releases-grid');
-      const releasesCount = document.getElementById('releases-count');
-      const branchesBlock = document.getElementById('branches-block');
-      const branchesGrid  = document.getElementById('branches-grid');
-      const branchesCount = document.getElementById('branches-count');
+      const pinnedRow  = document.getElementById('pinned-row');
+      const tabsRow    = document.getElementById('version-tabs');
+
+      const TABS = {
+        release:     { types: ['release'],     tab: document.getElementById('tab-release'),     panel: document.getElementById('panel-release'),     grid: document.getElementById('release-grid'),     count: document.getElementById('release-count') },
+        snapshot:    { types: ['snapshot'],    tab: document.getElementById('tab-snapshot'),    panel: document.getElementById('panel-snapshot'),    grid: document.getElementById('snapshot-grid'),    count: document.getElementById('snapshot-count') },
+        development: { types: ['branch', 'pr'], tab: document.getElementById('tab-development'), panel: document.getElementById('panel-development'), grid: document.getElementById('development-grid'), count: document.getElementById('development-count') },
+      };
 
       // ── Fallback: always show static Stable + Master cards ──────
       const fallbackEntries = [
@@ -754,9 +787,7 @@
       } catch { /* use fallback */ }
 
       // ── Render pinned (stable + master) ─────────────────────────
-      const pinned   = entries.filter(e => e.type === 'stable' || e.type === 'master');
-      const releases = entries.filter(e => e.type === 'release');
-      const branches = entries.filter(e => e.type === 'branch');
+      const pinned = entries.filter(e => e.type === 'stable' || e.type === 'master');
 
       pinned.forEach(e => pinnedRow.appendChild(makeCard(e, true)));
       // Add wing icon to all rendered cards
@@ -767,18 +798,35 @@
       });
       if (!pinned.length) pinnedRow.innerHTML = '<div class="versions-empty">No builds deployed yet.</div>';
 
-      // ── Render Release Versions ──────────────────────────────────
-      if (releases.length) {
-        releases.forEach(e => releasesGrid.appendChild(makeCard(e, false)));
-        releasesCount.textContent = releases.length;
-        releasesBlock.style.display = '';
+      // ── Populate each tab (Release, Snapshot, Development) ──────
+      let firstAvailable = null;
+      for (const [key, group] of Object.entries(TABS)) {
+        const items = entries.filter(e => group.types.includes(e.type));
+        if (items.length) {
+          items.forEach(e => group.grid.appendChild(makeCard(e, false)));
+          group.count.textContent = items.length;
+          group.tab.disabled = false;
+          if (!firstAvailable) firstAvailable = key;
+        } else {
+          group.tab.disabled = true;
+          group.count.textContent = '';
+        }
       }
 
-      // ── Render Branches ─────────────────────────────────────────
-      if (branches.length) {
-        branches.forEach(e => branchesGrid.appendChild(makeCard(e, false)));
-        branchesCount.textContent = branches.length;
-        branchesBlock.style.display = '';
+      if (!firstAvailable) {
+        tabsRow.style.display = 'none';
+      } else {
+        const activate = (key) => {
+          for (const [k, group] of Object.entries(TABS)) {
+            const isActive = k === key;
+            group.tab.classList.toggle('active', isActive);
+            group.panel.classList.toggle('active', isActive);
+          }
+        };
+        Object.entries(TABS).forEach(([key, group]) => {
+          group.tab.addEventListener('click', () => { if (!group.tab.disabled) activate(key); });
+        });
+        activate(firstAvailable);
       }
     })();
   </script>
