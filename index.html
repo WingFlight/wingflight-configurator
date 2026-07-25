@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wingflight Configurator</title>
-  <meta name="description" content="Wingflight Configurator — Advanced open source flight control configuration for winged aircraft.">
+  <meta name="description" content="Wingflight Configurator — Advanced open source flight control configuration for fixed wing aircraft.">
   <link rel="icon" type="image/svg+xml" href="bundle/images/favicon/favicon.svg">
   <style>
     /* ── Reset & Base ─────────────────────────────────────────── */
@@ -244,7 +244,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
-    /* Pinned top row: Stable + Master */
+    /* Pinned top row: Stable only */
     .pinned-row {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -647,7 +647,7 @@
     <div class="container">
       <div class="section-label">Available Builds</div>
       <h2 class="section-title">Select a Version</h2>
-      <p class="section-sub">Stable and master are always available. Releases, snapshots, and development builds are listed below as they are deployed.</p>
+      <p class="section-sub">Stable is always available. Releases, snapshots, and development builds (including master) are listed below as they are deployed.</p>
 
       <!-- Pinned: Stable + Master -->
       <div class="pinned-row" id="pinned-row"></div>
@@ -685,7 +685,7 @@
           <a href="https://wingflight.org/" target="_blank" rel="noopener" class="footer-logo">
             <img src="logos/logos_svg/wf_logo_dark_white.svg" alt="Wingflight">
           </a>
-          <p class="footer-tagline">Advanced Open Source Flight Control for Winged Aircraft</p>
+          <p class="footer-tagline">Advanced Open Source Flight Control for Fixed Wing Aircraft</p>
         </div>
         <ul class="footer-links">
           <li><a href="https://wingflight.org/" target="_blank" rel="noopener">Project Website</a></li>
@@ -714,7 +714,10 @@
     //   ]
     // }
     // type: "stable" | "master" | "release" | "snapshot" | "branch" | "pr"
-    // Tabs group release / snapshot / development (branch + pr).
+    // Only "stable" is pinned above the tabs -- master is only "current"
+    // for developers, so it's grouped into the Development tab along with
+    // branch/pr, not pinned next to the thing end users actually want.
+    // Tabs group release / snapshot / development (branch + pr + master).
     // ─────────────────────────────────────────────────────────────
 
     const ICON_CLOCK = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>`;
@@ -765,7 +768,7 @@
       const TABS = {
         release:     { types: ['release'],     tab: document.getElementById('tab-release'),     panel: document.getElementById('panel-release'),     grid: document.getElementById('release-grid'),     count: document.getElementById('release-count') },
         snapshot:    { types: ['snapshot'],    tab: document.getElementById('tab-snapshot'),    panel: document.getElementById('panel-snapshot'),    grid: document.getElementById('snapshot-grid'),    count: document.getElementById('snapshot-count') },
-        development: { types: ['branch', 'pr'], tab: document.getElementById('tab-development'), panel: document.getElementById('panel-development'), grid: document.getElementById('development-grid'), count: document.getElementById('development-count') },
+        development: { types: ['master', 'branch', 'pr'], tab: document.getElementById('tab-development'), panel: document.getElementById('panel-development'), grid: document.getElementById('development-grid'), count: document.getElementById('development-count') },
       };
 
       // ── Fallback: always show static Stable + Master cards ──────
@@ -786,8 +789,8 @@
         }
       } catch { /* use fallback */ }
 
-      // ── Render pinned (stable + master) ─────────────────────────
-      const pinned = entries.filter(e => e.type === 'stable' || e.type === 'master');
+      // ── Render pinned (stable only -- master is a dev build) ─────
+      const pinned = entries.filter(e => e.type === 'stable');
 
       pinned.forEach(e => pinnedRow.appendChild(makeCard(e, true)));
       // Add wing icon to all rendered cards
@@ -796,7 +799,7 @@
         img.className = 'version-card-icon'; img.src = 'logos/wf_icon.svg'; img.alt = ''; img.setAttribute('aria-hidden','true');
         c.prepend(img);
       });
-      if (!pinned.length) pinnedRow.innerHTML = '<div class="versions-empty">No builds deployed yet.</div>';
+      if (!pinned.length) pinnedRow.innerHTML = '<div class="versions-empty">No stable release yet — check the Snapshot or Development tabs below.</div>';
 
       // ── Populate each tab (Release, Snapshot, Development) ──────
       let firstAvailable = null;
