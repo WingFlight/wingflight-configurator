@@ -60,7 +60,7 @@ export function applyVirtualConfig() {
     flightControllerVersion: CONFIGURATOR.virtualFwVersion,
     flightControllerIdentifier: "WGFL",
     apiVersion: CONFIGURATOR.virtualApiVersion,
-    motorCount: 1,
+    motorCount: 2, // lets the motor 2 RPM filter group be exercised in virtual mode
     servoCount: 4,
     sampleRateHz: 4000,
     activeSensors: 63, // activate all sensors
@@ -199,15 +199,15 @@ export function applyVirtualConfig() {
     mincommand: 1000,
     minthrottle: 1070,
     maxthrottle: 2000,
-    motor_count_blheli: 2, // lets ESC2 (tail) be exercised in virtual mode
+    motor_count_blheli: 2, // lets ESC2 (motor 2) be exercised in virtual mode
     motor_pwm_protocol: 0,
     motor_pwm_rate: 250,
     motor_poles: [8, 8, 8, 8],
     motor_rpm_lpf: [0, 0, 0, 0],
     use_dshot_telemetry: false,
     use_unsynced_pwm: false,
-    main_rotor_gear_ratio: [1, 9],
-    tail_rotor_gear_ratio: [1, 5],
+    motor1_gear_ratio: [1, 9],
+    motor2_gear_ratio: [1, 5],
   });
 
   FC.FEATURE_CONFIG.features.ESC_SENSOR = true;

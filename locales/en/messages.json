@@ -5498,14 +5498,14 @@
     "gyroRpmFilterHelp": {
         "message": "Every rotating part on an aircraft generates vibrations, which can significantly affect the performance of the flight control loops. The <i>RPM Filter</i> utilizes the motor's RPM signal and the model's gear ratios to precisely eliminate these vibrations from the gyro's output, enabling the control loops to operate on the true motion of the aircraft. This method introduces substantially less delay than traditional vibration filtering, enhancing overall flight performance."
     },
-    "gyroRpmFilterMainRotorGroup": {
-        "message": "Main Rotor"
+    "gyroRpmFilterMotor1Group": {
+        "message": "Motor 1"
     },
     "gyroRpmFilterMainRotorHelp": {
         "message": "RPM controlled filters for the main rotor harmonics"
     },
-    "gyroRpmFilterTailRotorGroup": {
-        "message": "Tail Rotor"
+    "gyroRpmFilterMotor2Group": {
+        "message": "Motor 2"
     },
     "gyroRpmFilterTailRotorHelp": {
         "message": "RPM controlled filters for the tail rotor harmonics"
@@ -5516,8 +5516,8 @@
     "gyroRpmFilterMainMotorGroup": {
         "message": "Main Motor Notch Filters"
     },
-    "gyroRpmFilterMainMotorQ": {
-        "message": "Main Motor Notch Q"
+    "gyroRpmFilterMotor1Q": {
+        "message": "Motor 1 Notch Q"
     },
     "gyroRpmFilterMainMotorHelp": {
         "message": "RPM controlled filters for the main motor harmonics"
@@ -5525,8 +5525,8 @@
     "gyroRpmFilterTailMotorGroup": {
         "message": "Tail Motor Notch Filters"
     },
-    "gyroRpmFilterTailMotorQ": {
-        "message": "Tail Motor Notch Q"
+    "gyroRpmFilterMotor2Q": {
+        "message": "Motor 2 Notch Q"
     },
     "gyroRpmFilterTailMotorHelp": {
         "message": "RPM controlled filters for the tail motor harmonics"
