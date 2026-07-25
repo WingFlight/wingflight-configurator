@@ -1,3 +1,15 @@
+# 0.0.9
+
+Add web-based configurator deployment (Web Serial/WebUSB/Web Bluetooth, PWA support, GitHub Pages hosting).
+Add servo trim adjustments for roll/pitch/yaw.
+Add effective PID gain preview in Master Gains section.
+Reuse gain-curve pool for fixed-wing throttle attenuation (TPA).
+Harden USB/serial device reconnect and port-picker behavior.
+
+# 0.0.8
+
+Version bump for release alignment; no configurator-relevant changes this cycle.
+
 # 0.0.7
 
 Fix arming confirmation dialog rendering raw HTML tags as literal text, and add button spacing.
