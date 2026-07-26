@@ -7,8 +7,8 @@
    viewBox="0 0 103.58047 48.517796"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
-   sodipodi:docname="delta_aileron.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="flying_wing_aileron.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,12 +24,12 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="3.4048401"
-     inkscape:cx="210.43573"
+     inkscape:cx="210.87628"
      inkscape:cy="176.36658"
-     inkscape:window-width="3840"
-     inkscape:window-height="2089"
-     inkscape:window-x="-8"
-     inkscape:window-y="162"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -166,7 +166,7 @@
        inkscape:path-effect="#path-effect1"
        inkscape:original-d="m 21.135513,63.234422 c 0.43096,-0.669908 3.528644,-1.212585 5.289435,0 -0.05423,2.823716 0,6.439674 0,6.439674 h -5.289435 c 0,0 -0.01193,-3.789672 0,-6.439674 z" />
     <path
-       style="display:inline;fill:#d40000;fill-opacity:1;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
+       style="display:inline;fill:#ffb4b4;fill-opacity:1;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
        d="m 108.23255,139.59192 0.6882,-4.50182 14.95878,-0.73822 -0.41827,4.50317 z m 13.92444,-4.37611 m 82.56328,4.3759 -0.68822,-4.50182 -14.95878,-0.73815 0.41828,4.50317 z m -13.92446,-4.37605"
        id="path5-8-4-4"
        sodipodi:nodetypes="ccccc"

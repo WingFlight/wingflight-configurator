@@ -7,8 +7,8 @@
    viewBox="0 0 103.58047 48.517796"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
-   sodipodi:docname="delt_two_motor.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="flying_wing_two_motor.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,12 +24,12 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="3.4048401"
-     inkscape:cx="210.43573"
+     inkscape:cx="210.58258"
      inkscape:cy="176.36658"
-     inkscape:window-width="3840"
-     inkscape:window-height="2089"
-     inkscape:window-x="-8"
-     inkscape:window-y="162"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -160,7 +160,7 @@
        inkscape:original-d="m 14.879195,59.762761 c -3.478654,0.04188 -6.2539329,0.791555 -6.19187,1.633492 0.0662,0.898066 3.529447,0.943412 6.818705,1.036112 3.289259,0.0927 7.161837,-0.395324 7.161837,-0.395324 v 0.81287 h 0.819588 0.948263 0.819588 v -0.81287 c 0,0 3.872578,0.488024 7.161837,0.395324 3.289258,-0.0927 6.752505,-0.138046 6.818705,-1.036112 0.06206,-0.841937 -2.713216,-1.591612 -6.19187,-1.633492 -0.23191,-0.0027 -0.467339,-0.0022 -0.704867,0.0016 -3.80045,0.05885 -7.083805,0.660425 -7.083805,0.660425 h -0.819588 -0.948263 -0.819588 c 0,0 -3.283355,-0.601576 -7.083805,-0.660425 -0.237528,-0.0037 -0.472957,-0.0042 -0.704867,-0.0016 z" />
     <path
        id="rect5"
-       style="display:inline;fill:#cac6c8;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
+       style="display:inline;fill:#595959;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel;fill-opacity:1"
        d="m 21.135513,63.234422 c 0.43096,-0.669908 3.528644,-1.212585 5.289435,0 -0.05423,2.823716 0,6.439674 0,6.439674 h -5.289435 c 0,0 -0.01193,-3.789672 0,-6.439674 z m 57.076374,0 c -0.43096,-0.669908 -3.528644,-1.212585 -5.289435,0 0.05423,2.823716 0,6.439674 0,6.439674 h 5.289435 c 0,0 0.01193,-3.789672 0,-6.439674 z"
        sodipodi:nodetypes="ccccc"
        inkscape:path-effect="#path-effect1"

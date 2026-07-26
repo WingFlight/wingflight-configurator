@@ -7,7 +7,7 @@
    viewBox="0 0 103.99402 68.333511"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    sodipodi:docname="conventional_dual_motor.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -25,11 +25,11 @@
      inkscape:document-units="mm"
      showguides="true"
      inkscape:zoom="2.4075855"
-     inkscape:cx="137.68981"
+     inkscape:cx="137.48214"
      inkscape:cy="55.865098"
-     inkscape:window-width="1440"
-     inkscape:window-height="2489"
-     inkscape:window-x="3832"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1">
@@ -303,7 +303,7 @@
        inkscape:original-d="m 6.1681119,141.38903 0.891616,-4.66232 17.4454451,-0.34968 -0.654798,4.61779 z" />
     <path
        id="rect5"
-       style="display:inline;fill:#cac6c8;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
+       style="display:inline;fill:#595959;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel;fill-opacity:1"
        d="m 20.216884,92.094513 c 0.43096,-0.669908 3.528644,-1.212585 5.289435,0 -0.05423,2.823716 0,6.439674 0,6.439674 h -5.289435 c 0,0 -0.01193,-3.789672 0,-6.439674 z m 58.268584,0 c -0.43096,-0.669908 -3.528644,-1.212585 -5.289435,0 0.05423,2.823716 0,6.439674 0,6.439674 h 5.289435 c 0,0 0.01193,-3.789672 0,-6.439674 z"
        sodipodi:nodetypes="ccccc"
        inkscape:path-effect="#path-effect1"
