@@ -7,7 +7,7 @@
    viewBox="0 0 103.99402 68.333511"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    sodipodi:docname="conventional_aileron.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -25,12 +25,12 @@
      inkscape:document-units="mm"
      showguides="true"
      inkscape:zoom="2.4075855"
-     inkscape:cx="137.68981"
+     inkscape:cx="137.48214"
      inkscape:cy="55.865098"
-     inkscape:window-width="3840"
-     inkscape:window-height="2089"
-     inkscape:window-x="-8"
-     inkscape:window-y="162"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1">
     <sodipodi:guide
@@ -44,7 +44,23 @@
     <inkscape:path-effect
        effect="mirror_symmetry"
        start_point="54.186587,135.05828"
-       end_point="54.186587,140.29007"
+       end_point="54.186587,140.29006"
+       center_point="54.186587,137.67417"
+       id="path-effect6"
+       is_visible="true"
+       lpeversion="1.2"
+       lpesatellites=""
+       mode="free"
+       discard_orig_path="false"
+       fuse_paths="false"
+       oposite_fuse="false"
+       split_items="false"
+       split_open="false"
+       link_styles="false" />
+    <inkscape:path-effect
+       effect="mirror_symmetry"
+       start_point="54.186587,135.05828"
+       end_point="54.186587,140.29006"
        center_point="54.186587,137.67417"
        id="path-effect4"
        is_visible="true"
@@ -295,7 +311,7 @@
        inkscape:original-d="m 40.682169,125.96451 -0.04088,-4.5069 12.744111,-4.27394 -0.108939,4.93512 z"
        transform="translate(-5.0588911,52.427125)" />
     <path
-       style="display:inline;fill:#d40000;fill-opacity:1;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
+       style="display:inline;fill:#ffb4b4;fill-opacity:1;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
        d="m 6.1681119,141.38903 0.891616,-4.66232 17.4454451,-0.34968 -0.654798,4.61779 z m 96.0369481,0 -0.89161,-4.66232 -17.445449,-0.34968 0.654798,4.61779 z"
        id="path5-8"
        sodipodi:nodetypes="ccccc"
@@ -347,5 +363,12 @@
        inkscape:path-effect="#path-effect10"
        inkscape:original-d="m 43.01138,155.10273 v -4.69889 l 13.210363,-0.27197 -0.03885,4.93525 -13.288071,0.0356"
        transform="translate(-5.0588709,21.549695)" />
+    <path
+       style="display:inline;fill:#ffb4b4;fill-opacity:1;stroke-width:3.24501;stroke-linecap:square;stroke-linejoin:bevel"
+       d="m 6.1681119,141.38903 0.891616,-4.66232 17.4454451,-0.34968 -0.654798,4.61779 z m 96.0369481,0 -0.89161,-4.66232 -17.445449,-0.34968 0.654798,4.61779 z"
+       id="path2"
+       sodipodi:nodetypes="ccccc"
+       inkscape:path-effect="#path-effect6"
+       inkscape:original-d="m 6.1681119,141.38903 0.891616,-4.66232 17.4454451,-0.34968 -0.654798,4.61779 z" />
   </g>
 </svg>
