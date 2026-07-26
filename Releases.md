@@ -1,3 +1,11 @@
+# 0.0.10
+
+Remove tail_rotor_mode; rename main/tail motor naming to motor1/motor2.
+Add model-type picker to the Mixer tab (guided airframe presets: Regular Airplane, Flying Wing, V-Tail, Delta Wing, Rudder/Elevator Trainer, Custom).
+Fix web-backend GUI global race causing "GUI is not defined" on startup.
+Fix NW.js-only zoom call crashing on the web backend.
+Move Master into the Development tab; footer wording tweak.
+
 # 0.0.9
 
 Add web-based configurator deployment (Web Serial/WebUSB/Web Bluetooth, PWA support, GitHub Pages hosting).
