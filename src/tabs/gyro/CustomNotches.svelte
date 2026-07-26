@@ -40,13 +40,13 @@
   });
 
   let showMainMotor = $derived(
-    FC.MOTOR_CONFIG.main_rotor_gear_ratio[0] != 1 ||
-      FC.MOTOR_CONFIG.main_rotor_gear_ratio[1] != 1,
+    FC.MOTOR_CONFIG.motor1_gear_ratio[0] != 1 ||
+      FC.MOTOR_CONFIG.motor1_gear_ratio[1] != 1,
   );
   let showTailMotor = $derived(
-    FC.MIXER_CONFIG.tail_rotor_mode > 0 &&
-      (FC.MOTOR_CONFIG.tail_rotor_gear_ratio[0] != 1 ||
-        FC.MOTOR_CONFIG.tail_rotor_gear_ratio[1] != 1),
+    FC.CONFIG.motorCount > 1 &&
+      (FC.MOTOR_CONFIG.motor2_gear_ratio[0] != 1 ||
+        FC.MOTOR_CONFIG.motor2_gear_ratio[1] != 1),
   );
 
   const MAX_NOTCH_COUNT = 16;
@@ -122,15 +122,15 @@
         {#if showMainMotor || showTailMotor}
           <SubSection label="gyroRpmFilterMotorGroup">
             {#if showMainMotor}
-              {@render notch("gyroRpmFilterMainMotorQ", 10)}
+              {@render notch("gyroRpmFilterMotor1Q", 10)}
             {/if}
             {#if showTailMotor}
-              {@render notch("gyroRpmFilterTailMotorQ", 20)}
+              {@render notch("gyroRpmFilterMotor2Q", 20)}
             {/if}
           </SubSection>
         {/if}
 
-        <SubSection label="gyroRpmFilterMainRotorGroup">
+        <SubSection label="gyroRpmFilterMotor1Group">
           {@render notch("gyroRpmFilterQ1", 11, "gyroRpmFilterH1")}
           {@render notch("gyroRpmFilterQ2", 12, "gyroRpmFilterH2")}
           {@render notch("gyroRpmFilterQ3", 13)}
@@ -141,7 +141,7 @@
           {@render notch("gyroRpmFilterQ8", 18)}
         </SubSection>
 
-        <SubSection label="gyroRpmFilterTailRotorGroup">
+        <SubSection label="gyroRpmFilterMotor2Group">
           {@render notch("gyroRpmFilterQ1", 21, "gyroRpmFilterH1")}
           {@render notch("gyroRpmFilterQ2", 22, "gyroRpmFilterH2")}
           {@render notch("gyroRpmFilterQ3", 23)}

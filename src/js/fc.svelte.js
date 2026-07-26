@@ -191,7 +191,6 @@ class FlightController {
     };
 
     this.MIXER_CONFIG = {
-      tail_rotor_mode:            0,
       model_type:                 0,
     };
 
@@ -398,8 +397,8 @@ class FlightController {
       motor_rpm_lpf:              [ 0, 0, 0, 0 ],
       use_dshot_telemetry:        false,
       use_unsynced_pwm:           false,
-      main_rotor_gear_ratio:      [ 1, 1 ],
-      tail_rotor_gear_ratio:      [ 1, 1 ],
+      motor1_gear_ratio:          [ 1, 1 ],
+      motor2_gear_ratio:          [ 1, 1 ],
     };
 
     this.GOVERNOR_CONFIG = {

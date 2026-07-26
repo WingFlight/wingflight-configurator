@@ -441,9 +441,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 for (let i = 0; i < 4; i++)
                     FC.MOTOR_CONFIG.motor_rpm_lpf[i] = data.readU8();
                 for (let i = 0; i < 2; i++)
-                    FC.MOTOR_CONFIG.main_rotor_gear_ratio[i] = data.readU16();
+                    FC.MOTOR_CONFIG.motor1_gear_ratio[i] = data.readU16();
                 for (let i = 0; i < 2; i++)
-                    FC.MOTOR_CONFIG.tail_rotor_gear_ratio[i] = data.readU16();
+                    FC.MOTOR_CONFIG.motor2_gear_ratio[i] = data.readU16();
                 break;
             }
 
@@ -772,8 +772,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_MIXER_CONFIG: {
-                FC.MIXER_CONFIG.tail_rotor_mode = data.readU8();
-                FC.MIXER_CONFIG.model_type = data.remaining() >= 1 ? data.readU8() : 0;
+                FC.MIXER_CONFIG.model_type = data.readU8();
                 break;
             }
 
@@ -1809,7 +1808,6 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
-            buffer.push8(FC.MIXER_CONFIG.tail_rotor_mode);
             buffer.push8(FC.MIXER_CONFIG.model_type);
             break;
         }
@@ -1922,9 +1920,9 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 4; i++)
                 buffer.push8(FC.MOTOR_CONFIG.motor_rpm_lpf[i]);
             for (let i = 0; i < 2; i++)
-                buffer.push16(FC.MOTOR_CONFIG.main_rotor_gear_ratio[i]);
+                buffer.push16(FC.MOTOR_CONFIG.motor1_gear_ratio[i]);
             for (let i = 0; i < 2; i++)
-                buffer.push16(FC.MOTOR_CONFIG.tail_rotor_gear_ratio[i]);
+                buffer.push16(FC.MOTOR_CONFIG.motor2_gear_ratio[i]);
             break;
         }
 
