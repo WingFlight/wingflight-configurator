@@ -7,6 +7,7 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { Mixer } from "@/js/Mixer.js";
   import { getTabHelpURL } from "@/js/help";
+  import { updateTabList } from "@/js/main.js";
 
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
@@ -101,8 +102,33 @@
     return dirty;
   }
 
-  function onWizardApply(options) {
+  async function onWizardApply(options) {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
+
+    // The feature flag isn't part of the staged mixer rules, and this tab's
+    // own Save only pushes MIXER_CONFIG/MIXER_INPUTS/MIXER_RULES -- so commit
+    // it immediately here rather than leaving it as unsaved FC state that a
+    // later tab visit (which re-fetches MSP_FEATURE_CONFIG on mount) could
+    // silently discard.
+    const thrustVectorEnabled =
+      !!options.thrustVectorRoll ||
+      !!options.thrustVectorPitch ||
+      !!options.thrustVectorYaw;
+    if (
+      thrustVectorEnabled !==
+      FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")
+    ) {
+      FC.FEATURE_CONFIG.features.setFeature(
+        "THRUST_VECTOR",
+        thrustVectorEnabled,
+      );
+      await MSP.promise(
+        MSPCodes.MSP_SET_FEATURE_CONFIG,
+        mspHelper.crunch(MSPCodes.MSP_SET_FEATURE_CONFIG),
+      );
+      await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
+      updateTabList(FC.FEATURE_CONFIG.features);
+    }
   }
 
   function onClickHelp() {

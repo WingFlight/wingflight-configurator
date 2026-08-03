@@ -803,6 +803,39 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_TV_PID_CONFIG: {
+                for (let i = 0; i < 3; i++) { // RPY
+                    for (let j = 0; j < 5; j++) { // PIDFB
+                        FC.TV_PIDS[i][j] = data.readU16();
+                    }
+                }
+                FC.TV_PID_PROFILE.masterGainRoll        = data.readU16();
+                FC.TV_PID_PROFILE.masterGainPitch       = data.readU16();
+                FC.TV_PID_PROFILE.masterGainYaw         = data.readU16();
+                FC.TV_PID_PROFILE.iterm_decay_time      = data.readU8();
+                FC.TV_PID_PROFILE.iterm_decay_limit     = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxType        = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelRoll   = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelPitch  = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelYaw    = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffRoll  = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffPitch = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffYaw   = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitRoll        = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitPitch       = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitYaw         = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffRoll       = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffPitch      = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffYaw        = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffRoll       = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffPitch      = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffYaw        = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffRoll        = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffPitch       = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffYaw         = data.readU8();
+                break;
+            }
+
             case MSPCodes.MSP_SET_REBOOT: {
                 const rebootType = data.read8();
                 if ((rebootType === self.REBOOT_TYPES.MSC) || (rebootType === self.REBOOT_TYPES.MSC_UTC)) {
@@ -1823,6 +1856,39 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push16(FC.BOARD_MOUNT_TRIM.roll)
                 .push16(FC.BOARD_MOUNT_TRIM.pitch)
                 .push16(FC.BOARD_MOUNT_TRIM.yaw);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_TV_PID_CONFIG: {
+            for (let i = 0; i < 3; i++) { // RPY
+                for (let j = 0; j < 5; j++) { // PIDFB
+                    buffer.push16(parseInt(FC.TV_PIDS[i][j]));
+                }
+            }
+            buffer.push16(FC.TV_PID_PROFILE.masterGainRoll)
+                .push16(FC.TV_PID_PROFILE.masterGainPitch)
+                .push16(FC.TV_PID_PROFILE.masterGainYaw)
+                .push8(FC.TV_PID_PROFILE.iterm_decay_time)
+                .push8(FC.TV_PID_PROFILE.iterm_decay_limit)
+                .push8(FC.TV_PID_PROFILE.itermRelaxType)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelRoll)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelPitch)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelYaw)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.errorLimitRoll)
+                .push8(FC.TV_PID_PROFILE.errorLimitPitch)
+                .push8(FC.TV_PID_PROFILE.errorLimitYaw)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.btermCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.btermCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.btermCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw);
             break;
         }
 

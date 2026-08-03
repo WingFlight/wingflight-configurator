@@ -18,11 +18,12 @@ export class Features {
     FREQ_SENSOR: 28,
     DYN_NOTCH: 29,
     RPM_FILTER: 30,
+    THRUST_VECTOR: 24,
   };
 
   static GROUPS = {
     RX_PROTO: ["RX_PPM", "RX_SERIAL", "RX_PARALLEL_PWM", "RX_MSP", "RX_SPI"],
-    OTHER: ["GPS", "LED_STRIP", "CMS"],
+    OTHER: ["GPS", "LED_STRIP", "CMS", "THRUST_VECTOR"],
     RSSI: ["RSSI_ADC"],
   };
 

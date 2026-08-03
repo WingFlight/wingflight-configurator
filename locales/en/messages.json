@@ -448,6 +448,9 @@
     "tabProfiles": {
         "message": "Profiles"
     },
+    "tabThrustVector": {
+        "message": "Thrust Vector"
+    },
     "tabRates": {
         "message": "Rates"
     },
@@ -1259,6 +1262,9 @@
     "feature_GPS": {
         "message": "GPS for telemetry"
     },
+    "feature_THRUST_VECTOR": {
+        "message": "Thrust vectoring"
+    },
     "feature_SONAR": {
         "message": "Sonar altitude radar"
     },
@@ -1321,6 +1327,9 @@
     },
     "featureTip_GPS": {
         "message": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration."
+    },
+    "featureTip_THRUST_VECTOR": {
+        "message": "Enables a second, independent PID loop for thrust-vectoring actuators, tuned separately from the main roll/pitch/yaw loop. Adds the <i>Thrust Vector</i> tab, and TV Roll/Pitch/Yaw mixer input sources on the <i>Mixer</i> tab."
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
@@ -2660,6 +2669,9 @@
     "adjustmentsGroupServoTrims": {
         "message": "Servo Trims"
     },
+    "adjustmentsGroupThrustVector": {
+        "message": "Thrust Vector"
+    },
     "adjustmentsGroupSetpointBoost": {
         "message": "Setpoint Boost"
     },
@@ -2842,6 +2854,60 @@
     },
     "adjustmentsFunctionServoTrimYaw": {
         "message": "Servo Trim Yaw"
+    },
+    "adjustmentsFunctionTVMasterGainRoll": {
+        "message": "TV Master Gain Roll"
+    },
+    "adjustmentsFunctionTVMasterGainPitch": {
+        "message": "TV Master Gain Pitch"
+    },
+    "adjustmentsFunctionTVMasterGainYaw": {
+        "message": "TV Master Gain Yaw"
+    },
+    "adjustmentsFunctionTVRollP": {
+        "message": "TV Roll P Gain"
+    },
+    "adjustmentsFunctionTVRollI": {
+        "message": "TV Roll I Gain"
+    },
+    "adjustmentsFunctionTVRollD": {
+        "message": "TV Roll D Gain"
+    },
+    "adjustmentsFunctionTVRollF": {
+        "message": "TV Roll F Gain"
+    },
+    "adjustmentsFunctionTVRollB": {
+        "message": "TV Roll B Gain"
+    },
+    "adjustmentsFunctionTVPitchP": {
+        "message": "TV Pitch P Gain"
+    },
+    "adjustmentsFunctionTVPitchI": {
+        "message": "TV Pitch I Gain"
+    },
+    "adjustmentsFunctionTVPitchD": {
+        "message": "TV Pitch D Gain"
+    },
+    "adjustmentsFunctionTVPitchF": {
+        "message": "TV Pitch F Gain"
+    },
+    "adjustmentsFunctionTVPitchB": {
+        "message": "TV Pitch B Gain"
+    },
+    "adjustmentsFunctionTVYawP": {
+        "message": "TV Yaw P Gain"
+    },
+    "adjustmentsFunctionTVYawI": {
+        "message": "TV Yaw I Gain"
+    },
+    "adjustmentsFunctionTVYawD": {
+        "message": "TV Yaw D Gain"
+    },
+    "adjustmentsFunctionTVYawF": {
+        "message": "TV Yaw F Gain"
+    },
+    "adjustmentsFunctionTVYawB": {
+        "message": "TV Yaw B Gain"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -3106,6 +3172,15 @@
     },
     "mixerInputStabilizedYaw": {
         "message": "Stabilized Yaw"
+    },
+    "mixerInputStabilizedTVRoll": {
+        "message": "Stabilized TV Roll"
+    },
+    "mixerInputStabilizedTVPitch": {
+        "message": "Stabilized TV Pitch"
+    },
+    "mixerInputStabilizedTVYaw": {
+        "message": "Stabilized TV Yaw"
     },
     "mixerInputStabilizedCollective": {
         "message": "Collective"
@@ -3697,6 +3772,21 @@
     },
     "mixerWizardDiffThrustHint": {
         "message": "Adds extra yaw authority by speeding up one motor and slowing the other, on top of normal throttle."
+    },
+    "mixerWizardThrustVectorTitle": {
+        "message": "Thrust Vectoring"
+    },
+    "mixerWizardThrustVectorRoll": {
+        "message": "Roll"
+    },
+    "mixerWizardThrustVectorPitch": {
+        "message": "Pitch"
+    },
+    "mixerWizardThrustVectorYaw": {
+        "message": "Yaw"
+    },
+    "mixerWizardThrustVectorHint": {
+        "message": "Check whichever axes your vectored mount can actually drive -- adds a Stabilized TV servo rule for each one checked, and enables Thrust Vectoring: a second PID loop tuned independently from the main Roll/Pitch/Yaw loop (see the new Thrust Vector tab)."
     },
     "mixerWizardOverwriteWarning": {
         "message": "Applying the wizard replaces all current mixer rules."
@@ -4973,6 +5063,18 @@
     "profilesPidSettings": {
         "message": "PID Controller Settings"
     },
+    "thrustVectorPidGains": {
+        "message": "Thrust Vector PID Gains"
+    },
+    "thrustVectorMasterGainGroup": {
+        "message": "Master Gain"
+    },
+    "thrustVectorPidSettings": {
+        "message": "Thrust Vector PID Settings"
+    },
+    "thrustVectorIntroNote": {
+        "message": "This is a second, independent PID loop for thrust-vectoring actuators -- it targets the same stick setpoint as the main Roll/Pitch/Yaw loop but is tuned separately. Its output only reaches your aircraft once you assign the <strong>Stabilized TV Roll/Pitch/Yaw</strong> mixer input sources to an output on the <i>Mixer</i> tab."
+    },
     "profilesErrorLimit": {
         "message": "Cumulative Error Limits"
     },
@@ -5098,6 +5200,18 @@
     },
     "profilesItermRelaxCutoffHelp": {
         "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
+    },
+    "tvItermRelaxLevelRoll": {
+        "message": "Level for Roll"
+    },
+    "tvItermRelaxLevelPitch": {
+        "message": "Level for Pitch"
+    },
+    "tvItermRelaxLevelYaw": {
+        "message": "Level for Yaw"
+    },
+    "tvItermRelaxLevelHelp": {
+        "message": "Setpoint activity, in degrees/s, above which I-term accumulation is fully suppressed. Lower values relax I-term sooner during stick movement."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
