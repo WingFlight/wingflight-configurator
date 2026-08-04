@@ -74,17 +74,27 @@ export const MixerCurve = {
 
     // Clamp a dragged point so it can never cross its immediate neighbors in x
     // (the firmware assumes ascending-x points and does no defensive sorting),
-    // and stays within the curve's value range in both axes.
+    // and stays within the curve's value range in both axes. The first and
+    // last active points are pinned to CURVE_MIN/CURVE_MAX exactly - they
+    // define the curve's domain extent, so only their y is adjustable (see
+    // removePoint() below for the matching protection against deleting
+    // either one outright).
     clampPoint: function (curve, index, x, y)
     {
         const self = this;
+        const clampedY = Math.min(Math.max(y, self.CURVE_MIN), self.CURVE_MAX);
 
-        const minX = (index > 0) ? curve.points[index - 1].x + 1 : self.CURVE_MIN;
-        const maxX = (index < curve.count - 1) ? curve.points[index + 1].x - 1 : self.CURVE_MAX;
+        if (index === 0)
+            return { x: self.CURVE_MIN, y: clampedY };
+        if (index === curve.count - 1)
+            return { x: self.CURVE_MAX, y: clampedY };
+
+        const minX = curve.points[index - 1].x + 1;
+        const maxX = curve.points[index + 1].x - 1;
 
         return {
             x: Math.min(Math.max(x, minX), maxX),
-            y: Math.min(Math.max(y, self.CURVE_MIN), self.CURVE_MAX),
+            y: clampedY,
         };
     },
 
@@ -162,12 +172,18 @@ export const MixerCurve = {
     },
 
     // Remove an active point. Returns false (no change) if it would leave
-    // fewer than the 2 points a curve needs to interpolate. The points array
-    // stays at a fixed POINT_COUNT length - removing shifts the remaining
-    // active points down and appends a fresh unused filler slot.
+    // fewer than the 2 points a curve needs to interpolate, or if `index` is
+    // the first or last active point - those define the curve's domain
+    // extent (CURVE_MIN/CURVE_MAX) and must never be deleted outright (see
+    // clampPoint()'s matching protection against dragging them away from
+    // it). The points array stays at a fixed POINT_COUNT length - removing
+    // shifts the remaining active points down and appends a fresh unused
+    // filler slot.
     removePoint: function (curve, index)
     {
         if (curve.count <= 2)
+            return false;
+        if (index === 0 || index === curve.count - 1)
             return false;
 
         curve.points.splice(index, 1);

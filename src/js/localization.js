@@ -8,6 +8,7 @@ export const i18n = {};
 //const languagesAvailables = [ 'de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'nl', 'pl', 'pt', 'pt_BR', 'zh_CN', 'zh_TW', ];
 const languagesAvailables = [ 'bg', 'de', 'en', 'es', 'fr', 'nl', 'zh_CN', 'zh_TW' ];
 const languageFallback = { 'default': ['en'], };
+const publicBasePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 
 /**
  * Functions that depend on the i18n framework
@@ -27,7 +28,7 @@ i18n.init = async function() {
             defaultNS: ["messages"],
             fallbackLng: languageFallback,
             backend: {
-                loadPath: "/locales/{{lng}}/{{ns}}.json",
+                loadPath: `${publicBasePath}locales/{{lng}}/{{ns}}.json`,
                 parse: i18n.parseInputFile,
             },
         });

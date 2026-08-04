@@ -11,16 +11,18 @@
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
 
+  import EffectivePidGains from "./EffectivePidGains.svelte";
   import PidGains from "./PidGains.svelte";
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
-  import profilesState from "./state.svelte.js";
+  import MasterGains from "./MasterGains.svelte";
 
   let loading = $state(true);
   let initialState = $state(null);
   let mountedProfile;
   let pollerInterval;
+  let runtimeGainsSupported = true;
 
   let copyDialogEl;
   let resetDialogEl;
@@ -40,12 +42,7 @@
     return diff(initialState, snapshotState());
   });
 
-  let profileSwitched = $derived(
-    profilesState.savedProfile !== undefined &&
-      FC.CONFIG.profile !== profilesState.savedProfile,
-  );
-
-  let dirty = $derived(changes.length > 0 || profileSwitched);
+  let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
   let pidWarning = $derived.by(() => {
@@ -59,6 +56,7 @@
   });
 
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
+  let showSettingsColumn = $derived(showPidBoxes && CONFIGURATOR.expertMode);
 
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
@@ -70,17 +68,29 @@
       .map((i) => ({ value: i, label: $i18n.t(`profilesSubTab${i + 1}`) })),
   );
 
+  async function updateRuntimeGains() {
+    if (!runtimeGainsSupported) {
+      return;
+    }
+
+    const response = await MSP.promise(MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS);
+    if (!response || response.length === 0) {
+      runtimeGainsSupported = false;
+      FC.PID_RUNTIME_GAINS = null;
+    }
+  }
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
+    await MSP.promise(MSPCodes.MSP_RC);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_PID_TUNING);
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
+    await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
+    await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
+    await updateRuntimeGains();
     await MSP.promise(MSPCodes.MSP_SENSOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG);
-
-    if (profilesState.savedProfile === undefined) {
-      profilesState.savedProfile = FC.CONFIG.profile;
-    }
 
     mountedProfile = FC.CONFIG.profile;
     initialState = snapshotState();
@@ -88,6 +98,8 @@
 
     pollerInterval = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_STATUS);
+      await MSP.promise(MSPCodes.MSP_RC);
+      await updateRuntimeGains();
 
       if (FC.CONFIG.profile !== mountedProfile) {
         mountedProfile = FC.CONFIG.profile;
@@ -180,19 +192,10 @@
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
-    profilesState.savedProfile = FC.CONFIG.profile;
     initialState = snapshotState();
   }
 
   export async function onRevert() {
-    if (FC.CONFIG.profile !== profilesState.savedProfile) {
-      const target = profilesState.savedProfile;
-      await MSP.promise(MSPCodes.MSP_SELECT_SETTING, [target]);
-      GUI.log($i18n.t("profilesActivateProfile", { 1: target + 1 }));
-      GUI.tab_switch_reload();
-      return;
-    }
-
     FC.PIDS.forEach((axis, i) => Object.assign(axis, initialState.PIDS[i]));
     Object.assign(FC.PID_PROFILE, initialState.PID_PROFILE);
   }
@@ -240,23 +243,23 @@
     </div>
   {/if}
 
-  <div class="content">
+  <div class="content" class:single-column={!showSettingsColumn}>
     <div>
       {#if showPidBoxes}
+        <EffectivePidGains />
         <PidGains />
+        <MasterGains />
       {/if}
       {#if CONFIGURATOR.expertMode}
         <LevelingSettings />
       {/if}
     </div>
-    <div>
-      {#if showPidBoxes}
+    {#if showSettingsColumn}
+      <div>
         <PidSettings />
-        {#if CONFIGURATOR.expertMode}
-          <PidBandwidth />
-        {/if}
-      {/if}
-    </div>
+        <PidBandwidth />
+      </div>
+    {/if}
   </div>
 </Page>
 
@@ -358,10 +361,23 @@
     border: 1px solid var(--color-border-accent);
   }
 
+  // Single column is the default at every width. The PID tables in the
+  // left column need real room before a two-column split is worth it
+  // (the widest, Effective PID Gains, wants ~800px before its own
+  // horizontal scroll goes away), so two columns only kick in once
+  // there's comfortably enough space for both - otherwise a narrow
+  // split just forces every table into its scrollable fallback, which
+  // is worse than stacking full-width.
   .content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: 1fr;
     column-gap: var(--section-gap);
+  }
+
+  @media only screen and (min-width: 1500px) {
+    .content:not(.single-column) {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    }
   }
 
   dialog {

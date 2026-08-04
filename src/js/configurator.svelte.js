@@ -25,6 +25,7 @@ export const CONFIGURATOR = $state({
   cliTab: "",
   gitChangesetId: __COMMIT_HASH__,
   version: __APP_VERSION__,
+  buildLabel: __BUILD_LABEL__,
   latestVersion: "0.0.1",
   latestVersionReleaseUrl:
     "https://github.com/WingFlight/wingflight-configurator/releases",

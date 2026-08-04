@@ -2,8 +2,11 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'release/*'
+    branches:
+      # Disabled native compiler workflow. Previous active tags:
+      # tags:
+      #   - 'release/*'
+      - 'disabled/native-compiler-workflows-do-not-run'
 
 jobs:
 
@@ -417,4 +420,3 @@ jobs:
         gh release create ${{ env.GIT_TAG }} --notes-file Notes.md --title "Wingflight Configurator ${{ env.GH_TYPE }} ${{ env.GIT_VER }}" wingflight-configurator*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

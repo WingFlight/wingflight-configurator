@@ -657,6 +657,7 @@
         GUI.log($i18n.t("firmwareFlasherNoValidPort"));
       }
     } else {
+      GUI.connect_lock = true;
       STM32DFU.connect(usbDevices, firmware, options);
     }
   }

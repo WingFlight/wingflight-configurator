@@ -14,7 +14,16 @@
 
 <div class="landing">
   <div class="hero">
-    <img class="logo" src="/images/cf_logo_black.svg" alt="Wingflight" />
+    <img
+      class="logo logo-light"
+      src="/images/cf_logo_black.svg"
+      alt="Wingflight"
+    />
+    <img
+      class="logo logo-dark"
+      src="/images/cf_logo_white.svg"
+      alt="Wingflight"
+    />
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <p>{@html $i18n.t("defaultWelcomeIntro")}</p>
   </div>
@@ -95,10 +104,23 @@
     width: 100%;
     max-width: 600px;
     margin: 5px;
+  }
 
-    :global(html[data-theme="dark"]) & {
-      content: url(/images/cf_logo_white.svg);
-    }
+  .logo-dark {
+    display: none;
+  }
+
+  :global(html[data-theme="dark"]) .hero {
+    background-color: #2e2e2e;
+    color: #fff;
+  }
+
+  :global(html[data-theme="dark"]) .logo-light {
+    display: none;
+  }
+
+  :global(html[data-theme="dark"]) .logo-dark {
+    display: inline-block;
   }
 
   .columns {

@@ -63,8 +63,9 @@ And many more...
 Wingflight Configurator requires Windows 10 or later. Windows 7 is not supported.
 
 Windows has sometimes issues with detecting the flight controller USB device correctly.
-Impulse RC has created a _Driver Fixer_ software for fixing these issues. You can download it
-[here](https://impulserc.com/pages/downloads).
+[WingFlight Driver Fixer](https://github.com/WingFlight/wingflight-driver-fixer/releases) is a small
+tool that detects your board, reboots it into bootloader/DFU mode if needed, and installs the correct
+USB driver automatically — download the latest release from the link above.
 
 #### Linux
 

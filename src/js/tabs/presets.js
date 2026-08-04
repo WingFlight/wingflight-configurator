@@ -148,8 +148,9 @@ class PresetsTab {
     this.#presetTracker = new PresetTracker();
 
     const self = this;
-    $("#content").load("/src/tabs/presets/presets.html", () =>
-      self.onHtmlLoad(callback),
+    $("#content").load(
+      `${import.meta.env.BASE_URL}src/tabs/presets/presets.html`,
+      () => self.onHtmlLoad(callback),
     );
 
     if (GUI.active_tab !== "presets") {

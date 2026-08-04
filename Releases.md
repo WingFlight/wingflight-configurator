@@ -1,3 +1,39 @@
+# 0.0.10
+
+Remove tail_rotor_mode; rename main/tail motor naming to motor1/motor2.
+Add model-type picker to the Mixer tab (guided airframe presets: Regular Airplane, Flying Wing, V-Tail, Delta Wing, Rudder/Elevator Trainer, Custom).
+Fix web-backend GUI global race causing "GUI is not defined" on startup.
+Fix NW.js-only zoom call crashing on the web backend.
+Move Master into the Development tab; footer wording tweak.
+
+# 0.0.9
+
+Add web-based configurator deployment (Web Serial/WebUSB/Web Bluetooth, PWA support, GitHub Pages hosting).
+Add servo trim adjustments for roll/pitch/yaw.
+Add effective PID gain preview in Master Gains section.
+Reuse gain-curve pool for fixed-wing throttle attenuation (TPA).
+Harden USB/serial device reconnect and port-picker behavior.
+
+# 0.0.8
+
+Version bump for release alignment; no configurator-relevant changes this cycle.
+
+# 0.0.7
+
+Fix arming confirmation dialog rendering raw HTML tags as literal text, and add button spacing.
+
+# 0.0.6
+
+Complete the Svelte rewrite of the configurator - all remaining tabs (Mixer, Rates, Profiles, Servos, Sensors, Status, Setup, Power, Logic/Conditions, and more) converted from legacy HTML/JS.
+Add Mounting-surface Trim UI (manual entry and auto-detect wizard).
+Add throttle range governor support.
+Add ready-to-arm surface wiggle.
+Add progressive row disclosure to the Conditions tab, matching Adjustments.
+Improve Modes page with expert mode and contextual help.
+Hide advanced Profiles and Board Alignment options behind expert mode.
+Fix save bar not displaying and Profiles page save button.
+Remove legacy API hooks.
+
 # 0.0.5
 
 Add AUTO TRIM mode display name.

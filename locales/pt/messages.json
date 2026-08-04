@@ -1397,7 +1397,7 @@
         "status": "New entry. Please translate!"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
+        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -1564,7 +1564,7 @@
         "status": "New entry. Please translate!"
     },
     "initialSetupDangerText": {
-        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
+        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -5788,7 +5788,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Nota:</strong> Sair da aba do CLI ou pressionar Desconectar irá <strong>automaticamente</strong> enviar o comando \"<strong>exit</strong>\" para a placa. No firmware mais recente, isto fará com que a controladora de voo <strong>reinicie</strong> e qualquer alteração que não foi gravada será <strong>perdida</strong>. <p><strong><span class=\"message-negative\">Atenção:</span></strong> Alguns comandos do CLI podem enviar sinais arbitrários para os pinos de saída dos motores. Isto pode fazer com que os motores girem se uma bateria estiver conectada. Portanto, é altamente recomendado verificar que <strong>nenhuma bateria está conectada antes de enviar comandos no CLI</strong>.",
+        "message": "<strong>Nota:</strong> Sair da aba do CLI ou pressionar Desconectar irá <strong>automaticamente</strong> enviar o comando \"<strong>exit</strong>\" para a placa. No firmware mais recente, isto fará com que a controladora de voo <strong>reinicie</strong> e qualquer alteração que não foi gravada será <strong>perdida</strong>. <br /><br /><strong><span class=\"message-negative\">Atenção:</span></strong> Alguns comandos do CLI podem enviar sinais arbitrários para os pinos de saída dos motores. Isto pode fazer com que os motores girem se uma bateria estiver conectada. Portanto, é altamente recomendado verificar que <strong>nenhuma bateria está conectada antes de enviar comandos no CLI</strong>.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -6481,7 +6481,7 @@
         }
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "Li o acima indicado e <strong>assumo total responsabilidade<strong> por instalar firmware instável",
+        "message": "Li o acima indicado e <strong>assumo total responsabilidade</strong> por instalar firmware instável",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {
@@ -10515,7 +10515,7 @@
         "english": "Saved"
     },
     "vtxHelp": {
-        "message": "Aqui pode configurar os valores para o seu transmissor de vídeo (VTX). Pode ver e alterar os valores de transmissão, incluindo as tabelas VTX, se a controladora de voo e o VTX o suportarem.br>Para configurar o seu VTX use os seguintes passos:<br>1. Vá a <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight/wiki/VTX-tables\">esta</a> página;<br>2. Encontre o ficheiro apropriado de configuração do VTX para o seu país e modelo de VTX e faça download;<br>3. Clique '$t(vtxButtonLoadFile.message)' abaixo, selecione o ficheiro de configuração do VTX, carregue-o;<br>4. Verifique que as definições estão corretas;<br>5. Clique '$t(vtxButtonSave.message)' para guardar as definições do VTX na controladora de voo.<br>6. Opcionalmente clique '$t(vtxButtonSaveLua.message)' para guardar o ficheiro de configuração lua que pode usar com os scripts lua do Betaflight (Veja mais <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">aqui</a>.)",
+        "message": "Aqui pode configurar os valores para o seu transmissor de vídeo (VTX). Pode ver e alterar os valores de transmissão, incluindo as tabelas VTX, se a controladora de voo e o VTX o suportarem.<br>Para configurar o seu VTX use os seguintes passos:<br>1. Vá a <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight/wiki/VTX-tables\">esta</a> página;<br>2. Encontre o ficheiro apropriado de configuração do VTX para o seu país e modelo de VTX e faça download;<br>3. Clique '$t(vtxButtonLoadFile.message)' abaixo, selecione o ficheiro de configuração do VTX, carregue-o;<br>4. Verifique que as definições estão corretas;<br>5. Clique '$t(vtxButtonSave.message)' para guardar as definições do VTX na controladora de voo.<br>6. Opcionalmente clique '$t(vtxButtonSaveLua.message)' para guardar o ficheiro de configuração lua que pode usar com os scripts lua do Betaflight (Veja mais <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">aqui</a>.)",
         "english": "Here you can configure the values for your Video Transmitter (VTX). You can view and change the transmission values, including the VTX Tables, if the flight controller and the VTX support it.<br>To set up your VTX use the following steps:<br>1. Go to <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight/wiki/VTX-tables\">this</a> page;<br>2. Find the appropriate VTX configuration file for your country and your VTX model and download it;<br>3. Click '$t(vtxButtonLoadFile.message)' below, select the VTX configuration file, load it;<br>4. Verify that the settings are correct;<br>5. Click '$t(vtxButtonSave.message)' to store the VTX settings on the flight controller.<br>6. Optionally click '$t(vtxButtonSaveLua.message)' to save a lua configuration file you can use with the betaflight lua scripts (See more <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">here</a>.)",
         "description": "Introduction message in the VTX tab"
     },

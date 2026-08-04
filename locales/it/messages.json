@@ -1397,7 +1397,7 @@
         "status": "New entry. Please translate!"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
+        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -1564,7 +1564,7 @@
         "status": "New entry. Please translate!"
     },
     "initialSetupDangerText": {
-        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
+        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>",
         "status": "New entry. Please translate!"
     },
@@ -5788,7 +5788,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Nota:</strong> Se lasci la pagina CLI o premi Disconnetti, verrà <strong>automaticamente</strong> inviato \"<strong>exit</strong>\" alla scheda di controllo. Con il firmware più recente questo farà sì che il controller si <strong>riavvii</strong> e le modifiche non salvate saranno <strong>perse</strong>.<p><strong><span class = \"message-negative\">Avvertenza:</span></strong> Alcuni comandi del CLI possono provocare l'invio di segnali arbitrari sui pin di uscita del motore. Ciò può causare la rotazione dei motori se è collegata una batteria. Pertanto, si consiglia vivamente di assicurarsi che <strong>non sia collegata alcuna batteria prima di immettere i comandi nel CLI</strong>.",
+        "message": "<strong>Nota:</strong> Se lasci la pagina CLI o premi Disconnetti, verrà <strong>automaticamente</strong> inviato \"<strong>exit</strong>\" alla scheda di controllo. Con il firmware più recente questo farà sì che il controller si <strong>riavvii</strong> e le modifiche non salvate saranno <strong>perse</strong>.<br /><br /><strong><span class = \"message-negative\">Avvertenza:</span></strong> Alcuni comandi del CLI possono provocare l'invio di segnali arbitrari sui pin di uscita del motore. Ciò può causare la rotazione dei motori se è collegata una batteria. Pertanto, si consiglia vivamente di assicurarsi che <strong>non sia collegata alcuna batteria prima di immettere i comandi nel CLI</strong>.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -6481,7 +6481,7 @@
         }
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "Ho letto sopra e <strong>mi assumo tutta la responsabilità<strong> di flashare un firmware instabile",
+        "message": "Ho letto sopra e <strong>mi assumo tutta la responsabilità</strong> di flashare un firmware instabile",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {

@@ -107,6 +107,22 @@
     "disconnect": {
         "message": "Disconnect"
     },
+    "portsSelectPleaseSelect": {
+        "message": "Please select",
+        "description": "Web-only disabled divider option in the port picker, separating already-authorized devices from the 'can't find my device' actions"
+    },
+    "portsSelectAddSerialDevice": {
+        "message": "--- I can't find my USB device ---",
+        "description": "Web-only port picker option that triggers the browser's native serial device chooser"
+    },
+    "portsSelectAddDfuDevice": {
+        "message": "--- I can't find my DFU device ---",
+        "description": "Web-only port picker option that triggers the browser's native DFU (WebUSB) device chooser"
+    },
+    "portsSelectAddBluetoothDevice": {
+        "message": "--- I can't find my Bluetooth device ---",
+        "description": "Web-only port picker option that triggers the browser's native Bluetooth device chooser"
+    },
     "portsSelectManual": {
         "message": "Manual Selection"
     },
@@ -744,6 +760,9 @@
     "usbDeviceCloseFail": {
         "message": "<span class=\"message-negative\">Failed</span> to close USB device"
     },
+    "usbDeviceClaimFail": {
+        "message": "<span class=\"message-negative\">Failed</span> to claim USB device!"
+    },
     "usbDeviceUdevNotice": {
         "message": "Are <strong>udev rules</strong> installed correctly? See docs for instructions"
     },
@@ -1226,7 +1245,7 @@
         "message": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
+        "message": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!"
     },
     "statusEnableArming": {
         "message": "Enable Arming:"
@@ -1328,7 +1347,7 @@
         "message": "All settings saved in EEPROM."
     },
     "initialSetupDangerText": {
-        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
+        "message": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
     },
     "initialSetupDangerTitle": {
         "message": "Arming and Override"
@@ -2055,7 +2074,7 @@
         "message": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
+        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
     "profilesBoost": {
@@ -2194,7 +2213,7 @@
         "message": "Telemetry Packet Ratio"
     },
     "receiverHelpCrsfTelemetryMode": {
-        "message": "Enables the Custom Rotorflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for helicopter use."
+        "message": "Enables the Custom Rotorflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for your aircraft."
     },
     "receiverHelpCrsfTelemetryRate": {
         "message": "Radio link packet rate for telemetry. Set this to the same value as the ELRS packet rate in the Tx."
@@ -2776,6 +2795,9 @@
     "adjustmentsGroupAccTrim": {
         "message": "Accelerometer Trim"
     },
+    "adjustmentsGroupServoTrims": {
+        "message": "Servo Trims"
+    },
     "adjustmentsGroupSetpointBoost": {
         "message": "Setpoint Boost"
     },
@@ -2948,7 +2970,16 @@
         "message": "Auto Hover Gain"
     },
     "adjustmentsFunctionAttHoldGain": {
-        "message": "Att Hold Gain"
+        "message": "Attitude Hold Gain"
+    },
+    "adjustmentsFunctionServoTrimRoll": {
+        "message": "Servo Trim Roll"
+    },
+    "adjustmentsFunctionServoTrimPitch": {
+        "message": "Servo Trim Pitch"
+    },
+    "adjustmentsFunctionServoTrimYaw": {
+        "message": "Servo Trim Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -3072,6 +3103,12 @@
     },
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
+    },
+    "servoTrimColumn": {
+        "message": "Trim"
+    },
+    "servoTrimColumnHelp": {
+        "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
     },
     "servoMin": {
         "message": "Min"
@@ -3502,6 +3539,12 @@
     "curvePointCount": {
         "message": "Points:"
     },
+    "curveEndpointXLocked": {
+        "message": "The first and last point are pinned to the curve's domain extent - only Y can be adjusted here"
+    },
+    "curveEndpointNoDelete": {
+        "message": "The first and last point can't be deleted - they define the curve's domain extent"
+    },
     "logicNote": {
         "message": "Define conditions here, then gate any Mixer Rule on one from its Condition column. A gated rule contributes nothing while its condition is false."
     },
@@ -3669,6 +3712,45 @@
     },
     "mixerOpenWizard": {
         "message": "Setup Wizard"
+    },
+    "mixerModelTypeTitle": {
+        "message": "Model Type"
+    },
+    "mixerChangeModelType": {
+        "message": "Change Model Type"
+    },
+    "mixerModelTypeRegularAirplane": {
+        "message": "Regular Airplane"
+    },
+    "mixerModelTypeFlyingWing": {
+        "message": "Flying Wing"
+    },
+    "mixerModelTypeVTailAirplane": {
+        "message": "V-Tail Airplane"
+    },
+    "mixerModelTypeDeltaWing": {
+        "message": "Delta Wing"
+    },
+    "mixerModelTypeRudderElevatorTrainer": {
+        "message": "Rudder/Elevator Trainer"
+    },
+    "mixerModelTypeCustom": {
+        "message": "Custom"
+    },
+    "mixerEditConfiguration": {
+        "message": "Edit Configuration"
+    },
+    "mixerEditConfigurationTitle": {
+        "message": "Edit Mixer Configuration"
+    },
+    "mixerChannelSummaryEmpty": {
+        "message": "No mixer rules generated yet for this model type. Use Edit Configuration to generate a starting mix."
+    },
+    "mixerChannelSummaryOutput": {
+        "message": "Output"
+    },
+    "mixerChannelSummaryInput": {
+        "message": "Input"
     },
     "mixerRuleMoveUp": {
         "message": "Move up"
@@ -3848,7 +3930,7 @@
         "message": "Throttle Protocol"
     },
     "motorsEscProtocolHelp": {
-        "message": "Select your ESC protocol.<br>Traditional helicopter ESCs use PWM. Drone ESCs may use other protocols, like DSHOT. <br>Make sure the protocol is supported by your ESC."
+        "message": "Select your ESC protocol.<br>Older ESCs use PWM. Newer ESCs may use other protocols, like DSHOT. <br>Make sure the protocol is supported by your ESC."
     },
     "motorsEscProtocolDisabled": {
         "message": "Please select a protocol appropriate for your ESCs. $t(escProtocolDisabledMessage.message)"
@@ -3923,16 +4005,16 @@
         "message": "Mode"
     },
     "motorsGovernorModeHelp": {
-        "message": "OFF disables the governor entirely.<br>RPM closed-loop holds a target RPM at idle (below the handover throttle) using motor RPM feedback &mdash; requires a valid RPM source (bidirectional DShot telemetry, ESC telemetry, or a frequency sensor).<br>Throttle open-loop just holds a fixed throttle percentage at idle &mdash; no RPM source needed, but it won't correct for load or battery sag.<br>RPM Range closed-loop holds a target RPM mapped across the <i>entire</i> throttle stick (Min RPM at 0% &mdash; Max RPM at 100%), for holding engine speed through a whole flight (e.g. dive speed control), not just idle &mdash; also requires a valid RPM source."
+        "message": "<p><b>Off:</b> disables the governor entirely.</p><p><b>RPM Idle/Max:</b> holds the target idle RPM below handover throttle using motor RPM feedback. Above handover, the optional max RPM limit can prevent overspeed.</p><p><b>Throttle Idle:</b> holds a fixed throttle percentage at idle. No RPM source is needed, but it will not correct for load or battery sag.</p><p><b>RPM Range:</b> maps the throttle stick to a target RPM range, from Min RPM at 0% to Max RPM at 100%, for governing engine speed through the whole flight.</p><p><b>RPM source:</b> RPM modes require bidirectional DShot telemetry, ESC telemetry, or a frequency sensor.</p>"
     },
     "motorsGovernorModeOff": {
         "message": "Off"
     },
     "motorsGovernorModeRpm": {
-        "message": "RPM"
+        "message": "RPM Idle/Max"
     },
     "motorsGovernorModeThrottle": {
-        "message": "Throttle"
+        "message": "Throttle Idle"
     },
     "motorsGovernorModeRpmRange": {
         "message": "RPM Range"
@@ -3954,6 +4036,12 @@
     },
     "motorsGovernorRpmMaxHelp": {
         "message": "Target RPM at 100% throttle stick. Set to 0 to disable RPM Range mode entirely."
+    },
+    "motorsGovernorRpmMaxLimit": {
+        "message": "Max RPM limit"
+    },
+    "motorsGovernorRpmMaxLimitHelp": {
+        "message": "Optional maximum RPM limit used above the handover throttle while in RPM Idle/Max mode. Set to 0 to disable max RPM limiting."
     },
     "motorsGovernorGain": {
         "message": "P Gain"
@@ -4133,7 +4221,7 @@
         "message": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
+        "message": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<br /><br /><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
         "message": "Write your command here."
@@ -4544,7 +4632,7 @@
         "message": "<strong>Recovery / Lost communication</strong>"
     },
     "firmwareFlasherRecoveryText": {
-        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install all STM32 drivers and Zadig if required (see <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\"target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
+        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://www.wingflight.org/docs/2.2.0/setup/flashing-the-firmware\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
     },
     "firmwareFlasherFirmwareNotLoaded": {
         "message": "Firmware not loaded"
@@ -4584,7 +4672,7 @@
         "message": "You are about to flash a <strong>development build of the firmware</strong>. These builds are a work-in-progress, and any of the following can be the case:<strong><ul><li>the firmware does not work at all;</li><li>the firmware is not flyable;</li><li>there are safety issues with the firmware, for example flyaways</li><li>the firmware can cause the flight controller to become unresponsive, or damaged</li></ul></strong>If you proceed with flashing this firmware, <strong>you are assuming full responsibility for the risk of any of the above happening</strong>. Furthermore you acknowledge that it is necessary to perform <strong>thorough bench tests with rotor blades removed</strong> before any attempts to fly this firmware."
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
+        "message": "I have read the above and <strong>I assume full responsibility</strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {
         "message": "Flash"
@@ -5038,35 +5126,29 @@
     "profilesErrorLimitYaw": {
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
-    "profilesFwTpaBreakpoint": {
-        "message": "Throttle Attenuation Breakpoint [%]"
+    "profilesFwTpaHelp": {
+        "message": "Baseline throttle attenuation scale, optionally shaped further by a curve from the Curves tab (evaluated on throttle, 0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. 100% with no curve assigned means no attenuation."
     },
-    "profilesFwTpaBreakpointHelp": {
-        "message": "Throttle level above which PID gain attenuation starts. Below this throttle level, gains are unaffected. On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so gain is reduced above this breakpoint instead of below it."
+    "profilesMasterGainGroup": {
+        "message": "Master Gains"
     },
-    "profilesFwTpaRate": {
-        "message": "Throttle Attenuation Rate [%]"
-    },
-    "profilesFwTpaRateHelp": {
-        "message": "How much P and D gain are reduced at full throttle, relative to the breakpoint. 0 disables attenuation."
-    },
-    "profilesMasterGainRoll": {
-        "message": "Master Gain for Roll Axis [%]"
-    },
-    "profilesMasterGainPitch": {
-        "message": "Master Gain for Pitch Axis [%]"
-    },
-    "profilesMasterGainYaw": {
-        "message": "Master Gain for Yaw Axis [%]"
+    "profilesMasterGainColumn": {
+        "message": "Gain [%]"
     },
     "profilesMasterGainHelp": {
         "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
     },
-    "profilesGainCurveLabel": {
-        "message": "Gain Curve"
+    "profilesGainCurveColumn": {
+        "message": "Curve"
     },
     "profilesGainCurveHelp": {
         "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+    },
+    "profilesEffectivePidGainsHelp": {
+        "message": "Read-only preview of the PID gains that are actually used after Master Gain scaling. This helps you see the effective tune while adjusting Master Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100. Boost (B) is shown unchanged because Master Gain does not scale it."
+    },
+    "profilesCrossAxisRelaxGroup": {
+        "message": "Cross-axis Relax"
     },
     "profilesCrossAxisRelaxStrength": {
         "message": "Cross-axis Relax Roll Strength [%]"
@@ -5091,6 +5173,9 @@
     },
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
+    },
+    "profilesItermDecayGroup": {
+        "message": "I-Term Decay"
     },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
@@ -5150,10 +5235,13 @@
         "message": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
+        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
+    },
+    "profilesGyroCutoffGroup": {
+        "message": "PID Loop Bandwidth"
     },
     "profilesGyroCutoffHelp": {
         "message": "PID Loop overall bandwidth in Hz"
@@ -5167,6 +5255,9 @@
     "profilesGyroCutoffYaw": {
         "message": "Yaw Bandwidth"
     },
+    "profilesDtermCutoffGroup": {
+        "message": "D-term Cutoff"
+    },
     "profilesDtermCutoffHelp": {
         "message": "D-term Cutoff Frequency in Hz"
     },
@@ -5178,6 +5269,9 @@
     },
     "profilesDtermCutoffYaw": {
         "message": "Yaw D-term Cutoff"
+    },
+    "profilesBtermCutoffGroup": {
+        "message": "B-term Cutoff"
     },
     "profilesBtermCutoffHelp": {
         "message": "B-term Cutoff Frequency in Hz"
@@ -5194,35 +5288,47 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
+    "profilesAcroTrainerGroup": {
+        "message": "Acro Trainer"
+    },
+    "profilesAutoHoverGroup": {
+        "message": "Auto Hover"
+    },
+    "profilesAttHoldGroup": {
+        "message": "Attitude Hold"
+    },
     "profilesAcroTrainerGain": {
         "message": "Acro Trainer gain"
     },
     "profilesAcroTrainerGainHelp": {
-        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the helicopter tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
+        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the aircraft tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
     },
     "profilesAcroTrainerLimit": {
         "message": "Acro Trainer angle limit"
     },
     "profilesAcroTrainerLimitHelp": {
-        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the helicopter will pitch/roll to"
+        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the aircraft will pitch/roll to"
+    },
+    "profilesAngleHorizonGroup": {
+        "message": "Angle / Horizon Mode"
     },
     "profilesAngleModeGain": {
         "message": "Angle Mode leveling gain"
     },
     "profilesAngleModeGainHelp": {
-        "message": "Angle Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Angle Mode"
+        "message": "Angle Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Angle Mode"
     },
     "profilesAngleModeLimit": {
         "message": "Angle Mode maximum angle"
     },
     "profilesAngleModeLimitHelp": {
-        "message": "Angle Mode maximum angle. Helicopter is limited to this angle when in Angle mode"
+        "message": "Angle Mode maximum angle. The aircraft is limited to this angle when in Angle mode"
     },
     "profilesHorizonModeGain": {
         "message": "Horizon Mode leveling gain"
     },
     "profilesHorizonModeGainHelp": {
-        "message": "Horizon Mode leveling gain. This determines how aggressively the helicopter tilts back to level while in Horizon Mode"
+        "message": "Horizon Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Horizon Mode"
     },
     "profilesAutoHoverGain": {
         "message": "Auto Hover gain"
@@ -5243,22 +5349,22 @@
         "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
     },
     "profilesAttHoldGain": {
-        "message": "Att Hold gain"
+        "message": "Attitude Hold gain"
     },
     "profilesAttHoldGainHelp": {
-        "message": "Correction strength back to the held attitude once the sticks are centred and Att Hold has frozen its target. Higher values return to the held attitude more aggressively."
+        "message": "Correction strength back to the held attitude once the sticks are centred and Attitude Hold has frozen its target. Higher values return to the held attitude more aggressively."
     },
     "profilesAttHoldDeadband": {
-        "message": "Att Hold deadband"
+        "message": "Attitude Hold deadband"
     },
     "profilesAttHoldDeadbandHelp": {
-        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which Att Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the aircraft is corrected back to it. Unlike Auto Hover, Att Hold does not bound stick authority -- it holds whatever attitude the aircraft was in the instant every stick returned inside this deadband, at any orientation, not just vertical or level."
+        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which Attitude Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the aircraft is corrected back to it. Unlike Auto Hover, Attitude Hold does not bound stick authority -- it holds whatever attitude the aircraft was in the instant every stick returned inside this deadband, at any orientation, not just vertical or level."
     },
     "profilesAttHoldMaxRate": {
-        "message": "Att Hold max rate"
+        "message": "Attitude Hold max rate"
     },
     "profilesAttHoldMaxRateHelp": {
-        "message": "Safety clamp (deg/s) on how fast Att Hold may rotate the aircraft back toward the frozen attitude once the sticks return inside the deadband."
+        "message": "Safety clamp (deg/s) on how fast Attitude Hold may rotate the aircraft back toward the frozen attitude once the sticks return inside the deadband."
     },
     "rateSetupCopyRateProfile": {
         "message": "Copy rateprofile"
@@ -5429,7 +5535,7 @@
         "message": "Notch Maximum Frequency"
     },
     "gyroDynamicNotchMaxHzHelp": {
-        "message": "Set this to the highest incoming noise frequency that is needed to be filtered. Should be 10-20% higher than the max tail rotor frequency, but no higher than 250Hz, if filter rate is 1k. If filter rate is 2k or higher, then 330-500 Hz can be used, especially for smaller helis with a motorised tail (higher range means less precision and lower performance)."
+        "message": "Set this to the highest incoming noise frequency that is needed to be filtered. Should be 10-20% higher than the max propeller/motor noise frequency, but no higher than 250Hz, if filter rate is 1k. If filter rate is 2k or higher, then 330-500 Hz can be used, especially for smaller aircraft (higher range means less precision and lower performance)."
     },
     "gyroDTermLowpassFiltersGroup": {
         "message": "D Term Lowpass Filters"
@@ -5528,16 +5634,16 @@
         "message": "RPM Filter Notches"
     },
     "gyroRpmFilterHelp": {
-        "message": "Every rotating part on a helicopter generates vibrations, which can significantly affect the performance of the flight control loops. The <i>RPM Filter</i> utilizes the motor's RPM signal and the model's gear ratios to precisely eliminate these vibrations from the gyro's output, enabling the control loops to operate on the true motion of the aircraft. This method introduces substantially less delay than traditional vibration filtering, enhancing overall flight performance."
+        "message": "Every rotating part on an aircraft generates vibrations, which can significantly affect the performance of the flight control loops. The <i>RPM Filter</i> utilizes the motor's RPM signal and the model's gear ratios to precisely eliminate these vibrations from the gyro's output, enabling the control loops to operate on the true motion of the aircraft. This method introduces substantially less delay than traditional vibration filtering, enhancing overall flight performance."
     },
-    "gyroRpmFilterMainRotorGroup": {
-        "message": "Main Rotor"
+    "gyroRpmFilterMotor1Group": {
+        "message": "Motor 1"
     },
     "gyroRpmFilterMainRotorHelp": {
         "message": "RPM controlled filters for the main rotor harmonics"
     },
-    "gyroRpmFilterTailRotorGroup": {
-        "message": "Tail Rotor"
+    "gyroRpmFilterMotor2Group": {
+        "message": "Motor 2"
     },
     "gyroRpmFilterTailRotorHelp": {
         "message": "RPM controlled filters for the tail rotor harmonics"
@@ -5548,8 +5654,8 @@
     "gyroRpmFilterMainMotorGroup": {
         "message": "Main Motor Notch Filters"
     },
-    "gyroRpmFilterMainMotorQ": {
-        "message": "Main Motor Notch Q"
+    "gyroRpmFilterMotor1Q": {
+        "message": "Motor 1 Notch Q"
     },
     "gyroRpmFilterMainMotorHelp": {
         "message": "RPM controlled filters for the main motor harmonics"
@@ -5557,8 +5663,8 @@
     "gyroRpmFilterTailMotorGroup": {
         "message": "Tail Motor Notch Filters"
     },
-    "gyroRpmFilterTailMotorQ": {
-        "message": "Tail Motor Notch Q"
+    "gyroRpmFilterMotor2Q": {
+        "message": "Motor 2 Notch Q"
     },
     "gyroRpmFilterTailMotorHelp": {
         "message": "RPM controlled filters for the tail motor harmonics"
@@ -7596,7 +7702,7 @@
         "message": "ALTHOLD"
     },
     "mode ATT HOLD": {
-        "message": "ATT HOLD"
+        "message": "ATTITUDE HOLD"
     },
     "modeHelp ATT HOLD": {
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
@@ -7704,7 +7810,7 @@
         "message": "AUTO HOVER"
     },
     "modeHelp AUTO HOVER": {
-        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Att Hold while active."
+        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Attitude Hold while active."
     },
     "mode GOVERNOR": {
         "message": "GOVERNOR"
@@ -8060,7 +8166,7 @@
         "description": "Warning message that shows up at the top of the presets tab"
     },
     "presets_sources_dialog_warning": {
-        "message": "<span class=\"message-negative\">WARNING!</span> Using third party preset sources could be dangerous.<br/>Make sure you add and use only trusted sources. Malicious or bad preset sources can break your helicopter configuration and potentially harm your devices.",
+        "message": "<span class=\"message-negative\">WARNING!</span> Using third party preset sources could be dangerous.<br/>Make sure you add and use only trusted sources. Malicious or bad preset sources can break your aircraft configuration and potentially harm your devices.",
         "description": "Warning message that shows up at the top of the preset sources dialog"
     },
     "presetsWarningWrongVersionConfirmation": {

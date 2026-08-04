@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { GainCurve } from "@/js/GainCurve.js";
 
@@ -156,10 +157,18 @@
   export function isDirty() {
     return anyDirty;
   }
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabCurves"), "_system");
+  }
 </script>
 
 {#snippet header()}
   <h1>{$i18n.t("tabCurves")}</h1>
+  <div class="grow"></div>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 {#snippet toolbar()}
@@ -222,6 +231,7 @@
           </thead>
           <tbody>
             {#each curve.points.slice(0, curve.count) as point, index (index)}
+              {@const isEndpoint = index === 0 || index === curve.count - 1}
               <tr>
                 <td class="point-index">{index + 1}</td>
                 <td>
@@ -230,6 +240,10 @@
                     min={category.xMin}
                     max={category.xMax}
                     step="10"
+                    disabled={isEndpoint}
+                    title={isEndpoint
+                      ? $i18n.t("curveEndpointXLocked")
+                      : undefined}
                     bind:value={
                       () => point.x,
                       (v) => onPointFieldChange(index, v, point.y)
@@ -252,6 +266,10 @@
                   <button
                     class="delete"
                     onclick={() => onDeletePoint(index)}
+                    disabled={isEndpoint}
+                    title={isEndpoint
+                      ? $i18n.t("curveEndpointNoDelete")
+                      : undefined}
                     aria-label="Delete point"
                   >
                     <span class="fas fa-times"></span>
@@ -287,6 +305,15 @@
 
   .btn {
     @extend %button;
+  }
+
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
+  }
+
+  .grow {
+    flex-grow: 1;
   }
 
   .category-tabs {

@@ -7,16 +7,16 @@
     onApplyButtonClicked,
     onEditPresetInstance,
   } = $props();
-  let selectedPresetInstancesLength = $state(presetInstances.length);
+  let selectedPresetInstancesLength = $derived(presetInstances.length);
   function onDeletePresetInstance(index) {
     presetInstances.splice(index, 1);
-    selectedPresetInstancesLength = presetInstances.length;
     if (presetInstances.length === 0) {
       onCancelButtonClicked();
     }
   }
   function onEditPresetComplete() {
-    selectedPresetInstancesLength = presetInstances.length + Date.now();
+    // Trigger reactivity by reassigning
+    presetInstances = presetInstances;
   }
 </script>
 

@@ -443,9 +443,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 for (let i = 0; i < 4; i++)
                     FC.MOTOR_CONFIG.motor_rpm_lpf[i] = data.readU8();
                 for (let i = 0; i < 2; i++)
-                    FC.MOTOR_CONFIG.main_rotor_gear_ratio[i] = data.readU16();
+                    FC.MOTOR_CONFIG.motor1_gear_ratio[i] = data.readU16();
                 for (let i = 0; i < 2; i++)
-                    FC.MOTOR_CONFIG.tail_rotor_gear_ratio[i] = data.readU16();
+                    FC.MOTOR_CONFIG.motor2_gear_ratio[i] = data.readU16();
                 break;
             }
 
@@ -459,6 +459,47 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.GOVERNOR_CONFIG.governor_ceiling = data.readU8();
                 FC.GOVERNOR_CONFIG.governor_rpm_min = data.readU16();
                 FC.GOVERNOR_CONFIG.governor_rpm_max = data.readU16();
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS: {
+                const gains = ["P", "I", "D", "F", "B"];
+                const version = data.readU8();
+                const runtimeGains = {
+                    version,
+                    pidMode: data.readU8(),
+                    fwTpa: data.readU32() / 100,
+                    axes: [],
+                };
+
+                for (let axis = 0; axis < 3; axis++) {
+                    const raw = {};
+                    const effective = {};
+
+                    for (const gain of gains) {
+                        raw[gain] = data.readU16();
+                    }
+
+                    const masterGain = data.readU16();
+                    const gainCurve = data.readU32() / 100;
+                    const gainCurvePosition = version >= 2 && data.remaining() >= 24
+                        ? data.readU32() / 100
+                        : null;
+
+                    for (const gain of gains) {
+                        effective[gain] = data.readU32() / 100;
+                    }
+
+                    runtimeGains.axes.push({
+                        raw,
+                        masterGain,
+                        gainCurve,
+                        gainCurvePosition,
+                        effective,
+                    });
+                }
+
+                FC.PID_RUNTIME_GAINS = runtimeGains;
                 break;
             }
 
@@ -766,7 +807,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_MIXER_CONFIG: {
-                FC.MIXER_CONFIG.tail_rotor_mode = data.readU8();
+                FC.MIXER_CONFIG.model_type = data.readU8();
                 break;
             }
 
@@ -1203,13 +1244,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.btermCutoffYaw                = data.readU8();
                 data.readU8(); // was yaw_inertia_precomp_gain (heli-only, removed)
                 data.readU8(); // was yaw_inertia_precomp_cutoff (heli-only, removed)
-                // Fixed-wing throttle-based gain attenuation //
-                FC.PID_PROFILE.fwTpaBreakpoint               = data.readU8();
-                FC.PID_PROFILE.fwTpaRate                     = data.readU8();
+                // Fixed-wing throttle-based gain attenuation (gain + curve index) //
+                FC.PID_PROFILE.fwTpaGain                     = data.readU8();
+                FC.PID_PROFILE.fwTpaCurve                    = data.readU8();
                 // Master gain (per axis) //
-                FC.PID_PROFILE.masterGainRoll                = data.readU8();
-                FC.PID_PROFILE.masterGainPitch               = data.readU8();
-                FC.PID_PROFILE.masterGainYaw                 = data.readU8();
+                FC.PID_PROFILE.masterGainRoll                = data.readU16();
+                FC.PID_PROFILE.masterGainPitch               = data.readU16();
+                FC.PID_PROFILE.masterGainYaw                 = data.readU16();
                 // Auto Hover //
                 FC.PID_PROFILE.autoHoverGain                 = data.readU8();
                 FC.PID_PROFILE.autoHoverMaxAngle             = data.readU8();
@@ -1802,7 +1843,7 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
-            buffer.push8(FC.MIXER_CONFIG.tail_rotor_mode);
+            buffer.push8(FC.MIXER_CONFIG.model_type);
             break;
         }
 
@@ -1914,9 +1955,9 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 4; i++)
                 buffer.push8(FC.MOTOR_CONFIG.motor_rpm_lpf[i]);
             for (let i = 0; i < 2; i++)
-                buffer.push16(FC.MOTOR_CONFIG.main_rotor_gear_ratio[i]);
+                buffer.push16(FC.MOTOR_CONFIG.motor1_gear_ratio[i]);
             for (let i = 0; i < 2; i++)
-                buffer.push16(FC.MOTOR_CONFIG.tail_rotor_gear_ratio[i]);
+                buffer.push16(FC.MOTOR_CONFIG.motor2_gear_ratio[i]);
             break;
         }
 
@@ -2189,13 +2230,13 @@ MspHelper.prototype.crunch = function(code) {
                 // was yaw_inertia_precomp_gain/cutoff (heli-only, removed) //
                 .push8(0)
                 .push8(0)
-                // Fixed-wing throttle-based gain attenuation //
-                .push8(FC.PID_PROFILE.fwTpaBreakpoint)
-                .push8(FC.PID_PROFILE.fwTpaRate)
+                // Fixed-wing throttle-based gain attenuation (gain + curve index) //
+                .push8(FC.PID_PROFILE.fwTpaGain)
+                .push8(FC.PID_PROFILE.fwTpaCurve)
                 // Master gain (per axis) //
-                .push8(FC.PID_PROFILE.masterGainRoll)
-                .push8(FC.PID_PROFILE.masterGainPitch)
-                .push8(FC.PID_PROFILE.masterGainYaw)
+                .push16(FC.PID_PROFILE.masterGainRoll)
+                .push16(FC.PID_PROFILE.masterGainPitch)
+                .push16(FC.PID_PROFILE.masterGainYaw)
                 // Auto Hover //
                 .push8(FC.PID_PROFILE.autoHoverGain)
                 .push8(FC.PID_PROFILE.autoHoverMaxAngle)
@@ -2557,6 +2598,11 @@ MspHelper.prototype.sendMixerInputs = function(onCompleteCallback)
     }
 
     send_next();
+};
+
+MspHelper.prototype.sendMixerConfig = function(onCompleteCallback)
+{
+    MSP.send_message(MSPCodes.MSP_SET_MIXER_CONFIG, this.crunch(MSPCodes.MSP_SET_MIXER_CONFIG), false, onCompleteCallback);
 };
 
 MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)

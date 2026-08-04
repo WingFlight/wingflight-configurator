@@ -57,6 +57,7 @@ class FlightController {
   PIDS_ACTIVE = $state();
   PID_NAMES = $state();
   PID_PROFILE = $state();
+  PID_RUNTIME_GAINS = $state();
   PILOT_CONFIG = $state();
   RC = $state();
   RC_COMMAND = $state();
@@ -192,7 +193,7 @@ class FlightController {
     };
 
     this.MIXER_CONFIG = {
-      tail_rotor_mode:            0,
+      model_type:                 0,
     };
 
     this.MIXER_INPUTS =             [];
@@ -240,6 +241,7 @@ class FlightController {
       controller:                 0,
     };
 
+    this.PID_RUNTIME_GAINS = null;
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});
     this.PIDS = Array.from({length: 3});
@@ -397,8 +399,8 @@ class FlightController {
       motor_rpm_lpf:              [ 0, 0, 0, 0 ],
       use_dshot_telemetry:        false,
       use_unsynced_pwm:           false,
-      main_rotor_gear_ratio:      [ 1, 1 ],
-      tail_rotor_gear_ratio:      [ 1, 1 ],
+      motor1_gear_ratio:          [ 1, 1 ],
+      motor2_gear_ratio:          [ 1, 1 ],
     };
 
     this.GOVERNOR_CONFIG = {
@@ -576,8 +578,8 @@ class FlightController {
       thrustLinearization:        0,
       yawCenterOffset:            0,
       pid_mode:                   0,
-      fwTpaBreakpoint:            0,
-      fwTpaRate:                  0,
+      fwTpaGain:                  100,
+      fwTpaCurve:                 0,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,

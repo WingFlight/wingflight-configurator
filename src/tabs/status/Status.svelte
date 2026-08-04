@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { getTabHelpURL } from "@/js/help";
   import * as flightStats from "@/js/flight-stats.js";
 
   import Page from "@/components/Page.svelte";
@@ -238,10 +239,18 @@
     clearInterval(fastInterval);
     clearInterval(slowInterval);
   });
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabStatus"), "_system");
+  }
 </script>
 
 {#snippet header()}
   <h1>{$i18n.t("tabStatus")}</h1>
+  <div class="grow"></div>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 <Page {header} {loading}>
@@ -433,7 +442,8 @@
 <dialog bind:this={confirmDialogEl}>
   <h3>{$i18n.t("dialogConfirmArmingTitle")}</h3>
   <div class="content">
-    <p>{$i18n.t("dialogConfirmArmingNote")}</p>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <p>{@html $i18n.t("dialogConfirmArmingNote")}</p>
   </div>
   <div class="buttons">
     <button class="btn" onclick={onConfirmArming}>
@@ -454,10 +464,37 @@
     @extend %button;
   }
 
+  .help-btn {
+    padding: 4px 8px;
+    min-width: 60px;
+  }
+
   .arm-danger {
     :global(strong) {
       font-weight: 700;
     }
+  }
+
+  dialog {
+    width: 32em;
+    border-radius: 5px;
+  }
+
+  dialog .content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  dialog .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 1.5em;
+  }
+
+  dialog h3 {
+    margin-bottom: 0.5em;
   }
 
   .top-grid {

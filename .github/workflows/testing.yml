@@ -2,8 +2,11 @@ name: Testing
 
 on:
   push:
-    tags:
-      - 'testing/*'
+    branches:
+      # Disabled native compiler workflow. Previous active tags:
+      # tags:
+      #   - 'testing/*'
+      - 'disabled/native-compiler-workflows-do-not-run'
 
 
 jobs:
@@ -426,4 +429,3 @@ jobs:
 
     - name: Delete tag
       run: git push origin :${GITHUB_REF}
-

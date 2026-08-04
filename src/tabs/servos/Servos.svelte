@@ -1,4 +1,5 @@
 <script>
+  import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
@@ -20,12 +21,25 @@
   const OVERRIDE_OFF = 2001;
 
   let loading = $state(true);
-  let dirty = $state(false);
   let needReboot = $state(false);
-  let initialConfig;
+  let initialConfig = $state(null);
   let poller;
+  let adjustmentPoller;
 
   let overrideEnabled = $state(false);
+
+  // Diff-based (mirrors Profiles.svelte) rather than a manual dirty=true
+  // flag, so Save also enables when a live ServoTrim adjustment shifts a
+  // servo's mid away from its initial value -- not just on direct edits.
+  let changes = $derived.by(() => {
+    if (!initialConfig) {
+      return [];
+    }
+
+    return diff(initialConfig, $state.snapshot(FC.SERVO_CONFIG));
+  });
+
+  let dirty = $derived(changes.length > 0);
 
   let hasFbusOrSbus = $derived(
     FC.SERIAL_CONFIG.ports.some(
@@ -165,6 +179,9 @@
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
+    await MSP.promise(MSPCodes.MSP_RC);
+    await MSP.promise(MSPCodes.MSP_MIXER_RULES);
+    await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
@@ -179,14 +196,22 @@
     poller = setInterval(() => {
       MSP.send_message(MSPCodes.MSP_SERVO);
     }, 100);
+
+    // Keeps AUX channel positions and the (possibly ServoTrim-adjusted)
+    // servo mids fresh, same 250ms cadence as Profiles.svelte's adjustment
+    // poller.
+    adjustmentPoller = setInterval(async () => {
+      await MSP.promise(MSPCodes.MSP_RC);
+      await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    }, 250);
   });
 
   onDestroy(() => {
     clearInterval(poller);
+    clearInterval(adjustmentPoller);
   });
 
   function onFieldChange(index) {
-    dirty = true;
     mspHelper.sendServoConfig(index);
   }
 
@@ -218,7 +243,6 @@
       reinitialiseConnection();
     }
 
-    dirty = false;
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
   }
@@ -226,7 +250,6 @@
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
-    dirty = false;
     needReboot = false;
   }
 

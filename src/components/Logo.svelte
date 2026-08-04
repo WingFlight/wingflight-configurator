@@ -1,6 +1,7 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 
   let hardwareName = $derived(FC.getHardwareName());
 </script>
@@ -10,15 +11,19 @@
     <span>
       {$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}
     </span>
-    {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier}
+    <span class="build-label">Branch/tag: {CONFIGURATOR.buildLabel}</span>
+    {#if (FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier) || hardwareName}
       <span>
-        {$i18n.t("versionLabelFirmware")}: {FC.CONFIG.buildVersion}
-        {FC.CONFIG.flightControllerIdentifier}
-      </span>
-    {/if}
-    {#if hardwareName}
-      <span>
-        {$i18n.t("versionLabelTarget")}: {hardwareName}
+        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier}
+          {$i18n.t("versionLabelFirmware")}: {FC.CONFIG.buildVersion}
+          {FC.CONFIG.flightControllerIdentifier}
+        {/if}
+        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier && hardwareName}
+          &middot;
+        {/if}
+        {#if hardwareName}
+          {$i18n.t("versionLabelTarget")}: {hardwareName}
+        {/if}
       </span>
     {/if}
   </div>

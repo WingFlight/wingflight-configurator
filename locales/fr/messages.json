@@ -905,7 +905,7 @@
         "english": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation2": {
-        "message": "Les dernières nouvelles peuvent être lues sur la page Annonces du site Web, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">ici</une>.",
+        "message": "Les dernières nouvelles peuvent être lues sur la page Annonces du site Web, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">ici</a>.",
         "english": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation3": {
@@ -1152,7 +1152,7 @@
         "english": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">AVERTISSEMENT !</strong> <strong>L'ARMEMENT est ACTIVÉ.</strong> Ne faites jamais voler l'appareil avec le configurateur connecté !</strong>",
+        "message": "<strong class=\"message-negative\">AVERTISSEMENT !</strong> <strong>L'ARMEMENT est ACTIVÉ.</strong> Ne faites jamais voler l'appareil avec le configurateur connecté !",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
     },
     "statusEnableArming": {
@@ -1288,7 +1288,7 @@
         "english": "All settings saved in EEPROM."
     },
     "initialSetupDangerText": {
-        "message": "<strong>Remarque:</strong> Afin d'éviter les blessures, <strong>retirez TOUTES les pales du rotor</strong> avant d'activer toute fonction d'armement.<strong class=\"message-negative\"><strong class=\"message -négatif\"><br/>NE JAMAIS VOLER VOTRE ENVIRONNEMENT AVEC LE CONFIGURATEUR CONNECTÉ!</strong>",
+        "message": "<strong>Remarque:</strong> Afin d'éviter les blessures, <strong>retirez TOUTES les pales du rotor</strong> avant d'activer toute fonction d'armement.<strong class=\"message-negative\"><br/>NE JAMAIS VOLER VOTRE ENVIRONNEMENT AVEC LE CONFIGURATEUR CONNECTÉ!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
     },
     "initialSetupDangerTitle": {
@@ -4596,7 +4596,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Note:</strong> Quitter l'onglet CLI ou appuyer sur Déconnecter va <strong>automatiquement</strong> envoyer \"<strong>exit</strong>\" à la console de commande. Avec le dernier firmware, le contrôleur de vol va <strong>redémarrer</strong> et les changements non sauvegardés seront<strong>perdus</strong>.<p><strong><span class=\"message-negative\">Avertissement:</span></strong> Certaines commandes en CLI peuvent produirent des signaux aléatoires envoyés aux sorties moteurs. Ceux-ci, dans certains cas, feront tourner les moteurs si la batterie est connectée. Ainsi, il est fortement recommandé de s'assurer que<strong>la batterie soit déconnectée avant d'entrer des commandes en CLI</strong>.",
+        "message": "<strong>Note:</strong> Quitter l'onglet CLI ou appuyer sur Déconnecter va <strong>automatiquement</strong> envoyer \"<strong>exit</strong>\" à la console de commande. Avec le dernier firmware, le contrôleur de vol va <strong>redémarrer</strong> et les changements non sauvegardés seront<strong>perdus</strong>.<br /><br /><strong><span class=\"message-negative\">Avertissement:</span></strong> Certaines commandes en CLI peuvent produirent des signaux aléatoires envoyés aux sorties moteurs. Ceux-ci, dans certains cas, feront tourner les moteurs si la batterie est connectée. Ainsi, il est fortement recommandé de s'assurer que<strong>la batterie soit déconnectée avant d'entrer des commandes en CLI</strong>.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -5197,7 +5197,7 @@
         "english": "You are about to flash a <strong>development build of the firmware</strong>. These builds are a work-in-progress, and any of the following can be the case:<strong><ul><li>the firmware does not work at all;</li><li>the firmware is not flyable;</li><li>there are safety issues with the firmware, for example flyaways</li><li>the firmware can cause the flight controller to become unresponsive, or damaged</li></ul></strong>If you proceed with flashing this firmware, <strong>you are assuming full responsibility for the risk of any of the above happening</strong>. Furthermore you acknowledge that it is necessary to perform <strong>thorough bench tests with rotor blades removed</strong> before any attempts to fly this firmware."
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "J'ai lu ce qui précède et <strong>j'assume l'entière responsabilité<strong> pour l'installation d'un microprogramme instable",
+        "message": "J'ai lu ce qui précède et <strong>j'assume l'entière responsabilité</strong> pour l'installation d'un microprogramme instable",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {
@@ -9114,7 +9114,7 @@
         "english": "Logging mode"
     },
     "blackboxModeHelp": {
-        "message": "<strong>OFF:</strong> Désactive la journalisation.<br><br><strong>NORMAL:</strong> Active la journalisation lorsque les commutateurs ARMED et BLACKBOX sont actifs.<br><br><strong>ARMÉ:< /strong> Activer la journalisation lorsqu'il est ARMÉ.<br><br><strong>COMMUTATEUR:</strong> Activer la journalisation lorsque le commutateur BLACKBOX est actif.",
+        "message": "<strong>OFF:</strong> Désactive la journalisation.<br><br><strong>NORMAL:</strong> Active la journalisation lorsque les commutateurs ARMED et BLACKBOX sont actifs.<br><br><strong>ARMÉ:</strong> Activer la journalisation lorsqu'il est ARMÉ.<br><br><strong>COMMUTATEUR:</strong> Activer la journalisation lorsque le commutateur BLACKBOX est actif.",
         "english": "<strong>OFF:</strong> Disable logging.<br><br><strong>NORMAL:</strong> Enable logging when both ARMED and BLACKBOX switch are active.<br><br><strong>ARMED:</strong> Enable logging when ARMED.<br><br><strong>SWITCH:</strong> Enable logging when BLACKBOX switch is active."
     },
     "blackboxModeOff": {

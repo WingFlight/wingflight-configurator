@@ -1152,7 +1152,7 @@
         "english": "Arming"
     },
     "statusArmingDanger": {
-        "message": "<strong class=\"message-negative\">LET OP!</strong> <strong>ARMING staat AAN.</strong> Vlieg nooit terwijl de Configurator verbonden is met het toestel!</strong>",
+        "message": "<strong class=\"message-negative\">LET OP!</strong> <strong>ARMING staat AAN.</strong> Vlieg nooit terwijl de Configurator verbonden is met het toestel!",
         "english": "<strong class=\"message-negative\">WARNING!</strong> <strong>ARMING is ENABLED.</strong> Never fly the craft with the Configurator connected!</strong>"
     },
     "statusEnableArming": {
@@ -1288,7 +1288,7 @@
         "english": "All settings saved in EEPROM."
     },
     "initialSetupDangerText": {
-        "message": "<strong>Opmerking:</strong> <strong>Verwijder ALLE rotorbladen om letsel te voorkomen</strong> voordat je arming inschakelt.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>VLIEG NOOIT TERWIJL DE CONFIGURATOR VERBONDEN IS!</strong>",
+        "message": "<strong>Opmerking:</strong> <strong>Verwijder ALLE rotorbladen om letsel te voorkomen</strong> voordat je arming inschakelt.<strong class=\"message-negative\"><br/>VLIEG NOOIT TERWIJL DE CONFIGURATOR VERBONDEN IS!</strong>",
         "english": "<strong>Note:</strong> In order to prevent injury <strong>remove ALL rotor blades</strong> before enabling any arming features.<strong class=\"message-negative\"><strong class=\"message-negative\"><br/>NEVER FLY YOUR CRAFT WITH THE CONFIGURATOR CONNECTED!</strong>"
     },
     "initialSetupDangerTitle": {
@@ -4596,7 +4596,7 @@
         "english": "Debug"
     },
     "cliInfo": {
-        "message": "<strong>Opmerking:</strong> Als je het CLI tabblad verlaat of als je op Disconnect klikt, zal dit resulteren in het <strong>automatisch</strong> versturen van het commando \"<strong>exit</strong>\". De laatste firmware zal er voor zorgen dat het board <strong>herstart</strong> en alle niet opgeslagen wijzigingen zullen <strong>verloren gaan</strong>.<p><strong><span class=\"message-negative\">Waarschuwing:</span></strong> Sommige CLI commando’s kunnen resulteren in signalen die worden verstuurd naar de motor output pins. Deze signalen kunnen ervoor zorgen dat de motoren gaan draaien als er een batterij is aangesloten! Het is daarom zeer aan te raden <strong>geen batterij aan te sluiten als je commando’s aan het invoeren bent in de CLI</strong>.",
+        "message": "<strong>Opmerking:</strong> Als je het CLI tabblad verlaat of als je op Disconnect klikt, zal dit resulteren in het <strong>automatisch</strong> versturen van het commando \"<strong>exit</strong>\". De laatste firmware zal er voor zorgen dat het board <strong>herstart</strong> en alle niet opgeslagen wijzigingen zullen <strong>verloren gaan</strong>.<br /><br /><strong><span class=\"message-negative\">Waarschuwing:</span></strong> Sommige CLI commando’s kunnen resulteren in signalen die worden verstuurd naar de motor output pins. Deze signalen kunnen ervoor zorgen dat de motoren gaan draaien als er een batterij is aangesloten! Het is daarom zeer aan te raden <strong>geen batterij aan te sluiten als je commando’s aan het invoeren bent in de CLI</strong>.",
         "english": "<strong>Note:</strong> Leaving CLI tab or pressing Disconnect will <strong>automatically</strong> send \"<strong>exit</strong>\" to the board.  With the latest firmware this will make the controller <strong>restart</strong> and unsaved changes will be <strong>lost</strong>.<p><strong><span class=\"message-negative\">Warning:</span></strong> Some commands in CLI can result in arbitrary signals being sent on the motor output pins. This can cause motors to spin up if a battery is connected. Therefore it is highly recommended to make sure that <strong>no battery is connected before entering commands in CLI</strong>."
     },
     "cliInputPlaceholder": {
@@ -5197,7 +5197,7 @@
         "english": "You are about to flash a <strong>development build of the firmware</strong>. These builds are a work-in-progress, and any of the following can be the case:<strong><ul><li>the firmware does not work at all;</li><li>the firmware is not flyable;</li><li>there are safety issues with the firmware, for example flyaways</li><li>the firmware can cause the flight controller to become unresponsive, or damaged</li></ul></strong>If you proceed with flashing this firmware, <strong>you are assuming full responsibility for the risk of any of the above happening</strong>. Furthermore you acknowledge that it is necessary to perform <strong>thorough bench tests with rotor blades removed</strong> before any attempts to fly this firmware."
     },
     "unstableFirmwareAcknoledgementAcknowledge": {
-        "message": "Ik heb het bovenstaande gelezen en <strong>Ik neem de volledige verantwoordelijkheid op mij<strong> voor het flashen van instabiele firmware",
+        "message": "Ik heb het bovenstaande gelezen en <strong>Ik neem de volledige verantwoordelijkheid op mij</strong> voor het flashen van instabiele firmware",
         "english": "I have read the above and <strong>I assume full responsibility<strong> for flashing unstable firmware"
     },
     "unstableFirmwareAcknoledgementFlash": {

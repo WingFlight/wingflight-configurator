@@ -9,6 +9,18 @@ export function supportsUnifiedTargets(version) {
   return semver.gte(version, "4.2.0");
 }
 
+// GitHub Release assets are served from release-assets.githubusercontent.com,
+// which sends no Access-Control-Allow-Origin header -- fetching one directly
+// from the browser is always blocked by CORS, regardless of origin. The
+// wingflight-firmware release/snapshot workflows also mirror each build's
+// .hex files into WingFlight/wingflight-artifacts (firmware/<tag>/<file>),
+// a plain public repo, and jsDelivr's GitHub CDN mirrors that with correct
+// CORS headers plus real caching -- so fetch from there instead of the
+// release asset's browser_download_url.
+export function firmwareArtifactUrl(tag, filename) {
+  return `https://cdn.jsdelivr.net/gh/WingFlight/wingflight-artifacts@master/firmware/${tag}/${filename}`;
+}
+
 export function hasUnifiedTargetBuild(builds) {
   return Object.keys(builds).some((key) =>
     builds[key].some((target) => supportsUnifiedTargets(target.version)),
@@ -36,7 +48,7 @@ export function processBoardOptions(releaseData, buildLevel, minVersion, maxVers
         releaseUrl: release.html_url,
         name: version,
         version,
-        url: asset.browser_download_url,
+        url: firmwareArtifactUrl(release.tag_name, asset.name),
         file: asset.name,
         target,
         date: formatDate(new Date(release.published_at)),

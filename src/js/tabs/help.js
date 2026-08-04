@@ -2,7 +2,7 @@ const tab = {
     tabName: 'help',
 };
 tab.initialize = function (callback) {
-    $('#content').load("/src/tabs/help.html", function () {
+    $('#content').load(`${import.meta.env.BASE_URL}src/tabs/help.html`, function () {
         i18n.localizePage();
         GUI.content_ready(callback);
     });

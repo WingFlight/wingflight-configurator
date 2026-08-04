@@ -3,8 +3,10 @@ name: PR-CI
 on:
   pull_request:
     branches:
-      - 'master'
-      - 'RF-*'
+      # Disabled native compiler workflow. Previous active branches:
+      # - 'master'
+      # - 'RF-*'
+      - 'disabled/native-compiler-workflows-do-not-run'
 
 jobs:
   lint:
@@ -436,4 +438,3 @@ jobs:
       with:
         name: wingflight-configurator-android-${{ env.GIT_VER }}
         path: redist/*
-
