@@ -11,6 +11,7 @@
   import Field from "@/components/Field.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import InfoNote from "@/components/notes/InfoNote.svelte";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
@@ -28,6 +29,7 @@
   function snapshotState() {
     return $state.snapshot({
       FC_LINK_SYNC_CONFIG: FC.FC_LINK_SYNC_CONFIG,
+      featureEnabled: FC.FEATURE_CONFIG.features.FC_LINK,
     });
   }
 
@@ -41,6 +43,7 @@
   let showToolbar = $derived(!loading && changes.length > 0);
 
   onMount(async () => {
+    await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_FC_LINK_STATUS);
     await MSP.promise(MSPCodes.MSP2_WING_FC_LINK_SYNC_CONFIG);
 
@@ -81,6 +84,7 @@
     }
 
     await save(MSPCodes.MSP2_WING_SET_FC_LINK_SYNC_CONFIG);
+    await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -91,6 +95,7 @@
 
   export async function onRevert() {
     Object.assign(FC.FC_LINK_SYNC_CONFIG, initialState.FC_LINK_SYNC_CONFIG);
+    FC.FEATURE_CONFIG.features.FC_LINK = initialState.featureEnabled;
   }
 
   export function isDirty() {
@@ -116,10 +121,26 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  {#if !FC.FC_LINK_STATUS.enabled}
-    <p>{$i18n.t("fcLinkNotEnabled")}</p>
-  {:else}
-    <div class="content">
+  <div class="content">
+    <Section label="fcLinkSectionEnable" summary="fcLinkSectionEnableHelp">
+      <Field id="fc-link-enable" label="genericEnable">
+        <Switch
+          id="fc-link-enable"
+          bind:checked={FC.FEATURE_CONFIG.features.FC_LINK}
+        />
+      </Field>
+      <div class="note-wrap">
+        <WarningNote message="fcLinkExperimentalNote" />
+      </div>
+    </Section>
+
+    {#if !FC.FEATURE_CONFIG.features.FC_LINK}
+      <!-- Nothing more to configure until the feature is enabled and saved. -->
+    {:else if !FC.FC_LINK_STATUS.enabled}
+      <Section label="fcLinkSectionStatus">
+        <p>{$i18n.t("fcLinkNotEnabled")}</p>
+      </Section>
+    {:else}
       <Section label="fcLinkSectionStatus">
         <Field id="fc-link-role" label="fcLinkRole">
           <span>
@@ -284,8 +305,8 @@
           </div>
         {/if}
       </Section>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </Page>
 
 <style lang="scss">

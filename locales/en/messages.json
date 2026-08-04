@@ -565,6 +565,15 @@
     "tabFcLink": {
         "message": "FC Link"
     },
+    "fcLinkSectionEnable": {
+        "message": "Enable FC Link"
+    },
+    "fcLinkSectionEnableHelp": {
+        "message": "Turns the FC Link subsystem on or off. Also requires a UART assigned to the FC Link Master or Slave port function to actually do anything."
+    },
+    "fcLinkExperimentalNote": {
+        "message": "FC Link is experimental. Enabling it requires a reboot, and a UART must be assigned to the FC Link Master or Slave port function before it will link to a peer."
+    },
     "fcLinkSectionStatus": {
         "message": "Link Status"
     },
@@ -572,7 +581,7 @@
         "message": "Link Statistics"
     },
     "fcLinkNotEnabled": {
-        "message": "FC Link is not configured on this board."
+        "message": "FC Link is enabled, but no UART has been assigned to the FC Link Master or Slave port function on this board."
     },
     "fcLinkRole": {
         "message": "Role"

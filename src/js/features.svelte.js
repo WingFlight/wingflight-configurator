@@ -13,6 +13,7 @@ export class Features {
     DISPLAY: 17,
     OSD: 18,
     CMS: 19,
+    FC_LINK: 23,
     RX_SPI: 25,
     ESC_SENSOR: 27,
     FREQ_SENSOR: 28,
