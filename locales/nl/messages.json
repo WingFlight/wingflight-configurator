@@ -1379,10 +1379,6 @@
         "message": "Weergave op het scherm",
         "english": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "Configuration Menu System",
-        "english": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "SPI RX ondersteuning",
         "english": "SPI RX support"
@@ -1434,10 +1430,6 @@
     "featureTip_LED_STRIP": {
         "message": "Maakt ondersteuning voor WS2811/2812 LED-strips mogelijk. Voegt het tabblad <i>LED Strip</i> toe voor de configuratie.",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "Maakt firmware-ondersteuning voor CMS mogelijk.",
-        "english": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "Seriële poorten",

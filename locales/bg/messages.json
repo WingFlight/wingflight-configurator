@@ -1403,10 +1403,6 @@
         "message": "Екранна индикация",
         "english": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "Система за конфигурационно меню",
-        "english": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "Поддръжка на SPI RX",
         "english": "SPI RX support"
@@ -1458,10 +1454,6 @@
     "featureTip_LED_STRIP": {
         "message": "Позволява поддръжка на WS2811/2812 LED ленти. Добавя раздела <i>LED лента</i> за конфигуриране.",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "Позволява фърмуерна поддръжка за CMS.",
-        "english": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "Серийни портове",
