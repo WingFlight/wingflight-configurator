@@ -96,6 +96,7 @@
   let detectDialogContent = $state("");
 
   let detectTimer;
+  let detectConnectDelayTimer;
   let detectMspHelper;
 
   let boardGroups = $derived(
@@ -131,6 +132,7 @@
     portPickerElement()?.removeEventListener("change", onPortChange);
     document.removeEventListener("keypress", onKeypress);
     clearTimeout(detectTimer);
+    clearTimeout(detectConnectDelayTimer);
   });
 
   function onCacheUpdate(release) {
@@ -710,12 +712,21 @@
     detectTimer = setTimeout(() => {
       GUI.log($i18n.t("firmwareFlasherBoardDetectionFail"));
       disconnectDetect();
-    }, 5000);
+    }, 8000);
 
     const el = portPickerElement();
     const port = String(el.value);
     const baud = getIntegerValue("select#baud") ?? 115200;
-    serial.connect(port, { bitrate: baud }, onDetectConnect);
+
+    // If we just got here from a connected session, navigating to this tab
+    // forces a disconnect first -- give the board/USB stack a brief moment to
+    // settle before reopening the same port and querying it. Without this,
+    // reconnecting immediately can get no response back in time (see
+    // handleConnectClick()'s disconnect branch, which now awaits the actual
+    // port close, but the board itself may still need a moment to be ready).
+    detectConnectDelayTimer = setTimeout(() => {
+      serial.connect(port, { bitrate: baud }, onDetectConnect);
+    }, 300);
   }
 
   function onDetectConnect(openInfo) {
@@ -790,6 +801,7 @@
   }
 
   function disconnectDetect() {
+    clearTimeout(detectConnectDelayTimer);
     serial.disconnect(onDetectClose);
     MSP.disconnect_cleanup();
     setFlashingEnabled(true);
