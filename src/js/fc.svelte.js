@@ -80,6 +80,8 @@ class FlightController {
   TELEMETRY_CONFIG = $state();
   TRANSPONDER = $state();
   TUNING_SLIDERS = $state();
+  TV_PIDS = $state();
+  TV_PID_PROFILE = $state();
   VOLTAGE_METERS = $state();
   VOLTAGE_METER_CONFIGS = $state();
 
