@@ -20,11 +20,6 @@ inUseRegex = [
     'powerVoltageId[0-9]+$',
     'powerAmperageId[0-9]+$',
     'vtxType_',
-    'osdSetupVideoFormatOption',
-    'osdSetupUnitsOption',
-    'osdTimerSourceOption',
-    'osdTimerPrecisionOption',
-    'osdDescribeFontVersion',
     'serialError',
     'reportProblemsDialog[A-Z_]+$',
 ]

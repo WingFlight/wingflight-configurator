@@ -64,10 +64,10 @@ export const MSPCodes = {
     MSP_SET_BLACKBOX_CONFIG:        81,
     MSP_TRANSPONDER_CONFIG:         82,
     MSP_SET_TRANSPONDER_CONFIG:     83,
-    MSP_OSD_CONFIG:                 84,
-    MSP_SET_OSD_CONFIG:             85,
-    MSP_OSD_CHAR_READ:              86,
-    MSP_OSD_CHAR_WRITE:             87,
+//  MSP_OSD_CONFIG:                 84, // removed (OSD)
+//  MSP_SET_OSD_CONFIG:             85, // removed (OSD)
+//  MSP_OSD_CHAR_READ:              86, // removed (OSD)
+//  MSP_OSD_CHAR_WRITE:             87, // removed (OSD)
 //  MSP_VTX_CONFIG:                 88,
 //  MSP_SET_VTX_CONFIG:             89,
     MSP_ADVANCED_CONFIG:            90,
