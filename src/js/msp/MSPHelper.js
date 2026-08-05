@@ -44,7 +44,6 @@ export function MspHelper() {
         'IRC_TRAMP': 13,
         'RUNCAM_DEVICE_CONTROL': 14,
         'LIDAR_TF': 15,
-        'FRSKY_OSD': 16,
         'SBUS_OUT': 18,
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
@@ -1652,20 +1651,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
             case MSPCodes.MSP_SET_TELEMETRY_CONFIG: {
                 console.log('Telemetry config saved');
-                break;
-            }
-            case MSPCodes.MSP_OSD_CONFIG: {
-                break;
-            }
-            case MSPCodes.MSP_SET_OSD_CONFIG: {
-                console.log('OSD config set');
-                break;
-            }
-            case MSPCodes.MSP_OSD_CHAR_READ: {
-                break;
-            }
-            case MSPCodes.MSP_OSD_CHAR_WRITE: {
-                console.log('OSD char uploaded');
                 break;
             }
             case MSPCodes.MSP_SET_NAME: {

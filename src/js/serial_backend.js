@@ -694,12 +694,6 @@ async function onConnect() {
                 }
             });
 
-        if (FC.CONFIG.boardType == 0) {
-            if (classes.indexOf("osd-required") >= 0) {
-                found = false;
-            }
-        }
-
         return found;
     }).show();
 
