@@ -18,11 +18,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-cms-removal",
-      "path": "./feature-cms-removal/"
-    },
-    {
-      "type": "branch",
       "name": "feature-osd-removal",
       "path": "./feature-osd-removal/"
     },
