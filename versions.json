@@ -23,6 +23,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-osd-removal",
+      "path": "./feature-osd-removal/"
+    },
+    {
+      "type": "branch",
       "name": "feature-thrust-vector",
       "path": "./feature-thrust-vector/"
     }
