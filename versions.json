@@ -18,6 +18,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-cms-removal",
+      "path": "./feature-cms-removal/"
+    },
+    {
+      "type": "branch",
       "name": "feature-thrust-vector",
       "path": "./feature-thrust-vector/"
     }
