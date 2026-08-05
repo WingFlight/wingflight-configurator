@@ -1283,9 +1283,6 @@
     "feature_OSD": {
         "message": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "SPI RX support"
     },
@@ -1324,9 +1321,6 @@
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "Serial Ports"

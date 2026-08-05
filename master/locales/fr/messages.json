@@ -1379,10 +1379,6 @@
         "message": "Affichage des infos sur l'écran (OSD)",
         "english": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "Système de menus de configuration",
-        "english": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "Prise en charge du SPI-RX",
         "english": "SPI RX support"
@@ -1434,10 +1430,6 @@
     "featureTip_LED_STRIP": {
         "message": "Active la prise en charge des bandes LED WS2811/2812. Ajoute l'onglet <i>LED Strip</i> pour la configuration.",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "Active la prise en charge du CMS par le firmware.",
-        "english": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "Ports série",

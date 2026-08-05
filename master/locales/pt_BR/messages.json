@@ -1671,11 +1671,6 @@
         "english": "On Screen Display",
         "status": "Reused translation. Please check!"
     },
-    "feature_CMS": {
-        "message": "Configuration Menu System",
-        "english": "Configuration Menu System",
-        "status": "New entry. Please translate!"
-    },
     "feature_RX_SPI": {
         "message": "SPI RX support",
         "english": "SPI RX support",
@@ -1745,11 +1740,6 @@
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration.",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration.",
-        "status": "New entry. Please translate!"
-    },
-    "featureTip_CMS": {
-        "message": "Enables firmware support for CMS.",
-        "english": "Enables firmware support for CMS.",
         "status": "New entry. Please translate!"
     },
     "configurationSerialPorts": {

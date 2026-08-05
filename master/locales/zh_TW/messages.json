@@ -1379,10 +1379,6 @@
         "message": "啟用 OSD",
         "english": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "設定選單系統",
-        "english": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "支援 SPI 接收機",
         "english": "SPI RX support"
@@ -1434,10 +1430,6 @@
     "featureTip_LED_STRIP": {
         "message": "啟用 WS2811/2812 LED 燈條支援。在設定器中加入 <i>LED 燈條</i> 頁面。",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "啟用 CMS 韌體支援。",
-        "english": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "串列埠",
