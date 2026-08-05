@@ -2467,6 +2467,9 @@
     "receiverTelemetrySensor_TEMP": {
         "message": "Temperature"
     },
+    "receiverTelemetrySensor_OSC_LIMITER": {
+        "message": "Oscillation Limiter"
+    },
     "receiverBars": {
         "message": "Channel Assignment"
     },
@@ -5035,6 +5038,30 @@
     },
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
+    },
+    "profilesOscLimiterGroup": {
+        "message": "Oscillation Limiter"
+    },
+    "profilesOscLimiter": {
+        "message": "Oscillation Limiter"
+    },
+    "profilesOscLimiterHelp": {
+        "message": "Detects sustained control-loop oscillation in fixed-wing rate mode and reduces the affected axis gain down to the configured floor."
+    },
+    "profilesOscLimiterMinHz": {
+        "message": "Minimum Frequency [Hz]"
+    },
+    "profilesOscLimiterMaxHz": {
+        "message": "Maximum Frequency [Hz]"
+    },
+    "profilesOscLimiterThreshold": {
+        "message": "Threshold [&deg;/s]"
+    },
+    "profilesOscLimiterFloor": {
+        "message": "Gain Floor [%]"
+    },
+    "profilesOscLimiterEngageMs": {
+        "message": "Engage Time [ms]"
     },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"

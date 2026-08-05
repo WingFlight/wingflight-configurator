@@ -112,6 +112,65 @@
     </Field>
   </SubSection>
 
+  <SubSection label="profilesOscLimiterGroup">
+    <Field id="osc-limiter" label="profilesOscLimiter">
+      {#snippet tooltip()}
+        {$i18n.t("profilesOscLimiterHelp")}
+      {/snippet}
+      <Switch
+        id="osc-limiter"
+        bind:checked={
+          () => FC.PID_PROFILE.oscLimiter > 0,
+          (v) => (FC.PID_PROFILE.oscLimiter = v ? 1 : 0)
+        }
+      />
+    </Field>
+    {#if FC.PID_PROFILE.oscLimiter > 0}
+      <SubSection>
+        <Field id="osc-limiter-min-hz" label="profilesOscLimiterMinHz">
+          <NumberInput
+            id="osc-limiter-min-hz"
+            min="1"
+            max="50"
+            bind:value={FC.PID_PROFILE.oscLimiterMinHz}
+          />
+        </Field>
+        <Field id="osc-limiter-max-hz" label="profilesOscLimiterMaxHz">
+          <NumberInput
+            id="osc-limiter-max-hz"
+            min="2"
+            max="100"
+            bind:value={FC.PID_PROFILE.oscLimiterMaxHz}
+          />
+        </Field>
+        <Field id="osc-limiter-threshold" label="profilesOscLimiterThreshold">
+          <NumberInput
+            id="osc-limiter-threshold"
+            min="1"
+            max="250"
+            bind:value={FC.PID_PROFILE.oscLimiterThreshold}
+          />
+        </Field>
+        <Field id="osc-limiter-floor" label="profilesOscLimiterFloor">
+          <NumberInput
+            id="osc-limiter-floor"
+            min="10"
+            max="100"
+            bind:value={FC.PID_PROFILE.oscLimiterFloor}
+          />
+        </Field>
+        <Field id="osc-limiter-engage-ms" label="profilesOscLimiterEngageMs">
+          <NumberInput
+            id="osc-limiter-engage-ms"
+            min="50"
+            max="2000"
+            bind:value={FC.PID_PROFILE.oscLimiterEngageMs}
+          />
+        </Field>
+      </SubSection>
+    {/if}
+  </SubSection>
+
   <SubSection label="profilesItermRelax">
     <Field id="iterm-relax" label="profilesItermRelax">
       {#snippet tooltip()}
