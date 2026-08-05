@@ -12,7 +12,6 @@ export class Features {
     LED_STRIP: 16,
     DISPLAY: 17,
     OSD: 18,
-    CMS: 19,
     RX_SPI: 25,
     ESC_SENSOR: 27,
     FREQ_SENSOR: 28,
@@ -22,7 +21,7 @@ export class Features {
 
   static GROUPS = {
     RX_PROTO: ["RX_PPM", "RX_SERIAL", "RX_PARALLEL_PWM", "RX_MSP", "RX_SPI"],
-    OTHER: ["GPS", "LED_STRIP", "CMS"],
+    OTHER: ["GPS", "LED_STRIP"],
     RSSI: ["RSSI_ADC"],
   };
 

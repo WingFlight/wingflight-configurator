@@ -1379,10 +1379,6 @@
         "message": "Visualización en Pantalla",
         "english": "On Screen Display"
     },
-    "feature_CMS": {
-        "message": "Menú de configuración del sistema",
-        "english": "Configuration Menu System"
-    },
     "feature_RX_SPI": {
         "message": "Soporte SPI del RX",
         "english": "SPI RX support"
@@ -1434,10 +1430,6 @@
     "featureTip_LED_STRIP": {
         "message": "Habilita soporte para tiras LED WS2811/2812 LEDs. Añade la pestaña <i>Tiras LED</i> para su configuración.",
         "english": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
-    },
-    "featureTip_CMS": {
-        "message": "Habilita el soporte del firmware para CMS.",
-        "english": "Enables firmware support for CMS."
     },
     "configurationSerialPorts": {
         "message": "Puertos Serie",
