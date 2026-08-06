@@ -493,6 +493,78 @@
     "escProgrammingArmedWarning": {
         "message": "Disarm the aircraft to program ESCs."
     },
+    "tabXactServoProgramming": {
+        "message": "XACT Servo Programming"
+    },
+    "xactServoIntro": {
+        "message": "Program XACT FBUS servo parameters over telemetry. Scan for a connected servo, then edit and write its parameters."
+    },
+    "xactServoSingleServoNote": {
+        "message": "Only connect one XACT servo at a time while programming. With multiple servos connected, scanning and writing parameters may target the wrong servo."
+    },
+    "xactServoScanButton": {
+        "message": "Scan for Servo"
+    },
+    "xactServoIdle": {
+        "message": "Click \"Scan for Servo\" to discover a connected XACT servo."
+    },
+    "xactServoScanning": {
+        "message": "Scanning for XACT servo..."
+    },
+    "xactServoNotFound": {
+        "message": "No XACT servo detected. Check wiring and try scanning again."
+    },
+    "xactServoSectionBasic": {
+        "message": "Basic Parameters"
+    },
+    "xactServoSectionAdvanced": {
+        "message": "Advanced Parameters"
+    },
+    "xactServoPhysicalId": {
+        "message": "Physical ID"
+    },
+    "xactServoAppIdOffset": {
+        "message": "App ID Offset"
+    },
+    "xactServoRange": {
+        "message": "Range"
+    },
+    "xactServoDirection": {
+        "message": "Direction"
+    },
+    "xactServoDirectionClockwise": {
+        "message": "Clockwise"
+    },
+    "xactServoDirectionCounterClockwise": {
+        "message": "Counter-Clockwise"
+    },
+    "xactServoPulseType": {
+        "message": "Pulse Type"
+    },
+    "xactServoDataRate": {
+        "message": "Data Rate"
+    },
+    "xactServoChannel": {
+        "message": "Channel"
+    },
+    "xactServoCenter": {
+        "message": "Center"
+    },
+    "xactServoP1": {
+        "message": "P1 Gain"
+    },
+    "xactServoP2": {
+        "message": "P2 Gain"
+    },
+    "xactServoD1": {
+        "message": "D1 Gain"
+    },
+    "xactServoTb": {
+        "message": "TB"
+    },
+    "xactServoPotGap": {
+        "message": "Pot Gap"
+    },
     "escProgrammingSelectManufacturer": {
         "message": "Select ESC manufacturer"
     },

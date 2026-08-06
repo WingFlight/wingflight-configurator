@@ -33,6 +33,7 @@ const tabHelpURLs = {
     tabBeepers:         `${docsBaseURL}/configurator/tabs/beepers/`,
     tabSensors:         `${docsBaseURL}/configurator/tabs/sensors/`,
     tabEscProgramming:  `${docsBaseURL}/configurator/tabs/esc-programming/`,
+    tabXactServoProgramming: `${docsBaseURL}/configurator/tabs/xact-servo-programming/`,
     tabBlackbox:        `${docsBaseURL}/configurator/tabs/blackbox/`,
     tabCli:             `${docsBaseURL}/configurator/tabs/cli/`,
 };

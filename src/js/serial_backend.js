@@ -715,6 +715,10 @@ async function onConnect() {
         await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG, false);
         await MSP.promise(MSPCodes.MSP_STATUS, false);
         await MSP.promise(MSPCodes.MSP_DATAFLASH_SUMMARY, false);
+        // Needed here (rather than left to each tab's own fetch) so updateTabList can
+        // decide whether to show the xact_servo tab before the nav is first shown.
+        await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG, false);
+        updateTabList(FC.FEATURE_CONFIG.features);
 
         if (FC.CONFIG.boardType == 0 || FC.CONFIG.boardType == 2) {
             startLiveDataRefreshTimer();
