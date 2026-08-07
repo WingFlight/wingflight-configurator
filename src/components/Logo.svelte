@@ -4,26 +4,32 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 
   let hardwareName = $derived(FC.getHardwareName());
+  let showFirmware = $derived(
+    FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier,
+  );
+  let configuratorLabel = $derived(
+    `${CONFIGURATOR.version} · ${CONFIGURATOR.buildLabel}`,
+  );
+  let firmwareLabel = $derived(
+    `${FC.CONFIG.buildVersion} ${FC.CONFIG.flightControllerIdentifier}`,
+  );
 </script>
 
 <div class="logo">
   <div class="logo-text">
-    <span>
-      {$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}
+    <span
+      title={`${$i18n.t("versionLabelConfigurator")}: ${CONFIGURATOR.version} · Branch/tag: ${CONFIGURATOR.buildLabel}`}
+    >
+      Cfg {configuratorLabel}
     </span>
-    <span class="build-label">Branch/tag: {CONFIGURATOR.buildLabel}</span>
-    {#if (FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier) || hardwareName}
-      <span>
-        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier}
-          {$i18n.t("versionLabelFirmware")}: {FC.CONFIG.buildVersion}
-          {FC.CONFIG.flightControllerIdentifier}
-        {/if}
-        {#if FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier && hardwareName}
-          &middot;
-        {/if}
-        {#if hardwareName}
-          {$i18n.t("versionLabelTarget")}: {hardwareName}
-        {/if}
+    {#if showFirmware}
+      <span title={`${$i18n.t("versionLabelFirmware")}: ${firmwareLabel}`}>
+        FW {firmwareLabel}
+      </span>
+    {/if}
+    {#if hardwareName}
+      <span title={`${$i18n.t("versionLabelTarget")}: ${hardwareName}`}>
+        Target {hardwareName}
       </span>
     {/if}
   </div>
@@ -47,9 +53,16 @@
     top: 49px;
     color: #d8d8d8;
     font-size: 0.7rem;
-    min-width: 210px;
+    width: 230px;
     display: flex;
     flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .logo-text span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   @media only screen and (max-width: 480px) {
@@ -84,17 +97,18 @@
       display: flex !important;
       left: 82px;
       top: 62px;
+      width: calc(100% - 92px);
     }
   }
 
   @media all and (min-width: 1125px) {
     .logo {
-      width: 340px;
+      width: 360px;
     }
 
     .logo-text {
       font-size: inherit;
-      position: relative;
+      width: 270px;
     }
   }
 </style>
