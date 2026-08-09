@@ -2,6 +2,8 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import { updateTabList } from "@/js/main.js";
 
   // modelType is passed to open() rather than taken as a prop -- callers
   // that let the user pick *which* type to configure (ModelTypePicker,
@@ -23,6 +25,12 @@
   let flaps = $state(false);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
+  // Independent per-axis, since a vectored mount might drive any combination
+  // (2-axis gimbals are commonly pitch+yaw, but roll+yaw and others exist
+  // too; some mounts are single- or full 3-axis).
+  let thrustVectorRoll = $state(false);
+  let thrustVectorPitch = $state(false);
+  let thrustVectorYaw = $state(false);
 
   export function open(modelType) {
     activeType = modelType;
@@ -40,11 +48,14 @@
     flaps = false;
     motors = 1;
     diffThrustYaw = false;
+    thrustVectorRoll = false;
+    thrustVectorPitch = false;
+    thrustVectorYaw = false;
 
     dialogEl.showModal();
   }
 
-  function apply() {
+  async function apply() {
     const options = {
       layout: activeType.layout,
       ailerons: activeType.ailerons?.fixed ?? ailerons,
@@ -53,9 +64,36 @@
       flaps,
       motors,
       diffThrustYaw,
+      thrustVectorRoll,
+      thrustVectorPitch,
+      thrustVectorYaw,
     };
 
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
+
+    // The feature flag isn't part of the staged mixer rules, and the Mixer
+    // tab's own Save only pushes MIXER_CONFIG/MIXER_INPUTS/MIXER_RULES -- so
+    // commit it immediately here rather than leaving it as unsaved FC state
+    // that a later tab visit (which re-fetches MSP_FEATURE_CONFIG on mount)
+    // could silently discard.
+    const thrustVectorEnabled =
+      thrustVectorRoll || thrustVectorPitch || thrustVectorYaw;
+    if (
+      thrustVectorEnabled !==
+      FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")
+    ) {
+      FC.FEATURE_CONFIG.features.setFeature(
+        "THRUST_VECTOR",
+        thrustVectorEnabled,
+      );
+      await MSP.promise(
+        MSPCodes.MSP_SET_FEATURE_CONFIG,
+        mspHelper.crunch(MSPCodes.MSP_SET_FEATURE_CONFIG),
+      );
+      await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
+      updateTabList(FC.FEATURE_CONFIG.features);
+    }
+
     applied = true;
     dialogEl.close();
   }
@@ -167,6 +205,27 @@
           <span>{$i18n.t("mixerWizardDiffThrust")}</span>
         </label>
         <div class="wizardHint">{$i18n.t("mixerWizardDiffThrustHint")}</div>
+      </div>
+    {/if}
+
+    {#if motors >= 1}
+      <div class="wizardSection">
+        <div class="wizardSectionTitle">
+          {$i18n.t("mixerWizardThrustVectorTitle")}
+        </div>
+        <label class="wizardOption">
+          <input type="checkbox" bind:checked={thrustVectorRoll} />
+          <span>{$i18n.t("mixerWizardThrustVectorRoll")}</span>
+        </label>
+        <label class="wizardOption">
+          <input type="checkbox" bind:checked={thrustVectorPitch} />
+          <span>{$i18n.t("mixerWizardThrustVectorPitch")}</span>
+        </label>
+        <label class="wizardOption">
+          <input type="checkbox" bind:checked={thrustVectorYaw} />
+          <span>{$i18n.t("mixerWizardThrustVectorYaw")}</span>
+        </label>
+        <div class="wizardHint">{$i18n.t("mixerWizardThrustVectorHint")}</div>
       </div>
     {/if}
 
