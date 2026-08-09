@@ -18,6 +18,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-serial_rework",
+      "path": "./feature-serial_rework/"
+    },
+    {
+      "type": "branch",
       "name": "feature-thrust-vector",
       "path": "./feature-thrust-vector/"
     }
