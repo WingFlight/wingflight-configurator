@@ -183,9 +183,24 @@ class WebUsbSerialPort {
     }
 }
 
+// Keyed by the underlying USBDevice so repeated getPorts()/requestPort()
+// calls for the same physical device return the same wrapper instance --
+// WebSerial.js's getStableWebSerialId() keys its id off object identity
+// (mirroring how real navigator.serial.getPorts() reuses SerialPort
+// instances), and a fresh wrapper every poll would mint a new id each time,
+// which in turn keeps re-triggering auto-connect-on-recognized-port as if a
+// new device just appeared.
+const wrappedPorts = new WeakMap();
+
 function wrapDevice(device) {
+    let port = wrappedPorts.get(device);
+    if (port) {
+        return port;
+    }
     try {
-        return new WebUsbSerialPort(device);
+        port = new WebUsbSerialPort(device);
+        wrappedPorts.set(device, port);
+        return port;
     } catch {
         // Device has no CDC-ACM interface (e.g. a DFU-mode bootloader device
         // also authorized on this origin) -- not something we can drive as a
