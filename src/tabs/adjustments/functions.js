@@ -13,7 +13,7 @@ export function getFunctions() {
         { id: 1,    name: 'RateProfile',                min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 2,    name: 'PIDProfile',                 min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 3,    name: 'LEDProfile',                 min: 1,     max: 4,      ticks: 0.25, pips: [ 1, 2, 3, 4 ] },
-        { id: 4,    name: 'OSDProfile',                 min: 1,     max: 3,      ticks: 0.25, pips: [ 1, 2, 3 ] },
+        { id: 4,    name: 'OSDProfile',                 min: 1,     max: 3,      ticks: 0.25, pips: [ 1, 2, 3 ], hide: true },
         { id: 5,    name: 'PitchRate',                  min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ] },
         { id: 6,    name: 'RollRate',                   min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ] },
         { id: 7,    name: 'YawRate',                    min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ] },

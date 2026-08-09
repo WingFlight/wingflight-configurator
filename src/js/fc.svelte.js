@@ -23,6 +23,8 @@ class FlightController {
   DEFAULT = $state();
   ESC_SENSOR_CONFIG = $state();
   FAILSAFE_CONFIG = $state();
+  FBUS_MASTER_CONFIG = $state();
+  FBUS_SENSORS = $state();
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
@@ -242,6 +244,10 @@ class FlightController {
     };
 
     this.PID_RUNTIME_GAINS = null;
+    this.FBUS_SENSORS = [];
+    this.FBUS_MASTER_CONFIG = {
+      forwardedSensors:            [],
+    };
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});
     this.PIDS = Array.from({length: 3});
