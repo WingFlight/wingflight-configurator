@@ -88,7 +88,15 @@
       GUI.operating_system === "Linux"
         ? mspHelper.REBOOT_TYPES.MSC_UTC
         : mspHelper.REBOOT_TYPES.MSC;
-    MSP.send_message(MSPCodes.MSP_SET_REBOOT, [type], false);
+    MSP.send_message(MSPCodes.MSP_SET_REBOOT, [type], false, ({ data } = {}) => {
+      const storageReady = !data || data.byteLength < 2 || data.getUint8(1) === 1;
+      if (!storageReady) {
+        return;
+      }
+
+      GUI.log($i18n.t("deviceRebooting"));
+      reinitialiseConnection();
+    });
   }
 </script>
 
