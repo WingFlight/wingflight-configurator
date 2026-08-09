@@ -44,23 +44,28 @@ class UsbEndpointUnderlyingSource {
         this.onError = onError;
     }
 
-    pull(controller) {
-        (async () => {
-            try {
-                const result = await this.device.transferIn(this.endpoint.endpointNumber, this.endpoint.packetSize);
-                if (result.status !== 'ok') {
-                    controller.error(`USB error: ${result.status}`);
-                    this.onError();
-                    return;
-                }
-                if (result.data?.buffer) {
-                    controller.enqueue(new Uint8Array(result.data.buffer, result.data.byteOffset, result.data.byteLength));
-                }
-            } catch (error) {
-                controller.error(error.toString());
+    // Must be a real async function (returning its promise) rather than an
+    // unawaited fire-and-forget IIFE: the ReadableStream spec doesn't call
+    // pull() again until the previously returned promise settles, which is
+    // what prevents overlapping transferIn() calls on the same endpoint --
+    // submitting a second bulk IN transfer before the first completes is
+    // what was triggering USB protocol errors and a forced device removal
+    // after a few seconds on Android.
+    async pull(controller) {
+        try {
+            const result = await this.device.transferIn(this.endpoint.endpointNumber, this.endpoint.packetSize);
+            if (result.status !== 'ok') {
+                controller.error(`USB error: ${result.status}`);
                 this.onError();
+                return;
             }
-        })();
+            if (result.data?.buffer) {
+                controller.enqueue(new Uint8Array(result.data.buffer, result.data.byteOffset, result.data.byteLength));
+            }
+        } catch (error) {
+            controller.error(error.toString());
+            this.onError();
+        }
     }
 }
 
