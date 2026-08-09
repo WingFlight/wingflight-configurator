@@ -1707,8 +1707,7 @@ dialog .dialog_toolbar .btn a.disabled {
     dialog {
         position: fixed;
         width: calc(100% - 2em) !important;
-        height: auto !important;
-        bottom: 0;
+        max-height: calc(100% - 56px - 2em);
         top: 56px;
         border-radius: unset;
         border: none;
