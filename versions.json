@@ -18,6 +18,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-msc",
+      "path": "./feature-msc/"
+    },
+    {
+      "type": "branch",
       "name": "feature-serial_rework",
       "path": "./feature-serial_rework/"
     },
