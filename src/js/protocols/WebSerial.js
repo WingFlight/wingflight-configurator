@@ -1,11 +1,21 @@
 import { webUsbSerialPolyfill } from './webUsbSerialPolyfill.js';
 
-// navigator.serial is desktop-only; Chrome for Android has WebUSB but not
-// Web Serial. On such browsers we fall back to a WebUSB-backed polyfill
-// (see webUsbSerialPolyfill.js) that speaks the same SerialPort shape, so
-// every function below can stay agnostic of which one actually backs a port.
+// Chrome for Android exposes `navigator.serial` as an object, but there is no
+// OS-level serial backend behind it there -- getPorts()/requestPort() always
+// resolve with nothing, even for FCs that are genuinely connected and
+// enumerable over WebUSB (confirmed: device shows in chrome://device-log but
+// never appears in navigator.serial's own picker). So 'serial' in navigator
+// alone isn't reliable proof of a working backend on Android, and we skip
+// straight to the WebUSB-backed polyfill (see webUsbSerialPolyfill.js) there.
+function isAndroid() {
+    if (navigator.userAgentData?.platform) {
+        return navigator.userAgentData.platform === 'Android';
+    }
+    return /Android/.test(navigator.userAgent);
+}
+
 function getSerialProvider() {
-    if ('serial' in navigator) {
+    if (!isAndroid() && 'serial' in navigator) {
         return navigator.serial;
     }
     if ('usb' in navigator) {
