@@ -1,21 +1,27 @@
 /**
  * Browser compatibility check for web deployment
- * This module checks for required APIs and notifies user of incompatibilities
+ * This module checks for required APIs and notifies user of incompatibilities.
+ *
+ * Compatibility is transport-based (mirrors Betaflight Configurator's
+ * checkCompatibility.js): the app is usable as long as at least one of
+ * Web Serial, Web Bluetooth, or WebUSB is available, rather than requiring
+ * a specific browser family. There is no native app fallback -- Wingflight
+ * Configurator is web-only, so an unsupported browser is just unsupported.
  */
 
 export const BrowserCompat = {
-  /**
-   * Check if browser is Chromium-based
-   */
-  isChromium() {
-    return /Chrome|Edg|Brave|Opera/i.test(navigator.userAgent) && !navigator.userAgent.includes('Firefox');
-  },
-
   /**
    * Check for WebSerial API support
    */
   hasWebSerial() {
     return 'serial' in navigator;
+  },
+
+  /**
+   * Check for Web Bluetooth API support
+   */
+  hasWebBluetooth() {
+    return 'bluetooth' in navigator;
   },
 
   /**
@@ -58,59 +64,49 @@ export const BrowserCompat = {
    * @returns {Object} Object with feature checks and overall compatibility status
    */
   checkAll() {
+    const hasWebSerial = this.hasWebSerial();
+    const hasWebBluetooth = this.hasWebBluetooth();
+    const hasWebUSB = this.hasWebUSB();
+    const hasWebStorage = this.hasWebStorage();
+
     return {
-      isChromium: this.isChromium(),
-      hasWebSerial: this.hasWebSerial(),
-      hasWebUSB: this.hasWebUSB(),
-      hasWebStorage: this.hasWebStorage(),
+      hasWebSerial,
+      hasWebBluetooth,
+      hasWebUSB,
+      hasWebStorage,
       browserName: this.getBrowserName(),
-      isCompatible: this.isChromium() && this.hasWebSerial() && this.hasWebUSB() && this.hasWebStorage(),
+      // At least one transport is enough to reach a flight controller (e.g.
+      // Android Chrome has no WebSerial/WebUSB but does support Web Bluetooth).
+      isCompatible: (hasWebSerial || hasWebBluetooth || hasWebUSB) && hasWebStorage,
     };
   },
 
   /**
-   * Display compatibility warning modal/banner
+   * Display compatibility warning in the console
    * @param {Object} compat - Result from checkAll()
    * @returns {boolean} true if compatible, false if not
    */
   displayWarning(compat) {
-    if (!compat.isChromium) {
-      const message = `
+    if (compat.isCompatible) {
+      return true;
+    }
+
+    const missing = [];
+    if (!compat.hasWebSerial) missing.push('Web Serial');
+    if (!compat.hasWebBluetooth) missing.push('Web Bluetooth');
+    if (!compat.hasWebUSB) missing.push('WebUSB');
+
+    const message = `
 ⚠️ Unsupported Browser: ${compat.browserName}
 
-Wingflight Configurator Web is optimized for Chromium-based browsers:
-- Google Chrome
-- Microsoft Edge
-- Brave Browser
-- Opera
-
-Your browser (${compat.browserName}) may have limited functionality. 
-Device access features (serial communication, USB) may not work.
-
-For best experience, please use a Chromium-based browser.
-      `.trim();
-      console.warn(message);
-      return false;
-    }
-
-    if (!compat.hasWebSerial || !compat.hasWebUSB) {
-      const missing = [];
-      if (!compat.hasWebSerial) missing.push('WebSerial API');
-      if (!compat.hasWebUSB) missing.push('WebUSB API');
-
-      const message = `
-⚠️ Limited Browser Support
-
-Your ${compat.browserName} browser is missing these features:
+Wingflight Configurator Web needs at least one of the following APIs to
+talk to a flight controller, and your browser has none of them:
 ${missing.map(f => `  • ${f}`).join('\n')}
 
-Device access features may not work properly.
-      `.trim();
-      console.warn(message);
-      return false;
-    }
-
-    return true;
+Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).
+    `.trim();
+    console.warn(message);
+    return false;
   },
 
   /**
@@ -140,20 +136,16 @@ Device access features may not work properly.
       line-height: 1.5;
     `;
 
-    let message = `⚠️ <strong>Limited Browser Support</strong><br/>`;
+    const missing = [];
+    if (!compat.hasWebSerial) missing.push('Web Serial');
+    if (!compat.hasWebBluetooth) missing.push('Web Bluetooth');
+    if (!compat.hasWebUSB) missing.push('WebUSB');
 
-    if (!compat.isChromium) {
-      message += `Your browser (${compat.browserName}) is not Chromium-based. `;
-      message += `Device access features may not work. `;
-      message += `Please use Chrome, Edge, Brave, or Opera for best experience.`;
-    } else if (!compat.hasWebSerial || !compat.hasWebUSB) {
-      const missing = [];
-      if (!compat.hasWebSerial) missing.push('WebSerial');
-      if (!compat.hasWebUSB) missing.push('WebUSB');
-      message += `Missing features: ${missing.join(', ')}. Device communication may be limited.`;
-    }
-
-    banner.innerHTML = message;
+    banner.innerHTML =
+      `⚠️ <strong>Unsupported Browser</strong><br/>` +
+      `Your browser (${compat.browserName}) doesn't support ${missing.join(', ')}. ` +
+      `Device communication needs at least one of Web Serial, Web Bluetooth, or WebUSB. ` +
+      `Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).`;
     container.insertBefore(banner, container.firstChild);
   },
 };

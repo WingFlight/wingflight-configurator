@@ -17,7 +17,33 @@ Wingflight Configurator has been adapted to run as a web application using moder
 ### ❌ Unsupported Browsers
 - **Firefox** - Limited WebSerial/WebUSB support
 - **Safari** - No WebSerial/WebUSB support
-- **Mobile browsers** - PWA installation may work, but device access is generally not available
+
+### Mobile browsers (Android / iOS)
+
+Wingflight Configurator is web-only -- there is no native mobile app, and
+none is planned. Support on mobile therefore depends entirely on which
+transport APIs the mobile browser implements:
+
+- **Web Bluetooth** is supported by Chrome on Android, so a flight controller
+  with a Bluetooth/BLE UART module (e.g. HC-05, HM-10, SpeedyBee, DroneBridge)
+  can be used from Android Chrome.
+- **Web Serial** is not implemented by any mobile browser (Android or iOS).
+  **WebUSB**, however, *is* supported by Chrome on Android, and
+  [src/js/protocols/WebSerial.js](src/js/protocols/WebSerial.js) falls back to
+  a vendored WebUSB-based polyfill
+  ([src/js/protocols/webUsbSerialPolyfill.js](src/js/protocols/webUsbSerialPolyfill.js),
+  trimmed from Google's official
+  [web-serial-polyfill](https://github.com/google/web-serial-polyfill)) when
+  `navigator.serial` isn't present but `navigator.usb` is. This only reaches
+  the standard USB CDC-ACM class -- the virtual-COM-port class most flight
+  controller MCUs (STM32, GD32, AT32, APM32, RP2040) expose natively -- and
+  cannot reach discrete USB-to-serial bridge chips (FTDI, CP210x, CH340),
+  which use a proprietary, non-CDC-ACM protocol. iOS has no WebUSB support
+  either, so USB flight controllers remain unreachable there.
+- The compatibility check in [src/js/browser-compat.js](src/js/browser-compat.js)
+  reflects this: it only blocks usage when *none* of Web Serial, Web
+  Bluetooth, or WebUSB are available, matching Betaflight Configurator's
+  transport-based compatibility check.
 
 ## Required Browser APIs
 
@@ -25,8 +51,9 @@ The web app requires the following browser APIs to be available:
 
 | API | Purpose | Supported Browsers |
 |-----|---------|-------------------|
-| **WebSerial API** | Serial port communication (flight controller) | Chrome, Edge, Brave, Opera |
-| **WebUSB API** | USB device access (flashing) | Chrome, Edge, Brave, Opera |
+| **WebSerial API** | Serial port communication (flight controller) | Chrome, Edge, Brave, Opera (desktop); Android Chrome via WebUSB CDC-ACM polyfill fallback |
+| **Web Bluetooth API** | BLE UART communication (flight controller) | Chrome, Edge, Brave, Opera (desktop and Android) |
+| **WebUSB API** | USB device access (flashing); Web Serial polyfill fallback on Android | Chrome, Edge, Brave, Opera (desktop and Android) |
 | **Web Storage API** | Local configuration storage | All modern browsers |
 | **Fetch API** | HTTP requests | All modern browsers |
 
@@ -169,7 +196,7 @@ A release is considered **stable** if the version tag:
 - Local configuration backup/restore (via IndexedDB)
 
 ### ⚠️ Browser-Dependent
-- **Serial Communication**: Requires WebSerial API (Chromium only)
+- **Serial Communication**: Requires WebSerial API (Chromium desktop), or WebUSB on Android for CDC-ACM devices only (see [Mobile browsers](#mobile-browsers-android--ios))
 - **USB Flashing**: Requires WebUSB API (Chromium only)
 - **File System Access**: Stored in browser storage, not local filesystem
 
@@ -269,7 +296,7 @@ Potential improvements for consideration:
 1. **Firefox Support**: Implement fallback proxy API for Firefox users
 2. **Safari Support**: Requires Safari to implement WebSerial/WebUSB
 3. **Offline Mode**: Add service workers for offline functionality
-4. **Mobile Web**: Adapt UI for mobile browsers (informational only)
+4. **Mobile Web**: Extend the WebUSB CDC-ACM polyfill fallback to more device classes, or add per-chipset polyfills (FTDI, CP210x, CH340) for Android
 5. **Progressive Web App (PWA)**: Add install capability
 
 ## Security Considerations
