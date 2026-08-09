@@ -20,8 +20,7 @@ Wingflight Configurator has been adapted to run as a web application using moder
 
 ### Mobile browsers (Android / iOS)
 
-Wingflight Configurator is web-only -- there is no native mobile app, and
-none is planned. Support on mobile therefore depends entirely on which
+Support on mobile therefore depends entirely on which
 transport APIs the mobile browser implements:
 
 - **Web Bluetooth** is supported by Chrome on Android, so a flight controller

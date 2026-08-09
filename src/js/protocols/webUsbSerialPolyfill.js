@@ -198,14 +198,23 @@ function wrapDevice(device) {
 // uses, so it can be swapped in as a drop-in port provider.
 export const webUsbSerialPolyfill = {
     async requestPort(options) {
-        const filters = (options?.filters || []).map((filter) => ({
-            classCode: CDC_CONTROL_INTERFACE_CLASS,
-            ...(filter.usbVendorId !== undefined && { vendorId: filter.usbVendorId }),
-            ...(filter.usbProductId !== undefined && { productId: filter.usbProductId }),
-        }));
-        const device = await navigator.usb.requestDevice({
-            filters: filters.length ? filters : [{ classCode: CDC_CONTROL_INTERFACE_CLASS }],
-        });
+        // Deliberately not also filtering on classCode here: Chrome's own
+        // matching already checks it against every interface (not just the
+        // device descriptor), so in theory it's redundant given
+        // vendorId/productId already narrow the list to known FC chips --
+        // but it's an extra variable devices with an Interface Association
+        // Descriptor (composite STM32 VCP boards report bDeviceClass 0xEF at
+        // the device level) don't need, and on Android it was observed to
+        // make the picker report "No compatible devices found" for boards
+        // that work fine over desktop Web Serial. CDC-ACM is still enforced
+        // afterwards via wrapDevice() below.
+        const filters = (options?.filters || [])
+            .map((filter) => ({
+                ...(filter.usbVendorId !== undefined && { vendorId: filter.usbVendorId }),
+                ...(filter.usbProductId !== undefined && { productId: filter.usbProductId }),
+            }))
+            .filter((filter) => Object.keys(filter).length > 0);
+        const device = await navigator.usb.requestDevice({ filters });
         const port = wrapDevice(device);
         if (!port) {
             throw new TypeError('Selected USB device does not expose a CDC-ACM serial interface');
