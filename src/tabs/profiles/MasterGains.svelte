@@ -308,4 +308,28 @@
   :global(html[data-theme="dark"]) .axis.THROTTLE {
     background-color: hsl(35, 45%, 28%);
   }
+
+  // This table has room to spare even at desktop density - it's not the
+  // reason for the 820px threshold (see Profiles.svelte's comment), but
+  // it switches at the same point as its siblings above so the page's
+  // compact mode arrives as one consistent transition rather than in
+  // stages. Buttons stay reasonably tappable (1.6rem); the text field
+  // narrows instead, since it only ever shows a short number.
+  @media only screen and (max-width: 820px) {
+    .table-scroll {
+      --number-input-height: 1.6rem;
+      --number-input-btn-size: 1.6rem;
+      --number-input-max-width: 92px;
+      --number-input-padding-x: 3px;
+    }
+
+    .grid {
+      min-width: 260px;
+    }
+
+    th,
+    td {
+      padding: 4px 6px;
+    }
+  }
 </style>
