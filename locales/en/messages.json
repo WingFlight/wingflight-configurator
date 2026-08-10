@@ -3046,6 +3046,9 @@
     "servoNumber": {
         "message": "Servo"
     },
+    "servoListBack": {
+        "message": "Back to Servo List"
+    },
     "servoMid": {
         "message": "Center"
     },
