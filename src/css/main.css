@@ -482,6 +482,26 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .header-wrapper {
     display: flex;
+    /* Wrap instead of squeezing the three status boxes below their real
+       content width. Without this, on a window narrower than desktop but
+       still well above the 575px "phone" breakpoint below (where
+       .header-wrapper is hidden behind the reveal toggle entirely), plain
+       flex shrinking could compress #sensor-status narrower than the
+       165px its five floated sensor icons need - and since #sensor-status
+       has a fixed height (not min-height), the icons that no longer fit
+       on one row spill out below the box instead of growing it, visibly
+       overlapping the page content underneath the header. flex-wrap here
+       plus flex-shrink:0 below (so a squeezed box wraps to its own line
+       instead of compressing) fixes that without touching the 575px
+       phone layout at all - on any window wide enough for these to fit
+       on one line (the common case), this changes nothing. */
+    flex-wrap: wrap;
+}
+
+#quad-status_wrapper,
+#sensor-status,
+#dataflash_wrapper_global {
+    flex-shrink: 0;
 }
 
 #sensor-status {
@@ -835,7 +855,13 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 /** Header (phones) **/
-@media all and (max-width: 575px) {
+/* 1100px, not 575px - matches the breakpoint the sidebar (.tab_container,
+   see "Tabs (phones)" below) already drops to icon-only at, and is now
+   raised to fully hand off to along with this compact header, rather than
+   leaving an in-between zone where the header has no room to spare but
+   still tries to render its full desktop layout (see the .header-wrapper
+   comment above for the specific overflow that caused). */
+@media all and (max-width: 1100px) , only screen and (max-device-width: 1100px) {
     .headerbar {
         height: 56px;
         background: rgba(0, 0, 0, 0.15);
@@ -1038,7 +1064,10 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 /** Tabs & content container (phones) **/
-@media all and (max-width: 575px) {
+/* Matches the headerbar's own 1100px breakpoint above - this is the
+   compact header's height math (56px collapsed vs. 115px desktop), so it
+   has to switch at the same point the header actually does. */
+@media all and (max-width: 1100px) , only screen and (max-device-width: 1100px) {
     #tab-content-container {
         height: calc(100% - 83px);
     }
@@ -1190,7 +1219,12 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 /** Tabs (phones) **/
-@media all and (max-width: 575px) {
+/* 1100px - matches the headerbar/tab-content-container breakpoints above:
+   the side nav now goes fully off-canvas (behind the hamburger drawer)
+   at the same point the header drops to compact mode, instead of sitting
+   in an in-between icon-only state that no longer has a compact-enough
+   header alongside it. */
+@media all and (max-width: 1100px) , only screen and (max-device-width: 1100px) {
     #logo-desktop {
         display: none;
     }
@@ -1587,7 +1621,11 @@ li.active .ic_mission {
 }
 
 /** Content (phones) **/
-@media all and (max-width: 575px) {
+/* 1100px - matches the sidebar going fully off-canvas at that width now
+   (see "Tabs (phones)" above): once it's not reserving any width, content
+   should reclaim all of it at the same point, not still leave room for
+   the now-gone icon-only column between 1100px and the old 575px. */
+@media all and (max-width: 1100px) , only screen and (max-device-width: 1100px) {
     #content {
         width: 100%;
     }
@@ -1707,8 +1745,7 @@ dialog .dialog_toolbar .btn a.disabled {
     dialog {
         position: fixed;
         width: calc(100% - 2em) !important;
-        height: auto !important;
-        bottom: 0;
+        max-height: calc(100% - 56px - 2em);
         top: 56px;
         border-radius: unset;
         border: none;

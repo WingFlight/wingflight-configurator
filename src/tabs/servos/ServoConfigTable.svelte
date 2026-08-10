@@ -75,19 +75,85 @@
     servos.some((servo) => servoTrimAdjustments(servo).length > 0),
   );
 
+  // Mobile view (see markup below): the desktop grid has up to 11 columns
+  // of tiny inputs, which doesn't survive shrinking to phone width no
+  // matter how it's squeezed -- so below that width this becomes a list of
+  // servos you tap into one at a time, each opening a single-column form
+  // with every field at a legible size, mirroring the list->editor pattern
+  // wingflight-lua-ethos-suite uses for the same reason (servos_pwm.lua).
+  let selectedIndex = $state(null);
+  let selectedServo = $derived(
+    servos.find((servo) => servo.index === selectedIndex) ?? null,
+  );
+
+  // Guards against a stale selection surviving a prop change this table
+  // instance doesn't otherwise react to (e.g. bus mode toggling off while
+  // a bus servo's detail view is open).
+  $effect(() => {
+    if (
+      selectedIndex !== null &&
+      !servos.some((servo) => servo.index === selectedIndex)
+    ) {
+      selectedIndex = null;
+    }
+  });
+
   // CSS Grid instead of a <table>: HTML tables with border-collapse are
   // prone to sub-pixel row-height rounding that visibly accumulates over
   // many rows (fine at row 1, drifted by row 10+) -- a grid sizes every row
   // independently and doesn't have that failure mode.
-  let gridColumns = $derived.by(() => {
-    const trimColumn = hasTrimAdjustments ? "70px " : "";
-    if (!CONFIGURATOR.expertMode) {
-      return `44px 118px ${trimColumn}118px 118px 118px 118px 84px 1fr`;
+  //
+  // Column widths are kept as a plain array (rather than hand-typed into
+  // the grid-template-columns string, as before) so gridMinWidth below can
+  // be computed from the exact same numbers instead of a second,
+  // independently-hand-typed guess that could drift out of sync with it.
+  const INDEX_COL = 44;
+  const VALUE_COL = 100;
+  const TRIM_COL = 64;
+  const CHECKBOX_COL = 60;
+  // No fixed column for the trailing Signal meter (it's the 1fr track), but
+  // it still needs *some* room to be legible -- this is roughly its
+  // meter-label plus a usable sliver of the meter bar itself.
+  const SIGNAL_MIN_WIDTH = 90;
+  const COLUMN_GAP = 4;
+
+  let columnWidths = $derived.by(() => {
+    const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
+    if (hasTrimAdjustments) cols.push(TRIM_COL);
+    cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
+    if (CONFIGURATOR.expertMode) {
+      if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
+      cols.push(VALUE_COL); // Speed
     }
-    return isBusTable
-      ? `44px 118px ${trimColumn}118px 118px 118px 118px 118px 84px 84px 1fr`
-      : `44px 118px ${trimColumn}118px 118px 118px 118px 118px 118px 84px 84px 1fr`;
+    cols.push(CHECKBOX_COL); // Reverse
+    if (CONFIGURATOR.expertMode) cols.push(CHECKBOX_COL); // Geo cor
+    return cols;
   });
+
+  let gridColumns = $derived(
+    `${columnWidths.map((w) => `${w}px`).join(" ")} 1fr`,
+  );
+
+  // The narrowest this table's *current* column set (which varies with
+  // Expert Mode / bus vs PWM / whether a Trim column is showing) can get
+  // before it needs its own horizontal scrollbar -- compared against the
+  // actually-measured available width below to decide whether to show the
+  // grid at all, rather than guessing a single fixed viewport breakpoint
+  // that can't account for the sidebar or for which column set is active.
+  let gridMinWidth = $derived(
+    columnWidths.reduce((sum, w) => sum + w, 0) +
+      columnWidths.length * COLUMN_GAP + // one gap before each column, including before the trailing Signal track
+      SIGNAL_MIN_WIDTH,
+  );
+
+  // Measured via bind:clientWidth below. Starts at 0 before the first
+  // layout pass, during which showCompact defaults to true (see below) --
+  // briefly showing the compact list first on a wide screen reads better
+  // than briefly showing an overflowing grid.
+  let containerWidth = $state(0);
+  let showCompact = $derived(
+    containerWidth === 0 || containerWidth < gridMinWidth,
+  );
 
   function bounds(servo, field) {
     if (servo.isBusServo) {
@@ -130,172 +196,376 @@
   }
 </script>
 
-<div class="servo-config">
-  <div class="header-row" style="grid-template-columns: {gridColumns}">
-    <span>{$i18n.t("servoNumber")}</span>
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoMid")}</span>
-      <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
-    </span>
-    {#if hasTrimAdjustments}
-      <span class="header-label-flex">
-        <span>{$i18n.t("servoTrimColumn")}</span>
-        <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
-      </span>
-    {/if}
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoMin")}</span>
-      <HelpIcon>{$i18n.t("servoMinHelp")}</HelpIcon>
-    </span>
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoMax")}</span>
-      <HelpIcon>{$i18n.t("servoMaxHelp")}</HelpIcon>
-    </span>
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoScaleNeg")}</span>
-      <HelpIcon>{$i18n.t("servoScaleNegHelp")}</HelpIcon>
-    </span>
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoScalePos")}</span>
-      <HelpIcon>{$i18n.t("servoScalePosHelp")}</HelpIcon>
-    </span>
-    {#if CONFIGURATOR.expertMode}
-      {#if !isBusTable}
-        <span class="header-label-flex">
-          <span>{$i18n.t("servoRate")}</span>
-          <HelpIcon>
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html $i18n.t("servoRateHelp")}
-          </HelpIcon>
-        </span>
-      {/if}
-      <span class="header-label-flex">
-        <span>{$i18n.t("servoSpeed")}</span>
-        <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
-      </span>
-    {/if}
-    <span class="header-label-flex">
-      <span>{$i18n.t("servoReverse")}</span>
-      <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
-    </span>
-    {#if CONFIGURATOR.expertMode}
-      <span class="header-label-flex">
-        <span>{$i18n.t("servoGeometryCorrection")}</span>
-        <HelpIcon>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("servoGeometryCorrectionHelp")}
-        </HelpIcon>
-      </span>
-    {/if}
-    <span>{$i18n.t("servoSignal")}</span>
-  </div>
+{#snippet fieldLabel(labelKey, helpKey)}
+  <span class="mobile-field-label">
+    {$i18n.t(labelKey)}
+    {#if helpKey}<HelpIcon>{$i18n.t(helpKey)}</HelpIcon>{/if}
+  </span>
+{/snippet}
 
-  {#each servos as servo (servo.index)}
-    {@const config = FC.SERVO_CONFIG[servo.index]}
-    <div class="servo-row" style="grid-template-columns: {gridColumns}">
-      <span class="servo-index">{servo.label}</span>
-      <span>
-        <NumberInput
-          {...bounds(servo, "mid")}
-          bind:value={config.mid}
-          disabled={midDisabled(servo)}
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      {#if hasTrimAdjustments}
-        <span class="servo-trim-badges">
-          {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-            <span
-              class="adjustment-badge"
-              class:runtime-active={trim.adjustment.active}
-              title={adjustmentTitle(trim.adjustment)}
-            >
-              {trim.axisLabel}
-              {trim.adjustment.active
-                ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-                : "ADJ"}
-            </span>
-          {/each}
+<div class="responsive-table" bind:clientWidth={containerWidth}>
+  {#if !showCompact}
+    <div class="servo-config desktop-table">
+      <div class="header-row" style="grid-template-columns: {gridColumns}">
+        <span>{$i18n.t("servoNumber")}</span>
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoMid")}</span>
+          <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
         </span>
-      {/if}
-      <span>
-        <NumberInput
-          {...bounds(servo, "min")}
-          bind:value={config.min}
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      <span>
-        <NumberInput
-          {...bounds(servo, "max")}
-          bind:value={config.max}
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      <span>
-        <NumberInput
-          min={scaleMin}
-          max="1000"
-          bind:value={config.rneg}
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      <span>
-        <NumberInput
-          min={scaleMin}
-          max="1000"
-          bind:value={config.rpos}
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      {#if CONFIGURATOR.expertMode}
-        {#if !isBusTable}
-          <span>
-            <NumberInput
-              min="50"
-              max="5000"
-              bind:value={config.rate}
-              onchange={() => onRateChange(servo.index)}
-            />
+        {#if hasTrimAdjustments}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoTrimColumn")}</span>
+            <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
           </span>
         {/if}
-        <span>
-          <NumberInput
-            min="0"
-            max="60000"
-            bind:value={config.speed}
-            onchange={() => onFieldChange(servo.index)}
-          />
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoMin")}</span>
+          <HelpIcon>{$i18n.t("servoMinHelp")}</HelpIcon>
         </span>
-      {/if}
-      <span class="servo-checkbox">
-        <Switch
-          bind:checked={
-            () => flag(servo.index, FLAG_REVERSE),
-            (v) => setFlag(servo.index, FLAG_REVERSE, v)
-          }
-          onchange={() => onFieldChange(servo.index)}
-        />
-      </span>
-      {#if CONFIGURATOR.expertMode}
-        <span class="servo-checkbox">
-          <Switch
-            bind:checked={
-              () => flag(servo.index, FLAG_GEOCOR),
-              (v) => setFlag(servo.index, FLAG_GEOCOR, v)
-            }
-            onchange={() => onFieldChange(servo.index)}
-          />
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoMax")}</span>
+          <HelpIcon>{$i18n.t("servoMaxHelp")}</HelpIcon>
         </span>
-      {/if}
-      <span class="servo-signal">
-        <span class="meter">
-          <span class="meter-fill" style="width: {meterPercent(servo)}%"></span>
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoScaleNeg")}</span>
+          <HelpIcon>{$i18n.t("servoScaleNegHelp")}</HelpIcon>
         </span>
-        <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
-      </span>
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoScalePos")}</span>
+          <HelpIcon>{$i18n.t("servoScalePosHelp")}</HelpIcon>
+        </span>
+        {#if CONFIGURATOR.expertMode}
+          {#if !isBusTable}
+            <span class="header-label-flex">
+              <span>{$i18n.t("servoRate")}</span>
+              <HelpIcon>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("servoRateHelp")}
+              </HelpIcon>
+            </span>
+          {/if}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoSpeed")}</span>
+            <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
+          </span>
+        {/if}
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoReverse")}</span>
+          <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
+        </span>
+        {#if CONFIGURATOR.expertMode}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoGeometryCorrection")}</span>
+            <HelpIcon>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html $i18n.t("servoGeometryCorrectionHelp")}
+            </HelpIcon>
+          </span>
+        {/if}
+        <span>{$i18n.t("servoSignal")}</span>
+      </div>
+
+      {#each servos as servo (servo.index)}
+        {@const config = FC.SERVO_CONFIG[servo.index]}
+        <div class="servo-row" style="grid-template-columns: {gridColumns}">
+          <span class="servo-index">{servo.label}</span>
+          <span>
+            <NumberInput
+              {...bounds(servo, "mid")}
+              bind:value={config.mid}
+              disabled={midDisabled(servo)}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          {#if hasTrimAdjustments}
+            <span class="servo-trim-badges">
+              {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+                <span
+                  class="adjustment-badge"
+                  class:runtime-active={trim.adjustment.active}
+                  title={adjustmentTitle(trim.adjustment)}
+                >
+                  {trim.axisLabel}
+                  {trim.adjustment.active
+                    ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+                    : "ADJ"}
+                </span>
+              {/each}
+            </span>
+          {/if}
+          <span>
+            <NumberInput
+              {...bounds(servo, "min")}
+              bind:value={config.min}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          <span>
+            <NumberInput
+              {...bounds(servo, "max")}
+              bind:value={config.max}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          <span>
+            <NumberInput
+              min={scaleMin}
+              max="1000"
+              bind:value={config.rneg}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          <span>
+            <NumberInput
+              min={scaleMin}
+              max="1000"
+              bind:value={config.rpos}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          {#if CONFIGURATOR.expertMode}
+            {#if !isBusTable}
+              <span>
+                <NumberInput
+                  min="50"
+                  max="5000"
+                  bind:value={config.rate}
+                  onchange={() => onRateChange(servo.index)}
+                />
+              </span>
+            {/if}
+            <span>
+              <NumberInput
+                min="0"
+                max="60000"
+                bind:value={config.speed}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
+          {/if}
+          <span class="servo-checkbox">
+            <Switch
+              bind:checked={
+                () => flag(servo.index, FLAG_REVERSE),
+                (v) => setFlag(servo.index, FLAG_REVERSE, v)
+              }
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </span>
+          {#if CONFIGURATOR.expertMode}
+            <span class="servo-checkbox">
+              <Switch
+                bind:checked={
+                  () => flag(servo.index, FLAG_GEOCOR),
+                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
+                }
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
+          {/if}
+          <span class="servo-signal">
+            <span class="meter">
+              <span class="meter-fill" style="width: {meterPercent(servo)}%"
+              ></span>
+            </span>
+            <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
+          </span>
+        </div>
+      {/each}
     </div>
-  {/each}
+  {:else}
+    <div class="mobile-view">
+      {#if selectedServo}
+        {@const servo = selectedServo}
+        {@const config = FC.SERVO_CONFIG[servo.index]}
+        <div class="mobile-detail">
+          <button
+            type="button"
+            class="mobile-back"
+            onclick={() => (selectedIndex = null)}
+          >
+            <em class="fas fa-chevron-left"></em>
+            {$i18n.t("servoListBack")}
+          </button>
+
+          <div class="mobile-detail-title">
+            {$i18n.t("servoNumber")}
+            {servo.label}
+          </div>
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoMid", "servoMidHelp")}
+            <NumberInput
+              {...bounds(servo, "mid")}
+              bind:value={config.mid}
+              disabled={midDisabled(servo)}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          {#if servoTrimAdjustments(servo).length > 0}
+            <div class="mobile-field">
+              {@render fieldLabel("servoTrimColumn", "servoTrimColumnHelp")}
+              <span class="servo-trim-badges">
+                {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+                  <span
+                    class="adjustment-badge"
+                    class:runtime-active={trim.adjustment.active}
+                    title={adjustmentTitle(trim.adjustment)}
+                  >
+                    {trim.axisLabel}
+                    {trim.adjustment.active
+                      ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+                      : "ADJ"}
+                  </span>
+                {/each}
+              </span>
+            </div>
+          {/if}
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoMin", "servoMinHelp")}
+            <NumberInput
+              {...bounds(servo, "min")}
+              bind:value={config.min}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoMax", "servoMaxHelp")}
+            <NumberInput
+              {...bounds(servo, "max")}
+              bind:value={config.max}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoScaleNeg", "servoScaleNegHelp")}
+            <NumberInput
+              min={scaleMin}
+              max="1000"
+              bind:value={config.rneg}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoScalePos", "servoScalePosHelp")}
+            <NumberInput
+              min={scaleMin}
+              max="1000"
+              bind:value={config.rpos}
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          {#if CONFIGURATOR.expertMode}
+            {#if !isBusTable}
+              <div class="mobile-field">
+                {@render fieldLabel("servoRate", "servoRateHelp")}
+                <NumberInput
+                  min="50"
+                  max="5000"
+                  bind:value={config.rate}
+                  onchange={() => onRateChange(servo.index)}
+                />
+              </div>
+            {/if}
+            <div class="mobile-field">
+              {@render fieldLabel("servoSpeed", "servoSpeedHelp")}
+              <NumberInput
+                min="0"
+                max="60000"
+                bind:value={config.speed}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </div>
+          {/if}
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoReverse", "servoReverseHelp")}
+            <Switch
+              bind:checked={
+                () => flag(servo.index, FLAG_REVERSE),
+                (v) => setFlag(servo.index, FLAG_REVERSE, v)
+              }
+              onchange={() => onFieldChange(servo.index)}
+            />
+          </div>
+
+          {#if CONFIGURATOR.expertMode}
+            <div class="mobile-field">
+              {@render fieldLabel(
+                "servoGeometryCorrection",
+                "servoGeometryCorrectionHelp",
+              )}
+              <Switch
+                bind:checked={
+                  () => flag(servo.index, FLAG_GEOCOR),
+                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
+                }
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </div>
+          {/if}
+
+          <div class="mobile-field">
+            {@render fieldLabel("servoSignal", null)}
+            <span class="servo-signal">
+              <span class="meter">
+                <span class="meter-fill" style="width: {meterPercent(servo)}%"
+                ></span>
+              </span>
+              <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
+            </span>
+          </div>
+        </div>
+      {:else}
+        <div class="mobile-list">
+          {#each servos as servo (servo.index)}
+            {@const config = FC.SERVO_CONFIG[servo.index]}
+            <button
+              type="button"
+              class="mobile-list-row"
+              onclick={() => (selectedIndex = servo.index)}
+            >
+              <span class="mobile-row-index">{servo.label}</span>
+              <span class="servo-signal mobile-row-signal">
+                <span class="meter">
+                  <span class="meter-fill" style="width: {meterPercent(servo)}%"
+                  ></span>
+                </span>
+                <span class="meter-label"
+                  >{FC.SERVO_DATA[servo.index] ?? 0}</span
+                >
+              </span>
+              <span class="mobile-row-mid"
+                >{$i18n.t("servoMid")}: {config.mid}</span
+              >
+              {#if servoTrimAdjustments(servo).length > 0}
+                <span class="mobile-row-badges">
+                  {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+                    <span
+                      class="adjustment-badge"
+                      class:runtime-active={trim.adjustment.active}
+                    >
+                      {trim.axisLabel}
+                    </span>
+                  {/each}
+                </span>
+              {/if}
+              {#if flag(servo.index, FLAG_REVERSE)}
+                <span class="mobile-row-rev">{$i18n.t("servoReverse")}</span>
+              {/if}
+              <em class="fas fa-chevron-right mobile-row-chevron"></em>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -411,5 +681,140 @@
     text-align: right;
 
     color: var(--color-text-soft);
+  }
+
+  // Which of .desktop-table / .mobile-view renders is now decided in JS
+  // (showCompact, from bind:clientWidth vs. the current column set's real
+  // minimum width) rather than a fixed viewport media query -- a static
+  // breakpoint can't account for the sidebar eating real width, or for
+  // Expert Mode/bus-vs-PWM/trim changing how many columns are actually in
+  // play, so it either overflows on ordinary wide screens (breakpoint too
+  // low) or loses the grid entirely on them (breakpoint pushed high enough
+  // to compensate). See gridMinWidth in the script block.
+  .responsive-table {
+    width: 100%;
+  }
+
+  .mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 2px;
+  }
+
+  .mobile-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    color: var(--color-text);
+    background-color: var(--color-surface);
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-surface-float, var(--color-surface));
+      }
+    }
+  }
+
+  .mobile-row-index {
+    min-width: 1.8rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .mobile-row-signal {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .mobile-row-mid {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    white-space: nowrap;
+
+    color: var(--color-text-soft);
+  }
+
+  .mobile-row-badges {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+  }
+
+  .mobile-row-rev {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    font-weight: 700;
+
+    color: var(--color-text-soft);
+    background-color: var(--color-surface-float, var(--color-surface));
+  }
+
+  .mobile-row-chevron {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+
+    color: var(--color-text-soft);
+  }
+
+  .mobile-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 2px;
+  }
+
+  .mobile-back {
+    @extend %button;
+
+    align-self: flex-start;
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .mobile-detail-title {
+    margin: 6px 0 4px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .mobile-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-field-label {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .mobile-field-label :global(.container) {
+    margin-left: 4px;
+  }
+
+  .mobile-field .servo-signal {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .mobile-field .servo-trim-badges {
+    justify-content: flex-end;
   }
 </style>

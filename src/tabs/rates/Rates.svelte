@@ -342,8 +342,12 @@
       <button
         class={["profile-tab", index === FC.CONFIG.rateProfile && "active"]}
         onclick={() => onClickProfileTab(index)}
+        aria-label={$i18n.t(`rateSetupSubTab${index + 1}`)}
       >
-        {$i18n.t(`rateSetupSubTab${index + 1}`)}
+        <span class="tab-label-full">
+          {$i18n.t(`rateSetupSubTab${index + 1}`)}
+        </span>
+        <span class="tab-label-short" aria-hidden="true">#{index + 1}</span>
       </button>
     {/each}
   </div>
@@ -454,6 +458,28 @@
     &.active {
       color: var(--color-text-inverse, #000);
       background-color: var(--color-accent, var(--accent));
+    }
+  }
+
+  .tab-label-short {
+    display: none;
+  }
+
+  // 650px, not the usual 480px phone breakpoint: matches
+  // Dynamics.svelte/RatesTable.svelte's threshold so the whole page goes
+  // compact together instead of the tabs switching well after the tables
+  // already have.
+  @media only screen and (max-width: 650px) {
+    .profile-tab {
+      padding: 0 10px;
+    }
+
+    .tab-label-full {
+      display: none;
+    }
+
+    .tab-label-short {
+      display: inline;
     }
   }
 

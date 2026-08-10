@@ -206,6 +206,103 @@
   }
 </script>
 
+{#snippet valueCell(axisIndex, gainIndex)}
+  <div class="real-pid-wrap">
+    <div class="real-pid" title={$i18n.t("profilesMasterGainHelp")}>
+      {formatRealPid(realPid(axisIndex, gainIndex))}
+    </div>
+  </div>
+{/snippet}
+
+{#snippet curveCell(axisIndex)}
+  <div class="curve-preview-wrap">
+    <svg
+      class="curve-preview"
+      class:expanded={curveExpanded}
+      viewBox="0 0 {CURVE_PREVIEW_WIDTH} {curvePreviewHeight()}"
+      style="height: {curvePreviewHeight()}px"
+      aria-hidden="true"
+    >
+      <rect
+        class="curve-frame"
+        x="1"
+        y="1"
+        width={CURVE_PREVIEW_WIDTH - 2}
+        height={curvePreviewHeight() - 2}
+        rx="2"
+      ></rect>
+      <line
+        class="curve-neutral"
+        x1={CURVE_PREVIEW_PAD}
+        y1={neutralLineY(axisIndex)}
+        x2={CURVE_PREVIEW_WIDTH - CURVE_PREVIEW_PAD}
+        y2={neutralLineY(axisIndex)}
+      ></line>
+      {#if hasRuntimeMasterGainDelta(axisIndex)}
+        <path
+          class="curve-profile"
+          d={curvePath(axisIndex, profileMasterGain(axisIndex))}
+        ></path>
+      {/if}
+      <path class="curve-live" d={curvePath(axisIndex)}></path>
+      {#if hasRuntimeThrottleDelta()}
+        <path
+          class="curve-throttle"
+          d={curvePath(
+            axisIndex,
+            runtimeMasterGain(axisIndex),
+            runtimeThrottleGain(),
+          )}
+        ></path>
+      {/if}
+      {#if curveMarker(axisIndex)}
+        <line
+          class="curve-pointer"
+          x1={curveMarker(axisIndex).x}
+          y1={curvePreviewHeight() - CURVE_PREVIEW_PAD}
+          x2={curveMarker(axisIndex).x}
+          y2={curveMarker(axisIndex).y}
+        ></line>
+        <circle
+          cx={curveMarker(axisIndex).x}
+          cy={curveMarker(axisIndex).y}
+          r="3"
+        ></circle>
+      {/if}
+      {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
+        <circle
+          class="throttle-marker"
+          cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
+          cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
+          r="2.4"
+        ></circle>
+      {/if}
+    </svg>
+    <span class="curve-live-label">{curveLabel(axisIndex)}</span>
+    {#if hasRuntimeMasterGainDelta(axisIndex)}
+      <span
+        class="curve-gain-label"
+        class:gain-higher={runtimeMasterGain(axisIndex) >
+          profileMasterGain(axisIndex)}
+        class:gain-lower={runtimeMasterGain(axisIndex) <
+          profileMasterGain(axisIndex)}
+      >
+        {formatMasterGain(runtimeMasterGain(axisIndex))}%
+      </span>
+    {/if}
+    {#if hasRuntimeThrottleDelta()}
+      <span
+        class="curve-throttle-label"
+        class:tpa-higher={runtimeThrottleGain() > 100}
+        class:tpa-lower={runtimeThrottleGain() < 100}
+        title="P/D throttle attenuation"
+      >
+        TPA {formatThrottleGain(runtimeThrottleGain())}%
+      </span>
+    {/if}
+  </div>
+{/snippet}
+
 <div class="effective-pids-section">
   <div class="effective-pids-header">
     <span class="header-label">
@@ -223,7 +320,9 @@
       ></em>
     </button>
   </div>
-  <div class="effective-pids-content">
+
+  <!-- Desktop: axes as rows, gain terms + curve as columns. -->
+  <div class="effective-pids-content desktop-table">
     <table class="grid effective-grid">
       <thead>
         <tr>
@@ -249,105 +348,42 @@
           <tr>
             <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
             {#each PID_GAINS as gain, gainIndex (gain.key)}
-              <td>
-                <div class="real-pid-wrap">
-                  <div
-                    class="real-pid"
-                    title={$i18n.t("profilesMasterGainHelp")}
-                  >
-                    {formatRealPid(realPid(axisIndex, gainIndex))}
-                  </div>
-                </div>
-              </td>
+              <td>{@render valueCell(axisIndex, gainIndex)}</td>
             {/each}
-            <td class="curve-cell">
-              <div class="curve-preview-wrap">
-                <svg
-                  class="curve-preview"
-                  class:expanded={curveExpanded}
-                  viewBox="0 0 {CURVE_PREVIEW_WIDTH} {curvePreviewHeight()}"
-                  style="height: {curvePreviewHeight()}px"
-                  aria-hidden="true"
-                >
-                  <rect
-                    class="curve-frame"
-                    x="1"
-                    y="1"
-                    width={CURVE_PREVIEW_WIDTH - 2}
-                    height={curvePreviewHeight() - 2}
-                    rx="2"
-                  ></rect>
-                  <line
-                    class="curve-neutral"
-                    x1={CURVE_PREVIEW_PAD}
-                    y1={neutralLineY(axisIndex)}
-                    x2={CURVE_PREVIEW_WIDTH - CURVE_PREVIEW_PAD}
-                    y2={neutralLineY(axisIndex)}
-                  ></line>
-                  {#if hasRuntimeMasterGainDelta(axisIndex)}
-                    <path
-                      class="curve-profile"
-                      d={curvePath(axisIndex, profileMasterGain(axisIndex))}
-                    ></path>
-                  {/if}
-                  <path class="curve-live" d={curvePath(axisIndex)}></path>
-                  {#if hasRuntimeThrottleDelta()}
-                    <path
-                      class="curve-throttle"
-                      d={curvePath(
-                        axisIndex,
-                        runtimeMasterGain(axisIndex),
-                        runtimeThrottleGain(),
-                      )}
-                    ></path>
-                  {/if}
-                  {#if curveMarker(axisIndex)}
-                    <line
-                      class="curve-pointer"
-                      x1={curveMarker(axisIndex).x}
-                      y1={curvePreviewHeight() - CURVE_PREVIEW_PAD}
-                      x2={curveMarker(axisIndex).x}
-                      y2={curveMarker(axisIndex).y}
-                    ></line>
-                    <circle
-                      cx={curveMarker(axisIndex).x}
-                      cy={curveMarker(axisIndex).y}
-                      r="3"
-                    ></circle>
-                  {/if}
-                  {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
-                    <circle
-                      class="throttle-marker"
-                      cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
-                      cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
-                      r="2.4"
-                    ></circle>
-                  {/if}
-                </svg>
-                <span class="curve-live-label">{curveLabel(axisIndex)}</span>
-                {#if hasRuntimeMasterGainDelta(axisIndex)}
-                  <span
-                    class="curve-gain-label"
-                    class:gain-higher={runtimeMasterGain(axisIndex) >
-                      profileMasterGain(axisIndex)}
-                    class:gain-lower={runtimeMasterGain(axisIndex) <
-                      profileMasterGain(axisIndex)}
-                  >
-                    {formatMasterGain(runtimeMasterGain(axisIndex))}%
-                  </span>
-                {/if}
-                {#if hasRuntimeThrottleDelta()}
-                  <span
-                    class="curve-throttle-label"
-                    class:tpa-higher={runtimeThrottleGain() > 100}
-                    class:tpa-lower={runtimeThrottleGain() < 100}
-                    title="P/D throttle attenuation"
-                  >
-                    TPA {formatThrottleGain(runtimeThrottleGain())}%
-                  </span>
-                {/if}
-              </div>
+            <td class="curve-cell">{@render curveCell(axisIndex)}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile: gain terms as rows, axes as columns - five narrow numeric
+       columns don't fit a phone width, but three do. The curve graphs are
+       dropped entirely here rather than squeezed in - they're a supporting
+       visualization, not the data itself, and there's no room left to show
+       three of them legibly. -->
+  <div class="effective-pids-content mobile-table">
+    <table class="grid effective-grid">
+      <thead>
+        <tr>
+          <th></th>
+          {#each PID_AXES as axis (axis)}
+            <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+          {/each}
+        </tr>
+      </thead>
+      <tbody>
+        {#each PID_GAINS as gain, gainIndex (gain.key)}
+          <tr>
+            <td class="term-label">
+              <span class="header-label">
+                <span class="term-key">{gain.key}</span>
+                <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+              </span>
             </td>
+            {#each PID_AXES as axis, axisIndex (axis)}
+              <td>{@render valueCell(axisIndex, gainIndex)}</td>
+            {/each}
           </tr>
         {/each}
       </tbody>
@@ -392,10 +428,8 @@
     background-color: color-mix(in srgb, var(--color-surface) 18%, transparent);
   }
 
-  @media only screen and (max-width: 480px) {
-    .effective-pids-header .header-label {
-      color: var(--color-text);
-    }
+  .mobile-table {
+    display: none;
   }
 
   .effective-pids-content {
@@ -436,6 +470,22 @@
   .effective-grid .axis {
     text-align: left;
     padding-left: 8px;
+  }
+
+  .term-label {
+    text-align: left;
+    padding-left: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  // P/I/D/F/B render at slightly different widths (an "I" is narrower
+  // than a "P"), which would otherwise nudge each row's help icon a
+  // couple pixels out of line with the others. Fixed width keeps them in
+  // one clean column regardless of which letter precedes it.
+  .term-key {
+    display: inline-block;
+    width: 12px;
   }
 
   .curve-column {
@@ -600,32 +650,119 @@
     color: hsl(35, 82%, 68%);
   }
 
-  .axis {
+  .axis,
+  .axis-header {
     font-weight: 600;
     white-space: nowrap;
   }
 
-  .axis.ROLL {
+  .axis.ROLL,
+  .axis-header.ROLL {
     background-color: hsl(0, 100%, 85%);
   }
 
-  .axis.PITCH {
+  .axis.PITCH,
+  .axis-header.PITCH {
     background-color: hsl(120, 100%, 85%);
   }
 
-  .axis.YAW {
+  .axis.YAW,
+  .axis-header.YAW {
     background-color: hsl(240, 100%, 88%);
   }
 
-  :global(html[data-theme="dark"]) .axis.ROLL {
+  :global(html[data-theme="dark"]) .axis.ROLL,
+  :global(html[data-theme="dark"]) .axis-header.ROLL {
     background-color: hsl(0, 40%, 30%);
   }
 
-  :global(html[data-theme="dark"]) .axis.PITCH {
+  :global(html[data-theme="dark"]) .axis.PITCH,
+  :global(html[data-theme="dark"]) .axis-header.PITCH {
     background-color: hsl(120, 25%, 25%);
   }
 
-  :global(html[data-theme="dark"]) .axis.YAW {
+  :global(html[data-theme="dark"]) .axis.YAW,
+  :global(html[data-theme="dark"]) .axis-header.YAW {
     background-color: hsl(240, 35%, 32%);
+  }
+
+  // 820px, not the usual 480px phone breakpoint: this is the widest table
+  // on the page (760px min-width) and needs real room before staying in
+  // desktop mode makes sense - below that it was falling into its own
+  // horizontal scroll well before the generic phone breakpoint kicked in.
+  // See Profiles.svelte's matching comment - this must switch in step
+  // with the rest of the page.
+  //
+  // Once transposed, five gain-term columns don't fit a phone width even
+  // shrunk, so the number grid becomes terms as rows, axes as the 3
+  // columns (same trick as PidGains.svelte) instead of scrolling. The
+  // curve graphs are dropped entirely (see markup above). These value
+  // boxes are also read-only display, not real inputs - no touch target
+  // to protect here, unlike the editable tables - so we drop the
+  // input-styled border/background (which also reads as misleadingly
+  // "editable") and reclaim the width instead.
+  //
+  // This must come after every unconditional ".grid" etc. rule above:
+  // media queries don't add specificity, so with equal-specificity
+  // selectors the later rule in the file wins regardless of which one's
+  // condition matches - an earlier copy of this block was silently losing
+  // to the plain ".grid" rule below it.
+  // %section-header (in _global.scss, shared by every section header in
+  // the app) drops its dark bar entirely at <=480px and switches text to
+  // --color-text to read against the page background that replaces it.
+  // This header force-sets --color-text-alt (white) unconditionally
+  // below, so it needs its own matching swap back to --color-text - but
+  // that has to stay paired with %section-header's own <=480 breakpoint,
+  // not this file's 820px table breakpoint, or the two desync: the bar
+  // stays dark past 480px while the text already went dark-on-dark.
+  @media only screen and (max-width: 480px) {
+    .effective-pids-header .header-label {
+      color: var(--color-text);
+    }
+  }
+
+  @media only screen and (max-width: 820px) {
+    .desktop-table {
+      display: none;
+    }
+
+    .mobile-table {
+      display: block;
+    }
+
+    .curve-expand-button {
+      display: none;
+    }
+
+    .grid {
+      // Not width:100% here - with only 4 columns (label + 3 axes), a full-
+      // width table stretches every column far past what its content
+      // needs. Let it shrink to fit instead; .mobile-table's overflow-x
+      // still catches it on the rare screen too narrow to fit even that.
+      width: auto;
+      min-width: 0;
+    }
+
+    th,
+    td {
+      padding: 4px 6px;
+    }
+
+    // Sized to roughly match PidGains.svelte's mobile NumberInput width
+    // just below it on the page, so the two tables read as one system
+    // instead of the value boxes here looking arbitrarily tiny.
+    .real-pid-wrap {
+      min-width: 50px;
+      max-width: 80px;
+    }
+
+    .real-pid {
+      padding: 0 6px;
+      height: 1.4rem;
+      line-height: 1.4rem;
+      font-size: 0.75rem;
+      border-color: transparent;
+      background-color: transparent;
+    }
   }
 </style>
