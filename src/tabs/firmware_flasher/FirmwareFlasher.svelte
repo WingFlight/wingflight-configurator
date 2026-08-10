@@ -870,26 +870,40 @@
     disabled={portIsDfu === false && !parsedHex}
     onclick={onClickExitDfu}
   >
-    {$i18n.t("firmwareFlasherExitDfu")}
+    <span class="label-full">{$i18n.t("firmwareFlasherExitDfu")}</span>
+    <span class="label-short">{$i18n.t("firmwareFlasherExitDfuShort")}</span>
   </button>
   <button
     class="btn"
     disabled={!flashState.flashingEnabled}
     onclick={onClickFlash}
   >
-    {$i18n.t("firmwareFlasherFlashFirmware")}
+    <span class="label-full">{$i18n.t("firmwareFlasherFlashFirmware")}</span>
+    <span class="label-short"
+      >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
+    >
   </button>
   <button
     class="btn"
     disabled={selectedVersion === "0" || loadingRemote}
     onclick={onClickLoadRemote}
   >
-    {loadingRemote
-      ? $i18n.t("firmwareFlasherButtonDownloading")
-      : $i18n.t("firmwareFlasherButtonLoadOnline")}
+    {#if loadingRemote}
+      {$i18n.t("firmwareFlasherButtonDownloading")}
+    {:else}
+      <span class="label-full"
+        >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+      >
+      <span class="label-short"
+        >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+      >
+    {/if}
   </button>
   <button class="btn" onclick={onClickLoadLocal}>
-    {$i18n.t("firmwareFlasherButtonLoadLocal")}
+    <span class="label-full">{$i18n.t("firmwareFlasherButtonLoadLocal")}</span>
+    <span class="label-short"
+      >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+    >
   </button>
 {/snippet}
 
@@ -1103,6 +1117,7 @@
 
   .btn {
     @extend %button;
+    white-space: nowrap;
   }
 
   .options {
@@ -1224,6 +1239,31 @@
   .progress-info {
     position: relative;
     flex-grow: 1;
+  }
+
+  .label-short {
+    display: none;
+  }
+
+  // Once the toolbar (which wraps via Page.svelte) no longer has room for
+  // four full-length button labels alongside the progress bar, switch to
+  // shorter labels *and* give the progress bar its own full-width line.
+  // The progress bar shows a real, filling/scrolling indicator while
+  // flashing - it needs to stay legibly wide rather than get squeezed onto
+  // a shared row with whatever button happens to still fit - and shorter
+  // button labels mean less gets pushed onto extra wrapped lines below it.
+  @media only screen and (max-width: 700px) {
+    .progress-info {
+      flex-basis: 100%;
+    }
+
+    .label-full {
+      display: none;
+    }
+
+    .label-short {
+      display: inline;
+    }
   }
 
   .progress {
