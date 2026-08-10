@@ -20,6 +20,11 @@
       "type": "branch",
       "name": "feature-serial_rework",
       "path": "./feature-serial_rework/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-thrust-vector-pid-mobile-table",
+      "path": "./feature-thrust-vector-pid-mobile-table/"
     }
   ]
 }
