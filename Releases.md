@@ -1,3 +1,12 @@
+# 0.0.11
+
+Add Thrust Vector configuration, mixer wizard support, and adjustment functions.
+Add FBUS/S.Port Sensors diagnostics.
+Improve Web Serial/WebUSB support, including Android compatibility, device filtering, and blackbox MSC reboot flow.
+Improve mobile layouts for Profiles, Rates, Servos, firmware flashing, dialogs, headers, and Thrust Vector tables.
+Remove OSD and CMS UI surfaces.
+Link to WingFlight Driver Fixer for USB driver help.
+
 # 0.0.10
 
 Remove tail_rotor_mode; rename main/tail motor naming to motor1/motor2.
