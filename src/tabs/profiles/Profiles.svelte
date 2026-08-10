@@ -230,8 +230,12 @@
       <button
         class={["profile-tab", index === FC.CONFIG.profile && "active"]}
         onclick={() => onClickProfileTab(index)}
+        aria-label={$i18n.t(`profilesSubTab${index + 1}`)}
       >
-        {$i18n.t(`profilesSubTab${index + 1}`)}
+        <span class="tab-label-full">
+          {$i18n.t(`profilesSubTab${index + 1}`)}
+        </span>
+        <span class="tab-label-short" aria-hidden="true">#{index + 1}</span>
       </button>
     {/each}
   </div>
@@ -351,6 +355,30 @@
     }
   }
 
+  .tab-label-short {
+    display: none;
+  }
+
+  // 820px, not the usual 480px phone breakpoint: this needs to switch in
+  // step with PidGains.svelte/EffectivePidGains.svelte's table transpose
+  // below (~800px is where Effective PID Gains' desktop table stops
+  // needing its own horizontal scroll - see the .content comment further
+  // down). Otherwise the tabs go compact well after the tables already
+  // have, which reads as inconsistent on the same page.
+  @media only screen and (max-width: 820px) {
+    .profile-tab {
+      padding: 0 10px;
+    }
+
+    .tab-label-full {
+      display: none;
+    }
+
+    .tab-label-short {
+      display: inline;
+    }
+  }
+
   .note {
     margin-bottom: var(--section-gap);
     padding: 8px 12px;
@@ -372,6 +400,15 @@
     display: grid;
     grid-template-columns: 1fr;
     column-gap: var(--section-gap);
+
+    // Same reasoning as Page.svelte's main: without this, a grid item's
+    // default overflow:visible sizes it to fit its widest descendant (the
+    // 760px-min-width Effective PID Gains table), inflating this whole
+    // column - and the page along with it - instead of letting that
+    // table's own overflow-x:auto box handle its overflow locally.
+    > div {
+      min-width: 0;
+    }
   }
 
   @media only screen and (min-width: 1500px) {

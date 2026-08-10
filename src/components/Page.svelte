@@ -41,7 +41,12 @@
     display: grid;
     grid-template-rows: auto 1fr;
     overflow-y: auto;
-    display: content;
+    // Setting only overflow-y forces overflow-x to compute as "auto" too
+    // (that's the CSS spec's rule for mismatched axes) - without this,
+    // .wrapper silently becomes a horizontal scroll container for the
+    // *whole* tab body (header included) whenever anything inside main
+    // is wide, instead of staying vertical-only as intended.
+    overflow-x: hidden;
   }
 
   .content {
@@ -49,9 +54,19 @@
     border-top-left-radius: 32px;
   }
 
+  main {
+    // A grid item with the default overflow:visible sizes itself to fit
+    // its widest descendant (e.g. a tab's wide table), which inflates
+    // main - and drags .wrapper/.container along with it - instead of
+    // letting that descendant's own overflow-x:auto box scroll locally.
+    // min-width: 0 lets main shrink to the space it's actually given.
+    min-width: 0;
+  }
+
   .header {
     padding: 8px var(--section-gap);
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     border-bottom: 1px solid var(--color-border-accent);
