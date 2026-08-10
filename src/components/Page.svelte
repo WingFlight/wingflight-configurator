@@ -98,6 +98,12 @@
 
   .toolbar {
     display: flex;
+    // Wrap instead of forcing every toolbar button into one row: on wide
+    // screens there's always enough room so nothing wraps, but tabs with
+    // several buttons (e.g. firmware flasher) would otherwise get squeezed
+    // below their readable width - or push the whole page into horizontal
+    // scroll - on narrow/mobile viewports.
+    flex-wrap: wrap;
     gap: 8px;
     padding: 8px;
     justify-content: end;
@@ -126,6 +132,10 @@
 
     .header {
       margin-bottom: 8px;
+    }
+
+    .toolbar {
+      justify-content: center;
     }
   }
 </style>
