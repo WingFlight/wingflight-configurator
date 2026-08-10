@@ -153,7 +153,19 @@ export async function connectWebSerial(self, path, options, callback) {
         }
 
         const port = entry.port;
-        await port.open({ baudRate: options?.bitrate || 115200 });
+        // Chrome's default receive buffer is only 255 bytes. On a fast
+        // desktop that's fine -- reader.read() gets serviced long before
+        // it fills -- but on a phone's slower CPU, a heavier tab (Servos
+        // polling servo configs at 4Hz, Profiles polling PID gains at
+        // 4Hz, each triggering a full diff()/table re-render) can stall
+        // the JS main thread just long enough between reads for incoming
+        // data to overrun that tiny buffer. Chrome then throws a
+        // BufferOverrunError, which errorHandler() treats like any other
+        // fatal receive error and force-disconnects -- the "logged out,
+        // reconnect to the FC" symptom seen only on mobile. A much larger
+        // buffer gives the browser enough slack to absorb a brief stall
+        // without losing the connection.
+        await port.open({ baudRate: options?.bitrate || 115200, bufferSize: 16384 });
 
         self.webSerialPort = port;
         self.webSerialWriter = port.writable.getWriter();
