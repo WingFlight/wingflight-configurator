@@ -3046,6 +3046,9 @@
     "servoNumber": {
         "message": "Servo"
     },
+    "servoListBack": {
+        "message": "Back to Servo List"
+    },
     "servoMid": {
         "message": "Center"
     },
@@ -4567,8 +4570,14 @@
     "firmwareFlasherButtonLoadLocal": {
         "message": "Load Firmware [Local]"
     },
+    "firmwareFlasherButtonLoadLocalShort": {
+        "message": "Load Local"
+    },
     "firmwareFlasherButtonLoadOnline": {
         "message": "Load Firmware [Online]"
+    },
+    "firmwareFlasherButtonLoadOnlineShort": {
+        "message": "Load Online"
     },
     "firmwareFlasherButtonDownloading": {
         "message": "Downloading..."
@@ -4576,8 +4585,14 @@
     "firmwareFlasherExitDfu": {
         "message": "Exit DFU Mode"
     },
+    "firmwareFlasherExitDfuShort": {
+        "message": "Exit DFU"
+    },
     "firmwareFlasherFlashFirmware": {
         "message": "Flash Firmware"
+    },
+    "firmwareFlasherFlashFirmwareShort": {
+        "message": "Flash"
     },
     "firmwareFlasherGithubInfoHead": {
         "message": "GitHub Firmware Info"
