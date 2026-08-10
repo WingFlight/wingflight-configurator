@@ -412,11 +412,11 @@ class FlightController {
     this.GOVERNOR_CONFIG = {
       governor_mode:          0,
       governor_rpm:           0,
-      governor_gain:          0,
-      governor_i_gain:        0,
-      governor_throttle:      0,
-      governor_handover:      0,
-      governor_ceiling:       0,
+      governor_gain:          20,
+      governor_i_gain:        30,
+      governor_throttle:      15,
+      governor_handover:      10,
+      governor_ceiling:       30,
       governor_rpm_min:       0,
       governor_rpm_max:       0,
     };

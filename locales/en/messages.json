@@ -3980,7 +3980,7 @@
         "message": "Mode"
     },
     "motorsGovernorModeHelp": {
-        "message": "<p><b>Off:</b> disables the governor entirely.</p><p><b>RPM Idle/Max:</b> holds the target idle RPM below handover throttle using motor RPM feedback. Above handover, the optional max RPM limit can prevent overspeed.</p><p><b>Throttle Idle:</b> holds a fixed throttle percentage at idle. No RPM source is needed, but it will not correct for load or battery sag.</p><p><b>RPM Range:</b> maps the throttle stick to a target RPM range, from Min RPM at 0% to Max RPM at 100%, for governing engine speed through the whole flight.</p><p><b>RPM source:</b> RPM modes require bidirectional DShot telemetry, ESC telemetry, or a frequency sensor.</p>"
+        "message": "<p><b>Off:</b> disables the governor entirely.</p><p><b>RPM Idle/Max:</b> holds the target idle RPM below handover throttle using motor RPM feedback, starting from the idle throttle floor so the ESC is not commanded to zero during a rapid throttle chop. Above handover, the optional max RPM limit can prevent overspeed.</p><p><b>Throttle Idle:</b> holds a fixed throttle percentage at idle. No RPM source is needed, but it will not correct for load or battery sag.</p><p><b>RPM Range:</b> maps the throttle stick to a target RPM range, from Min RPM at 0% to Max RPM at 100%, for governing engine speed through the whole flight.</p><p><b>RPM source:</b> RPM modes require bidirectional DShot telemetry, ESC telemetry, or a frequency sensor.</p>"
     },
     "motorsGovernorModeOff": {
         "message": "Off"
@@ -4031,10 +4031,10 @@
         "message": "Integral gain that slowly closes the remaining gap between the target RPM and where the P gain alone settles. Start around 30; increase if the motor takes too long to reach the exact target RPM, decrease if the RPM slowly drifts past the target and back (a slow oscillation, distinct from the fast one P gain controls)."
     },
     "motorsGovernorThrottle": {
-        "message": "Idle Throttle"
+        "message": "Idle Throttle Floor"
     },
     "motorsGovernorThrottleHelp": {
-        "message": "Fixed throttle percentage to hold at idle when no RPM sensor is available. Slewed smoothly, same as RPM mode, but does not correct for load or RPM &mdash; just outputs this value while <i>GOVERNOR</i> is engaged and below the handover throttle."
+        "message": "Minimum powered idle output used by RPM Idle/Max mode, and the fixed idle output used by Throttle Idle mode. Set this high enough to keep the motor spinning reliably below the handover throttle; it is still limited by the governor ceiling."
     },
     "motorsGovernorHandover": {
         "message": "Handover Throttle"
