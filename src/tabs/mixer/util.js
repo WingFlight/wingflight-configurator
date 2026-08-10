@@ -22,10 +22,18 @@ export const DIFFERENTIAL_MAX = 100;
 export function ruleToDisplay(rule) {
   let weight = rule.weight;
   let weightNeg = rule.weightNeg;
-  const reverse = weight < 0;
+  // Firmware picks weight for input >= 0 and weightNeg for input < 0
+  // (flight/mixer.c). Reverse flips which physical direction each branch
+  // drives, so a reversed rule's "full" magnitude lives in weightNeg and its
+  // differential-reduced magnitude lives in weight -- both negated. A
+  // canonical (non-reversed) encoding never has either field negative
+  // (weight is always >= 0 here and weightNeg's factor never goes below 0
+  // per DIFFERENTIAL_MAX), so either field being negative is the reverse
+  // signal; checking only weight missed the case where it's exactly 0 (100%
+  // differential) but weightNeg still carries the reversed sign.
+  const reverse = weight < 0 || weightNeg < 0;
   if (reverse) {
-    weight = -weight;
-    weightNeg = -weightNeg;
+    [weight, weightNeg] = [-weightNeg, -weight];
   }
   const differential =
     weight === 0 ? 0 : Math.round((1 - weightNeg / weight) * 100);
@@ -42,8 +50,14 @@ export function displayToRule(weight, differential, reverse, weightMin, weightMa
     weightMin,
     weightMax,
   );
-  const sign = reverse ? -1 : 1;
-  return { weight: sign * weight, weightNeg: sign * weightNeg };
+  // See ruleToDisplay: reversing swaps which branch (weight vs weightNeg)
+  // gets the full magnitude, it doesn't just flip signs in place -- otherwise
+  // the differential-reduced side stays pinned to whichever input sign it
+  // was on before reversing, instead of following the surface it belongs to.
+  if (reverse) {
+    return { weight: -weightNeg, weightNeg: -weight };
+  }
+  return { weight, weightNeg };
 }
 
 // mixerInputs[].rate is a fixed-point multiplier on the wire (1000 = unity);
