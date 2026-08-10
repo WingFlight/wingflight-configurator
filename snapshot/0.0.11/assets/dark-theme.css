@@ -1,0 +1,513 @@
+:root[data-theme=dark] {
+    --accent: #d40000ff;
+    --darkAccent: #8f0000ff;
+    --subtleAccent: #c0c0c0;
+    --superSubtleAccent: #595959;
+    --quietHeader: #303236;
+    --defaultText: #ffffff;
+    --subtleText: #c0c0c0;
+    --mutedText: #d6d6d6;
+    --linkText: #ff7070;
+    --attention: #c04020;
+    --boxBackground: #3a3a3a;
+    --alternativeBackground: #414443;
+    --sideBackground: #404040;
+    --ledAccent: #6e6e6e;
+    --ledBackground: #424242;
+    --gimbalBackground: var(--subtleAccent);
+    --gimbalCrosshair: var(--mutedText);
+    --switcherysecond: #858585;
+    --button-border: #c4c4c4;
+    --button-background: #c4c4c4;
+    --hoverButton-border: #ffbb00;
+    --hoverButton-background: #d6d6d6;
+    --pushedButton-fontColor: #000000;
+    --pushedButton-border: #ffbb00;
+    --pushedButton-background: #595959;
+    --backgroundColor: #393b3a;
+}
+
+html[data-theme=dark] .background_paper {
+    background-image: url(/snapshot/0.0.11/images/paper-dark.png);
+}
+
+html[data-theme=dark] body {
+    color: white;
+}
+
+html[data-theme=dark] ::backdrop {
+    background-image: none;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme=dark] #options-window {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] #content {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] #content.logopen {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] dialog {
+    background-color: #3a3d3c;
+    color:white;
+    border: 1px solid #ffbb2a;
+}
+
+html[data-theme=dark] .note {
+    background-color: #4e4e4e;
+    border: 1px solid #df8c27;
+    color: white;
+}
+
+html[data-theme=dark] .content_toolbar {
+    background-color: #555857;
+}
+
+html[data-theme=dark] .gui_box {
+    border: 1px solid #4d4d4d;
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .gui_warning {
+    background: #414443;
+}
+
+html[data-theme=dark] .gui_note {
+    background: #393b3a;
+}
+
+html[data-theme=dark] .grey {
+    background-color: #414443
+}
+
+html[data-theme=dark] .gui_box_bottombar {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .fixed_band {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .small a {
+    border: 1px solid #ffbb2a;
+}
+
+html[data-theme=dark] #quad-status_wrapper {
+    color: #393b3a;
+}
+
+html[data-theme=dark] button {
+    border: 1px solid #ffbb2a;
+    background-color: #ffbb2a;
+    color: black;
+}
+
+html[data-theme=dark] .default_btn a.disabled {
+    background-color: #595959;
+    border-color: #595959;
+    color: black;
+}
+
+html[data-theme=dark] .helpicon {
+    background-image: url(/snapshot/0.0.11/images/icons/cf_icon_info_white.svg);
+    opacity: 0.3;
+}
+html[data-theme=dark] .cf .helpicon {
+    background-image: url(/snapshot/0.0.11/images/icons/cf_icon_info_grey.svg);
+    opacity: 0.4;
+}
+html[data-theme=dark] .cf .helpicon:hover {
+    background-image: url(/snapshot/0.0.11/images/icons/cf_icon_info_grey.svg);
+    opacity: 1;
+}
+
+html[data-theme=dark] .gui_box_titlebar .helpicon {
+    background-image: url(/snapshot/0.0.11/images/icons/cf_icon_info_grey.svg);
+}
+
+html[data-theme=dark] .subtitle .helpicon {
+    background-image: url(/snapshot/0.0.11/images/icons/cf_icon_info_grey.svg);
+}
+
+html[data-theme=dark] .cf_table td {
+    border-style: solid;
+}
+
+html[data-theme=dark] .noboarder td {
+    border-style: unset;
+}
+
+html[data-theme=dark] .jBox-container {
+    background: #393b3a;
+    color:white;
+}
+
+html[data-theme=dark] .jBox-Modal .jBox-title,
+html[data-theme=dark] .jBox-Confirm .jBox-title {
+    background: #393b3a;
+    border-bottom: 1px solid #9c9c9c;
+    color: white;
+}
+
+html[data-theme=dark] .jBox-pointer:after {
+    background: #393b3a;
+}
+
+html[data-theme=dark] span.value {
+    background-color: #202020;
+}
+
+
+/* TABS */
+
+html[data-theme=dark] #tabs li.active a {
+    color: #fff;
+}
+
+
+/* ADJUSTMENTS TAB */
+
+html[data-theme=dark] .tab-adjustments .adjustments {
+    background-color: #454545;
+}
+
+html[data-theme=dark] .tab-adjustments .adjustments tbody:nth-child(odd) {
+    background-color: #454545;
+}
+
+html[data-theme=dark] .tab-adjustments .adjustments tbody {
+    background-color: #4f5150;
+}
+
+html[data-theme=dark] .tab-adjustments .adjustments tbody tr td {
+    border-color: var(--alternativeBackground);
+}
+
+html[data-theme=dark] .tab-adjustments .adjustments select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-adjustments .adjustments input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-adjustments .adjustmentBody .value-box {
+    background: #252525;
+}
+
+
+/* BEEPERS TAB */
+
+html[data-theme=dark] .tab-beepers .gui_box span {
+    color: white;
+}
+
+html[data-theme=dark] .tab-beepers input,
+html[data-theme=dark] .tab-beepers select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+
+/* CLI TAB */
+
+
+/* AutoComplete */
+html[data-theme=dark] .cli-textcomplete-dropdown {
+    background-color: #393b3a;
+}
+html[data-theme=dark] .cli-textcomplete-dropdown a {
+    color: white;
+}
+html[data-theme=dark] .cli-textcomplete-dropdown .active {
+    background-color: var(--quietHeader);
+}
+
+
+/* FIRMWARE FLASHER TAB */
+
+html[data-theme=dark] .btn .disabled {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .gui_note .gui_box_titlebar {
+    color: black;
+}
+
+/* GPS TAB */
+
+html[data-theme=dark] .tab-gps .GPS_info .head,
+html[data-theme=dark] .tab-gps .GPS_signal_strength .head {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .tab-gps input,
+html[data-theme=dark] .tab-gps select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-gps #loadmap .controls {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .tab-gps #loadmap .controls a {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .tab-gps #loadmap .controls a:hover {
+    background-color: var(--hoverButton-background);
+}
+
+html[data-theme=dark] .tab-gps #loadmap .controls a:active {
+    background-color: #393b3a;
+}
+
+progress[value]::-webkit-progress-bar {
+    background-color: #393b3a;
+}
+
+/* PROFILES TAB */
+
+html[data-theme=dark] .tab-profiles .tab-area {
+    background: #393b3a;
+}
+
+html[data-theme=dark] .tab-profiles .tab-container > div {
+    background-color: #535655;
+    border-right: 1px solid #393b3a;
+}
+
+html[data-theme=dark] .tab-profiles .tab-container > div.active {
+    background-color: var(--accent);
+}
+
+html[data-theme=dark] .tab-profiles input:disabled,
+html[data-theme=dark] .tab-profiles select:disabled {
+    color: #595959;
+}
+
+html[data-theme=dark] .tab-profiles table input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-profiles table select {
+    text-align-last: right;
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-profiles .settings_table .suboption select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-profiles .settings_table .suboption input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .xxx-tab-profiles .settings_table tr {
+    border-bottom: 1px solid #6b6b6b;
+}
+
+html[data-theme=dark] .tab-profiles .ROLL .axis_title {
+    background-color: #A00000;
+}
+
+html[data-theme=dark] .tab-profiles .PITCH .axis_title {
+    background-color: #00A000;
+}
+
+html[data-theme=dark] .tab-profiles .YAW .axis_title {
+    background-color: #0000A0;
+}
+
+html[data-theme=dark] .tab-profiles .gui_box span {
+    color: white;
+}
+
+html[data-theme=dark] .tab-profiles .number input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-profiles .bottomarea {
+    background-color: #393b3a;
+}
+
+html[data-theme=dark] .tab-profiles .regular-button.disabled {
+    background-color: #393b3a;
+}
+
+
+/* RATES TAB */
+
+html[data-theme=dark] .tab-rates .tab-area {
+    background: #393b3a;
+}
+
+html[data-theme=dark] .tab-rates .tab-container > div {
+    background-color: #535655;
+    border-right: 1px solid #393b3a;
+}
+
+html[data-theme=dark] .tab-rates .tab-container > div.active {
+    background-color: var(--accent);
+}
+
+html[data-theme=dark] .tab-rates select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates table select {
+    text-align-last: right;
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates .cf tr {
+    background-color: #414443;
+}
+
+html[data-theme=dark] .tab-rates .cf th {
+    background-color: var(--quietHeader);
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates .cf input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates .cf select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-rates .cf .rates_logo_bg {
+    background-color: #ffffff33;
+}
+
+html[data-theme=dark] .tab-rates .ROLL .axis_title {
+    background-color: #A00000;
+}
+
+html[data-theme=dark] .tab-rates .PITCH .axis_title {
+    background-color: #00A000;
+}
+
+html[data-theme=dark] .tab-rates .YAW .axis_title {
+    background-color: #0000A0;
+}
+
+
+html[data-theme=dark] .tab-rates .gui_box span {
+    color: white;
+}
+
+/* POWER TAB */
+
+html[data-theme=dark] .tab-power .number input {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-power .battery-configuration select,
+html[data-theme=dark] .tab-power .smartfuel-configuration select {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+
+/* SERVOS TAB */
+
+html[data-theme=dark] .tab-servos .gui_box span {
+    color: white;
+}
+
+html[data-theme=dark] .tab-servos .servoConfig {
+    background-color: #393b3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-servos .servoConfig td {
+    border-color: #575757;
+}
+
+html[data-theme=dark] .tab-servos .servoConfig tbody tr {
+    background-color: #414443;
+}
+
+html[data-theme=dark] .tab-servos .servoConfig tbody tr:nth-child(even) {
+    background-color: #3f3f3f;
+}
+
+html[data-theme=dark] .tab-servos input[type="number"] {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+html[data-theme=dark] .tab-servos .meter-bar {
+    background-color: #3a3a3a;
+}
+
+html[data-theme=dark] .tab-servos .meter-label {
+    color: white;
+}
+
+html[data-theme=dark] .tab-servos .servoOverride tbody tr:nth-child(odd) {
+    background-color: #3f3f3f;
+}
+
+html[data-theme=dark] .tab-servos .servoOverride tbody tr:nth-child(even) {
+    background-color: #393939;
+}
+
+
+/* SELECT2 */
+
+html[data-theme=dark] .select2-container .select2-selection--single .select2-selection__rendered {
+    background-color: #3a3a3a !important;
+}
+
+html[data-theme=dark] .select2-selection__arrow b {
+    border-bottom: 1.5px solid white !important;
+    border-right: 1.5px solid white !important;
+}
+
+html[data-theme=dark] .select2-search--dropdown {
+    background-color: #3a3a3a !important;
+}
+
+html[data-theme=dark] .select2-search--dropdown .select2-search__field {
+    border: 1px solid var(--subtleAccent) !important;
+    background-color: #3a3a3a !important;
+    color: white !important;
+}
+
+html[data-theme=dark] .select2-results>.select2-results__options {
+    background-color: #3a3a3a !important;
+}
+
+/* PRESETS TAB */
+
+html[data-theme=dark] .tab-presets input,
+html[data-theme=dark] .tab-presets select {
+    background-color: #3a3a3a;
+    color: white;
+}
