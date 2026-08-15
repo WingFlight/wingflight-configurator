@@ -1,0 +1,18 @@
+<!--
+  File: src/tabs/remap_fc/remap_fc.html
+  Content-wrapper shell for the "Remap FC" tab; the actual UI is a
+  Svelte component mounted into #remap_fc_svelte_mount by remap_fc.js.
+-->
+<div class="tab-remap_fc">
+  <div class="content_wrapper" id="remap_fc_content_wrapper">
+    <div class="title-container">
+      <div class="tab_title" i18n="tabRemapFC"></div>
+      <div class="cf_doc_version_bt">
+        <a id="button-documentation"></a>
+      </div>
+    </div>
+
+    <!-- The actual UI (button + output) is a mounted Svelte component -->
+    <div id="remap_fc_svelte_mount"></div>
+  </div>
+</div>

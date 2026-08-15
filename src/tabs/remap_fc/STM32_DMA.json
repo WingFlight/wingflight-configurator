@@ -1,0 +1,2097 @@
+{
+  "STM32F411": {
+    "A00": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 6"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 6"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 6"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 1 Channel 6",
+        "DMA1 Stream 3 Channel 6"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ]
+    },
+    "A06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "A10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "A11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B04": {
+      "AF1": [
+        "DMA1 Stream 4 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "B05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "B06": {
+      "AF1": [
+        "DMA1 Stream 0 Channel 2"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "B07": {
+      "AF1": [
+        "DMA1 Stream 3 Channel 2"
+      ],
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "B08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "B15": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "C06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "C07": {
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "C08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ]
+    },
+    "C09": {
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ]
+    },
+    "D12": {
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "D13": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "D14": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "E08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E12": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E14": {
+      "AF1": [
+        "DMA2 Stream 4 Channel 6"
+      ]
+    }
+  },
+  "STM32F40X": {
+    "A00": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 6"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 6"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 6"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 1 Channel 6",
+        "DMA1 Stream 3 Channel 6"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "A10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "A11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B04": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "B05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "B06": {
+      "AF1": [
+        "DMA1 Stream 0 Channel 2"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "B07": {
+      "AF1": [
+        "DMA1 Stream 3 Channel 2"
+      ],
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "B08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B15": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "C07": {
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "C08": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C09": {
+      "AF1": [
+        "DMA2 Stream 7 Channel 7"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 7 Channel 7"
+      ]
+    },
+    "D12": {
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "D13": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "D14": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "E08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E12": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E14": {
+      "AF1": [
+        "DMA2 Stream 4 Channel 6"
+      ]
+    }
+  },
+  "STM32F7X2": {
+    "A00": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 6"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 6"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 6"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 1 Channel 6",
+        "DMA1 Stream 3 Channel 6"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "A10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "A11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B04": {
+      "AF1": [
+        "DMA1 Stream 4 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "B05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "B06": {
+      "AF1": [
+        "DMA1 Stream 0 Channel 2"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "B07": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "B08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B15": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C06": {
+      "AF1": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "C07": {
+      "AF1": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "C08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C09": {
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 7 Channel 7"
+      ]
+    },
+    "D12": {
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "D13": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "D14": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "E08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E12": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E14": {
+      "AF1": [
+        "DMA2 Stream 4 Channel 6"
+      ]
+    }
+  },
+  "STM32F745": {
+    "A00": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 6"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 4 Channel 6"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Channel 6"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ],
+      "AF2": [
+        "DMA1 Stream 1 Channel 6",
+        "DMA1 Stream 3 Channel 6"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "A10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "A11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Stream 5 Channel 3"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B04": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ]
+    },
+    "B05": {
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ]
+    },
+    "B06": {
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "B07": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "B08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Stream 1 Channel 3"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Stream 7 Channel 3",
+        "DMA1 Stream 6 Channel 3"
+      ]
+    },
+    "B13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "B15": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C06": {
+      "AF2": [
+        "DMA1 Stream 4 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 2 Channel 7"
+      ]
+    },
+    "C07": {
+      "AF2": [
+        "DMA1 Stream 5 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 3 Channel 7"
+      ]
+    },
+    "C08": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 2 Channel 0",
+        "DMA2 Stream 4 Channel 7"
+      ]
+    },
+    "C09": {
+      "AF2": [
+        "DMA1 Stream 2 Channel 5"
+      ],
+      "AF3": [
+        "DMA2 Stream 7 Channel 7"
+      ]
+    },
+    "D12": {
+      "AF2": [
+        "DMA1 Stream 0 Channel 2"
+      ]
+    },
+    "D13": {
+      "AF2": [
+        "DMA1 Stream 3 Channel 2"
+      ]
+    },
+    "D14": {
+      "AF2": [
+        "DMA1 Stream 7 Channel 2"
+      ]
+    },
+    "E08": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E09": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 1 Channel 6",
+        "DMA2 Stream 3 Channel 6"
+      ]
+    },
+    "E10": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E11": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 2 Channel 6"
+      ]
+    },
+    "E12": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E13": {
+      "AF1": [
+        "DMA2 Stream 6 Channel 0",
+        "DMA2 Stream 6 Channel 6"
+      ]
+    },
+    "E14": {
+      "AF1": [
+        "DMA2 Stream 4 Channel 6"
+      ]
+    }
+  },
+  "STM32H743": {
+    "A00": {
+      "AF1": [
+        "DMA1 Stream 0 Request 18",
+        "DMA1 Stream 1 Request 18",
+        "DMA1 Stream 2 Request 18"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 55",
+        "DMA1 Stream 1 Request 55",
+        "DMA1 Stream 2 Request 55"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Stream 0 Request 19",
+        "DMA1 Stream 1 Request 19",
+        "DMA1 Stream 2 Request 19"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 56",
+        "DMA1 Stream 1 Request 56",
+        "DMA1 Stream 2 Request 56"
+      ],
+      "AF4": [
+        "DMA1 Stream 0 Request 105",
+        "DMA1 Stream 1 Request 105",
+        "DMA1 Stream 2 Request 105"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Stream 0 Request 20",
+        "DMA1 Stream 1 Request 20",
+        "DMA1 Stream 2 Request 20"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 57",
+        "DMA1 Stream 1 Request 57",
+        "DMA1 Stream 2 Request 57"
+      ],
+      "AF4": [
+        "DMA1 Stream 0 Request 105",
+        "DMA1 Stream 1 Request 105",
+        "DMA1 Stream 2 Request 105"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Stream 0 Request 21",
+        "DMA1 Stream 1 Request 21",
+        "DMA1 Stream 2 Request 21"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 58",
+        "DMA1 Stream 1 Request 58",
+        "DMA1 Stream 2 Request 58"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Stream 0 Request 18",
+        "DMA1 Stream 1 Request 18",
+        "DMA1 Stream 2 Request 18"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 47",
+        "DMA1 Stream 1 Request 47",
+        "DMA1 Stream 2 Request 47"
+      ]
+    },
+    "A06": {
+      "AF2": [
+        "DMA1 Stream 0 Request 23",
+        "DMA1 Stream 1 Request 23",
+        "DMA1 Stream 2 Request 23"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA1 Stream 0 Request 11",
+        "DMA1 Stream 1 Request 11",
+        "DMA1 Stream 2 Request 11"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 24",
+        "DMA1 Stream 1 Request 24",
+        "DMA1 Stream 2 Request 24"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 47",
+        "DMA1 Stream 1 Request 47",
+        "DMA1 Stream 2 Request 47"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA1 Stream 0 Request 11",
+        "DMA1 Stream 1 Request 11",
+        "DMA1 Stream 2 Request 11"
+      ]
+    },
+    "A09": {
+      "AF1": [
+        "DMA1 Stream 0 Request 12",
+        "DMA1 Stream 1 Request 12",
+        "DMA1 Stream 2 Request 12"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Stream 0 Request 18",
+        "DMA1 Stream 1 Request 18",
+        "DMA1 Stream 2 Request 18"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA1 Stream 0 Request 12",
+        "DMA1 Stream 1 Request 12",
+        "DMA1 Stream 2 Request 12"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 25",
+        "DMA1 Stream 1 Request 25",
+        "DMA1 Stream 2 Request 25"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA1 Stream 0 Request 13",
+        "DMA1 Stream 1 Request 13",
+        "DMA1 Stream 2 Request 13"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 26",
+        "DMA1 Stream 1 Request 26",
+        "DMA1 Stream 2 Request 26"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Stream 0 Request 19",
+        "DMA1 Stream 1 Request 19",
+        "DMA1 Stream 2 Request 19"
+      ]
+    },
+    "B04": {
+      "AF2": [
+        "DMA1 Stream 0 Request 23",
+        "DMA1 Stream 1 Request 23",
+        "DMA1 Stream 2 Request 23"
+      ]
+    },
+    "B05": {
+      "AF2": [
+        "DMA1 Stream 0 Request 24",
+        "DMA1 Stream 1 Request 24",
+        "DMA1 Stream 2 Request 24"
+      ]
+    },
+    "B06": {
+      "AF1": [
+        "DMA1 Stream 0 Request 109",
+        "DMA1 Stream 1 Request 109",
+        "DMA1 Stream 2 Request 109"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 29",
+        "DMA1 Stream 1 Request 29",
+        "DMA1 Stream 2 Request 29"
+      ]
+    },
+    "B07": {
+      "AF1": [
+        "DMA1 Stream 0 Request 111",
+        "DMA1 Stream 1 Request 111",
+        "DMA1 Stream 2 Request 111"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 30",
+        "DMA1 Stream 1 Request 30",
+        "DMA1 Stream 2 Request 30"
+      ]
+    },
+    "B08": {
+      "AF1": [
+        "DMA1 Stream 0 Request 109",
+        "DMA1 Stream 1 Request 109",
+        "DMA1 Stream 2 Request 109"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 31",
+        "DMA1 Stream 1 Request 31",
+        "DMA1 Stream 2 Request 31"
+      ]
+    },
+    "B09": {
+      "AF1": [
+        "DMA1 Stream 0 Request 111",
+        "DMA1 Stream 1 Request 111",
+        "DMA1 Stream 2 Request 111"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Stream 0 Request 20",
+        "DMA1 Stream 1 Request 20",
+        "DMA1 Stream 2 Request 20"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Stream 0 Request 21",
+        "DMA1 Stream 1 Request 21",
+        "DMA1 Stream 2 Request 21"
+      ]
+    },
+    "B13": {
+      "AF1": [
+        "DMA1 Stream 0 Request 11",
+        "DMA1 Stream 1 Request 11",
+        "DMA1 Stream 2 Request 11"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA1 Stream 0 Request 12",
+        "DMA1 Stream 1 Request 12",
+        "DMA1 Stream 2 Request 12"
+      ]
+    },
+    "B15": {
+      "AF1": [
+        "DMA1 Stream 0 Request 13",
+        "DMA1 Stream 1 Request 13",
+        "DMA1 Stream 2 Request 13"
+      ]
+    },
+    "C06": {
+      "AF1": [
+        "DMA1 Stream 0 Request 47",
+        "DMA1 Stream 1 Request 47",
+        "DMA1 Stream 2 Request 47"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 23",
+        "DMA1 Stream 1 Request 23",
+        "DMA1 Stream 2 Request 23"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 47",
+        "DMA1 Stream 1 Request 47",
+        "DMA1 Stream 2 Request 47"
+      ]
+    },
+    "C07": {
+      "AF1": [
+        "DMA1 Stream 0 Request 48",
+        "DMA1 Stream 1 Request 48",
+        "DMA1 Stream 2 Request 48"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 24",
+        "DMA1 Stream 1 Request 24",
+        "DMA1 Stream 2 Request 24"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 48",
+        "DMA1 Stream 1 Request 48",
+        "DMA1 Stream 2 Request 48"
+      ]
+    },
+    "C08": {
+      "AF2": [
+        "DMA1 Stream 0 Request 25",
+        "DMA1 Stream 1 Request 25",
+        "DMA1 Stream 2 Request 25"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 49",
+        "DMA1 Stream 1 Request 49",
+        "DMA1 Stream 2 Request 49"
+      ]
+    },
+    "C09": {
+      "AF2": [
+        "DMA1 Stream 0 Request 26",
+        "DMA1 Stream 1 Request 26",
+        "DMA1 Stream 2 Request 26"
+      ],
+      "AF3": [
+        "DMA1 Stream 0 Request 50",
+        "DMA1 Stream 1 Request 50",
+        "DMA1 Stream 2 Request 50"
+      ]
+    },
+    "D12": {
+      "AF1": [
+        "DMA1 Stream 0 Request 29",
+        "DMA1 Stream 1 Request 29",
+        "DMA1 Stream 2 Request 29"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 29",
+        "DMA1 Stream 1 Request 29",
+        "DMA1 Stream 2 Request 29"
+      ]
+    },
+    "D13": {
+      "AF1": [
+        "DMA1 Stream 0 Request 30",
+        "DMA1 Stream 1 Request 30",
+        "DMA1 Stream 2 Request 30"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 30",
+        "DMA1 Stream 1 Request 30",
+        "DMA1 Stream 2 Request 30"
+      ]
+    },
+    "D14": {
+      "AF1": [
+        "DMA1 Stream 0 Request 31",
+        "DMA1 Stream 1 Request 31",
+        "DMA1 Stream 2 Request 31"
+      ],
+      "AF2": [
+        "DMA1 Stream 0 Request 31",
+        "DMA1 Stream 1 Request 31",
+        "DMA1 Stream 2 Request 31"
+      ]
+    },
+    "E04": {
+      "AF4": [
+        "DMA1 Stream 0 Request 105",
+        "DMA1 Stream 1 Request 105",
+        "DMA1 Stream 2 Request 105"
+      ]
+    },
+    "E05": {
+      "AF1": [
+        "DMA1 Stream 0 Request 105",
+        "DMA1 Stream 1 Request 105",
+        "DMA1 Stream 2 Request 105"
+      ],
+      "AF4": [
+        "DMA1 Stream 0 Request 105",
+        "DMA1 Stream 1 Request 105",
+        "DMA1 Stream 2 Request 105"
+      ]
+    },
+    "E08": {
+      "AF1": [
+        "DMA1 Stream 0 Request 11",
+        "DMA1 Stream 1 Request 11",
+        "DMA1 Stream 2 Request 11"
+      ]
+    },
+    "E09": {
+      "AF1": [
+        "DMA1 Stream 0 Request 11",
+        "DMA1 Stream 1 Request 11",
+        "DMA1 Stream 2 Request 11"
+      ]
+    },
+    "E10": {
+      "AF1": [
+        "DMA1 Stream 0 Request 12",
+        "DMA1 Stream 1 Request 12",
+        "DMA1 Stream 2 Request 12"
+      ]
+    },
+    "E11": {
+      "AF1": [
+        "DMA1 Stream 0 Request 12",
+        "DMA1 Stream 1 Request 12",
+        "DMA1 Stream 2 Request 12"
+      ]
+    },
+    "E12": {
+      "AF1": [
+        "DMA1 Stream 0 Request 13",
+        "DMA1 Stream 1 Request 13",
+        "DMA1 Stream 2 Request 13"
+      ]
+    },
+    "E13": {
+      "AF1": [
+        "DMA1 Stream 0 Request 13",
+        "DMA1 Stream 1 Request 13",
+        "DMA1 Stream 2 Request 13"
+      ]
+    },
+    "E14": {
+      "AF1": [
+        "DMA1 Stream 0 Request 14",
+        "DMA1 Stream 1 Request 14",
+        "DMA1 Stream 2 Request 14"
+      ]
+    }
+  },
+  "STM32G474": {
+    "A00": {
+      "AF1": [
+        "DMA1 Channel 1 Request 56",
+        "DMA1 Channel 2 Request 56",
+        "DMA1 Channel 3 Request 56"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 72",
+        "DMA1 Channel 2 Request 72",
+        "DMA1 Channel 3 Request 72"
+      ]
+    },
+    "A01": {
+      "AF1": [
+        "DMA1 Channel 1 Request 57",
+        "DMA1 Channel 2 Request 57",
+        "DMA1 Channel 3 Request 57"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 73",
+        "DMA1 Channel 2 Request 73",
+        "DMA1 Channel 3 Request 73"
+      ],
+      "AF9": [
+        "DMA1 Channel 1 Request 78",
+        "DMA1 Channel 2 Request 78",
+        "DMA1 Channel 3 Request 78"
+      ]
+    },
+    "A02": {
+      "AF1": [
+        "DMA1 Channel 1 Request 58",
+        "DMA1 Channel 2 Request 58",
+        "DMA1 Channel 3 Request 58"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 74",
+        "DMA1 Channel 2 Request 74",
+        "DMA1 Channel 3 Request 74"
+      ],
+      "AF9": [
+        "DMA1 Channel 1 Request 78",
+        "DMA1 Channel 2 Request 78",
+        "DMA1 Channel 3 Request 78"
+      ]
+    },
+    "A03": {
+      "AF1": [
+        "DMA1 Channel 1 Request 59",
+        "DMA1 Channel 2 Request 59",
+        "DMA1 Channel 3 Request 59"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 75",
+        "DMA1 Channel 2 Request 75",
+        "DMA1 Channel 3 Request 75"
+      ]
+    },
+    "A04": {
+      "AF2": [
+        "DMA1 Channel 1 Request 62",
+        "DMA1 Channel 2 Request 62",
+        "DMA1 Channel 3 Request 62"
+      ]
+    },
+    "A05": {
+      "AF1": [
+        "DMA1 Channel 1 Request 56",
+        "DMA1 Channel 2 Request 56",
+        "DMA1 Channel 3 Request 56"
+      ]
+    },
+    "A06": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 61",
+        "DMA1 Channel 2 Request 61",
+        "DMA1 Channel 3 Request 61"
+      ]
+    },
+    "A07": {
+      "AF1": [
+        "DMA1 Channel 1 Request 84",
+        "DMA1 Channel 2 Request 84",
+        "DMA1 Channel 3 Request 84"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 62",
+        "DMA1 Channel 2 Request 62",
+        "DMA1 Channel 3 Request 62"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ]
+    },
+    "A08": {
+      "AF1": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ]
+    },
+    "A09": {
+      "AF6": [
+        "DMA1 Channel 1 Request 43",
+        "DMA1 Channel 2 Request 43",
+        "DMA1 Channel 3 Request 43"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 58",
+        "DMA1 Channel 2 Request 58",
+        "DMA1 Channel 3 Request 58"
+      ]
+    },
+    "A10": {
+      "AF6": [
+        "DMA1 Channel 1 Request 44",
+        "DMA1 Channel 2 Request 44",
+        "DMA1 Channel 3 Request 44"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 59",
+        "DMA1 Channel 2 Request 59",
+        "DMA1 Channel 3 Request 59"
+      ]
+    },
+    "A11": {
+      "AF6": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 67",
+        "DMA1 Channel 2 Request 67",
+        "DMA1 Channel 3 Request 67"
+      ],
+      "AF11": [
+        "DMA1 Channel 1 Request 45",
+        "DMA1 Channel 2 Request 45",
+        "DMA1 Channel 3 Request 45"
+      ]
+    },
+    "A12": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 43",
+        "DMA1 Channel 2 Request 43",
+        "DMA1 Channel 3 Request 43"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 68",
+        "DMA1 Channel 2 Request 68",
+        "DMA1 Channel 3 Request 68"
+      ]
+    },
+    "A13": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 69",
+        "DMA1 Channel 2 Request 69",
+        "DMA1 Channel 3 Request 69"
+      ]
+    },
+    "A14": {
+      "AF5": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ]
+    },
+    "A15": {
+      "AF1": [
+        "DMA1 Channel 1 Request 56",
+        "DMA1 Channel 2 Request 56",
+        "DMA1 Channel 3 Request 56"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ]
+    },
+    "B00": {
+      "AF1": [
+        "DMA1 Channel 1 Request 63",
+        "DMA1 Channel 2 Request 63",
+        "DMA1 Channel 3 Request 63"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 63",
+        "DMA1 Channel 2 Request 63",
+        "DMA1 Channel 3 Request 63"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 43",
+        "DMA1 Channel 2 Request 43",
+        "DMA1 Channel 3 Request 43"
+      ]
+    },
+    "B01": {
+      "AF1": [
+        "DMA1 Channel 1 Request 64",
+        "DMA1 Channel 2 Request 64",
+        "DMA1 Channel 3 Request 64"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 64",
+        "DMA1 Channel 2 Request 64",
+        "DMA1 Channel 3 Request 64"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 51",
+        "DMA1 Channel 2 Request 51",
+        "DMA1 Channel 3 Request 51"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 44",
+        "DMA1 Channel 2 Request 44",
+        "DMA1 Channel 3 Request 44"
+      ]
+    },
+    "B02": {
+      "AF1": [
+        "DMA1 Channel 1 Request 72",
+        "DMA1 Channel 2 Request 72",
+        "DMA1 Channel 3 Request 72"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 72",
+        "DMA1 Channel 2 Request 72",
+        "DMA1 Channel 3 Request 72"
+      ],
+      "AF3": [
+        "DMA1 Channel 1 Request 86",
+        "DMA1 Channel 2 Request 86",
+        "DMA1 Channel 3 Request 86"
+      ]
+    },
+    "B03": {
+      "AF1": [
+        "DMA1 Channel 1 Request 57",
+        "DMA1 Channel 2 Request 57",
+        "DMA1 Channel 3 Request 57"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ]
+    },
+    "B04": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 61",
+        "DMA1 Channel 2 Request 61",
+        "DMA1 Channel 3 Request 61"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ]
+    },
+    "B05": {
+      "AF2": [
+        "DMA1 Channel 1 Request 62",
+        "DMA1 Channel 2 Request 62",
+        "DMA1 Channel 3 Request 62"
+      ],
+      "AF3": [
+        "DMA1 Channel 1 Request 51",
+        "DMA1 Channel 2 Request 51",
+        "DMA1 Channel 3 Request 51"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 84",
+        "DMA1 Channel 2 Request 84",
+        "DMA1 Channel 3 Request 84"
+      ]
+    },
+    "B06": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 67",
+        "DMA1 Channel 2 Request 67",
+        "DMA1 Channel 3 Request 67"
+      ],
+      "AF5": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ]
+    },
+    "B07": {
+      "AF1": [
+        "DMA1 Channel 1 Request 84",
+        "DMA1 Channel 2 Request 84",
+        "DMA1 Channel 3 Request 84"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 68",
+        "DMA1 Channel 2 Request 68",
+        "DMA1 Channel 3 Request 68"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 64",
+        "DMA1 Channel 2 Request 64",
+        "DMA1 Channel 3 Request 64"
+      ]
+    },
+    "B08": {
+      "AF1": [
+        "DMA1 Channel 1 Request 82",
+        "DMA1 Channel 2 Request 82",
+        "DMA1 Channel 3 Request 82"
+      ],
+      "AF2": [
+        "DMA1 Channel 1 Request 69",
+        "DMA1 Channel 2 Request 69",
+        "DMA1 Channel 3 Request 69"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ]
+    },
+    "B09": {
+      "AF1": [
+        "DMA1 Channel 1 Request 84",
+        "DMA1 Channel 2 Request 84",
+        "DMA1 Channel 3 Request 84"
+      ],
+      "AF10": [
+        "DMA1 Channel 1 Request 51",
+        "DMA1 Channel 2 Request 51",
+        "DMA1 Channel 3 Request 51"
+      ],
+      "AF11": [
+        "DMA1 Channel 1 Request 44",
+        "DMA1 Channel 2 Request 44",
+        "DMA1 Channel 3 Request 44"
+      ]
+    },
+    "B10": {
+      "AF1": [
+        "DMA1 Channel 1 Request 58",
+        "DMA1 Channel 2 Request 58",
+        "DMA1 Channel 3 Request 58"
+      ]
+    },
+    "B11": {
+      "AF1": [
+        "DMA1 Channel 1 Request 59",
+        "DMA1 Channel 2 Request 59",
+        "DMA1 Channel 3 Request 59"
+      ]
+    },
+    "B13": {
+      "AF6": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ]
+    },
+    "B14": {
+      "AF1": [
+        "DMA1 Channel 1 Request 78",
+        "DMA1 Channel 2 Request 78",
+        "DMA1 Channel 3 Request 78"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 43",
+        "DMA1 Channel 2 Request 43",
+        "DMA1 Channel 3 Request 43"
+      ]
+    },
+    "B15": {
+      "AF2": [
+        "DMA1 Channel 1 Request 78",
+        "DMA1 Channel 2 Request 78",
+        "DMA1 Channel 3 Request 78"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 44",
+        "DMA1 Channel 2 Request 44",
+        "DMA1 Channel 3 Request 44"
+      ]
+    },
+    "C00": {
+      "AF2": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ]
+    },
+    "C01": {
+      "AF2": [
+        "DMA1 Channel 1 Request 43",
+        "DMA1 Channel 2 Request 43",
+        "DMA1 Channel 3 Request 43"
+      ]
+    },
+    "C02": {
+      "AF2": [
+        "DMA1 Channel 1 Request 44",
+        "DMA1 Channel 2 Request 44",
+        "DMA1 Channel 3 Request 44"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 87",
+        "DMA1 Channel 2 Request 87",
+        "DMA1 Channel 3 Request 87"
+      ]
+    },
+    "C03": {
+      "AF2": [
+        "DMA1 Channel 1 Request 45",
+        "DMA1 Channel 2 Request 45",
+        "DMA1 Channel 3 Request 45"
+      ]
+    },
+    "C05": {
+      "AF6": [
+        "DMA1 Channel 1 Request 45",
+        "DMA1 Channel 2 Request 45",
+        "DMA1 Channel 3 Request 45"
+      ]
+    },
+    "C06": {
+      "AF2": [
+        "DMA1 Channel 1 Request 61",
+        "DMA1 Channel 2 Request 61",
+        "DMA1 Channel 3 Request 61"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ]
+    },
+    "C07": {
+      "AF2": [
+        "DMA1 Channel 1 Request 62",
+        "DMA1 Channel 2 Request 62",
+        "DMA1 Channel 3 Request 62"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ]
+    },
+    "C08": {
+      "AF2": [
+        "DMA1 Channel 1 Request 63",
+        "DMA1 Channel 2 Request 63",
+        "DMA1 Channel 3 Request 63"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 51",
+        "DMA1 Channel 2 Request 51",
+        "DMA1 Channel 3 Request 51"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 88",
+        "DMA1 Channel 2 Request 88",
+        "DMA1 Channel 3 Request 88"
+      ]
+    },
+    "C09": {
+      "AF2": [
+        "DMA1 Channel 1 Request 64",
+        "DMA1 Channel 2 Request 64",
+        "DMA1 Channel 3 Request 64"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 52",
+        "DMA1 Channel 2 Request 52",
+        "DMA1 Channel 3 Request 52"
+      ]
+    },
+    "C10": {
+      "AF4": [
+        "DMA1 Channel 1 Request 49",
+        "DMA1 Channel 2 Request 49",
+        "DMA1 Channel 3 Request 49"
+      ]
+    },
+    "C11": {
+      "AF4": [
+        "DMA1 Channel 1 Request 50",
+        "DMA1 Channel 2 Request 50",
+        "DMA1 Channel 3 Request 50"
+      ]
+    },
+    "C12": {
+      "AF1": [
+        "DMA1 Channel 1 Request 73",
+        "DMA1 Channel 2 Request 73",
+        "DMA1 Channel 3 Request 73"
+      ],
+      "AF4": [
+        "DMA1 Channel 1 Request 51",
+        "DMA1 Channel 2 Request 51",
+        "DMA1 Channel 3 Request 51"
+      ]
+    },
+    "C13": {
+      "AF4": [
+        "DMA1 Channel 1 Request 42",
+        "DMA1 Channel 2 Request 42",
+        "DMA1 Channel 3 Request 42"
+      ],
+      "AF6": [
+        "DMA1 Channel 1 Request 52",
+        "DMA1 Channel 2 Request 52",
+        "DMA1 Channel 3 Request 52"
+      ]
+    }
+  }
+}

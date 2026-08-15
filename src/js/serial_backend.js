@@ -789,6 +789,9 @@ export function read_serial(info) {
             case 'presets':
                 TABS.presets.read(info);
                 break;
+            case 'remap_fc':
+                TABS.remap_fc.read(info);
+                break;
         }
     }
 }
@@ -882,7 +885,7 @@ function update_live_status() {
        display: 'inline-block'
     });
 
-    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets') {
+    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets' && GUI.active_tab != 'remap_fc') {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
     }
 

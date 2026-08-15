@@ -56,6 +56,7 @@ export const GuiControl = function () {
         'sensors',
         'servos',
         'presets',
+        'remap_fc',
     ];
 
     this.allowedTabs = this.defaultAllowedTabsWhenDisconnected;
