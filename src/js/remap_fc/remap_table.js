@@ -116,22 +116,35 @@ export function buildRowsForOptions(options, currentHardware, defaultHardware) {
 
 // isEligibleToAdd applies the FC's own filling-order rules on top of
 // plain availability: motors and servos must be filled in sequence
-// (S4 can't be offered until S1-S3 already have a row, same for M),
-// and an output-frequency group can only be offered once its matching
-// motor does (Freq2 needs M2). Anything else (LED, UART/I2C) has no
-// such constraint.
-function isEligibleToAdd(option, visibleOptions) {
+// (S4 can't be offered until S1-S3 are *all* already configured, same
+// for M — checking only the immediate predecessor isn't enough, since
+// removing an earlier one, e.g. S2, while S3/S4 stay configured would
+// otherwise leave that gap invisible and still let S5 through), and an
+// output-frequency group can only be offered once its matching motor
+// is (Freq2 needs M2). "Configured" here means either claimed as some
+// row's Current Option (e.g. M1 might be configured by having been
+// picked as a different pin's occupant — RX1's Current Option, say —
+// without M1 ever getting its own dedicated row), or simply having a
+// row of its own at all, even an unresolved "Set Option" one — a row
+// that exists but hasn't been given a value yet still counts as "this
+// slot has been started", which is enough to unblock the next one in
+// sequence, depending on what the caller passes in. Anything else
+// (LED, UART/I2C) has no such constraint.
+function isEligibleToAdd(option, configuredOptions) {
   const match = option.match(/^([A-Za-z]+)(\d+)$/);
   if (!match) return true;
   const [, prefix, indexStr] = match;
   const index = Number(indexStr);
 
   if (prefix === "M" || prefix === "S") {
-    return index === 1 || visibleOptions.includes(`${prefix}${index - 1}`);
+    for (let i = 1; i < index; i++) {
+      if (!configuredOptions.includes(`${prefix}${i}`)) return false;
+    }
+    return true;
   }
 
   if (prefix === "Freq") {
-    return visibleOptions.includes(`M${index}`);
+    return configuredOptions.includes(`M${index}`);
   }
 
   return true;
@@ -140,29 +153,72 @@ function isEligibleToAdd(option, visibleOptions) {
 /**
  * Returns the options that could be offered by "+ Add": every option
  * this board's default structure actually reports a pin for, except
- * ones already spoken for — either claimed as some visible row's
- * Current Option (including a row showing itself, unchanged), or
- * sitting in a freshly-added row that hasn't had a "Set Option" pick
- * made yet (it doesn't occupy a pin yet, but it already has a row, so
- * offering it again would let you add a second one).
+ * ones already spoken for.
  *
- * On top of that, motors, servos, and output-frequency groups (see
- * isEligibleToAdd) must also satisfy the FC's own filling order —
- * having a default pin isn't enough on its own for those.
+ * Motors, servos, output-frequency groups, and the LED pin (see
+ * TABLE_OPTION_KEYS) can be picked as a *different* row's Current
+ * Option, so one of them can become "homeless" — no longer claimed by
+ * anything, even though it still has its own row (e.g. M1's own row
+ * got reassigned to something else). Those are still offered here
+ * despite having a row, via unavailableOptions (claimed-or-pending-a-
+ * pick only) — and must also satisfy the FC's own filling order (see
+ * isEligibleToAdd), since having a default pin isn't enough on its own
+ * for those.
+ *
+ * UART/I2C resources, on the other hand, are never offered as a row's
+ * Current Option (see getRowSelectableOptions), so they can't become
+ * "homeless" the same way — once one has a row at all, regardless of
+ * what that row currently holds, it's fully spoken for and excluded
+ * via visibleOptions instead.
  * @param {import("./hardware_parser.js").HardwareMap} defaultHardware
  * @param {string[]} unavailableOptions - option keys that are claimed or pending a pick.
+ * @param {string[]} configuredOptions - option keys that are claimed, or that simply have a row of their own.
  * @param {string[]} visibleOptions - option keys that currently have a row.
  * @returns {AddableOption[]}
  */
-export function getAddableOptions(defaultHardware, unavailableOptions, visibleOptions) {
+export function getAddableOptions(
+  defaultHardware,
+  unavailableOptions,
+  configuredOptions,
+  visibleOptions,
+) {
   return OPTION_KEYS.filter((option) => {
-    if (unavailableOptions.includes(option)) return false;
     if (!(option in defaultHardware)) return false;
 
     if (TABLE_OPTION_KEYS.includes(option)) {
-      return isEligibleToAdd(option, visibleOptions);
+      if (unavailableOptions.includes(option)) return false;
+      return isEligibleToAdd(option, configuredOptions);
     }
 
-    return true;
+    return !visibleOptions.includes(option);
   }).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
+}
+
+/**
+ * Returns the options that could be assigned as a row's Current
+ * Option: every one of the FC's own fixed options — motors, servos,
+ * output-frequency groups, and the LED pin (see TABLE_OPTION_KEYS) —
+ * that isn't already claimed by some row, and that passes the FC's
+ * filling-order rules (see isEligibleToAdd) so gaps can't be created
+ * (e.g. S3 can't be picked unless S1 and S2 are already claimed).
+ *
+ * Deliberately uses claimedOptions rather than the broader
+ * "configured" notion getAddableOptions uses: a row's own dropdown
+ * always includes itself as a choice, so if merely *having a row*
+ * counted as satisfying the previous index, a freshly-added, still-
+ * unresolved M1 would immediately unlock M2 in its own dropdown — the
+ * next one shouldn't become pickable until the previous one has an
+ * actual value, not just a row.
+ *
+ * Unlike getAddableOptions, this deliberately ignores defaultHardware:
+ * a row's Current Option is picked from the FC's fixed set of possible
+ * options, not from whatever this specific board's default dump
+ * happens to report.
+ * @param {string[]} claimedOptions - option keys currently claimed as some row's Current Option.
+ * @returns {string[]}
+ */
+export function getRowSelectableOptions(claimedOptions) {
+  return TABLE_OPTION_KEYS.filter(
+    (option) => !claimedOptions.includes(option) && isEligibleToAdd(option, claimedOptions),
+  );
 }

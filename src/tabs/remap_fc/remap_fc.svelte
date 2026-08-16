@@ -17,6 +17,7 @@
     TABLE_OPTION_KEYS,
     buildRowsForOptions,
     getAddableOptions,
+    getRowSelectableOptions,
   } from "@/js/remap_fc/remap_table.js";
 
   // Sentinel dropdown value meaning "nothing assigned to this pin" —
@@ -93,6 +94,15 @@
   // a row and shouldn't be offered a second time.
   let unavailableOptions = $derived([...claimedOptions, ...unsetOptions]);
 
+  // Options that count as "configured" for the M/S/Freq filling-order
+  // rule: claimed (occupying a pin), or simply having a row of its own
+  // at all — even an unresolved "Set Option" one. Without the latter,
+  // e.g. removing S2-S4 and leaving S1 as an unresolved row would make
+  // S2 ineligible again, since S1 wouldn't be "claimed" yet.
+  let configuredOptions = $derived([
+    ...new Set([...claimedOptions, ...visibleOptions]),
+  ]);
+
   // The full pool for the "+ Add" row: a "None" choice, plus every
   // default-structure option that isn't already spoken for — including
   // ones that are currently assigned but never get an automatic row
@@ -102,7 +112,12 @@
   // when picked).
   let addablePool = $derived([
     { option: NONE_VALUE, defaultPin: null },
-    ...getAddableOptions(defaultHardware, unavailableOptions, visibleOptions),
+    ...getAddableOptions(
+      defaultHardware,
+      unavailableOptions,
+      configuredOptions,
+      visibleOptions,
+    ),
   ]);
 
   // Whether there's anything real left to add (i.e. more than just
@@ -118,22 +133,19 @@
   let addMenuSize = $derived(Math.min(addablePool.length + 1, 10));
 
   // The base pool for per-row "Current Option" dropdowns. This is
-  // deliberately separate from addablePool: "+ Add" tracks which FC
-  // pins have a row at all (excluding unset ones too, so you can't add
-  // a duplicate row), but a row's own dropdown only cares about which
-  // options are genuinely claimed — a row must always be able to pick
-  // its own option, even while its own row is still "unset".
+  // deliberately separate from addablePool: "+ Add" only offers what
+  // this specific board's default structure reports, but a row's
+  // Current Option comes from the FC's fixed set of options regardless
+  // of defaultHardware, only excluding what's genuinely claimed (a row
+  // must always be able to pick its own option, even while its own row
+  // is still "unset", so this uses claimedOptions rather than
+  // unavailableOptions).
   let rowSelectablePool = $derived([
-    { option: NONE_VALUE, defaultPin: null },
-    ...getAddableOptions(defaultHardware, claimedOptions, visibleOptions),
+    NONE_VALUE,
+    ...getRowSelectableOptions(claimedOptions),
   ]);
 
   // The pool offered by a given row's own "Current Option" dropdown:
-  // unlike "+ Add" (which offers the full default structure so
-  // UART/I2C resources can be brought into view), a row can only be
-  // reassigned to one of the original FC options — motors, servos,
-  // output-frequency groups, and the LED pin — since those are the
-  // only things that make sense as an output pin's occupant. Also
   // excludes options that already have their own row elsewhere in the
   // table, so one row's edit can't "steal" another row's identity —
   // except the row's own option, which must stay selectable so a row
@@ -143,11 +155,10 @@
    */
   function optionsForRow(row) {
     return rowSelectablePool.filter(
-      (addable) =>
-        addable.option === NONE_VALUE ||
-        (TABLE_OPTION_KEYS.includes(addable.option) &&
-          (addable.option === row.option ||
-            !visibleOptions.includes(addable.option))),
+      (option) =>
+        option === NONE_VALUE ||
+        option === row.option ||
+        !visibleOptions.includes(option),
     );
   }
 
@@ -312,12 +323,12 @@
                               },
                             ]
                           : []),
-                      ...optionsForRow(row).map((addable) => ({
-                        value: addable.option,
+                      ...optionsForRow(row).map((option) => ({
+                        value: option,
                         label:
-                          addable.option === NONE_VALUE
+                          option === NONE_VALUE
                             ? $i18n.t("remapFcNoneOption")
-                            : addable.option,
+                            : option,
                       })),
                     ]}
                   />
