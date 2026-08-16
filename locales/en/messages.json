@@ -7340,12 +7340,21 @@
         "message": "Error reading FC"
     },
     "remapFcTableOption": {
-        "message": "Option"
+        "message": "FC Pin"
     },
     "remapFcTableDefaultPin": {
         "message": "Default Pin"
     },
     "remapFcTableCurrentOption": {
         "message": "Current Option"
+    },
+    "remapFcAddOption": {
+        "message": "+ Add"
+    },
+    "remapFcNoneOption": {
+        "message": "None"
+    },
+    "remapFcSetOption": {
+        "message": "Set Option"
     }
 }

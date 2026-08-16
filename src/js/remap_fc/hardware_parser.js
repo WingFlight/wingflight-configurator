@@ -33,6 +33,10 @@ const RESOURCE_KEY_PREFIXES = {
   FREQ: "Freq",
 };
 
+// Line formats to match in `dump hardware` output, e.g.:
+//   resource MOTOR 1 A08
+//   timer A08 AF1
+//   dma pin A08 0
 const RESOURCE_LINE_RE = /^resource\s+(\w+)\s+(\d+)\s+(\S+)$/i;
 const TIMER_LINE_RE = /^timer\s+(\S+)\s+(\S+)$/i;
 const DMA_LINE_RE = /^dma\s+pin\s+(\S+)\s+(\S+)$/i;
@@ -44,9 +48,12 @@ const DMA_LINE_RE = /^dma\s+pin\s+(\S+)\s+(\S+)$/i;
 function parsePinMetadata(dumpText) {
   const pinMetadata = {};
 
+  // Walk every line once, checking it against both the timer and DMA
+  // patterns and merging whichever matches into that pin's entry.
   for (const rawLine of dumpText.split(/\r?\n/)) {
     const line = rawLine.trim();
 
+    // Timer line: record the AF assigned to this pin, if any.
     const timerMatch = line.match(TIMER_LINE_RE);
     if (timerMatch) {
       const [, pin, af] = timerMatch;
@@ -56,6 +63,7 @@ function parsePinMetadata(dumpText) {
       continue;
     }
 
+    // DMA line: record the DMA stream/channel assigned to this pin, if any.
     const dmaMatch = line.match(DMA_LINE_RE);
     if (dmaMatch) {
       const [, pin, dma] = dmaMatch;
@@ -76,9 +84,13 @@ function parsePinMetadata(dumpText) {
  * @returns {HardwareMap}
  */
 export function parseHardwareDump(dumpText) {
+  // Build the pin -> {timer, dma} lookup first so it's ready to join
+  // against each resource line below.
   const pinMetadata = parsePinMetadata(dumpText);
   const hardware = {};
 
+  // Walk every `resource` line, skip unassigned/unrecognized ones, and
+  // enrich each configured resource with its pin's timer/DMA metadata.
   for (const rawLine of dumpText.split(/\r?\n/)) {
     const match = rawLine.trim().match(RESOURCE_LINE_RE);
     if (!match) continue;
