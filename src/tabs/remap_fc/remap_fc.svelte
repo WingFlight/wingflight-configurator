@@ -36,6 +36,10 @@
   // setters below (this component never fetches anything itself). ---
   let running = $state(false);
   let error = $state(null);
+  // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
+  // the current hardware dump. Matches the top-level keys of
+  // STM32_timers.json/STM32_DMA.json.
+  let mcuType = $state(null);
   // workingCurrent is a local, editable copy of the current hardware
   // map: it starts as whatever was read from the FC, and is mutated
   // here as the user makes "Current Option" picks. Nothing is sent to
@@ -182,10 +186,12 @@
    * ever added explicitly via "+ Add".
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} current
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} defaultHw
+   * @param {?string} mcu
    */
-  export function setHardware(current, defaultHw) {
+  export function setHardware(current, defaultHw, mcu) {
     workingCurrent = { ...current };
     defaultHardware = { ...defaultHw };
+    mcuType = mcu;
     visibleOptions = TABLE_OPTION_KEYS.filter((option) => option in current);
     // Rows freshly read from the FC are never "unset" — only ones
     // added afterwards via "+ Add" start in that placeholder state.
@@ -194,6 +200,7 @@
 
   export function reset() {
     error = null;
+    mcuType = null;
     workingCurrent = {};
     defaultHardware = {};
     visibleOptions = [];
@@ -271,9 +278,18 @@
   <div class="content">
     <p class="note">{$i18n.t("remapFcNote")}</p>
 
-    <button class="btn run-btn" onclick={onClick} disabled={running}>
-      {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
-    </button>
+    <div class="toolbar">
+      <button class="btn run-btn" onclick={onClick} disabled={running}>
+        {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
+      </button>
+
+      <!-- The flight controller's MCU family, once known. -->
+      {#if mcuType}
+        <div class="mcu-badge">
+          {$i18n.t("remapFcMcuLabel")}&nbsp;<strong>{mcuType}</strong>
+        </div>
+      {/if}
+    </div>
 
     <!-- Error from the last CLI sequence, if any. -->
     {#if error}
@@ -385,9 +401,23 @@
     opacity: 0.8;
   }
 
+  // Run button plus the MCU badge, side by side.
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   .run-btn {
     @extend %button;
     align-self: flex-start;
+  }
+
+  .mcu-badge {
+    padding: 6px 12px;
+    border: 1px solid var(--subtleAccent);
+    border-radius: 4px;
+    color: var(--textColor);
   }
 
   // Comparison table: option name, default pin, arrow, current option.

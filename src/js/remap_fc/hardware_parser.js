@@ -76,6 +76,29 @@ function parsePinMetadata(dumpText) {
   return pinMetadata;
 }
 
+// Matches the MCU family name (e.g. "STM32F7X2") as it appears in the
+// version banner near the top of a `dump hardware`, e.g.:
+//   # Wingflight / STM32F7X2 (S7X2) 4.6.0-0.0.10 ...
+// in the same naming used as the top-level keys of
+// STM32_timers.json / STM32_DMA.json.
+const MCU_TYPE_RE = /STM32[A-Z0-9]+/i;
+
+/**
+ * Parses the flight controller's MCU type (e.g. "STM32F7X2") out of a
+ * `dump hardware` CLI command's output. The dump's own first line is
+ * just the echoed command, so this scans for the pattern rather than
+ * assuming a fixed line position.
+ * @param {string} dumpText
+ * @returns {?string}
+ */
+export function parseMcuType(dumpText) {
+  for (const rawLine of dumpText.split(/\r?\n/)) {
+    const match = rawLine.match(MCU_TYPE_RE);
+    if (match) return match[0].toUpperCase();
+  }
+  return null;
+}
+
 /**
  * Parses the text output of a `dump hardware` CLI command into a
  * HardwareMap of configured resources, each enriched with its pin's

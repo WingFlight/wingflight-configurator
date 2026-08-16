@@ -7356,5 +7356,8 @@
     },
     "remapFcSetOption": {
         "message": "Set Option"
+    },
+    "remapFcMcuLabel": {
+        "message": "MCU:"
     }
 }

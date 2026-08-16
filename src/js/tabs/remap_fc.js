@@ -10,7 +10,7 @@ import HeadlessCliEngine from "@/js/headless_cli_engine.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { mount, unmount } from "svelte";
 import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
-import { parseHardwareDump } from "@/js/remap_fc/hardware_parser.js";
+import { parseHardwareDump, parseMcuType } from "@/js/remap_fc/hardware_parser.js";
 
 const IDLE_THRESHOLD_MS = 500;
 
@@ -29,6 +29,12 @@ class RemapFcTab {
   #currentHardware = null;
   /** @type {?import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   #defaultHardware = null;
+
+  // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
+  // the first line of the current hardware dump. Matches the top-level
+  // keys of STM32_timers.json/STM32_DMA.json.
+  /** @type {?string} */
+  #mcuType = null;
 
   // DOM references populated once the tab's HTML has been loaded.
   #dom = {
@@ -56,6 +62,10 @@ class RemapFcTab {
 
   get defaultHardware() {
     return this.#defaultHardware;
+  }
+
+  get mcuType() {
+    return this.#mcuType;
   }
 
   // initialize loads the tab's HTML shell and switches GUI.active_tab,
@@ -175,21 +185,11 @@ class RemapFcTab {
   // sequence, we wait for the CLI channel to actually go idle before
   // considering the session over.
   #exitCliWithNoReboot() {
-    console.log(
-      "remap_fc: sending noreboot",
-      "connectionValid:", CONFIGURATOR.connectionValid,
-      "cliEngineActive:", CONFIGURATOR.cliEngineActive,
-      "cliEngineValid:", CONFIGURATOR.cliEngineValid,
-    );
     this.#cliEngine.sendLine("noreboot");
     return this.#waitForIdle().then(() => {
       CONFIGURATOR.cliEngineActive = false;
       CONFIGURATOR.cliEngineValid = false;
       CONFIGURATOR.cliTab = "";
-      console.log(
-        "remap_fc: CLI session exited",
-        "connectionValid:", CONFIGURATOR.connectionValid,
-      );
     });
   }
 
@@ -214,15 +214,17 @@ class RemapFcTab {
     this.#tornDown = false;
     this.#svelteComponent?.setError(null);
     this.#svelteComponent?.setRunning(true);
-    this.#svelteComponent?.setHardware({}, {});
+    this.#svelteComponent?.setHardware({}, {}, null);
     this.#currentHardware = null;
     this.#defaultHardware = null;
+    this.#mcuType = null;
 
     try {
       await this.#activateCli();
       if (this.#tornDown) return;
 
       const currentDump = await this.#runCommandAndCapture("dump hardware");
+      console.log("remap_fc: dump hardware output", currentDump);
       if (this.#tornDown) return;
 
       await this.#runCommandAndCapture("defaults nosave");
@@ -232,21 +234,22 @@ class RemapFcTab {
 
       this.#currentHardware = parseHardwareDump(currentDump);
       this.#defaultHardware = parseHardwareDump(defaultDump);
+      this.#mcuType = parseMcuType(currentDump);
       console.log("remap_fc: currentHardware", this.#currentHardware);
       console.log("remap_fc: defaultHardware", this.#defaultHardware);
+      console.log("remap_fc: mcuType", this.#mcuType);
 
-      this.#svelteComponent?.setHardware(this.#currentHardware, this.#defaultHardware);
+      this.#svelteComponent?.setHardware(
+        this.#currentHardware,
+        this.#defaultHardware,
+        this.#mcuType,
+      );
     } catch (err) {
       console.error("remap_fc: CLI sequence failed", err);
       this.#svelteComponent?.setError(
         err?.message ?? i18n.getMessage("remapFcError"),
       );
     } finally {
-      console.log(
-        "remap_fc: doRunSequence finally",
-        "tornDown:", this.#tornDown,
-        "cliEngineActive:", CONFIGURATOR.cliEngineActive,
-      );
       if (CONFIGURATOR.cliEngineActive) {
         await this.#exitCliWithNoReboot();
       }
@@ -270,14 +273,6 @@ class RemapFcTab {
   // the FC stuck in CLI mode (and other tabs waiting for data) after
   // switching away from this one.
   cleanup(callback) {
-    console.log(
-      "remap_fc: cleanup called",
-      "runInFlight:", this.#runSequencePromise !== null,
-      "connectionValid:", CONFIGURATOR.connectionValid,
-      "cliEngineActive:", CONFIGURATOR.cliEngineActive,
-      "cliEngineValid:", CONFIGURATOR.cliEngineValid,
-    );
-
     if (this.#svelteComponent) {
       unmount(this.#svelteComponent);
       this.#svelteComponent = null;
@@ -289,10 +284,7 @@ class RemapFcTab {
     // cleanly on its own via #doRunSequence()'s finally block, then
     // proceed with the tab switch.
     if (this.#runSequencePromise) {
-      this.#runSequencePromise.then(() => {
-        console.log("remap_fc: cleanup proceeding after in-flight run exited");
-        callback?.();
-      });
+      this.#runSequencePromise.then(() => callback?.());
       return;
     }
 
@@ -303,7 +295,6 @@ class RemapFcTab {
         CONFIGURATOR.cliEngineValid
       )
     ) {
-      console.log("remap_fc: cleanup found no active CLI session to close");
       callback?.();
       return;
     }
