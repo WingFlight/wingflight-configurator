@@ -36,6 +36,17 @@ class RemapFcTab {
     mountPoint: null,
   };
 
+  // Set to true once cleanup() starts, so an in-flight runSequence()
+  // knows to stop sending further commands rather than racing with
+  // the tab switch.
+  #tornDown = false;
+
+  // The in-flight runSequence() promise, if any — cleanup() awaits it
+  // so we don't switch tabs until the CLI session has actually been
+  // exited.
+  /** @type {?Promise<void>} */
+  #runSequencePromise = null;
+
   // Read-only accessors so other code (e.g. tests, future features) can
   // inspect the last parsed hardware state without reaching into
   // private fields.
@@ -154,23 +165,53 @@ class RemapFcTab {
 
   // Exits CLI mode with "noreboot" rather than CliEngine.close()'s
   // hardcoded "exit", since we don't want the flight controller to
-  // reboot after this sequence.
+  // reboot after this sequence. The sendLine callback only confirms
+  // the write went out locally, not that the flight controller has
+  // finished responding — a fixed delay after that risked flipping
+  // cliEngineActive to false while the FC was still sending trailing
+  // CLI-mode text, which would then get fed into the binary MSP parser
+  // as garbage (CRC failures, desynced framing) once the next tab
+  // started polling. So, exactly like every other command in this
+  // sequence, we wait for the CLI channel to actually go idle before
+  // considering the session over.
   #exitCliWithNoReboot() {
-    return new Promise((resolve) => {
-      this.#cliEngine.sendLine("noreboot", () => {
-        CONFIGURATOR.cliEngineActive = false;
-        CONFIGURATOR.cliEngineValid = false;
-        CONFIGURATOR.cliTab = "";
-        resolve();
-      });
+    console.log(
+      "remap_fc: sending noreboot",
+      "connectionValid:", CONFIGURATOR.connectionValid,
+      "cliEngineActive:", CONFIGURATOR.cliEngineActive,
+      "cliEngineValid:", CONFIGURATOR.cliEngineValid,
+    );
+    this.#cliEngine.sendLine("noreboot");
+    return this.#waitForIdle().then(() => {
+      CONFIGURATOR.cliEngineActive = false;
+      CONFIGURATOR.cliEngineValid = false;
+      CONFIGURATOR.cliTab = "";
+      console.log(
+        "remap_fc: CLI session exited",
+        "connectionValid:", CONFIGURATOR.connectionValid,
+      );
     });
   }
 
-  // runSequence drives the whole "Read FC" flow: enter CLI mode, dump
-  // the current hardware config, reset to defaults and dump again so
-  // we have both pin layouts, then parse and hand the raw maps to the
-  // Svelte component, which builds and owns the editable table itself.
-  async runSequence() {
+  // runSequence kicks off #doRunSequence and remembers its promise, so
+  // cleanup() can wait for the CLI session to actually be exited
+  // before the tab switch proceeds.
+  runSequence() {
+    this.#runSequencePromise = this.#doRunSequence();
+    return this.#runSequencePromise;
+  }
+
+  // #doRunSequence drives the whole "Read FC" flow: enter CLI mode,
+  // dump the current hardware config, reset to defaults and dump again
+  // so we have both pin layouts, then parse and hand the raw maps to
+  // the Svelte component, which builds and owns the editable table
+  // itself. Checks #tornDown between steps so a tab switch mid-run
+  // stops it from sending further commands, and always exits CLI mode
+  // with "noreboot" in the finally block — whether the run finished,
+  // failed, or was cut short — so we never leave the flight controller
+  // sitting in CLI mode when this tab is left.
+  async #doRunSequence() {
+    this.#tornDown = false;
     this.#svelteComponent?.setError(null);
     this.#svelteComponent?.setRunning(true);
     this.#svelteComponent?.setHardware({}, {});
@@ -179,10 +220,15 @@ class RemapFcTab {
 
     try {
       await this.#activateCli();
+      if (this.#tornDown) return;
+
       const currentDump = await this.#runCommandAndCapture("dump hardware");
+      if (this.#tornDown) return;
+
       await this.#runCommandAndCapture("defaults nosave");
+      if (this.#tornDown) return;
+
       const defaultDump = await this.#runCommandAndCapture("dump hardware");
-      await this.#exitCliWithNoReboot();
 
       this.#currentHardware = parseHardwareDump(currentDump);
       this.#defaultHardware = parseHardwareDump(defaultDump);
@@ -196,7 +242,16 @@ class RemapFcTab {
         err?.message ?? i18n.getMessage("remapFcError"),
       );
     } finally {
+      console.log(
+        "remap_fc: doRunSequence finally",
+        "tornDown:", this.#tornDown,
+        "cliEngineActive:", CONFIGURATOR.cliEngineActive,
+      );
+      if (CONFIGURATOR.cliEngineActive) {
+        await this.#exitCliWithNoReboot();
+      }
       this.#svelteComponent?.setRunning(false);
+      this.#runSequencePromise = null;
     }
   }
 
@@ -206,12 +261,39 @@ class RemapFcTab {
     this.#cliEngine.readSerial(readInfo);
   }
 
-  // cleanup unmounts the Svelte component and, if a CLI session is
-  // still active, closes it before switching away from this tab.
+  // cleanup unmounts the Svelte component and makes sure the CLI
+  // session is actually exited before switching away from this tab.
+  // Deliberately never calls CliEngine.close() (which sends a
+  // hardcoded "exit" and reboots the flight controller) — that would
+  // both defeat the point of #exitCliWithNoReboot() and race with a
+  // still-running #doRunSequence(), which is exactly what was leaving
+  // the FC stuck in CLI mode (and other tabs waiting for data) after
+  // switching away from this one.
   cleanup(callback) {
+    console.log(
+      "remap_fc: cleanup called",
+      "runInFlight:", this.#runSequencePromise !== null,
+      "connectionValid:", CONFIGURATOR.connectionValid,
+      "cliEngineActive:", CONFIGURATOR.cliEngineActive,
+      "cliEngineValid:", CONFIGURATOR.cliEngineValid,
+    );
+
     if (this.#svelteComponent) {
       unmount(this.#svelteComponent);
       this.#svelteComponent = null;
+    }
+
+    this.#tornDown = true;
+
+    // A run is still in flight: let it notice #tornDown and exit
+    // cleanly on its own via #doRunSequence()'s finally block, then
+    // proceed with the tab switch.
+    if (this.#runSequencePromise) {
+      this.#runSequencePromise.then(() => {
+        console.log("remap_fc: cleanup proceeding after in-flight run exited");
+        callback?.();
+      });
+      return;
     }
 
     if (
@@ -221,13 +303,12 @@ class RemapFcTab {
         CONFIGURATOR.cliEngineValid
       )
     ) {
+      console.log("remap_fc: cleanup found no active CLI session to close");
       callback?.();
       return;
     }
 
-    this.#cliEngine.close(() => {
-      callback?.();
-    });
+    this.#exitCliWithNoReboot().then(() => callback?.());
   }
 }
 
