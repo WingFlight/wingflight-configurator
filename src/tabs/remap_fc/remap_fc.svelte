@@ -20,6 +20,8 @@
   let error = $state(null);
   let output = $state("");
   let hasRun = $state(false);
+  /** @type {import("@/js/remap_fc/remap_table.js").RemapRow[]} */
+  let remapTable = $state([]);
 
   // --- Functions below are called from remap_fc.js on the mounted
   // instance (e.g. `component.setRunning(true)`), the same way
@@ -43,10 +45,18 @@
     output += `# ${command}\n${text}\n`;
   }
 
+  /**
+   * @param {import("@/js/remap_fc/remap_table.js").RemapRow[]} rows
+   */
+  export function setRemapTable(rows) {
+    remapTable = rows;
+  }
+
   export function reset() {
     output = "";
     error = null;
     hasRun = false;
+    remapTable = [];
   }
 
   function onClick() {
@@ -71,6 +81,29 @@
       <div class="error_message">{error}</div>
     {/if}
 
+    {#if remapTable.length}
+      <table class="remap-table">
+        <thead>
+          <tr>
+            <th>{$i18n.t("remapFcTableOption")}</th>
+            <th>{$i18n.t("remapFcTableDefaultPin")}</th>
+            <th></th>
+            <th>{$i18n.t("remapFcTableCurrentOption")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each remapTable as row (row.option)}
+            <tr>
+              <td>{row.option}</td>
+              <td>{row.defaultPin ?? "—"}</td>
+              <td class="arrow">→</td>
+              <td>{row.currentOption ?? "—"}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+
     {#if hasRun}
       <pre class="output">{output}</pre>
     {/if}
@@ -93,6 +126,26 @@
   .run-btn {
     @extend %button;
     align-self: flex-start;
+  }
+
+  .remap-table {
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 4px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--subtleAccent);
+    }
+
+    th {
+      color: var(--textColor);
+      opacity: 0.8;
+    }
+
+    .arrow {
+      opacity: 0.6;
+    }
   }
 
   .output {

@@ -1561,6 +1561,17 @@ li.active .ic_power {
 li.active .ic_failsafe {
     background-image: url(/images/icons/cf_icon_failsafe_white.svg);
 }
+.ic_remap_fc {
+    background-image: url(/images/icons/cf_icon_remap_grey.svg);
+}
+
+.ic_remap_fc:hover {
+    background-image: url(/images/icons/cf_icon_remap_white.svg);
+}
+
+li.active .ic_remap_fc {
+    background-image: url(/images/icons/cf_icon_remap_white.svg);
+}
 .ic_backup {
     background-image: url(/images/icons/cf_icon_backup_grey.svg);
 }

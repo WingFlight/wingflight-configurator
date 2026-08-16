@@ -13,9 +13,10 @@
 
 /**
  * @typedef {Object.<string, HardwareResource>} HardwareMap
- * Maps a hardware resource key (e.g. "M1", "S3", "RX1", "SDA2", "LED")
- * to its assigned pin and that pin's timer/DMA configuration. Only
- * resources that are actually assigned a pin are present as keys.
+ * Maps a hardware resource key (e.g. "M1", "S3", "RX1", "SDA2",
+ * "Freq2", "LED") to its assigned pin and that pin's timer/DMA
+ * configuration. Only resources that are actually assigned a pin are
+ * present as keys.
  */
 
 // Maps a `resource` command's tag (as it appears in `dump hardware`
@@ -29,6 +30,7 @@ const RESOURCE_KEY_PREFIXES = {
   I2C_SDA: "SDA",
   I2C_SCL: "SCL",
   LED: "LED",
+  FREQ: "Freq",
 };
 
 const RESOURCE_LINE_RE = /^resource\s+(\w+)\s+(\d+)\s+(\S+)$/i;

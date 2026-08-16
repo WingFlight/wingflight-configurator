@@ -11,6 +11,7 @@ import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { mount, unmount } from "svelte";
 import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import { parseHardwareDump } from "@/js/remap_fc/hardware_parser.js";
+import { buildRemapTable } from "@/js/remap_fc/remap_table.js";
 
 const IDLE_THRESHOLD_MS = 500;
 
@@ -152,6 +153,7 @@ class RemapFcTab {
   async runSequence() {
     this.#svelteComponent?.setError(null);
     this.#svelteComponent?.setRunning(true);
+    this.#svelteComponent?.setRemapTable([]);
     this.#currentHardware = null;
     this.#defaultHardware = null;
 
@@ -166,6 +168,9 @@ class RemapFcTab {
       this.#defaultHardware = parseHardwareDump(defaultDump);
       console.log("remap_fc: currentHardware", this.#currentHardware);
       console.log("remap_fc: defaultHardware", this.#defaultHardware);
+
+      const rows = buildRemapTable(this.#currentHardware, this.#defaultHardware);
+      this.#svelteComponent?.setRemapTable(rows);
     } catch (err) {
       console.error("remap_fc: CLI sequence failed", err);
       this.#svelteComponent?.setError(
