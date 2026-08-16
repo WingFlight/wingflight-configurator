@@ -114,25 +114,55 @@ export function buildRowsForOptions(options, currentHardware, defaultHardware) {
   });
 }
 
+// isEligibleToAdd applies the FC's own filling-order rules on top of
+// plain availability: motors and servos must be filled in sequence
+// (S4 can't be offered until S1-S3 already have a row, same for M),
+// and an output-frequency group can only be offered once its matching
+// motor does (Freq2 needs M2). Anything else (LED, UART/I2C) has no
+// such constraint.
+function isEligibleToAdd(option, visibleOptions) {
+  const match = option.match(/^([A-Za-z]+)(\d+)$/);
+  if (!match) return true;
+  const [, prefix, indexStr] = match;
+  const index = Number(indexStr);
+
+  if (prefix === "M" || prefix === "S") {
+    return index === 1 || visibleOptions.includes(`${prefix}${index - 1}`);
+  }
+
+  if (prefix === "Freq") {
+    return visibleOptions.includes(`M${index}`);
+  }
+
+  return true;
+}
+
 /**
  * Returns the options that could be offered by "+ Add": every option
- * with a default pin, except ones already spoken for — either claimed
- * as some visible row's Current Option (including a row showing
- * itself, unchanged), or sitting in a freshly-added row that hasn't
- * had a "Set Option" pick made yet (it doesn't occupy a pin yet, but
- * it already has a row, so offering it again would let you add a
- * second one). An option with no row of its own at all (e.g. a
- * UART/I2C resource, which never gets an automatic row) still shows
- * up here so it can be brought into view, as long as nothing has
- * claimed it; and an option whose own row has picked something else
- * no longer counts as spoken for, since it isn't sitting on any pin
- * any more.
+ * this board's default structure actually reports a pin for, except
+ * ones already spoken for — either claimed as some visible row's
+ * Current Option (including a row showing itself, unchanged), or
+ * sitting in a freshly-added row that hasn't had a "Set Option" pick
+ * made yet (it doesn't occupy a pin yet, but it already has a row, so
+ * offering it again would let you add a second one).
+ *
+ * On top of that, motors, servos, and output-frequency groups (see
+ * isEligibleToAdd) must also satisfy the FC's own filling order —
+ * having a default pin isn't enough on its own for those.
  * @param {import("./hardware_parser.js").HardwareMap} defaultHardware
  * @param {string[]} unavailableOptions - option keys that are claimed or pending a pick.
+ * @param {string[]} visibleOptions - option keys that currently have a row.
  * @returns {AddableOption[]}
  */
-export function getAddableOptions(defaultHardware, unavailableOptions) {
-  return OPTION_KEYS.filter(
-    (option) => option in defaultHardware && !unavailableOptions.includes(option),
-  ).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
+export function getAddableOptions(defaultHardware, unavailableOptions, visibleOptions) {
+  return OPTION_KEYS.filter((option) => {
+    if (unavailableOptions.includes(option)) return false;
+    if (!(option in defaultHardware)) return false;
+
+    if (TABLE_OPTION_KEYS.includes(option)) {
+      return isEligibleToAdd(option, visibleOptions);
+    }
+
+    return true;
+  }).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
 }

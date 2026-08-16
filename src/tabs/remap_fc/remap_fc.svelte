@@ -102,7 +102,7 @@
   // when picked).
   let addablePool = $derived([
     { option: NONE_VALUE, defaultPin: null },
-    ...getAddableOptions(defaultHardware, unavailableOptions),
+    ...getAddableOptions(defaultHardware, unavailableOptions, visibleOptions),
   ]);
 
   // Whether there's anything real left to add (i.e. more than just
@@ -125,7 +125,7 @@
   // its own option, even while its own row is still "unset".
   let rowSelectablePool = $derived([
     { option: NONE_VALUE, defaultPin: null },
-    ...getAddableOptions(defaultHardware, claimedOptions),
+    ...getAddableOptions(defaultHardware, claimedOptions, visibleOptions),
   ]);
 
   // The pool offered by a given row's own "Current Option" dropdown:
