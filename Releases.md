@@ -1,3 +1,8 @@
+# 0.0.12
+
+Fix mixer rule differential being one-sided when Reverse is enabled.
+Fix Discord link.
+
 # 0.0.11
 
 Add Thrust Vector configuration, mixer wizard support, and adjustment functions.
