@@ -2,6 +2,7 @@
 
 Fix mixer rule dropdowns overflowing into the next column.
 Keep hover tooltips inline with their field and inside their panel.
+Add a manual refresh button to the Firmware Flasher release list, bypassing the hourly release-list cache.
 
 # 0.0.12
 

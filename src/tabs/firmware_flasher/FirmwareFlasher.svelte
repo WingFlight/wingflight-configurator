@@ -64,6 +64,7 @@
 
   let selectedBoard = $state("0");
   let boardsLoading = $state(true);
+  let releasesLoading = $state(false);
   let selectedVersion = $state("0");
   let versionsLoading = $state(false);
   let firmwareVersionEntries = $state([]);
@@ -160,15 +161,17 @@
     }
   }
 
-  function loadBuildType(index) {
+  function loadBuildType(index, force = false) {
     chrome.storage.local.set({ selected_build_type: index });
     if (GUI.connect_lock) return;
 
     unifiedConfigs = {};
     boardsLoading = true;
-    releaseChecker.loadReleaseData((releaseData) =>
-      onReleaseData(releaseData ?? [], BUILD_TYPES[index].level),
-    );
+    releasesLoading = true;
+    releaseChecker.loadReleaseData((releaseData) => {
+      releasesLoading = false;
+      onReleaseData(releaseData ?? [], BUILD_TYPES[index].level);
+    }, force);
   }
 
   function onBuildTypeChange(index) {
@@ -177,6 +180,14 @@
     firmwareVersionEntries = [];
     selectedVersion = "0";
     loadBuildType(buildTypeIndex);
+  }
+
+  function onClickRefreshReleases() {
+    if (releasesLoading || GUI.connect_lock) return;
+    selectedBoard = "0";
+    firmwareVersionEntries = [];
+    selectedVersion = "0";
+    loadBuildType(buildTypeIndex, true);
   }
 
   async function onReleaseData(releaseData, buildLevel) {
@@ -910,14 +921,26 @@
 <Page {header} {toolbar}>
   <div class="options">
     <div class="field">
-      <Select
-        value={buildTypeIndex}
-        options={BUILD_TYPES.map((b, i) => ({
-          value: i,
-          label: $i18n.t(b.tag),
-        }))}
-        onchange={(e) => onBuildTypeChange(e.target.value)}
-      />
+      <div class="board-select-flex">
+        <Select
+          value={buildTypeIndex}
+          options={BUILD_TYPES.map((b, i) => ({
+            value: i,
+            label: $i18n.t(b.tag),
+          }))}
+          onchange={(e) => onBuildTypeChange(e.target.value)}
+        />
+        <span class="default_btn detect_btn">
+          <button
+            class="detect-board"
+            disabled={releasesLoading}
+            title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
+            onclick={onClickRefreshReleases}
+          >
+            <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}></em>
+          </button>
+        </span>
+      </div>
       <span class="description"
         >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
       >
