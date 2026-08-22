@@ -4507,6 +4507,9 @@
     "firmwareFlasherOnlineSelectBuildType": {
         "message": "Select build type to see available boards."
     },
+    "firmwareFlasherRefreshReleasesButton": {
+        "message": "Refresh the release list (bypasses the local cache)"
+    },
     "firmwareFlasherOnlineSelectBoardDescription": {
         "message": "Select your board to see available online firmware releases - Select the correct firmware appropriate for your board."
     },
