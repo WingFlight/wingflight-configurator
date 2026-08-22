@@ -1,3 +1,8 @@
+# 0.0.13
+
+Fix mixer rule dropdowns overflowing into the next column.
+Keep hover tooltips inline with their field and inside their panel.
+
 # 0.0.12
 
 Fix mixer rule differential being one-sided when Reverse is enabled.
