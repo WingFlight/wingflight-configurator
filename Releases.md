@@ -1,3 +1,7 @@
+# 0.0.14
+
+Hide Thrust Vector wizard options when the feature is disabled.
+
 # 0.0.13
 
 Fix mixer rule dropdowns overflowing into the next column.
