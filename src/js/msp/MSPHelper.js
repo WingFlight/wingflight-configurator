@@ -1317,6 +1317,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.gainCurveYaw                  = data.remaining() >= 1 ? data.readU8() : 0;
                 // Att Hold max rate //
                 FC.PID_PROFILE.attHoldMaxRate                = data.remaining() >= 2 ? data.readU16() : 300;
+                // Oscillation limiter //
+                FC.PID_PROFILE.oscLimiter                    = data.remaining() >= 7 ? data.readU8() : 0;
+                FC.PID_PROFILE.oscLimiterMinHz               = data.remaining() >= 6 ? data.readU8() : 4;
+                FC.PID_PROFILE.oscLimiterMaxHz               = data.remaining() >= 5 ? data.readU8() : 20;
+                FC.PID_PROFILE.oscLimiterThreshold           = data.remaining() >= 4 ? data.readU8() : 30;
+                FC.PID_PROFILE.oscLimiterFloor               = data.remaining() >= 3 ? data.readU8() : 50;
+                FC.PID_PROFILE.oscLimiterEngageMs            = data.remaining() >= 2 ? data.readU16() : 250;
                 break;
             }
 
@@ -2315,7 +2322,14 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.gainCurvePitch)
                 .push8(FC.PID_PROFILE.gainCurveYaw)
                 // Att Hold max rate //
-                .push16(FC.PID_PROFILE.attHoldMaxRate);
+                .push16(FC.PID_PROFILE.attHoldMaxRate)
+                // Oscillation limiter //
+                .push8(FC.PID_PROFILE.oscLimiter)
+                .push8(FC.PID_PROFILE.oscLimiterMinHz)
+                .push8(FC.PID_PROFILE.oscLimiterMaxHz)
+                .push8(FC.PID_PROFILE.oscLimiterThreshold)
+                .push8(FC.PID_PROFILE.oscLimiterFloor)
+                .push16(FC.PID_PROFILE.oscLimiterEngageMs);
             break;
         }
 
