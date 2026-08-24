@@ -504,11 +504,11 @@
     }
   }
 
-  function onLoadSuccess(data, summary) {
+  async function onLoadSuccess(data, summary) {
     localFirmwareLoaded = false;
     const release =
       typeof summary === "object" ? summary : selectedVersionEntry()?.summary;
-    processHex(data, release);
+    await processHex(data, release);
     loadingRemote = false;
   }
 
@@ -635,7 +635,7 @@
       const res = await fetch(summary.url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.text();
-      onLoadSuccess(data, summary);
+      await onLoadSuccess(data, summary);
     } catch (err) {
       console.log("Failed to download firmware", err);
       loadingRemote = false;
