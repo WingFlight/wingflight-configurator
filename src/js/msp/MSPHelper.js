@@ -47,6 +47,7 @@ export function MspHelper() {
         'SBUS_OUT': 18,
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
+        'SRXL2_ESC': 21,
     };
 
     self.REBOOT_TYPES = {
