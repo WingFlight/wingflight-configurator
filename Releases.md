@@ -1,3 +1,9 @@
+# 0.0.15
+
+Add support for Spektrum SRXL2 ESC.
+Fix Flash Firmware button needing two clicks after loading online firmware.
+Fix firmware flashing docs link on Firmware Flasher recovery text.
+
 # 0.0.14
 
 Hide Thrust Vector wizard options when the feature is disabled.
