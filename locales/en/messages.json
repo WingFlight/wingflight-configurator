@@ -1817,6 +1817,9 @@
     "portsFunction_SPORT_MASTER": {
         "message": "S.PORT Master"
     },
+    "portsFunction_SRXL2_ESC": {
+        "message": "SRXL2 ESC"
+    },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
     },
@@ -3907,6 +3910,9 @@
     "motorsEscProtocolHelp": {
         "message": "Select your ESC protocol.<br>Older ESCs use PWM. Newer ESCs may use other protocols, like DSHOT. <br>Make sure the protocol is supported by your ESC."
     },
+    "motorsEscProtocolSrxl2LockedHelp": {
+        "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs use that same connection for throttle and telemetry, so it can't be set independently here. To use a different protocol, change that port's function instead."
+    },
     "motorsEscProtocolDisabled": {
         "message": "Please select a protocol appropriate for your ESCs. $t(escProtocolDisabledMessage.message)"
     },
@@ -3919,11 +3925,17 @@
     "motorsEscTelemetryProtocolHelp": {
         "message": "Your ESC Telemetry protocol. Connect the telemetry wire from the ESC to your FC. Specify which UART to use for ESC Telemetry in the <i>Configuration</i> tab."
     },
+    "motorsEscTelemetryProtocolSrxl2LockedHelp": {
+        "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs report telemetry automatically over that same bus, so no separate telemetry protocol needs to be chosen."
+    },
     "motorsEscTelemetryHalfDuplex": {
         "message": "Half-Duplex"
     },
     "motorsEscTelemetryHalfDuplexHelp": {
         "message": "Use the Tx pin for both sending and receiving. Required for forward programming of supported ESCs (e.g. Hobbywing Platinum V5 or Scorpion Tribunus)."
+    },
+    "motorsEscTelemetryHalfDuplexSrxl2LockedHelp": {
+        "message": "Always on for SRXL2 ESC — it's a single-wire half-duplex bus."
     },
     "motorsEscTelemetryPinswap": {
         "message": "Pin Swap"
