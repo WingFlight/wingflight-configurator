@@ -12,7 +12,15 @@ const tab = {
   },
 
   initialize(callback) {
-    xactState.reset();
+    // GUI.tab_switch_reload() (used e.g. by the expert-mode toggle) re-initializes the
+    // *current* tab in place without actually navigating away from it -- GUI.active_tab
+    // stays "xact_servo" and GUI.tab_switch_in_progress is never set for that path. Only
+    // reset the scanned servo state on a genuine switch onto this tab, so toggling expert
+    // mode just re-renders the existing form (showing/hiding the advanced fields) instead
+    // of dropping back to the idle/unscanned view.
+    if (GUI.tab_switch_in_progress) {
+      xactState.reset();
+    }
     const target = document.querySelector("#content");
     target.innerHTML = "";
     this.svelteComponent = mount(XactServoProgramming, { target });

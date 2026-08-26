@@ -6,6 +6,7 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
+  import Tooltip from "@/components/Tooltip.svelte";
   import { getTabHelpURL } from "@/js/help";
 
   import xactState, { View } from "./state.svelte.js";
@@ -82,8 +83,11 @@
     <p class="status error">{$i18n.t("xactServoNotFound")}</p>
   {:else if xactState.view === View.FORM}
     <div class="pages">
-      <Section label="xactServoSectionBasic">
+      <Section label="xactServoSectionProtocol">
         <Field id="physicalId" label="xactServoPhysicalId">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoPhysicalIdHelp" />
+          {/snippet}
           <NumberInput
             id="physicalId"
             bind:value={xactState.values.physicalId}
@@ -93,6 +97,9 @@
           />
         </Field>
         <Field id="appIdOffset" label="xactServoAppIdOffset">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoAppIdOffsetHelp" />
+          {/snippet}
           <NumberInput
             id="appIdOffset"
             bind:value={xactState.values.appIdOffset}
@@ -101,7 +108,13 @@
             step={1}
           />
         </Field>
+      </Section>
+
+      <Section label="xactServoSectionServo">
         <Field id="range" label="xactServoRange">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoRangeHelp" />
+          {/snippet}
           <Select
             id="range"
             bind:value={xactState.values.range}
@@ -109,6 +122,9 @@
           />
         </Field>
         <Field id="direction" label="xactServoDirection">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoDirectionHelp" />
+          {/snippet}
           <Select
             id="direction"
             bind:value={xactState.values.direction}
@@ -116,6 +132,9 @@
           />
         </Field>
         <Field id="pulseType" label="xactServoPulseType">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoPulseTypeHelp" />
+          {/snippet}
           <Select
             id="pulseType"
             bind:value={xactState.values.pulseType}
@@ -123,6 +142,9 @@
           />
         </Field>
         <Field id="dataRate" label="xactServoDataRate" unit="ms">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoDataRateHelp" />
+          {/snippet}
           <NumberInput
             id="dataRate"
             bind:value={xactState.values.dataRate}
@@ -132,6 +154,9 @@
           />
         </Field>
         <Field id="channel" label="xactServoChannel">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoChannelHelp" />
+          {/snippet}
           <NumberInput
             id="channel"
             bind:value={
@@ -144,6 +169,9 @@
           />
         </Field>
         <Field id="center" label="xactServoCenter">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoCenterHelp" />
+          {/snippet}
           <NumberInput
             id="center"
             bind:value={xactState.values.center}
@@ -156,6 +184,9 @@
 
       <Section label="xactServoSectionAdvanced">
         <Field id="p1" label="xactServoP1">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoP1Help" />
+          {/snippet}
           <NumberInput
             id="p1"
             bind:value={xactState.values.p1}
@@ -165,6 +196,9 @@
           />
         </Field>
         <Field id="p2" label="xactServoP2">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoP2Help" />
+          {/snippet}
           <NumberInput
             id="p2"
             bind:value={xactState.values.p2}
@@ -174,6 +208,9 @@
           />
         </Field>
         <Field id="d1" label="xactServoD1">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoD1Help" />
+          {/snippet}
           <NumberInput
             id="d1"
             bind:value={xactState.values.d1}
@@ -183,6 +220,9 @@
           />
         </Field>
         <Field id="tb" label="xactServoTb">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoTbHelp" />
+          {/snippet}
           <NumberInput
             id="tb"
             bind:value={xactState.values.tb}
@@ -192,6 +232,9 @@
           />
         </Field>
         <Field id="potGap" label="xactServoPotGap">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoPotGapHelp" />
+          {/snippet}
           <NumberInput
             id="potGap"
             bind:value={xactState.values.potGap}

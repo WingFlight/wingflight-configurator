@@ -494,7 +494,7 @@
         "message": "XACT Servo Programming"
     },
     "xactServoIntro": {
-        "message": "Program XACT FBUS servo parameters over telemetry. Scan for a connected servo, then edit and write its parameters."
+        "message": "Program XACT FBUS servo parameters over telemetry. XACT servos report and are configured over the same S.Port/FBUS wire used for telemetry — no separate programming connection is needed. Scan for a connected servo, then edit and write its parameters."
     },
     "xactServoSingleServoNote": {
         "message": "Only connect one XACT servo at a time while programming. With multiple servos connected, scanning and writing parameters may target the wrong servo."
@@ -511,8 +511,11 @@
     "xactServoNotFound": {
         "message": "No XACT servo detected. Check wiring and try scanning again."
     },
-    "xactServoSectionBasic": {
-        "message": "Basic Parameters"
+    "xactServoSectionProtocol": {
+        "message": "Protocol"
+    },
+    "xactServoSectionServo": {
+        "message": "Servo Settings"
     },
     "xactServoSectionAdvanced": {
         "message": "Advanced Parameters"
@@ -520,14 +523,26 @@
     "xactServoPhysicalId": {
         "message": "Physical ID"
     },
+    "xactServoPhysicalIdHelp": {
+        "message": "The servo's address on the FBUS/S.Port bus, used the same way an S.Port sensor's Physical ID is &mdash; it lets the receiving side poll each device on the shared wire in turn without collisions. Every servo daisy-chained on the same bus must use a different Physical ID, or the FC/receiver won't be able to tell them apart. A Physical ID of 0 means no servo has been discovered yet."
+    },
     "xactServoAppIdOffset": {
-        "message": "App ID Offset"
+        "message": "App ID"
+    },
+    "xactServoAppIdOffsetHelp": {
+        "message": "Distinguishes this servo from other servos of the same model on the same bus, so its telemetry and status can be matched to the correct physical servo. Give each one a different value if you have more than one on the same bus."
     },
     "xactServoRange": {
         "message": "Range"
     },
+    "xactServoRangeHelp": {
+        "message": "Total mechanical travel of the servo output arm/disc, centered on <strong>Center</strong>: 120&deg;, 90&deg;, or 180&deg;. Set this to match how far the linkage is actually meant to swing &mdash; the servo scales the full input signal range across whichever travel is selected here."
+    },
     "xactServoDirection": {
         "message": "Direction"
+    },
+    "xactServoDirectionHelp": {
+        "message": "Which way the output arm/disc turns for an increasing input signal. Use this to correct a servo that moves the wrong way for its linkage instead of reversing the channel elsewhere."
     },
     "xactServoDirectionClockwise": {
         "message": "Clockwise"
@@ -538,29 +553,56 @@
     "xactServoPulseType": {
         "message": "Pulse Type"
     },
+    "xactServoPulseTypeHelp": {
+        "message": "The pulse width the servo centers on when driven by a plain PWM signal (outside FBUS control). <strong>1500us</strong> is the standard RC convention and is correct for almost every use &mdash; leave it here unless you specifically have a narrow-band, high-speed tail/FBL setup built around a <strong>760us</strong> center. The two are not interchangeable: driving a 760us-centered servo with a normal 1500us-centered signal will barely move it, and driving a 1500us servo with a 760us-centered signal can over-travel it hard enough to damage it. Only change this if the receiving side (gyro/FC output) is already configured for the matching convention."
+    },
     "xactServoDataRate": {
         "message": "Data Rate"
+    },
+    "xactServoDataRateHelp": {
+        "message": "How often the servo refreshes its position/telemetry over FBUS, in milliseconds. Lower values update faster at the cost of more bus traffic; 0 lets the servo use its own default rate."
     },
     "xactServoChannel": {
         "message": "Channel"
     },
+    "xactServoChannelHelp": {
+        "message": "Which control channel the servo listens to for its position command. Matches the channel numbering used elsewhere in the flight controller's mixer/output setup."
+    },
     "xactServoCenter": {
         "message": "Center"
+    },
+    "xactServoCenterHelp": {
+        "message": "Fine trim of the servo's electrical center point, independent of any sub-trim done in the mixer. Nudge this only to correct a small mechanical offset in how the horn/disc sits at true center &mdash; large corrections belong in the mixer/endpoint setup instead."
     },
     "xactServoP1": {
         "message": "P1 Gain"
     },
+    "xactServoP1Help": {
+        "message": "Proportional drive gain, paired with <strong>P2 Gain</strong>. The <strong>P1:P2 ratio</strong> sets how hard the servo drives toward the commanded position: a larger ratio moves faster but is more prone to overshoot/jitter when it arrives; a smaller ratio is smoother and more precise (useful right around center/landing) at the cost of outright speed. Raise P1 relative to P2 for more authority, and expect to raise <strong>D1 Gain</strong> alongside it if the servo starts to jitter when stopping."
+    },
     "xactServoP2": {
         "message": "P2 Gain"
+    },
+    "xactServoP2Help": {
+        "message": "Proportional drive gain, paired with <strong>P1 Gain</strong> &mdash; see its tooltip for how the P1:P2 ratio governs speed vs. precision."
     },
     "xactServoD1": {
         "message": "D1 Gain"
     },
+    "xactServoD1Help": {
+        "message": "Damping gain that compensates for the overshoot/vibration ('jitter') a strong <strong>P1:P2</strong> ratio can cause when the servo stops. If increasing P1 for more speed/authority introduces jitter on arrival, increase this a little to settle it back down."
+    },
     "xactServoTb": {
         "message": "TB"
     },
+    "xactServoTbHelp": {
+        "message": "An additional internal tuning gain alongside P1/P2/D1, exposed here for completeness. Its exact effect isn't documented by FrSky, so leave it at the servo's factory default unless you have specific guidance to change it."
+    },
     "xactServoPotGap": {
         "message": "Pot Gap"
+    },
+    "xactServoPotGapHelp": {
+        "message": "Electronic deadband around center that compensates for mechanical slop (backlash) in the servo's own feedback linkage. Keep this as small as possible for the most precise centering; only increase it a little if the servo is visibly hunting/shaking at rest, and increase in small steps &mdash; too large a gap adds slack and reduces precision everywhere in the servo's travel, not just at center."
     },
     "escProgrammingSelectManufacturer": {
         "message": "Select ESC manufacturer"
