@@ -2,7 +2,7 @@ import diff from "microdiff";
 
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-import { parseServoList, parseServoParams, buildServoParamsPayload } from "./protocol.js";
+import { parseServoList, parseServoListDiag, parseServoParams, buildServoParamsPayload } from "./protocol.js";
 
 export const View = {
     IDLE: "idle",
@@ -40,6 +40,10 @@ class State {
     servos = $state([]);
     selectedPhysicalId = $state(null);
 
+    // TEMPORARY: last MSP_XACT_SERVO_LIST diagnostic snapshot -- see protocol.js's
+    // parseServoListDiag. Not reactive on purpose, it's only ever read for logging.
+    lastDiag = null;
+
     // initialValues must be reactive ($state): `changes` reads it, and a plain field
     // reassignment wouldn't invalidate the derived, leaving isDirty()/the Save toolbar stuck.
     initialValues = $state(null);
@@ -64,6 +68,10 @@ class State {
 
     async fetchServoList() {
         const response = await MSP.promise(MSPCodes.MSP_XACT_SERVO_LIST);
+        // TEMPORARY: also grab/log the diagnostic prefix -- see protocol.js's
+        // parseServoListDiag for what each field means. Remove alongside it once the
+        // "scan finds nothing" issue is tracked down.
+        this.lastDiag = parseServoListDiag(response.data);
         return parseServoList(response.data);
     }
 
@@ -105,6 +113,15 @@ class State {
 
             if (this.servos.length === 0) {
                 this.view = View.NOT_FOUND;
+                // TEMPORARY: surface why, until the "scan finds nothing" issue is understood.
+                if (this.lastDiag) {
+                    GUI.log(
+                        `XACT scan: masterEnabled=${this.lastDiag.masterEnabled} ` +
+                            `xactInitialized=${this.lastDiag.xactInitialized} ` +
+                            `telemetryState=${this.lastDiag.telemetryState} ` +
+                            `physIdsFound=${this.lastDiag.physIdsFound}`,
+                    );
+                }
             } else if (this.servos.length === 1) {
                 await this.selectServo(this.servos[0].physicalId);
             } else {
