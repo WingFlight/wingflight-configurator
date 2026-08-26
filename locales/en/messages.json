@@ -494,25 +494,28 @@
         "message": "XACT Servo Programming"
     },
     "xactServoIntro": {
-        "message": "Program XACT FBUS servo parameters over telemetry. XACT servos report and are configured over the same S.Port/FBUS wire used for telemetry — no separate programming connection is needed. Scan for a connected servo, then edit and write its parameters."
+        "message": "Program XACT FBUS servo parameters over telemetry. XACT servos report and are configured over the same S.Port/FBUS wire used for telemetry — no separate programming connection is needed. Scan for connected servos, then select one to edit and write its parameters."
     },
     "xactServoSingleServoNote": {
-        "message": "Only connect one XACT servo at a time while programming. With multiple servos connected, scanning and writing parameters may target the wrong servo."
+        "message": "Every XACT servo on the bus needs a unique Physical ID. Two servos sharing one collide and are tracked as a single entry -- if they also share the same App ID this tool has no way to tell them apart, so double-check factory-default units before connecting them together."
     },
     "xactServoScanButton": {
-        "message": "Scan for Servo"
+        "message": "Scan for Servos"
     },
     "xactServoIdle": {
-        "message": "Click \"Scan for Servo\" to discover a connected XACT servo."
+        "message": "Click \"Scan for Servos\" to discover connected XACT servos."
     },
     "xactServoScanning": {
-        "message": "Scanning for XACT servo..."
+        "message": "Scanning for XACT servos..."
     },
     "xactServoNotFound": {
-        "message": "No XACT servo detected. Check wiring and try scanning again."
+        "message": "No XACT servos detected. Check wiring and try scanning again."
     },
     "xactServoMultipleFound": {
         "message": "Found {{count}} XACT servos on the bus. Select one to program:"
+    },
+    "xactServoListReading": {
+        "message": "Reading…"
     },
     "xactServoBackToList": {
         "message": "Back to list"

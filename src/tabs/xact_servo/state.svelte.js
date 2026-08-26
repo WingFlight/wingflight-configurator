@@ -2,7 +2,7 @@ import diff from "microdiff";
 
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-import { parseServoList, parseServoListDiag, parseServoParams, buildServoParamsPayload } from "./protocol.js";
+import { parseServoList, parseServoParams, buildServoParamsPayload } from "./protocol.js";
 
 export const View = {
     IDLE: "idle",
@@ -22,10 +22,19 @@ const SCAN_POLL_INTERVAL_MS = 400;
 const SCAN_SETTLE_MS = 1200;
 
 // How long to wait for a selected servo's parameter read to complete before giving up. The
-// firmware only auto-reads the first servo it discovers; selecting any other one kicks off a
-// fresh read for it, so this covers that read cycle, not just network/serial latency.
+// firmware reads every discovered servo's parameters in the background as soon as it finds
+// them, but selecting a servo still (re)starts its read to be sure of a fresh value, so this
+// covers a full read cycle, not just serial latency.
 const PARAMS_TIMEOUT_MS = 5000;
 const PARAMS_POLL_INTERVAL_MS = 250;
+
+// The firmware reads every discovered servo's parameters in the background, so by the time the
+// list is shown most rows are usually already "ready" -- but a servo found right at the end of
+// the scan window might not be yet. Keep refreshing the list for a bit so those rows fill in
+// (e.g. Channel) without the user needing to rescan, stopping once everything is ready or the
+// user has navigated away from the list.
+const LIST_REFRESH_TIMEOUT_MS = 4000;
+const LIST_REFRESH_INTERVAL_MS = 500;
 
 function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,13 +45,9 @@ class State {
     values = $state({});
     error = $state(null);
 
-    // Servos discovered by the last scan: [{ physicalId, appIdOffset, conflict }, ...]
+    // Servos discovered by the last scan: [{ physicalId, appIdOffset, conflict, ready, channel }]
     servos = $state([]);
     selectedPhysicalId = $state(null);
-
-    // TEMPORARY: last MSP_XACT_SERVO_LIST diagnostic snapshot -- see protocol.js's
-    // parseServoListDiag. Not reactive on purpose, it's only ever read for logging.
-    lastDiag = null;
 
     // initialValues must be reactive ($state): `changes` reads it, and a plain field
     // reassignment wouldn't invalidate the derived, leaving isDirty()/the Save toolbar stuck.
@@ -68,10 +73,6 @@ class State {
 
     async fetchServoList() {
         const response = await MSP.promise(MSPCodes.MSP_XACT_SERVO_LIST);
-        // TEMPORARY: also grab/log the diagnostic prefix -- see protocol.js's
-        // parseServoListDiag for what each field means. Remove alongside it once the
-        // "scan finds nothing" issue is tracked down.
-        this.lastDiag = parseServoListDiag(response.data);
         return parseServoList(response.data);
     }
 
@@ -113,19 +114,11 @@ class State {
 
             if (this.servos.length === 0) {
                 this.view = View.NOT_FOUND;
-                // TEMPORARY: surface why, until the "scan finds nothing" issue is understood.
-                if (this.lastDiag) {
-                    GUI.log(
-                        `XACT scan: masterEnabled=${this.lastDiag.masterEnabled} ` +
-                            `xactInitialized=${this.lastDiag.xactInitialized} ` +
-                            `telemetryState=${this.lastDiag.telemetryState} ` +
-                            `physIdsFound=${this.lastDiag.physIdsFound}`,
-                    );
-                }
             } else if (this.servos.length === 1) {
                 await this.selectServo(this.servos[0].physicalId);
             } else {
                 this.view = View.LIST;
+                this.refreshListInBackground();
             }
         } catch (err) {
             this.error = err?.message ?? String(err);
@@ -135,6 +128,24 @@ class State {
 
     async rescan() {
         return this.scan();
+    }
+
+    // Keep polling the servo list for a while so rows fill in (e.g. Channel) as the firmware's
+    // background read reaches each one, without a full rescan. Stops on its own once every
+    // servo is ready, once LIST_REFRESH_TIMEOUT_MS has passed, or once the user has navigated
+    // away from the list (selected a servo, rescanned, etc.).
+    async refreshListInBackground() {
+        const deadline = Date.now() + LIST_REFRESH_TIMEOUT_MS;
+
+        while (
+            this.view === View.LIST &&
+            this.servos.some((servo) => !servo.ready) &&
+            Date.now() < deadline
+        ) {
+            await delay(LIST_REFRESH_INTERVAL_MS);
+            if (this.view !== View.LIST) return;
+            this.servos = await this.fetchServoList();
+        }
     }
 
     // Fetch (waiting for) one discovered servo's full parameters, then show its form. Safe to
@@ -170,6 +181,7 @@ class State {
         this.initialValues = null;
         this.selectedPhysicalId = null;
         this.view = View.LIST;
+        this.refreshListInBackground();
     }
 
     async onSave() {

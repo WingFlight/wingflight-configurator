@@ -25,28 +25,20 @@
 // get the literal bus address FrSky's own tool displays (e.g. offset 10 -> "680A").
 export const FBUS_SERVO_DATA_BASE = 0x6800;
 
-// TEMPORARY: the response is currently prefixed with 4 diagnostic bytes (masterEnabled,
-// xactInitialized, telemetryState, physIdsFound) to track down why a scan finds nothing
-// despite the FBUS/S.Port Sensors page seeing the servo -- see msp.c's MSP_XACT_SERVO_LIST
-// handler for what each one means. Remove diag/parseServoListDiag once that's understood.
-export function parseServoListDiag(data) {
-    return {
-        masterEnabled: data.getUint8(0) !== 0,
-        xactInitialized: data.getUint8(1) !== 0,
-        telemetryState: data.getUint8(2),
-        physIdsFound: data.getUint8(3),
-    };
-}
-
 export function parseServoList(data) {
-    const count = data.getUint8(4);
+    const count = data.getUint8(0);
     const servos = [];
     for (let i = 0; i < count; i++) {
-        const offset = 5 + i * 3;
+        const offset = 1 + i * 5;
         servos.push({
             physicalId: data.getUint8(offset),
             appIdOffset: data.getUint8(offset + 1),
             conflict: data.getUint8(offset + 2) !== 0,
+            // The firmware reads every discovered servo's parameters in the background, so
+            // channel is usually already known -- ready is false only briefly, right after
+            // a servo is first discovered.
+            ready: data.getUint8(offset + 3) !== 0,
+            channel: data.getUint8(offset + 4),
         });
     }
     return servos;

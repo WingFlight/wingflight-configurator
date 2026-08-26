@@ -125,6 +125,13 @@
           class="servo-list-row"
           onclick={() => onSelectServo(servo.physicalId)}
         >
+          <span class="servo-row-channel">
+            {#if servo.ready}
+              {$i18n.t("xactServoChannel")}: CH{servo.channel + 1}
+            {:else}
+              {$i18n.t("xactServoListReading")}
+            {/if}
+          </span>
           <span class="servo-row-field">
             {$i18n.t("xactServoPhysicalId")}: {hex(servo.physicalId, 2)}
           </span>
@@ -410,9 +417,17 @@
     }
   }
 
+  .servo-row-channel {
+    flex-shrink: 0;
+    min-width: 90px;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
   .servo-row-field {
     flex-shrink: 0;
     font-size: 0.85rem;
+    color: var(--color-text-soft);
   }
 
   .row-grow {
