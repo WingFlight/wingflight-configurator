@@ -231,11 +231,11 @@
 <style lang="scss">
   .container {
     display: flex;
-    max-width: 120px;
+    max-width: var(--number-input-max-width, 120px);
   }
 
   input {
-    padding: 0 8px;
+    padding: 0 var(--number-input-padding-x, 8px);
     width: 100%;
     transition:
       background-color var(--animation-speed),
@@ -312,17 +312,17 @@
 
   @media only screen and (max-width: 480px) {
     input {
-      height: 2rem;
-      line-height: 2rem;
+      height: var(--number-input-height, 2rem);
+      line-height: var(--number-input-height, 2rem);
       text-align: center;
       font-size: 0.8rem !important;
     }
 
     .dec,
     .inc {
-      height: 2rem;
-      width: 2rem;
-      min-width: 2rem;
+      height: var(--number-input-height, 2rem);
+      width: var(--number-input-btn-size, 2rem);
+      min-width: var(--number-input-btn-size, 2rem);
     }
   }
 </style>

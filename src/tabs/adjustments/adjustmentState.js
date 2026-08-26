@@ -21,6 +21,18 @@ export const MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [85, 84, 86]; // Roll/Pitch/Yaw
 // the affected servo(s) themselves (see Servos tab).
 export const SERVO_TRIM_ADJUSTMENT_FUNCTIONS = [89, 90, 91]; // Roll/Pitch/Yaw
 
+// Thrust Vector's own independent PID loop (FEATURE_THRUST_VECTOR) -- same
+// shape as PID_ADJUSTMENT_FUNCTIONS/MASTER_GAIN_ADJUSTMENT_FUNCTIONS above,
+// but a separate table since these tune FC.TV_PIDS/TV_PID_PROFILE, not the
+// main loop's FC.PIDS/PID_PROFILE.
+export const TV_PID_ADJUSTMENT_FUNCTIONS = [
+  [95, 96, 97, 98, 99],    // TV Roll P/I/D/F/B
+  [100, 101, 102, 103, 104], // TV Pitch P/I/D/F/B
+  [105, 106, 107, 108, 109], // TV Yaw P/I/D/F/B
+];
+
+export const TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [92, 93, 94]; // Roll/Pitch/Yaw
+
 function auxChannelValue(channel) {
   return channel >= 0 && channel < ALWAYS_ON_CH
     ? FC.RC.channels[channel + PRIMARY_CHANNEL_COUNT]

@@ -1,3 +1,11 @@
+allowBuilds:
+  '@fortawesome/fontawesome-free': true
+  '@parcel/watcher': true
+  es5-ext: true
+  fs-xattr: true
+  fsevents: true
+  nw-builder: true
+
 onlyBuiltDependencies:
   - '@fortawesome/fontawesome-free'
   - '@parcel/watcher'

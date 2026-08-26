@@ -213,6 +213,23 @@
     font-size: 0.75rem;
   }
 
+  // Grid items default to a content-based minimum width, so without this a
+  // <select> happily forces itself (and the column) wider than its track to
+  // fit its longest option ("Stabilized Roll" etc.) - overflowing into the
+  // next column instead of respecting the space the grid actually gave it.
+  .col-output,
+  .col-oper,
+  .col-input,
+  .col-curve,
+  .col-condition {
+    min-width: 0;
+
+    :global(select) {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
   .col-weight,
   .col-differential,
   .col-offset,

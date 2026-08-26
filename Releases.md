@@ -1,3 +1,33 @@
+# 0.0.15
+
+Add support for Spektrum SRXL2 ESC.
+Fix Flash Firmware button needing two clicks after loading online firmware.
+Fix firmware flashing docs link on Firmware Flasher recovery text.
+
+# 0.0.14
+
+Hide Thrust Vector wizard options when the feature is disabled.
+
+# 0.0.13
+
+Fix mixer rule dropdowns overflowing into the next column.
+Keep hover tooltips inline with their field and inside their panel.
+Add a manual refresh button to the Firmware Flasher release list, bypassing the hourly release-list cache.
+
+# 0.0.12
+
+Fix mixer rule differential being one-sided when Reverse is enabled.
+Fix Discord link.
+
+# 0.0.11
+
+Add Thrust Vector configuration, mixer wizard support, and adjustment functions.
+Add FBUS/S.Port Sensors diagnostics.
+Improve Web Serial/WebUSB support, including Android compatibility, device filtering, and blackbox MSC reboot flow.
+Improve mobile layouts for Profiles, Rates, Servos, firmware flashing, dialogs, headers, and Thrust Vector tables.
+Remove OSD and CMS UI surfaces.
+Link to WingFlight Driver Fixer for USB driver help.
+
 # 0.0.10
 
 Remove tail_rotor_mode; rename main/tail motor naming to motor1/motor2.

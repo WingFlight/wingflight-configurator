@@ -144,7 +144,7 @@
       </Field>
     {/if}
 
-    {#if throttleMode}
+    {#if rpmMode || throttleMode}
       <Field id="governor-throttle" label="motorsGovernorThrottle" unit="%">
         {#snippet tooltip()}
           <Tooltip help="motorsGovernorThrottleHelp" />

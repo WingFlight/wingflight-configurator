@@ -39,9 +39,17 @@
   <SubSection>
     <Field id="esc-protocol" label="motorsEscProtocol">
       {#snippet tooltip()}
-        <Tooltip help="motorsEscProtocolHelp" />
+        <Tooltip
+          help={motorState.srxl2PortAssigned
+            ? "motorsEscProtocolSrxl2LockedHelp"
+            : "motorsEscProtocolHelp"}
+        />
       {/snippet}
-      <select id="esc-protocol" bind:value={FC.MOTOR_CONFIG.motor_pwm_protocol}>
+      <select
+        id="esc-protocol"
+        bind:value={FC.MOTOR_CONFIG.motor_pwm_protocol}
+        disabled={motorState.srxl2PortAssigned}
+      >
         {#each motorState.throttleProtocols as proto, index (proto)}
           <option value={index}>{proto}</option>
         {/each}
@@ -69,7 +77,7 @@
       </div>
     {/if}
 
-    {#if isEnabled && !motorState.isDshot && protocol !== 0 && !motorState.isCastleLink}
+    {#if isEnabled && !motorState.isDshot && protocol !== 0 && !motorState.isCastleLink && !motorState.isSrxl2}
       <div transition:slide>
         <Field id="throttle-unsynced-pwm" label="motorsUnsyncedPwm">
           {#snippet tooltip()}

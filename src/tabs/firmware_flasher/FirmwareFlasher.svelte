@@ -64,6 +64,7 @@
 
   let selectedBoard = $state("0");
   let boardsLoading = $state(true);
+  let releasesLoading = $state(false);
   let selectedVersion = $state("0");
   let versionsLoading = $state(false);
   let firmwareVersionEntries = $state([]);
@@ -96,6 +97,7 @@
   let detectDialogContent = $state("");
 
   let detectTimer;
+  let detectConnectDelayTimer;
   let detectMspHelper;
 
   let boardGroups = $derived(
@@ -131,6 +133,7 @@
     portPickerElement()?.removeEventListener("change", onPortChange);
     document.removeEventListener("keypress", onKeypress);
     clearTimeout(detectTimer);
+    clearTimeout(detectConnectDelayTimer);
   });
 
   function onCacheUpdate(release) {
@@ -158,15 +161,17 @@
     }
   }
 
-  function loadBuildType(index) {
+  function loadBuildType(index, force = false) {
     chrome.storage.local.set({ selected_build_type: index });
     if (GUI.connect_lock) return;
 
     unifiedConfigs = {};
     boardsLoading = true;
-    releaseChecker.loadReleaseData((releaseData) =>
-      onReleaseData(releaseData ?? [], BUILD_TYPES[index].level),
-    );
+    releasesLoading = true;
+    releaseChecker.loadReleaseData((releaseData) => {
+      releasesLoading = false;
+      onReleaseData(releaseData ?? [], BUILD_TYPES[index].level);
+    }, force);
   }
 
   function onBuildTypeChange(index) {
@@ -175,6 +180,14 @@
     firmwareVersionEntries = [];
     selectedVersion = "0";
     loadBuildType(buildTypeIndex);
+  }
+
+  function onClickRefreshReleases() {
+    if (releasesLoading || GUI.connect_lock) return;
+    selectedBoard = "0";
+    firmwareVersionEntries = [];
+    selectedVersion = "0";
+    loadBuildType(buildTypeIndex, true);
   }
 
   async function onReleaseData(releaseData, buildLevel) {
@@ -491,11 +504,11 @@
     }
   }
 
-  function onLoadSuccess(data, summary) {
+  async function onLoadSuccess(data, summary) {
     localFirmwareLoaded = false;
     const release =
       typeof summary === "object" ? summary : selectedVersionEntry()?.summary;
-    processHex(data, release);
+    await processHex(data, release);
     loadingRemote = false;
   }
 
@@ -622,7 +635,7 @@
       const res = await fetch(summary.url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.text();
-      onLoadSuccess(data, summary);
+      await onLoadSuccess(data, summary);
     } catch (err) {
       console.log("Failed to download firmware", err);
       loadingRemote = false;
@@ -710,12 +723,21 @@
     detectTimer = setTimeout(() => {
       GUI.log($i18n.t("firmwareFlasherBoardDetectionFail"));
       disconnectDetect();
-    }, 5000);
+    }, 8000);
 
     const el = portPickerElement();
     const port = String(el.value);
     const baud = getIntegerValue("select#baud") ?? 115200;
-    serial.connect(port, { bitrate: baud }, onDetectConnect);
+
+    // If we just got here from a connected session, navigating to this tab
+    // forces a disconnect first -- give the board/USB stack a brief moment to
+    // settle before reopening the same port and querying it. Without this,
+    // reconnecting immediately can get no response back in time (see
+    // handleConnectClick()'s disconnect branch, which now awaits the actual
+    // port close, but the board itself may still need a moment to be ready).
+    detectConnectDelayTimer = setTimeout(() => {
+      serial.connect(port, { bitrate: baud }, onDetectConnect);
+    }, 300);
   }
 
   function onDetectConnect(openInfo) {
@@ -790,6 +812,7 @@
   }
 
   function disconnectDetect() {
+    clearTimeout(detectConnectDelayTimer);
     serial.disconnect(onDetectClose);
     MSP.disconnect_cleanup();
     setFlashingEnabled(true);
@@ -858,40 +881,66 @@
     disabled={portIsDfu === false && !parsedHex}
     onclick={onClickExitDfu}
   >
-    {$i18n.t("firmwareFlasherExitDfu")}
+    <span class="label-full">{$i18n.t("firmwareFlasherExitDfu")}</span>
+    <span class="label-short">{$i18n.t("firmwareFlasherExitDfuShort")}</span>
   </button>
   <button
     class="btn"
     disabled={!flashState.flashingEnabled}
     onclick={onClickFlash}
   >
-    {$i18n.t("firmwareFlasherFlashFirmware")}
+    <span class="label-full">{$i18n.t("firmwareFlasherFlashFirmware")}</span>
+    <span class="label-short"
+      >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
+    >
   </button>
   <button
     class="btn"
     disabled={selectedVersion === "0" || loadingRemote}
     onclick={onClickLoadRemote}
   >
-    {loadingRemote
-      ? $i18n.t("firmwareFlasherButtonDownloading")
-      : $i18n.t("firmwareFlasherButtonLoadOnline")}
+    {#if loadingRemote}
+      {$i18n.t("firmwareFlasherButtonDownloading")}
+    {:else}
+      <span class="label-full"
+        >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+      >
+      <span class="label-short"
+        >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+      >
+    {/if}
   </button>
   <button class="btn" onclick={onClickLoadLocal}>
-    {$i18n.t("firmwareFlasherButtonLoadLocal")}
+    <span class="label-full">{$i18n.t("firmwareFlasherButtonLoadLocal")}</span>
+    <span class="label-short"
+      >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+    >
   </button>
 {/snippet}
 
 <Page {header} {toolbar}>
   <div class="options">
     <div class="field">
-      <Select
-        value={buildTypeIndex}
-        options={BUILD_TYPES.map((b, i) => ({
-          value: i,
-          label: $i18n.t(b.tag),
-        }))}
-        onchange={(e) => onBuildTypeChange(e.target.value)}
-      />
+      <div class="board-select-flex">
+        <Select
+          value={buildTypeIndex}
+          options={BUILD_TYPES.map((b, i) => ({
+            value: i,
+            label: $i18n.t(b.tag),
+          }))}
+          onchange={(e) => onBuildTypeChange(e.target.value)}
+        />
+        <span class="default_btn detect_btn">
+          <button
+            class="detect-board"
+            disabled={releasesLoading}
+            title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
+            onclick={onClickRefreshReleases}
+          >
+            <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}></em>
+          </button>
+        </span>
+      </div>
       <span class="description"
         >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
       >
@@ -1091,6 +1140,7 @@
 
   .btn {
     @extend %button;
+    white-space: nowrap;
   }
 
   .options {
@@ -1212,6 +1262,31 @@
   .progress-info {
     position: relative;
     flex-grow: 1;
+  }
+
+  .label-short {
+    display: none;
+  }
+
+  // Once the toolbar (which wraps via Page.svelte) no longer has room for
+  // four full-length button labels alongside the progress bar, switch to
+  // shorter labels *and* give the progress bar its own full-width line.
+  // The progress bar shows a real, filling/scrolling indicator while
+  // flashing - it needs to stay legibly wide rather than get squeezed onto
+  // a shared row with whatever button happens to still fit - and shorter
+  // button labels mean less gets pushed onto extra wrapped lines below it.
+  @media only screen and (max-width: 700px) {
+    .progress-info {
+      flex-basis: 100%;
+    }
+
+    .label-full {
+      display: none;
+    }
+
+    .label-short {
+      display: inline;
+    }
   }
 
   .progress {

@@ -31,6 +31,9 @@ export const Mixer = {
         'mixerInputRCChannel16',
         'mixerInputRCChannel17',
         'mixerInputRCChannel18',
+        'mixerInputStabilizedTVRoll',
+        'mixerInputStabilizedTVPitch',
+        'mixerInputStabilizedTVYaw',
     ],
 
     heliOnlyInputs: [],
@@ -266,6 +269,9 @@ export const Mixer = {
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
         const ROLL = 1, PITCH = 2, YAW = 3, THROTTLE = 4, RC_AUX1 = 13;
+        // MIXER_IN_STABILIZED_TV_ROLL/PITCH/YAW -- appended at the tail of
+        // firmware's MIXER_IN_* enum (pg/mixer.h), after RC_CHANNEL_18.
+        const TV_ROLL = 27, TV_PITCH = 28, TV_YAW = 29;
 
         if (options.layout === 'conventional') {
             if (options.ailerons === 'single') {
@@ -300,7 +306,7 @@ export const Mixer = {
         }
 
         if (options.flaps) {
-            rules.push(rule(OP_SET, RC_AUX1, nextServo, 1000));
+            rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
         }
 
         if (options.motors >= 1) {
@@ -314,6 +320,20 @@ export const Mixer = {
                 rules.push(rule(OP_ADD, YAW, 9,      500));
                 rules.push(rule(OP_ADD, YAW, motor2, 500, true));
             }
+        }
+
+        // Thrust vectoring mounts vary -- 2-axis gimbals (commonly pitch+yaw,
+        // but roll+yaw and others exist too), single-axis, or full 3-axis --
+        // so each axis is wired independently rather than assuming a fixed
+        // combination.
+        if (options.thrustVectorRoll) {
+            rules.push(rule(OP_SET, TV_ROLL, nextServo++, 1000));
+        }
+        if (options.thrustVectorPitch) {
+            rules.push(rule(OP_SET, TV_PITCH, nextServo++, 1000));
+        }
+        if (options.thrustVectorYaw) {
+            rules.push(rule(OP_SET, TV_YAW, nextServo, 1000));
         }
 
         return rules;
