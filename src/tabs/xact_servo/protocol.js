@@ -29,16 +29,20 @@ export function parseServoList(data) {
     const count = data.getUint8(0);
     const servos = [];
     for (let i = 0; i < count; i++) {
-        const offset = 1 + i * 5;
+        const offset = 1 + i * 6;
         servos.push({
             physicalId: data.getUint8(offset),
             appIdOffset: data.getUint8(offset + 1),
             conflict: data.getUint8(offset + 2) !== 0,
+            // Two servos sharing an App ID both act on a write meant for just one of them
+            // (confirmed on real hardware), regardless of their (different) Physical IDs --
+            // this is the one that actually matters for "is it safe to save".
+            duplicateAppId: data.getUint8(offset + 3) !== 0,
             // The firmware reads every discovered servo's parameters in the background, so
             // channel is usually already known -- ready is false only briefly, right after
             // a servo is first discovered.
-            ready: data.getUint8(offset + 3) !== 0,
-            channel: data.getUint8(offset + 4),
+            ready: data.getUint8(offset + 4) !== 0,
+            channel: data.getUint8(offset + 5),
         });
     }
     return servos;
@@ -48,21 +52,22 @@ export function parseServoParams(data) {
     return {
         ready: data.getUint8(0) !== 0,
         conflict: data.getUint8(1) !== 0,
-        physicalId: data.getUint8(2),
-        appIdOffset: data.getUint8(3),
-        firmwareVersion: data.getUint8(4),
-        dataRate: data.getUint16(5, true),
-        range: data.getUint8(7),
-        direction: data.getUint8(8),
-        pulseType: data.getUint8(9),
-        channel: data.getUint8(10),
-        center: data.getInt8(11),
-        holdingStrength: data.getUint8(12),
-        operationSmoothing: data.getUint8(13),
-        deadband: data.getUint8(14),
-        hasExtendedParams: data.getUint8(15) !== 0,
-        workingMode: data.getUint8(16),
-        maxAngle: data.getUint16(17, true),
+        duplicateAppId: data.getUint8(2) !== 0,
+        physicalId: data.getUint8(3),
+        appIdOffset: data.getUint8(4),
+        firmwareVersion: data.getUint8(5),
+        dataRate: data.getUint16(6, true),
+        range: data.getUint8(8),
+        direction: data.getUint8(9),
+        pulseType: data.getUint8(10),
+        channel: data.getUint8(11),
+        center: data.getInt8(12),
+        holdingStrength: data.getUint8(13),
+        operationSmoothing: data.getUint8(14),
+        deadband: data.getUint8(15),
+        hasExtendedParams: data.getUint8(16) !== 0,
+        workingMode: data.getUint8(17),
+        maxAngle: data.getUint16(18, true),
     };
 }
 

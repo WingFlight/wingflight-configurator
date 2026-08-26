@@ -142,7 +142,11 @@
             )}
           </span>
           <span class="row-grow"></span>
-          {#if servo.conflict}
+          {#if servo.duplicateAppId}
+            <span class="servo-row-conflict"
+              >{$i18n.t("xactServoDuplicateAppIdBadge")}</span
+            >
+          {:else if servo.conflict}
             <span class="servo-row-conflict"
               >{$i18n.t("xactServoConflictBadge")}</span
             >
@@ -159,7 +163,9 @@
       </button>
     {/if}
 
-    {#if xactState.values.conflict}
+    {#if xactState.values.duplicateAppId}
+      <WarningNote message="xactServoDuplicateAppIdWarning" />
+    {:else if xactState.values.conflict}
       <WarningNote message="xactServoConflictWarning" />
     {/if}
 

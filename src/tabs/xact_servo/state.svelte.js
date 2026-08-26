@@ -191,6 +191,13 @@ class State {
     async onSave() {
         const payload = buildServoParamsPayload(this.selectedPhysicalId, this.values);
         await MSP.promise(MSPCodes.MSP_SET_XACT_PARAMS, Array.from(payload));
+
+        // The firmware can silently refuse the write (e.g. this servo shares its App ID with
+        // another discovered one -- see fbusXactHasDuplicateAppId()) while still ACK'ing the
+        // MSP frame itself, so trusting `this.values` as "now saved" would hide that. Re-fetch
+        // from the firmware's own cache instead: a refused write shows up as the values not
+        // having actually changed.
+        this.values = await this.fetchParams(this.selectedPhysicalId);
         this.initialValues = $state.snapshot(this.values);
     }
 

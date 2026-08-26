@@ -526,6 +526,12 @@
     "xactServoConflictWarning": {
         "message": "Another servo appears to be answering with this same Physical ID -- the parameters below may be a mix of two different servos. Disconnect the extra unit, give it a different Physical ID, and rescan before saving."
     },
+    "xactServoDuplicateAppIdBadge": {
+        "message": "⚠ Duplicate App ID"
+    },
+    "xactServoDuplicateAppIdWarning": {
+        "message": "Another discovered servo shares this one's App ID. XACT commands are addressed by App ID, not just Physical ID -- confirmed on real hardware, a save here can also silently reach that other servo. Saving is blocked until you give this servo a different, unused App ID; other changes will be saved together with that fix once it's unique."
+    },
     "xactServoSectionProtocol": {
         "message": "Protocol"
     },
