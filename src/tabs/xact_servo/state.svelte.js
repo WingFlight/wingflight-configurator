@@ -175,12 +175,16 @@ class State {
 
     // Return to the servo list without a full rescan (only relevant when more than one servo
     // was discovered). The toolbar only allows this while not dirty, so edits aren't silently
-    // discarded.
-    backToList() {
+    // discarded. Always re-fetches once so a just-saved change (e.g. a new Channel) shows up
+    // immediately -- refreshListInBackground() alone wouldn't do it, since it only keeps
+    // polling while some row isn't ready yet, which won't be true once everything's already
+    // been read.
+    async backToList() {
         this.values = {};
         this.initialValues = null;
         this.selectedPhysicalId = null;
         this.view = View.LIST;
+        this.servos = await this.fetchServoList();
         this.refreshListInBackground();
     }
 
