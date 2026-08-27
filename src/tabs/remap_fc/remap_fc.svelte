@@ -10,6 +10,8 @@
    */
 
   import { i18n } from "@/js/i18n.js";
+  import { FC } from "@/js/fc.svelte.js";
+  import { getTabHelpURL } from "@/js/help";
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
   import {
@@ -36,6 +38,10 @@
   // setters below (this component never fetches anything itself). ---
   let running = $state(false);
   let error = $state(null);
+  // Whether a read has completed at least once — once true, the toolbar
+  // shows the connected board's identity instead of the "Read FC"
+  // button, since there's no longer anything for that button to do.
+  let hasRead = $state(false);
   // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
   // the current hardware dump. Matches the top-level keys of
   // STM32_timers.json/STM32_DMA.json.
@@ -192,6 +198,7 @@
     workingCurrent = { ...current };
     defaultHardware = { ...defaultHw };
     mcuType = mcu;
+    hasRead = true;
     visibleOptions = TABLE_OPTION_KEYS.filter((option) => option in current);
     // Rows freshly read from the FC are never "unset" — only ones
     // added afterwards via "+ Add" start in that placeholder state.
@@ -200,6 +207,7 @@
 
   export function reset() {
     error = null;
+    hasRead = false;
     mcuType = null;
     workingCurrent = {};
     defaultHardware = {};
@@ -214,6 +222,10 @@
   function onClick() {
     reset();
     onRunClick();
+  }
+
+  function onClickHelp() {
+    window.open(getTabHelpURL("tabRemapFC"), "_system");
   }
 
   // handleAddChange fires when an option is picked from the "+ Add"
@@ -272,6 +284,10 @@
 
 {#snippet header()}
   <h1>{$i18n.t("tabRemapFC")}</h1>
+  <div class="grow"></div>
+  <button class="btn help-btn" onclick={onClickHelp}>
+    {$i18n.t("buttonHelp")}
+  </button>
 {/snippet}
 
 <Page {header} loading={false}>
@@ -279,14 +295,36 @@
     <p class="note">{$i18n.t("remapFcNote")}</p>
 
     <div class="toolbar">
-      <button class="btn run-btn" onclick={onClick} disabled={running}>
-        {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
-      </button>
+      <!-- Before a read, offer the button that triggers one; once read,
+           there's nothing left for it to do, so show the connected
+           board's identity in its place instead. -->
+      {#if hasRead}
+        <div class="board-badge">
+          <strong>{FC.CONFIG.manufacturerId}</strong>&nbsp;&nbsp;&nbsp;<strong
+            >{FC.CONFIG.boardName}</strong
+          >
+        </div>
+      {:else}
+        <button class="btn run-btn" onclick={onClick} disabled={running}>
+          {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
+        </button>
+      {/if}
 
       <!-- The flight controller's MCU family, once known. -->
       {#if mcuType}
         <div class="mcu-badge">
           {$i18n.t("remapFcMcuLabel")}&nbsp;<strong>{mcuType}</strong>
+        </div>
+      {/if}
+
+      <!-- The board's reference design (e.g. "F7A1"), if the connected
+           firmware reports one -- most boards won't, so this stays
+           hidden rather than showing an empty badge. -->
+      {#if FC.CONFIG.boardDesign}
+        <div class="mcu-badge">
+          {$i18n.t("remapFcDesignLabel")}&nbsp;<strong
+            >{FC.CONFIG.boardDesign}</strong
+          >
         </div>
       {/if}
     </div>
@@ -401,7 +439,8 @@
     opacity: 0.8;
   }
 
-  // Run button plus the MCU badge, side by side.
+  // Run button (or, once read, the board-identity badge) plus the MCU
+  // badge, side by side.
   .toolbar {
     display: flex;
     align-items: center;
@@ -413,11 +452,23 @@
     align-self: flex-start;
   }
 
-  .mcu-badge {
+  .mcu-badge,
+  .board-badge {
     padding: 6px 12px;
     border: 1px solid var(--subtleAccent);
     border-radius: 4px;
     color: var(--textColor);
+  }
+
+  // Header help button, matching every other tab's <Page> header.
+  .grow {
+    flex-grow: 1;
+  }
+
+  .help-btn {
+    @extend %button;
+    padding: 4px 8px;
+    min-width: 60px;
   }
 
   // Comparison table: option name, default pin, arrow, current option.

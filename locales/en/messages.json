@@ -7359,5 +7359,8 @@
     },
     "remapFcMcuLabel": {
         "message": "MCU:"
+    },
+    "remapFcDesignLabel": {
+        "message": "Design:"
     }
 }
