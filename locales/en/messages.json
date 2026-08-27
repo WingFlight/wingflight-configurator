@@ -1976,6 +1976,9 @@
     "portsFunction_SRXL2_ESC": {
         "message": "SRXL2 ESC"
     },
+    "portsFunction_CRSF_SENSORS": {
+        "message": "CRSF Sensors"
+    },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
     },
@@ -6085,6 +6088,9 @@
     "powerBatteryVoltageMeterTypeFbus": {
         "message": "FrSky Sensor"
     },
+    "powerBatteryVoltageMeterTypeCrsf": {
+        "message": "CRSF Sensor"
+    },
     "powerBatteryCurrentMeterSource": {
         "message": "Battery Current Source"
     },
@@ -6099,6 +6105,9 @@
     },
     "powerBatteryCurrentMeterTypeFbus": {
         "message": "FrSky Sensor"
+    },
+    "powerBatteryCurrentMeterTypeCrsf": {
+        "message": "CRSF Sensor"
     },
     "powerBatteryCurrentMeterTypeMsp": {
         "message": "MSP Sensor"

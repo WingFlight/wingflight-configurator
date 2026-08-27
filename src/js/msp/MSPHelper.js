@@ -48,6 +48,7 @@ export function MspHelper() {
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
         'SRXL2_ESC': 21,
+        'CRSF_SENSORS': 22,
     };
 
     self.REBOOT_TYPES = {
