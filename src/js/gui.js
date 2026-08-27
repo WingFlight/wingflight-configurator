@@ -305,23 +305,41 @@ GuiControl.prototype.tab_switch_allowed = function (callback) {
     }
 };
 
+// interval_kill_all()/timeout_kill_all() and MSP.callbacks_cleanup() run
+// only after the outgoing tab's own cleanup() has actually finished (via
+// its callback), not before. A tab's cleanup can itself be asynchronous
+// and rely on GUI intervals/timeouts it started (e.g. polling a CLI
+// session for idle before exiting it) — killing every timer first, as
+// this used to do, could pull the rug out from under that wait and
+// leave it unresolved forever, so cleanup's callback (and therefore the
+// next tab's initialize()) would never fire.
 GuiControl.prototype.tab_switch_reload = function (callback) {
-    MSP.callbacks_cleanup();
-    this.interval_kill_all();
-
     if (this.current_tab) {
-        this.current_tab.cleanup();
-        this.current_tab.initialize(callback);
+        this.current_tab.cleanup(() => {
+            MSP.callbacks_cleanup();
+            this.timeout_kill_all();
+            this.interval_kill_all();
+            this.current_tab.initialize(callback);
+        });
+    } else {
+        MSP.callbacks_cleanup();
+        this.timeout_kill_all();
+        this.interval_kill_all();
     }
 };
 
 GuiControl.prototype.tab_switch_cleanup = function (callback) {
-    MSP.callbacks_cleanup();
-    this.interval_kill_all();
-
     if (this.current_tab) {
-        this.current_tab.cleanup(callback);
+        this.current_tab.cleanup(() => {
+            MSP.callbacks_cleanup();
+            this.timeout_kill_all();
+            this.interval_kill_all();
+            callback?.();
+        });
     } else {
+        MSP.callbacks_cleanup();
+        this.timeout_kill_all();
+        this.interval_kill_all();
         callback?.();
     }
 };

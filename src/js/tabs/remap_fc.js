@@ -36,12 +36,6 @@ class RemapFcTab {
   /** @type {?string} */
   #mcuType = null;
 
-  // DOM references populated once the tab's HTML has been loaded.
-  #dom = {
-    contentWrapper: null,
-    mountPoint: null,
-  };
-
   // Set to true once cleanup() starts, so an in-flight runSequence()
   // knows to stop sending further commands rather than racing with
   // the tab switch.
@@ -68,36 +62,24 @@ class RemapFcTab {
     return this.#mcuType;
   }
 
-  // initialize loads the tab's HTML shell and switches GUI.active_tab,
-  // then hands off to onHtmlLoad once the markup is in the DOM.
+  // initialize mounts the RemapFc Svelte component directly into #content
+  // — no jQuery-loaded HTML shell, matching every other Svelte-only tab
+  // (e.g. gyro.js) — so its own <Page> header is the tab's only header,
+  // rather than duplicating a second, legacy title bar on top of it.
   /**
    * @param {?Function} callback
    */
   initialize(callback) {
     this.#cliEngine = new HeadlessCliEngine(this);
 
-    const self = this;
-    $("#content").load(
-      `${import.meta.env.BASE_URL}src/tabs/remap_fc/remap_fc.html`,
-      () => self.onHtmlLoad(callback),
-    );
-
     if (GUI.active_tab !== "remap_fc") {
       GUI.active_tab = "remap_fc";
     }
-  }
 
-  // onHtmlLoad wires up localization and DOM references, then mounts
-  // the RemapFc Svelte component, passing it the callbacks it needs to
-  // drive this controller.
-  onHtmlLoad(callback) {
-    i18n.localizePage();
-
-    this.#dom.contentWrapper = $("#remap_fc_content_wrapper");
-    this.#dom.mountPoint = document.querySelector("#remap_fc_svelte_mount");
-
+    const target = document.querySelector("#content");
+    target.innerHTML = "";
     this.#svelteComponent = mount(RemapFc, {
-      target: this.#dom.mountPoint,
+      target,
       props: {
         onRunClick: () => this.runSequence(),
         onAddOption: (option) => this.#onAddOption(option),
@@ -114,19 +96,29 @@ class RemapFcTab {
   }
 
   // activateCli enters CLI mode and resolves once the flight controller
-  // should be ready to receive commands. Mirrors PresetsTab.activateCli(),
-  // minus the CliEngine UI wiring (setUi) that we don't need here.
+  // should be ready to receive commands. Matches PresetsTab.activateCli()
+  // and the plain CLI tab's activateCli() exactly (minus the CliEngine UI
+  // wiring, setUi/initializeAutoComplete, that a headless engine doesn't
+  // need) — waiting on CONFIGURATOR.cliEngineValid rather than a flat
+  // delay, since that's the flag readSerial() only flips once it has
+  // actually seen the flight controller's CLI banner text, not just
+  // after some fixed time has passed.
   #activateCli() {
     return new Promise((resolve) => {
       CONFIGURATOR.cliEngineActive = true;
       CONFIGURATOR.cliTab = "remap_fc";
       this.#cliEngine.enterCliMode();
 
-      GUI.timeout_add(
-        "remap_fc_enter_cli_mode_done",
-        () => resolve(),
-        IDLE_THRESHOLD_MS,
-      );
+      const waitForValidCliEngine = setInterval(() => {
+        if (CONFIGURATOR.cliEngineValid) {
+          clearInterval(waitForValidCliEngine);
+          GUI.timeout_add(
+            "remap_fc_enter_cli_mode_done",
+            () => resolve(),
+            IDLE_THRESHOLD_MS,
+          );
+        }
+      }, IDLE_THRESHOLD_MS);
     });
   }
 
@@ -173,26 +165,6 @@ class RemapFcTab {
     return this.#cliEngine.outputHistory.slice(startLength);
   }
 
-  // Exits CLI mode with "noreboot" rather than CliEngine.close()'s
-  // hardcoded "exit", since we don't want the flight controller to
-  // reboot after this sequence. The sendLine callback only confirms
-  // the write went out locally, not that the flight controller has
-  // finished responding — a fixed delay after that risked flipping
-  // cliEngineActive to false while the FC was still sending trailing
-  // CLI-mode text, which would then get fed into the binary MSP parser
-  // as garbage (CRC failures, desynced framing) once the next tab
-  // started polling. So, exactly like every other command in this
-  // sequence, we wait for the CLI channel to actually go idle before
-  // considering the session over.
-  #exitCliWithNoReboot() {
-    this.#cliEngine.sendLine("noreboot");
-    return this.#waitForIdle().then(() => {
-      CONFIGURATOR.cliEngineActive = false;
-      CONFIGURATOR.cliEngineValid = false;
-      CONFIGURATOR.cliTab = "";
-    });
-  }
-
   // runSequence kicks off #doRunSequence and remembers its promise, so
   // cleanup() can wait for the CLI session to actually be exited
   // before the tab switch proceeds.
@@ -206,10 +178,11 @@ class RemapFcTab {
   // so we have both pin layouts, then parse and hand the raw maps to
   // the Svelte component, which builds and owns the editable table
   // itself. Checks #tornDown between steps so a tab switch mid-run
-  // stops it from sending further commands, and always exits CLI mode
-  // with "noreboot" in the finally block — whether the run finished,
-  // failed, or was cut short — so we never leave the flight controller
-  // sitting in CLI mode when this tab is left.
+  // stops it from sending further commands. Deliberately leaves the CLI
+  // session open when the run finishes (or fails) — cleanup() is the
+  // only place that actually exits CLI mode, once the user navigates
+  // away from this tab, so repeated reads don't pay the cost of
+  // re-entering CLI mode each time.
   async #doRunSequence() {
     this.#tornDown = false;
     this.#svelteComponent?.setError(null);
@@ -250,9 +223,6 @@ class RemapFcTab {
         err?.message ?? i18n.getMessage("remapFcError"),
       );
     } finally {
-      if (CONFIGURATOR.cliEngineActive) {
-        await this.#exitCliWithNoReboot();
-      }
       this.#svelteComponent?.setRunning(false);
       this.#runSequencePromise = null;
     }
@@ -264,14 +234,17 @@ class RemapFcTab {
     this.#cliEngine.readSerial(readInfo);
   }
 
-  // cleanup unmounts the Svelte component and makes sure the CLI
-  // session is actually exited before switching away from this tab.
-  // Deliberately never calls CliEngine.close() (which sends a
-  // hardcoded "exit" and reboots the flight controller) — that would
-  // both defeat the point of #exitCliWithNoReboot() and race with a
-  // still-running #doRunSequence(), which is exactly what was leaving
-  // the FC stuck in CLI mode (and other tabs waiting for data) after
-  // switching away from this one.
+  // cleanup unmounts the Svelte component and is the sole place that
+  // actually exits CLI mode — #doRunSequence() deliberately leaves the
+  // session open on completion, so it's still here to be exited (rather
+  // than re-entered) if the user reads again before switching away.
+  // Uses CliEngine.close() — the same standard exit PresetsTab and the
+  // plain CLI tab both use — rather than a bespoke non-reboot command:
+  // it sends a real "exit", and the flight controller's actual reboot is
+  // picked up by CliEngine.readSerial()'s own "Rebooting" detection,
+  // which resets the CLI flags and calls reinitialiseConnection() — the
+  // same reconnect path every other "Save & Reboot" action in this app
+  // already relies on, rather than us reimplementing it.
   cleanup(callback) {
     if (this.#svelteComponent) {
       unmount(this.#svelteComponent);
@@ -280,26 +253,27 @@ class RemapFcTab {
 
     this.#tornDown = true;
 
-    // A run is still in flight: let it notice #tornDown and exit
-    // cleanly on its own via #doRunSequence()'s finally block, then
-    // proceed with the tab switch.
-    if (this.#runSequencePromise) {
-      this.#runSequencePromise.then(() => callback?.());
-      return;
-    }
-
-    if (
-      !(
+    // #finishCleanup only runs once any in-flight run has actually
+    // settled (#doRunSequence notices #tornDown and stops at its next
+    // check), so it always sees the CLI session's true end-of-run
+    // state rather than racing it.
+    const finishCleanup = () => {
+      if (
         CONFIGURATOR.connectionValid &&
         CONFIGURATOR.cliEngineActive &&
         CONFIGURATOR.cliEngineValid
-      )
-    ) {
-      callback?.();
-      return;
-    }
+      ) {
+        this.#cliEngine.close(() => callback?.());
+      } else {
+        callback?.();
+      }
+    };
 
-    this.#exitCliWithNoReboot().then(() => callback?.());
+    if (this.#runSequencePromise) {
+      this.#runSequencePromise.then(finishCleanup);
+    } else {
+      finishCleanup();
+    }
   }
 }
 

@@ -170,8 +170,12 @@ export async function handleConnectClick() {
                     $('div#flashbutton a.flash_state').removeClass('active');
                     $('div#flashbutton a.flash').removeClass('active');
                 }
-                GUI.timeout_kill_all();
-                GUI.interval_kill_all();
+                // tab_switch_cleanup() kills timeouts/intervals itself, only
+                // once the current tab's own cleanup() has finished — doing
+                // it here first would kill any GUI timer that cleanup()
+                // is still relying on (e.g. a CLI session polling for idle
+                // before exiting), leaving its callback (and this promise)
+                // unresolved forever.
                 await new Promise((resolve) => GUI.tab_switch_cleanup(resolve));
                 GUI.tab_switch_in_progress = false;
 
