@@ -14,6 +14,7 @@ import "./gyro.js";
 import "./help.js";
 import "./landing.js";
 import "./led_strip.js";
+import "./xact_servo.js";
 import "./logic.js";
 import "./mixer.js";
 import "./motors.js";
