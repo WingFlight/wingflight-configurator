@@ -192,6 +192,12 @@ class State {
         const payload = buildServoParamsPayload(this.selectedPhysicalId, this.values);
         await MSP.promise(MSPCodes.MSP_SET_XACT_PARAMS, Array.from(payload));
 
+        // If this save renamed the servo's own Physical ID, the firmware now tracks it under
+        // the new one (see fbus_xact.c's XACT_FIELD_PHYSICAL_ID write) -- follow the rename so
+        // the verification re-fetch below, and anything afterwards (Save again, back to list),
+        // addresses the servo correctly instead of a Physical ID nothing answers to anymore.
+        this.selectedPhysicalId = this.values.physicalId;
+
         // The firmware can silently refuse the write (e.g. this servo shares its App ID with
         // another discovered one -- see fbusXactHasDuplicateAppId()) while still ACK'ing the
         // MSP frame itself, so trusting `this.values` as "now saved" would hide that. Re-fetch

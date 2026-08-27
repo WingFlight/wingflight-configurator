@@ -524,7 +524,7 @@
         "message": "⚠ ID conflict"
     },
     "xactServoConflictWarning": {
-        "message": "Another servo appears to be answering with this same Physical ID -- the parameters below may be a mix of two different servos. Disconnect the extra unit, give it a different Physical ID, and rescan before saving."
+        "message": "Two servos appear to share this Physical ID and can't be told apart -- the parameters below may be a mix of both. To resolve: unplug one of the two affected servos, change the Physical ID of the one still connected to something unused, then reconnect the other one and rescan."
     },
     "xactServoDuplicateAppIdBadge": {
         "message": "⚠ Duplicate App ID"
