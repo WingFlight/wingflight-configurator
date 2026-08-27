@@ -532,6 +532,9 @@
     "xactServoDuplicateAppIdWarning": {
         "message": "Another discovered servo shares this one's App ID. XACT commands are addressed by App ID, not just Physical ID -- confirmed on real hardware, a save here can also silently reach that other servo. Saving is blocked until you give this servo a different, unused App ID; other changes will be saved together with that fix once it's unique."
     },
+    "xactServoPhysicalIdCollisionWarning": {
+        "message": "Another discovered servo already uses this Physical ID. Choose a different one -- two servos sharing a Physical ID collide on the bus and get tracked as a single, unreliable entry."
+    },
     "xactServoSectionProtocol": {
         "message": "Protocol"
     },

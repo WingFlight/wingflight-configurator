@@ -22,6 +22,25 @@
       !xactState.isDirty(),
   );
 
+  // Live checks against the other servos already discovered this scan, so picking a new
+  // Physical ID/App ID gives immediate feedback on whether it actually resolves a collision --
+  // xactState.values.duplicateAppId only reflects what was true when the servo was read, not
+  // whatever's currently selected in the form.
+  let physicalIdWillCollide = $derived(
+    xactState.servos.some(
+      (s) =>
+        s.physicalId !== xactState.selectedPhysicalId &&
+        s.physicalId === xactState.values.physicalId,
+    ),
+  );
+  let appIdWillCollide = $derived(
+    xactState.servos.some(
+      (s) =>
+        s.physicalId !== xactState.selectedPhysicalId &&
+        s.appIdOffset === xactState.values.appIdOffset,
+    ),
+  );
+
   function hex(value, digits) {
     return value.toString(16).toUpperCase().padStart(digits, "0");
   }
@@ -163,7 +182,9 @@
       </button>
     {/if}
 
-    {#if xactState.values.duplicateAppId}
+    {#if physicalIdWillCollide}
+      <WarningNote message="xactServoPhysicalIdCollisionWarning" />
+    {:else if appIdWillCollide}
       <WarningNote message="xactServoDuplicateAppIdWarning" />
     {:else if xactState.values.conflict}
       <WarningNote message="xactServoConflictWarning" />
