@@ -205,6 +205,11 @@ class State {
         // having actually changed.
         this.values = await this.fetchParams(this.selectedPhysicalId);
         this.initialValues = $state.snapshot(this.values);
+
+        // Refresh the discovered-servo list too -- it drives the form's live Physical ID/App
+        // ID collision checks, and a stale entry for this same servo's pre-save identity would
+        // otherwise look like a collision with itself after a rename.
+        this.servos = await this.fetchServoList();
     }
 
     onRevert() {
