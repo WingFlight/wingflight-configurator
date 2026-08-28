@@ -50,6 +50,11 @@
       "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-sbus-input",
+      "path": "./feature-sbus-input/"
     }
   ]
 }
