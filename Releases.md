@@ -1,3 +1,7 @@
+# 0.0.16
+
+Add XACT servo programming tab: scan and configure FrSky XACT servos over FBUS, with multi-servo discovery/selection, live Physical ID/App ID conflict detection, and a field set aligned to FrSky's own configuration tool.
+
 # 0.0.15
 
 Add support for Spektrum SRXL2 ESC.
