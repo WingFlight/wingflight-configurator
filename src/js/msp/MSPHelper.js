@@ -48,6 +48,8 @@ export function MspHelper() {
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
         'SRXL2_ESC': 21,
+        'FC_LINK_MASTER': 22,
+        'FC_LINK_SLAVE': 23,
     };
 
     self.REBOOT_TYPES = {
@@ -554,6 +556,35 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_FC_LINK_STATUS: {
+                FC.FC_LINK_STATUS.enabled = !!data.readU8();
+                FC.FC_LINK_STATUS.role = data.readU8();
+                FC.FC_LINK_STATUS.peerLost = !!data.readU8();
+                FC.FC_LINK_STATUS.peerArmed = !!data.readU8();
+                FC.FC_LINK_STATUS.peerFailsafeActive = !!data.readU8();
+                FC.FC_LINK_STATUS.peerRxReceivingSignal = !!data.readU8();
+                FC.FC_LINK_STATUS.peerSeq = data.readU16();
+                FC.FC_LINK_STATUS.txHeartbeatSent = data.readU32();
+                FC.FC_LINK_STATUS.rxByteTotal = data.readU32();
+                FC.FC_LINK_STATUS.heartbeatOk = data.readU32();
+                FC.FC_LINK_STATUS.heartbeatChecksumFail = data.readU32();
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_FC_LINK_SYNC_CONFIG: {
+                FC.FC_LINK_SYNC_CONFIG.syncMixerServos = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncPidRates = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncRx = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncMotor = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncTelemetry = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncModesAdjustments = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncGps = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncOsd = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncVtx = !!data.readU8();
+                FC.FC_LINK_SYNC_CONFIG.syncOther = !!data.readU8();
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();
@@ -691,6 +722,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
             case MSPCodes.MSP2_WING_SET_GOVERNOR_CONFIG: {
                 console.log('Governor Configuration saved');
+                break;
+            }
+            case MSPCodes.MSP2_WING_SET_FC_LINK_SYNC_CONFIG: {
+                console.log('FC Link sync configuration saved');
                 break;
             }
             case MSPCodes.MSP_SET_GPS_CONFIG: {
@@ -2050,6 +2085,20 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
             }
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_FC_LINK_SYNC_CONFIG: {
+            buffer.push8(FC.FC_LINK_SYNC_CONFIG.syncMixerServos ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncPidRates ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncRx ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncMotor ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncTelemetry ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncModesAdjustments ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncGps ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncOsd ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncVtx ? 1 : 0)
+                .push8(FC.FC_LINK_SYNC_CONFIG.syncOther ? 1 : 0);
             break;
         }
 

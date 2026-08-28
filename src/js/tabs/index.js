@@ -8,6 +8,7 @@ import "./curves.js";
 import "./esc_programming.js";
 import "./failsafe.js";
 import "./fbus_sensors.js";
+import "./fc_link.js";
 import "./firmware_flasher.js";
 import "./gps.js";
 import "./gyro.js";

@@ -11,6 +11,7 @@ export class Features {
     RSSI_ADC: 15,
     LED_STRIP: 16,
     DISPLAY: 17,
+    FC_LINK: 23,
     RX_SPI: 25,
     ESC_SENSOR: 27,
     FREQ_SENSOR: 28,

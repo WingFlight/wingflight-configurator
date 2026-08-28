@@ -715,6 +715,147 @@
     "tabBlackbox": {
         "message": "Blackbox"
     },
+    "tabFcLink": {
+        "message": "FC Link"
+    },
+    "fcLinkSectionEnable": {
+        "message": "Enable FC Link"
+    },
+    "fcLinkSectionEnableHelp": {
+        "message": "Turns the FC Link subsystem on or off. Also requires a UART assigned to the FC Link Master or Slave port function to actually do anything."
+    },
+    "fcLinkExperimentalNote": {
+        "message": "FC Link is experimental. Enabling it requires a reboot, and a UART must be assigned to the FC Link Master or Slave port function before it will link to a peer."
+    },
+    "fcLinkSectionStatus": {
+        "message": "Link Status"
+    },
+    "fcLinkSectionStats": {
+        "message": "Link Statistics"
+    },
+    "fcLinkNotEnabled": {
+        "message": "FC Link is enabled, but no UART has been assigned to the FC Link Master or Slave port function on this board."
+    },
+    "fcLinkRole": {
+        "message": "Role"
+    },
+    "fcLinkRoleMaster": {
+        "message": "Master"
+    },
+    "fcLinkRoleSlave": {
+        "message": "Slave"
+    },
+    "fcLinkPeerStatus": {
+        "message": "Peer"
+    },
+    "fcLinkPeerConnected": {
+        "message": "Connected"
+    },
+    "fcLinkPeerLost": {
+        "message": "Lost"
+    },
+    "fcLinkPeerArmed": {
+        "message": "Peer Armed"
+    },
+    "fcLinkPeerFailsafe": {
+        "message": "Peer Failsafe"
+    },
+    "fcLinkPeerRxSignal": {
+        "message": "Peer RX Signal"
+    },
+    "fcLinkHeartbeatSent": {
+        "message": "Heartbeats Sent"
+    },
+    "fcLinkBytesReceived": {
+        "message": "Bytes Received"
+    },
+    "fcLinkHeartbeatOk": {
+        "message": "Heartbeats OK"
+    },
+    "fcLinkHeartbeatChecksumFail": {
+        "message": "Checksum Failures"
+    },
+    "fcLinkSectionSync": {
+        "message": "Base Config Sync"
+    },
+    "fcLinkSectionSyncHelp": {
+        "message": "Choose which categories of base configuration this SLAVE will accept when syncing from the MASTER. Live PID/rate tuning is always mirrored continuously regardless of these settings — this only affects the one-shot base config sync, which runs automatically whenever MASTER's saved config changes in a category enabled below, or on demand via <code>fc_link sync</code>."
+    },
+    "fcLinkSyncMasterOnly": {
+        "message": "Sync categories are configured on the SLAVE board."
+    },
+    "fcLinkSyncMixerServos": {
+        "message": "Mixer / Servos"
+    },
+    "fcLinkSyncMixerServosHelp": {
+        "message": "Mixer rules, curves and inputs, logic conditions, servo endpoints/rate/speed, and rotor governor settings."
+    },
+    "fcLinkSyncPidRates": {
+        "message": "PID / Rates"
+    },
+    "fcLinkSyncPidRatesHelp": {
+        "message": "PID profiles, rate profiles, stick-gain curves, and gyro/RPM/dynamic-notch filtering. Note: the currently active PID/rate profile is already mirrored live regardless of this setting — this only affects the full saved profile set."
+    },
+    "fcLinkSyncRx": {
+        "message": "Receiver"
+    },
+    "fcLinkSyncRxHelp": {
+        "message": "Receiver channel mapping and protocol, stick deadband/smoothing, and failsafe behaviour."
+    },
+    "fcLinkSyncMotor": {
+        "message": "Motor"
+    },
+    "fcLinkSyncMotorHelp": {
+        "message": "Throttle range, RPM filtering/gear ratios, and pole count. Motor pin assignment and ESC protocol (DSHOT/PWM) are per-board wiring and are never synced, even with this on."
+    },
+    "fcLinkSyncTelemetry": {
+        "message": "Telemetry"
+    },
+    "fcLinkSyncTelemetryHelp": {
+        "message": "Telemetry sensor/rate settings, and the tuning fields of the SBUS-out/F.Bus-master redundancy-bus outputs (frame rate, telemetry rate, sensor forwarding). Port wiring flags (inverted, pin swap, half-duplex) on all of these are per-board and are never synced, even with this on."
+    },
+    "fcLinkSyncModesAdjustments": {
+        "message": "Modes / Adjustments"
+    },
+    "fcLinkSyncModesAdjustmentsHelp": {
+        "message": "Flight mode (box) activation ranges, adjustment ranges, and logic conditions."
+    },
+    "fcLinkSyncGps": {
+        "message": "GPS"
+    },
+    "fcLinkSyncGpsHelp": {
+        "message": "GPS provider/config, GPS rescue, and home-position settings."
+    },
+    "fcLinkSyncOsd": {
+        "message": "OSD"
+    },
+    "fcLinkSyncOsdHelp": {
+        "message": "OSD layout/elements, display-port offsets, and video standard (PAL/NTSC)."
+    },
+    "fcLinkSyncVtx": {
+        "message": "VTX"
+    },
+    "fcLinkSyncVtxHelp": {
+        "message": "VTX band/channel/power table and settings."
+    },
+    "fcLinkSyncOther": {
+        "message": "Other"
+    },
+    "fcLinkSyncOtherHelp": {
+        "message": "Everything else considered safe to share: blackbox, beeper, arming, battery, pilot name, rangefinder, RC device, scheduler, time, and LED strip colour/mode assignments."
+    },
+    "fcLinkSyncNeverSyncedNote": {
+        "message": "Regardless of the categories above, some settings are <b>never</b> copied from the MASTER, because they describe this specific board rather than shared tuning: pin/wiring assignments (which pin drives which motor, servo, or receiver), port wiring flags (inverted/pin-swap/half-duplex on FC Link, SBUS-out, F.Bus-master, S.Port-master, and telemetry), per-unit sensor calibration (accelerometer, compass, current/voltage sensors), and board and gyro mounting alignment."
+    },
+    "fcLinkSyncNow": {
+        "message": "Sync and Reboot"
+    },
+    "fcLinkSyncTriggered": {
+        "message": "FC Link config sync requested from MASTER."
+    },
+    "fcLinkSyncTriggerRefused": {
+        "message": "FC Link sync refused — not a SLAVE, link down, or peer firmware/EEPROM version mismatch."
+    },
     "tabAdjustments": {
         "message": "Adjustments"
     },
@@ -1975,6 +2116,12 @@
     },
     "portsFunction_SRXL2_ESC": {
         "message": "SRXL2 ESC"
+    },
+    "portsFunction_FC_LINK_MASTER": {
+        "message": "FC Link (Master)"
+    },
+    "portsFunction_FC_LINK_SLAVE": {
+        "message": "FC Link (Slave)"
     },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
@@ -4725,6 +4872,9 @@
     },
     "firmwareFlasherOptionLabelBuildTypeDevelopment": {
         "message": "All Releases and Snapshots"
+    },
+    "firmwareFlasherOptionLabelBuildTypeFeatureBranch": {
+        "message": "All Releases, Snapshots and Feature Branches"
     },
     "firmwareFlasherOptionLabelSelectFirmware": {
         "message": "Choose a Firmware / Board"
