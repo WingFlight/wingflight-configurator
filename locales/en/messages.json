@@ -4873,6 +4873,9 @@
     "firmwareFlasherOptionLabelBuildTypeDevelopment": {
         "message": "All Releases and Snapshots"
     },
+    "firmwareFlasherOptionLabelBuildTypeFeatureBranch": {
+        "message": "All Releases, Snapshots and Feature Branches"
+    },
     "firmwareFlasherOptionLabelSelectFirmware": {
         "message": "Choose a Firmware / Board"
     },
