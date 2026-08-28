@@ -461,6 +461,13 @@ export function updateTabList(features) {
         (port) => port.functions.includes('FBUS_OUT') || port.functions.includes('SPORT_MASTER'),
     );
     $('#tabs ul.mode-connected li.tab_fbus_sensors').toggle(fbusMasterActive);
+
+    // SBUS-In Fallback likewise has no dedicated feature bit -- its own
+    // serial port function is what turns it on.
+    const hasSbusInputPort = (FC.SERIAL_CONFIG?.ports ?? []).some(
+        (port) => port.functions.includes('RX_SBUS_INPUT'),
+    );
+    $('#tabs ul.mode-connected li.tab_sbus_input_status').toggle(hasSbusInputPort);
 }
 
 function zeroPad(value, width) {

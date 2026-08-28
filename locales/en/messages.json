@@ -742,6 +742,9 @@
     "tabFbusSensors": {
         "message": "FBUS/S.Port Sensors"
     },
+    "tabSbusInputStatus": {
+        "message": "SBUS Input Status"
+    },
     "fbusSensorsDescription": {
         "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master."
     },
@@ -781,9 +784,6 @@
     "fbusSensorsColPackets": {
         "message": "Packets"
     },
-    "sbusInputStatusTitle": {
-        "message": "SBUS-In Fallback Status"
-    },
     "sbusInputStatusDescription": {
         "message": "Live status for the secondary SBUS receiver assigned as an instant fallback if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
     },
@@ -798,6 +798,9 @@
     },
     "sbusInputStatusActiveFallback": {
         "message": "Active Source: SBUS-In"
+    },
+    "sbusInputStatusEmpty": {
+        "message": "No channel data yet -- check the satellite is bound and wired to this port."
     },
     "logActionHide": {
         "message": "Hide Log"
