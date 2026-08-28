@@ -55,6 +55,7 @@
     { tag: "firmwareFlasherOptionLabelBuildTypeRelease", level: 0 },
     { tag: "firmwareFlasherOptionLabelBuildTypePreRelease", level: 1 },
     { tag: "firmwareFlasherOptionLabelBuildTypeDevelopment", level: 2 },
+    { tag: "firmwareFlasherOptionLabelBuildTypeFeatureBranch", level: 3 },
   ];
 
   let buildTypeIndex = $state(0);
