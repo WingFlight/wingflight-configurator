@@ -64,10 +64,10 @@ export const MSPCodes = {
     MSP_SET_BLACKBOX_CONFIG:        81,
     MSP_TRANSPONDER_CONFIG:         82,
     MSP_SET_TRANSPONDER_CONFIG:     83,
-    MSP_OSD_CONFIG:                 84,
-    MSP_SET_OSD_CONFIG:             85,
-    MSP_OSD_CHAR_READ:              86,
-    MSP_OSD_CHAR_WRITE:             87,
+//  MSP_OSD_CONFIG:                 84, // removed (OSD)
+//  MSP_SET_OSD_CONFIG:             85, // removed (OSD)
+//  MSP_OSD_CHAR_READ:              86, // removed (OSD)
+//  MSP_OSD_CHAR_WRITE:             87, // removed (OSD)
 //  MSP_VTX_CONFIG:                 88,
 //  MSP_SET_VTX_CONFIG:             89,
     MSP_ADVANCED_CONFIG:            90,
@@ -132,7 +132,11 @@ export const MSPCodes = {
     MSP_SET_RPM_FILTER_V2:          155,
 
     MSP_UID:                        160,
+    MSP_SET_XACT_SCAN:              161,
+    MSP_XACT_PARAMS:                162,
+    MSP_SET_XACT_PARAMS:            163,
     MSP_GPS_SV_INFO:                164,
+    MSP_XACT_SERVO_LIST:            165,
 
     MSP_MIXER_INPUTS:               170,
     MSP_SET_MIXER_INPUT:            171,
@@ -216,10 +220,16 @@ export const MSPCodes = {
     MSP2_WING_SET_BOARD_MOUNT_TRIM:  0x5F04,
     MSP2_WING_BOARD_MOUNT_TRIM_AUTO: 0x5F05,
     MSP2_WING_EFFECTIVE_PID_GAINS:   0x5F06,
-    MSP2_WING_FC_LINK_STATUS:        0x5F07,
-    MSP2_WING_FC_LINK_SYNC_CONFIG:   0x5F08,
-    MSP2_WING_SET_FC_LINK_SYNC_CONFIG: 0x5F09,
-    MSP2_WING_TRIGGER_FC_LINK_SYNC:  0x5F0A,
+    MSP2_WING_FBUS_SENSORS:           0x5F07,
+    MSP2_WING_CLEAR_FBUS_SENSORS:     0x5F08,
+    MSP2_WING_FBUS_MASTER_CONFIG:     0x5F09,
+    MSP2_WING_SET_FBUS_MASTER_CONFIG: 0x5F0A,
+    MSP2_WING_TV_PID_CONFIG:          0x5F0B,
+    MSP2_WING_SET_TV_PID_CONFIG:      0x5F0C,
+    MSP2_WING_FC_LINK_STATUS:          0x5F0D,
+    MSP2_WING_FC_LINK_SYNC_CONFIG:     0x5F0E,
+    MSP2_WING_SET_FC_LINK_SYNC_CONFIG: 0x5F0F,
+    MSP2_WING_TRIGGER_FC_LINK_SYNC:    0x5F10,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

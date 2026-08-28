@@ -8,6 +8,12 @@
   let showFwVersion = $derived(
     FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier,
   );
+  let firmwareLabel = $derived(
+    `${FC.CONFIG.buildVersion} ${FC.CONFIG.flightControllerIdentifier}`,
+  );
+  let configuratorLabel = $derived(
+    `${CONFIGURATOR.version} · ${CONFIGURATOR.buildLabel}`,
+  );
 </script>
 
 <div class="container">
@@ -27,29 +33,34 @@
   <div class="grow"></div>
 
   {#if showFwVersion}
-    <span>
-      {$i18n.t("versionLabelFirmware")}
-      {FC.CONFIG.buildVersion}
-      {FC.CONFIG.flightControllerIdentifier}
+    <span
+      class="identity"
+      title={`${$i18n.t("versionLabelFirmware")}: ${firmwareLabel}`}
+    >
+      FW {firmwareLabel}
     </span>
   {/if}
-  <span class="configurator-version">
-    <span>{$i18n.t("versionLabelConfigurator")}: {CONFIGURATOR.version}</span>
-    <span class="build-label">Branch/tag: {CONFIGURATOR.buildLabel}</span>
+  <span
+    class="identity configurator-version"
+    title={`${$i18n.t("versionLabelConfigurator")}: ${CONFIGURATOR.version} · Branch/tag: ${CONFIGURATOR.buildLabel}`}
+  >
+    Cfg {configuratorLabel}
   </span>
 </div>
 
 <style lang="scss">
   .grow {
     flex-grow: 1;
+    min-width: 8px;
   }
 
   .container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     height: 20px;
     line-height: 20px;
     width: 100%;
+    overflow: hidden;
 
     :global(html[data-theme="light"]) & {
       background-color: #bfbeb5;
@@ -72,18 +83,17 @@
     & > span {
       padding: 0 12px;
       flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
-  .configurator-version {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    line-height: 10px;
+  .identity {
+    max-width: 210px;
   }
 
-  .build-label {
-    font-size: 10px;
-    opacity: 0.75;
+  .configurator-version {
+    max-width: 190px;
   }
 </style>

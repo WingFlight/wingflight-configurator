@@ -136,4 +136,14 @@
   :global(html[data-theme="dark"]) .axis.yaw {
     background-color: hsl(240, 35%, 32%);
   }
+
+  // Matches Dynamics.svelte/Rates.svelte's 650px breakpoint so the whole
+  // page goes compact together, even though this table's labels are
+  // already short enough that it doesn't strictly need to change.
+  @media only screen and (max-width: 650px) {
+    th,
+    td {
+      padding: 4px 2px;
+    }
+  }
 </style>

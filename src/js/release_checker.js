@@ -7,7 +7,7 @@ export const ReleaseChecker = function (releaseName, releaseUrl) {
     self._releaseUrl = releaseUrl;
 };
 
-ReleaseChecker.prototype.loadReleaseData = function (processFunction) {
+ReleaseChecker.prototype.loadReleaseData = function (processFunction, force) {
     const self = this;
     chrome.storage.local.get([self._releaseLastUpdateTag, self._releaseDataTag], function (result) {
         const releaseDataTimestamp = $.now();
@@ -15,7 +15,7 @@ ReleaseChecker.prototype.loadReleaseData = function (processFunction) {
         const cachedReleaseLastUpdate = result[self._releaseLastUpdateTag];
         // An empty array is truthy, so treat a cached-but-empty release list the same as no cache at all.
         const hasCachedData = Array.isArray(cacheReleaseData) ? cacheReleaseData.length > 0 : !!cacheReleaseData;
-        if (!hasCachedData || !cachedReleaseLastUpdate || releaseDataTimestamp - cachedReleaseLastUpdate > 3600 * 1000) {
+        if (force || !hasCachedData || !cachedReleaseLastUpdate || releaseDataTimestamp - cachedReleaseLastUpdate > 3600 * 1000) {
             $.get(self._releaseUrl, function (releaseData) {
                 GUI.log(i18n.getMessage('releaseCheckLoaded',[self._releaseName]));
 

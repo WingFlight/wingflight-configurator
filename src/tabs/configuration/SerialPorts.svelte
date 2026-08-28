@@ -1,4 +1,6 @@
 <script>
+  import semver from "semver";
+
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
@@ -33,6 +35,13 @@
     const options = [];
 
     for (const func of PORT_FUNCTIONS) {
+      if (
+        func.minApiVersion &&
+        semver.lt(FC.CONFIG.apiVersion, func.minApiVersion)
+      ) {
+        continue;
+      }
+
       options.push({
         value: func.id,
         label: $i18n.t(`portsFunction_${func.name}`),

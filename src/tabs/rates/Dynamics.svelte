@@ -18,7 +18,9 @@
 
     <div class="group">
       <div class="row-label">
-        <span>{$i18n.t("rateSetupResponse")}</span>
+        <span class="label-text" title={$i18n.t("rateSetupResponse")}
+          >{$i18n.t("rateSetupResponse")}</span
+        >
         <HelpIcon>{$i18n.t("rateSetupResponseHelp")}</HelpIcon>
       </div>
       <NumberInput
@@ -40,7 +42,9 @@
 
     <div class="group">
       <div class="row-label">
-        <span>{$i18n.t("rateSetpointBoostGain")}</span>
+        <span class="label-text" title={$i18n.t("rateSetpointBoostGain")}
+          >{$i18n.t("rateSetpointBoostGain")}</span
+        >
         <HelpIcon>{$i18n.t("rateSetpointBoostGainHelp")}</HelpIcon>
       </div>
       <NumberInput
@@ -60,7 +64,11 @@
       />
 
       <div class="row-label">
-        <span>{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span>
+        <span
+          class="label-text"
+          title="{$i18n.t('rateSetpointBoostCutoff')} [Hz]"
+          >{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span
+        >
       </div>
       <NumberInput
         min="0"
@@ -81,7 +89,9 @@
 
     <div class="group">
       <div class="row-label">
-        <span>{$i18n.t("rateYawDynamicCeilingGain")}</span>
+        <span class="label-text" title={$i18n.t("rateYawDynamicCeilingGain")}
+          >{$i18n.t("rateYawDynamicCeilingGain")}</span
+        >
         <HelpIcon>{$i18n.t("rateYawDynamicCeilingGainHelp")}</HelpIcon>
       </div>
       <div></div>
@@ -93,7 +103,9 @@
       />
 
       <div class="row-label">
-        <span>{$i18n.t("rateYawDynamicDeadbandGain")}</span>
+        <span class="label-text" title={$i18n.t("rateYawDynamicDeadbandGain")}
+          >{$i18n.t("rateYawDynamicDeadbandGain")}</span
+        >
         <HelpIcon>{$i18n.t("rateYawDynamicDeadbandGainHelp")}</HelpIcon>
       </div>
       <div></div>
@@ -105,7 +117,11 @@
       />
 
       <div class="row-label">
-        <span>{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span>
+        <span
+          class="label-text"
+          title="{$i18n.t('rateYawDynamicDeadbandFilter')} [Hz]"
+          >{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span
+        >
       </div>
       <div></div>
       <div></div>
@@ -164,6 +180,16 @@
     padding-left: 4px;
   }
 
+  .label-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    // Flex items default to a min-width based on their content's natural
+    // size, which for nowrap text is the full, untruncated width - that
+    // silently defeats text-overflow:ellipsis unless overridden.
+    min-width: 0;
+  }
+
   .axis-title.roll {
     background-color: hsl(0, 100%, 85%);
   }
@@ -186,5 +212,23 @@
 
   :global(html[data-theme="dark"]) .axis-title.yaw {
     background-color: hsl(240, 35%, 32%);
+  }
+
+  // 650px, not the usual 480px phone breakpoint: this grid's label column
+  // (up to 220px, for the longest untruncated labels like "Setpoint Boost
+  // Cutoff [Hz]") starts crowding the 3 input columns well before 480px.
+  // Shrinking it earlier - with the label truncating to an ellipsis, full
+  // text still available as a tooltip/via each row's help icon - gives
+  // the inputs real room instead of staying squeezed. Matches
+  // RatesTable.svelte/Rates.svelte's tab labels, which switch at the same
+  // point so the whole page goes compact together.
+  @media only screen and (max-width: 650px) {
+    .grid {
+      grid-template-columns: minmax(70px, 110px) repeat(3, minmax(70px, 1fr));
+    }
+
+    .row-label {
+      padding-left: 2px;
+    }
   }
 </style>

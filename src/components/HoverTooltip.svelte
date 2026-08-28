@@ -19,15 +19,23 @@
   async function onmouseover() {
     tooltipElement.showPopover();
 
+    // Keep the tooltip within whichever panel the field lives in, so it
+    // never spills sideways onto a neighbouring panel/column - the
+    // viewport is wide enough that flip()/shift() would otherwise see
+    // plenty of "room" over there and never budge.
+    const boundary = element.closest("[data-tooltip-boundary]") ?? undefined;
+
     const { x, y, placement, middlewareData } = await computePosition(
       element,
       tooltipElement,
       {
+        // Left/right only - never above or below - so the tooltip always
+        // stays vertically inline with the field it's describing.
         placement: "right",
         middleware: [
-          offset(16),
-          flip(),
-          shift({ padding: 4 }),
+          offset(12),
+          flip({ fallbackPlacements: ["left"], boundary }),
+          shift({ padding: 8, crossAxis: false, boundary }),
           arrow({ element: arrowElement }),
         ],
       },
@@ -112,6 +120,11 @@
     font-weight: 400;
     line-height: 18px;
     border-radius: 2px;
+    // The tooltip must never intercept the pointer: it can end up positioned
+    // over neighbouring fields (or briefly over its own anchor before
+    // computePosition settles), and a click there should always reach the
+    // control underneath rather than being swallowed by the popover.
+    pointer-events: none;
 
     color: var(--color-text);
     background-color: var(--color-surface-float);

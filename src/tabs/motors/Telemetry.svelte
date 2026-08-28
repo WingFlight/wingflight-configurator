@@ -19,11 +19,16 @@
       <SubSection>
         <Field id="esc-telemetry-protocol" label="motorsEscTelemetryProtocol">
           {#snippet tooltip()}
-            <Tooltip help="motorsEscTelemetryProtocolHelp" />
+            <Tooltip
+              help={motorState.srxl2PortAssigned
+                ? "motorsEscTelemetryProtocolSrxl2LockedHelp"
+                : "motorsEscTelemetryProtocolHelp"}
+            />
           {/snippet}
           <select
             id="esc-telemetry-protocol"
             bind:value={FC.ESC_SENSOR_CONFIG.protocol}
+            disabled={motorState.srxl2PortAssigned}
           >
             {#each motorState.telemetryProtocols as proto, index (proto)}
               <option value={index}>{proto}</option>
@@ -41,11 +46,16 @@
           label="motorsEscTelemetryHalfDuplex"
         >
           {#snippet tooltip()}
-            <Tooltip help="motorsEscTelemetryHalfDuplexHelp" />
+            <Tooltip
+              help={motorState.srxl2PortAssigned
+                ? "motorsEscTelemetryHalfDuplexSrxl2LockedHelp"
+                : "motorsEscTelemetryHalfDuplexHelp"}
+            />
           {/snippet}
           <Switch
             id="esc-telemetry-half-duplex"
             bind:checked={FC.ESC_SENSOR_CONFIG.half_duplex}
+            disabled={motorState.srxl2PortAssigned}
           />
         </Field>
 

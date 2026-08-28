@@ -44,12 +44,12 @@ export function MspHelper() {
         'IRC_TRAMP': 13,
         'RUNCAM_DEVICE_CONTROL': 14,
         'LIDAR_TF': 15,
-        'FRSKY_OSD': 16,
         'SBUS_OUT': 18,
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
-        'FC_LINK_MASTER': 21,
-        'FC_LINK_SLAVE': 22,
+        'SRXL2_ESC': 21,
+        'FC_LINK_MASTER': 22,
+        'FC_LINK_SLAVE': 23,
     };
 
     self.REBOOT_TYPES = {
@@ -503,6 +503,59 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_FBUS_SENSORS: {
+                const count = data.readU8();
+                const sensors = [];
+
+                for (let i = 0; i < count; i++) {
+                    const sensor = {
+                        physicalId: data.readU8(),
+                        source: data.readU8(), // 0 = FBUS, 1 = S.Port
+                        forwarded: data.readU8() !== 0,
+                        packetCount: data.readU32(),
+                    };
+
+                    const nameLen = data.readU8();
+                    let name = '';
+                    for (let j = 0; j < nameLen; j++) {
+                        name += String.fromCharCode(data.readU8());
+                    }
+                    sensor.name = name;
+
+                    const appIdCount = data.readU8();
+                    sensor.appIds = [];
+                    for (let j = 0; j < appIdCount; j++) {
+                        sensor.appIds.push(data.readU16());
+                    }
+
+                    sensors.push(sensor);
+                }
+
+                FC.FBUS_SENSORS = sensors;
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS: {
+                console.log('Observed FBUS/S.Port sensors cleared');
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG: {
+                data.readU8(); // payload version, unused for now
+                const forwardedSensors = [];
+                // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
+                for (let i = 0; i < 8; i++) {
+                    forwardedSensors.push(data.readU8());
+                }
+                FC.FBUS_MASTER_CONFIG.forwardedSensors = forwardedSensors;
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_SET_FBUS_MASTER_CONFIG: {
+                console.log('FBUS master forwarding config saved');
+                break;
+            }
+
             case MSPCodes.MSP2_WING_FC_LINK_STATUS: {
                 FC.FC_LINK_STATUS.enabled = !!data.readU8();
                 FC.FC_LINK_STATUS.role = data.readU8();
@@ -838,6 +891,39 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_TV_PID_CONFIG: {
+                for (let i = 0; i < 3; i++) { // RPY
+                    for (let j = 0; j < 5; j++) { // PIDFB
+                        FC.TV_PIDS[i][j] = data.readU16();
+                    }
+                }
+                FC.TV_PID_PROFILE.masterGainRoll        = data.readU16();
+                FC.TV_PID_PROFILE.masterGainPitch       = data.readU16();
+                FC.TV_PID_PROFILE.masterGainYaw         = data.readU16();
+                FC.TV_PID_PROFILE.iterm_decay_time      = data.readU8();
+                FC.TV_PID_PROFILE.iterm_decay_limit     = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxType        = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelRoll   = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelPitch  = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxLevelYaw    = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffRoll  = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffPitch = data.readU8();
+                FC.TV_PID_PROFILE.itermRelaxCutoffYaw   = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitRoll        = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitPitch       = data.readU8();
+                FC.TV_PID_PROFILE.errorLimitYaw         = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffRoll       = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffPitch      = data.readU8();
+                FC.TV_PID_PROFILE.dtermCutoffYaw        = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffRoll       = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffPitch      = data.readU8();
+                FC.TV_PID_PROFILE.btermCutoffYaw        = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffRoll        = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffPitch       = data.readU8();
+                FC.TV_PID_PROFILE.gyroCutoffYaw         = data.readU8();
+                break;
+            }
+
             case MSPCodes.MSP_SET_REBOOT: {
                 const rebootType = data.read8();
                 if ((rebootType === self.REBOOT_TYPES.MSC) || (rebootType === self.REBOOT_TYPES.MSC_UTC)) {
@@ -1008,6 +1094,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     };
                     FC.SERIAL_CONFIG.ports.push(serialPort);
                 }
+                updateTabList(FC.FEATURE_CONFIG.features);
                 break;
             }
 
@@ -1689,20 +1776,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Telemetry config saved');
                 break;
             }
-            case MSPCodes.MSP_OSD_CONFIG: {
-                break;
-            }
-            case MSPCodes.MSP_SET_OSD_CONFIG: {
-                console.log('OSD config set');
-                break;
-            }
-            case MSPCodes.MSP_OSD_CHAR_READ: {
-                break;
-            }
-            case MSPCodes.MSP_OSD_CHAR_WRITE: {
-                console.log('OSD char uploaded');
-                break;
-            }
             case MSPCodes.MSP_SET_NAME: {
                 console.log('Name set');
                 break;
@@ -1861,6 +1934,39 @@ MspHelper.prototype.crunch = function(code) {
             break;
         }
 
+        case MSPCodes.MSP2_WING_SET_TV_PID_CONFIG: {
+            for (let i = 0; i < 3; i++) { // RPY
+                for (let j = 0; j < 5; j++) { // PIDFB
+                    buffer.push16(parseInt(FC.TV_PIDS[i][j]));
+                }
+            }
+            buffer.push16(FC.TV_PID_PROFILE.masterGainRoll)
+                .push16(FC.TV_PID_PROFILE.masterGainPitch)
+                .push16(FC.TV_PID_PROFILE.masterGainYaw)
+                .push8(FC.TV_PID_PROFILE.iterm_decay_time)
+                .push8(FC.TV_PID_PROFILE.iterm_decay_limit)
+                .push8(FC.TV_PID_PROFILE.itermRelaxType)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelRoll)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelPitch)
+                .push8(FC.TV_PID_PROFILE.itermRelaxLevelYaw)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.errorLimitRoll)
+                .push8(FC.TV_PID_PROFILE.errorLimitPitch)
+                .push8(FC.TV_PID_PROFILE.errorLimitYaw)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.dtermCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.btermCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.btermCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.btermCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffRoll)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffPitch)
+                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw);
+            break;
+        }
+
         case MSPCodes.MSP_SET_PID_TUNING: {
             for (let i = 0; i < 3; i++) { // RPY
                 for (let j = 0; j < 4; j++) { // PIDF
@@ -1971,6 +2077,14 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.GOVERNOR_CONFIG.governor_ceiling)
                 .push16(FC.GOVERNOR_CONFIG.governor_rpm_min)
                 .push16(FC.GOVERNOR_CONFIG.governor_rpm_max);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_FBUS_MASTER_CONFIG: {
+            // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
+            for (let i = 0; i < 8; i++) {
+                buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
+            }
             break;
         }
 

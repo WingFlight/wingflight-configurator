@@ -2,6 +2,7 @@ import semver from "semver";
 
 import * as config from "@/js/config.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { mountComponents } from "@/js/main.svelte.js";
@@ -448,6 +449,18 @@ function notifyOutdatedVersion(releaseData) {
 export function updateTabList(features) {
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
+    $('#tabs ul.mode-connected li.tab_thrust_vector').toggle(features.isEnabled('THRUST_VECTOR'));
+
+    const hasFbusPort = (FC.SERIAL_CONFIG?.ports ?? []).some((port) => port.functions.includes('FBUS_OUT'));
+    $('#tabs ul.mode-connected li.tab_xact_servo').toggle(hasFbusPort);
+
+    // FBUS/S.Port master mode observes sensors on a UART configured with the
+    // FBUS_OUT or SPORT_MASTER serial port function -- there's no dedicated
+    // feature bit for it (mirrors the check in Servos.svelte).
+    const fbusMasterActive = (FC.SERIAL_CONFIG?.ports ?? []).some(
+        (port) => port.functions.includes('FBUS_OUT') || port.functions.includes('SPORT_MASTER'),
+    );
+    $('#tabs ul.mode-connected li.tab_fbus_sensors').toggle(fbusMasterActive);
 }
 
 function zeroPad(value, width) {

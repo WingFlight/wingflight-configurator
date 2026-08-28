@@ -11,19 +11,18 @@ export class Features {
     RSSI_ADC: 15,
     LED_STRIP: 16,
     DISPLAY: 17,
-    OSD: 18,
-    CMS: 19,
     FC_LINK: 23,
     RX_SPI: 25,
     ESC_SENSOR: 27,
     FREQ_SENSOR: 28,
     DYN_NOTCH: 29,
     RPM_FILTER: 30,
+    THRUST_VECTOR: 24,
   };
 
   static GROUPS = {
     RX_PROTO: ["RX_PPM", "RX_SERIAL", "RX_PARALLEL_PWM", "RX_MSP", "RX_SPI"],
-    OTHER: ["GPS", "LED_STRIP", "CMS"],
+    OTHER: ["GPS", "LED_STRIP", "THRUST_VECTOR"],
     RSSI: ["RSSI_ADC"],
   };
 

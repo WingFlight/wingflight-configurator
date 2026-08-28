@@ -29,8 +29,32 @@
   }
 </script>
 
+{#snippet valueCell(axisIndex, gainIndex)}
+  {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
+  <div
+    class="runtime-control"
+    class:runtime-controlled={adjustment}
+    class:runtime-active={adjustment?.active}
+    title={adjustmentTitle(adjustment)}
+  >
+    <NumberInput
+      min="0"
+      max="1000"
+      bind:value={FC.PIDS[axisIndex][gainIndex]}
+    />
+    {#if adjustment}
+      <span class="adjustment-badge">
+        {adjustment.active
+          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/if}
+  </div>
+{/snippet}
+
 <Section label="profilesPidGains">
-  <div class="table-scroll">
+  <!-- Desktop: axes as rows, gain terms as columns. -->
+  <div class="table-scroll desktop-table">
     <table class="grid">
       <thead>
         <tr>
@@ -50,28 +74,38 @@
           <tr>
             <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
             {#each GAINS as gain, gainIndex (gain.key)}
-              {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
-              <td>
-                <div
-                  class="runtime-control"
-                  class:runtime-controlled={adjustment}
-                  class:runtime-active={adjustment?.active}
-                  title={adjustmentTitle(adjustment)}
-                >
-                  <NumberInput
-                    min="0"
-                    max="1000"
-                    bind:value={FC.PIDS[axisIndex][gainIndex]}
-                  />
-                  {#if adjustment}
-                    <span class="adjustment-badge">
-                      {adjustment.active
-                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                        : "ADJ"}
-                    </span>
-                  {/if}
-                </div>
-              </td>
+              <td>{@render valueCell(axisIndex, gainIndex)}</td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile: five gain-term columns don't fit a phone width even shrunk,
+       so terms become rows and the 3 axes become columns instead - same
+       data, same steppers, just reoriented to fit. -->
+  <div class="table-scroll mobile-table">
+    <table class="grid">
+      <thead>
+        <tr>
+          <th></th>
+          {#each AXES as axis (axis)}
+            <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+          {/each}
+        </tr>
+      </thead>
+      <tbody>
+        {#each GAINS as gain, gainIndex (gain.key)}
+          <tr>
+            <td class="term-label">
+              <span class="header-label">
+                <span class="term-key">{gain.key}</span>
+                <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+              </span>
+            </td>
+            {#each AXES as axis, axisIndex (axis)}
+              <td>{@render valueCell(axisIndex, gainIndex)}</td>
             {/each}
           </tr>
         {/each}
@@ -83,6 +117,10 @@
 <style lang="scss">
   .table-scroll {
     overflow-x: auto;
+  }
+
+  .mobile-table {
+    display: none;
   }
 
   .grid {
@@ -151,33 +189,100 @@
     opacity: 0.62;
   }
 
-  .axis {
+  .axis,
+  .axis-header {
     font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .axis {
     text-align: left;
     padding-left: 8px;
   }
 
-  .axis.ROLL {
+  .term-label {
+    text-align: left;
+    padding-left: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  // P/I/D/F/B render at slightly different widths (an "I" is narrower
+  // than a "P"), which would otherwise nudge each row's help icon a
+  // couple pixels out of line with the others. Fixed width keeps them in
+  // one clean column regardless of which letter precedes it.
+  .term-key {
+    display: inline-block;
+    width: 12px;
+  }
+
+  .axis.ROLL,
+  .axis-header.ROLL {
     background-color: hsl(0, 100%, 85%);
   }
 
-  .axis.PITCH {
+  .axis.PITCH,
+  .axis-header.PITCH {
     background-color: hsl(120, 100%, 85%);
   }
 
-  .axis.YAW {
+  .axis.YAW,
+  .axis-header.YAW {
     background-color: hsl(240, 100%, 88%);
   }
 
-  :global(html[data-theme="dark"]) .axis.ROLL {
+  :global(html[data-theme="dark"]) .axis.ROLL,
+  :global(html[data-theme="dark"]) .axis-header.ROLL {
     background-color: hsl(0, 40%, 30%);
   }
 
-  :global(html[data-theme="dark"]) .axis.PITCH {
+  :global(html[data-theme="dark"]) .axis.PITCH,
+  :global(html[data-theme="dark"]) .axis-header.PITCH {
     background-color: hsl(120, 25%, 25%);
   }
 
-  :global(html[data-theme="dark"]) .axis.YAW {
+  :global(html[data-theme="dark"]) .axis.YAW,
+  :global(html[data-theme="dark"]) .axis-header.YAW {
     background-color: hsl(240, 35%, 32%);
+  }
+
+  // 820px, not the usual 480px phone breakpoint: this table needs real
+  // room (5 columns) before staying in desktop mode makes sense - below
+  // that it was falling into its own horizontal scroll well before the
+  // generic phone breakpoint kicked in. See Profiles.svelte's matching
+  // comment - this must switch in step with the rest of the page.
+  //
+  // Once transposed, mobile has only 3 axis columns left (see markup
+  // above) - much more headroom than the 5-column desktop table, so
+  // NumberInput can sit closer to its normal desktop size instead of the
+  // aggressively clawed-back width a 5-column fit would need. Still skip
+  // width:100% on .grid though: even 3 columns of fixed-width steppers
+  // get stretched far past their content by a full-width table, which is
+  // what made this look sparse before.
+  @media only screen and (max-width: 820px) {
+    .desktop-table {
+      display: none;
+    }
+
+    .mobile-table {
+      display: block;
+    }
+
+    .table-scroll {
+      --number-input-height: 1.7rem;
+      --number-input-btn-size: 1.7rem;
+      --number-input-max-width: 116px;
+      --number-input-padding-x: 6px;
+    }
+
+    .grid {
+      width: auto;
+      min-width: 0;
+    }
+
+    th,
+    td {
+      padding: 4px 6px;
+    }
   }
 </style>

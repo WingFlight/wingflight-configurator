@@ -23,6 +23,8 @@ class FlightController {
   DEFAULT = $state();
   ESC_SENSOR_CONFIG = $state();
   FAILSAFE_CONFIG = $state();
+  FBUS_MASTER_CONFIG = $state();
+  FBUS_SENSORS = $state();
   FC_LINK_STATUS = $state();
   FC_LINK_SYNC_CONFIG = $state();
   FEATURE_CONFIG = $state();
@@ -82,6 +84,8 @@ class FlightController {
   TELEMETRY_CONFIG = $state();
   TRANSPONDER = $state();
   TUNING_SLIDERS = $state();
+  TV_PIDS = $state();
+  TV_PID_PROFILE = $state();
   VOLTAGE_METERS = $state();
   VOLTAGE_METER_CONFIGS = $state();
 
@@ -242,6 +246,10 @@ class FlightController {
     };
 
     this.PID_RUNTIME_GAINS = null;
+    this.FBUS_SENSORS = [];
+    this.FBUS_MASTER_CONFIG = {
+      forwardedSensors:            [],
+    };
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});
     this.PIDS = Array.from({length: 3});
@@ -406,11 +414,11 @@ class FlightController {
     this.GOVERNOR_CONFIG = {
       governor_mode:          0,
       governor_rpm:           0,
-      governor_gain:          0,
-      governor_i_gain:        0,
-      governor_throttle:      0,
-      governor_handover:      0,
-      governor_ceiling:       0,
+      governor_gain:          20,
+      governor_i_gain:        30,
+      governor_throttle:      15,
+      governor_handover:      10,
+      governor_ceiling:       30,
       governor_rpm_min:       0,
       governor_rpm_max:       0,
     };
@@ -596,6 +604,37 @@ class FlightController {
       gainCurveRoll:              0,
       gainCurvePitch:             0,
       gainCurveYaw:               0,
+    };
+
+    // Independent Thrust Vector PID loop (FEATURE_THRUST_VECTOR). Single
+    // config, not a per-profile array -- see MSP2_WING_TV_PID_CONFIG.
+    this.TV_PIDS = Array.from({length: 3}, () => Array.from({length: 5}).fill(0));
+
+    this.TV_PID_PROFILE = {
+      masterGainRoll:        100,
+      masterGainPitch:       100,
+      masterGainYaw:         100,
+      iterm_decay_time:      0,
+      iterm_decay_limit:     0,
+      itermRelaxType:        0,
+      itermRelaxLevelRoll:   0,
+      itermRelaxLevelPitch:  0,
+      itermRelaxLevelYaw:    0,
+      itermRelaxCutoffRoll:  0,
+      itermRelaxCutoffPitch: 0,
+      itermRelaxCutoffYaw:   0,
+      errorLimitRoll:        0,
+      errorLimitPitch:       0,
+      errorLimitYaw:         0,
+      dtermCutoffRoll:       0,
+      dtermCutoffPitch:      0,
+      dtermCutoffYaw:        0,
+      btermCutoffRoll:       0,
+      btermCutoffPitch:      0,
+      btermCutoffYaw:        0,
+      gyroCutoffRoll:        0,
+      gyroCutoffPitch:       0,
+      gyroCutoffYaw:         0,
     };
 
     this.SENSOR_CONFIG = {

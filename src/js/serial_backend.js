@@ -177,7 +177,13 @@ export async function handleConnectClick() {
 
                 await new Promise((resolve) => globalThis.mspHelper.setArmingEnabled(true, resolve));
 
-                finishClose();
+                // Wait for the port to actually finish closing before letting the
+                // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()
+                // used to fire-and-forget serial.disconnect(), so navigating to
+                // Firmware Flasher here would mount the tab (and enable Detect)
+                // while the previous connection's teardown (cancel reader / release
+                // lock / port.close()) was still in flight.
+                await finishClose();
             }
 
             toggleStatus();
@@ -365,7 +371,16 @@ function finishClose() {
     // close reset to custom defaults dialog
     $('#dialogResetToCustomDefaults')[0].close();
 
-    serial.disconnect(onClosed);
+    // Resolves once the port has actually finished closing (not just once the
+    // GUI-visible state below has been reset), so callers that need the port
+    // truly free again -- e.g. handleConnectClick()'s disconnect branch -- can
+    // await it instead of racing the real teardown.
+    const disconnected = new Promise((resolve) => {
+        serial.disconnect((result) => {
+            onClosed(result);
+            resolve();
+        });
+    });
 
     MSP.disconnect_cleanup();
     portUsage.reset();
@@ -397,6 +412,8 @@ function finishClose() {
     }
 
     $('#tabs .tab_landing a').trigger("click");
+
+    return disconnected;
 }
 
 function setConnectionTimeout() {
@@ -694,12 +711,6 @@ async function onConnect() {
                 }
             });
 
-        if (FC.CONFIG.boardType == 0) {
-            if (classes.indexOf("osd-required") >= 0) {
-                found = false;
-            }
-        }
-
         return found;
     }).show();
 
@@ -715,6 +726,11 @@ async function onConnect() {
         await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG, false);
         await MSP.promise(MSPCodes.MSP_STATUS, false);
         await MSP.promise(MSPCodes.MSP_DATAFLASH_SUMMARY, false);
+        // Needed here (rather than left to each tab's own fetch) so updateTabList can
+        // decide whether to show the xact_servo and FBUS Sensors tabs -- both gated
+        // on serial port function -- before the nav is first shown.
+        await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG, false);
+        updateTabList(FC.FEATURE_CONFIG.features);
 
         if (FC.CONFIG.boardType == 0 || FC.CONFIG.boardType == 2) {
             startLiveDataRefreshTimer();

@@ -12,7 +12,7 @@
 </script>
 
 <div class="wrapper">
-  <div class="container">
+  <div class="container" data-tooltip-boundary>
     {#if header}
       {@render header()}
     {:else}

@@ -1,4 +1,5 @@
 <script>
+  import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
   let { onApply } = $props();
@@ -12,6 +13,12 @@
   let flaps = $state(false);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
+  // Independent per-axis, since a vectored mount might drive any combination
+  // (2-axis gimbals are commonly pitch+yaw, but roll+yaw and others exist
+  // too; some mounts are single- or full 3-axis).
+  let thrustVectorRoll = $state(false);
+  let thrustVectorPitch = $state(false);
+  let thrustVectorYaw = $state(false);
 
   function reset() {
     layout = "conventional";
@@ -21,6 +28,9 @@
     flaps = false;
     motors = 1;
     diffThrustYaw = false;
+    thrustVectorRoll = false;
+    thrustVectorPitch = false;
+    thrustVectorYaw = false;
   }
 
   export function open() {
@@ -69,6 +79,9 @@
       flaps,
       motors,
       diffThrustYaw,
+      thrustVectorRoll,
+      thrustVectorPitch,
+      thrustVectorYaw,
     });
   }
 </script>
@@ -184,6 +197,27 @@
             <span>{$i18n.t("mixerWizardDiffThrust")}</span>
           </label>
           <div class="wizardHint">{$i18n.t("mixerWizardDiffThrustHint")}</div>
+        </div>
+      {/if}
+
+      {#if motors >= 1 && FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")}
+        <div class="wizardSection">
+          <div class="wizardSectionTitle">
+            {$i18n.t("mixerWizardThrustVectorTitle")}
+          </div>
+          <label class="wizardOption">
+            <input type="checkbox" bind:checked={thrustVectorRoll} />
+            <span>{$i18n.t("mixerWizardThrustVectorRoll")}</span>
+          </label>
+          <label class="wizardOption">
+            <input type="checkbox" bind:checked={thrustVectorPitch} />
+            <span>{$i18n.t("mixerWizardThrustVectorPitch")}</span>
+          </label>
+          <label class="wizardOption">
+            <input type="checkbox" bind:checked={thrustVectorYaw} />
+            <span>{$i18n.t("mixerWizardThrustVectorYaw")}</span>
+          </label>
+          <div class="wizardHint">{$i18n.t("mixerWizardThrustVectorHint")}</div>
         </div>
       {/if}
 
