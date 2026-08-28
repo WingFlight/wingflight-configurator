@@ -45,6 +45,11 @@
       "type": "snapshot",
       "name": "0.0.9",
       "path": "./snapshot/0.0.9/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-fclink",
+      "path": "./feature-fclink/"
     }
   ]
 }
