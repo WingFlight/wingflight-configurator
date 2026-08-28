@@ -785,7 +785,7 @@
         "message": "Packets"
     },
     "sbusInputStatusDescription": {
-        "message": "Live status for the secondary SBUS receiver assigned as an instant fallback if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
+        "message": "Live status for the secondary SBUS receiver assigned as a fallback if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
     },
     "sbusInputStatusLinkUp": {
         "message": "Link: Up"
