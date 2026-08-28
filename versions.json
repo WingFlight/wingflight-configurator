@@ -50,11 +50,6 @@
       "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-firmware-flasher-branch-builds-tier",
-      "path": "./feature-firmware-flasher-branch-builds-tier/"
     }
   ]
 }
