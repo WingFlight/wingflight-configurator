@@ -781,6 +781,24 @@
     "fbusSensorsColPackets": {
         "message": "Packets"
     },
+    "sbusInputStatusTitle": {
+        "message": "SBUS-In Fallback Status"
+    },
+    "sbusInputStatusDescription": {
+        "message": "Live status for the secondary SBUS receiver assigned as an instant fallback if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
+    },
+    "sbusInputStatusLinkUp": {
+        "message": "Link: Up"
+    },
+    "sbusInputStatusLinkDown": {
+        "message": "Link: Down"
+    },
+    "sbusInputStatusActiveMain": {
+        "message": "Active Source: Main RX"
+    },
+    "sbusInputStatusActiveFallback": {
+        "message": "Active Source: SBUS-In"
+    },
     "logActionHide": {
         "message": "Hide Log"
     },
@@ -1975,6 +1993,9 @@
     },
     "portsFunction_SRXL2_ESC": {
         "message": "SRXL2 ESC"
+    },
+    "portsFunction_RX_SBUS_INPUT": {
+        "message": "SBUS-In Fallback"
     },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
