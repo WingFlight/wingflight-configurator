@@ -554,6 +554,21 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_SBUS_INPUT_STATUS: {
+                data.readU8(); // payload version, unused for now
+                const enabled = data.readU8() !== 0;
+                const linkUp = data.readU8() !== 0;
+                const activeSource = data.readU8() !== 0 ? 'fallback' : 'main';
+                const channelCount = data.readU8();
+                const channels = [];
+                for (let i = 0; i < channelCount; i++) {
+                    channels.push(data.readU16());
+                }
+
+                FC.SBUS_INPUT_STATUS = { enabled, linkUp, activeSource, channels };
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();

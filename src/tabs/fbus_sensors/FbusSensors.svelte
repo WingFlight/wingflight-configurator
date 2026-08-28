@@ -10,6 +10,7 @@
 
   import Page from "@/components/Page.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Meter from "@/components/Meter.svelte";
 
   // Mirrors fbusSensorGetSourceName() in drivers/fbus_sensor.c
   const SOURCE_NAMES = ["FBUS", "S.Port"];
@@ -21,13 +22,36 @@
 
   const POLL_INTERVAL_MS = 1000;
 
+  // Faster than the FBUS sensor poll above -- this is a live channel/link
+  // readout for bench-testing SBUS-In Fallback, not passive telemetry.
+  const SBUS_INPUT_POLL_INTERVAL_MS = 200;
+  const SBUS_METER_MIN = 750;
+  const SBUS_METER_MAX = 2250;
+
   let loading = $state(true);
   let supported = $state(true);
   let clearing = $state(false);
   let togglingKey = $state(null);
   let pollerInterval;
+  let sbusInputPollerInterval;
 
   let sensors = $derived(FC.FBUS_SENSORS ?? []);
+
+  let sbusInput = $derived(
+    FC.SBUS_INPUT_STATUS ?? {
+      enabled: false,
+      linkUp: false,
+      activeSource: "main",
+      channels: [],
+    },
+  );
+
+  function sbusChannelWidth(value) {
+    return (
+      (100 * (value - SBUS_METER_MIN)) /
+      (SBUS_METER_MAX - SBUS_METER_MIN)
+    ).clamp(0, 100);
+  }
 
   // Forwarding relays sensor data back out over the receiver link's own
   // telemetry return channel (rx/fbus.c), which only exists for FrSky-family
@@ -93,6 +117,10 @@
     await MSP.promise(MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG);
   }
 
+  async function refreshSbusInput() {
+    await MSP.promise(MSPCodes.MSP2_WING_SBUS_INPUT_STATUS);
+  }
+
   async function onClickClear() {
     clearing = true;
     try {
@@ -148,14 +176,19 @@
 
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_RX_CONFIG);
-    await Promise.all([refresh(), refreshForwardConfig()]);
+    await Promise.all([refresh(), refreshForwardConfig(), refreshSbusInput()]);
     loading = false;
 
     pollerInterval = setInterval(refresh, POLL_INTERVAL_MS);
+    sbusInputPollerInterval = setInterval(
+      refreshSbusInput,
+      SBUS_INPUT_POLL_INTERVAL_MS,
+    );
   });
 
   onDestroy(() => {
     clearInterval(pollerInterval);
+    clearInterval(sbusInputPollerInterval);
   });
 </script>
 
@@ -230,6 +263,39 @@
         </table>
       </div>
     {/if}
+  {/if}
+
+  {#if sbusInput.enabled}
+    <h2 class="section-title">{$i18n.t("sbusInputStatusTitle")}</h2>
+    <p class="description">{$i18n.t("sbusInputStatusDescription")}</p>
+
+    <div class="status-row">
+      <span
+        class="badge"
+        class:up={sbusInput.linkUp}
+        class:down={!sbusInput.linkUp}
+      >
+        {sbusInput.linkUp
+          ? $i18n.t("sbusInputStatusLinkUp")
+          : $i18n.t("sbusInputStatusLinkDown")}
+      </span>
+      <span class="badge" class:active={sbusInput.activeSource === "fallback"}>
+        {sbusInput.activeSource === "fallback"
+          ? $i18n.t("sbusInputStatusActiveFallback")
+          : $i18n.t("sbusInputStatusActiveMain")}
+      </span>
+    </div>
+
+    <div class="channels">
+      {#each sbusInput.channels as value, index (index)}
+        <Meter
+          --fill-hue={(index * 20).toString()}
+          title={`CH${index + 1}`}
+          leftLabel={value}
+          value={sbusChannelWidth(value)}
+        />
+      {/each}
+    </div>
   {/if}
 </Page>
 
@@ -337,5 +403,45 @@
   .app-ids {
     color: var(--color-text-soft);
     font-variant-numeric: tabular-nums;
+  }
+
+  .section-title {
+    margin-top: calc(var(--section-gap) * 2);
+    font-weight: 600;
+  }
+
+  .status-row {
+    display: flex;
+    gap: 8px;
+    margin: var(--section-gap) 0;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .badge.up {
+    color: var(--color-border-accent);
+    border-color: var(--color-border-accent);
+  }
+
+  // "active" here means the SBUS-in link is the one currently driving the
+  // aircraft (main link down) -- worth calling out the same way "down" is.
+  .badge.down,
+  .badge.active {
+    color: var(--color-danger, var(--color-border-accent));
+    border-color: var(--color-danger, var(--color-border-accent));
+  }
+
+  .channels {
+    display: grid;
+    gap: 6px;
+    margin-bottom: var(--section-gap);
   }
 </style>
