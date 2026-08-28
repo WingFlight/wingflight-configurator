@@ -32,10 +32,23 @@ function formatDate(date) {
   return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// Feature-branch dev builds (wingflight-firmware's dev-build.yml, tag
+// dev/<branch-slug>) are also GitHub prereleases, same as snapshot/* builds --
+// but they're rebuilt on every push to an in-progress branch rather than a
+// deliberate snapshot cut, so they get their own build-type tier instead of
+// being lumped into "All Releases and Snapshots".
+function isFeatureBranchBuild(release) {
+  return release.tag_name?.startsWith("dev/") ?? false;
+}
+
 export function processBoardOptions(releaseData, buildLevel, minVersion, maxVersion) {
   const releases = {};
   releaseData.forEach((release) => {
-    if (release.prerelease && buildLevel < 2) return;
+    if (isFeatureBranchBuild(release)) {
+      if (buildLevel < 3) return;
+    } else if (release.prerelease && buildLevel < 2) {
+      return;
+    }
     release.assets.forEach((asset) => {
       const match = FILENAME_EXPRESSION.exec(asset.name);
       if (!match) return;
