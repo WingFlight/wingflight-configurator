@@ -3118,6 +3118,9 @@
     "adjustmentsFunctionTVYawB": {
         "message": "TV Yaw B Gain"
     },
+    "adjustmentsFunctionTVHoldGain": {
+        "message": "TV Attitude Hold Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -5318,7 +5321,7 @@
         "message": "Attitude / Heading Hold"
     },
     "thrustVectorHoldIntroNote": {
-        "message": "Engaged by its own switch (<strong>TV ATT HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
     },
     "thrustVectorHoldGain": {
         "message": "Hold gain"
