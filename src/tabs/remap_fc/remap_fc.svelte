@@ -158,11 +158,42 @@
   // option's *own* default pin, regardless of where it's currently
   // sitting -- an option's identity, and so its reference label,
   // doesn't change just because it's been reassigned elsewhere.
+  // Two labels optionLabel shows that would otherwise read misleadingly
+  // for how this board's outputs are actually used in practice, even
+  // though the FC's own reference design / CLI naming is unchanged:
+  // "TAIL" (a reference design usage name) is wired to a servo output,
+  // and "Motor 2" (expandOptionName's fallback for M2) is actually a
+  // second ESC output. Only applied by optionLabel, never by
+  // displayName itself -- the "FC Pin" column still needs to show the
+  // board's own physical connector name ("TAIL") unchanged, since
+  // that's what's actually printed on the board and can't change.
+  const DISPLAY_LABEL_OVERRIDES = {
+    TAIL: "Servo 4",
+    "Motor 2": "ESC 2",
+  };
+
+  // The board's own name for an option's default pin (e.g. "ESC" for
+  // "M1", "TAIL" for "S4") when this board's reference design
+  // documents one, since that's the label the user actually has
+  // printed on the board; otherwise falls back to expandOptionName's
+  // spelled-out CLI name (e.g. "Servo 1" for "S1"). Used to identify a
+  // row by its own fixed default pin -- never overridden, since that
+  // identity is the board's own physical connector name.
   function displayName(option) {
     const pin = defaultHardware[option]?.pin;
     return (
       (pin !== undefined && referenceLabels[pin]) || expandOptionName(option)
     );
+  }
+
+  // The name to show for an option wherever it appears as a
+  // *selectable* value -- a "+ Add" choice, or a value picked in some
+  // row's Current Option dropdown. Same as displayName, but with
+  // DISPLAY_LABEL_OVERRIDES applied on top, since an option picked
+  // from a list reads better by its logical servo/ESC slot than by
+  // whichever other connector's name its default pin happens to share.
+  function optionLabel(option) {
+    return DISPLAY_LABEL_OVERRIDES[displayName(option)] || displayName(option);
   }
 
   // The option keys currently claimed as some row's Current Option —
@@ -680,7 +711,7 @@
                           ? [
                               {
                                 value: row.currentOption,
-                                label: displayName(row.currentOption),
+                                label: optionLabel(row.currentOption),
                               },
                             ]
                           : []),
@@ -689,7 +720,7 @@
                         label:
                           option === NONE_VALUE
                             ? $i18n.t("remapFcNoneOption")
-                            : displayName(option),
+                            : optionLabel(option),
                       })),
                     ]}
                   />
@@ -709,7 +740,7 @@
                       { value: "", label: $i18n.t("remapFcAddOption") },
                       ...addablePool.map((addable) => ({
                         value: addable.option,
-                        label: displayName(addable.option),
+                        label: optionLabel(addable.option),
                       })),
                     ]}
                   />

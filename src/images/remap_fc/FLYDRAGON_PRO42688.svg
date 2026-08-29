@@ -7,27 +7,36 @@
   labels simply sitting on its own right-hand portion -- no seam.
   Brand/model sit at the top and the chip label near the bottom
   (opposite of NEXUS_XR.svg's layout), matching the real board's own
-  silkscreen. Centre glyph is the Rotorflight rotor-blur mark. Pin
-  header is always on the right edge, by convention for every diagram
-  in this set. Pin order traced from the photo: AUX, TX2, RX2, RPM,
-  ESC, TAIL, CH3, CH2, CH1.
+  silkscreen -- text reads "FLYDRAGONpro" / "ROTORFLIGHT system" as
+  one word / lowercase, exactly as printed on the board. Centre glyph
+  is the Rotorflight rotor-blur mark. Pin header is always on the
+  right edge, by convention for every diagram in this set (the real
+  board prints its labels on the left; mirrored here to match the
+  convention). Pin order confirmed against the photo, top to bottom:
+  TAIL, CH3, CH2, CH1, ESC, RPM, RX2, TX2, AUX.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560">
   <!-- Single flat-top body, small rounded corners -->
   <rect x="30" y="10" width="1040" height="540" rx="20" fill="#c9d0d6" />
   <rect x="42" y="22" width="1016" height="516" rx="14" fill="#a13d3d" />
 
-  <!-- Brand / model, top of the board -->
+  <!-- Brand / model, top of the board, positioned against the pin
+       column (mirrored from the photo, where it sits against the
+       label column on the left) rather than against the left edge -->
   <g font-family="Arial, sans-serif" font-weight="900" font-style="italic" fill="#f2e6e6">
-    <text x="120" y="100" font-size="60">FLYDRAGON Pro</text>
+    <text x="290" y="110" font-size="58">FLYDRAGONpro</text>
   </g>
-  <text x="120" y="150" font-family="Arial, sans-serif" font-weight="700" font-size="24" letter-spacing="1" fill="#e8d6d6">ROTORFLIGHT System</text>
+  <text x="290" y="160" font-family="Arial, sans-serif" font-weight="700" font-size="28" letter-spacing="1" fill="#e8d6d6">ROTORFLIGHT system</text>
 
   <!-- Two stacked connectors, inset just inside the left edge, below
        the brand text -->
   <rect x="46" y="180" width="46" height="110" rx="16" fill="#0d0f12" />
   <rect x="60" y="194" width="16" height="82" rx="8" fill="#c9d0d6" />
   <rect x="46" y="304" width="46" height="90" rx="14" fill="#c9d0d6" />
+
+  <!-- RX status hole, below the brand text -->
+  <circle cx="470" cy="198" r="6" fill="#e8d6d6" />
+  <text x="470" y="185" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#e8d6d6" text-anchor="middle">RX</text>
 
   <!-- Rotorflight rotor-blur mark, recoloured to sit on the red body,
        centred in the open middle of the board -->
@@ -54,9 +63,9 @@
     <text x="955" y="188" font-size="30">RX2</text>
     <text x="955" y="244" font-size="30">RPM</text>
     <text x="955" y="300" font-size="30">ESC</text>
-    <text x="955" y="356" font-size="30">TAIL</text>
-    <text x="955" y="412" font-size="30">CH3</text>
-    <text x="955" y="462" font-size="30">CH2</text>
-    <text x="955" y="510" font-size="30">CH1</text>
+    <text x="955" y="356" font-size="30">CH1</text>
+    <text x="955" y="412" font-size="30">CH2</text>
+    <text x="955" y="462" font-size="30">CH3</text>
+    <text x="955" y="510" font-size="30">TAIL</text>
   </g>
 </svg>
