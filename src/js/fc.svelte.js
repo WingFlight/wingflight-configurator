@@ -641,6 +641,9 @@ class FlightController {
       gyroCutoffRoll:        0,
       gyroCutoffPitch:       0,
       gyroCutoffYaw:         0,
+      tvHoldGain:            0,
+      tvHoldDeadband:        0,
+      tvHoldMaxRate:         0,
     };
 
     this.SENSOR_CONFIG = {

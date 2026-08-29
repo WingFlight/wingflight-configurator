@@ -312,6 +312,47 @@
     </div>
   </Section>
 
+  <Section label="thrustVectorHoldGroup">
+    <div class="note">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <p>{@html $i18n.t("thrustVectorHoldIntroNote")}</p>
+    </div>
+
+    <Field id="tv-hold-gain" label="thrustVectorHoldGain">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldGainHelp")}
+      {/snippet}
+      <NumberInput
+        id="tv-hold-gain"
+        min="0"
+        max="250"
+        bind:value={FC.TV_PID_PROFILE.tvHoldGain}
+      />
+    </Field>
+    <Field id="tv-hold-deadband" label="thrustVectorHoldDeadband">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldDeadbandHelp")}
+      {/snippet}
+      <NumberInput
+        id="tv-hold-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.TV_PID_PROFILE.tvHoldDeadband}
+      />
+    </Field>
+    <Field id="tv-hold-max-rate" label="thrustVectorHoldMaxRate">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldMaxRateHelp")}
+      {/snippet}
+      <NumberInput
+        id="tv-hold-max-rate"
+        min="0"
+        max="1800"
+        bind:value={FC.TV_PID_PROFILE.tvHoldMaxRate}
+      />
+    </Field>
+  </Section>
+
   {#if CONFIGURATOR.expertMode}
     <Section label="thrustVectorPidSettings">
       <SubSection label="profilesItermDecayGroup">

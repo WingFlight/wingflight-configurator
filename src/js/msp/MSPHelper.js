@@ -902,6 +902,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.gyroCutoffRoll        = data.readU8();
                 FC.TV_PID_PROFILE.gyroCutoffPitch       = data.readU8();
                 FC.TV_PID_PROFILE.gyroCutoffYaw         = data.readU8();
+                // TV Hold -- independent attitude/heading hold for this loop only //
+                FC.TV_PID_PROFILE.tvHoldGain            = data.remaining() >= 4 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.tvHoldDeadband        = data.remaining() >= 3 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.tvHoldMaxRate         = data.remaining() >= 2 ? data.readU16() : 0;
                 break;
             }
 
@@ -1944,7 +1948,11 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.TV_PID_PROFILE.btermCutoffYaw)
                 .push8(FC.TV_PID_PROFILE.gyroCutoffRoll)
                 .push8(FC.TV_PID_PROFILE.gyroCutoffPitch)
-                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw);
+                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw)
+                // TV Hold -- independent attitude/heading hold for this loop only //
+                .push8(FC.TV_PID_PROFILE.tvHoldGain)
+                .push8(FC.TV_PID_PROFILE.tvHoldDeadband)
+                .push16(FC.TV_PID_PROFILE.tvHoldMaxRate);
             break;
         }
 
