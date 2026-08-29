@@ -393,6 +393,14 @@
                 ? $i18n.t("sbusInputStatusLinkUp")
                 : $i18n.t("sbusInputStatusLinkDown")}
             </span>
+            <span
+              class="badge"
+              class:active={backupRxStatus.activeSource === "fallback"}
+            >
+              {backupRxStatus.activeSource === "fallback"
+                ? $i18n.t("sbusInputStatusActiveFallback")
+                : $i18n.t("sbusInputStatusActiveMain")}
+            </span>
             <div class="grow"></div>
             <button
               class="icon fas"
@@ -409,14 +417,6 @@
           </div>
           {#if backupRxExpanded}
             <div class="backup-rx-details" transition:slide|global>
-              <span
-                class="badge"
-                class:active={backupRxStatus.activeSource === "fallback"}
-              >
-                {backupRxStatus.activeSource === "fallback"
-                  ? $i18n.t("sbusInputStatusActiveFallback")
-                  : $i18n.t("sbusInputStatusActiveMain")}
-              </span>
               {#if backupRxStatus.channels.length === 0}
                 <p class="note">{$i18n.t("sbusInputStatusEmpty")}</p>
               {:else}
