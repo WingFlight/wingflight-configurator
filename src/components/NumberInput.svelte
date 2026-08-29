@@ -232,6 +232,15 @@
   .container {
     display: flex;
     max-width: var(--number-input-max-width, 120px);
+    // Never let a flex sibling (e.g. an adjustment-badge span in a
+    // .runtime-control row) squeeze this below its own intended size --
+    // that silently shrinks the inner <input> (the only child here with
+    // no min-width of its own) into an unreadable sliver instead of
+    // making the *row* overflow, which every table using this component
+    // already wraps in a horizontally-scrollable container for. Sizing
+    // stays exactly what --number-input-max-width/-height/-btn-size say
+    // it should be for the current breakpoint, never ambient flex-shrink.
+    flex-shrink: 0;
   }
 
   input {

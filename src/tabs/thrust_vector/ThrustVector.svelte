@@ -10,6 +10,7 @@
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
+    TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -66,6 +67,10 @@
   function masterGainAdjustmentState(axisIndex) {
     return getAdjustmentState(TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS[axisIndex]);
   }
+
+  let holdGainAdjustment = $derived(
+    getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
+  );
 
   let loading = $state(true);
   let initialState = $state(null);
@@ -310,6 +315,61 @@
         </tbody>
       </table>
     </div>
+  </Section>
+
+  <Section label="thrustVectorHoldGroup">
+    <div class="note">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <p>{@html $i18n.t("thrustVectorHoldIntroNote")}</p>
+    </div>
+
+    <Field id="tv-hold-gain" label="thrustVectorHoldGain">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldGainHelp")}
+      {/snippet}
+      <div
+        class="runtime-control"
+        class:runtime-controlled={holdGainAdjustment}
+        class:runtime-active={holdGainAdjustment?.active}
+        title={adjustmentTitle(holdGainAdjustment)}
+      >
+        <NumberInput
+          id="tv-hold-gain"
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.tvHoldGain}
+        />
+        {#if holdGainAdjustment}
+          <span class="adjustment-badge">
+            {holdGainAdjustment.active
+              ? (adjustmentChannelLabel(holdGainAdjustment) ?? "LIVE")
+              : "ADJ"}
+          </span>
+        {/if}
+      </div>
+    </Field>
+    <Field id="tv-hold-deadband" label="thrustVectorHoldDeadband">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldDeadbandHelp")}
+      {/snippet}
+      <NumberInput
+        id="tv-hold-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.TV_PID_PROFILE.tvHoldDeadband}
+      />
+    </Field>
+    <Field id="tv-hold-max-rate" label="thrustVectorHoldMaxRate">
+      {#snippet tooltip()}
+        {$i18n.t("thrustVectorHoldMaxRateHelp")}
+      {/snippet}
+      <NumberInput
+        id="tv-hold-max-rate"
+        min="0"
+        max="1800"
+        bind:value={FC.TV_PID_PROFILE.tvHoldMaxRate}
+      />
+    </Field>
   </Section>
 
   {#if CONFIGURATOR.expertMode}
@@ -671,18 +731,24 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-  }
-
-  .runtime-controlled {
-    padding-right: 2px;
   }
 
   .runtime-active {
     opacity: 1;
   }
 
+  // Absolutely positioned, not a normal flex child -- a td centers
+  // .runtime-control as one box (`td { text-align: center }` below), so a
+  // badge sharing the flex row would widen that box on badge-carrying rows
+  // only, visibly dragging the number input itself left of where it sits
+  // on every badge-less row in the same column. Taking the badge out of
+  // flow keeps .runtime-control's own width (and so its centered position)
+  // down to just the input, on every row alike; the badge just hangs
+  // beside it without moving anything.
   .adjustment-badge {
+    position: absolute;
+    left: 100%;
+    margin-left: 8px;
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
@@ -694,6 +760,7 @@
     line-height: 1rem;
     text-align: center;
     letter-spacing: 0;
+    white-space: nowrap;
   }
 
   .runtime-control:not(.runtime-active) .adjustment-badge {

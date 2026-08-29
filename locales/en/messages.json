@@ -3118,6 +3118,9 @@
     "adjustmentsFunctionTVYawB": {
         "message": "TV Yaw B Gain"
     },
+    "adjustmentsFunctionTVHoldGain": {
+        "message": "TV Attitude Hold Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -5313,6 +5316,30 @@
     },
     "thrustVectorIntroNote": {
         "message": "This is a second, independent PID loop for thrust-vectoring actuators -- it targets the same stick setpoint as the main Roll/Pitch/Yaw loop but is tuned separately. Its output only reaches your aircraft once you assign the <strong>Stabilized TV Roll/Pitch/Yaw</strong> mixer input sources to an output on the <i>Mixer</i> tab."
+    },
+    "thrustVectorHoldGroup": {
+        "message": "Attitude / Heading Hold"
+    },
+    "thrustVectorHoldIntroNote": {
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+    },
+    "thrustVectorHoldGain": {
+        "message": "Hold gain"
+    },
+    "thrustVectorHoldGainHelp": {
+        "message": "Correction strength back to the held attitude once the sticks are centred and TV Hold has frozen its target. Higher values return to the held attitude more aggressively."
+    },
+    "thrustVectorHoldDeadband": {
+        "message": "Hold deadband"
+    },
+    "thrustVectorHoldDeadbandHelp": {
+        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which TV Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the thrust-vector output is corrected back to it. Same track/freeze behaviour as Attitude Hold, but as an independent instance for this loop only."
+    },
+    "thrustVectorHoldMaxRate": {
+        "message": "Hold max rate"
+    },
+    "thrustVectorHoldMaxRateHelp": {
+        "message": "Safety clamp (deg/s) on how fast TV Hold may drive the thrust-vector output back toward the frozen attitude once the sticks return inside the deadband."
     },
     "profilesErrorLimit": {
         "message": "Cumulative Error Limits"
