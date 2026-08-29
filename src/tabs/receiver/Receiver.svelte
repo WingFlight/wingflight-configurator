@@ -163,7 +163,7 @@
   );
 
   function onClickBackupRxDetails() {
-    $("#tabs ul.mode-connected li.tab_sbus_input_status a").click();
+    globalThis.$("#tabs ul.mode-connected li.tab_sbus_input_status a").click();
   }
 
   let extTelemProto = $derived.by(() => {
