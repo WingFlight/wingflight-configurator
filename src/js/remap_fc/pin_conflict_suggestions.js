@@ -16,18 +16,22 @@
  * it's free. Each candidate layout is itself run through a full
  * reallocation pass; only ones that leave nothing unresolved at all
  * are kept. This is a single-swap search, not an exhaustive one -- a
- * clash that needs two coordinated moves at once to resolve won't
- * find a suggestion here, only the fallback below.
+ * clash that needs two coordinated moves at once to resolve won't find
+ * a suggestion here. Deliberately no automatic fallback for that case
+ * either (e.g. silently clearing the pin back to unassigned): the
+ * caller shows a plain message pointing back at whichever option the
+ * user just placed, rather than this module guessing at some other
+ * feature to touch on their behalf.
  */
 
 import { buildFeatureRows, reallocateTimersAndDma, buildTimerDmaCommands } from "./timer_dma_reconciler.js";
 
 /**
  * @typedef {Object} PinConflictSuggestion
- * @property {"swap"|"move"|"clear"} type
+ * @property {"swap"|"move"} type
  * @property {string} feature - The unresolved feature this suggestion moves.
  * @property {?string} otherFeature - For "swap", the feature it trades places with.
- * @property {?string} targetPin - For "swap"/"move", the pin `feature` would move to.
+ * @property {string} targetPin - The pin `feature` would move to.
  * @property {import("./hardware_parser.js").HardwareMap} apply - The
  *   resulting working hardware map, ready to adopt as-is if this
  *   suggestion is accepted.
@@ -39,6 +43,21 @@ import { buildFeatureRows, reallocateTimersAndDma, buildTimerDmaCommands } from 
  * the label is the caller's job -- see remap_fc.svelte's
  * suggestionLabel, which uses the same optionLabel() every other
  * option label in this tab goes through.
+ */
+
+/**
+ * @typedef {Object} PinConflictSearchResult
+ * @property {string[]} unresolvedFeatures - Empty if the working
+ *   state's current pin assignments are fine as they are (no reason
+ *   for the caller to show anything). Non-empty means a full
+ *   reallocation pass still leaves at least this many features
+ *   genuinely conflicting -- always shown by the caller regardless of
+ *   whether any suggestions were actually found for them.
+ * @property {PinConflictSuggestion[]} suggestions - Empty either
+ *   because unresolvedFeatures is empty (nothing to suggest a fix
+ *   for), or because unresolvedFeatures is non-empty but no single
+ *   swap/move resolves it -- the caller tells these two apart via
+ *   unresolvedFeatures itself.
  */
 
 /**
@@ -77,11 +96,7 @@ function unresolvedAfterReallocation(
  * @param {import("./remap_table.js").RemapRow[]} tableRows - Every
  *   row currently in the table, as candidate target pins to move an
  *   unresolved feature onto.
- * @returns {PinConflictSuggestion[]} Empty if nothing's unresolved, or
- *   if it is but no single swap/move/clear was tried (never actually
- *   happens -- clearing an unresolved feature always resolves it, so
- *   the fallback always has something to offer once there's anything
- *   unresolved at all).
+ * @returns {PinConflictSearchResult}
  */
 export function findPinConflictSuggestions(
   workingCurrent,
@@ -91,14 +106,14 @@ export function findPinConflictSuggestions(
   reservedTimers,
   tableRows,
 ) {
-  const unresolved = unresolvedAfterReallocation(
+  const unresolvedFeatures = unresolvedAfterReallocation(
     workingCurrent,
     mcuType,
     mcuAllData,
     reservedDmaStreams,
     reservedTimers,
   );
-  if (unresolved.length === 0) return [];
+  if (unresolvedFeatures.length === 0) return { unresolvedFeatures, suggestions: [] };
 
   const occupantOf = (pin) =>
     Object.keys(workingCurrent).find((key) => workingCurrent[key].pin === pin);
@@ -113,7 +128,7 @@ export function findPinConflictSuggestions(
 
   const suggestions = [];
 
-  for (const feature of unresolved) {
+  for (const feature of unresolvedFeatures) {
     const currentPin = workingCurrent[feature]?.pin;
     if (!currentPin) continue;
 
@@ -149,23 +164,5 @@ export function findPinConflictSuggestions(
     }
   }
 
-  // Fallback: no single swap/move resolves everything (a clash that
-  // needs two coordinated moves at once, say) -- clearing an
-  // unresolved feature back to unassigned always resolves it on its
-  // own, so this is always available even when nothing else is.
-  if (suggestions.length === 0) {
-    for (const feature of unresolved) {
-      const candidate = { ...workingCurrent };
-      delete candidate[feature];
-      suggestions.push({
-        type: "clear",
-        feature,
-        otherFeature: null,
-        targetPin: null,
-        apply: candidate,
-      });
-    }
-  }
-
-  return suggestions;
+  return { unresolvedFeatures, suggestions };
 }

@@ -122,6 +122,13 @@
   // than the button that reveals it — opened on click, and closed
   // again as soon as a choice is made.
   let addMenuOpen = $state(false);
+  // The option key most recently placed onto a pin via a row's
+  // Current Option dropdown -- set in handleCurrentOptionChange, read
+  // by the pin-conflict warning panel when no automatic swap/move
+  // resolves an unresolved clash, to point the user back at whichever
+  // pin choice they just made rather than guessing at some other
+  // feature to touch on their behalf.
+  let lastChangedOption = $state(null);
 
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
@@ -232,21 +239,15 @@
   // keys (e.g. "M1"), so building the actual display label is this
   // component's job, not that module's.
   function suggestionLabel(suggestion) {
-    if (suggestion.type === "swap") {
-      return $i18n.t("remapFcSuggestionSwap", {
-        feature: optionLabel(suggestion.feature),
-        otherFeature: optionLabel(suggestion.otherFeature),
-      });
-    }
-    if (suggestion.type === "move") {
-      return $i18n.t("remapFcSuggestionMove", {
-        feature: optionLabel(suggestion.feature),
-        targetPin: suggestion.targetPin,
-      });
-    }
-    return $i18n.t("remapFcSuggestionClear", {
-      feature: optionLabel(suggestion.feature),
-    });
+    return suggestion.type === "swap"
+      ? $i18n.t("remapFcSuggestionSwap", {
+          feature: optionLabel(suggestion.feature),
+          otherFeature: optionLabel(suggestion.otherFeature),
+        })
+      : $i18n.t("remapFcSuggestionMove", {
+          feature: optionLabel(suggestion.feature),
+          targetPin: suggestion.targetPin,
+        });
   }
 
   // The option keys currently claimed as some row's Current Option —
@@ -424,14 +425,19 @@
   );
 
   // Candidate pin swaps/moves that would let a fresh reallocation
-  // resolve everything -- empty whenever a clash exists but a full
-  // reallocation pass on the *current* pin assignments would already
-  // resolve it (liveClash.hasClash true, this empty): that case only
-  // needs "Allocate Timers/DMA" pressed, not a pin-level fix, so the
-  // warning panel below stays hidden for it. Only non-empty once
+  // resolve everything, plus which features are genuinely unresolved
+  // regardless of whether any were found -- empty whenever a clash
+  // exists but a full reallocation pass on the *current* pin
+  // assignments would already resolve it (liveClash.hasClash true,
+  // unresolvedFeatures empty): that case only needs "Allocate
+  // Timers/DMA" pressed, not a pin-level fix, so the warning panel
+  // below stays hidden for it. unresolvedFeatures only non-empty once
   // reallocation genuinely can't resolve the current pin layout at
   // all -- see pin_conflict_suggestions.js for the search itself.
-  let pinConflictSuggestions = $derived(
+  // suggestions can still be empty even then, when no single swap/move
+  // resolves it -- the panel falls back to pointing at
+  // lastChangedOption for that case rather than guessing at a fix.
+  let pinConflictResult = $derived(
     hasRead
       ? findPinConflictSuggestions(
           workingCurrent,
@@ -441,7 +447,7 @@
           reservedTimers,
           tableRows,
         )
-      : [],
+      : { unresolvedFeatures: [], suggestions: [] },
   );
 
   // Bound to the suggestion picker dropdown when there's more than
@@ -453,10 +459,10 @@
   // index past its new end is still selected.
   let selectedSuggestionIndex = $state("0");
   let selectedSuggestion = $derived(
-    pinConflictSuggestions[
+    pinConflictResult.suggestions[
       Math.min(
         Number(selectedSuggestionIndex),
-        pinConflictSuggestions.length - 1,
+        pinConflictResult.suggestions.length - 1,
       )
     ] ?? null,
   );
@@ -617,6 +623,7 @@
     unsetOptions = [];
     selectedAddOption = "";
     addMenuOpen = false;
+    lastChangedOption = null;
     timerDmaCommands = [];
     calculatedAllocationTable = [];
     unresolvedFeatures = [];
@@ -704,6 +711,7 @@
       visibleOptions = visibleOptions.filter((option) => option !== row.option);
     } else if (chosen) {
       next[chosen] = { pin: row.defaultPin };
+      lastChangedOption = chosen;
     }
 
     unsetOptions = unsetOptions.filter((option) => option !== row.option);
@@ -713,30 +721,19 @@
   // handleAcceptSuggestion fires when the pin-conflict warning panel's
   // "Accept Suggestion" button is pressed: adopts the selected
   // suggestion's precomputed pin layout wholesale (see
-  // pin_conflict_suggestions.js), then reconciles unsetOptions to
-  // match -- a "clear" suggestion leaves its feature's row without an
-  // occupant, so it's marked unset to force an explicit pick rather
-  // than silently reading as "None"; a "swap"/"move" gives its
-  // feature(s) a freshly resolved pin, so any stale "unset" state
-  // they were carrying is cleared instead.
+  // pin_conflict_suggestions.js) -- always a "swap" or "move", which
+  // gives its feature(s) a freshly resolved pin, so any stale "unset"
+  // placeholder state they were carrying is cleared too.
   function handleAcceptSuggestion() {
     if (!selectedSuggestion) return;
 
     workingCurrent = selectedSuggestion.apply;
 
-    if (selectedSuggestion.type === "clear") {
-      unsetOptions = unsetOptions.includes(selectedSuggestion.feature)
-        ? unsetOptions
-        : [...unsetOptions, selectedSuggestion.feature];
-    } else {
-      const affected = [
-        selectedSuggestion.feature,
-        selectedSuggestion.otherFeature,
-      ].filter((option) => option !== null);
-      unsetOptions = unsetOptions.filter(
-        (option) => !affected.includes(option),
-      );
-    }
+    const affected = [
+      selectedSuggestion.feature,
+      selectedSuggestion.otherFeature,
+    ].filter((option) => option !== null);
+    unsetOptions = unsetOptions.filter((option) => !affected.includes(option));
 
     selectedSuggestionIndex = "0";
   }
@@ -967,10 +964,12 @@
            button's actually been pressed. suggestedAllocationTable
            shows what that reallocation attempt produces regardless
            (including which feature(s) it couldn't resolve), and
-           pinConflictSuggestions offers a pin-level fix instead --
-           swapping/moving one of those features onto a different pin
-           so a fresh reallocation *can* resolve everything. -->
-      {#if pinConflictSuggestions.length}
+           pinConflictResult.suggestions offers a pin-level fix instead
+           -- swapping/moving one of those features onto a different
+           pin so a fresh reallocation *can* resolve everything -- when
+           one was found; see the suggestion-row below for what shows
+           instead when it wasn't. -->
+      {#if pinConflictResult.unresolvedFeatures.length}
         <div class="allocation-column allocation-live-warning">
           <h2>{$i18n.t("remapFcAllocationInvalidHeading")}</h2>
           <p class="allocation-warning">
@@ -1005,30 +1004,51 @@
             </tbody>
           </table>
 
-          <!-- The pin-level fix itself: a single suggestion shows as
-               plain text, more than one gets a picker so the user
-               chooses which to apply -- either way, "Accept
-               Suggestion" adopts selectedSuggestion.apply wholesale
-               (see handleAcceptSuggestion). -->
-          <div class="suggestion-row">
-            {#if pinConflictSuggestions.length > 1}
-              <Select
-                bind:value={selectedSuggestionIndex}
-                options={pinConflictSuggestions.map((suggestion, index) => ({
-                  value: String(index),
-                  label: suggestionLabel(suggestion),
-                }))}
-              />
-            {:else if selectedSuggestion}
-              <span>{suggestionLabel(selectedSuggestion)}</span>
-            {/if}
-            <button
-              class="btn accept-suggestion-btn"
-              onclick={handleAcceptSuggestion}
-            >
-              {$i18n.t("remapFcAcceptSuggestion")}
-            </button>
-          </div>
+          <!-- The pin-level fix itself, when the search actually found
+               one: a single suggestion shows as plain text, more than
+               one gets a picker so the user chooses which to apply --
+               either way, "Accept Suggestion" adopts
+               selectedSuggestion.apply wholesale (see
+               handleAcceptSuggestion). When no single swap/move
+               resolves everything, there's nothing to offer as a
+               one-click fix -- rather than guessing at some other
+               feature to touch on the user's behalf, this points back
+               at whichever option they most recently placed
+               (lastChangedOption), falling back to naming one of the
+               unresolved features itself if nothing's been touched
+               yet this session (e.g. the clash was already there on
+               read). -->
+          {#if pinConflictResult.suggestions.length}
+            <div class="suggestion-row">
+              {#if pinConflictResult.suggestions.length > 1}
+                <Select
+                  bind:value={selectedSuggestionIndex}
+                  options={pinConflictResult.suggestions.map(
+                    (suggestion, index) => ({
+                      value: String(index),
+                      label: suggestionLabel(suggestion),
+                    }),
+                  )}
+                />
+              {:else if selectedSuggestion}
+                <span>{suggestionLabel(selectedSuggestion)}</span>
+              {/if}
+              <button
+                class="btn accept-suggestion-btn"
+                onclick={handleAcceptSuggestion}
+              >
+                {$i18n.t("remapFcAcceptSuggestion")}
+              </button>
+            </div>
+          {:else}
+            <p class="allocation-warning suggestion-manual-fix">
+              {$i18n.t("remapFcSuggestionManualFix", {
+                feature: optionLabel(
+                  lastChangedOption ?? pinConflictResult.unresolvedFeatures[0],
+                ),
+              })}
+            </p>
+          {/if}
         </div>
       {/if}
     </div>
@@ -1161,6 +1181,16 @@
     gap: 10px;
     margin-top: 10px;
     flex-wrap: wrap;
+  }
+
+  // Shown instead of .suggestion-row when the search found no
+  // swap/move that resolves everything -- .allocation-warning already
+  // gives it the same red, attention-grabbing colour as the reasons
+  // text above it; this just adds the same top spacing .suggestion-row
+  // has, so the two are visually interchangeable depending on which
+  // one applies.
+  .suggestion-manual-fix {
+    margin: 10px 0 0;
   }
 
   .accept-suggestion-btn {

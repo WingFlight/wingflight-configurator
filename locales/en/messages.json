@@ -7393,8 +7393,8 @@
     "remapFcSuggestionMove": {
         "message": "Move {{feature}} to pin {{targetPin}} (currently unassigned)"
     },
-    "remapFcSuggestionClear": {
-        "message": "Set {{feature}} to unassigned"
+    "remapFcSuggestionManualFix": {
+        "message": "No automatic fix found. Please choose a different pin for {{feature}}."
     },
     "remapFcAllocationUnresolved": {
         "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."
