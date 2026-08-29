@@ -3,8 +3,12 @@
  * Builds the "Remap FC" comparison table: for a given list of hardware
  * options, shows the pin each one is assigned by default, and which
  * option (if any) currently occupies that same pin. Also works out
- * which default-only options are still free to be added to the table.
+ * which default-only options are still free to be added to the table,
+ * and diffs an edited working copy back against what was actually read
+ * to build the CLI commands needed to apply the changes.
  */
+
+import { buildResourceCommand } from "./hardware_parser.js";
 
 /**
  * @typedef {Object} RemapRow
@@ -50,6 +54,15 @@ export const TABLE_OPTION_KEYS = [
 // appear via an explicit "+ Add" pick. In canonical display order.
 // Exported so callers can sort/filter an arbitrary set of option keys
 // back into this order, and so "+ Add" can offer the complete list.
+//
+// RX/TX go up to 12 and SDA/SCL up to 4 to match the CLI's own
+// resource catalog (`resource SERIAL_RX 12 ...`, `resource I2C_SDA 4
+// ...`), even though only a handful of MCUs — none currently supported
+// by Rotorflight/Wingflight — actually wire that many UART/I2C
+// instances. getAddableOptions already gates every option on
+// `option in defaultHardware`, so this stays invisible for every board
+// that doesn't have a given instance; it's just here so a board that
+// does isn't silently missing pins this tool can't see or manage.
 export const OPTION_KEYS = [
   "M1",
   "M2",
@@ -73,18 +86,32 @@ export const OPTION_KEYS = [
   "RX4",
   "RX5",
   "RX6",
+  "RX7",
+  "RX8",
+  "RX9",
+  "RX10",
+  "RX11",
+  "RX12",
   "TX1",
   "TX2",
   "TX3",
   "TX4",
   "TX5",
   "TX6",
+  "TX7",
+  "TX8",
+  "TX9",
+  "TX10",
+  "TX11",
+  "TX12",
   "SDA1",
   "SDA2",
   "SDA3",
+  "SDA4",
   "SCL1",
   "SCL2",
   "SCL3",
+  "SCL4",
   "LED",
 ];
 
@@ -152,46 +179,50 @@ function isEligibleToAdd(option, configuredOptions) {
 
 /**
  * Returns the options that could be offered by "+ Add": every option
- * this board's default structure actually reports a pin for, except
- * ones already spoken for.
+ * this board's default structure actually reports a pin for — every
+ * physical connector this board actually has — except ones already
+ * spoken for by a row of their own.
+ *
+ * Deliberately ignores the FC's filling-order rules (see
+ * isEligibleToAdd): "+ Add" only brings a hidden row into view, it
+ * doesn't assign anything to it (see handleAddChange — a freshly-added
+ * row starts "unset", with no value at all), so it can never create
+ * the kind of gap that rule exists to prevent. That constraint is
+ * enforced where it actually matters instead: when a value is picked
+ * for some row's Current Option (see getRowSelectableOptions). Without
+ * this distinction, removing every servo would make it impossible to
+ * see S1-S4 (or Freq1) as addable again all at once, even though
+ * bringing all four back into view is completely safe — only actually
+ * giving one of them a value would need to respect the sequence.
  *
  * Motors, servos, output-frequency groups, and the LED pin (see
- * TABLE_OPTION_KEYS) can be picked as a *different* row's Current
- * Option, so one of them can become "homeless" — no longer claimed by
- * anything, even though it still has its own row (e.g. M1's own row
- * got reassigned to something else). Those are still offered here
- * despite having a row, via unavailableOptions (claimed-or-pending-a-
- * pick only) — and must also satisfy the FC's own filling order (see
- * isEligibleToAdd), since having a default pin isn't enough on its own
- * for those.
+ * TABLE_OPTION_KEYS) always have their own row the moment they're
+ * eligible (they're only ever removed from the table by being set to
+ * "None" — see handleCurrentOptionChange), so a "homeless" one — no
+ * longer claimed by anything, e.g. M1's own row got reassigned to
+ * something else — never needs offering here: its own row's dropdown
+ * already includes it as a choice (see optionsForRow's row.option
+ * bypass), so it can always be reclaimed there directly. Offering it
+ * here too would just be a second, redundant path to the exact same
+ * place — worse, a misleading one, since picking it here is a silent
+ * no-op (handleAddChange skips anything already in visibleOptions).
+ * So these are only offered once their row has actually been removed
+ * entirely (visibleOptions no longer includes them).
  *
  * UART/I2C resources, on the other hand, are never offered as a row's
- * Current Option (see getRowSelectableOptions), so they can't become
- * "homeless" the same way — once one has a row at all, regardless of
+ * Current Option (see getRowSelectableOptions), so there's no separate
+ * reclaim path for them at all — once one has a row, regardless of
  * what that row currently holds, it's fully spoken for and excluded
- * via visibleOptions instead.
+ * via visibleOptions too, the same as TABLE_OPTION_KEYS options are
+ * here.
  * @param {import("./hardware_parser.js").HardwareMap} defaultHardware
- * @param {string[]} unavailableOptions - option keys that are claimed or pending a pick.
- * @param {string[]} configuredOptions - option keys that are claimed, or that simply have a row of their own.
  * @param {string[]} visibleOptions - option keys that currently have a row.
  * @returns {AddableOption[]}
  */
-export function getAddableOptions(
-  defaultHardware,
-  unavailableOptions,
-  configuredOptions,
-  visibleOptions,
-) {
-  return OPTION_KEYS.filter((option) => {
-    if (!(option in defaultHardware)) return false;
-
-    if (TABLE_OPTION_KEYS.includes(option)) {
-      if (unavailableOptions.includes(option)) return false;
-      return isEligibleToAdd(option, configuredOptions);
-    }
-
-    return !visibleOptions.includes(option);
-  }).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
+export function getAddableOptions(defaultHardware, visibleOptions) {
+  return OPTION_KEYS.filter(
+    (option) => option in defaultHardware && !visibleOptions.includes(option),
+  ).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
 }
 
 /**
@@ -221,4 +252,41 @@ export function getRowSelectableOptions(claimedOptions) {
   return TABLE_OPTION_KEYS.filter(
     (option) => !claimedOptions.includes(option) && isEligibleToAdd(option, claimedOptions),
   );
+}
+
+/**
+ * Diffs the as-read hardware map against the edited working copy and
+ * returns the ordered CLI commands needed to apply the changes to the
+ * flight controller.
+ *
+ * Every affected resource is freed first (`resource <TAG> <index>
+ * none`), and only once every removal has been sent does any new/moved
+ * assignment go out (`resource <TAG> <index> <PIN>`). Freeing
+ * everything before claiming anything means a straight swap between
+ * two resources (M1 and S2 trading pins, say) can never try to claim a
+ * pin the other side hasn't freed yet, regardless of which one the
+ * user happened to edit first.
+ * @param {import("./hardware_parser.js").HardwareMap} original - The hardware map as last read from the FC.
+ * @param {import("./hardware_parser.js").HardwareMap} working - The edited, in-progress working copy.
+ * @returns {string[]}
+ */
+export function buildChangeCommands(original, working) {
+  const removals = [];
+  const additions = [];
+
+  const allKeys = new Set([
+    ...Object.keys(original),
+    ...Object.keys(working),
+  ]);
+
+  for (const key of allKeys) {
+    const beforePin = original[key]?.pin ?? null;
+    const afterPin = working[key]?.pin ?? null;
+    if (beforePin === afterPin) continue;
+
+    if (beforePin !== null) removals.push(buildResourceCommand(key, null));
+    if (afterPin !== null) additions.push(buildResourceCommand(key, afterPin));
+  }
+
+  return [...removals, ...additions];
 }

@@ -7362,5 +7362,35 @@
     },
     "remapFcDesignLabel": {
         "message": "Design:"
+    },
+    "remapFcLoadChangesButton": {
+        "message": "Load Changes"
+    },
+    "remapFcApplying": {
+        "message": "Applying..."
+    },
+    "remapFcPendingCommands": {
+        "message": "Pending Commands ({{count}})"
+    },
+    "remapFcAllocateButton": {
+        "message": "Allocate Timers/DMA"
+    },
+    "remapFcAllocationCalculatedHeading": {
+        "message": "Calculated config"
+    },
+    "remapFcAllocationUnresolved": {
+        "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."
+    },
+    "remapFcAllocationFeature": {
+        "message": "Feature"
+    },
+    "remapFcAllocationPin": {
+        "message": "Pin"
+    },
+    "remapFcAllocationTimer": {
+        "message": "Timer"
+    },
+    "remapFcAllocationDma": {
+        "message": "DMA"
     }
 }

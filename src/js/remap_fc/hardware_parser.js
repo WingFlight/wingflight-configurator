@@ -29,9 +29,17 @@ const RESOURCE_KEY_PREFIXES = {
   SERIAL_TX: "TX",
   I2C_SDA: "SDA",
   I2C_SCL: "SCL",
-  LED: "LED",
+  LED_STRIP: "LED",
   FREQ: "Freq",
 };
+
+// Inverse of RESOURCE_KEY_PREFIXES: maps a HardwareMap key's prefix
+// back to the CLI resource tag used in a `resource <TAG> <index> <PIN>`
+// command, for reconstructing commands from a key (see
+// buildResourceCommand below).
+const RESOURCE_TAGS_BY_PREFIX = Object.fromEntries(
+  Object.entries(RESOURCE_KEY_PREFIXES).map(([tag, prefix]) => [prefix, tag]),
+);
 
 // Line formats to match in `dump hardware` output, e.g.:
 //   resource MOTOR 1 A08
@@ -138,4 +146,71 @@ export function parseHardwareDump(dumpText) {
   }
 
   return hardware;
+}
+
+// Splits a HardwareMap key like "M1" or "Freq2" into its letter prefix
+// and numeric index; "LED" has no index of its own (see
+// parseHardwareDump), so it's special-cased to the CLI's own fixed
+// index of 1 for that resource.
+const OPTION_KEY_RE = /^([A-Za-z]+)(\d+)$/;
+
+/**
+ * Builds the `resource <TAG> <index> <PIN>` CLI command that assigns
+ * (or, when pin is null/undefined, frees) the given HardwareMap option
+ * key — the inverse of parseHardwareDump's per-line parsing.
+ * @param {string} optionKey e.g. "M1", "Freq2", "LED"
+ * @param {?string} pin e.g. "A08", or null/undefined to free the resource
+ * @returns {string}
+ */
+export function buildResourceCommand(optionKey, pin) {
+  let tag;
+  let index;
+
+  if (optionKey === "LED") {
+    tag = RESOURCE_TAGS_BY_PREFIX["LED"];
+    index = 1;
+  } else {
+    const match = optionKey.match(OPTION_KEY_RE);
+    if (!match) {
+      throw new Error(`Unrecognized option key: ${optionKey}`);
+    }
+    const [, prefix, indexStr] = match;
+    tag = RESOURCE_TAGS_BY_PREFIX[prefix];
+    if (!tag) {
+      throw new Error(`Unrecognized option key prefix: ${prefix}`);
+    }
+    index = indexStr;
+  }
+
+  // The flight controller's own dumps write this sentinel in uppercase
+  // (e.g. "resource MOTOR 3 NONE") -- match that exactly rather than
+  // relying on the firmware's CLI parser being case-insensitive about
+  // its own commands.
+  return `resource ${tag} ${index} ${pin ?? "NONE"}`;
+}
+
+/**
+ * Builds the `timer`/`dma pin` CLI commands that put every pin in the
+ * given HardwareMap back exactly as it was recorded -- the inverse of
+ * parsePinMetadata's per-pin parsing, using each entry's own `timer`
+ * (AF) and `dma` (index) fields verbatim rather than computing
+ * anything. Used to replay a `dump hardware` snapshot's timer/DMA
+ * state back onto the flight controller after `defaults nosave` has
+ * overwritten it in RAM -- see remap_fc.js's #doRunSequence.
+ * @param {HardwareMap} hardwareMap
+ * @returns {string[]}
+ */
+export function buildTimerDmaReplayCommands(hardwareMap) {
+  const commands = [];
+
+  for (const entry of Object.values(hardwareMap)) {
+    if (entry.timer !== undefined) {
+      commands.push(`timer ${entry.pin} ${entry.timer}`);
+    }
+    if (entry.dma !== undefined) {
+      commands.push(`dma pin ${entry.pin} ${entry.dma}`);
+    }
+  }
+
+  return commands;
 }
