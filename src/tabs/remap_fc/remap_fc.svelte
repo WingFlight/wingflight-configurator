@@ -29,8 +29,20 @@
     buildNamedConnectorPins,
     expandOptionName,
   } from "@/js/remap_fc/reference_design_labels.js";
+  import { loadReferenceDesigns } from "@/js/remap_fc/reference_design_source.js";
   import mcuAllData from "@/tabs/remap_fc/MCU-all.json";
-  import referenceDesigns from "@/tabs/remap_fc/reference_designs.json";
+  import referenceDesignsLocal from "@/tabs/remap_fc/reference_designs.json";
+
+  // Starts as the copy bundled with this build so the tab is usable
+  // immediately, then replaced with the latest version fetched from
+  // GitHub once that resolves (cached for the rest of this session --
+  // see reference_design_source.js), so a newly documented board
+  // doesn't have to wait for a new configurator release to show up
+  // here. Silently keeps the bundled copy if the fetch fails.
+  let referenceDesigns = $state(referenceDesignsLocal);
+  loadReferenceDesigns(referenceDesignsLocal).then((data) => {
+    referenceDesigns = data;
+  });
 
   // Sentinel dropdown value meaning "nothing assigned to this pin" —
   // distinct from the empty placeholder value used by the "+ Add" row.
