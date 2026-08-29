@@ -10,6 +10,7 @@
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
+    TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -66,6 +67,10 @@
   function masterGainAdjustmentState(axisIndex) {
     return getAdjustmentState(TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS[axisIndex]);
   }
+
+  let holdGainAdjustment = $derived(
+    getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
+  );
 
   let loading = $state(true);
   let initialState = $state(null);
@@ -322,12 +327,26 @@
       {#snippet tooltip()}
         {$i18n.t("thrustVectorHoldGainHelp")}
       {/snippet}
-      <NumberInput
-        id="tv-hold-gain"
-        min="0"
-        max="250"
-        bind:value={FC.TV_PID_PROFILE.tvHoldGain}
-      />
+      <div
+        class="runtime-control"
+        class:runtime-controlled={holdGainAdjustment}
+        class:runtime-active={holdGainAdjustment?.active}
+        title={adjustmentTitle(holdGainAdjustment)}
+      >
+        <NumberInput
+          id="tv-hold-gain"
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.tvHoldGain}
+        />
+        {#if holdGainAdjustment}
+          <span class="adjustment-badge">
+            {holdGainAdjustment.active
+              ? (adjustmentChannelLabel(holdGainAdjustment) ?? "LIVE")
+              : "ADJ"}
+          </span>
+        {/if}
+      </div>
     </Field>
     <Field id="tv-hold-deadband" label="thrustVectorHoldDeadband">
       {#snippet tooltip()}
