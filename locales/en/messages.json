@@ -743,7 +743,7 @@
         "message": "FBUS/S.Port Sensors"
     },
     "tabSbusInputStatus": {
-        "message": "SBUS Input"
+        "message": "Serial Rx (Backup)"
     },
     "fbusSensorsDescription": {
         "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master."
@@ -1998,7 +1998,7 @@
         "message": "SRXL2 ESC"
     },
     "portsFunction_RX_SBUS_INPUT": {
-        "message": "SBUS Input (Satellite Rx)"
+        "message": "Serial Rx (Backup, SBUS)"
     },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
@@ -2696,6 +2696,9 @@
     },
     "receiverButtonSticks": {
         "message": "Control sticks"
+    },
+    "receiverBackupRxViewDetails": {
+        "message": "View Details"
     },
     "receiverModelPreview": {
         "message": "Preview"

@@ -17,6 +17,7 @@
   import TelemetrySettings from "./TelemetrySettings.svelte";
   import TelemetrySensors from "./TelemetrySensors/TelemetrySensors.svelte";
   import ChannelAssignment from "./ChannelAssignment/ChannelAssignment.svelte";
+  import { UART_NAMES } from "@/tabs/configuration/util.js";
   import {
     TelemetryType,
     RX_PROTOCOLS,
@@ -26,6 +27,7 @@
   let loading = $state(true);
   let initialState;
   let sensorUpdateIntervalId;
+  let backupRxPollerIntervalId;
 
   function snapshotState() {
     return $state.snapshot({
@@ -66,10 +68,18 @@
       await MSP.promise(MSPCodes.MSP_RC_COMMAND);
       await MSP.promise(MSPCodes.MSP_ANALOG);
     }, 25);
+
+    if (hasBackupRxPort) {
+      await MSP.promise(MSPCodes.MSP2_WING_SBUS_INPUT_STATUS);
+      backupRxPollerIntervalId = setInterval(() => {
+        MSP.promise(MSPCodes.MSP2_WING_SBUS_INPUT_STATUS);
+      }, 500);
+    }
   });
 
   onDestroy(() => {
     clearInterval(sensorUpdateIntervalId);
+    clearInterval(backupRxPollerIntervalId);
   });
 
   export async function onSave() {
@@ -128,6 +138,33 @@
       (port) => port.functionMask & SERIALRX_FUNCTION,
     ),
   );
+
+  // Serial Rx (Backup, SBUS) - see FUNCTION_RX_SBUS_INPUT in wingflight-firmware.
+  // No dedicated feature bit, same as SERIALRX_FUNCTION above: the port assignment
+  // itself is the enablement.
+  const RX_SBUS_INPUT_FUNCTION = 4194304;
+  let hasBackupRxPort = $derived(
+    FC.SERIAL_CONFIG.ports.some(
+      (port) => port.functionMask & RX_SBUS_INPUT_FUNCTION,
+    ),
+  );
+  let backupRxPort = $derived(
+    FC.SERIAL_CONFIG.ports.find(
+      (port) => port.functionMask & RX_SBUS_INPUT_FUNCTION,
+    ),
+  );
+  let backupRxStatus = $derived(
+    FC.SBUS_INPUT_STATUS ?? {
+      enabled: false,
+      linkUp: false,
+      activeSource: "main",
+      channels: [],
+    },
+  );
+
+  function onClickBackupRxDetails() {
+    $("#tabs ul.mode-connected li.tab_sbus_input_status a").click();
+  }
 
   let extTelemProto = $derived.by(() => {
     for (const proto of EXTERNAL_TELEMETRY_PROTOCOLS) {
@@ -308,6 +345,27 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
+  {#if hasBackupRxPort}
+    <div class="backup-rx-status">
+      <span
+        class="badge"
+        class:up={backupRxStatus.linkUp}
+        class:down={!backupRxStatus.linkUp}
+      >
+        {$i18n.t("tabSbusInputStatus")}:
+        {backupRxPort
+          ? (UART_NAMES[backupRxPort.identifier] ?? backupRxPort.identifier)
+          : ""}
+        &mdash;
+        {backupRxStatus.linkUp
+          ? $i18n.t("sbusInputStatusLinkUp")
+          : $i18n.t("sbusInputStatusLinkDown")}
+      </span>
+      <button class="btn-link" onclick={onClickBackupRxDetails}>
+        {$i18n.t("receiverBackupRxViewDetails")}
+      </button>
+    </div>
+  {/if}
   <div class="content">
     <div>
       <ReceiverType {rxProtoIndex} {hasSerialRxPort} {setRxProto} />
@@ -335,6 +393,53 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
     column-gap: var(--section-gap);
+  }
+
+  .backup-rx-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: var(--section-gap);
+    padding: 8px 12px;
+    border-radius: 4px;
+
+    color: var(--color-text-soft);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+  }
+
+  .badge.up {
+    color: var(--color-border-accent);
+    border-color: var(--color-border-accent);
+  }
+
+  .badge.down {
+    color: var(--color-danger, var(--color-border-accent));
+    border-color: var(--color-danger, var(--color-border-accent));
+  }
+
+  .btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-border-accent);
+    cursor: pointer;
+    font: inherit;
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
   }
 
   .help-btn {
