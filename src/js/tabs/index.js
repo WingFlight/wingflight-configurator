@@ -25,7 +25,6 @@ import "./privacy_policy.js";
 import "./profiles.js";
 import "./rates.js";
 import "./receiver.js";
-import "./sbus_input_status.js";
 import "./sensors.js";
 import "./servos.js";
 import "./setup.js";

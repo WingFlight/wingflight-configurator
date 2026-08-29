@@ -36,9 +36,6 @@ const tabHelpURLs = {
     tabXactServoProgramming: `${docsBaseURL}/configurator/tabs/xact-servo-programming/`,
     tabBlackbox:        `${docsBaseURL}/configurator/tabs/blackbox/`,
     tabFbusSensors:     `${docsBaseURL}/configurator/tabs/fbus-sensors/`,
-    // No dedicated configurator/tabs page for this one -- it's a live
-    // status view, not a settings tab -- points at the feature's own page.
-    tabSbusInputStatus: `${docsBaseURL}/flight-modes/sbus-input-fallback/`,
     tabCli:             `${docsBaseURL}/configurator/tabs/cli/`,
 };
 

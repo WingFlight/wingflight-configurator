@@ -2700,6 +2700,9 @@
     "receiverBackupRxViewDetails": {
         "message": "View Details"
     },
+    "receiverBackupRxHide": {
+        "message": "Hide"
+    },
     "receiverModelPreview": {
         "message": "Preview"
     },

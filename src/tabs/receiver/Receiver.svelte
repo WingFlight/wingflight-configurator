@@ -12,6 +12,7 @@
 
   import ModelPreview from "./ModelPreview.svelte";
   import Page from "@/components/Page.svelte";
+  import Meter from "@/components/Meter.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
   import TelemetrySettings from "./TelemetrySettings.svelte";
@@ -71,9 +72,11 @@
 
     if (hasBackupRxPort) {
       await MSP.promise(MSPCodes.MSP2_WING_SBUS_INPUT_STATUS);
+      // 200ms rather than the 25ms main-channel poll above - this only needs to
+      // look live when the box below is expanded, not drive a hot loop always.
       backupRxPollerIntervalId = setInterval(() => {
         MSP.promise(MSPCodes.MSP2_WING_SBUS_INPUT_STATUS);
-      }, 500);
+      }, 200);
     }
   });
 
@@ -162,8 +165,19 @@
     },
   );
 
-  function onClickBackupRxDetails() {
-    globalThis.$("#tabs ul.mode-connected li.tab_sbus_input_status a").click();
+  let backupRxExpanded = $state(false);
+
+  function toggleBackupRxExpanded() {
+    backupRxExpanded = !backupRxExpanded;
+  }
+
+  const BACKUP_RX_METER_MIN = 750;
+  const BACKUP_RX_METER_MAX = 2250;
+  function backupRxChannelWidth(value) {
+    return (
+      (100 * (value - BACKUP_RX_METER_MIN)) /
+      (BACKUP_RX_METER_MAX - BACKUP_RX_METER_MIN)
+    ).clamp(0, 100);
   }
 
   let extTelemProto = $derived.by(() => {
@@ -345,27 +359,6 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  {#if hasBackupRxPort}
-    <div class="backup-rx-status">
-      <span
-        class="badge"
-        class:up={backupRxStatus.linkUp}
-        class:down={!backupRxStatus.linkUp}
-      >
-        {$i18n.t("tabSbusInputStatus")}:
-        {backupRxPort
-          ? (UART_NAMES[backupRxPort.identifier] ?? backupRxPort.identifier)
-          : ""}
-        &mdash;
-        {backupRxStatus.linkUp
-          ? $i18n.t("sbusInputStatusLinkUp")
-          : $i18n.t("sbusInputStatusLinkDown")}
-      </span>
-      <button class="btn-link" onclick={onClickBackupRxDetails}>
-        {$i18n.t("receiverBackupRxViewDetails")}
-      </button>
-    </div>
-  {/if}
   <div class="content">
     <div>
       <ReceiverType {rxProtoIndex} {hasSerialRxPort} {setRxProto} />
@@ -386,6 +379,54 @@
       <ModelPreview />
     </div>
   </div>
+  {#if hasBackupRxPort}
+    <div class="backup-rx-status">
+      <div class="backup-rx-summary">
+        <span
+          class="badge"
+          class:up={backupRxStatus.linkUp}
+          class:down={!backupRxStatus.linkUp}
+        >
+          {$i18n.t("tabSbusInputStatus")}:
+          {backupRxPort
+            ? (UART_NAMES[backupRxPort.identifier] ?? backupRxPort.identifier)
+            : ""}
+          &mdash;
+          {backupRxStatus.linkUp
+            ? $i18n.t("sbusInputStatusLinkUp")
+            : $i18n.t("sbusInputStatusLinkDown")}
+        </span>
+        <button class="btn-link" onclick={toggleBackupRxExpanded}>
+          {backupRxExpanded
+            ? $i18n.t("receiverBackupRxHide")
+            : $i18n.t("receiverBackupRxViewDetails")}
+        </button>
+      </div>
+      {#if backupRxExpanded}
+        <div class="backup-rx-details" transition:slide|global>
+          <span class="badge" class:active={backupRxStatus.activeSource === "fallback"}>
+            {backupRxStatus.activeSource === "fallback"
+              ? $i18n.t("sbusInputStatusActiveFallback")
+              : $i18n.t("sbusInputStatusActiveMain")}
+          </span>
+          {#if backupRxStatus.channels.length === 0}
+            <p class="note">{$i18n.t("sbusInputStatusEmpty")}</p>
+          {:else}
+            <div class="backup-rx-channels">
+              {#each backupRxStatus.channels as value, index (index)}
+                <Meter
+                  --fill-hue={(index * 20).toString()}
+                  title={`CH${index + 1}`}
+                  leftLabel={value}
+                  value={backupRxChannelWidth(value)}
+                />
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+  {/if}
 </Page>
 
 <style lang="scss">
@@ -396,16 +437,41 @@
   }
 
   .backup-rx-status {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: var(--section-gap);
-    padding: 8px 12px;
+    margin-top: var(--section-gap);
+    padding: 6px 10px;
     border-radius: 4px;
+    width: fit-content;
+    max-width: 100%;
+    font-size: 0.85rem;
 
     color: var(--color-text-soft);
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
+  }
+
+  .backup-rx-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .backup-rx-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+    width: 280px;
+    max-width: 100%;
+  }
+
+  .backup-rx-channels {
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .note {
+    margin: 0;
+    color: var(--color-text-soft);
   }
 
   .badge {
@@ -423,7 +489,10 @@
     border-color: var(--color-border-accent);
   }
 
-  .badge.down {
+  // "active" here means the SBUS-in link is the one currently driving the
+  // aircraft (main link down) -- worth calling out the same way "down" is.
+  .badge.down,
+  .badge.active {
     color: var(--color-danger, var(--color-border-accent));
     border-color: var(--color-danger, var(--color-border-accent));
   }
