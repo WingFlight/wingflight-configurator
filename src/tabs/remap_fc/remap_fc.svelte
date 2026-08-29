@@ -22,7 +22,15 @@
     getAddableOptions,
     getRowSelectableOptions,
   } from "@/js/remap_fc/remap_table.js";
-  import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
+  import {
+    reconcileTimersAndDma,
+    buildFeatureRows,
+    detectClashes,
+    reallocateTimersAndDma,
+    buildTimerDmaCommands,
+    buildAllocationTable,
+  } from "@/js/remap_fc/timer_dma_reconciler.js";
+  import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
   import {
     buildReferenceLabels,
     buildReservedPins,
@@ -115,30 +123,6 @@
   // again as soon as a choice is made.
   let addMenuOpen = $state(false);
 
-  // The board diagram's own square size in pixels, kept in step with
-  // the table's rendered height (see the ResizeObserver effect below)
-  // so the diagram grows as rows are added and shrinks as they're
-  // removed, clamped so it's never too small to read or big enough to
-  // dwarf the table next to it. Deliberately measured in JS rather
-  // than via the CSS aspect-ratio property -- this app's own runtime
-  // doesn't support aspect-ratio (it silently resolves to a height of
-  // 0), so this is the reliable alternative.
-  let tableEl = $state(null);
-  let diagramSize = $state(260);
-
-  $effect(() => {
-    if (!tableEl) return;
-
-    const clampToTableHeight = () => {
-      diagramSize = Math.min(480, Math.max(160, tableEl.offsetHeight));
-    };
-    clampToTableHeight();
-
-    const observer = new ResizeObserver(clampToTableHeight);
-    observer.observe(tableEl);
-    return () => observer.disconnect();
-  });
-
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
   let orderedVisible = $derived(
@@ -149,6 +133,26 @@
   // (possibly edited) working copy every time it changes.
   let tableRows = $derived(
     buildRowsForOptions(orderedVisible, workingCurrent, defaultHardware),
+  );
+
+  // The board diagram's own square size in pixels, computed directly
+  // from the table's row count rather than measured from the DOM --
+  // measuring the table's own rendered height instead would also
+  // catch the "+ Add" dropdown's option list temporarily inflating it
+  // while open, growing and then shrinking the diagram back down as
+  // soon as it's closed. This way only real, committed rows change
+  // it. Clamped so it's never too small to read or big enough to
+  // dwarf the table next to it. Computed in JS rather than via the
+  // CSS aspect-ratio property -- this app's own runtime doesn't
+  // support aspect-ratio (it silently resolves to a height of 0), so
+  // this is the reliable alternative regardless.
+  const DIAGRAM_BASE_SIZE = 70;
+  const DIAGRAM_ROW_SIZE = 25;
+  let diagramSize = $derived(
+    Math.min(
+      480,
+      Math.max(160, DIAGRAM_BASE_SIZE + tableRows.length * DIAGRAM_ROW_SIZE),
+    ),
   );
 
   // Pin -> friendly name (e.g. "ESC", "TAIL", "Port A Rx") from the
@@ -218,6 +222,31 @@
   // whichever other connector's name its default pin happens to share.
   function optionLabel(option) {
     return DISPLAY_LABEL_OVERRIDES[displayName(option)] || displayName(option);
+  }
+
+  // Builds the human-readable label for a pin-conflict suggestion (see
+  // pinConflictSuggestions/pin_conflict_suggestions.js), using this
+  // board's own reference-design labels the same way every other
+  // option label in this tab does -- pin_conflict_suggestions.js
+  // itself has no knowledge of reference designs, only raw CLI option
+  // keys (e.g. "M1"), so building the actual display label is this
+  // component's job, not that module's.
+  function suggestionLabel(suggestion) {
+    if (suggestion.type === "swap") {
+      return $i18n.t("remapFcSuggestionSwap", {
+        feature: optionLabel(suggestion.feature),
+        otherFeature: optionLabel(suggestion.otherFeature),
+      });
+    }
+    if (suggestion.type === "move") {
+      return $i18n.t("remapFcSuggestionMove", {
+        feature: optionLabel(suggestion.feature),
+        targetPin: suggestion.targetPin,
+      });
+    }
+    return $i18n.t("remapFcSuggestionClear", {
+      feature: optionLabel(suggestion.feature),
+    });
   }
 
   // The option keys currently claimed as some row's Current Option —
@@ -342,6 +371,95 @@
   // than something that silently recalculates (and so could silently
   // go stale) in the background as the table is edited.
   let timerDmaCommands = $state([]);
+
+  // A read-only, always-current check of whether the working state's
+  // present timer/DMA assignments actually clash right now -- unlike
+  // timerDmaCommands/calculatedAllocationTable below, this recomputes
+  // on every table edit rather than only when "Allocate Timers/DMA" is
+  // pressed, since it never stages anything to send; it only decides
+  // whether to show the automatic warning panel (see
+  // suggestedAllocationTable below it). Empty/no-clash before the FC's
+  // been read, since there's nothing to check yet.
+  let liveFeatureRows = $derived(
+    hasRead ? buildFeatureRows(workingCurrent, mcuType, mcuAllData) : [],
+  );
+  let liveClash = $derived(
+    detectClashes(liveFeatureRows, reservedDmaStreams, reservedTimers),
+  );
+
+  // What a fresh allocation pass would assign each currently-selected
+  // pin, for the automatic warning panel -- gathers every timer option
+  // each of those pins actually supports, groups them by timer base
+  // (features sharing a base must share a type -- see
+  // timer_allocator.js), and assigns each feature a compatible option
+  // (forcing one through even if it still collides, rather than
+  // leaving a feature blank -- see pickBestOption/allocateDma's own
+  // comments for why). unresolved marks which rows the panel should
+  // style as still-conflicting despite that. Only computed while
+  // there's actually a clash to show a suggestion for, since it's
+  // otherwise wasted work.
+  let liveAllocation = $derived(
+    liveClash.hasClash
+      ? reallocateTimersAndDma(
+          liveFeatureRows,
+          reservedDmaStreams,
+          reservedTimers,
+        )
+      : [],
+  );
+  let liveUnresolved = $derived(
+    liveClash.hasClash
+      ? buildTimerDmaCommands(
+          liveFeatureRows,
+          liveAllocation,
+          reservedDmaStreams,
+          reservedTimers,
+        ).unresolved
+      : [],
+  );
+  let suggestedAllocationTable = $derived(
+    liveClash.hasClash
+      ? buildAllocationTable(liveFeatureRows, liveAllocation, liveUnresolved)
+      : [],
+  );
+
+  // Candidate pin swaps/moves that would let a fresh reallocation
+  // resolve everything -- empty whenever a clash exists but a full
+  // reallocation pass on the *current* pin assignments would already
+  // resolve it (liveClash.hasClash true, this empty): that case only
+  // needs "Allocate Timers/DMA" pressed, not a pin-level fix, so the
+  // warning panel below stays hidden for it. Only non-empty once
+  // reallocation genuinely can't resolve the current pin layout at
+  // all -- see pin_conflict_suggestions.js for the search itself.
+  let pinConflictSuggestions = $derived(
+    hasRead
+      ? findPinConflictSuggestions(
+          workingCurrent,
+          mcuType,
+          mcuAllData,
+          reservedDmaStreams,
+          reservedTimers,
+          tableRows,
+        )
+      : [],
+  );
+
+  // Bound to the suggestion picker dropdown when there's more than
+  // one candidate -- a string, like every other value this app's
+  // Select component binds (a native <select>'s own value is always a
+  // string regardless), rather than relying on the index surviving
+  // the round trip as a number. Clamped defensively in case the
+  // suggestion list itself shrinks (e.g. after a table edit) while an
+  // index past its new end is still selected.
+  let selectedSuggestionIndex = $state("0");
+  let selectedSuggestion = $derived(
+    pinConflictSuggestions[
+      Math.min(
+        Number(selectedSuggestionIndex),
+        pinConflictSuggestions.length - 1,
+      )
+    ] ?? null,
+  );
 
   // One row per feature describing its timer/DMA outcome from the
   // last "Allocate Timers/DMA" run -- what a from-scratch allocation
@@ -591,6 +709,37 @@
     unsetOptions = unsetOptions.filter((option) => option !== row.option);
     workingCurrent = next;
   }
+
+  // handleAcceptSuggestion fires when the pin-conflict warning panel's
+  // "Accept Suggestion" button is pressed: adopts the selected
+  // suggestion's precomputed pin layout wholesale (see
+  // pin_conflict_suggestions.js), then reconciles unsetOptions to
+  // match -- a "clear" suggestion leaves its feature's row without an
+  // occupant, so it's marked unset to force an explicit pick rather
+  // than silently reading as "None"; a "swap"/"move" gives its
+  // feature(s) a freshly resolved pin, so any stale "unset" state
+  // they were carrying is cleared instead.
+  function handleAcceptSuggestion() {
+    if (!selectedSuggestion) return;
+
+    workingCurrent = selectedSuggestion.apply;
+
+    if (selectedSuggestion.type === "clear") {
+      unsetOptions = unsetOptions.includes(selectedSuggestion.feature)
+        ? unsetOptions
+        : [...unsetOptions, selectedSuggestion.feature];
+    } else {
+      const affected = [
+        selectedSuggestion.feature,
+        selectedSuggestion.otherFeature,
+      ].filter((option) => option !== null);
+      unsetOptions = unsetOptions.filter(
+        (option) => !affected.includes(option),
+      );
+    }
+
+    selectedSuggestionIndex = "0";
+  }
 </script>
 
 {#snippet header()}
@@ -696,32 +845,30 @@
       <div class="error_message">{error}</div>
     {/if}
 
-    <!-- A generic diagram, always visible: the bare-PCB placeholder
-         before anything's been read, switching to the generic cased
-         diagram with the FC's own reported name overlaid on top once
-         it's known. Not board-specific artwork -- building a
-         dedicated diagram per manufacturer doesn't scale, so both
-         images are deliberately generic (see GENERIC.svg and
-         CASED_GENERIC.svg's own file comments). -->
     <div class="table-with-diagram">
-      <div
-        class="board-diagram-wrap"
-        style="width: {diagramSize}px; height: {diagramSize}px;"
-      >
-        <img
-          class="board-diagram"
-          src={hasRead
-            ? "/images/remap_fc/CASED_GENERIC.svg"
-            : "/images/remap_fc/GENERIC.svg"}
-          alt=""
-        />
-        {#if hasRead}
+      <!-- The generic cased diagram, with the FC's own reported name
+           overlaid on top -- hidden entirely until the FC's actually
+           been read, since there's no name to show yet and nothing to
+           diagram. Not board-specific artwork -- building a dedicated
+           diagram per manufacturer doesn't scale, so this is
+           deliberately generic (see CASED_GENERIC.svg's own file
+           comment). -->
+      {#if hasRead}
+        <div
+          class="board-diagram-wrap"
+          style="width: {diagramSize}px; height: {diagramSize}px;"
+        >
+          <img
+            class="board-diagram"
+            src="/images/remap_fc/CASED_GENERIC.svg"
+            alt=""
+          />
           <div class="board-diagram-label">
             {FC.CONFIG.manufacturerId}
             {FC.CONFIG.boardName}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       <!-- The current-vs-default pin remap table, in fixed option
            order, plus a trailing "+ Add" row for options not yet
@@ -729,7 +876,7 @@
            even once every row has been cleared to "None" —
            otherwise there'd be no way to bring any row back. -->
       {#if tableRows.length || hasRealAddableOptions}
-        <table class="remap-table" bind:this={tableEl}>
+        <table class="remap-table">
           <thead>
             <tr>
               <th>{$i18n.t("remapFcTableOption")}</th>
@@ -809,6 +956,81 @@
           </tbody>
         </table>
       {/if}
+
+      <!-- Automatic warning: appears only once the working state's
+           current pin assignments have a timer/DMA clash that a full
+           reallocation pass genuinely can't resolve on its own (a
+           clash "Allocate Timers/DMA" alone would fix stays silent
+           here -- that button is still the way to apply it). No
+           button press needed to see this, unlike the "Allocate
+           Timers/DMA" results below, which only appear once that
+           button's actually been pressed. suggestedAllocationTable
+           shows what that reallocation attempt produces regardless
+           (including which feature(s) it couldn't resolve), and
+           pinConflictSuggestions offers a pin-level fix instead --
+           swapping/moving one of those features onto a different pin
+           so a fresh reallocation *can* resolve everything. -->
+      {#if pinConflictSuggestions.length}
+        <div class="allocation-column allocation-live-warning">
+          <h2>{$i18n.t("remapFcAllocationInvalidHeading")}</h2>
+          <p class="allocation-warning">
+            {$i18n.t("remapFcAllocationInvalidWarning", {
+              reasons: liveClash.reasons.join("; "),
+            })}
+          </p>
+          <table class="allocation-table">
+            <thead>
+              <tr>
+                <th>{$i18n.t("remapFcAllocationFeature")}</th>
+                <th>{$i18n.t("remapFcAllocationPin")}</th>
+                <th>{$i18n.t("remapFcAllocationTimer")}</th>
+                <th>{$i18n.t("remapFcAllocationDma")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each suggestedAllocationTable as row (row.feature)}
+                <tr class:unresolved={row.unresolved}>
+                  <td>{row.feature}</td>
+                  <td>{row.pin}</td>
+                  <td>
+                    <div>{row.timerCommand}</div>
+                    <div class="allocation-resolved">{row.timer}</div>
+                  </td>
+                  <td class:dma-unmanaged={!row.dmaManaged}>
+                    <div>{row.dmaCommand}</div>
+                    <div class="allocation-resolved">{row.dma}</div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+
+          <!-- The pin-level fix itself: a single suggestion shows as
+               plain text, more than one gets a picker so the user
+               chooses which to apply -- either way, "Accept
+               Suggestion" adopts selectedSuggestion.apply wholesale
+               (see handleAcceptSuggestion). -->
+          <div class="suggestion-row">
+            {#if pinConflictSuggestions.length > 1}
+              <Select
+                bind:value={selectedSuggestionIndex}
+                options={pinConflictSuggestions.map((suggestion, index) => ({
+                  value: String(index),
+                  label: suggestionLabel(suggestion),
+                }))}
+              />
+            {:else if selectedSuggestion}
+              <span>{suggestionLabel(selectedSuggestion)}</span>
+            {/if}
+            <button
+              class="btn accept-suggestion-btn"
+              onclick={handleAcceptSuggestion}
+            >
+              {$i18n.t("remapFcAcceptSuggestion")}
+            </button>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <!-- Appears once "Allocate Timers/DMA" has actually been run:
@@ -845,7 +1067,7 @@
                   <div>{row.timerCommand}</div>
                   <div class="allocation-resolved">{row.timer}</div>
                 </td>
-                <td>
+                <td class:dma-unmanaged={!row.dmaManaged}>
                   <div>{row.dmaCommand}</div>
                   <div class="allocation-resolved">{row.dma}</div>
                 </td>
@@ -919,6 +1141,32 @@
     }
   }
 
+  // The automatic live-clash warning sits beside the diagram/table in
+  // .table-with-diagram's flex row (wrapping below them on narrow
+  // viewports, same as the diagram already does), so it needs to grow
+  // to fill the row's remaining width rather than just shrink-wrapping
+  // its content, and a border colour that reads as a warning rather
+  // than the calculated-config panel's neutral one.
+  .allocation-live-warning {
+    flex: 1 1 260px;
+    border-color: #d9534f;
+  }
+
+  // The suggestion picker (a single suggestion shows as plain text
+  // instead -- see the template) plus "Accept Suggestion", at the
+  // bottom of the pin-conflict warning panel.
+  .suggestion-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .accept-suggestion-btn {
+    @extend %button;
+  }
+
   .allocation-table {
     border-collapse: collapse;
 
@@ -938,6 +1186,17 @@
     // for it, rather than one that was actually (re)allocated.
     tr.unresolved td {
       color: #d9534f;
+    }
+
+    // Flags a DMA cell shown for reference only -- a servo/frequency
+    // input's chosen timer happens to define a DMA option, but this
+    // tool never claims or sends it, since firmware never actually
+    // uses DMA for either regardless (see feature_classifier.js's
+    // featureNeedsDma). Struck through and faded so it reads as inert
+    // rather than something that will actually happen.
+    td.dma-unmanaged {
+      opacity: 0.5;
+      text-decoration: line-through;
     }
   }
 
@@ -1068,6 +1327,17 @@
 
     .add-btn {
       @extend %button;
+    }
+
+    // The "Current Option" dropdown otherwise sizes itself to each
+    // row's own current label (a native <select>'s default sizing),
+    // so a short label like "SBUS" produces a narrower control than a
+    // longer one like "Frequency 1" sitting right above/below it --
+    // a fixed width keeps every row's dropdown the same size
+    // regardless of its own current label. :global(), since Select.svelte
+    // renders the actual <select> itself, not this file.
+    tr:not(.add-row) td:last-child :global(select) {
+      width: 160px;
     }
   }
 

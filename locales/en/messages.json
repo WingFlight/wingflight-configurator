@@ -7378,6 +7378,24 @@
     "remapFcAllocationCalculatedHeading": {
         "message": "Calculated config"
     },
+    "remapFcAllocationInvalidHeading": {
+        "message": "Pin selection not valid"
+    },
+    "remapFcAllocationInvalidWarning": {
+        "message": "The current timer/DMA assignment can't work: {{reasons}}. Reallocating timers/DMA on the current pins alone can't resolve it either -- pick a suggestion below to fix the pin assignment itself."
+    },
+    "remapFcAcceptSuggestion": {
+        "message": "Accept Suggestion"
+    },
+    "remapFcSuggestionSwap": {
+        "message": "Swap pins for {{feature}} and {{otherFeature}}"
+    },
+    "remapFcSuggestionMove": {
+        "message": "Move {{feature}} to pin {{targetPin}} (currently unassigned)"
+    },
+    "remapFcSuggestionClear": {
+        "message": "Set {{feature}} to unassigned"
+    },
     "remapFcAllocationUnresolved": {
         "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."
     },

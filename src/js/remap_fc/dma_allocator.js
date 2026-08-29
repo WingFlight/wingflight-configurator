@@ -1,11 +1,20 @@
 /**
  * File: src/js/remap_fc/dma_allocator.js
  * Picks a DMA stream for every feature that's already been given a
- * timer (see timer_allocator.js), following the original Wingflight
- * remap tool's DMA rules: a stream can only serve one feature at a
- * time, and motors/the LED strip -- the outputs most sensitive to DMA
- * contention -- may take a stream a lower-priority feature (a servo
- * or frequency input) already claimed.
+ * timer (see timer_allocator.js) and actually uses DMA at all -- a
+ * motor (conservatively assumed to, since its real protocol isn't
+ * known at this stage of setup) or the LED strip (which always does).
+ * A servo or frequency input never uses DMA regardless of any other
+ * setting, so it's skipped entirely here -- see
+ * feature_classifier.js's featureNeedsDma, and each row's own
+ * needsDma. Follows the original Wingflight remap tool's DMA rules
+ * for the features that do participate: a stream can only serve one
+ * feature at a time, and a motor/the LED strip -- the outputs most
+ * sensitive to DMA contention -- may take a stream a lower-priority
+ * feature already claimed (though in practice, with servos/frequency
+ * inputs excluded, the only lower-priority claimant left is a
+ * reserved stream this tool doesn't manage at all, which is never
+ * stealable regardless of priority).
  *
  * Claims are tracked per *stream*, not per stream+channel: on the
  * underlying STM32 DMA hardware, a stream is a single physical unit
@@ -46,7 +55,11 @@ const RESERVED_CLAIMANT = "__reserved__";
  */
 
 /**
- * Allocates a DMA stream to every row that has a chosen timer.
+ * Allocates a DMA stream to every row that has a chosen timer and
+ * needs DMA at all (row.needsDma -- see feature_classifier.js's
+ * featureNeedsDma). A row with a chosen timer but needsDma false
+ * (a servo or frequency input) is reported with its options for
+ * reference but never actually claims a stream.
  * @param {import("./timer_allocator.js").TimerAllocationRow[]} timerRows
  * @param {Set<string>} [reservedStreams] - Streams already claimed by
  *   something this tool doesn't manage (see
@@ -69,6 +82,20 @@ export function allocateDma(timerRows, reservedStreams = new Set()) {
   for (const row of timerRows) {
     if (!row.chosen) {
       results[row.feature] = { dmaOptions: [], selectedDMAIndex: -1, dmaInfo: null };
+      continue;
+    }
+
+    // A servo or frequency input never actually uses DMA regardless
+    // of its timer choice (see feature_classifier.js's
+    // featureNeedsDma) -- report its options for reference, but never
+    // claim a stream for it, so it can neither be flagged as clashing
+    // over DMA nor block a motor/LED feature that actually needs one.
+    if (!row.needsDma) {
+      results[row.feature] = {
+        dmaOptions: row.chosen.dma,
+        selectedDMAIndex: -1,
+        dmaInfo: null,
+      };
       continue;
     }
 
@@ -95,6 +122,19 @@ export function allocateDma(timerRows, reservedStreams = new Set()) {
       ) {
         best = i;
       }
+    }
+
+    // Every option is already held by something this feature isn't
+    // allowed to take (another high-priority feature, or something
+    // reserved outside this tool's control) -- rather than leaving
+    // this feature with no DMA at all, force its first option anyway.
+    // Downstream code (see timer_dma_reconciler.js's
+    // buildTimerDmaCommands) is responsible for noticing the
+    // resulting stream collision and refusing to actually send it,
+    // the same reasoning timer_allocator.js's pickBestOption follows
+    // for the equivalent timer case.
+    if (best === -1 && dmaOptions.length > 0) {
+      best = 0;
     }
 
     if (best >= 0) {

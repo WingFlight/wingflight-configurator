@@ -19,10 +19,22 @@
  * exclusivity and critical-base rules is that one feature's "safe"
  * choice depends on every other feature's choice too, so a partial
  * reallocation could just move the clash elsewhere.
+ *
+ * timer_allocator.js/dma_allocator.js always assign every feature
+ * *something*, even when literally every option available to it
+ * collides with something else already claimed -- rather than
+ * silently leaving a feature unconfigured (which would read as
+ * "nothing wrong here" when something very much still is), the
+ * allocators force their best remaining choice through regardless.
+ * This file is what actually notices that a forced choice still
+ * collides, via stillConflictingFeatures below -- checking the
+ * allocation's own *output* for the same rules detectClashes checks
+ * against the *current*, pre-allocation state -- and is what actually
+ * withholds sending it, in buildTimerDmaCommands.
  */
 
 import { getPinTimerOptions } from "./timer_dma_lookup.js";
-import { classifyFeature } from "./feature_classifier.js";
+import { classifyFeature, featureNeedsDma } from "./feature_classifier.js";
 import { allocateTimers } from "./timer_allocator.js";
 import { allocateDma } from "./dma_allocator.js";
 
@@ -40,7 +52,13 @@ import { allocateDma } from "./dma_allocator.js";
  *   handleCurrentOptionChange).
  * @property {?import("./timer_dma_lookup.js").DmaChoice} currentDma -
  *   The DMA choice currentOption's own list points to at the
- *   HardwareMap entry's dma index, or null.
+ *   HardwareMap entry's dma index, or null -- always null when
+ *   needsDma is false, regardless of what the HardwareMap entry
+ *   itself reports, since this tool never treats a servo/frequency
+ *   input's DMA index as meaningful (see featureNeedsDma).
+ * @property {boolean} needsDma - Whether this tool tracks/claims DMA
+ *   for this feature's type at all -- see feature_classifier.js's
+ *   featureNeedsDma.
  */
 
 /**
@@ -67,6 +85,7 @@ export function buildFeatureRows(workingCurrent, mcuType, mcuAllData) {
     .filter(([feature]) => classifyFeature(feature) !== "other")
     .map(([feature, entry]) => {
       const options = getPinTimerOptions(mcuAllData, mcuType, entry.pin);
+      const needsDma = featureNeedsDma(feature);
 
       // A HardwareMap entry's own `timer` field holds the pin's AF
       // value (e.g. "AF2"), not the full "TIM3 CH1" descriptor --
@@ -75,9 +94,10 @@ export function buildFeatureRows(workingCurrent, mcuType, mcuAllData) {
       const currentOption = entry.timer
         ? (options.find((o) => o.af === entry.timer) ?? null)
         : null;
-      const currentDma = currentOption
-        ? (currentOption.dma[Number(entry.dma)] ?? null)
-        : null;
+      const currentDma =
+        needsDma && currentOption
+          ? (currentOption.dma[Number(entry.dma)] ?? null)
+          : null;
 
       return {
         feature,
@@ -86,6 +106,7 @@ export function buildFeatureRows(workingCurrent, mcuType, mcuAllData) {
         options,
         currentOption,
         currentDma,
+        needsDma,
       };
     });
 }
@@ -199,7 +220,12 @@ export function reallocateTimersAndDma(
   reservedTimers = new Set(),
 ) {
   const timerRows = allocateTimers(
-    featureRows.map(({ feature, pin, options }) => ({ feature, pin, options })),
+    featureRows.map(({ feature, pin, options, needsDma }) => ({
+      feature,
+      pin,
+      options,
+      needsDma,
+    })),
     reservedTimers,
   );
   const dmaResults = allocateDma(timerRows, reservedStreams);
@@ -210,6 +236,80 @@ export function reallocateTimersAndDma(
     chosen: row.chosen,
     dma: dmaResults[row.feature],
   }));
+}
+
+/**
+ * Which features in a fresh allocation still genuinely collide with
+ * each other, checking the allocation's own *output* for exactly the
+ * rules detectClashes checks against the *current*, pre-allocation
+ * state: two features sharing a full timer+channel, two different
+ * feature types sharing a base, a feature sitting on a timer/DMA
+ * stream this tool doesn't control, or two features sharing a DMA
+ * stream. This is what actually catches a forced choice
+ * timer_allocator.js's pickBestOption or dma_allocator.js's
+ * allocateDma pushed through despite every option colliding with
+ * something -- see each of their own file comments for why they force
+ * one through rather than leaving the feature unconfigured.
+ * @param {FeatureTimerRow[]} featureRows - For each result's own type.
+ * @param {FeatureAllocation[]} allocation
+ * @param {Set<string>} reservedStreams
+ * @param {Set<string>} reservedTimers
+ * @returns {Set<string>} Feature keys still colliding with something.
+ */
+function stillConflictingFeatures(
+  featureRows,
+  allocation,
+  reservedStreams,
+  reservedTimers,
+) {
+  const typeByFeature = new Map(featureRows.map((row) => [row.feature, row.type]));
+  const seenFullTimers = new Map();
+  const baseOwner = new Map();
+  const seenDma = new Map();
+  const conflicting = new Set();
+
+  for (const result of allocation) {
+    const type = typeByFeature.get(result.feature);
+
+    if (result.chosen) {
+      const { timer, base } = result.chosen;
+
+      if (reservedTimers.has(timer)) conflicting.add(result.feature);
+
+      const timerOwner = seenFullTimers.get(timer);
+      if (timerOwner) {
+        conflicting.add(result.feature);
+        conflicting.add(timerOwner);
+      } else {
+        seenFullTimers.set(timer, result.feature);
+      }
+
+      const baseOwnerEntry = baseOwner.get(base);
+      if (baseOwnerEntry && baseOwnerEntry.type !== type) {
+        conflicting.add(result.feature);
+        conflicting.add(baseOwnerEntry.feature);
+      } else if (!baseOwnerEntry) {
+        baseOwner.set(base, { feature: result.feature, type });
+      }
+    }
+
+    const dmaInfo = result.dma?.dmaInfo;
+    if (dmaInfo) {
+      const stream = dmaInfo.stream;
+
+      if (reservedStreams.has(stream)) conflicting.add(result.feature);
+
+      const dmaOwner = seenDma.get(stream);
+      if (dmaOwner) {
+        conflicting.add(result.feature);
+        conflicting.add(dmaOwner);
+      } else {
+        seenDma.set(stream, result.feature);
+      }
+    }
+  }
+
+  return conflicting;
 }
 
 /**
@@ -226,21 +326,37 @@ export function reallocateTimersAndDma(
  * so a straight swap between two pins can never try to claim a value
  * the other side hasn't freed yet.
  *
- * A feature the allocator couldn't find any valid timer for at all
- * (timer_allocator.js's base-exclusivity/critical-base rules left it
- * with nothing) is left alone entirely -- no removal, no addition --
- * rather than freeing its existing timer with nothing to replace it.
- * Sending `timer <PIN> NONE` on its own would take a working output
- * and turn it into a broken one; leaving it exactly as it was is worse
- * only in that the clash it was already part of isn't fixed, which is
- * the same outcome as not running the allocator at all. Reported back
- * via `unresolved` so the caller can warn about it instead.
+ * A feature still conflicting with another even after a full
+ * reallocation pass (stillConflictingFeatures above -- the pin
+ * assignment itself is the actual problem, not the timer/DMA choice
+ * on it; see pin_conflict_suggestions.js for the fix that actually
+ * addresses that) is left alone entirely -- no removal, no addition --
+ * rather than sending a `timer`/`dma pin` command this tool already
+ * knows collides with something. Sending `timer <PIN> NONE` on its own
+ * would take a working output and turn it into a broken one; leaving
+ * it exactly as it was is worse only in that the clash it was already
+ * part of isn't fixed, which is the same outcome as not running the
+ * allocator at all. Reported back via `unresolved` so the caller can
+ * warn about it instead.
  * @param {FeatureTimerRow[]} featureRows
  * @param {FeatureAllocation[]} allocation
+ * @param {Set<string>} [reservedStreams]
+ * @param {Set<string>} [reservedTimers]
  * @returns {{commands: string[], unresolved: string[]}}
  */
-export function buildTimerDmaCommands(featureRows, allocation) {
+export function buildTimerDmaCommands(
+  featureRows,
+  allocation,
+  reservedStreams = new Set(),
+  reservedTimers = new Set(),
+) {
   const currentByFeature = new Map(featureRows.map((row) => [row.feature, row]));
+  const conflicting = stillConflictingFeatures(
+    featureRows,
+    allocation,
+    reservedStreams,
+    reservedTimers,
+  );
   const timerRemovals = [];
   const timerAdditions = [];
   const dmaRemovals = [];
@@ -250,11 +366,17 @@ export function buildTimerDmaCommands(featureRows, allocation) {
   for (const result of allocation) {
     const current = currentByFeature.get(result.feature);
 
-    // A feature with timer options that still ended up with none
-    // chosen is a genuine allocation failure, not just "this feature
-    // has no timer capability at all" (which also has chosen: null,
-    // but with an empty options list too, and nothing to warn about).
-    if (!result.chosen && (current?.options?.length ?? 0) > 0) {
+    // Either this feature is one of the ones stillConflictingFeatures
+    // found still colliding despite the allocator's best effort, or
+    // (rare, effectively a defensive fallback now that
+    // pickBestOption/allocateDma always force a choice through when
+    // any option exists at all) it genuinely has no timer options to
+    // choose from in the first place -- not a real failure, just a
+    // pin with no timer capability, so nothing to warn about there.
+    if (
+      conflicting.has(result.feature) ||
+      (!result.chosen && (current?.options?.length ?? 0) > 0)
+    ) {
       unresolved.push(result.feature);
       continue;
     }
@@ -314,30 +436,44 @@ function allocationFromCurrentState(featureRows) {
  * @property {boolean} unresolved - Whether this feature's timer could
  *   not be resolved at all, so what's shown is its unchanged existing
  *   state rather than anything actually being applied.
+ * @property {boolean} dmaManaged - Whether this tool actually tracks/
+ *   claims DMA for this feature (see feature_classifier.js's
+ *   featureNeedsDma) -- false for a servo/frequency input. The
+ *   dmaCommand/dma fields below are still populated when false, but
+ *   purely informationally: firmware never uses DMA for such a
+ *   feature regardless of what's shown, and this tool never sends the
+ *   command. The UI should style these visibly differently (e.g.
+ *   greyed out/struck through) from a real, actionable DMA outcome.
  * @property {string} timerCommand - The `timer` CLI command, for
  *   reference alongside the human-readable form below.
  * @property {string} timer - A human-readable resolution, e.g.
  *   "pin A03: TIM9 CH2 (AF3)" -- much easier to place at a glance than
  *   "timer A03 AF3" alone.
- * @property {string} dmaCommand - The `dma pin` CLI command.
+ * @property {string} dmaCommand - The `dma pin` CLI command -- see
+ *   dmaManaged above for when this is informational only.
  * @property {string} dma - A human-readable resolution, e.g.
- *   "pin A09: DMA2 Stream 6 Channel 0".
+ *   "pin A09: DMA2 Stream 6 Channel 0" -- see dmaManaged above.
  */
 
 /**
  * Builds one row per feature describing its timer/DMA outcome, for
- * display in the UI's allocation panel. An unresolved feature (see
- * buildTimerDmaCommands) shows its unchanged *existing* state rather
- * than the failed allocation attempt, since nothing was actually sent
- * for it -- showing the attempt would misleadingly suggest its timer
- * had been cleared.
+ * display in the UI's allocation panel. Always shows the allocator's
+ * own calculated result, unresolved or not -- pickBestOption/
+ * allocateDma always force their best remaining choice through even
+ * when it still collides with something, rather than leaving the
+ * feature unconfigured, precisely so there's always something real to
+ * show here rather than a blank "-" that would misleadingly read as
+ * "nothing wrong." unresolved (see buildTimerDmaCommands) marks which
+ * rows are still genuinely conflicting despite that, purely for the
+ * caller's own styling (e.g. this tab renders those rows struck
+ * through/highlighted) -- it doesn't change which value gets shown.
  *
- * A feature with nothing chosen at all -- e.g. one the table just
- * staged onto a new pin, which never had a timer/DMA of its own to
- * begin with -- shows "-" rather than a synthetic "timer <PIN> NONE"/
- * "dma pin <PIN> NONE": there's genuinely nothing there yet, so a
- * command-shaped string would misleadingly suggest one is about to be
- * (or already was) sent to clear something that was never set.
+ * A feature with nothing chosen at all -- genuinely no timer options
+ * for its pin at all, not a clash (see buildTimerDmaCommands' own
+ * comment) -- shows "-" rather than a synthetic "timer <PIN> NONE"/
+ * "dma pin <PIN> NONE": there's nothing there and nothing this
+ * allocator could ever assign, so a command-shaped string would
+ * misleadingly suggest otherwise.
  * @param {FeatureTimerRow[]} featureRows
  * @param {FeatureAllocation[]} allocation
  * @param {string[]} unresolved
@@ -348,19 +484,29 @@ export function buildAllocationTable(featureRows, allocation, unresolved = []) {
   const unresolvedSet = new Set(unresolved);
 
   return allocation.map((result) => {
-    const isUnresolved = unresolvedSet.has(result.feature);
     const current = currentByFeature.get(result.feature);
+    const dmaManaged = current?.needsDma ?? true;
+    const chosen = result.chosen;
 
-    const chosen = isUnresolved ? (current?.currentOption ?? null) : result.chosen;
-    const dmaInfo = isUnresolved ? (current?.currentDma ?? null) : result.dma.dmaInfo;
-    const dmaIndex = isUnresolved
-      ? (current?.currentDma?.index ?? -1)
-      : result.dma.selectedDMAIndex;
+    // For a feature this tool actually manages DMA for, show what was
+    // (or would be) really assigned -- allocateDma already never
+    // claims a stream for anything else, so result.dma is always
+    // empty for those. Show the first DMA choice its chosen timer
+    // defines anyway, purely informationally (see dmaManaged above):
+    // firmware ignores it regardless, so there's nothing to actually
+    // send, but it's still worth showing what's technically available.
+    const dmaInfo = dmaManaged ? result.dma.dmaInfo : (chosen?.dma?.[0] ?? null);
+    const dmaIndex = dmaManaged
+      ? result.dma.selectedDMAIndex
+      : chosen?.dma?.length
+        ? 0
+        : -1;
 
     return {
       feature: result.feature,
       pin: result.pin,
-      unresolved: isUnresolved,
+      unresolved: unresolvedSet.has(result.feature),
+      dmaManaged,
       timerCommand: chosen ? `timer ${result.pin} ${chosen.af}` : "-",
       timer: chosen ? `pin ${result.pin}: ${chosen.timer} (${chosen.af})` : "-",
       dmaCommand: dmaIndex >= 0 ? `dma pin ${result.pin} ${dmaIndex}` : "-",
@@ -409,7 +555,12 @@ export function reconcileTimersAndDma(
   }
 
   const allocation = reallocateTimersAndDma(featureRows, reservedDmaStreams, reservedTimers);
-  const { commands, unresolved } = buildTimerDmaCommands(featureRows, allocation);
+  const { commands, unresolved } = buildTimerDmaCommands(
+    featureRows,
+    allocation,
+    reservedDmaStreams,
+    reservedTimers,
+  );
   return {
     commands,
     clash,

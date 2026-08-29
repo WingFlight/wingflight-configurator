@@ -38,3 +38,26 @@ export const MOTOR_GROUP = ["M1", "M2", "M3", "M4"];
 // allowed to take a stream/channel a lower-priority feature (e.g. a
 // servo or frequency input) already claimed. See dma_allocator.js.
 export const HIGH_DMA_PRIORITY_TYPES = new Set(["motor", "led"]);
+
+// Feature types this tool actually tracks or claims DMA for at all. A
+// motor output's real protocol (PWM vs DSHOT) isn't known at this
+// stage of setup -- MSP_MOTOR_CONFIG isn't even fetched here -- so
+// every motor is conservatively assumed to need DMA, the same as the
+// LED strip always genuinely does. A servo is always plain PWM and a
+// frequency input is plain input capture, so neither ever uses DMA
+// regardless of any other setting: this tool never claims one for
+// them, and never treats a DMA index either happens to still report
+// (leftover from a previous configuration, say) as a real clash. See
+// timer_dma_reconciler.js's buildFeatureRows and dma_allocator.js's
+// allocateDma, the two places this actually matters.
+export const DMA_MANAGED_TYPES = new Set(["motor", "led"]);
+
+/**
+ * Whether this tool should track/claim DMA for this feature at all --
+ * see DMA_MANAGED_TYPES.
+ * @param {string} optionKey
+ * @returns {boolean}
+ */
+export function featureNeedsDma(optionKey) {
+  return DMA_MANAGED_TYPES.has(classifyFeature(optionKey));
+}

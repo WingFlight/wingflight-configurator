@@ -52,12 +52,19 @@ const RESERVED_TYPE = "__reserved__";
  * @property {import("./timer_dma_lookup.js").TimerOption[]} options
  * @property {?import("./timer_dma_lookup.js").TimerOption} chosen
  * @property {?string} rule - Why this choice was made, for debugging.
+ * @property {boolean} [needsDma] - Passed through unchanged from the
+ *   input `features` array (this module only allocates timers, never
+ *   DMA) -- see dma_allocator.js's allocateDma, which reads it back
+ *   off this same row.
  */
 
 /**
  * Allocates a clash-free timer+channel to every feature that has a
  * pin with timer options.
- * @param {{feature: string, pin: string, options: import("./timer_dma_lookup.js").TimerOption[]}[]} features
+ * @param {{feature: string, pin: string, options: import("./timer_dma_lookup.js").TimerOption[], needsDma?: boolean}[]} features
+ *   needsDma isn't used by this module -- carried through untouched
+ *   onto each returned row purely so dma_allocator.js's allocateDma
+ *   can read it back off the same row afterwards.
  * @param {Set<string>} [reservedTimers] - Full timer+channel strings
  *   (e.g. "TIM11 CH1") already claimed by something outside this
  *   tool's control -- see timer_dma_lookup.js's parseReservedTimers.
@@ -135,12 +142,25 @@ export function allocateTimers(features, reservedTimers = new Set()) {
   }
 
   // Picks the best remaining option for a single row: the first
-  // non-negative candidate, or failing that the first candidate at
-  // all, or null if nothing is left.
+  // non-negative, non-clashing candidate, or failing that the first
+  // non-clashing candidate at all. If literally every option clashes
+  // with something else already claimed, assigns the best of them
+  // anyway rather than leaving the row with nothing -- a feature
+  // always ends up with *something* to show/send as long as it has at
+  // least one timer option at all, even if it's one this allocator
+  // knows collides with another feature. Downstream code (see
+  // timer_dma_reconciler.js's buildTimerDmaCommands) is responsible
+  // for noticing that collision and refusing to actually send it,
+  // rather than this allocator silently leaving the feature
+  // unconfigured, which would read as "nothing wrong here" when
+  // something very much still is.
   function pickBestOption(row, label, avoidCritical = true) {
     const candidates = row.options.filter((o) => canUseOption(row, o, avoidCritical));
-    row.chosen = candidates.find((o) => !o.negative) ?? candidates[0] ?? null;
-    row.rule = label;
+    const forced = candidates.length === 0 && row.options.length > 0;
+    const pool = forced ? row.options : candidates;
+
+    row.chosen = pool.find((o) => !o.negative) ?? pool[0] ?? null;
+    row.rule = forced ? `${label} (forced -- every option clashes)` : label;
     if (row.chosen) registerUsage(row);
   }
 
@@ -220,16 +240,21 @@ export function allocateTimers(features, reservedTimers = new Set()) {
 
   // 1) Frequency inputs: unique, prefer TIM2/TIM5, non-negative, avoid
   // critical bases -- resolved first since they have the narrowest
-  // preference and the most to lose if a preferred base is taken.
+  // preference and the most to lose if a preferred base is taken. As
+  // with pickBestOption, falls all the way back to any option at all
+  // (even one this allocator knows clashes with something) rather
+  // than leaving the row with nothing, if every option is otherwise
+  // excluded -- see pickBestOption's own comment for why.
   for (const row of rows.filter((r) => r.type === "freq")) {
     const usable = row.options.filter((o) => canUseOption(row, o, true) && !o.negative);
+    const forced = usable.length === 0 && row.options.length > 0;
     row.chosen =
       usable.find((o) => o.base === "TIM2") ??
       usable.find((o) => o.base === "TIM5") ??
       usable[0] ??
       row.options.filter((o) => canUseOption(row, o, true))[0] ??
-      null;
-    row.rule = "freq: assigned";
+      (forced ? row.options[0] : null);
+    row.rule = forced ? "freq: assigned (forced -- every option clashes)" : "freq: assigned";
     if (row.chosen) registerUsage(row);
   }
 
