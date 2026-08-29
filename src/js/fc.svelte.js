@@ -70,6 +70,7 @@ class FlightController {
   RXFAIL_CONFIG = $state();
   RX_CHANNELS = $state();
   RX_CONFIG = $state();
+  SBUS_INPUT_STATUS = $state();
   SDCARD = $state();
   SENSOR_ALIGNMENT = $state();
   SENSOR_CONFIG = $state();
@@ -443,6 +444,13 @@ class FlightController {
       sectors:                    0,
       totalSize:                  0,
       usedSize:                   0,
+    };
+
+    this.SBUS_INPUT_STATUS = {
+      enabled:                    false,
+      linkUp:                     false,
+      activeSource:               "main",
+      channels:                   [],
     };
 
     this.SDCARD = {
