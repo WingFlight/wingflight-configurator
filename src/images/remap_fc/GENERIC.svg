@@ -1,20 +1,35 @@
 <!--
   File: src/images/remap_fc/GENERIC.svg
   Generic fallback diagram for any board with no dedicated diagram of
-  its own -- a bare, uncased square flight controller PCB (the common
+  its own — a bare, uncased square flight controller PCB (the common
   "Betaflight stack" form factor), rather than a specific real board.
   Same dimensional/filled style as NEXUS_XR.svg and
   FLYDRAGON_PRO42688.svg, but with no case/bezel (this board has none)
-  -- just a matte black PCB with generously rounded corners (matching
+  — just a matte black PCB with generously rounded corners (matching
   the real board), copper pads, an
-  LQFP-style MCU with pin leads (deliberately unbranded -- this is the
+  LQFP-style MCU with pin leads (deliberately unbranded — this is the
   generic, no-specific-vendor fallback), a scattering of passives and
   a small SOIC IC, and a USB-C receptacle. No pin labels, since none
   are known for an arbitrary board; only a plain header of square
   copper pads on the right edge, matching the same "pins on the
-  right" convention every diagram in this set follows.
+  right" convention every diagram in this set follows. Shown by
+  remap_fc.svelte before the FC's been read, switching to
+  CASED_GENERIC.svg once it has — the two share a label zone at
+  x=85-235, y=84-116 of this 320x320 viewBox (26.6%-73.4% width,
+  26.25%-36.25% height), between this file's own top mounting holes
+  and its central chip, kept clear here too even though this file
+  itself never has anything overlaid on it, so the position stays
+  identical if that ever changes. Explicit width/height (matching the
+  viewBox) alongside it, not just the viewBox alone — an <img> can't
+  reliably infer intrinsic size from viewBox-only SVGs on every
+  rendering engine, and without it this can render at zero height.
 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="320"
+  height="320"
+  viewBox="0 0 320 320"
+>
   <!-- PCB, matte black edge + surface, generously rounded corners
        matching the real board -->
   <rect x="20" y="20" width="280" height="280" rx="40" fill="#1a1a1d" />

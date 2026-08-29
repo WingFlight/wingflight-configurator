@@ -115,6 +115,30 @@
   // again as soon as a choice is made.
   let addMenuOpen = $state(false);
 
+  // The board diagram's own square size in pixels, kept in step with
+  // the table's rendered height (see the ResizeObserver effect below)
+  // so the diagram grows as rows are added and shrinks as they're
+  // removed, clamped so it's never too small to read or big enough to
+  // dwarf the table next to it. Deliberately measured in JS rather
+  // than via the CSS aspect-ratio property -- this app's own runtime
+  // doesn't support aspect-ratio (it silently resolves to a height of
+  // 0), so this is the reliable alternative.
+  let tableEl = $state(null);
+  let diagramSize = $state(260);
+
+  $effect(() => {
+    if (!tableEl) return;
+
+    const clampToTableHeight = () => {
+      diagramSize = Math.min(480, Math.max(160, tableEl.offsetHeight));
+    };
+    clampToTableHeight();
+
+    const observer = new ResizeObserver(clampToTableHeight);
+    observer.observe(tableEl);
+    return () => observer.disconnect();
+  });
+
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
   let orderedVisible = $derived(
@@ -672,92 +696,120 @@
       <div class="error_message">{error}</div>
     {/if}
 
-    <!-- The current-vs-default pin remap table, in fixed option order,
-         plus a trailing "+ Add" row for options not yet given a row.
-         Keep the table (and with it, "+ Add") visible even once every
-         row has been cleared to "None" — otherwise there'd be no way
-         to bring any row back. -->
-    {#if tableRows.length || hasRealAddableOptions}
-      <table class="remap-table">
-        <thead>
-          <tr>
-            <th>{$i18n.t("remapFcTableOption")}</th>
-            <th>{$i18n.t("remapFcTableDefaultPin")}</th>
-            <th></th>
-            <th>{$i18n.t("remapFcTableCurrentOption")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each tableRows as row (row.option)}
-            {@const unset = unsetOptions.includes(row.option)}
+    <!-- A generic diagram, always visible: the bare-PCB placeholder
+         before anything's been read, switching to the generic cased
+         diagram with the FC's own reported name overlaid on top once
+         it's known. Not board-specific artwork -- building a
+         dedicated diagram per manufacturer doesn't scale, so both
+         images are deliberately generic (see GENERIC.svg and
+         CASED_GENERIC.svg's own file comments). -->
+    <div class="table-with-diagram">
+      <div
+        class="board-diagram-wrap"
+        style="width: {diagramSize}px; height: {diagramSize}px;"
+      >
+        <img
+          class="board-diagram"
+          src={hasRead
+            ? "/images/remap_fc/CASED_GENERIC.svg"
+            : "/images/remap_fc/GENERIC.svg"}
+          alt=""
+        />
+        {#if hasRead}
+          <div class="board-diagram-label">
+            {FC.CONFIG.manufacturerId}
+            {FC.CONFIG.boardName}
+          </div>
+        {/if}
+      </div>
+
+      <!-- The current-vs-default pin remap table, in fixed option
+           order, plus a trailing "+ Add" row for options not yet
+           given a row. Keep the table (and with it, "+ Add") visible
+           even once every row has been cleared to "None" —
+           otherwise there'd be no way to bring any row back. -->
+      {#if tableRows.length || hasRealAddableOptions}
+        <table class="remap-table" bind:this={tableEl}>
+          <thead>
             <tr>
-              <td>{displayName(row.option)}</td>
-              <td>{row.defaultPin ?? "—"}</td>
-              <td class="arrow">→</td>
-              <td>
-                <!-- Force a remount whenever the displayed value changes
+              <th>{$i18n.t("remapFcTableOption")}</th>
+              <th>{$i18n.t("remapFcTableDefaultPin")}</th>
+              <th></th>
+              <th>{$i18n.t("remapFcTableCurrentOption")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each tableRows as row (row.option)}
+              {@const unset = unsetOptions.includes(row.option)}
+              <tr>
+                <td>{displayName(row.option)}</td>
+                <td>{row.defaultPin ?? "—"}</td>
+                <td class="arrow">→</td>
+                <td>
+                  <!-- Force a remount whenever the displayed value changes
                      (e.g. because a different row's edit cleared this
                      row's occupant, or this row just got resolved out
                      of the "unset" placeholder state) so the select
                      always reflects it. -->
-                {#key unset ? "unset" : row.currentOption}
-                  <Select
-                    value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
-                    onchange={(e) => handleCurrentOptionChange(row, e)}
-                    options={[
-                      ...(unset
-                        ? [{ value: "", label: $i18n.t("remapFcSetOption") }]
-                        : row.currentOption
-                          ? [
-                              {
-                                value: row.currentOption,
-                                label: optionLabel(row.currentOption),
-                              },
-                            ]
-                          : []),
-                      ...optionsForRow(row).map((option) => ({
-                        value: option,
-                        label:
-                          option === NONE_VALUE
-                            ? $i18n.t("remapFcNoneOption")
-                            : optionLabel(option),
-                      })),
-                    ]}
-                  />
-                {/key}
-              </td>
-            </tr>
-          {/each}
-          {#if hasRealAddableOptions}
-            <tr class="add-row">
-              <td colspan="4">
-                {#if addMenuOpen}
-                  <Select
-                    bind:value={selectedAddOption}
-                    onchange={handleAddChange}
-                    size={addMenuSize}
-                    options={[
-                      { value: "", label: $i18n.t("remapFcAddOption") },
-                      ...addablePool.map((addable) => ({
-                        value: addable.option,
-                        label: optionLabel(addable.option),
-                      })),
-                    ]}
-                  />
-                {:else}
-                  <button
-                    class="btn add-btn"
-                    onclick={() => (addMenuOpen = true)}
-                  >
-                    {$i18n.t("remapFcAddOption")}
-                  </button>
-                {/if}
-              </td>
-            </tr>
-          {/if}
-        </tbody>
-      </table>
-    {/if}
+                  {#key unset ? "unset" : row.currentOption}
+                    <Select
+                      value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
+                      onchange={(e) => handleCurrentOptionChange(row, e)}
+                      options={[
+                        ...(unset
+                          ? [{ value: "", label: $i18n.t("remapFcSetOption") }]
+                          : row.currentOption
+                            ? [
+                                {
+                                  value: row.currentOption,
+                                  label: optionLabel(row.currentOption),
+                                },
+                              ]
+                            : []),
+                        ...optionsForRow(row).map((option) => ({
+                          value: option,
+                          label:
+                            option === NONE_VALUE
+                              ? $i18n.t("remapFcNoneOption")
+                              : optionLabel(option),
+                        })),
+                      ]}
+                    />
+                  {/key}
+                </td>
+              </tr>
+            {/each}
+            {#if hasRealAddableOptions}
+              <tr class="add-row">
+                <td colspan="4">
+                  {#if addMenuOpen}
+                    <Select
+                      bind:value={selectedAddOption}
+                      onchange={handleAddChange}
+                      size={addMenuSize}
+                      options={[
+                        { value: "", label: $i18n.t("remapFcAddOption") },
+                        ...addablePool.map((addable) => ({
+                          value: addable.option,
+                          label: optionLabel(addable.option),
+                        })),
+                      ]}
+                    />
+                  {:else}
+                    <button
+                      class="btn add-btn"
+                      onclick={() => (addMenuOpen = true)}
+                    >
+                      {$i18n.t("remapFcAddOption")}
+                    </button>
+                  {/if}
+                </td>
+              </tr>
+            {/if}
+          </tbody>
+        </table>
+      {/if}
+    </div>
 
     <!-- Appears once "Allocate Timers/DMA" has actually been run:
          calculatedAllocationTable -- what a from-scratch allocation
@@ -932,6 +984,61 @@
     @extend %button;
     padding: 4px 8px;
     min-width: 60px;
+  }
+
+  // Lays the board diagram out beside the remap table on wide
+  // viewports, and stacks them (diagram above table) once there's not
+  // enough room for both side by side.
+  .table-with-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  // Positions the board name overlay (see .board-diagram-label)
+  // relative to the diagram underneath it. Deliberately no CSS sizing
+  // here at all -- width/height come from the inline style set from
+  // diagramSize (see the ResizeObserver effect in <script>), which
+  // measures the table's own rendered height so the diagram grows
+  // alongside it as rows are added, clamped there to a sensible
+  // min/max. This app's own runtime doesn't support the CSS
+  // aspect-ratio property (it silently resolves to a height of 0), so
+  // this is the reliable alternative, not a stylistic choice.
+  .board-diagram-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .board-diagram {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  // The FC's own reported name, overlaid on the generic diagram's
+  // shared label zone (see CASED_GENERIC.svg/GENERIC.svg's own file
+  // comments for that zone's coordinates -- kept identical between
+  // the two so switching which image sits underneath never moves the
+  // text). Never shown over GENERIC.svg in practice, since there's no
+  // name to show before the FC's been read, but the position is
+  // shared regardless.
+  .board-diagram-label {
+    position: absolute;
+    left: 26.6%;
+    right: 26.6%;
+    top: 26.25%;
+    bottom: 63.75%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #f2f4f6;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    pointer-events: none;
   }
 
   // Comparison table: option name, default pin, arrow, current option.

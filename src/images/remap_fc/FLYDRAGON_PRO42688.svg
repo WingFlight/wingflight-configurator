@@ -4,18 +4,28 @@
   Unlike NEXUS_XR.svg, the real case is a single flat-top piece with
   small rounded corners (not a chamfered case + separate stepped-down
   pin panel), so this is one continuous rounded-rect body with the pin
-  labels simply sitting on its own right-hand portion -- no seam.
+  labels simply sitting on its own right-hand portion — no seam.
   Brand/model sit at the top and the chip label near the bottom
   (opposite of NEXUS_XR.svg's layout), matching the real board's own
-  silkscreen -- text reads "FLYDRAGONpro" / "ROTORFLIGHT system" as
+  silkscreen — text reads "FLYDRAGONpro" / "ROTORFLIGHT system" as
   one word / lowercase, exactly as printed on the board. Centre glyph
   is the Rotorflight rotor-blur mark. Pin header is always on the
   right edge, by convention for every diagram in this set (the real
   board prints its labels on the left; mirrored here to match the
   convention). Pin order confirmed against the photo, top to bottom:
-  TAIL, CH3, CH2, CH1, ESC, RPM, RX2, TX2, AUX.
+  TAIL, CH3, CH2, CH1, ESC, RPM, RX2, TX2, AUX. Explicit width/height
+  (matching the viewBox) alongside it, not just the viewBox alone —
+  an <img> can't reliably infer intrinsic size from viewBox-only SVGs
+  on every rendering engine, and without it this can render at zero
+  height (see GENERIC.svg's file comment, where this was actually
+  hit).
 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560">
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1100"
+  height="560"
+  viewBox="0 0 1100 560"
+>
   <!-- Single flat-top body, small rounded corners -->
   <rect x="30" y="10" width="1040" height="540" rx="20" fill="#c9d0d6" />
   <rect x="42" y="22" width="1016" height="516" rx="14" fill="#a13d3d" />

@@ -4,13 +4,22 @@
   vector-redrawn against the real case: chamfered aluminium bezel,
   USB-C port, FC/RX status LEDs and their two mounting holes along the
   bottom edge, and a separate pin-label panel extending off the right
-  edge (matching the physical label strip on the real case) -- always
+  edge (matching the physical label strip on the real case) — always
   the right edge, by convention for every diagram in this set. Board
   is wider than it is tall, matching the real case. Pin order
   confirmed against the real board: SBUS, AUX, TLM, RPM, ESC, TAIL,
-  S3, S2, S1.
+  S3, S2, S1. Explicit width/height (matching the viewBox) alongside
+  it, not just the viewBox alone — an <img> can't reliably infer
+  intrinsic size from viewBox-only SVGs on every rendering engine, and
+  without it this can render at zero height (see GENERIC.svg's file
+  comment, where this was actually hit).
 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560">
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1100"
+  height="560"
+  viewBox="0 0 1100 560"
+>
   <defs>
     <!-- Chamfered-corner case outline, shared by the bezel and the
          inset body so the two stay concentric. -->
