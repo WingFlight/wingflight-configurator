@@ -1,0 +1,75 @@
+<!--
+  File: src/images/remap_fc/NEXUS_XR.svg
+  Top-down diagram of the RadioMaster NEXUS-XR flight controller,
+  vector-redrawn against the real case: chamfered aluminium bezel,
+  USB-C port, FC/RX status LEDs and their two mounting holes along the
+  bottom edge, and a separate pin-label panel extending off the right
+  edge (matching the physical label strip on the real case) -- always
+  the right edge, by convention for every diagram in this set. Board
+  is wider than it is tall, matching the real case. Pin order
+  confirmed against the real board: SBUS, AUX, TLM, RPM, ESC, TAIL,
+  S3, S2, S1.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560">
+  <defs>
+    <!-- Chamfered-corner case outline, shared by the bezel and the
+         inset body so the two stay concentric. -->
+    <path id="nexus-case-outer" d="M 100 10 L 780 10 L 850 80 L 850 480 L 780 550 L 100 550 L 30 480 L 30 80 Z" />
+    <path id="nexus-case-inner" d="M 100 22 L 780 22 L 838 80 L 838 480 L 780 538 L 100 538 L 42 480 L 42 80 Z" />
+
+    <!-- Pin-label panel, a separate tab extending off the case's own
+         right edge, matching the physical label strip on the real
+         board. Its own left boundary retraces nexus-case-outer's
+         right edge exactly (same points, reverse direction), so the
+         two shapes share a seam with no gap and no overlap. -->
+    <path id="nexus-tab-outer" d="M 780 10 L 1030 10 L 1070 50 L 1070 510 L 1030 550 L 780 550 L 850 480 L 850 80 Z" />
+    <path id="nexus-tab-inner" d="M 796 24 L 1024 24 L 1058 58 L 1058 502 L 1024 536 L 796 536 L 844 480 L 844 80 Z" />
+  </defs>
+
+  <!-- Main case -->
+  <use href="#nexus-case-outer" fill="#c9d0d6" />
+  <use href="#nexus-case-inner" fill="#2f6f96" />
+
+  <!-- Pin-label panel -->
+  <use href="#nexus-tab-outer" fill="#c9d0d6" />
+  <use href="#nexus-tab-inner" fill="#2f6f96" />
+
+  <!-- USB-C connector, inset just inside the left edge, vertically centred -->
+  <rect x="46" y="200" width="48" height="160" rx="18" fill="#0d0f12" />
+  <rect x="60" y="218" width="16" height="124" rx="8" fill="#c9d0d6" />
+
+  <!-- Status LED / mounting-hole row, bottom edge -->
+  <g fill="#20404f">
+    <rect x="96" y="466" width="34" height="16" rx="8" />
+    <rect x="162" y="466" width="34" height="16" rx="8" />
+    <circle cx="258" cy="474" r="13" />
+    <rect x="314" y="466" width="34" height="16" rx="8" />
+    <circle cx="408" cy="474" r="13" />
+  </g>
+  <circle cx="258" cy="474" r="6" fill="#0d0f12" />
+  <circle cx="408" cy="474" r="6" fill="#0d0f12" />
+
+  <g font-family="Arial, sans-serif" font-weight="900" font-style="italic" fill="#dbe3e8">
+    <text x="210" y="480" font-size="18">FC</text>
+    <text x="358" y="480" font-size="18">RX</text>
+  </g>
+
+  <!-- Brand / model, matching the real board's slanted, heavy sans -->
+  <g font-family="Arial, sans-serif" font-weight="900" font-style="italic" fill="#c9d0d6">
+    <text x="120" y="108" font-size="60">RADIOMASTER</text>
+    <text x="120" y="310" font-size="88" fill="#eef2f4">NEXUS-XR</text>
+  </g>
+
+  <!-- Pin labels, on the tab, top to bottom -->
+  <g font-family="Arial, sans-serif" font-weight="900" font-style="italic" fill="#dbe3e8" text-anchor="middle">
+    <text x="955" y="76" font-size="30">SBUS</text>
+    <text x="955" y="132" font-size="30">AUX</text>
+    <text x="955" y="188" font-size="30">TLM</text>
+    <text x="955" y="244" font-size="30">RPM</text>
+    <text x="955" y="300" font-size="30">ESC</text>
+    <text x="955" y="356" font-size="30">TAIL</text>
+    <text x="955" y="412" font-size="30">S3</text>
+    <text x="955" y="462" font-size="30">S2</text>
+    <text x="955" y="510" font-size="30">S1</text>
+  </g>
+</svg>
