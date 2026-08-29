@@ -377,7 +377,6 @@
     </div>
     <div>
       <ChannelAssignment />
-      <ModelPreview />
       {#if hasBackupRxPort}
         <Section label="tabSbusInputStatus">
           <div class="backup-rx-summary">
@@ -394,11 +393,19 @@
                 ? $i18n.t("sbusInputStatusLinkUp")
                 : $i18n.t("sbusInputStatusLinkDown")}
             </span>
-            <button class="btn-link" onclick={toggleBackupRxExpanded}>
-              {backupRxExpanded
+            <div class="grow"></div>
+            <button
+              class="icon fas"
+              class:fa-chevron-down={!backupRxExpanded}
+              class:fa-chevron-up={backupRxExpanded}
+              onclick={toggleBackupRxExpanded}
+              aria-label={backupRxExpanded
                 ? $i18n.t("receiverBackupRxHide")
                 : $i18n.t("receiverBackupRxViewDetails")}
-            </button>
+              title={backupRxExpanded
+                ? $i18n.t("receiverBackupRxHide")
+                : $i18n.t("receiverBackupRxViewDetails")}
+            ></button>
           </div>
           {#if backupRxExpanded}
             <div class="backup-rx-details" transition:slide|global>
@@ -428,6 +435,7 @@
           {/if}
         </Section>
       {/if}
+      <ModelPreview />
     </div>
   </div>
 </Page>
@@ -449,8 +457,6 @@
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid var(--color-border);
-    width: 280px;
-    max-width: 100%;
   }
 
   .backup-rx-channels {
@@ -487,17 +493,35 @@
     border-color: var(--color-danger, var(--color-border-accent));
   }
 
-  .btn-link {
+  // Matches Section.svelte's own header icon button exactly, for the
+  // expand/collapse chevron - same look as the rest of the app's
+  // disclosure controls, not a one-off.
+  .icon {
     background: none;
     border: none;
-    padding: 0;
-    color: var(--color-border-accent);
+    padding: 8px;
+    margin: 0;
+    font-size: 1rem;
     cursor: pointer;
-    font: inherit;
-    text-decoration: underline;
+
+    -webkit-tap-highlight-color: transparent;
+
+    :global(html[data-theme="light"]) & {
+      color: var(--color-neutral-400);
+    }
+
+    :global(html[data-theme="dark"]) & {
+      color: var(--color-neutral-500);
+    }
 
     &:hover {
-      text-decoration: none;
+      :global(html[data-theme="light"]) & {
+        color: var(--color-neutral-500);
+      }
+
+      :global(html[data-theme="dark"]) & {
+        color: var(--color-neutral-500);
+      }
     }
   }
 
