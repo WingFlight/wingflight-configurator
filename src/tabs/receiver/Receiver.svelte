@@ -12,6 +12,7 @@
 
   import ModelPreview from "./ModelPreview.svelte";
   import Page from "@/components/Page.svelte";
+  import Section from "@/components/Section.svelte";
   import Meter from "@/components/Meter.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
@@ -377,56 +378,58 @@
     <div>
       <ChannelAssignment />
       <ModelPreview />
-    </div>
-  </div>
-  {#if hasBackupRxPort}
-    <div class="backup-rx-status">
-      <div class="backup-rx-summary">
-        <span
-          class="badge"
-          class:up={backupRxStatus.linkUp}
-          class:down={!backupRxStatus.linkUp}
-        >
-          {$i18n.t("tabSbusInputStatus")}:
-          {backupRxPort
-            ? (UART_NAMES[backupRxPort.identifier] ?? backupRxPort.identifier)
-            : ""}
-          &mdash;
-          {backupRxStatus.linkUp
-            ? $i18n.t("sbusInputStatusLinkUp")
-            : $i18n.t("sbusInputStatusLinkDown")}
-        </span>
-        <button class="btn-link" onclick={toggleBackupRxExpanded}>
-          {backupRxExpanded
-            ? $i18n.t("receiverBackupRxHide")
-            : $i18n.t("receiverBackupRxViewDetails")}
-        </button>
-      </div>
-      {#if backupRxExpanded}
-        <div class="backup-rx-details" transition:slide|global>
-          <span class="badge" class:active={backupRxStatus.activeSource === "fallback"}>
-            {backupRxStatus.activeSource === "fallback"
-              ? $i18n.t("sbusInputStatusActiveFallback")
-              : $i18n.t("sbusInputStatusActiveMain")}
-          </span>
-          {#if backupRxStatus.channels.length === 0}
-            <p class="note">{$i18n.t("sbusInputStatusEmpty")}</p>
-          {:else}
-            <div class="backup-rx-channels">
-              {#each backupRxStatus.channels as value, index (index)}
-                <Meter
-                  --fill-hue={(index * 20).toString()}
-                  title={`CH${index + 1}`}
-                  leftLabel={value}
-                  value={backupRxChannelWidth(value)}
-                />
-              {/each}
+      {#if hasBackupRxPort}
+        <Section label="tabSbusInputStatus">
+          <div class="backup-rx-summary">
+            <span
+              class="badge"
+              class:up={backupRxStatus.linkUp}
+              class:down={!backupRxStatus.linkUp}
+            >
+              {backupRxPort
+                ? (UART_NAMES[backupRxPort.identifier] ?? backupRxPort.identifier)
+                : ""}
+              &mdash;
+              {backupRxStatus.linkUp
+                ? $i18n.t("sbusInputStatusLinkUp")
+                : $i18n.t("sbusInputStatusLinkDown")}
+            </span>
+            <button class="btn-link" onclick={toggleBackupRxExpanded}>
+              {backupRxExpanded
+                ? $i18n.t("receiverBackupRxHide")
+                : $i18n.t("receiverBackupRxViewDetails")}
+            </button>
+          </div>
+          {#if backupRxExpanded}
+            <div class="backup-rx-details" transition:slide|global>
+              <span
+                class="badge"
+                class:active={backupRxStatus.activeSource === "fallback"}
+              >
+                {backupRxStatus.activeSource === "fallback"
+                  ? $i18n.t("sbusInputStatusActiveFallback")
+                  : $i18n.t("sbusInputStatusActiveMain")}
+              </span>
+              {#if backupRxStatus.channels.length === 0}
+                <p class="note">{$i18n.t("sbusInputStatusEmpty")}</p>
+              {:else}
+                <div class="backup-rx-channels">
+                  {#each backupRxStatus.channels as value, index (index)}
+                    <Meter
+                      --fill-hue={(index * 20).toString()}
+                      title={`CH${index + 1}`}
+                      leftLabel={value}
+                      value={backupRxChannelWidth(value)}
+                    />
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/if}
-        </div>
+        </Section>
       {/if}
     </div>
-  {/if}
+  </div>
 </Page>
 
 <style lang="scss">
@@ -434,19 +437,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
     column-gap: var(--section-gap);
-  }
-
-  .backup-rx-status {
-    margin-top: var(--section-gap);
-    padding: 6px 10px;
-    border-radius: 4px;
-    width: fit-content;
-    max-width: 100%;
-    font-size: 0.85rem;
-
-    color: var(--color-text-soft);
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
   }
 
   .backup-rx-summary {
