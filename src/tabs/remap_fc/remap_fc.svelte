@@ -13,7 +13,9 @@
   import { FC } from "@/js/fc.svelte.js";
   import { getTabHelpURL } from "@/js/help";
   import Page from "@/components/Page.svelte";
+  import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
+  import Switch from "@/components/Switch.svelte";
   import {
     OPTION_KEYS,
     TABLE_OPTION_KEYS,
@@ -61,9 +63,10 @@
   // setters below (this component never fetches anything itself). ---
   let running = $state(false);
   let error = $state(null);
-  // Whether a read has completed at least once — once true, the toolbar
-  // shows the connected board's identity instead of the "Read FC"
-  // button, since there's no longer anything for that button to do.
+  // Whether a read has completed at least once — once true, the board
+  // info card (and everything else below it) shows instead of the
+  // "Read FC" button, since there's no longer anything for that
+  // button to do.
   let hasRead = $state(false);
   // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
   // the current hardware dump. Matches the top-level keys of
@@ -134,6 +137,10 @@
   // pin choice they just made rather than guessing at some other
   // feature to touch on their behalf.
   let lastChangedOption = $state(null);
+  // Whether the "Calculated config" card is expanded -- collapsed by
+  // default, since it's implementation detail (raw timer/DMA
+  // assignments) most users never need to look at.
+  let showCalculatedDetails = $state(false);
 
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
@@ -721,6 +728,23 @@
     onLoadChanges?.(commandsToSend);
   }
 
+  // handleClearChanges fires when "Clear Changes" is pressed: discards
+  // every edit made since the last successful read/apply by simply
+  // re-running setHardware with originalCurrent -- the same as what
+  // happens right after an initial read, since originalCurrent already
+  // holds exactly that baseline (see setHardware/markApplied).
+  function handleClearChanges() {
+    setHardware(
+      originalCurrent,
+      defaultHardware,
+      mcuType,
+      reservedDmaStreams,
+      reservedTimers,
+      dshotBurstSetting,
+      dshotBitbangSetting,
+    );
+  }
+
   // handleCurrentOptionChange fires when a row's "Current Option"
   // dropdown changes: clear whoever currently occupies that row's
   // default pin (a pin can only host one resource), then either
@@ -817,105 +841,91 @@
 {/snippet}
 
 <Page {header} loading={false}>
-  <div class="content">
-    <p class="note">{$i18n.t("remapFcNote")}</p>
+  <p class="note">{$i18n.t("remapFcNote")}</p>
 
-    <div class="toolbar">
-      <!-- Before a read, offer the button that triggers one; once read,
-           there's nothing left for it to do, so show the connected
-           board's identity in its place instead. -->
-      {#if hasRead}
-        <div class="board-badge">
-          <strong>{FC.CONFIG.manufacturerId}</strong>&nbsp;&nbsp;&nbsp;<strong
-            >{FC.CONFIG.boardName}</strong
-          >
-        </div>
-      {:else}
-        <button class="btn run-btn" onclick={onClick} disabled={running}>
-          {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
-        </button>
-      {/if}
+  <!-- Before a read, offer the button that triggers one; everything
+       else below only has anything to show once the FC's actually
+       been read. -->
+  {#if !hasRead}
+    <button class="btn run-btn" onclick={onClick} disabled={running}>
+      {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
+    </button>
+  {/if}
 
-      <!-- The flight controller's MCU family, once known. -->
-      {#if mcuType}
-        <div class="mcu-badge">
-          {$i18n.t("remapFcMcuLabel")}&nbsp;<strong>{mcuType}</strong>
-        </div>
-      {/if}
+  <!-- Error from the last CLI sequence, if any. -->
+  {#if error}
+    <div class="error_message">{error}</div>
+  {/if}
 
-      <!-- The board's reference design (e.g. "F7A1"), once read. This
-           comes from FC.CONFIG (populated via MSP at connect time, not
-           parsed from the CLI dump), so it's already known before any
-           read -- gated on hasRead so it only appears once the FC has
-           actually been read here, matching mcuType/the board badge
-           rather than jumping ahead of them. -->
-      {#if hasRead && FC.CONFIG.boardDesign}
-        <div class="mcu-badge">
-          {$i18n.t("remapFcDesignLabel")}&nbsp;<strong
-            >{FC.CONFIG.boardDesign}</strong
-          >
-        </div>
-      {/if}
+  {#if hasRead}
+    <div class="board-info-card">
+      <Section>
+        {#snippet header()}
+          <div class="header">
+            <span class="title"
+              >{FC.CONFIG.manufacturerId} {FC.CONFIG.boardName}</span
+            >
+          </div>
+        {/snippet}
+
+        {#if mcuType || FC.CONFIG.boardDesign}
+          <table class="info-table">
+            <tbody>
+              {#if mcuType}
+                <tr>
+                  <td>{$i18n.t("remapFcMcuLabel")}</td>
+                  <td>{mcuType}</td>
+                </tr>
+              {/if}
+              <!-- The board's reference design (e.g. "F7A1"). This
+                   comes from FC.CONFIG (populated via MSP at connect
+                   time, not parsed from the CLI dump), so it's
+                   already known before any read, but this whole card
+                   only renders once hasRead is true anyway. -->
+              {#if FC.CONFIG.boardDesign}
+                <tr>
+                  <td>{$i18n.t("remapFcDesignLabel")}</td>
+                  <td>{FC.CONFIG.boardDesign}</td>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        {/if}
+      </Section>
     </div>
 
-    <!-- Only appears once there's something staged to send: the
-         "Load Changes" button applies the diff between what was read
-         and the current edits, plus any staged timer/DMA fix (plus a
-         trailing "save" to persist it and reboot), and the panel next
-         to it lets the user see exactly which commands that means, in
-         the exact order they'll be sent, before committing to them. -->
-    {#if hasStagedCommands}
-      <div class="changes-bar">
-        <button
-          class="btn apply-btn"
-          onclick={handleLoadChanges}
-          disabled={running}
-        >
-          {running
-            ? $i18n.t("remapFcApplying")
-            : $i18n.t("remapFcLoadChangesButton")}
-        </button>
-
-        <details class="commands-panel">
-          <summary
-            >{$i18n.t("remapFcPendingCommands", {
-              count: commandsToSend.length,
-            })}
-          </summary>
-          <pre>{commandsToSend.join("\n")}</pre>
-        </details>
-      </div>
-    {/if}
-
-    <!-- Error from the last CLI sequence, if any. -->
-    {#if error}
-      <div class="error_message">{error}</div>
+    <!-- Controls the "Calculated config" card further down -- kept up
+         here, next to the board info it actually toggles context for,
+         rather than inside the card it hides, since a control that's
+         only visible once you've already shown the thing it hides
+         would be unreachable to turn back off from a glance. -->
+    {#if calculatedAllocationTable.length}
+      <label class="details-toggle">
+        <Switch bind:checked={showCalculatedDetails} />
+        <span>{$i18n.t("remapFcShowDetails")}</span>
+      </label>
     {/if}
 
     <div class="table-with-diagram">
       <!-- The generic cased diagram, with the FC's own reported name
-           overlaid on top -- hidden entirely until the FC's actually
-           been read, since there's no name to show yet and nothing to
-           diagram. Not board-specific artwork -- building a dedicated
-           diagram per manufacturer doesn't scale, so this is
-           deliberately generic (see CASED_GENERIC.svg's own file
+           overlaid on top. Not board-specific artwork -- building a
+           dedicated diagram per manufacturer doesn't scale, so this
+           is deliberately generic (see CASED_GENERIC.svg's own file
            comment). -->
-      {#if hasRead}
-        <div
-          class="board-diagram-wrap"
-          style="width: {diagramSize}px; height: {diagramSize}px;"
-        >
-          <img
-            class="board-diagram"
-            src="/images/remap_fc/CASED_GENERIC.svg"
-            alt=""
-          />
-          <div class="board-diagram-label">
-            {FC.CONFIG.manufacturerId}
-            {FC.CONFIG.boardName}
-          </div>
+      <div
+        class="board-diagram-wrap"
+        style="width: {diagramSize}px; height: {diagramSize}px;"
+      >
+        <img
+          class="board-diagram"
+          src="/images/remap_fc/CASED_GENERIC.svg"
+          alt=""
+        />
+        <div class="board-diagram-label">
+          {FC.CONFIG.manufacturerId}
+          {FC.CONFIG.boardName}
         </div>
-      {/if}
+      </div>
 
       <!-- The current-vs-default pin remap table, in fixed option
            order, plus a trailing "+ Add" row for options not yet
@@ -927,7 +937,9 @@
           <thead>
             <tr>
               <th>{$i18n.t("remapFcTableOption")}</th>
-              <th>{$i18n.t("remapFcTableDefaultPin")}</th>
+              {#if showCalculatedDetails}
+                <th>{$i18n.t("remapFcTableDefaultPin")}</th>
+              {/if}
               <th></th>
               <th>{$i18n.t("remapFcTableCurrentOption")}</th>
             </tr>
@@ -937,7 +949,9 @@
               {@const unset = unsetOptions.includes(row.option)}
               <tr>
                 <td>{displayName(row.option)}</td>
-                <td>{row.defaultPin ?? "—"}</td>
+                {#if showCalculatedDetails}
+                  <td>{row.defaultPin ?? "—"}</td>
+                {/if}
                 <td class="arrow">→</td>
                 <td>
                   <!-- Force a remount whenever the displayed value changes
@@ -951,7 +965,12 @@
                       onchange={(e) => handleCurrentOptionChange(row, e)}
                       options={[
                         ...(unset
-                          ? [{ value: "", label: $i18n.t("remapFcSetOption") }]
+                          ? [
+                              {
+                                value: "",
+                                label: $i18n.t("remapFcSetOption"),
+                              },
+                            ]
                           : row.currentOption
                             ? [
                                 {
@@ -975,7 +994,7 @@
             {/each}
             {#if hasRealAddableOptions}
               <tr class="add-row">
-                <td colspan="4">
+                <td colspan={showCalculatedDetails ? 4 : 3}>
                   {#if addMenuOpen}
                     <Select
                       bind:value={selectedAddOption}
@@ -1003,155 +1022,196 @@
           </tbody>
         </table>
       {/if}
-
-      <!-- Automatic warning: appears only once the working state's
-           current pin assignments have a timer/DMA clash that a full
-           reallocation pass genuinely can't resolve on its own (a
-           clash a fresh reallocation alone would fix stays silent
-           here -- calculatedAllocationTable below already reflects it
-           automatically, no button press needed for that either
-           anymore). reconciled.clash.reasons explains *why* the
-           current pins clash to begin with; calculatedAllocationTable
-           in the always-visible panel below shows what a reallocation
-           attempt produces regardless (including which feature(s) it
-           still couldn't resolve), so there's no need to repeat that
-           table here too -- and pinConflictResult.suggestions offers a
-           pin-level fix instead -- swapping/moving one of those
-           features onto a different pin so a fresh reallocation *can*
-           resolve everything -- when one was found; see the
-           suggestion-row below for what shows instead when it
-           wasn't. -->
-      {#if pinConflictResult.unresolvedFeatures.length}
-        <div class="allocation-column allocation-live-warning">
-          <h2>{$i18n.t("remapFcAllocationInvalidHeading")}</h2>
-          <p class="allocation-warning">
-            {$i18n.t("remapFcAllocationInvalidWarning", {
-              reasons: reconciled.clash.reasons.join("; "),
-            })}
-          </p>
-
-          <!-- The pin-level fix itself, when the search actually found
-               one: a single suggestion shows as plain text, more than
-               one gets a picker so the user chooses which to apply --
-               either way, "Accept Suggestion" adopts
-               selectedSuggestion.apply wholesale (see
-               handleAcceptSuggestion). When no single swap/move
-               resolves everything, there's nothing to offer as a
-               one-click fix -- rather than guessing at some other
-               feature to touch on the user's behalf, this points back
-               at whichever option they most recently placed
-               (lastChangedOption), falling back to naming one of the
-               unresolved features itself if nothing's been touched
-               yet this session (e.g. the clash was already there on
-               read). -->
-          {#if pinConflictResult.suggestions.length}
-            <div class="suggestion-row">
-              {#if pinConflictResult.suggestions.length > 1}
-                <Select
-                  bind:value={selectedSuggestionIndex}
-                  options={pinConflictResult.suggestions.map(
-                    (suggestion, index) => ({
-                      value: String(index),
-                      label: suggestionLabel(suggestion),
-                    }),
-                  )}
-                />
-              {:else if selectedSuggestion}
-                <span>{suggestionLabel(selectedSuggestion)}</span>
-              {/if}
-              <button
-                class="btn accept-suggestion-btn"
-                onclick={handleAcceptSuggestion}
-              >
-                {$i18n.t("remapFcAcceptSuggestion")}
-              </button>
-            </div>
-          {:else}
-            <p class="allocation-warning suggestion-manual-fix">
-              {$i18n.t("remapFcSuggestionManualFix", {
-                feature: optionLabel(manualFixTarget),
-              })}
-            </p>
-            <div class="suggestion-row">
-              <button
-                class="btn accept-suggestion-btn"
-                onclick={handleResetToSetOption}
-              >
-                {$i18n.t("remapFcResetToSetOption")}
-              </button>
-            </div>
-          {/if}
-        </div>
-      {/if}
     </div>
+  {/if}
 
-    <!-- Always visible once the FC's been read: calculatedAllocationTable
-         is reconciled's own always-current result -- what a
-         from-scratch allocation pass computes, or the working state's
-         own current timer/DMA unchanged if nothing needed fixing. No
-         expand/collapse, and no button to press to see it -- see
-         reconciled's own comment for why. -->
-    {#if calculatedAllocationTable.length}
-      {#if unresolvedFeatures.length}
-        <p class="allocation-warning">
-          {$i18n.t("remapFcAllocationUnresolved", {
-            features: unresolvedFeatures.join(", "),
+  <!-- Only appears once there's something staged to send: the
+       "Load Changes" button applies the diff between what was read
+       and the current edits, plus any staged timer/DMA fix (plus a
+       trailing "save" to persist it and reboot), and the panel next
+       to it lets the user see exactly which commands that means, in
+       the exact order they'll be sent, before committing to them. -->
+  {#if hasStagedCommands}
+    <div class="pending-changes-card">
+      <Section label="remapFcChangesHeading">
+        <div class="changes-bar">
+          <div class="changes-row">
+            <button
+              class="btn apply-btn"
+              onclick={handleLoadChanges}
+              disabled={running}
+            >
+              {running
+                ? $i18n.t("remapFcApplying")
+                : $i18n.t("remapFcLoadChangesButton")}
+            </button>
+
+            <details class="commands-panel">
+              <summary
+                >{$i18n.t("remapFcPendingCommands", {
+                  count: commandsToSend.length,
+                })}
+              </summary>
+              <pre>{commandsToSend.join("\n")}</pre>
+            </details>
+          </div>
+
+          <button
+            class="btn clear-btn"
+            onclick={handleClearChanges}
+            disabled={running}
+          >
+            {$i18n.t("remapFcClearChangesButton")}
+          </button>
+        </div>
+      </Section>
+    </div>
+  {/if}
+
+  <!-- Automatic warning: appears only once the working state's
+       current pin assignments have a timer/DMA clash that a full
+       reallocation pass genuinely can't resolve on its own (a
+       clash a fresh reallocation alone would fix stays silent
+       here -- calculatedAllocationTable below already reflects it
+       automatically, no button press needed for that either
+       anymore). reconciled.clash.reasons explains *why* the
+       current pins clash to begin with; calculatedAllocationTable
+       in the always-visible panel below shows what a reallocation
+       attempt produces regardless (including which feature(s) it
+       still couldn't resolve), so there's no need to repeat that
+       table here too -- and pinConflictResult.suggestions offers a
+       pin-level fix instead -- swapping/moving one of those
+       features onto a different pin so a fresh reallocation *can*
+       resolve everything -- when one was found; see the
+       suggestion-row below for what shows instead when it
+       wasn't. -->
+  {#if pinConflictResult.unresolvedFeatures.length}
+    <Section>
+      {#snippet header()}
+        <div class="header">
+          <span class="title warning-title"
+            >{$i18n.t("remapFcAllocationInvalidHeading")}</span
+          >
+        </div>
+      {/snippet}
+
+      <p class="allocation-warning">
+        {$i18n.t("remapFcAllocationInvalidWarning", {
+          reasons: reconciled.clash.reasons.join("; "),
+        })}
+      </p>
+
+      <!-- The pin-level fix itself, when the search actually found
+           one: a single suggestion shows as plain text, more than
+           one gets a picker so the user chooses which to apply --
+           either way, "Accept Suggestion" adopts
+           selectedSuggestion.apply wholesale (see
+           handleAcceptSuggestion). When no single swap/move
+           resolves everything, there's nothing to offer as a
+           one-click fix -- rather than guessing at some other
+           feature to touch on the user's behalf, this points back
+           at whichever option they most recently placed
+           (lastChangedOption), falling back to naming one of the
+           unresolved features itself if nothing's been touched
+           yet this session (e.g. the clash was already there on
+           read). -->
+      {#if pinConflictResult.suggestions.length}
+        <div class="suggestion-row">
+          {#if pinConflictResult.suggestions.length > 1}
+            <Select
+              bind:value={selectedSuggestionIndex}
+              options={pinConflictResult.suggestions.map(
+                (suggestion, index) => ({
+                  value: String(index),
+                  label: suggestionLabel(suggestion),
+                }),
+              )}
+            />
+          {:else if selectedSuggestion}
+            <span>{suggestionLabel(selectedSuggestion)}</span>
+          {/if}
+          <button
+            class="btn accept-suggestion-btn"
+            onclick={handleAcceptSuggestion}
+          >
+            {$i18n.t("remapFcAcceptSuggestion")}
+          </button>
+        </div>
+      {:else}
+        <p class="allocation-warning suggestion-manual-fix">
+          {$i18n.t("remapFcSuggestionManualFix", {
+            feature: optionLabel(manualFixTarget),
           })}
         </p>
+        <div class="suggestion-row">
+          <button
+            class="btn accept-suggestion-btn"
+            onclick={handleResetToSetOption}
+          >
+            {$i18n.t("remapFcResetToSetOption")}
+          </button>
+        </div>
       {/if}
+    </Section>
+  {/if}
 
-      <div class="allocation-column">
-        <h2>{$i18n.t("remapFcAllocationCalculatedHeading")}</h2>
-        <table class="allocation-table">
-          <thead>
-            <tr>
-              <th>{$i18n.t("remapFcAllocationFeature")}</th>
-              <th>{$i18n.t("remapFcAllocationPin")}</th>
-              <th>{$i18n.t("remapFcAllocationTimer")}</th>
-              <th>{$i18n.t("remapFcAllocationDma")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each calculatedAllocationTable as row (row.feature)}
-              <tr class:unresolved={row.unresolved}>
-                <td>{row.feature}</td>
-                <td>{row.pin}</td>
-                <td>
-                  <div>{row.timerCommand}</div>
-                  <div class="allocation-resolved">{row.timer}</div>
-                </td>
-                <td class:dma-unmanaged={!row.dmaManaged}>
-                  <div>{row.dmaCommand}</div>
-                  <div class="allocation-resolved">{row.dma}</div>
-                </td>
+  <!-- calculatedAllocationTable is reconciled's own always-current
+       result -- what a from-scratch allocation pass computes, or the
+       working state's own current timer/DMA unchanged if nothing
+       needed fixing. A genuine problem (unresolvedFeatures) always
+       stays visible regardless of the toggle above (see
+       .details-toggle); the card itself -- header included -- is
+       implementation detail, so the whole thing hides behind "Show
+       details" rather than just the table inside it. -->
+  {#if calculatedAllocationTable.length}
+    {#if unresolvedFeatures.length}
+      <p class="allocation-warning">
+        {$i18n.t("remapFcAllocationUnresolved", {
+          features: unresolvedFeatures.join(", "),
+        })}
+      </p>
+    {/if}
+
+    {#if showCalculatedDetails}
+      <div class="calculated-config-card">
+        <Section label="remapFcAllocationCalculatedHeading">
+          <table class="allocation-table">
+            <thead>
+              <tr>
+                <th>{$i18n.t("remapFcAllocationFeature")}</th>
+                <th>{$i18n.t("remapFcAllocationPin")}</th>
+                <th>{$i18n.t("remapFcAllocationTimer")}</th>
+                <th>{$i18n.t("remapFcAllocationDma")}</th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {#each calculatedAllocationTable as row (row.feature)}
+                <tr class:unresolved={row.unresolved}>
+                  <td>{row.feature}</td>
+                  <td>{row.pin}</td>
+                  <td>
+                    <div>{row.timerCommand}</div>
+                    <div class="allocation-resolved">{row.timer}</div>
+                  </td>
+                  <td class:dma-unmanaged={!row.dmaManaged}>
+                    <div>{row.dmaCommand}</div>
+                    <div class="allocation-resolved">{row.dma}</div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </Section>
       </div>
     {/if}
-  </div>
+  {/if}
 </Page>
 
 <style lang="scss">
-  .content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-  }
-
   .note {
-    color: var(--textColor);
+    color: var(--color-text);
     opacity: 0.8;
-  }
-
-  // Run button (or, once read, the board-identity badge) plus the MCU
-  // badge, side by side.
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    margin-bottom: 4px;
   }
 
   .run-btn {
@@ -1159,45 +1219,70 @@
     align-self: flex-start;
   }
 
-  .mcu-badge,
-  .board-badge {
-    padding: 6px 12px;
-    border: 1px solid var(--subtleAccent);
-    border-radius: 4px;
-    color: var(--textColor);
+  // Custom Section headers (board-info card, live-warning card):
+  // matches Section.svelte/Status.svelte's own header/title styling,
+  // since supplying a header snippet bypasses Section's default one
+  // entirely.
+  .header {
+    @extend %section-header;
+    padding-right: 8px;
   }
 
-  // "Allocate Timers/DMA" results: a warning for anything left
-  // unresolved, then the working state's current timer/DMA and a
-  // from-scratch calculation side by side for comparison. Bordered,
-  // basic layout for now -- styling to be refined later.
-  .allocation-warning {
-    color: #d9534f;
+  .title {
+    padding-left: 8px;
+    font-weight: 600;
   }
 
-  .allocation-column {
-    padding: 8px 12px;
-    border: 1px solid var(--subtleAccent);
-    border-radius: 4px;
-    color: var(--textColor);
-    overflow-x: auto;
+  .warning-title {
+    color: var(--color-status-bad);
+  }
 
-    h2 {
-      margin: 0 0 6px;
-      font-size: 1em;
-      opacity: 0.8;
+  // Plain label/value rows, matching Status.svelte's own info-table
+  // convention.
+  .info-table {
+    width: 100%;
+
+    td {
+      padding: 3px 0;
+      font-size: 0.8rem;
+
+      &:last-child {
+        text-align: right;
+        font-weight: 600;
+      }
     }
   }
 
-  // The automatic live-clash warning sits beside the diagram/table in
-  // .table-with-diagram's flex row (wrapping below them on narrow
-  // viewports, same as the diagram already does), so it needs to grow
-  // to fill the row's remaining width rather than just shrink-wrapping
-  // its content, and a border colour that reads as a warning rather
-  // than the calculated-config panel's neutral one.
-  .allocation-live-warning {
-    flex: 1 1 260px;
-    border-color: #d9534f;
+  // Sized to hug its own short content, matching Status.svelte's
+  // compact info cards, rather than stretching the full page width.
+  // margin-bottom separates it from .table-with-diagram right below --
+  // a plain div with no top spacing of its own, so without this the
+  // remap table's header row sits almost flush against this card.
+  .board-info-card {
+    max-width: 320px;
+    margin-bottom: 24px;
+  }
+
+  // Wider than .board-info-card since the table has four columns, but
+  // still capped rather than spanning the full page.
+  .calculated-config-card,
+  .pending-changes-card {
+    max-width: 560px;
+  }
+
+  .details-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    width: fit-content;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    margin-bottom: 16px;
+  }
+
+  .allocation-warning {
+    color: var(--color-status-bad);
   }
 
   // The suggestion picker (a single suggestion shows as plain text
@@ -1226,13 +1311,14 @@
   }
 
   .allocation-table {
+    width: 100%;
     border-collapse: collapse;
 
     th,
     td {
       padding: 4px 12px;
       text-align: left;
-      border-bottom: 1px solid var(--subtleAccent);
+      border-bottom: 1px solid var(--color-border);
       vertical-align: top;
     }
 
@@ -1243,7 +1329,7 @@
     // Flags a row left untouched because nothing could be resolved
     // for it, rather than one that was actually (re)allocated.
     tr.unresolved td {
-      color: #d9534f;
+      color: var(--color-status-bad);
     }
 
     // Flags a DMA cell shown for reference only -- a servo/frequency
@@ -1263,20 +1349,29 @@
     font-size: 0.9em;
   }
 
-  // "Load Changes" button plus its command-preview panel.
+  // "Load Changes" plus its command-preview panel, stacked above the
+  // separate "Clear Changes" row.
   .changes-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .changes-row {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .apply-btn {
+  .apply-btn,
+  .clear-btn {
     @extend %button;
     align-self: flex-start;
   }
 
   .commands-panel {
-    color: var(--textColor);
+    color: var(--color-text);
 
     summary {
       cursor: pointer;
@@ -1286,7 +1381,7 @@
     pre {
       margin: 6px 0 0;
       padding: 8px 12px;
-      border: 1px solid var(--subtleAccent);
+      border: 1px solid var(--color-border);
       border-radius: 4px;
       white-space: pre-wrap;
     }
@@ -1311,6 +1406,11 @@
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 20px;
+    // Whatever comes next (the live-warning Section, the pending
+    // changes card, or the calculated-config card) is a plain div or
+    // a Section, neither of which carries its own top spacing large
+    // enough to read as a clear break from the remap table above it.
+    margin-bottom: 32px;
   }
 
   // Positions the board name overlay (see .board-diagram-label)
@@ -1366,11 +1466,11 @@
     td {
       padding: 4px 12px;
       text-align: left;
-      border-bottom: 1px solid var(--subtleAccent);
+      border-bottom: 1px solid var(--color-border);
     }
 
     th {
-      color: var(--textColor);
+      color: var(--color-text);
       opacity: 0.8;
     }
 
@@ -1400,6 +1500,6 @@
   }
 
   .error_message {
-    color: #d9534f;
+    color: var(--color-status-bad);
   }
 </style>

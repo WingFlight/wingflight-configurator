@@ -7358,16 +7358,25 @@
         "message": "Set Option"
     },
     "remapFcMcuLabel": {
-        "message": "MCU:"
+        "message": "MCU"
     },
     "remapFcDesignLabel": {
-        "message": "Design:"
+        "message": "Design"
     },
     "remapFcLoadChangesButton": {
         "message": "Load Changes"
     },
+    "remapFcClearChangesButton": {
+        "message": "Clear Changes"
+    },
     "remapFcApplying": {
         "message": "Applying..."
+    },
+    "remapFcChangesHeading": {
+        "message": "Pending Changes"
+    },
+    "remapFcShowDetails": {
+        "message": "Show details"
     },
     "remapFcPendingCommands": {
         "message": "Pending Commands ({{count}})"
