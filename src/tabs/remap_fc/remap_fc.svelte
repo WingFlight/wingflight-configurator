@@ -186,27 +186,49 @@
     buildReservedPins(referenceDesigns, FC.CONFIG.boardDesign),
   );
 
-  // The name to actually show for an option key, anywhere one appears
-  // -- a row's own identity, a "+ Add" choice, or a value picked in
-  // some row's Current Option dropdown. Substitutes the reference
-  // design's own name for the option's default pin (e.g. "ESC" for
-  // "M1") when this board's reference design documents one, since
-  // that's the label the user actually has printed on the board;
-  // otherwise falls back to expandOptionName's spelled-out CLI name
-  // (e.g. "Servo 1" for "S1") rather than the bare shorthand, so an
-  // undocumented board still reads well. Always resolved via the
-  // option's *own* default pin, regardless of where it's currently
-  // sitting -- an option's identity, and so its reference label,
-  // doesn't change just because it's been reassigned elsewhere.
-  // Two labels optionLabel shows that would otherwise read misleadingly
-  // for how this board's outputs are actually used in practice, even
-  // though the FC's own reference design / CLI naming is unchanged:
-  // "TAIL" (a reference design usage name) is wired to a servo output,
-  // and "Motor 2" (expandOptionName's fallback for M2) is actually a
-  // second ESC output. Only applied by optionLabel, never by
-  // displayName itself -- the "FC Pin" column still needs to show the
-  // board's own physical connector name ("TAIL") unchanged, since
-  // that's what's actually printed on the board and can't change.
+  // Pins this board's reference design documents as a specific,
+  // purpose-built connector (AUX, SBUS, TLM, RPM, ...) rather than a
+  // generic "Port X" one -- same set setHardware already uses to
+  // decide which UART/I2C options always get a row.
+  let namedConnectorPins = $derived(
+    buildNamedConnectorPins(referenceDesigns, FC.CONFIG.boardDesign),
+  );
+
+  // The UART/I2C option keys behind those named-connector pins (e.g.
+  // "RX2" for a board that calls it "TLM") -- passed to
+  // getRowSelectableOptions so a named connector can be picked as any
+  // row's Current Option (labelled through optionLabel the same as
+  // everything else, so the user sees "TLM", never the raw "RX2"), the
+  // same as a motor/servo can. Without this, clearing a named
+  // connector's own row leaves it reachable only through "+ Add",
+  // where nothing hints that "TLM" is what "RX2" is called there -- a
+  // user who doesn't already know that mapping would have no way to
+  // bring it back at all.
+  //
+  // Explicitly excludes TABLE_OPTION_KEYS: a servo/motor's own default
+  // pin can itself be a named connector (e.g. "TAIL" is S4's own pin
+  // on some boards), but getRowSelectableOptions's own pool already
+  // includes every TABLE_OPTION_KEYS member unconditionally -- adding
+  // S4 again here would offer it twice in the same dropdown, which
+  // Svelte's keyed {#each} in Select.svelte rejects outright as a
+  // duplicate key.
+  let namedConnectorOptionKeys = $derived(
+    Object.keys(defaultHardware).filter(
+      (option) =>
+        !TABLE_OPTION_KEYS.includes(option) &&
+        namedConnectorPins.has(defaultHardware[option]?.pin),
+    ),
+  );
+
+  // Two labels displayName would otherwise resolve to that read
+  // misleadingly for how this board's outputs are actually used in
+  // practice, even though the FC's own reference design / CLI naming
+  // is unchanged: "TAIL" (a reference design usage name) is wired to a
+  // servo output, and "Motor 2" (expandOptionName's fallback for M2)
+  // is actually a second ESC output. Applied by optionLabel, on top of
+  // displayName's own result, wherever a *function* is being picked
+  // for a port rather than the port itself being named -- see
+  // optionLabel/displayName's own comments for the distinction.
   const DISPLAY_LABEL_OVERRIDES = {
     TAIL: "Servo 4",
     "Motor 2": "ESC 2",
@@ -216,9 +238,15 @@
   // "M1", "TAIL" for "S4") when this board's reference design
   // documents one, since that's the label the user actually has
   // printed on the board; otherwise falls back to expandOptionName's
-  // spelled-out CLI name (e.g. "Servo 1" for "S1"). Used to identify a
-  // row by its own fixed default pin -- never overridden, since that
-  // identity is the board's own physical connector name.
+  // spelled-out CLI name (e.g. "Servo 1" for "S1"). Used anywhere a
+  // *physical port* is being named, never overridden, since that
+  // identity is the board's own connector name and can't change: a
+  // row's own "FC Pin" column, and "+ Add" (bringing a port into the
+  // table is about which port, not which logical function ends up
+  // occupying it -- see optionLabel for that). Always resolved via the
+  // option's *own* default pin, regardless of where it's currently
+  // sitting -- an option's identity, and so its reference label,
+  // doesn't change just because it's been reassigned elsewhere.
   function displayName(option) {
     const pin = defaultHardware[option]?.pin;
     return (
@@ -226,12 +254,14 @@
     );
   }
 
-  // The name to show for an option wherever it appears as a
-  // *selectable* value -- a "+ Add" choice, or a value picked in some
-  // row's Current Option dropdown. Same as displayName, but with
-  // DISPLAY_LABEL_OVERRIDES applied on top, since an option picked
-  // from a list reads better by its logical servo/ESC slot than by
-  // whichever other connector's name its default pin happens to share.
+  // The name to show for an option wherever it appears as a value
+  // being *picked* for some port's Current Option -- the dropdown's
+  // own selected-value display and its list of choices. Same as
+  // displayName, but with DISPLAY_LABEL_OVERRIDES applied on top,
+  // since a function being assigned to a port reads better by its
+  // logical servo/ESC slot than by whichever other connector's name
+  // its own default pin happens to share (e.g. picking S4 to drive the
+  // TAIL port reads as "Servo 4", not as "TAIL" a second time).
   function optionLabel(option) {
     return DISPLAY_LABEL_OVERRIDES[displayName(option)] || displayName(option);
   }
@@ -339,6 +369,13 @@
   // elsewhere, exactly like it does in the "+ Add" pool (see
   // getAddableOptions), or there'd be no way to place it anywhere but
   // back onto its own original pin.
+  //
+  // namedConnectorOptionKeys extends getRowSelectableOptions's own
+  // pool beyond TABLE_OPTION_KEYS with this board's own named
+  // connectors (AUX, SBUS, TLM, RPM, ...) -- without it, clearing one
+  // is reachable only through "+ Add", where nothing hints that (say)
+  // "TLM" is what "RX2" is called here, so a user who doesn't already
+  // know that mapping would have no way to bring it back at all.
   /**
    * @param {import("@/js/remap_fc/remap_table.js").RemapRow} row
    */
@@ -347,9 +384,10 @@
       ? claimedOptions.filter((option) => option !== row.currentOption)
       : claimedOptions;
 
-    return [NONE_VALUE, ...getRowSelectableOptions(claimedIfPicked)].filter(
-      (option) => option !== row.currentOption,
-    );
+    return [
+      NONE_VALUE,
+      ...getRowSelectableOptions(claimedIfPicked, namedConnectorOptionKeys),
+    ].filter((option) => option !== row.currentOption);
   }
 
   // The `resource` CLI commands needed to bring the flight controller
@@ -561,10 +599,6 @@
 
     const occupantOf = (pin) =>
       Object.keys(current).find((key) => current[key].pin === pin);
-    const namedConnectorPins = buildNamedConnectorPins(
-      referenceDesigns,
-      FC.CONFIG.boardDesign,
-    );
 
     visibleOptions = OPTION_KEYS.filter((option) => {
       const defaultPin = defaultHw[option]?.pin;
@@ -951,7 +985,7 @@
                         { value: "", label: $i18n.t("remapFcAddOption") },
                         ...addablePool.map((addable) => ({
                           value: addable.option,
-                          label: optionLabel(addable.option),
+                          label: displayName(addable.option),
                         })),
                       ]}
                     />

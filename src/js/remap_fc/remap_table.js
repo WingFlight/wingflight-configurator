@@ -228,10 +228,22 @@ export function getAddableOptions(defaultHardware, visibleOptions) {
 /**
  * Returns the options that could be assigned as a row's Current
  * Option: every one of the FC's own fixed options — motors, servos,
- * output-frequency groups, and the LED pin (see TABLE_OPTION_KEYS) —
- * that isn't already claimed by some row, and that passes the FC's
- * filling-order rules (see isEligibleToAdd) so gaps can't be created
- * (e.g. S3 can't be picked unless S1 and S2 are already claimed).
+ * output-frequency groups, and the LED pin (see TABLE_OPTION_KEYS),
+ * plus whichever UART/I2C options namedConnectorKeys names (see
+ * reference_design_labels.js's buildNamedConnectorPins -- a caller
+ * passes the option keys whose *own* default pin one of those names,
+ * e.g. "RX2" when this board's reference design calls RX2's own pin
+ * "TLM") — that isn't already claimed by some row, and that passes
+ * the FC's filling-order rules (see isEligibleToAdd) so gaps can't be
+ * created (e.g. S3 can't be picked unless S1 and S2 are already
+ * claimed; a namedConnectorKeys option always passes this trivially,
+ * since isEligibleToAdd's rules only ever apply to M/S/Freq prefixes).
+ * Every other UART/I2C option stays unreachable here, only ever
+ * addable via "+ Add" — offering every possible RX/TX/SDA/SCL slot in
+ * every row's own dropdown regardless of whether this board's own
+ * reference design ever names it anything would just be clutter, the
+ * same reasoning TABLE_OPTION_KEYS's own doc comment gives for leaving
+ * UART/I2C out of the table's default row set to begin with.
  *
  * Deliberately uses claimedOptions rather than the broader
  * "configured" notion getAddableOptions uses: a row's own dropdown
@@ -241,15 +253,27 @@ export function getAddableOptions(defaultHardware, visibleOptions) {
  * next one shouldn't become pickable until the previous one has an
  * actual value, not just a row.
  *
- * Unlike getAddableOptions, this deliberately ignores defaultHardware:
- * a row's Current Option is picked from the FC's fixed set of possible
- * options, not from whatever this specific board's default dump
- * happens to report.
+ * Unlike getAddableOptions, this deliberately ignores defaultHardware
+ * for TABLE_OPTION_KEYS: a row's Current Option is picked from the
+ * FC's fixed set of possible options, not from whatever this specific
+ * board's default dump happens to report. namedConnectorKeys is the
+ * one exception, since by construction every option key in it already
+ * has a default pin (that's what makes it a named connector at all).
  * @param {string[]} claimedOptions - option keys currently claimed as some row's Current Option.
+ * @param {string[]} [namedConnectorKeys] - option keys whose own
+ *   default pin this board's reference design documents as a named
+ *   connector (e.g. "RX2" for a board that calls it "TLM"). A
+ *   TABLE_OPTION_KEYS member listed here too (a servo/motor's own
+ *   default pin can itself be a named connector -- "TAIL" is S4's own
+ *   pin on some boards) is harmless: deduped below rather than
+ *   requiring the caller to filter it out first, since offering the
+ *   same option twice in one dropdown is a Svelte each_key_duplicate
+ *   crash, not just a cosmetic glitch, and not every future caller can
+ *   be trusted to remember that.
  * @returns {string[]}
  */
-export function getRowSelectableOptions(claimedOptions) {
-  return TABLE_OPTION_KEYS.filter(
+export function getRowSelectableOptions(claimedOptions, namedConnectorKeys = []) {
+  return [...new Set([...TABLE_OPTION_KEYS, ...namedConnectorKeys])].filter(
     (option) => !claimedOptions.includes(option) && isEligibleToAdd(option, claimedOptions),
   );
 }
