@@ -927,12 +927,25 @@
         </div>
       </div>
 
-      <!-- The current-vs-default pin remap table, in fixed option
-           order, plus a trailing "+ Add" row for options not yet
-           given a row. Keep the table (and with it, "+ Add") visible
-           even once every row has been cleared to "None" —
-           otherwise there'd be no way to bring any row back. -->
-      {#if tableRows.length || hasRealAddableOptions}
+      <!-- setHardware({}, {}, null) is called at the very start of a
+           re-read (see remap_fc.js's #doRunSequence) to clear out the
+           previous board's table before the new one's data has
+           actually arrived back -- that already flips hasRead true
+           (this whole section is showing), but leaves tableRows/
+           hasRealAddableOptions both empty for the several seconds
+           the CLI sequence takes, with nothing else on screen to
+           explain why the table's gone. running stays true for that
+           entire window (see remap_fc.js), so it's what this keys
+           off, rather than the row/addable counts themselves — a
+           board that genuinely has no rows to show (not just "not
+           read yet") should still just render nothing here, same as
+           before. -->
+      {#if running}
+        <div class="table-loading">
+          <div class="spinner"></div>
+          <p>{$i18n.t("remapFcLoadingHardware")}</p>
+        </div>
+      {:else if tableRows.length || hasRealAddableOptions}
         <table class="remap-table">
           <thead>
             <tr>
@@ -952,7 +965,13 @@
                 {#if showCalculatedDetails}
                   <td>{row.defaultPin ?? "—"}</td>
                 {/if}
-                <td class="arrow">→</td>
+                <td class="arrow">
+                  <img
+                    class="arrow-cable"
+                    src="/images/remap_fc/CABLE_ARROW.svg"
+                    alt=""
+                  />
+                </td>
                 <td>
                   <!-- Force a remount whenever the displayed value changes
                      (e.g. because a different row's edit cleared this
@@ -1405,12 +1424,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 20px;
-    // Whatever comes next (the live-warning Section, the pending
-    // changes card, or the calculated-config card) is a plain div or
-    // a Section, neither of which carries its own top spacing large
-    // enough to read as a clear break from the remap table above it.
-    margin-bottom: 32px;
+    gap: 0;
   }
 
   // Positions the board name overlay (see .board-diagram-label)
@@ -1458,6 +1472,28 @@
     pointer-events: none;
   }
 
+  // Shown in place of the table while a read is still in flight --
+  // matches Page.svelte's own loading spinner (same image asset), just
+  // smaller and inline rather than filling the whole tab.
+  .table-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    color: var(--color-text);
+    opacity: 0.8;
+  }
+
+  .table-loading .spinner {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background-image: url("/images/loading-spin.svg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+  }
+
   // Comparison table: option name, default pin, arrow, current option.
   .remap-table {
     border-collapse: collapse;
@@ -1475,7 +1511,15 @@
     }
 
     .arrow {
-      opacity: 0.6;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .arrow-cable {
+      display: block;
+      width: 38px;
+      height: auto;
+      opacity: 0.85;
     }
 
     .add-row td {

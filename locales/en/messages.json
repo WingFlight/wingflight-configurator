@@ -7336,11 +7336,14 @@
     "remapFcRunning": {
         "message": "Reading FC"
     },
+    "remapFcLoadingHardware": {
+        "message": "Loading hardware..."
+    },
     "remapFcError": {
         "message": "Error reading FC"
     },
     "remapFcTableOption": {
-        "message": "FC Pin"
+        "message": "FC Label"
     },
     "remapFcTableDefaultPin": {
         "message": "Default Pin"
