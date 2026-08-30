@@ -449,6 +449,12 @@ function allocationFromCurrentState(featureRows) {
  * @property {string} timer - A human-readable resolution, e.g.
  *   "pin A03: TIM9 CH2 (AF3)" -- much easier to place at a glance than
  *   "timer A03 AF3" alone.
+ * @property {{af: string, label: string, chosen: boolean}[]} timerOptions -
+ *   Every timer/AF this pin actually supports (not just the one
+ *   chosen), so the UI can show the full picture -- e.g. to check
+ *   whether a still-free option exists before touching a wire -- with
+ *   `chosen` marking which one (if any) this row is actually using.
+ *   Empty for a pin with no timer capability at all.
  * @property {string} dmaCommand - The `dma pin` CLI command -- see
  *   dmaManaged above for when this is informational only.
  * @property {string} dma - A human-readable resolution, e.g.
@@ -502,6 +508,12 @@ export function buildAllocationTable(featureRows, allocation, unresolved = []) {
         ? 0
         : -1;
 
+    const timerOptions = (current?.options ?? []).map((option) => ({
+      af: option.af,
+      label: `${option.timer} (${option.af})`,
+      chosen: chosen ? option.af === chosen.af : false,
+    }));
+
     return {
       feature: result.feature,
       pin: result.pin,
@@ -509,6 +521,7 @@ export function buildAllocationTable(featureRows, allocation, unresolved = []) {
       dmaManaged,
       timerCommand: chosen ? `timer ${result.pin} ${chosen.af}` : "-",
       timer: chosen ? `pin ${result.pin}: ${chosen.timer} (${chosen.af})` : "-",
+      timerOptions,
       dmaCommand: dmaIndex >= 0 ? `dma pin ${result.pin} ${dmaIndex}` : "-",
       dma: dmaInfo ? `pin ${result.pin}: ${dmaInfo.stream} Channel ${dmaInfo.channel}` : "-",
     };

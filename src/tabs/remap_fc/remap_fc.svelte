@@ -1058,7 +1058,11 @@
             <button
               class="btn apply-btn"
               onclick={handleLoadChanges}
-              disabled={running}
+              disabled={running ||
+                pinConflictResult.unresolvedFeatures.length > 0}
+              title={pinConflictResult.unresolvedFeatures.length > 0
+                ? $i18n.t("remapFcLoadChangesBlocked")
+                : ""}
             >
               {running
                 ? $i18n.t("remapFcApplying")
@@ -1209,8 +1213,15 @@
                   <td>{row.feature}</td>
                   <td>{row.pin}</td>
                   <td>
-                    <div>{row.timerCommand}</div>
-                    <div class="allocation-resolved">{row.timer}</div>
+                    {#if row.timerOptions.length}
+                      <ul class="timer-options">
+                        {#each row.timerOptions as option (option.af)}
+                          <li class:chosen={option.chosen}>{option.label}</li>
+                        {/each}
+                      </ul>
+                    {:else}
+                      -
+                    {/if}
                   </td>
                   <td class:dma-unmanaged={!row.dmaManaged}>
                     <div>{row.dmaCommand}</div>
@@ -1368,6 +1379,30 @@
     font-size: 0.9em;
   }
 
+  // Every timer option this pin actually supports, not just the one
+  // in use -- the chosen one stands out at full weight/opacity, the
+  // rest are dimmed rather than removed entirely, so it's still
+  // obvious what else was available.
+  .timer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      font-size: 0.85em;
+      white-space: nowrap;
+      opacity: 0.45;
+    }
+
+    li.chosen {
+      font-weight: 600;
+      opacity: 1;
+    }
+  }
+
   // "Load Changes" plus its command-preview panel, stacked above the
   // separate "Clear Changes" row.
   .changes-bar {
@@ -1474,12 +1509,19 @@
 
   // Shown in place of the table while a read is still in flight --
   // matches Page.svelte's own loading spinner (same image asset), just
-  // smaller and inline rather than filling the whole tab.
+  // smaller and inline rather than filling the whole tab. align-self:
+  // stretch centers it vertically against the diagram's own height
+  // (rather than hugging the top of the row), but it otherwise hugs
+  // its own content width, right next to the diagram, instead of
+  // centering across the whole remaining row.
   .table-loading {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 0;
+    align-self: stretch;
+    // Matches .remap-table's own th/td padding, so the loading state
+    // and the loaded table line up at the same left edge.
+    padding-left: 12px;
     color: var(--color-text);
     opacity: 0.8;
   }

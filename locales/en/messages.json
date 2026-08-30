@@ -7369,6 +7369,9 @@
     "remapFcLoadChangesButton": {
         "message": "Load Changes"
     },
+    "remapFcLoadChangesBlocked": {
+        "message": "Resolve the pin conflict below before sending changes"
+    },
     "remapFcClearChangesButton": {
         "message": "Clear Changes"
     },
