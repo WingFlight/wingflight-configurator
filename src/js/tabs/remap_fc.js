@@ -13,6 +13,7 @@ import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import {
   parseHardwareDump,
   parseMcuType,
+  parseDshotSettings,
   buildTimerDmaReplayCommands,
 } from "@/js/remap_fc/hardware_parser.js";
 import { buildChangeCommands } from "@/js/remap_fc/remap_table.js";
@@ -59,6 +60,17 @@ class RemapFcTab {
   // parseReservedTimers. Same treatment as #reservedDmaStreams.
   /** @type {Set<string>} */
   #reservedTimers = new Set();
+
+  // The board's own current dshot_burst/dshot_bitbang settings, parsed
+  // from the same `dump hardware` output already captured for
+  // #currentHardware -- see hardware_parser.js's parseDshotSettings.
+  // Purely informational for now (shown as CLI comment lines ahead of
+  // the Svelte component's staged commands), not something this tool
+  // reads or acts on itself.
+  /** @type {?string} */
+  #dshotBurst = null;
+  /** @type {?string} */
+  #dshotBitbang = null;
 
   // Set to true once cleanup() starts, so an in-flight runSequence()
   // knows to stop sending further commands rather than racing with
@@ -246,6 +258,8 @@ class RemapFcTab {
     this.#mcuType = null;
     this.#reservedDmaStreams = new Set();
     this.#reservedTimers = new Set();
+    this.#dshotBurst = null;
+    this.#dshotBitbang = null;
 
     try {
       await this.#activateCli();
@@ -284,9 +298,17 @@ class RemapFcTab {
       this.#currentHardware = parseHardwareDump(currentDump);
       this.#defaultHardware = parseHardwareDump(defaultDump);
       this.#mcuType = parseMcuType(currentDump);
+      const { dshotBurst, dshotBitbang } = parseDshotSettings(currentDump);
+      this.#dshotBurst = dshotBurst;
+      this.#dshotBitbang = dshotBitbang;
       console.log("remap_fc: currentHardware", this.#currentHardware);
       console.log("remap_fc: defaultHardware", this.#defaultHardware);
       console.log("remap_fc: mcuType", this.#mcuType);
+      console.log(
+        "remap_fc: dshotBurst/dshotBitbang",
+        this.#dshotBurst,
+        this.#dshotBitbang,
+      );
 
       // `defaults nosave` doesn't just preview the factory defaults --
       // it actually resets the flight controller's live resource/
@@ -328,6 +350,8 @@ class RemapFcTab {
         this.#mcuType,
         this.#reservedDmaStreams,
         this.#reservedTimers,
+        this.#dshotBurst,
+        this.#dshotBitbang,
       );
     } catch (err) {
       console.error("remap_fc: CLI sequence failed", err);

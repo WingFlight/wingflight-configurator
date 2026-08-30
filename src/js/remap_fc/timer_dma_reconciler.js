@@ -537,7 +537,12 @@ export function buildAllocationTable(featureRows, allocation, unresolved = []) {
  *   already claimed by something outside this tool's control (the
  *   gyro's clock/sync signal, ...) -- see timer_dma_lookup.js's
  *   parseReservedTimers. Same treatment as reservedDmaStreams.
- * @returns {{commands: string[], clash: ClashReport, unresolved: string[], calculatedTable: AllocationTableRow[]}}
+ * @returns {{commands: string[], clash: ClashReport, unresolved: string[], calculatedTable: AllocationTableRow[], allocation: FeatureAllocation[]}}
+ *   allocation is the raw result underlying calculatedTable -- callers
+ *   that need a resolved feature's actual af/dma index (not just its
+ *   human-readable/command-string form) read it from here, e.g.
+ *   remap_fc.svelte's markApplied writing a just-sent allocation back
+ *   into its own working state once it's actually been applied.
  */
 export function reconcileTimersAndDma(
   workingCurrent,
@@ -550,8 +555,9 @@ export function reconcileTimersAndDma(
   const clash = detectClashes(featureRows, reservedDmaStreams, reservedTimers);
 
   if (!clash.hasClash) {
-    const calculatedTable = buildAllocationTable(featureRows, allocationFromCurrentState(featureRows));
-    return { commands: [], clash, unresolved: [], calculatedTable };
+    const allocation = allocationFromCurrentState(featureRows);
+    const calculatedTable = buildAllocationTable(featureRows, allocation);
+    return { commands: [], clash, unresolved: [], calculatedTable, allocation };
   }
 
   const allocation = reallocateTimersAndDma(featureRows, reservedDmaStreams, reservedTimers);
@@ -566,5 +572,6 @@ export function reconcileTimersAndDma(
     clash,
     unresolved,
     calculatedTable: buildAllocationTable(featureRows, allocation, unresolved),
+    allocation,
   };
 }

@@ -22,14 +22,7 @@
     getAddableOptions,
     getRowSelectableOptions,
   } from "@/js/remap_fc/remap_table.js";
-  import {
-    reconcileTimersAndDma,
-    buildFeatureRows,
-    detectClashes,
-    reallocateTimersAndDma,
-    buildTimerDmaCommands,
-    buildAllocationTable,
-  } from "@/js/remap_fc/timer_dma_reconciler.js";
+  import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
   import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
   import {
     buildReferenceLabels,
@@ -96,13 +89,25 @@
   // DMA streams already claimed by something outside this tool's
   // control -- SPI buses, the ADC, etc. -- read once per "Read FC" (see
   // remap_fc.js's #doRunSequence) and handed to reconcileTimersAndDma
-  // so "Allocate Timers/DMA" never proposes stealing one of these.
+  // so its reallocation pass never proposes stealing one of these.
   /** @type {Set<string>} */
   let reservedDmaStreams = $state(new Set());
   // Same idea for full timer+channel claims outside this tool's
   // control -- the gyro's clock/sync signal, etc.
   /** @type {Set<string>} */
   let reservedTimers = $state(new Set());
+  // The board's own current dshot_burst/dshot_bitbang settings, read
+  // once per "Read FC" (see remap_fc.js's #dshotBurst/#dshotBitbang) --
+  // purely informational, shown as CLI comment lines ahead of the
+  // staged commands (see commandsToSend) so they're visible whenever
+  // reviewing what's about to be sent, since they affect whether
+  // firmware actually uses DMA for a motor output at all (see
+  // feature_classifier.js's featureNeedsDma). null before read, or if
+  // dump hardware's own "# master" section didn't report them.
+  /** @type {?string} */
+  let dshotBurstSetting = $state(null);
+  /** @type {?string} */
+  let dshotBitbangSetting = $state(null);
   // The option keys that have a row in the table: seeded from whatever
   // was assigned on read, and grown whenever an option is added via
   // the "+ Add" row. Picking "None" for a row's current option removes
@@ -274,13 +279,6 @@
     ]),
   ]);
 
-  // Everything "+ Add" should treat as unavailable: options claimed by
-  // a resolved row, plus options already sitting in an unresolved
-  // "unset" row — a freshly-added row doesn't occupy a pin yet, so it
-  // wouldn't show up in claimedOptions on its own, but it already has
-  // a row and shouldn't be offered a second time.
-  let unavailableOptions = $derived([...claimedOptions, ...unsetOptions]);
-
   // The full pool for the "+ Add" row: every default-structure option
   // that isn't already spoken for — including ones that are currently
   // assigned but never get an automatic row (UART/I2C resources),
@@ -321,14 +319,19 @@
   // doesn't need to be included here regardless — the template always
   // renders it as its own option separately.
   //
-  // Otherwise excludes options genuinely unavailable elsewhere —
-  // claimed by a resolved row, or sitting in another row's unresolved
-  // "unset" state (see unavailableOptions) — so one row's edit can't
-  // steal an option another row is still mid-pick on, except the row's
-  // own option, which must stay selectable so a row can be set back to
-  // its own default pin.
+  // Otherwise excludes only options genuinely claimed elsewhere right
+  // now (claimedOptions, via getRowSelectableOptions) -- deliberately
+  // not options merely sitting in another row's unresolved "unset"
+  // state (e.g. a freshly "+ Add"ed row nobody's picked a value for
+  // yet). An earlier version excluded those too, on the theory that
+  // one row's edit could "steal" an option another row was mid-pick
+  // on -- but every row's own dropdown recomputes live off
+  // claimedOptions, so the moment anything actually claims an option,
+  // every other row's list drops it immediately regardless; there was
+  // no real race to guard against, only an option that's genuinely
+  // free being needlessly withheld from every row but its own.
   //
-  // Deliberately uses unavailableOptions rather than visibleOptions: an
+  // Deliberately uses claimedOptions rather than visibleOptions: an
   // option can have its own row (visibleOptions) while having gone
   // "homeless" — e.g. M1's row still exists, but a different row's edit
   // moved M1 off its own default pin, so M1 itself is no longer any
@@ -345,11 +348,7 @@
       : claimedOptions;
 
     return [NONE_VALUE, ...getRowSelectableOptions(claimedIfPicked)].filter(
-      (option) =>
-        option !== row.currentOption &&
-        (option === NONE_VALUE ||
-          option === row.option ||
-          !unavailableOptions.includes(option)),
+      (option) => option !== row.currentOption,
     );
   }
 
@@ -364,65 +363,38 @@
   );
   let hasPendingChanges = $derived(pendingCommands.length > 0);
 
-  // The `timer`/`dma pin` commands needed to clear up a timer or DMA
-  // clash in the working state -- unlike pendingCommands, this isn't
-  // recomputed live on every edit: it's a snapshot taken only when
-  // "Allocate Timers/DMA" is pressed (see handleAllocateTimersDma),
-  // since reallocation should be a deliberate, reviewable step rather
-  // than something that silently recalculates (and so could silently
-  // go stale) in the background as the table is edited.
-  let timerDmaCommands = $state([]);
-
-  // A read-only, always-current check of whether the working state's
-  // present timer/DMA assignments actually clash right now -- unlike
-  // timerDmaCommands/calculatedAllocationTable below, this recomputes
-  // on every table edit rather than only when "Allocate Timers/DMA" is
-  // pressed, since it never stages anything to send; it only decides
-  // whether to show the automatic warning panel (see
-  // suggestedAllocationTable below it). Empty/no-clash before the FC's
-  // been read, since there's nothing to check yet.
-  let liveFeatureRows = $derived(
-    hasRead ? buildFeatureRows(workingCurrent, mcuType, mcuAllData) : [],
-  );
-  let liveClash = $derived(
-    detectClashes(liveFeatureRows, reservedDmaStreams, reservedTimers),
-  );
-
-  // What a fresh allocation pass would assign each currently-selected
-  // pin, for the automatic warning panel -- gathers every timer option
-  // each of those pins actually supports, groups them by timer base
-  // (features sharing a base must share a type -- see
-  // timer_allocator.js), and assigns each feature a compatible option
-  // (forcing one through even if it still collides, rather than
-  // leaving a feature blank -- see pickBestOption/allocateDma's own
-  // comments for why). unresolved marks which rows the panel should
-  // style as still-conflicting despite that. Only computed while
-  // there's actually a clash to show a suggestion for, since it's
-  // otherwise wasted work.
-  let liveAllocation = $derived(
-    liveClash.hasClash
-      ? reallocateTimersAndDma(
-          liveFeatureRows,
+  // The single, always-current timer/DMA reallocation pass over the
+  // working state: whether it clashes right now, what a fresh
+  // allocation pass would assign each feature (forcing one through
+  // even if it still collides with something, rather than leaving a
+  // feature blank -- see pickBestOption/allocateDma's own comments for
+  // why), which features are still genuinely unresolved despite that,
+  // and the `timer`/`dma pin` commands needed to apply it. Recomputed
+  // on every table edit -- there's no separate "Allocate Timers/DMA"
+  // step to press; see markApplied for how it avoids proposing the
+  // same commands again forever once they've actually been sent. Empty/
+  // no-clash before the FC's been read, since there's nothing to check
+  // yet.
+  let reconciled = $derived(
+    hasRead
+      ? reconcileTimersAndDma(
+          workingCurrent,
+          mcuType,
+          mcuAllData,
           reservedDmaStreams,
           reservedTimers,
         )
-      : [],
+      : {
+          commands: [],
+          clash: { hasClash: false, reasons: [] },
+          unresolved: [],
+          calculatedTable: [],
+          allocation: [],
+        },
   );
-  let liveUnresolved = $derived(
-    liveClash.hasClash
-      ? buildTimerDmaCommands(
-          liveFeatureRows,
-          liveAllocation,
-          reservedDmaStreams,
-          reservedTimers,
-        ).unresolved
-      : [],
-  );
-  let suggestedAllocationTable = $derived(
-    liveClash.hasClash
-      ? buildAllocationTable(liveFeatureRows, liveAllocation, liveUnresolved)
-      : [],
-  );
+  let timerDmaCommands = $derived(reconciled.commands);
+  let calculatedAllocationTable = $derived(reconciled.calculatedTable);
+  let unresolvedFeatures = $derived(reconciled.unresolved);
 
   // Candidate pin swaps/moves that would let a fresh reallocation
   // resolve everything, plus which features are genuinely unresolved
@@ -467,15 +439,14 @@
     ] ?? null,
   );
 
-  // One row per feature describing its timer/DMA outcome from the
-  // last "Allocate Timers/DMA" run -- what a from-scratch allocation
-  // pass computes, or the working state's own current timer/DMA
-  // unchanged if nothing needed fixing -- plus the names of any
-  // features that couldn't be resolved at all. Populated alongside
-  // timerDmaCommands by handleAllocateTimersDma, and cleared the same
-  // way.
-  let calculatedAllocationTable = $state([]);
-  let unresolvedFeatures = $state([]);
+  // The feature the pin-conflict warning panel's manual-fix message/
+  // button targets when no swap/move resolves the clash -- whichever
+  // one the user most recently placed, falling back to whichever
+  // unresolved feature comes first if nothing's been touched yet this
+  // session (e.g. the clash was already there on read).
+  let manualFixTarget = $derived(
+    lastChangedOption ?? pinConflictResult.unresolvedFeatures[0] ?? null,
+  );
 
   // Whether there's anything staged to actually send -- resource
   // changes, timer/DMA changes, or both. Drives the "Load Changes"
@@ -484,6 +455,23 @@
   let hasStagedCommands = $derived(
     hasPendingChanges || timerDmaCommands.length > 0,
   );
+
+  // Leading `#` comment lines noting the board's own current
+  // dshot_burst/dshot_bitbang settings (see setHardware) -- purely
+  // informational for now (a `#` line is an inert CLI comment,
+  // harmless to actually send), so whoever's reviewing the staged
+  // commands can see at a glance what DSHOT/bitbang mode is active,
+  // since it affects whether firmware actually uses DMA for a motor
+  // output at all. Omitted individually if dump hardware's own
+  // "# master" section didn't report one, rather than showing "null".
+  let dshotSettingComments = $derived([
+    ...(dshotBurstSetting !== null
+      ? [`# dshot_burst = ${dshotBurstSetting}`]
+      : []),
+    ...(dshotBitbangSetting !== null
+      ? [`# dshot_bitbang = ${dshotBitbangSetting}`]
+      : []),
+  ]);
 
   // What "Load Changes" actually sends, and what the preview panel
   // shows -- the two must always match exactly, so this is the single
@@ -494,6 +482,7 @@
   // `resource` command, since a pin's final timer options can depend
   // on which feature ends up on it.
   let commandsToSend = $derived([
+    ...dshotSettingComments,
     ...pendingCommands,
     ...timerDmaCommands,
     "save",
@@ -548,6 +537,8 @@
    * @param {?string} mcu
    * @param {Set<string>} [reservedDma] - See remap_fc.js's #reservedDmaStreams.
    * @param {Set<string>} [reservedTmr] - See remap_fc.js's #reservedTimers.
+   * @param {?string} [dshotBurst] - See remap_fc.js's #dshotBurst.
+   * @param {?string} [dshotBitbang] - See remap_fc.js's #dshotBitbang.
    */
   export function setHardware(
     current,
@@ -555,6 +546,8 @@
     mcu,
     reservedDma = new Set(),
     reservedTmr = new Set(),
+    dshotBurst = null,
+    dshotBitbang = null,
   ) {
     workingCurrent = { ...current };
     originalCurrent = { ...current };
@@ -562,6 +555,8 @@
     mcuType = mcu;
     reservedDmaStreams = reservedDma;
     reservedTimers = reservedTmr;
+    dshotBurstSetting = dshotBurst;
+    dshotBitbangSetting = dshotBitbang;
     hasRead = true;
 
     const occupantOf = (pin) =>
@@ -602,12 +597,37 @@
    * Doesn't attempt to re-read the FC itself -- a "save" reboots it,
    * so nothing at that point can safely wait for a fresh dump; the
    * table simply keeps showing what was just staged and sent.
+   *
+   * Also writes reconciled's own just-applied timer/af and dma index
+   * into workingCurrent for every feature it resolved (never one still
+   * in reconciled.unresolved -- that one's commands were withheld, not
+   * sent, so its working state should stay exactly as it was). Without
+   * this, workingCurrent's entries would carry no timer/dma of their
+   * own forever (nothing else ever sets them -- a resource pick only
+   * ever sets a pin, see handleCurrentOptionChange), so the very next
+   * reactive pass would see the same "no timer chosen yet" gap it just
+   * fixed and immediately propose reallocating and resending the exact
+   * same commands again.
    */
   export function markApplied() {
-    originalCurrent = { ...workingCurrent };
-    timerDmaCommands = [];
-    calculatedAllocationTable = [];
-    unresolvedFeatures = [];
+    const next = { ...workingCurrent };
+    for (const result of reconciled.allocation) {
+      if (reconciled.unresolved.includes(result.feature)) continue;
+      const entry = next[result.feature];
+      if (!entry) continue;
+
+      next[result.feature] = {
+        ...entry,
+        timer: result.chosen?.af,
+        dma:
+          result.dma?.selectedDMAIndex >= 0
+            ? String(result.dma.selectedDMAIndex)
+            : undefined,
+      };
+    }
+
+    workingCurrent = next;
+    originalCurrent = { ...next };
   }
 
   export function reset() {
@@ -619,14 +639,13 @@
     defaultHardware = {};
     reservedDmaStreams = new Set();
     reservedTimers = new Set();
+    dshotBurstSetting = null;
+    dshotBitbangSetting = null;
     visibleOptions = [];
     unsetOptions = [];
     selectedAddOption = "";
     addMenuOpen = false;
     lastChangedOption = null;
-    timerDmaCommands = [];
-    calculatedAllocationTable = [];
-    unresolvedFeatures = [];
   }
 
   // onClick handles the "Read FC" button: clear any previous run's
@@ -666,25 +685,6 @@
   // saves/reboots to make the change take effect.
   function handleLoadChanges() {
     onLoadChanges?.(commandsToSend);
-  }
-
-  // handleAllocateTimersDma fires when "Allocate Timers/DMA" is
-  // pressed: checks the working state's final feature/pin layout for a
-  // timer or DMA clash and, only if one exists, reallocates everything
-  // and stages the resulting `timer`/`dma pin` commands into the same
-  // preview/"Load Changes" flow the resource commands use -- or clears
-  // any previously staged ones back out if nothing needs fixing now.
-  function handleAllocateTimersDma() {
-    const result = reconcileTimersAndDma(
-      workingCurrent,
-      mcuType,
-      mcuAllData,
-      reservedDmaStreams,
-      reservedTimers,
-    );
-    timerDmaCommands = result.commands;
-    calculatedAllocationTable = result.calculatedTable;
-    unresolvedFeatures = result.unresolved;
   }
 
   // handleCurrentOptionChange fires when a row's "Current Option"
@@ -737,6 +737,41 @@
 
     selectedSuggestionIndex = "0";
   }
+
+  // handleResetToSetOption fires when the pin-conflict warning panel's
+  // manual-fix button is pressed -- shown instead of a suggestion
+  // picker when no swap/move resolves the clash (see
+  // pinConflictResult/manualFixTarget). Clears manualFixTarget's pin
+  // and marks its *row* -- deliberately never manualFixTarget itself
+  // -- as unset, so it shows "Set Option" rather than "None". "None"
+  // would risk the exact bug the old "clear" suggestion type had (see
+  // pin_conflict_suggestions.js's own file comment): a feature with no
+  // row of its own, once cleared, has no dropdown left to ever
+  // un-flag it through again, permanently blacklisting it from
+  // claimedOptions. The row always has one (it's a fixed part of the
+  // table, tied to its own default pin regardless of what currently
+  // occupies it), so marking it unset is always safe to undo --
+  // picking anything in that row's dropdown clears the flag the same
+  // way any other pick does. An explicit button rather than an
+  // automatic revert deliberately -- the clash and its reasons stay
+  // visible until the user actually confirms this, rather than the
+  // panel flashing away before it's even been read.
+  function handleResetToSetOption() {
+    if (!manualFixTarget) return;
+
+    const affectedRow = tableRows.find(
+      (row) => row.currentOption === manualFixTarget,
+    );
+    if (!affectedRow) return;
+
+    const next = { ...workingCurrent };
+    delete next[manualFixTarget];
+    workingCurrent = next;
+    unsetOptions = unsetOptions.includes(affectedRow.option)
+      ? unsetOptions
+      : [...unsetOptions, affectedRow.option];
+    lastChangedOption = null;
+  }
 </script>
 
 {#snippet header()}
@@ -786,25 +821,6 @@
             >{FC.CONFIG.boardDesign}</strong
           >
         </div>
-      {/if}
-
-      <!-- Checks the working state for a timer/DMA clash and stages
-           the fix (see handleAllocateTimersDma) -- deliberately its
-           own button rather than something "Load Changes" does
-           automatically, so reallocation is a step the user asks for
-           and can review, not a silent side effect of applying a
-           resource change. Available any time there's something read
-           to check, independent of whether any resource edit is
-           pending -- a clash can exist in what was actually read off
-           the board, with no table edits involved at all. -->
-      {#if hasRead}
-        <button
-          class="btn allocate-btn"
-          onclick={handleAllocateTimersDma}
-          disabled={running}
-        >
-          {$i18n.t("remapFcAllocateButton")}
-        </button>
       {/if}
     </div>
 
@@ -957,52 +973,28 @@
       <!-- Automatic warning: appears only once the working state's
            current pin assignments have a timer/DMA clash that a full
            reallocation pass genuinely can't resolve on its own (a
-           clash "Allocate Timers/DMA" alone would fix stays silent
-           here -- that button is still the way to apply it). No
-           button press needed to see this, unlike the "Allocate
-           Timers/DMA" results below, which only appear once that
-           button's actually been pressed. suggestedAllocationTable
-           shows what that reallocation attempt produces regardless
-           (including which feature(s) it couldn't resolve), and
-           pinConflictResult.suggestions offers a pin-level fix instead
-           -- swapping/moving one of those features onto a different
-           pin so a fresh reallocation *can* resolve everything -- when
-           one was found; see the suggestion-row below for what shows
-           instead when it wasn't. -->
+           clash a fresh reallocation alone would fix stays silent
+           here -- calculatedAllocationTable below already reflects it
+           automatically, no button press needed for that either
+           anymore). reconciled.clash.reasons explains *why* the
+           current pins clash to begin with; calculatedAllocationTable
+           in the always-visible panel below shows what a reallocation
+           attempt produces regardless (including which feature(s) it
+           still couldn't resolve), so there's no need to repeat that
+           table here too -- and pinConflictResult.suggestions offers a
+           pin-level fix instead -- swapping/moving one of those
+           features onto a different pin so a fresh reallocation *can*
+           resolve everything -- when one was found; see the
+           suggestion-row below for what shows instead when it
+           wasn't. -->
       {#if pinConflictResult.unresolvedFeatures.length}
         <div class="allocation-column allocation-live-warning">
           <h2>{$i18n.t("remapFcAllocationInvalidHeading")}</h2>
           <p class="allocation-warning">
             {$i18n.t("remapFcAllocationInvalidWarning", {
-              reasons: liveClash.reasons.join("; "),
+              reasons: reconciled.clash.reasons.join("; "),
             })}
           </p>
-          <table class="allocation-table">
-            <thead>
-              <tr>
-                <th>{$i18n.t("remapFcAllocationFeature")}</th>
-                <th>{$i18n.t("remapFcAllocationPin")}</th>
-                <th>{$i18n.t("remapFcAllocationTimer")}</th>
-                <th>{$i18n.t("remapFcAllocationDma")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each suggestedAllocationTable as row (row.feature)}
-                <tr class:unresolved={row.unresolved}>
-                  <td>{row.feature}</td>
-                  <td>{row.pin}</td>
-                  <td>
-                    <div>{row.timerCommand}</div>
-                    <div class="allocation-resolved">{row.timer}</div>
-                  </td>
-                  <td class:dma-unmanaged={!row.dmaManaged}>
-                    <div>{row.dmaCommand}</div>
-                    <div class="allocation-resolved">{row.dma}</div>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
 
           <!-- The pin-level fix itself, when the search actually found
                one: a single suggestion shows as plain text, more than
@@ -1043,21 +1035,28 @@
           {:else}
             <p class="allocation-warning suggestion-manual-fix">
               {$i18n.t("remapFcSuggestionManualFix", {
-                feature: optionLabel(
-                  lastChangedOption ?? pinConflictResult.unresolvedFeatures[0],
-                ),
+                feature: optionLabel(manualFixTarget),
               })}
             </p>
+            <div class="suggestion-row">
+              <button
+                class="btn accept-suggestion-btn"
+                onclick={handleResetToSetOption}
+              >
+                {$i18n.t("remapFcResetToSetOption")}
+              </button>
+            </div>
           {/if}
         </div>
       {/if}
     </div>
 
-    <!-- Appears once "Allocate Timers/DMA" has actually been run:
-         calculatedAllocationTable -- what a from-scratch allocation
-         pass computes, or the working state's own current timer/DMA
-         unchanged if nothing needed fixing. Always visible once
-         populated; no expand/collapse. -->
+    <!-- Always visible once the FC's been read: calculatedAllocationTable
+         is reconciled's own always-current result -- what a
+         from-scratch allocation pass computes, or the working state's
+         own current timer/DMA unchanged if nothing needed fixing. No
+         expand/collapse, and no button to press to see it -- see
+         reconciled's own comment for why. -->
     {#if calculatedAllocationTable.length}
       {#if unresolvedFeatures.length}
         <p class="allocation-warning">
@@ -1132,11 +1131,6 @@
     border: 1px solid var(--subtleAccent);
     border-radius: 4px;
     color: var(--textColor);
-  }
-
-  .allocate-btn {
-    @extend %button;
-    align-self: flex-start;
   }
 
   // "Allocate Timers/DMA" results: a warning for anything left

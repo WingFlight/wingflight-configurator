@@ -7372,9 +7372,6 @@
     "remapFcPendingCommands": {
         "message": "Pending Commands ({{count}})"
     },
-    "remapFcAllocateButton": {
-        "message": "Allocate Timers/DMA"
-    },
     "remapFcAllocationCalculatedHeading": {
         "message": "Calculated config"
     },
@@ -7382,7 +7379,7 @@
         "message": "Pin selection not valid"
     },
     "remapFcAllocationInvalidWarning": {
-        "message": "The current timer/DMA assignment can't work: {{reasons}}. Reallocating timers/DMA on the current pins alone can't resolve it either -- pick a suggestion below to fix the pin assignment itself."
+        "message": "The current pin assignment can't work: {{reasons}}. Reallocating timers/DMA on the current pins alone can't resolve it either -- pick a suggestion below to fix the pin assignment itself."
     },
     "remapFcAcceptSuggestion": {
         "message": "Accept Suggestion"
@@ -7394,7 +7391,10 @@
         "message": "Move {{feature}} to pin {{targetPin}} (currently unassigned)"
     },
     "remapFcSuggestionManualFix": {
-        "message": "No automatic fix found. Please choose a different pin for {{feature}}."
+        "message": "No automatic fix found for {{feature}}. Reset it to unassigned and choose a different pin."
+    },
+    "remapFcResetToSetOption": {
+        "message": "Reset to Set Option"
     },
     "remapFcAllocationUnresolved": {
         "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."

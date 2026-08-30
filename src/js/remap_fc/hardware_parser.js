@@ -107,6 +107,29 @@ export function parseMcuType(dumpText) {
   return null;
 }
 
+// Matches a `dump hardware` "# master" line for a `set <NAME> = <VALUE>`
+// setting, e.g. "set dshot_burst = OFF".
+function parseSetValue(dumpText, settingName) {
+  const re = new RegExp(`^set\\s+${settingName}\\s*=\\s*(\\S+)`, "im");
+  return dumpText.match(re)?.[1] ?? null;
+}
+
+/**
+ * Parses the current dshot_burst/dshot_bitbang settings out of a
+ * `dump hardware` CLI command's output -- both are part of its own
+ * "# master" section alongside the other hardware-level settings
+ * (sensor bus types, ADC, battery monitoring), not something this
+ * tool needs a separate CLI query for.
+ * @param {string} dumpText
+ * @returns {{dshotBurst: ?string, dshotBitbang: ?string}}
+ */
+export function parseDshotSettings(dumpText) {
+  return {
+    dshotBurst: parseSetValue(dumpText, "dshot_burst"),
+    dshotBitbang: parseSetValue(dumpText, "dshot_bitbang"),
+  };
+}
+
 /**
  * Parses the text output of a `dump hardware` CLI command into a
  * HardwareMap of configured resources, each enriched with its pin's
