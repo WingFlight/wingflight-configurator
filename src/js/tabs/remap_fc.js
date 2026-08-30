@@ -42,7 +42,7 @@ class RemapFcTab {
 
   // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
   // the first line of the current hardware dump. Matches the top-level
-  // keys of STM32_timers.json/STM32_DMA.json.
+  // keys of MCU-all.json.
   /** @type {?string} */
   #mcuType = null;
 

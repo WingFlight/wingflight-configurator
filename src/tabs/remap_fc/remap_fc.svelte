@@ -70,7 +70,7 @@
   let hasRead = $state(false);
   // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
   // the current hardware dump. Matches the top-level keys of
-  // STM32_timers.json/STM32_DMA.json.
+  // MCU-all.json.
   let mcuType = $state(null);
   // workingCurrent is a local, editable copy of the current hardware
   // map: it starts as whatever was read from the FC, and is mutated
