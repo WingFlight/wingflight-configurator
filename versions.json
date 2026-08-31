@@ -48,6 +48,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-bus-servo-clone-pwm",
+      "path": "./feature-bus-servo-clone-pwm/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     }
