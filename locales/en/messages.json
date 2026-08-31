@@ -3343,6 +3343,12 @@
     "servoEnableOverrideText": {
         "message": " <i>Servo override</i> forces the servos to a arbitrary positions for setup purposes. The override values are not saved, and will be reset after a reboot."
     },
+    "servoBusCloneLabel": {
+        "message": "<strong>Clone PWM outputs to bus servos</strong>"
+    },
+    "servoBusCloneText": {
+        "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
+    },
     "servoOverrideEnable": {
         "message": "Enable"
     },

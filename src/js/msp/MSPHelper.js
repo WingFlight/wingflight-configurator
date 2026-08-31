@@ -842,6 +842,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
+                FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
                 break;
             }
 
@@ -1902,6 +1903,7 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
+            buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
             break;
         }
 
