@@ -180,6 +180,7 @@
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
     await MSP.promise(MSPCodes.MSP_RC);
+    await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
@@ -226,6 +227,17 @@
       FC.SERVO_OVERRIDE[servo.mspIndex] = checked ? 0 : OVERRIDE_OFF;
       mspHelper.sendServoOverride(servo.mspIndex);
     }
+  }
+
+  // Lives on FC.MIXER_CONFIG (shared with the Mixer tab) rather than
+  // FC.SERVO_CONFIG, so -- like the Mixer tab's own THRUST_VECTOR feature
+  // flag -- it's committed immediately instead of being staged into this
+  // tab's dirty/Save cycle.
+  async function onToggleBusClone(checked) {
+    FC.MIXER_CONFIG.bus_servo_clone_pwm = checked ? 1 : 0;
+    await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
+    GUI.log($i18n.t("eepromSaved"));
   }
 
   function onClickHelp() {
@@ -310,6 +322,21 @@
 
   {#if busActive}
     <Section label="servoConfigurationBus">
+      <div class="override-toggle">
+        <Switch
+          id="servo-bus-clone-enable"
+          bind:checked={
+            () => FC.MIXER_CONFIG.bus_servo_clone_pwm === 1, onToggleBusClone
+          }
+        />
+        <label for="servo-bus-clone-enable">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <span>{@html $i18n.t("servoBusCloneLabel")}</span>
+        </label>
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
+      </div>
+
       <div class="table-scroll">
         <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
       </div>

@@ -197,6 +197,7 @@ class FlightController {
 
     this.MIXER_CONFIG = {
       model_type:                 0,
+      bus_servo_clone_pwm:        1,
     };
 
     this.MIXER_INPUTS =             [];
