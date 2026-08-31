@@ -802,9 +802,6 @@
     "rxInputBackupStatusActiveBackup": {
         "message": "Active Source: Backup RX"
     },
-    "rxInputBackupStatusEmpty": {
-        "message": "No channel data yet -- check the satellite is bound and wired to this port."
-    },
     "receiverBackupRxProvider": {
         "message": "Protocol"
     },
@@ -2723,12 +2720,6 @@
     },
     "receiverButtonSticks": {
         "message": "Control sticks"
-    },
-    "receiverBackupRxViewDetails": {
-        "message": "View Details"
-    },
-    "receiverBackupRxHide": {
-        "message": "Hide"
     },
     "receiverModelPreview": {
         "message": "Preview"
