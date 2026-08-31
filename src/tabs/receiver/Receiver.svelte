@@ -169,7 +169,7 @@
 
   // Keep in sync with wingflight-firmware's cli/settings.c
   // lookupTableRxInputBackupProvider[] (same order) - only SBUS exists today.
-  const RX_INPUT_BACKUP_PROVIDER_NAMES = ["SBUS"];
+  const RX_INPUT_BACKUP_PROVIDER_NAMES = ["SBUS", "FBUS", "FPORT", "FPORT2"];
 
   let backupRxExpanded = $state(false);
 
