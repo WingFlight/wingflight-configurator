@@ -575,6 +575,22 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG: {
+                data.readU8(); // payload version, unused for now
+                const provider = data.readU8();
+                const inverted = data.readU8() !== 0;
+                const halfDuplex = data.readU8() !== 0;
+                const pinSwap = data.readU8() !== 0;
+
+                FC.RX_INPUT_BACKUP_CONFIG = { provider, inverted, halfDuplex, pinSwap };
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: {
+                console.log('Backup RX config saved');
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();
@@ -2081,6 +2097,15 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
             }
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: {
+            buffer.push8(1); // payload version
+            buffer.push8(FC.RX_INPUT_BACKUP_CONFIG.provider)
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.inverted))
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.halfDuplex))
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.pinSwap));
             break;
         }
 

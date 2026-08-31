@@ -70,6 +70,7 @@ class FlightController {
   RXFAIL_CONFIG = $state();
   RX_CHANNELS = $state();
   RX_CONFIG = $state();
+  RX_INPUT_BACKUP_CONFIG = $state();
   RX_INPUT_BACKUP_STATUS = $state();
   SDCARD = $state();
   SENSOR_ALIGNMENT = $state();
@@ -445,6 +446,13 @@ class FlightController {
       sectors:                    0,
       totalSize:                  0,
       usedSize:                   0,
+    };
+
+    this.RX_INPUT_BACKUP_CONFIG = {
+      provider:                   0,
+      inverted:                   false,
+      halfDuplex:                 false,
+      pinSwap:                    false,
     };
 
     this.RX_INPUT_BACKUP_STATUS = {

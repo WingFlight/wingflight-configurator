@@ -13,6 +13,10 @@
   import ModelPreview from "./ModelPreview.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import SubSection from "@/components/SubSection.svelte";
+  import Field from "@/components/Field.svelte";
+  import Switch from "@/components/Switch.svelte";
+  import Tooltip from "@/components/Tooltip.svelte";
   import Meter from "@/components/Meter.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
@@ -38,6 +42,7 @@
       RC_CONFIG: FC.RC_CONFIG,
       RX_CONFIG: FC.RX_CONFIG,
       TELEMETRY_CONFIG: FC.TELEMETRY_CONFIG,
+      RX_INPUT_BACKUP_CONFIG: FC.RX_INPUT_BACKUP_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
   }
@@ -72,6 +77,7 @@
     }, 25);
 
     if (hasBackupRxPort) {
+      await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG);
       await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
       // 200ms rather than the 25ms main-channel poll above - this only needs to
       // look live when the box below is expanded, not drive a hot loop always.
@@ -79,6 +85,12 @@
         MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
       }, 200);
     }
+
+    // initialState is snapshotted above before this block runs, so re-snapshot
+    // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
+    // isDirty()/onRevert() would compare against the pre-fetch default values
+    // for a tab that hadn't even loaded its own config yet.
+    initialState = snapshotState();
   });
 
   onDestroy(() => {
@@ -97,6 +109,9 @@
     await save(MSPCodes.MSP_SET_RSSI_CONFIG);
     await save(MSPCodes.MSP_SET_TELEMETRY_CONFIG);
     await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
+    if (hasBackupRxPort) {
+      await save(MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG);
+    }
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -111,6 +126,10 @@
     Object.assign(FC.RC_CONFIG, initialState.RC_CONFIG);
     Object.assign(FC.RX_CONFIG, initialState.RX_CONFIG);
     Object.assign(FC.TELEMETRY_CONFIG, initialState.TELEMETRY_CONFIG);
+    Object.assign(
+      FC.RX_INPUT_BACKUP_CONFIG,
+      initialState.RX_INPUT_BACKUP_CONFIG,
+    );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
   }
 
@@ -424,6 +443,47 @@
                 : $i18n.t("receiverBackupRxViewDetails")}
             ></button>
           </div>
+          <SubSection>
+            <Field id="backup-rx-provider" label="receiverBackupRxProvider">
+              <select
+                id="backup-rx-provider"
+                bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
+              >
+                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
+                  <option value={i}>{name}</option>
+                {/each}
+              </select>
+            </Field>
+          </SubSection>
+          <SubSection label="receiverBackupRxSignaling">
+            <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxInvertedHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-inverted"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
+              />
+            </Field>
+            <Field id="backup-rx-halfduplex" label="receiverBackupRxHalfDuplex">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxHalfDuplexHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-halfduplex"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
+              />
+            </Field>
+            <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxPinSwapHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-pinswap"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
+              />
+            </Field>
+          </SubSection>
           {#if backupRxExpanded}
             <div class="backup-rx-details" transition:slide|global>
               {#if backupRxStatus.channels.length === 0}

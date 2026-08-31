@@ -802,6 +802,30 @@
     "rxInputBackupStatusEmpty": {
         "message": "No channel data yet -- check the satellite is bound and wired to this port."
     },
+    "receiverBackupRxProvider": {
+        "message": "Protocol"
+    },
+    "receiverBackupRxSignaling": {
+        "message": "Signaling"
+    },
+    "receiverBackupRxInverted": {
+        "message": "Inverted"
+    },
+    "receiverBackupRxInvertedHelp": {
+        "message": "Off applies whichever electrical inversion the selected protocol normally needs (SBUS is naturally inverted; FBUS, FPort, and FPort2 are not). Turn on only if this wire is inverted relative to that protocol's normal wiring, e.g. via an external inverter."
+    },
+    "receiverBackupRxHalfDuplex": {
+        "message": "Half-Duplex"
+    },
+    "receiverBackupRxHalfDuplexHelp": {
+        "message": "Enable if only one signal wire is connected for this receiver (single-wire wiring). Safe even though this port never transmits."
+    },
+    "receiverBackupRxPinSwap": {
+        "message": "Pin Swap"
+    },
+    "receiverBackupRxPinSwapHelp": {
+        "message": "Swaps the Rx and Tx pins on this port."
+    },
     "logActionHide": {
         "message": "Hide Log"
     },
