@@ -23,6 +23,11 @@
   let loading = $state(true);
   let needReboot = $state(false);
   let initialConfig = $state(null);
+  // bus_servo_clone_pwm lives on FC.MIXER_CONFIG, not FC.SERVO_CONFIG, so it
+  // falls outside the diff below -- tracked separately so it participates in
+  // the same dirty/Save/Revert cycle as everything else on this tab instead
+  // of silently self-committing with no toolbar feedback.
+  let initialBusClonePwm = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -39,7 +44,12 @@
     return diff(initialConfig, $state.snapshot(FC.SERVO_CONFIG));
   });
 
-  let dirty = $derived(changes.length > 0);
+  let busCloneDirty = $derived(
+    initialBusClonePwm !== null &&
+      FC.MIXER_CONFIG.bus_servo_clone_pwm !== initialBusClonePwm,
+  );
+
+  let dirty = $derived(changes.length > 0 || busCloneDirty);
 
   let hasFbusOrSbus = $derived(
     FC.SERIAL_CONFIG.ports.some(
@@ -188,6 +198,7 @@
     await MSP.promise(MSPCodes.MSP_SERVO);
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
+    initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     overrideEnabled = allServos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -229,15 +240,13 @@
     }
   }
 
-  // Lives on FC.MIXER_CONFIG (shared with the Mixer tab) rather than
-  // FC.SERVO_CONFIG, so -- like the Mixer tab's own THRUST_VECTOR feature
-  // flag -- it's committed immediately instead of being staged into this
-  // tab's dirty/Save cycle.
-  async function onToggleBusClone(checked) {
+  // Mirrors onFieldChange: push the new value to the FC live (so it's
+  // immediately testable) but don't touch EEPROM here -- that only happens
+  // via the shared onSave() below, once this shows up as a dirty change on
+  // the toolbar like every other field on this tab.
+  function onToggleBusClone(checked) {
     FC.MIXER_CONFIG.bus_servo_clone_pwm = checked ? 1 : 0;
-    await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
-    await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
-    GUI.log($i18n.t("eepromSaved"));
+    mspHelper.sendMixerConfig();
   }
 
   function onClickHelp() {
@@ -246,6 +255,8 @@
 
   export async function onSave() {
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
+    // Already pushed live by onToggleBusClone when changed -- EEPROM_WRITE
+    // below persists it along with everything else, no need to resend.
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
@@ -257,11 +268,18 @@
 
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
+    initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
   }
 
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
+
+    if (busCloneDirty) {
+      FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
+      await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    }
+
     needReboot = false;
   }
 
