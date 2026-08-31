@@ -387,6 +387,51 @@
   <div class="content">
     <div>
       <ReceiverType {rxProtoIndex} {hasSerialRxPort} {setRxProto} />
+      {#if hasBackupRxPort}
+        <Section label="tabRxInputBackupConfig">
+          <SubSection>
+            <Field id="backup-rx-provider" label="receiverBackupRxProvider">
+              <select
+                id="backup-rx-provider"
+                bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
+              >
+                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
+                  <option value={i}>{name}</option>
+                {/each}
+              </select>
+            </Field>
+          </SubSection>
+          <SubSection label="receiverBackupRxSignaling">
+            <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxInvertedHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-inverted"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
+              />
+            </Field>
+            <Field id="backup-rx-halfduplex" label="receiverBackupRxHalfDuplex">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxHalfDuplexHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-halfduplex"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
+              />
+            </Field>
+            <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
+              {#snippet tooltip()}
+                <Tooltip help="receiverBackupRxPinSwapHelp" />
+              {/snippet}
+              <Switch
+                id="backup-rx-pinswap"
+                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
+              />
+            </Field>
+          </SubSection>
+        </Section>
+      {/if}
       <ChannelRange />
       {#if telemetry}
         <div transition:slide>
@@ -443,47 +488,6 @@
                 : $i18n.t("receiverBackupRxViewDetails")}
             ></button>
           </div>
-          <SubSection>
-            <Field id="backup-rx-provider" label="receiverBackupRxProvider">
-              <select
-                id="backup-rx-provider"
-                bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
-              >
-                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
-                  <option value={i}>{name}</option>
-                {/each}
-              </select>
-            </Field>
-          </SubSection>
-          <SubSection label="receiverBackupRxSignaling">
-            <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxInvertedHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-inverted"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
-              />
-            </Field>
-            <Field id="backup-rx-halfduplex" label="receiverBackupRxHalfDuplex">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxHalfDuplexHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-halfduplex"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
-              />
-            </Field>
-            <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxPinSwapHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-pinswap"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
-              />
-            </Field>
-          </SubSection>
           {#if backupRxExpanded}
             <div class="backup-rx-details" transition:slide|global>
               {#if backupRxStatus.channels.length === 0}
