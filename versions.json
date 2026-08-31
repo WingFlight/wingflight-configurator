@@ -48,6 +48,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-bus-clone",
+      "path": "./feature-bus-clone/"
+    },
+    {
+      "type": "branch",
       "name": "feature-bus-servo-clone-pwm",
       "path": "./feature-bus-servo-clone-pwm/"
     },
