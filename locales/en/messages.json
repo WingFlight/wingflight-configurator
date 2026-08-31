@@ -742,7 +742,7 @@
     "tabFbusSensors": {
         "message": "FBUS/S.Port Sensors"
     },
-    "tabSbusInputStatus": {
+    "tabRxInputBackupStatus": {
         "message": "Serial Rx (Backup)"
     },
     "fbusSensorsDescription": {
@@ -784,22 +784,22 @@
     "fbusSensorsColPackets": {
         "message": "Packets"
     },
-    "sbusInputStatusDescription": {
-        "message": "Live status for the secondary SBUS receiver assigned as a fallback if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
+    "rxInputBackupStatusDescription": {
+        "message": "Live status for the secondary RX input assigned as a backup if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
     },
-    "sbusInputStatusLinkUp": {
+    "rxInputBackupStatusLinkUp": {
         "message": "Link: Up"
     },
-    "sbusInputStatusLinkDown": {
+    "rxInputBackupStatusLinkDown": {
         "message": "Link: Down"
     },
-    "sbusInputStatusActiveMain": {
+    "rxInputBackupStatusActiveMain": {
         "message": "Active Source: Main RX"
     },
-    "sbusInputStatusActiveFallback": {
-        "message": "Active Source: SBUS-In"
+    "rxInputBackupStatusActiveBackup": {
+        "message": "Active Source: Backup RX"
     },
-    "sbusInputStatusEmpty": {
+    "rxInputBackupStatusEmpty": {
         "message": "No channel data yet -- check the satellite is bound and wired to this port."
     },
     "logActionHide": {
@@ -1997,8 +1997,8 @@
     "portsFunction_SRXL2_ESC": {
         "message": "SRXL2 ESC"
     },
-    "portsFunction_RX_SBUS_INPUT": {
-        "message": "Serial Rx (Backup, SBUS)"
+    "portsFunction_RX_INPUT_BACKUP": {
+        "message": "Serial Rx (Backup)"
     },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"

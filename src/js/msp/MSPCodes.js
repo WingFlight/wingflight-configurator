@@ -226,7 +226,7 @@ export const MSPCodes = {
     MSP2_WING_SET_FBUS_MASTER_CONFIG: 0x5F0A,
     MSP2_WING_TV_PID_CONFIG:          0x5F0B,
     MSP2_WING_SET_TV_PID_CONFIG:      0x5F0C,
-    MSP2_WING_SBUS_INPUT_STATUS:      0x5F0D,
+    MSP2_WING_RX_INPUT_BACKUP_STATUS: 0x5F0D,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
