@@ -53,6 +53,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-backup-fbus-fport",
+      "path": "./feature-backup-fbus-fport/"
+    },
+    {
+      "type": "branch",
       "name": "feature-bus-clone",
       "path": "./feature-bus-clone/"
     },
