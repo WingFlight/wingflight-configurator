@@ -10,6 +10,40 @@
 
 import { buildResourceCommand } from "./hardware_parser.js";
 
+// Rotorflight's own hard limits on how many motor/servo outputs it can
+// actually drive, regardless of how many a target's own hardware
+// defines (see feature_classifier.js's MOTOR_RE/SERVO_RE, which
+// already cap classification the same way). A target shared with
+// Betaflight commonly defines more than this -- up to 8 motors,
+// sometimes 12 servos -- but a live `dump hardware` from Rotorflight
+// itself never reports beyond these, since its own runtime was never
+// compiled to support more. wingflight_target_source.js is the one
+// place that can still surface a richer default set than that (from
+// the target's own definition on GitHub, for a board with no
+// Rotorflight-specific build of its own) -- see isOverCapacity below
+// for how those extra rows are handled once they do show up.
+export const MAX_VALID_MOTORS = 4;
+export const MAX_VALID_SERVOS = 8;
+
+const MOTOR_OR_SERVO_INDEX_RE = /^(M|S)(\d+)$/;
+
+// Whether optionKey names a motor/servo index beyond what Rotorflight
+// can actually use -- e.g. "M5" on an 8-motor Betaflight-shared
+// target. Exported so remap_fc.svelte can force these rows into the
+// "Set Option" placeholder state as soon as they're read (see
+// setHardware), rather than ever presenting one as if it were a real,
+// usable current option -- TABLE_OPTION_KEYS/getRowSelectableOptions
+// already exclude them from ever being *picked* as a value, being
+// capped at the valid range themselves, so this only needs checking
+// wherever a row's own identity (not its Current Option) is involved.
+export function isOverCapacity(optionKey) {
+  const match = optionKey.match(MOTOR_OR_SERVO_INDEX_RE);
+  if (!match) return false;
+  const [, prefix, indexStr] = match;
+  const index = Number(indexStr);
+  return prefix === "M" ? index > MAX_VALID_MOTORS : index > MAX_VALID_SERVOS;
+}
+
 /**
  * @typedef {Object} RemapRow
  * @property {string} option - The resource key, e.g. "M1".
@@ -55,19 +89,32 @@ export const TABLE_OPTION_KEYS = [
 // Exported so callers can sort/filter an arbitrary set of option keys
 // back into this order, and so "+ Add" can offer the complete list.
 //
-// RX/TX go up to 12 and SDA/SCL up to 4 to match the CLI's own
-// resource catalog (`resource SERIAL_RX 12 ...`, `resource I2C_SDA 4
-// ...`), even though only a handful of MCUs — none currently supported
-// by Rotorflight/Wingflight — actually wire that many UART/I2C
-// instances. getAddableOptions already gates every option on
-// `option in defaultHardware`, so this stays invisible for every board
-// that doesn't have a given instance; it's just here so a board that
-// does isn't silently missing pins this tool can't see or manage.
+// M5-M12/S9-S12 go beyond MAX_VALID_MOTORS/MAX_VALID_SERVOS — see
+// isOverCapacity's own comment for why a board can still report them
+// (via wingflight_target_source.js) despite Rotorflight itself never
+// being able to use them. RX/TX go up to 12 and SDA/SCL up to 4 to
+// match the CLI's own resource catalog (`resource SERIAL_RX 12 ...`,
+// `resource I2C_SDA 4 ...`), even though only a handful of MCUs — none
+// currently supported by Rotorflight/Wingflight — actually wire that
+// many UART/I2C instances. Every one of these stays invisible for a
+// board that doesn't actually report it — getAddableOptions gates on
+// `option in defaultHardware`, and setHardware's own visibleOptions
+// computation gates the rest the same way — so this is just here so a
+// board that *does* report one isn't silently missing a pin this tool
+// can't see or manage.
 export const OPTION_KEYS = [
   "M1",
   "M2",
   "M3",
   "M4",
+  "M5",
+  "M6",
+  "M7",
+  "M8",
+  "M9",
+  "M10",
+  "M11",
+  "M12",
   "S1",
   "S2",
   "S3",
@@ -76,6 +123,10 @@ export const OPTION_KEYS = [
   "S6",
   "S7",
   "S8",
+  "S9",
+  "S10",
+  "S11",
+  "S12",
   "Freq1",
   "Freq2",
   "Freq3",

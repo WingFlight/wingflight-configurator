@@ -8,6 +8,7 @@
 
 import HeadlessCliEngine from "@/js/headless_cli_engine.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+import { FC } from "@/js/fc.svelte.js";
 import { mount, unmount } from "svelte";
 import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import {
@@ -20,6 +21,7 @@ import {
   parseReservedDmaStreams,
   parseReservedTimers,
 } from "@/js/remap_fc/timer_dma_lookup.js";
+import { fetchWingflightTargetDefaults } from "@/js/remap_fc/wingflight_target_source.js";
 
 const IDLE_THRESHOLD_MS = 500;
 
@@ -288,6 +290,26 @@ class RemapFcTab {
       console.log("remap_fc: defaultHardware", this.#defaultHardware);
       console.log("remap_fc: mcuType", this.#mcuType);
 
+      // A board with no Rotorflight-specific build of its own (see
+      // remap_fc.svelte's boardDiagramSrc for the same check) only
+      // ever reports resources up to whatever Rotorflight's own
+      // runtime was compiled to support -- kick off a lookup of the
+      // richer default set its own shared Betaflight target actually
+      // defines (see wingflight_target_source.js), in parallel with
+      // the CLI restore sequence below since it's an unrelated
+      // network fetch, not something to make the user wait on twice.
+      // Purely for display -- this.#defaultHardware itself, used
+      // below to compute what actually gets sent back to the FC,
+      // stays exactly what was really read regardless of how this
+      // resolves.
+      const targetDefaultsPromise =
+        !FC.CONFIG.boardDesign || FC.CONFIG.boardDesign === "BTFL"
+          ? fetchWingflightTargetDefaults(
+              FC.CONFIG.manufacturerId,
+              FC.CONFIG.boardName,
+            )
+          : Promise.resolve(null);
+
       // `defaults nosave` doesn't just preview the factory defaults --
       // it actually resets the flight controller's live resource/
       // timer/DMA state to them in RAM (that's the only way the CLI
@@ -322,9 +344,11 @@ class RemapFcTab {
         if (this.#tornDown) return;
       }
 
+      const targetDefaults = await targetDefaultsPromise;
+
       this.#svelteComponent?.setHardware(
         this.#currentHardware,
-        this.#defaultHardware,
+        targetDefaults ?? this.#defaultHardware,
         this.#mcuType,
         this.#reservedDmaStreams,
         this.#reservedTimers,

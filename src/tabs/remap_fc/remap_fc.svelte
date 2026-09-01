@@ -23,6 +23,7 @@
     buildRowsForOptions,
     getAddableOptions,
     getRowSelectableOptions,
+    isOverCapacity,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
   import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
@@ -618,6 +619,16 @@
       const defaultPin = defaultHw[option]?.pin;
       if (defaultPin === undefined) return false;
 
+      // Beyond what Rotorflight can actually use (e.g. "M5" on an
+      // 8-motor target) -- only ever possible via
+      // wingflight_target_source.js's richer default set, never from
+      // the FC's own dump directly. Always show it once the default
+      // set claims it, regardless of what (if anything) currently
+      // occupies that pin, so a pin the user needs to explicitly deal
+      // with can never go silently missing (see the unsetOptions
+      // assignment below for forcing its placeholder state).
+      if (isOverCapacity(option)) return true;
+
       if (
         !TABLE_OPTION_KEYS.includes(option) &&
         namedConnectorPins.has(defaultPin)
@@ -633,9 +644,15 @@
       );
     });
 
-    // Rows freshly read from the FC are never "unset" — only ones
-    // added afterwards via "+ Add" start in that placeholder state.
-    unsetOptions = [];
+    // Rows freshly read from the FC are never "unset" — except ones
+    // beyond Rotorflight's actual motor/servo capacity, which always
+    // start "Set Option" regardless of what's nominally assigned to
+    // their default pin right now (see isOverCapacity), since
+    // Rotorflight can never actually use that value as a real current
+    // option -- the row exists purely so the user can explicitly
+    // reassign or free that pin, never left looking like a settled,
+    // working assignment.
+    unsetOptions = visibleOptions.filter((option) => isOverCapacity(option));
   }
 
   /**
