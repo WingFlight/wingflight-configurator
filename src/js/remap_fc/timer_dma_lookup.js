@@ -61,17 +61,45 @@ function parseDmaChoices(rawDma) {
   });
 }
 
+// Some flight controller firmware builds report a specific silicon
+// variant in `dump hardware`'s own version banner (e.g. "STM32F405")
+// rather than the shared family name MCU-all.json actually keys its
+// pin data under (e.g. "STM32F40X" -- ST's own reference manual
+// groups F405/F407/F415/F417 as one family sharing an identical
+// peripheral/AF layout, so Betaflight/Rotorflight's resource tables
+// are built once per family, not once per exact chip). Confirmed
+// against a MATEKF405TE's own `dump hardware` -- its reported "timer
+// C09 AF3" (TIM8 CH4) matches MCU-all.json's STM32F40X entry for C09
+// exactly. Add an entry here whenever a new board's dump reports a
+// raw MCU string MCU-all.json has no exact key for, once its correct
+// family has been confirmed the same way against MCU-all.json's own
+// pin data for that board -- never guessed ahead of an actual report.
+const MCU_ALIASES = {
+  STM32F405: "STM32F40X",
+};
+
+// Resolves a raw reported MCU string to whichever MCU-all.json key
+// actually has data for it -- the exact string first (true for every
+// MCU family MCU-all.json was generated with a matching key for, e.g.
+// "STM32F7X2"), falling back to MCU_ALIASES for a known family alias.
+function resolveMcuKey(mcuAllData, mcuType) {
+  if (mcuAllData?.[mcuType]) return mcuType;
+  return MCU_ALIASES[mcuType] ?? mcuType;
+}
+
 /**
  * Returns every timer option MCU-all.json reports for the given pin
  * on the given MCU, normalised for the allocators. Empty if the MCU
  * or pin isn't known, or the pin has no timer options at all.
  * @param {Object} mcuAllData - The parsed contents of MCU-all.json.
- * @param {?string} mcuType - e.g. "STM32F7X2".
+ * @param {?string} mcuType - e.g. "STM32F7X2" -- see resolveMcuKey for
+ *   when this isn't already one of MCU-all.json's own top-level keys.
  * @param {string} pin - e.g. "A02".
  * @returns {TimerOption[]}
  */
 export function getPinTimerOptions(mcuAllData, mcuType, pin) {
-  const entries = mcuAllData?.[mcuType]?.pins?.[pin]?.timers ?? [];
+  const resolvedMcu = resolveMcuKey(mcuAllData, mcuType);
+  const entries = mcuAllData?.[resolvedMcu]?.pins?.[pin]?.timers ?? [];
 
   return entries.map((entry) => ({
     timer: entry.timer,

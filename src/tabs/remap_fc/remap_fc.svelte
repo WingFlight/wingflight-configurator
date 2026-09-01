@@ -174,6 +174,21 @@
     ),
   );
 
+  // The cased diagram (see below) reads as "this specific board is
+  // documented" -- only warranted once boardDesign actually names a
+  // real reference design (e.g. "F7C5"). "BTFL" is what a board
+  // running stock Betaflight (rather than a Rotorflight reference
+  // design) reports here, and an empty string is what FC.CONFIG
+  // starts as before any value has actually arrived -- neither is a
+  // real reference design, so both fall back to the bare-PCB GENERIC
+  // diagram instead, rather than implying a level of board-specific
+  // support that isn't actually there.
+  let boardDiagramSrc = $derived(
+    FC.CONFIG.boardDesign && FC.CONFIG.boardDesign !== "BTFL"
+      ? "/images/remap_fc/CASED_GENERIC.svg"
+      : "/images/remap_fc/GENERIC.svg",
+  );
+
   // Pin -> friendly name (e.g. "ESC", "TAIL", "Port A Rx") from the
   // reference design matching this board's own design family, so the
   // table and "+ Add" can show the board's own silkscreen labelling
@@ -907,8 +922,10 @@
     {/if}
 
     <div class="table-with-diagram">
-      <!-- The generic cased diagram, with the FC's own reported name
-           overlaid on top. Not board-specific artwork -- building a
+      <!-- The generic diagram, with the FC's own reported name
+           overlaid on top -- cased once boardDesign names a real
+           reference design, bare PCB otherwise (see boardDiagramSrc).
+           Not board-specific artwork either way -- building a
            dedicated diagram per manufacturer doesn't scale, so this
            is deliberately generic (see CASED_GENERIC.svg's own file
            comment). -->
@@ -916,11 +933,7 @@
         class="board-diagram-wrap"
         style="width: {diagramSize}px; height: {diagramSize}px;"
       >
-        <img
-          class="board-diagram"
-          src="/images/remap_fc/CASED_GENERIC.svg"
-          alt=""
-        />
+        <img class="board-diagram" src={boardDiagramSrc} alt="" />
         <div class="board-diagram-label">
           {FC.CONFIG.manufacturerId}
           {FC.CONFIG.boardName}
@@ -1485,10 +1498,8 @@
   // The FC's own reported name, overlaid on the generic diagram's
   // shared label zone (see CASED_GENERIC.svg/GENERIC.svg's own file
   // comments for that zone's coordinates -- kept identical between
-  // the two so switching which image sits underneath never moves the
-  // text). Never shown over GENERIC.svg in practice, since there's no
-  // name to show before the FC's been read, but the position is
-  // shared regardless.
+  // the two, and with boardDiagramSrc choosing between them, so
+  // switching which image sits underneath never moves the text).
   .board-diagram-label {
     position: absolute;
     left: 26.6%;
