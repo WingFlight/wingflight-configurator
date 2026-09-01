@@ -99,18 +99,6 @@
   // control -- the gyro's clock/sync signal, etc.
   /** @type {Set<string>} */
   let reservedTimers = $state(new Set());
-  // The board's own current dshot_burst/dshot_bitbang settings, read
-  // once per "Read FC" (see remap_fc.js's #dshotBurst/#dshotBitbang) --
-  // purely informational, shown as CLI comment lines ahead of the
-  // staged commands (see commandsToSend) so they're visible whenever
-  // reviewing what's about to be sent, since they affect whether
-  // firmware actually uses DMA for a motor output at all (see
-  // feature_classifier.js's featureNeedsDma). null before read, or if
-  // dump hardware's own "# master" section didn't report them.
-  /** @type {?string} */
-  let dshotBurstSetting = $state(null);
-  /** @type {?string} */
-  let dshotBitbangSetting = $state(null);
   // The option keys that have a row in the table: seeded from whatever
   // was assigned on read, and grown whenever an option is added via
   // the "+ Add" row. Picking "None" for a row's current option removes
@@ -251,6 +239,15 @@
   // displayName's own result, wherever a *function* is being picked
   // for a port rather than the port itself being named -- see
   // optionLabel/displayName's own comments for the distinction.
+  //
+  // Only ever applies once this board actually matched a documented
+  // reference design (see optionLabel's own referenceLabels check) --
+  // "Motor 2" is displayName's own generic fallback for M2 on *any*
+  // undocumented board (see displayName), not just the reference
+  // design this override was actually written for, so without that
+  // gate every plain Betaflight-target board reading "Motor 2" would
+  // get silently relabelled "ESC 2" too, despite following no
+  // documented usage where that's actually true.
   const DISPLAY_LABEL_OVERRIDES = {
     TAIL: "Servo 4",
     "Motor 2": "ESC 2",
@@ -279,13 +276,20 @@
   // The name to show for an option wherever it appears as a value
   // being *picked* for some port's Current Option -- the dropdown's
   // own selected-value display and its list of choices. Same as
-  // displayName, but with DISPLAY_LABEL_OVERRIDES applied on top,
+  // displayName, but with DISPLAY_LABEL_OVERRIDES applied on top --
+  // and only once this board actually matched a documented reference
+  // design (referenceLabels is {} otherwise, see its own comment) --
   // since a function being assigned to a port reads better by its
   // logical servo/ESC slot than by whichever other connector's name
   // its own default pin happens to share (e.g. picking S4 to drive the
-  // TAIL port reads as "Servo 4", not as "TAIL" a second time).
+  // TAIL port reads as "Servo 4", not as "TAIL" a second time). A
+  // board with no matched reference design has no such documented
+  // usage to read better by, so it always falls back to plain
+  // displayName instead, however that resolves.
   function optionLabel(option) {
-    return DISPLAY_LABEL_OVERRIDES[displayName(option)] || displayName(option);
+    const name = displayName(option);
+    const hasReferenceDesign = Object.keys(referenceLabels).length > 0;
+    return hasReferenceDesign ? (DISPLAY_LABEL_OVERRIDES[name] ?? name) : name;
   }
 
   // Builds the human-readable label for a pin-conflict suggestion (see
@@ -516,22 +520,16 @@
     hasPendingChanges || timerDmaCommands.length > 0,
   );
 
-  // Leading `#` comment lines noting the board's own current
-  // dshot_burst/dshot_bitbang settings (see setHardware) -- purely
-  // informational for now (a `#` line is an inert CLI comment,
-  // harmless to actually send), so whoever's reviewing the staged
-  // commands can see at a glance what DSHOT/bitbang mode is active,
-  // since it affects whether firmware actually uses DMA for a motor
-  // output at all. Omitted individually if dump hardware's own
-  // "# master" section didn't report one, rather than showing "null".
-  let dshotSettingComments = $derived([
-    ...(dshotBurstSetting !== null
-      ? [`# dshot_burst = ${dshotBurstSetting}`]
-      : []),
-    ...(dshotBitbangSetting !== null
-      ? [`# dshot_bitbang = ${dshotBitbangSetting}`]
-      : []),
-  ]);
+  // Every motor output this tool manages is assumed to run plain
+  // DMA-driven DSHOT (see feature_classifier.js's DMA_MANAGED_TYPES/
+  // featureNeedsDma) -- never bitbang, never DSHOT burst mode -- so
+  // these are forced alongside every other staged change, rather than
+  // read from (and only echoed back alongside) whatever the board's
+  // own current config happens to say.
+  const DSHOT_SETTING_COMMANDS = [
+    "set dshot_burst = OFF",
+    "set dshot_bitbang = OFF",
+  ];
 
   // What "Load Changes" actually sends, and what the preview panel
   // shows -- the two must always match exactly, so this is the single
@@ -542,7 +540,7 @@
   // `resource` command, since a pin's final timer options can depend
   // on which feature ends up on it.
   let commandsToSend = $derived([
-    ...dshotSettingComments,
+    ...DSHOT_SETTING_COMMANDS,
     ...pendingCommands,
     ...timerDmaCommands,
     "save",
@@ -597,8 +595,6 @@
    * @param {?string} mcu
    * @param {Set<string>} [reservedDma] - See remap_fc.js's #reservedDmaStreams.
    * @param {Set<string>} [reservedTmr] - See remap_fc.js's #reservedTimers.
-   * @param {?string} [dshotBurst] - See remap_fc.js's #dshotBurst.
-   * @param {?string} [dshotBitbang] - See remap_fc.js's #dshotBitbang.
    */
   export function setHardware(
     current,
@@ -606,8 +602,6 @@
     mcu,
     reservedDma = new Set(),
     reservedTmr = new Set(),
-    dshotBurst = null,
-    dshotBitbang = null,
   ) {
     workingCurrent = { ...current };
     originalCurrent = { ...current };
@@ -615,8 +609,6 @@
     mcuType = mcu;
     reservedDmaStreams = reservedDma;
     reservedTimers = reservedTmr;
-    dshotBurstSetting = dshotBurst;
-    dshotBitbangSetting = dshotBitbang;
     hasRead = true;
 
     const occupantOf = (pin) =>
@@ -695,8 +687,6 @@
     defaultHardware = {};
     reservedDmaStreams = new Set();
     reservedTimers = new Set();
-    dshotBurstSetting = null;
-    dshotBitbangSetting = null;
     visibleOptions = [];
     unsetOptions = [];
     selectedAddOption = "";
@@ -755,8 +745,6 @@
       mcuType,
       reservedDmaStreams,
       reservedTimers,
-      dshotBurstSetting,
-      dshotBitbangSetting,
     );
   }
 
