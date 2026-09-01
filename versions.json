@@ -53,11 +53,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-backup-exbus-crsf",
-      "path": "./feature-backup-exbus-crsf/"
-    },
-    {
-      "type": "branch",
       "name": "feature-backup-ibus-sumd-spektrum",
       "path": "./feature-backup-ibus-sumd-spektrum/"
     },
