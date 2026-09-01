@@ -53,6 +53,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-backup-ibus-sumd-spektrum",
+      "path": "./feature-backup-ibus-sumd-spektrum/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     }
