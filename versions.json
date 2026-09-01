@@ -53,11 +53,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-bus-clone",
-      "path": "./feature-bus-clone/"
-    },
-    {
-      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     }
