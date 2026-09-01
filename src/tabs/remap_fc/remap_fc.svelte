@@ -1580,7 +1580,7 @@
 
     .arrow-cable {
       display: block;
-      width: 38px;
+      width: 57px;
       height: auto;
       opacity: 0.85;
     }
@@ -1602,7 +1602,7 @@
     // regardless of its own current label. :global(), since Select.svelte
     // renders the actual <select> itself, not this file.
     tr:not(.add-row) td:last-child :global(select) {
-      width: 160px;
+      width: 104px;
     }
   }
 
