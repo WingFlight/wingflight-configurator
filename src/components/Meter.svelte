@@ -23,7 +23,7 @@
 
   .meter {
     position: relative;
-    height: 20px;
+    height: 16px;
     border-radius: 2px;
     container-type: size;
     color: var(--color-text);
@@ -52,8 +52,8 @@
 
   .left-label {
     position: absolute;
-    height: 20px;
-    line-height: 20px;
+    height: 16px;
+    line-height: 16px;
     font-weight: 600;
     z-index: 1;
     left: 8px;
@@ -61,8 +61,8 @@
 
   .right-label {
     position: absolute;
-    height: 20px;
-    line-height: 20px;
+    height: 16px;
+    line-height: 16px;
     font-weight: 600;
     z-index: 1;
     right: 8px;
@@ -70,7 +70,7 @@
 
   .fill {
     position: absolute;
-    height: 20px;
+    height: 16px;
     border-radius: 2px;
     margin-left: -1px;
     margin-top: -1px;
