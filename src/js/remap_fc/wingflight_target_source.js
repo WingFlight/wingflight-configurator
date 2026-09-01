@@ -38,13 +38,17 @@ const BRANCH = "master";
 const CONFIGS_PATH = "configs";
 const FETCH_TIMEOUT_MS = 4000;
 
+// Races `promise` against a timeout, clearing the timer either way --
+// left running, it would still fire after `promise` already won the
+// race, rejecting a promise nothing is left to handle (an unhandled
+// rejection a few seconds into every successful call, not just a
+// slow/failed one).
 function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((_resolve, reject) =>
-      setTimeout(() => reject(new Error("timed out")), ms),
-    ),
-  ]);
+  let timeoutId;
+  const timeout = new Promise((_resolve, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("timed out")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 async function fetchRawConfig(url) {
