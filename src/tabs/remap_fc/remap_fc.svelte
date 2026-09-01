@@ -861,8 +861,6 @@
 {/snippet}
 
 <Page {header} loading={false}>
-  <p class="note">{$i18n.t("remapFcNote")}</p>
-
   <!-- Before a read, offer the button that triggers one; everything
        else below only has anything to show once the FC's actually
        been read. -->
@@ -1260,15 +1258,12 @@
 </Page>
 
 <style lang="scss">
-  .note {
-    color: var(--color-text);
-    opacity: 0.8;
-    margin-bottom: 4px;
-  }
-
   .run-btn {
     @extend %button;
     align-self: flex-start;
+    // Keeps the button at the same vertical position it sat at back
+    // when the (now-removed) yellow note banner was still above it.
+    margin-top: 20px;
   }
 
   // Custom Section headers (board-info card, live-warning card):

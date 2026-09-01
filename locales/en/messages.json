@@ -7327,9 +7327,6 @@
     "tabRemapFC": {
         "message": "Remap FC"
     },
-    "remapFcNote": {
-        "message": "Used to swap inputs and outputs of the flight controller. Add or remove servos and motors."
-    },
     "remapFcRunButton": {
         "message": "Read FC"
     },
