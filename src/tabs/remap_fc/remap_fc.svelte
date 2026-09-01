@@ -1062,6 +1062,97 @@
     </div>
   {/if}
 
+  <!-- Automatic warning: appears only once the working state's
+       current pin assignments have a timer/DMA clash that a full
+       reallocation pass genuinely can't resolve on its own (a
+       clash a fresh reallocation alone would fix stays silent
+       here -- calculatedAllocationTable below already reflects it
+       automatically, no button press needed for that either
+       anymore). reconciled.clash.reasons explains *why* the
+       current pins clash to begin with; calculatedAllocationTable
+       in the always-visible panel below shows what a reallocation
+       attempt produces regardless (including which feature(s) it
+       still couldn't resolve), so there's no need to repeat that
+       table here too -- and pinConflictResult.suggestions offers a
+       pin-level fix instead -- swapping/moving one of those
+       features onto a different pin so a fresh reallocation *can*
+       resolve everything -- when one was found; see the
+       suggestion-row below for what shows instead when it
+       wasn't. Shown above Pending Changes since "Load Changes" is
+       blocked while this is up (see its own disabled check below) --
+       the fix belongs in front of the button it's blocking. -->
+  {#if pinConflictResult.unresolvedFeatures.length}
+    <div class="pin-conflict-card">
+      <Section>
+        {#snippet header()}
+          <div class="header">
+            <span class="title warning-title"
+              >{$i18n.t("remapFcAllocationInvalidHeading")}</span
+            >
+          </div>
+        {/snippet}
+
+        <p class="allocation-warning">
+          {$i18n.t("remapFcAllocationInvalidWarning", {
+            reasons: reconciled.clash.reasons.join("; "),
+          })}
+        </p>
+
+        <!-- The pin-level fix itself, when the search actually found
+             one: a single suggestion shows as plain text, more than
+             one gets a picker so the user chooses which to apply --
+             either way, "Accept Suggestion" adopts
+             selectedSuggestion.apply wholesale (see
+             handleAcceptSuggestion). When no single swap/move
+             resolves everything, there's nothing to offer as a
+             one-click fix -- rather than guessing at some other
+             feature to touch on the user's behalf, this points back
+             at whichever option they most recently placed
+             (lastChangedOption), falling back to naming one of the
+             unresolved features itself if nothing's been touched
+             yet this session (e.g. the clash was already there on
+             read). -->
+        {#if pinConflictResult.suggestions.length}
+          <div class="suggestion-row">
+            {#if pinConflictResult.suggestions.length > 1}
+              <Select
+                bind:value={selectedSuggestionIndex}
+                options={pinConflictResult.suggestions.map(
+                  (suggestion, index) => ({
+                    value: String(index),
+                    label: suggestionLabel(suggestion),
+                  }),
+                )}
+              />
+            {:else if selectedSuggestion}
+              <span>{suggestionLabel(selectedSuggestion)}</span>
+            {/if}
+            <button
+              class="btn accept-suggestion-btn"
+              onclick={handleAcceptSuggestion}
+            >
+              {$i18n.t("remapFcAcceptSuggestion")}
+            </button>
+          </div>
+        {:else}
+          <p class="allocation-warning suggestion-manual-fix">
+            {$i18n.t("remapFcSuggestionManualFix", {
+              feature: optionLabel(manualFixTarget),
+            })}
+          </p>
+          <div class="suggestion-row">
+            <button
+              class="btn accept-suggestion-btn"
+              onclick={handleResetToSetOption}
+            >
+              {$i18n.t("remapFcResetToSetOption")}
+            </button>
+          </div>
+        {/if}
+      </Section>
+    </div>
+  {/if}
+
   <!-- Only appears once there's something staged to send: the
        "Load Changes" button applies the diff between what was read
        and the current edits, plus any staged timer/DMA fix (plus a
@@ -1107,93 +1198,6 @@
         </div>
       </Section>
     </div>
-  {/if}
-
-  <!-- Automatic warning: appears only once the working state's
-       current pin assignments have a timer/DMA clash that a full
-       reallocation pass genuinely can't resolve on its own (a
-       clash a fresh reallocation alone would fix stays silent
-       here -- calculatedAllocationTable below already reflects it
-       automatically, no button press needed for that either
-       anymore). reconciled.clash.reasons explains *why* the
-       current pins clash to begin with; calculatedAllocationTable
-       in the always-visible panel below shows what a reallocation
-       attempt produces regardless (including which feature(s) it
-       still couldn't resolve), so there's no need to repeat that
-       table here too -- and pinConflictResult.suggestions offers a
-       pin-level fix instead -- swapping/moving one of those
-       features onto a different pin so a fresh reallocation *can*
-       resolve everything -- when one was found; see the
-       suggestion-row below for what shows instead when it
-       wasn't. -->
-  {#if pinConflictResult.unresolvedFeatures.length}
-    <Section>
-      {#snippet header()}
-        <div class="header">
-          <span class="title warning-title"
-            >{$i18n.t("remapFcAllocationInvalidHeading")}</span
-          >
-        </div>
-      {/snippet}
-
-      <p class="allocation-warning">
-        {$i18n.t("remapFcAllocationInvalidWarning", {
-          reasons: reconciled.clash.reasons.join("; "),
-        })}
-      </p>
-
-      <!-- The pin-level fix itself, when the search actually found
-           one: a single suggestion shows as plain text, more than
-           one gets a picker so the user chooses which to apply --
-           either way, "Accept Suggestion" adopts
-           selectedSuggestion.apply wholesale (see
-           handleAcceptSuggestion). When no single swap/move
-           resolves everything, there's nothing to offer as a
-           one-click fix -- rather than guessing at some other
-           feature to touch on the user's behalf, this points back
-           at whichever option they most recently placed
-           (lastChangedOption), falling back to naming one of the
-           unresolved features itself if nothing's been touched
-           yet this session (e.g. the clash was already there on
-           read). -->
-      {#if pinConflictResult.suggestions.length}
-        <div class="suggestion-row">
-          {#if pinConflictResult.suggestions.length > 1}
-            <Select
-              bind:value={selectedSuggestionIndex}
-              options={pinConflictResult.suggestions.map(
-                (suggestion, index) => ({
-                  value: String(index),
-                  label: suggestionLabel(suggestion),
-                }),
-              )}
-            />
-          {:else if selectedSuggestion}
-            <span>{suggestionLabel(selectedSuggestion)}</span>
-          {/if}
-          <button
-            class="btn accept-suggestion-btn"
-            onclick={handleAcceptSuggestion}
-          >
-            {$i18n.t("remapFcAcceptSuggestion")}
-          </button>
-        </div>
-      {:else}
-        <p class="allocation-warning suggestion-manual-fix">
-          {$i18n.t("remapFcSuggestionManualFix", {
-            feature: optionLabel(manualFixTarget),
-          })}
-        </p>
-        <div class="suggestion-row">
-          <button
-            class="btn accept-suggestion-btn"
-            onclick={handleResetToSetOption}
-          >
-            {$i18n.t("remapFcResetToSetOption")}
-          </button>
-        </div>
-      {/if}
-    </Section>
   {/if}
 
   <!-- calculatedAllocationTable is reconciled's own always-current
@@ -1314,7 +1318,8 @@
   // Wider than .board-info-card since the table has four columns, but
   // still capped rather than spanning the full page.
   .calculated-config-card,
-  .pending-changes-card {
+  .pending-changes-card,
+  .pin-conflict-card {
     max-width: 560px;
   }
 
