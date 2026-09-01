@@ -457,6 +457,7 @@ class FlightController {
 
     this.RX_INPUT_BACKUP_STATUS = {
       enabled:                    false,
+      mainLinkUp:                 null,
       provider:                   0,
       linkUp:                     false,
       activeSource:               "main",

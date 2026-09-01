@@ -560,8 +560,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // rather than reading-and-discarding like the v1 decoder here used to,
                 // so a v1 firmware (no provider byte, always SBUS) still decodes the
                 // rest of the fixed fields correctly instead of misreading them.
+                // Version 3 added `mainLinkUp` (right after `enabled`) - null on older
+                // firmware (genuinely unknown) rather than guessing true/false, so the
+                // UI can simply not render a main-link badge instead of showing a
+                // possibly-wrong one.
                 const payloadVersion = data.readU8();
                 const enabled = data.readU8() !== 0;
+                const mainLinkUp = payloadVersion >= 3 ? data.readU8() !== 0 : null;
                 const provider = payloadVersion >= 2 ? data.readU8() : 0; // 0 = SBUS
                 const linkUp = data.readU8() !== 0;
                 const activeSource = data.readU8() !== 0 ? 'backup' : 'main';
@@ -571,7 +576,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     channels.push(data.readU16());
                 }
 
-                FC.RX_INPUT_BACKUP_STATUS = { enabled, provider, linkUp, activeSource, channels };
+                FC.RX_INPUT_BACKUP_STATUS = { enabled, mainLinkUp, provider, linkUp, activeSource, channels };
                 break;
             }
 

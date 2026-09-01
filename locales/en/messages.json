@@ -745,9 +745,6 @@
     "tabRxInputBackupConfig": {
         "message": "Serial RX #2"
     },
-    "tabRxInputBackupStatus": {
-        "message": "Serial RX #2 Status"
-    },
     "fbusSensorsDescription": {
         "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master."
     },

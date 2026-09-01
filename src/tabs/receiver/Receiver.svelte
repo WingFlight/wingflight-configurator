@@ -22,7 +22,6 @@
   import TelemetrySettings from "./TelemetrySettings.svelte";
   import TelemetrySensors from "./TelemetrySensors/TelemetrySensors.svelte";
   import ChannelAssignment from "./ChannelAssignment/ChannelAssignment.svelte";
-  import { UART_NAMES } from "@/tabs/configuration/util.js";
   import {
     TelemetryType,
     RX_PROTOCOLS,
@@ -77,13 +76,19 @@
 
     if (hasBackupRxPort) {
       await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG);
-      await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
-      // 200ms rather than the 25ms main-channel poll above - this only needs to
-      // look live when the box below is expanded, not drive a hot loop always.
-      backupRxPollerIntervalId = setInterval(() => {
-        MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
-      }, 200);
     }
+
+    // Polled unconditionally, not just when hasBackupRxPort - mainLinkUp
+    // (the primary RX's own live signal state) is shown in the Serial RX #1
+    // box regardless of whether a backup port is configured at all; the
+    // backup-specific fields just stay at their disabled/empty defaults when
+    // it isn't.
+    await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
+    // 200ms rather than the 25ms main-channel poll above - this only needs to
+    // look live for a status badge, not drive a hot loop always.
+    backupRxPollerIntervalId = setInterval(() => {
+      MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
+    }, 200);
 
     // initialState is snapshotted above before this block runs, so re-snapshot
     // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
@@ -170,14 +175,10 @@
       (port) => port.functionMask & RX_INPUT_BACKUP_FUNCTION,
     ),
   );
-  let backupRxPort = $derived(
-    FC.SERIAL_CONFIG.ports.find(
-      (port) => port.functionMask & RX_INPUT_BACKUP_FUNCTION,
-    ),
-  );
   let backupRxStatus = $derived(
     FC.RX_INPUT_BACKUP_STATUS ?? {
       enabled: false,
+      mainLinkUp: null,
       provider: 0,
       linkUp: false,
       activeSource: "main",
@@ -186,8 +187,18 @@
   );
 
   // Keep in sync with wingflight-firmware's cli/settings.c
-  // lookupTableRxInputBackupProvider[] (same order).
-  const RX_INPUT_BACKUP_PROVIDER_NAMES = ["SBUS", "FBUS", "FPORT", "FPORT2"];
+  // lookupTableRxInputBackupProvider[] (same order, NONE=0 first) - this
+  // array's index must match the firmware enum. Display text matches
+  // RX_PROTOCOLS' own naming (./protocols.js) for the same protocols, so the
+  // two dropdowns read consistently rather than one using full names and the
+  // other short codes.
+  const RX_INPUT_BACKUP_PROVIDER_NAMES = [
+    "None",
+    "Futaba S.BUS",
+    "FrSky FBUS",
+    "FrSky F.PORT",
+    "FrSky F.PORT2",
+  ];
 
   let extTelemProto = $derived.by(() => {
     for (const proto of EXTERNAL_TELEMETRY_PROTOCOLS) {
@@ -370,9 +381,39 @@
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <div class="content">
     <div>
-      <ReceiverType {rxProtoIndex} {hasSerialRxPort} {setRxProto} />
+      <ReceiverType
+        {rxProtoIndex}
+        {hasSerialRxPort}
+        {setRxProto}
+        mainLinkUp={backupRxStatus.mainLinkUp}
+        {hasBackupRxPort}
+        backupActive={backupRxStatus.activeSource === "backup"}
+      />
       {#if hasBackupRxPort}
-        <Section label="tabRxInputBackupConfig">
+        {#snippet backupConfigHeader()}
+          <div class="section-header">
+            <span class="title">{$i18n.t("tabRxInputBackupConfig")}</span>
+            <div class="grow"></div>
+            <span
+              class="badge"
+              class:up={backupRxStatus.linkUp}
+              class:down={!backupRxStatus.linkUp}
+            >
+              {backupRxStatus.linkUp
+                ? $i18n.t("rxInputBackupStatusLinkUp")
+                : $i18n.t("rxInputBackupStatusLinkDown")}
+            </span>
+            <span
+              class="badge"
+              class:active={backupRxStatus.activeSource === "backup"}
+            >
+              {backupRxStatus.activeSource === "backup"
+                ? $i18n.t("rxInputBackupStatusActiveBackup")
+                : $i18n.t("rxInputBackupStatusActiveMain")}
+            </span>
+          </div>
+        {/snippet}
+        <Section header={backupConfigHeader}>
           <SubSection>
             <Field id="backup-rx-provider" label="receiverBackupRxProvider">
               <select
@@ -430,37 +471,6 @@
     </div>
     <div>
       <ChannelAssignment />
-      {#if hasBackupRxPort}
-        <Section label="tabRxInputBackupStatus">
-          <div class="backup-rx-summary">
-            <span class="badge">
-              {RX_INPUT_BACKUP_PROVIDER_NAMES[backupRxStatus.provider] ?? "?"}
-            </span>
-            <span
-              class="badge"
-              class:up={backupRxStatus.linkUp}
-              class:down={!backupRxStatus.linkUp}
-            >
-              {backupRxPort
-                ? (UART_NAMES[backupRxPort.identifier] ??
-                  backupRxPort.identifier)
-                : ""}
-              &mdash;
-              {backupRxStatus.linkUp
-                ? $i18n.t("rxInputBackupStatusLinkUp")
-                : $i18n.t("rxInputBackupStatusLinkDown")}
-            </span>
-            <span
-              class="badge"
-              class:active={backupRxStatus.activeSource === "backup"}
-            >
-              {backupRxStatus.activeSource === "backup"
-                ? $i18n.t("rxInputBackupStatusActiveBackup")
-                : $i18n.t("rxInputBackupStatusActiveMain")}
-            </span>
-          </div>
-        </Section>
-      {/if}
       <ModelPreview />
     </div>
   </div>
@@ -473,10 +483,19 @@
     column-gap: var(--section-gap);
   }
 
-  .backup-rx-summary {
-    display: flex;
-    align-items: center;
+  // Custom Section header (badges live here, not in the body) - replicates
+  // %section-header (_global.scss) plus a right-aligned badge row, kept
+  // compact rather than adding a separate summary line below the title.
+  // Mirrors ReceiverType.svelte's own identical block for its RX #1 header.
+  .section-header {
+    @extend %section-header;
+
+    padding-right: 8px;
     gap: 8px;
+  }
+
+  .title {
+    padding-left: 8px;
   }
 
   .badge {
