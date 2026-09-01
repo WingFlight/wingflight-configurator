@@ -48,7 +48,7 @@ export function MspHelper() {
         'FBUS_OUT': 19,
         'SPORT_MASTER': 20,
         'SRXL2_ESC': 21,
-        'RX_SBUS_INPUT': 22,
+        'RX_INPUT_BACKUP': 22,
     };
 
     self.REBOOT_TYPES = {
@@ -555,18 +555,23 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP2_WING_SBUS_INPUT_STATUS: {
-                data.readU8(); // payload version, unused for now
+            case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS: {
+                // Version 2 added the `provider` byte (firmware msp.c) - branch on it
+                // rather than reading-and-discarding like the v1 decoder here used to,
+                // so a v1 firmware (no provider byte, always SBUS) still decodes the
+                // rest of the fixed fields correctly instead of misreading them.
+                const payloadVersion = data.readU8();
                 const enabled = data.readU8() !== 0;
+                const provider = payloadVersion >= 2 ? data.readU8() : 0; // 0 = SBUS
                 const linkUp = data.readU8() !== 0;
-                const activeSource = data.readU8() !== 0 ? 'fallback' : 'main';
+                const activeSource = data.readU8() !== 0 ? 'backup' : 'main';
                 const channelCount = data.readU8();
                 const channels = [];
                 for (let i = 0; i < channelCount; i++) {
                     channels.push(data.readU16());
                 }
 
-                FC.SBUS_INPUT_STATUS = { enabled, linkUp, activeSource, channels };
+                FC.RX_INPUT_BACKUP_STATUS = { enabled, provider, linkUp, activeSource, channels };
                 break;
             }
 
