@@ -60,11 +60,6 @@
       "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-rx-input-backup-provider",
-      "path": "./feature-rx-input-backup-provider/"
     }
   ]
 }
