@@ -198,6 +198,8 @@
     "FrSky FBUS",
     "FrSky F.PORT",
     "FrSky F.PORT2",
+    "Jeti EXBUS",
+    "TBS CRSF",
   ];
 
   let extTelemProto = $derived.by(() => {
