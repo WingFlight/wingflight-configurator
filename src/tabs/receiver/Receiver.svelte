@@ -198,6 +198,10 @@
     "FrSky FBUS",
     "FrSky F.PORT",
     "FrSky F.PORT2",
+    "Flysky IBUS",
+    "Graupner SUMD",
+    "Spektrum DSM/1024",
+    "Spektrum DSM/2048",
   ];
 
   let extTelemProto = $derived.by(() => {
