@@ -155,18 +155,24 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-  }
-
-  .runtime-controlled {
-    padding-right: 2px;
   }
 
   .runtime-active {
     opacity: 1;
   }
 
+  // Absolutely positioned, not a normal flex child -- a td centers
+  // .runtime-control as one box (`td { text-align: center }` above), so a
+  // badge sharing the flex row would widen that box on badge-carrying rows
+  // only, visibly dragging the number input itself left of where it sits
+  // on every badge-less row in the same column. Taking the badge out of
+  // flow keeps .runtime-control's own width (and so its centered position)
+  // down to just the input, on every row alike; the badge just hangs
+  // beside it without moving anything.
   .adjustment-badge {
+    position: absolute;
+    left: 100%;
+    margin-left: 8px;
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
@@ -178,6 +184,7 @@
     line-height: 1rem;
     text-align: center;
     letter-spacing: 0;
+    white-space: nowrap;
   }
 
   .runtime-control:not(.runtime-active) .adjustment-badge {

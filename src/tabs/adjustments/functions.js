@@ -119,6 +119,7 @@ export function getFunctions() {
         { id: 107,  name: 'TVYawD',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 108,  name: 'TVYawF',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
+        { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
     ];
 }
 
