@@ -106,6 +106,26 @@ export function parseMcuType(dumpText) {
   return null;
 }
 
+// Matches the assigned value in a `get motor_pwm_protocol` CLI
+// response, e.g. the line:
+//   motor_pwm_protocol = DSHOT600
+// The echoed command line ("# get motor_pwm_protocol") and the
+// "Allowed values: ..." line have no `= <value>` after the name, so
+// they're skipped.
+const MOTOR_PWM_PROTOCOL_RE = /motor_pwm_protocol\s*=\s*(\S+)/i;
+
+/**
+ * Parses the current motor_pwm_protocol setting (e.g. "DSHOT600") out
+ * of a `get motor_pwm_protocol` CLI command's output. Returns null if
+ * no value line is present.
+ * @param {string} getOutput
+ * @returns {?string}
+ */
+export function parseMotorPwmProtocol(getOutput) {
+  const match = getOutput.match(MOTOR_PWM_PROTOCOL_RE);
+  return match ? match[1] : null;
+}
+
 /**
  * Parses the text output of a `dump hardware` CLI command into a
  * HardwareMap of configured resources, each enriched with its pin's

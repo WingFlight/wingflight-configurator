@@ -14,6 +14,7 @@ import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import {
   parseHardwareDump,
   parseMcuType,
+  parseMotorPwmProtocol,
   buildTimerDmaReplayCommands,
 } from "@/js/remap_fc/hardware_parser.js";
 import { buildChangeCommands } from "@/js/remap_fc/remap_table.js";
@@ -46,6 +47,15 @@ class RemapFcTab {
   // keys of MCU-all.json.
   /** @type {?string} */
   #mcuType = null;
+
+  // The flight controller's current motor_pwm_protocol (e.g.
+  // "DSHOT600"), read once per "Read FC" via `get motor_pwm_protocol`.
+  // Reassigning a pin's timer/DMA makes the firmware drop the protocol
+  // back to PWM, so this is appended as `set motor_pwm_protocol = ...`
+  // after the timer/DMA commands (see remap_fc.svelte's commandsToSend)
+  // to put it back before `save`.
+  /** @type {?string} */
+  #currentMotorProtocol = null;
 
   // DMA streams already claimed by something outside this tool's
   // control (SPI buses, ADC, ...), parsed from `dma show` -- see
@@ -246,6 +256,7 @@ class RemapFcTab {
     this.#currentHardware = null;
     this.#defaultHardware = null;
     this.#mcuType = null;
+    this.#currentMotorProtocol = null;
     this.#reservedDmaStreams = new Set();
     this.#reservedTimers = new Set();
 
@@ -275,6 +286,24 @@ class RemapFcTab {
       const timerShowOutput = await this.#runCommandAndCapture("timer show");
       console.log("remap_fc: timer show output", timerShowOutput);
       this.#reservedTimers = parseReservedTimers(timerShowOutput);
+      if (this.#tornDown) return;
+
+      // Capture the current motor_pwm_protocol before `defaults nosave`
+      // touches anything. Reassigning a pin's timer/DMA later forces the
+      // firmware to drop the protocol back to PWM, so the Svelte
+      // component appends `set motor_pwm_protocol = <this>` after its
+      // timer/DMA commands to restore it (see commandsToSend there).
+      const currentMotorProtocolOutput = await this.#runCommandAndCapture(
+        "get motor_pwm_protocol",
+      );
+      console.log(
+        "remap_fc: get motor_pwm_protocol output",
+        currentMotorProtocolOutput,
+      );
+      this.#currentMotorProtocol = parseMotorPwmProtocol(
+        currentMotorProtocolOutput,
+      );
+      console.log("remap_fc: currentMotorProtocol", this.#currentMotorProtocol);
       if (this.#tornDown) return;
 
       await this.#runCommandAndCapture("defaults nosave");
@@ -346,6 +375,7 @@ class RemapFcTab {
 
       const targetDefaults = await targetDefaultsPromise;
 
+      this.#svelteComponent?.setCurrentMotorProtocol(this.#currentMotorProtocol);
       this.#svelteComponent?.setHardware(
         this.#currentHardware,
         targetDefaults ?? this.#defaultHardware,

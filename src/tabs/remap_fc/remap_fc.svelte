@@ -23,7 +23,6 @@
     buildRowsForOptions,
     getAddableOptions,
     getRowSelectableOptions,
-    isOverCapacity,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
   import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
@@ -73,6 +72,13 @@
   // the current hardware dump. Matches the top-level keys of
   // MCU-all.json.
   let mcuType = $state(null);
+  // The flight controller's motor_pwm_protocol as it was when the FC
+  // was read (e.g. "DSHOT600"), set by remap_fc.js via
+  // setCurrentMotorProtocol(). Reassigning a pin's timer/DMA makes the
+  // firmware drop this back to PWM, so it's re-applied as
+  // `set motor_pwm_protocol = <this>` right before `save` (see
+  // commandsToSend). null when the read couldn't determine it.
+  let currentMotorProtocol = $state(null);
   // workingCurrent is a local, editable copy of the current hardware
   // map: it starts as whatever was read from the FC, and is mutated
   // here as the user makes "Current Option" picks. Nothing is sent to
@@ -532,6 +538,18 @@
     "set dshot_bitbang = OFF",
   ];
 
+  // Restores motor_pwm_protocol to whatever the FC reported on read
+  // (see currentMotorProtocol). Applying any `timer`/`dma pin` command
+  // makes the firmware drop the protocol back to PWM, so this has to
+  // go out after timerDmaCommands and as the last thing before `save`.
+  // Empty when there are no timer/DMA changes (nothing reset it) or
+  // the read couldn't determine the protocol.
+  let currentMotorProtocolCommand = $derived(
+    currentMotorProtocol && timerDmaCommands.length > 0
+      ? [`set motor_pwm_protocol = ${currentMotorProtocol}`]
+      : [],
+  );
+
   // What "Load Changes" actually sends, and what the preview panel
   // shows -- the two must always match exactly, so this is the single
   // place "save" gets appended. `resource`/`timer`/`dma pin` commands
@@ -544,6 +562,7 @@
     ...DSHOT_SETTING_COMMANDS,
     ...pendingCommands,
     ...timerDmaCommands,
+    ...currentMotorProtocolCommand,
     "save",
   ]);
 
@@ -553,6 +572,10 @@
 
   export function setRunning(value) {
     running = value;
+  }
+
+  export function setCurrentMotorProtocol(value) {
+    currentMotorProtocol = value;
   }
 
   export function setError(message) {
@@ -615,19 +638,24 @@
     const occupantOf = (pin) =>
       Object.keys(current).find((key) => current[key].pin === pin);
 
+    // Deliberately no special-casing here for a beyond-capacity key
+    // (e.g. "M5" on an 8-motor target, only ever possible via
+    // wingflight_target_source.js's richer default set): an earlier
+    // version always showed one the moment the default set claimed
+    // it, forced to a "Set Option" placeholder regardless of what
+    // actually occupied its pin -- which, on real hardware, ended up
+    // *hiding* a genuine assignment instead of surfacing one. A
+    // board's own reference design can name a beyond-capacity slot's
+    // pin as something else entirely (e.g. "Motor 5" turning out to
+    // be a servo's own physical connector), so isOverCapacity's own
+    // TABLE_OPTION_KEYS exclusion is enough on its own: it can never
+    // be *picked* as a value (TABLE_OPTION_KEYS stays capped at the
+    // real range), but the row itself should behave exactly like any
+    // other pin -- shown when something real occupies it, offered
+    // through "+ Add" otherwise.
     visibleOptions = OPTION_KEYS.filter((option) => {
       const defaultPin = defaultHw[option]?.pin;
       if (defaultPin === undefined) return false;
-
-      // Beyond what Rotorflight can actually use (e.g. "M5" on an
-      // 8-motor target) -- only ever possible via
-      // wingflight_target_source.js's richer default set, never from
-      // the FC's own dump directly. Always show it once the default
-      // set claims it, regardless of what (if anything) currently
-      // occupies that pin, so a pin the user needs to explicitly deal
-      // with can never go silently missing (see the unsetOptions
-      // assignment below for forcing its placeholder state).
-      if (isOverCapacity(option)) return true;
 
       if (
         !TABLE_OPTION_KEYS.includes(option) &&
@@ -644,15 +672,9 @@
       );
     });
 
-    // Rows freshly read from the FC are never "unset" — except ones
-    // beyond Rotorflight's actual motor/servo capacity, which always
-    // start "Set Option" regardless of what's nominally assigned to
-    // their default pin right now (see isOverCapacity), since
-    // Rotorflight can never actually use that value as a real current
-    // option -- the row exists purely so the user can explicitly
-    // reassign or free that pin, never left looking like a settled,
-    // working assignment.
-    unsetOptions = visibleOptions.filter((option) => isOverCapacity(option));
+    // Rows freshly read from the FC are never "unset" — only ones
+    // added afterwards via "+ Add" start in that placeholder state.
+    unsetOptions = [];
   }
 
   /**
@@ -699,6 +721,7 @@
     error = null;
     hasRead = false;
     mcuType = null;
+    currentMotorProtocol = null;
     workingCurrent = {};
     originalCurrent = {};
     defaultHardware = {};
@@ -1261,8 +1284,6 @@
   .run-btn {
     @extend %button;
     align-self: flex-start;
-    // Keeps the button at the same vertical position it sat at back
-    // when the (now-removed) yellow note banner was still above it.
     margin-top: 20px;
   }
 

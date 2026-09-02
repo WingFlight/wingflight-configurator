@@ -20,8 +20,7 @@ import { buildResourceCommand } from "./hardware_parser.js";
 // compiled to support more. wingflight_target_source.js is the one
 // place that can still surface a richer default set than that (from
 // the target's own definition on GitHub, for a board with no
-// Rotorflight-specific build of its own) -- see isOverCapacity below
-// for how those extra rows are handled once they do show up.
+// Rotorflight-specific build of its own).
 export const MAX_VALID_MOTORS = 4;
 export const MAX_VALID_SERVOS = 8;
 
@@ -29,13 +28,19 @@ const MOTOR_OR_SERVO_INDEX_RE = /^(M|S)(\d+)$/;
 
 // Whether optionKey names a motor/servo index beyond what Rotorflight
 // can actually use -- e.g. "M5" on an 8-motor Betaflight-shared
-// target. Exported so remap_fc.svelte can force these rows into the
-// "Set Option" placeholder state as soon as they're read (see
-// setHardware), rather than ever presenting one as if it were a real,
-// usable current option -- TABLE_OPTION_KEYS/getRowSelectableOptions
-// already exclude them from ever being *picked* as a value, being
-// capped at the valid range themselves, so this only needs checking
-// wherever a row's own identity (not its Current Option) is involved.
+// target. TABLE_OPTION_KEYS/getRowSelectableOptions already exclude
+// these from ever being *picked* as a value, being capped at the
+// valid range themselves -- this exists purely so a caller can tell
+// the difference if it ever needs to (e.g. styling), not because a
+// beyond-capacity row needs any different *visibility* treatment than
+// any other: an earlier version of remap_fc.svelte's setHardware also
+// forced these rows to always show, placeholder-unset regardless of
+// what actually occupied their pin -- which, on real hardware, ended
+// up hiding a genuine assignment a board's own reference design gave
+// that pin a different name for (e.g. "Motor 5" turning out to be a
+// servo's own physical connector) rather than surfacing it. Removed:
+// a beyond-capacity option's row is now shown/hidden by the exact
+// same occupancy rule as any other option's.
 export function isOverCapacity(optionKey) {
   const match = optionKey.match(MOTOR_OR_SERVO_INDEX_RE);
   if (!match) return false;
