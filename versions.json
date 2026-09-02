@@ -53,6 +53,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-crsf-sensors",
+      "path": "./feature-crsf-sensors/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     }
