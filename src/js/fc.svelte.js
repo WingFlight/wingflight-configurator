@@ -72,6 +72,7 @@ class FlightController {
   RX_CONFIG = $state();
   RX_INPUT_BACKUP_CONFIG = $state();
   RX_INPUT_BACKUP_STATUS = $state();
+  CRSF_SENSORS_STATUS = $state();
   SDCARD = $state();
   SENSOR_ALIGNMENT = $state();
   SENSOR_CONFIG = $state();
@@ -462,6 +463,21 @@ class FlightController {
       linkUp:                     false,
       activeSource:               "main",
       channels:                   [],
+    };
+
+    this.CRSF_SENSORS_STATUS = {
+      enabled:                    false,
+      rxByteCount:                0,
+      rxSyncCount:                0,
+      rxCrcOkCount:               0,
+      rxCrcFailCount:             0,
+      lastFrameType:              0,
+      lastFrameLength:            0,
+      gps:                        null,
+      battery:                    null,
+      baro:                       null,
+      cells:                      null,
+      rpm:                        null,
     };
 
     this.SDCARD = {
