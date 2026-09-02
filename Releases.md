@@ -1,3 +1,14 @@
+# 0.0.17
+
+Add Thrust Vector Attitude Hold.
+Add Serial Rx (Backup, SBUS) port option and diagnostics.
+Split feature-branch development builds into their own tier on the Firmware Flasher tab.
+Add "Clone PWM outputs to bus servos" toggle on the Servos tab.
+
+# 0.0.16
+
+Add XACT servo programming tab: scan and configure FrSky XACT servos over FBUS, with multi-servo discovery/selection, live Physical ID/App ID conflict detection, and a field set aligned to FrSky's own configuration tool.
+
 # 0.0.15
 
 Add support for Spektrum SRXL2 ESC.

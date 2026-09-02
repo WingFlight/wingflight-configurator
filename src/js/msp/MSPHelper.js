@@ -49,6 +49,7 @@ export function MspHelper() {
         'SPORT_MASTER': 20,
         'SRXL2_ESC': 21,
         'CRSF_SENSORS': 22,
+        'RX_INPUT_BACKUP': 23,
     };
 
     self.REBOOT_TYPES = {
@@ -555,6 +556,47 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS: {
+                // Version 2 added the `provider` byte (firmware msp.c) - branch on it
+                // rather than reading-and-discarding like the v1 decoder here used to,
+                // so a v1 firmware (no provider byte, always SBUS) still decodes the
+                // rest of the fixed fields correctly instead of misreading them.
+                // Version 3 added `mainLinkUp` (right after `enabled`) - null on older
+                // firmware (genuinely unknown) rather than guessing true/false, so the
+                // UI can simply not render a main-link badge instead of showing a
+                // possibly-wrong one.
+                const payloadVersion = data.readU8();
+                const enabled = data.readU8() !== 0;
+                const mainLinkUp = payloadVersion >= 3 ? data.readU8() !== 0 : null;
+                const provider = payloadVersion >= 2 ? data.readU8() : 0; // 0 = SBUS
+                const linkUp = data.readU8() !== 0;
+                const activeSource = data.readU8() !== 0 ? 'backup' : 'main';
+                const channelCount = data.readU8();
+                const channels = [];
+                for (let i = 0; i < channelCount; i++) {
+                    channels.push(data.readU16());
+                }
+
+                FC.RX_INPUT_BACKUP_STATUS = { enabled, mainLinkUp, provider, linkUp, activeSource, channels };
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG: {
+                data.readU8(); // payload version, unused for now
+                const provider = data.readU8();
+                const inverted = data.readU8() !== 0;
+                const halfDuplex = data.readU8() !== 0;
+                const pinSwap = data.readU8() !== 0;
+
+                FC.RX_INPUT_BACKUP_CONFIG = { provider, inverted, halfDuplex, pinSwap };
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: {
+                console.log('Backup RX config saved');
+                break;
+            }
+
             case MSPCodes.MSP_GPS_CONFIG: {
                 FC.GPS_CONFIG.provider = data.readU8();
                 FC.GPS_CONFIG.ublox_sbas = data.readU8();
@@ -827,6 +869,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
+                FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
                 break;
             }
 
@@ -887,6 +930,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.gyroCutoffRoll        = data.readU8();
                 FC.TV_PID_PROFILE.gyroCutoffPitch       = data.readU8();
                 FC.TV_PID_PROFILE.gyroCutoffYaw         = data.readU8();
+                // TV Hold -- independent attitude/heading hold for this loop only //
+                FC.TV_PID_PROFILE.tvHoldGain            = data.remaining() >= 4 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.tvHoldDeadband        = data.remaining() >= 3 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.tvHoldMaxRate         = data.remaining() >= 2 ? data.readU16() : 0;
                 break;
             }
 
@@ -1883,6 +1930,7 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
+            buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
             break;
         }
 
@@ -1929,7 +1977,11 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.TV_PID_PROFILE.btermCutoffYaw)
                 .push8(FC.TV_PID_PROFILE.gyroCutoffRoll)
                 .push8(FC.TV_PID_PROFILE.gyroCutoffPitch)
-                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw);
+                .push8(FC.TV_PID_PROFILE.gyroCutoffYaw)
+                // TV Hold -- independent attitude/heading hold for this loop only //
+                .push8(FC.TV_PID_PROFILE.tvHoldGain)
+                .push8(FC.TV_PID_PROFILE.tvHoldDeadband)
+                .push16(FC.TV_PID_PROFILE.tvHoldMaxRate);
             break;
         }
 
@@ -2051,6 +2103,15 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
             }
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: {
+            buffer.push8(1); // payload version
+            buffer.push8(FC.RX_INPUT_BACKUP_CONFIG.provider)
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.inverted))
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.halfDuplex))
+                  .push8(Number(FC.RX_INPUT_BACKUP_CONFIG.pinSwap));
             break;
         }
 

@@ -742,6 +742,9 @@
     "tabFbusSensors": {
         "message": "FBUS/S.Port Sensors"
     },
+    "tabRxInputBackupConfig": {
+        "message": "Serial RX #2"
+    },
     "fbusSensorsDescription": {
         "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master."
     },
@@ -780,6 +783,45 @@
     },
     "fbusSensorsColPackets": {
         "message": "Packets"
+    },
+    "rxInputBackupStatusDescription": {
+        "message": "Live status for the secondary RX input assigned as a backup if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
+    },
+    "rxInputBackupStatusLinkUp": {
+        "message": "Link: Up"
+    },
+    "rxInputBackupStatusLinkDown": {
+        "message": "Link: Down"
+    },
+    "rxInputBackupStatusActiveMain": {
+        "message": "Active Source: Main RX"
+    },
+    "rxInputBackupStatusActiveBackup": {
+        "message": "Active Source: Backup RX"
+    },
+    "receiverBackupRxProvider": {
+        "message": "Protocol"
+    },
+    "receiverBackupRxSignaling": {
+        "message": "Signaling"
+    },
+    "receiverBackupRxInverted": {
+        "message": "Inverted"
+    },
+    "receiverBackupRxInvertedHelp": {
+        "message": "Off applies whichever electrical inversion the selected protocol normally needs (SBUS is naturally inverted; FBUS, FPort, and FPort2 are not). Turn on only if this wire is inverted relative to that protocol's normal wiring, e.g. via an external inverter."
+    },
+    "receiverBackupRxHalfDuplex": {
+        "message": "Half-Duplex"
+    },
+    "receiverBackupRxHalfDuplexHelp": {
+        "message": "Enable if only one signal wire is connected for this receiver (single-wire wiring). Safe even though this port never transmits."
+    },
+    "receiverBackupRxPinSwap": {
+        "message": "Pin Swap"
+    },
+    "receiverBackupRxPinSwapHelp": {
+        "message": "Swaps the Rx and Tx pins on this port."
     },
     "logActionHide": {
         "message": "Hide Log"
@@ -1979,6 +2021,9 @@
     "portsFunction_CRSF_SENSORS": {
         "message": "CRSF Sensors"
     },
+    "portsFunction_RX_INPUT_BACKUP": {
+        "message": "Serial Rx (Backup)"
+    },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
     },
@@ -2146,7 +2191,7 @@
         "message": "Loaded Profile: <strong class=\"message-positive\">$1</strong>"
     },
     "receiverSelection": {
-        "message": "Protocol"
+        "message": "Serial RX #1"
     },
     "receiverSelectionSectionSignaling": {
         "message": "Signaling"
@@ -3091,6 +3136,9 @@
     "adjustmentsFunctionTVYawB": {
         "message": "TV Yaw B Gain"
     },
+    "adjustmentsFunctionTVHoldGain": {
+        "message": "TV Attitude Hold Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -3312,6 +3360,12 @@
     },
     "servoEnableOverrideText": {
         "message": " <i>Servo override</i> forces the servos to a arbitrary positions for setup purposes. The override values are not saved, and will be reset after a reboot."
+    },
+    "servoBusCloneLabel": {
+        "message": "<strong>Clone PWM outputs to bus servos</strong>"
+    },
+    "servoBusCloneText": {
+        "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
     },
     "servoOverrideEnable": {
         "message": "Enable"
@@ -4729,6 +4783,9 @@
     "firmwareFlasherOptionLabelBuildTypeDevelopment": {
         "message": "All Releases and Snapshots"
     },
+    "firmwareFlasherOptionLabelBuildTypeFeatureBranch": {
+        "message": "All Releases, Snapshots and Feature Branches"
+    },
     "firmwareFlasherOptionLabelSelectFirmware": {
         "message": "Choose a Firmware / Board"
     },
@@ -5283,6 +5340,30 @@
     },
     "thrustVectorIntroNote": {
         "message": "This is a second, independent PID loop for thrust-vectoring actuators -- it targets the same stick setpoint as the main Roll/Pitch/Yaw loop but is tuned separately. Its output only reaches your aircraft once you assign the <strong>Stabilized TV Roll/Pitch/Yaw</strong> mixer input sources to an output on the <i>Mixer</i> tab."
+    },
+    "thrustVectorHoldGroup": {
+        "message": "Attitude / Heading Hold"
+    },
+    "thrustVectorHoldIntroNote": {
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+    },
+    "thrustVectorHoldGain": {
+        "message": "Hold gain"
+    },
+    "thrustVectorHoldGainHelp": {
+        "message": "Correction strength back to the held attitude once the sticks are centred and TV Hold has frozen its target. Higher values return to the held attitude more aggressively."
+    },
+    "thrustVectorHoldDeadband": {
+        "message": "Hold deadband"
+    },
+    "thrustVectorHoldDeadbandHelp": {
+        "message": "Percent stick deflection, on any of roll/pitch/yaw, above which TV Hold gives full unmodified stick authority and continuously re-captures its held attitude (so a future freeze is seamless); below this on all three sticks, the target freezes and the thrust-vector output is corrected back to it. Same track/freeze behaviour as Attitude Hold, but as an independent instance for this loop only."
+    },
+    "thrustVectorHoldMaxRate": {
+        "message": "Hold max rate"
+    },
+    "thrustVectorHoldMaxRateHelp": {
+        "message": "Safety clamp (deg/s) on how fast TV Hold may drive the thrust-vector output back toward the frozen attitude once the sticks return inside the deadband."
     },
     "profilesErrorLimit": {
         "message": "Cumulative Error Limits"

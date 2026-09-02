@@ -34,14 +34,41 @@
   let rightLabel = $derived(
     Number.isFinite(percent) ? `${(100 * percent).toFixed(1)}%` : "",
   );
+
+  // Second, compact line showing the backup RX's own value for this same
+  // channel index, when a backup port is configured and reporting data -
+  // lets both links be compared per-channel here instead of needing the
+  // separate full channel grid the Serial RX #2 Status box used to have.
+  let backupValue = $derived(FC.RX_INPUT_BACKUP_STATUS.channels[channel]);
+  let hasBackupValue = $derived(backupValue !== undefined);
+  let backupWidth = $derived(
+    hasBackupValue
+      ? ((100 * (backupValue - min)) / (max - min)).clamp(0, 100)
+      : 0,
+  );
 </script>
 
-<Meter
-  --fill-hue={hue}
-  leftLabel={FC.RX_CHANNELS[channel]}
-  value={width}
-  {rightLabel}
-/>
+<div class="channel-meters">
+  <Meter
+    --fill-hue={hue}
+    leftLabel={FC.RX_CHANNELS[channel]}
+    value={width}
+    {rightLabel}
+  />
+  {#if hasBackupValue}
+    <Meter
+      --fill-hue={hue}
+      leftLabel={backupValue}
+      value={backupWidth}
+      compact
+    />
+  {/if}
+</div>
 
 <style lang="scss">
+  .channel-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 </style>

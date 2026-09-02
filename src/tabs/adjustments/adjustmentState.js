@@ -33,6 +33,10 @@ export const TV_PID_ADJUSTMENT_FUNCTIONS = [
 
 export const TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [92, 93, 94]; // Roll/Pitch/Yaw
 
+// TV Hold's gain (flight/tv_hold.c) -- a single scalar, not per-axis like the
+// tables above (the hold engine itself is a single 3-axis instance).
+export const TV_HOLD_GAIN_ADJUSTMENT_FUNCTION = 110;
+
 function auxChannelValue(channel) {
   return channel >= 0 && channel < ALWAYS_ON_CH
     ? FC.RC.channels[channel + PRIMARY_CHANNEL_COUNT]

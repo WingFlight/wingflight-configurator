@@ -70,6 +70,8 @@ class FlightController {
   RXFAIL_CONFIG = $state();
   RX_CHANNELS = $state();
   RX_CONFIG = $state();
+  RX_INPUT_BACKUP_CONFIG = $state();
+  RX_INPUT_BACKUP_STATUS = $state();
   SDCARD = $state();
   SENSOR_ALIGNMENT = $state();
   SENSOR_CONFIG = $state();
@@ -196,6 +198,7 @@ class FlightController {
 
     this.MIXER_CONFIG = {
       model_type:                 0,
+      bus_servo_clone_pwm:        1,
     };
 
     this.MIXER_INPUTS =             [];
@@ -445,6 +448,22 @@ class FlightController {
       usedSize:                   0,
     };
 
+    this.RX_INPUT_BACKUP_CONFIG = {
+      provider:                   0,
+      inverted:                   false,
+      halfDuplex:                 false,
+      pinSwap:                    false,
+    };
+
+    this.RX_INPUT_BACKUP_STATUS = {
+      enabled:                    false,
+      mainLinkUp:                 null,
+      provider:                   0,
+      linkUp:                     false,
+      activeSource:               "main",
+      channels:                   [],
+    };
+
     this.SDCARD = {
       supported:                  false,
       state:                      0,
@@ -633,6 +652,9 @@ class FlightController {
       gyroCutoffRoll:        0,
       gyroCutoffPitch:       0,
       gyroCutoffYaw:         0,
+      tvHoldGain:            0,
+      tvHoldDeadband:        0,
+      tvHoldMaxRate:         0,
     };
 
     this.SENSOR_CONFIG = {
