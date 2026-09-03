@@ -737,7 +737,7 @@
     flex-direction: column;
     gap: 4px;
     padding: 8px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -771,7 +771,7 @@
   }
 
   .meter-card {
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 4px;
 
     background-color: var(--color-surface);
@@ -805,7 +805,7 @@
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .content {

@@ -417,7 +417,7 @@
     padding: 0 6px;
     height: 1.4rem;
     border: 0;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background: transparent;
     color: var(--color-text-alt);
     cursor: pointer;
@@ -504,7 +504,7 @@
     height: 1.5rem;
     padding: 0 8px;
     border: 1px solid var(--color-border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-input-bg-disabled);
     color: var(--color-text-soft);
     text-align: right;
@@ -598,7 +598,7 @@
   .curve-throttle-label {
     position: absolute;
     padding: 0 4px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
     color: var(--color-text-soft);
     font-size: 0.65rem;

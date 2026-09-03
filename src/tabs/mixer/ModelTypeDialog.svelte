@@ -58,7 +58,7 @@
   dialog {
     width: 40em;
     max-width: calc(100vw - 2em);
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   h3 {

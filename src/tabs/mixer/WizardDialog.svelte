@@ -253,7 +253,7 @@
   dialog {
     width: 54em;
     max-width: calc(100vw - 2em);
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   h3 {
@@ -275,7 +275,7 @@
     margin-bottom: 12px;
     padding: 10px 12px;
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: var(--color-surface-float, var(--color-surface));
   }
 
@@ -314,7 +314,7 @@
     width: 100%;
     aspect-ratio: 103.58047 / 48.517796;
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     padding: 10px;
     box-sizing: border-box;

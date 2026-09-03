@@ -365,7 +365,7 @@
     inset: 0;
     margin: auto;
     width: min(400px, calc(100% - 2em));
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog h3 {
@@ -387,7 +387,7 @@
   .wizard-progress {
     width: 100%;
     height: 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background: var(--color-border);
     overflow: hidden;
   }

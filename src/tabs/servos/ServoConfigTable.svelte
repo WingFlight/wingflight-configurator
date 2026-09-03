@@ -593,7 +593,7 @@
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: transparent;
     color: var(--color-text-soft);
     font-size: 0.62rem;
@@ -657,7 +657,7 @@
     display: block;
     flex: 1;
     height: 10px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
 
     background-color: var(--color-surface-float, var(--color-surface));
@@ -670,7 +670,7 @@
     left: 0;
     display: block;
     height: 100%;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     background-color: var(--color-accent, var(--accent));
   }
 
@@ -752,7 +752,7 @@
   .mobile-row-rev {
     flex-shrink: 0;
     padding: 1px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     font-size: 0.65rem;
     font-weight: 700;
 

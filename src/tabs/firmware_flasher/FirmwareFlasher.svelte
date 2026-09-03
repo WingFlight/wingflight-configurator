@@ -1206,7 +1206,7 @@
     height: 1.5rem;
     min-width: 120px;
     padding: 0 4px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--color-border-soft);
     background-color: var(--color-input-bg);
     color: var(--color-text);
@@ -1219,7 +1219,7 @@
 
   .release_info {
     margin-top: var(--section-gap);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     border: 1px solid var(--color-border);
   }
@@ -1244,7 +1244,7 @@
   .note {
     margin-top: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     color: var(--color-text);
     background-color: var(--color-surface);
     border: 1px solid var(--color-border-accent);
@@ -1293,17 +1293,17 @@
   .progress {
     width: 100%;
     height: 26px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
 
     &::-webkit-progress-bar {
       background-color: #4f4f4f;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
     }
 
     &::-webkit-progress-value {
       background-color: #f86008;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
     }
   }
 
@@ -1323,19 +1323,19 @@
 
     &.valid {
       background-color: #00d000;
-      border-radius: 5px;
+      border-radius: var(--radius-sm);
       color: #fff;
     }
 
     &.invalid {
       background-color: #a62e32;
-      border-radius: 5px;
+      border-radius: var(--radius-sm);
       color: #fff;
     }
 
     &.actionRequired {
       background-color: #0081ff;
-      border-radius: 5px;
+      border-radius: var(--radius-sm);
       color: #fff;
     }
   }
@@ -1352,7 +1352,7 @@
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .buttons {

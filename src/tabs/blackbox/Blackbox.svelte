@@ -160,7 +160,7 @@
   .note {
     margin-top: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);

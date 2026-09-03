@@ -293,6 +293,6 @@
     color: var(--color-text-soft);
 
     border: 1px dashed var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
   }
 </style>

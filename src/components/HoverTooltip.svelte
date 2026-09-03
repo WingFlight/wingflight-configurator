@@ -119,7 +119,7 @@
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 18px;
-    border-radius: 2px;
+    border-radius: var(--radius-md);
     // The tooltip must never intercept the pointer: it can end up positioned
     // over neighbouring fields (or briefly over its own anchor before
     // computePosition settles), and a click there should always reach the
@@ -128,8 +128,12 @@
 
     color: var(--color-text);
     background-color: var(--color-surface-float);
-    border: 1px solid var(--color-border-accent);
-    box-shadow: 0px 4px 12px -4px var(--color-shadow);
+    // A neutral hairline plus real elevation, rather than the accent
+    // outline this used to carry - a red frame on every hover tip read as
+    // an error state and put brand colour on the noisiest surface in the
+    // app. The shadow is what separates it from the panel underneath.
+    border: 1px solid var(--color-border-soft);
+    box-shadow: var(--shadow-md);
   }
 
   .tooltip-arrow {
@@ -138,7 +142,7 @@
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;
     position: absolute;
-    border-right: 8px solid var(--color-border-accent);
+    border-right: 8px solid var(--color-border-soft);
 
     &::after {
       content: "";
