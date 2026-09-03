@@ -60,6 +60,11 @@
       "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-modern_ui",
+      "path": "./feature-modern_ui/"
     }
   ]
 }
