@@ -1,48 +1,23 @@
 <!--
   File: src/images/remap_fc/CASED_GENERIC.svg
-  Generic, unbranded "cased" flight controller diagram — stands in
-  for any board that isn't a bare PCB stack (see GENERIC.svg for
-  that case), since building a dedicated diagram per manufacturer
-  doesn't scale. Deliberately minimal: just the case shape, with no
-  connector, LED, or pin header drawn on it, since none of those are
-  actually known for an arbitrary board and would only look wrong
-  guessed at. No brand text baked in either: the caller overlays the
-  FC's own reported name on top, at the shared label position both
-  this file and GENERIC.svg leave clear (see remap_fc.svelte's
-  .board-diagram-label) — kept identical between the two so
-  switching which image is shown never moves the text. Same
-  dimensional case styling as NEXUS_XR.svg/FLYDRAGON_PRO42688.svg
-  (rounded corners, metal bezel), but in a neutral grey rather than
-  any brand's colour, and on the same square 320x320 canvas as
-  GENERIC.svg so the two share the same visible footprint when
-  swapped between. Deliberately has no bezel on the left edge — the
-  case reads as continuing past the frame rather than boxed in, since
-  a real board's own edge is rarely what a user cares about seeing.
-  Explicit width/height (matching the viewBox) alongside it, not just
-  the viewBox alone — an <img> can't reliably infer intrinsic size
-  from viewBox-only SVGs on every rendering engine, and without it
-  this can render at zero height.
+  Reference copy of the generic "cased" flight controller diagram —
+  remap_fc.svelte inlines this shape directly (see its own
+  board-diagram <svg>) rather than loading this file at runtime, so
+  keep the two in sync by hand. Outer/inner body matches
+  flydragon.svg's own outline (a plain rounded rect, rx 20/14), grey
+  as the fallback colour a manufacturer with no dedicated diagram
+  gets. Trial: cropped to a square on the board's right side (right
+  edge aligned with the board's own right edge, so its natural
+  rounded corner still shows), deliberately excluding the whole
+  left-side territory where a USB-C connector would sit — the point
+  being that no manufacturer's connector position or orientation
+  needs accounting for at all any more (the connector rects, and the
+  standalone USBC.svg component they came from, have been removed).
+  Explicit width/height alongside the viewBox — an <img> can't
+  reliably infer intrinsic size from viewBox alone on every rendering
+  engine, and without it this can render at zero height.
 -->
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="320"
-  height="320"
-  viewBox="0 0 320 320"
->
-  <!-- Case, rounded corners on the right only, flush/open on the left -->
-  <path
-    d="M 0 10 L 286 10 A 24 24 0 0 1 310 34 L 310 286 A 24 24 0 0 1 286 310 L 0 310 Z"
-    fill="#aab2bb"
-  />
-  <path
-    d="M 0 20 L 284 20 A 16 16 0 0 1 300 36 L 300 284 A 16 16 0 0 1 284 300 L 0 300 Z"
-    fill="#3a3f46"
-  />
-
-  <!-- Label zone: x=85-235, y=84-116 of this 320x320 viewBox
-       (26.6%-73.4% width, 26.25%-36.25% height) — kept clear for the
-       board name overlaid on top by the caller. No visible marker
-       drawn; noted here only so that safe zone stays intentional if
-       this file is edited. Same zone GENERIC.svg leaves clear,
-       between its top mounting holes and its central chip. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="530 10 540 540" width="540" height="540">
+  <rect x="30" y="10" width="1040" height="540" rx="20" fill="#9ba3ac" />
+  <rect x="56" y="36" width="988" height="488" rx="14" fill="#4b5561" />
 </svg>

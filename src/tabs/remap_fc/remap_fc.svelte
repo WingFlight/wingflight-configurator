@@ -25,6 +25,7 @@
     getRowSelectableOptions,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
+  import { isMcuSupported } from "@/js/remap_fc/timer_dma_lookup.js";
   import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
   import {
     buildReferenceLabels,
@@ -36,12 +37,9 @@
   import mcuAllData from "@/tabs/remap_fc/MCU-all.json";
   import referenceDesignsLocal from "@/tabs/remap_fc/reference_designs.json";
 
-  // Starts as the copy bundled with this build so the tab is usable
-  // immediately, then replaced with the latest version fetched from
-  // GitHub once that resolves (cached for the rest of this session --
-  // see reference_design_source.js), so a newly documented board
-  // doesn't have to wait for a new configurator release to show up
-  // here. Silently keeps the bundled copy if the fetch fails.
+  // Starts as the bundled copy, then replaces itself with the latest
+  // version fetched from GitHub (see reference_design_source.js), so
+  // a newly documented board doesn't need a new release.
   let referenceDesigns = $state(referenceDesignsLocal);
   loadReferenceDesigns(referenceDesignsLocal).then((data) => {
     referenceDesigns = data;
@@ -63,79 +61,60 @@
   // setters below (this component never fetches anything itself). ---
   let running = $state(false);
   let error = $state(null);
-  // Whether a read has completed at least once — once true, the board
-  // info card (and everything else below it) shows instead of the
-  // "Read FC" button, since there's no longer anything for that
-  // button to do.
+  // Whether a read has completed — flips the pre-read intro/button
+  // over to the board info card and table.
   let hasRead = $state(false);
-  // The flight controller's MCU family (e.g. "STM32F7X2"), parsed from
-  // the current hardware dump. Matches the top-level keys of
-  // MCU-all.json.
+  // MCU family (e.g. "STM32F7X2"), matching MCU-all.json's top-level
+  // keys.
   let mcuType = $state(null);
-  // The flight controller's motor_pwm_protocol as it was when the FC
-  // was read (e.g. "DSHOT600"), set by remap_fc.js via
-  // setCurrentMotorProtocol(). Reassigning a pin's timer/DMA makes the
-  // firmware drop this back to PWM, so it's re-applied as
-  // `set motor_pwm_protocol = <this>` right before `save` (see
-  // commandsToSend). null when the read couldn't determine it.
+  // motor_pwm_protocol as read (e.g. "DSHOT600") -- reassigning a
+  // pin's timer/DMA resets it to PWM, so it's restored via
+  // commandsToSend. Set by remap_fc.js via setCurrentMotorProtocol().
   let currentMotorProtocol = $state(null);
-  // workingCurrent is a local, editable copy of the current hardware
-  // map: it starts as whatever was read from the FC, and is mutated
-  // here as the user makes "Current Option" picks. Nothing is sent to
-  // the FC yet — this is staging only.
+  // Editable working copy of the current hardware map, staged only
+  // until "Load Changes" is pressed.
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   let workingCurrent = $state({});
-  // originalCurrent is the untouched hardware map exactly as last read
-  // (or last successfully applied) — the baseline workingCurrent is
-  // diffed against to work out what actually changed and needs to be
-  // sent to the FC. Never mutated by editing, only replaced wholesale
-  // by setHardware()/reset().
+  // Baseline as last read/applied -- workingCurrent is diffed against
+  // this to find what actually changed.
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   let originalCurrent = $state({});
-  // defaultHardware is the read-only reference for each option's
-  // default pin; it never changes after a "Read FC" run.
+  // Read-only reference for each option's default pin; never changes
+  // after a read.
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   let defaultHardware = $state({});
-  // DMA streams already claimed by something outside this tool's
-  // control -- SPI buses, the ADC, etc. -- read once per "Read FC" (see
-  // remap_fc.js's #doRunSequence) and handed to reconcileTimersAndDma
-  // so its reallocation pass never proposes stealing one of these.
+  // DMA streams claimed outside this tool's control (SPI, ADC, ...),
+  // so reallocation never proposes stealing them.
   /** @type {Set<string>} */
   let reservedDmaStreams = $state(new Set());
-  // Same idea for full timer+channel claims outside this tool's
-  // control -- the gyro's clock/sync signal, etc.
+  // Same idea for timer+channel claims (the gyro's clock/sync, ...).
   /** @type {Set<string>} */
   let reservedTimers = $state(new Set());
-  // The option keys that have a row in the table: seeded from whatever
-  // was assigned on read, and grown whenever an option is added via
-  // the "+ Add" row. Picking "None" for a row's current option removes
-  // that row again — that's how an accidental add gets undone.
+  // Option keys with a row in the table, seeded on read and grown via
+  // "+ Add". Picking "None" removes the row again.
   /** @type {string[]} */
   let visibleOptions = $state([]);
-  // Option keys whose row was just added via "+ Add" and hasn't had a
-  // "Current Option" pick made yet — these show the "Set Option"
-  // placeholder instead of whatever their default pin's join would
-  // otherwise resolve to, forcing an explicit "None" or real choice.
+  // Options whose row shows the "Set Option" placeholder instead of a
+  // resolved value.
   /** @type {string[]} */
   let unsetOptions = $state([]);
-  // Bound to the "+ Add" dropdown so we can reset it back to the
-  // placeholder after each selection.
+  // Bound to the "+ Add" dropdown; reset to the placeholder after
+  // each selection.
   let selectedAddOption = $state("");
-  // Whether the "+ Add" row is currently showing its dropdown rather
-  // than the button that reveals it — opened on click, and closed
-  // again as soon as a choice is made.
+  // Whether "+ Add" is showing its dropdown rather than the button
+  // that reveals it.
   let addMenuOpen = $state(false);
-  // The option key most recently placed onto a pin via a row's
-  // Current Option dropdown -- set in handleCurrentOptionChange, read
-  // by the pin-conflict warning panel when no automatic swap/move
-  // resolves an unresolved clash, to point the user back at whichever
-  // pin choice they just made rather than guessing at some other
-  // feature to touch on their behalf.
+  // Option most recently placed via a row's dropdown -- used by the
+  // pin-conflict panel to point back at the user's last edit.
   let lastChangedOption = $state(null);
   // Whether the "Calculated config" card is expanded -- collapsed by
-  // default, since it's implementation detail (raw timer/DMA
-  // assignments) most users never need to look at.
+  // default, since most users never need it.
   let showCalculatedDetails = $state(false);
+
+  // Whether MCU-all.json has real timer/DMA data for this board's
+  // MCU -- false means pin remapping can't be safely calculated, so
+  // the tool shows a warning instead of opening (see the template).
+  let mcuSupported = $derived(isMcuSupported(mcuAllData, mcuType));
 
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
@@ -149,86 +128,150 @@
     buildRowsForOptions(orderedVisible, workingCurrent, defaultHardware),
   );
 
-  // The board diagram's own square size in pixels, computed directly
-  // from the table's row count rather than measured from the DOM --
-  // measuring the table's own rendered height instead would also
-  // catch the "+ Add" dropdown's option list temporarily inflating it
-  // while open, growing and then shrinking the diagram back down as
-  // soon as it's closed. This way only real, committed rows change
-  // it. Clamped so it's never too small to read or big enough to
-  // dwarf the table next to it. Computed in JS rather than via the
-  // CSS aspect-ratio property -- this app's own runtime doesn't
-  // support aspect-ratio (it silently resolves to a height of 0), so
-  // this is the reliable alternative regardless.
-  const DIAGRAM_BASE_SIZE = 70;
-  const DIAGRAM_ROW_SIZE = 25;
-  let diagramSize = $derived(
+  // Diagram height, computed from the table's row count rather than
+  // measured from the DOM (which would also catch the "+ Add"
+  // dropdown temporarily inflating it), and clamped to a sensible
+  // range. This app's runtime doesn't support CSS aspect-ratio, so
+  // this is the reliable alternative.
+  const DIAGRAM_BASE_SIZE = 24;
+  const DIAGRAM_ROW_SIZE = 28;
+  let diagramHeight = $derived(
     Math.min(
       480,
       Math.max(160, DIAGRAM_BASE_SIZE + tableRows.length * DIAGRAM_ROW_SIZE),
     ),
   );
+  // Width derived from the diagram's own square shape (see the
+  // inline <svg>'s viewBox below -- it's cropped to a square on the
+  // board's right side, right edge aligned with the board's own
+  // right edge, deliberately excluding the USB-C connector's whole
+  // left-side territory so no manufacturer's connector position or
+  // orientation ever needs to be accounted for here), so the artwork
+  // fills the wrapper edge to edge as it grows.
+  const DIAGRAM_ASPECT_RATIO = 1;
+  let diagramWidth = $derived(diagramHeight * DIAGRAM_ASPECT_RATIO);
 
-  // The cased diagram (see below) reads as "this specific board is
-  // documented" -- only warranted once boardDesign actually names a
-  // real reference design (e.g. "F7C5"). "BTFL" is what a board
-  // running stock Betaflight (rather than a Rotorflight reference
-  // design) reports here, and an empty string is what FC.CONFIG
-  // starts as before any value has actually arrived -- neither is a
-  // real reference design, so both fall back to the bare-PCB GENERIC
-  // diagram instead, rather than implying a level of board-specific
-  // support that isn't actually there.
-  let boardDiagramSrc = $derived(
-    FC.CONFIG.boardDesign && FC.CONFIG.boardDesign !== "BTFL"
-      ? "/images/remap_fc/CASED_GENERIC.svg"
-      : "/images/remap_fc/GENERIC.svg",
+  // The board's own printed brand name -- distinct from
+  // manufacturers.js's own `name` (the parent RC-radio manufacturer,
+  // e.g. "FrSky"), this is what's actually silkscreened on the board
+  // itself (e.g. "Vantac"). Falls back to FC.CONFIG's own reported
+  // manufacturerId when a board has no dedicated diagram.
+  const MANUFACTURER_BOARD_NAMES = {
+    RDMS: "RadioMaster",
+    FRSK: "Vantac",
+    GSKY: "Goosky",
+    FDRC: "FlyDragon",
+    FWRF: "FlyWing",
+    MTKS: "Matek",
+  };
+  let boardBrandName = $derived(
+    MANUFACTURER_BOARD_NAMES[FC.CONFIG.manufacturerId] ??
+      FC.CONFIG.manufacturerId,
   );
 
-  // Pin -> friendly name (e.g. "ESC", "TAIL", "Port A Rx") from the
-  // reference design matching this board's own design family, so the
-  // table and "+ Add" can show the board's own silkscreen labelling
-  // alongside the CLI's MOTOR/SERVO/SERIAL_RX naming. Empty for a
-  // board whose design isn't one of the documented reference families
-  // -- every lookup below just falls back to the plain option name.
+  // The board's own printed branding artwork -- one <MANUFACTURER>_
+  // BRAND.svg file per manufacturer (see src/images/remap_fc/), each
+  // laid over the diagram at a fixed width (see BRAND_IMAGE_WIDTH)
+  // with its own aspect ratio setting the height, so every image can
+  // have a different natural shape without needing per-manufacturer
+  // layout code. A manufacturer with no entry here just shows the
+  // plain generic body.
+  const MANUFACTURER_BRAND_IMAGES = {
+    RDMS: { file: "RADIOMASTER_BRAND.svg", aspect: 282 / 75 },
+    FRSK: { file: "VANTAC_BRAND.svg", aspect: 1377 / 596 },
+    GSKY: { file: "GOOSKY_BRAND.svg", aspect: 1427 / 135 },
+    FDRC: { file: "FLYDRAGON_BRAND.svg", aspect: 500 / 360 },
+    FWRF: { file: "FLYWING_BRAND.svg", aspect: 613 / 171 },
+    MTKS: { file: "MATEKSYS_BRAND.svg", aspect: 300 / 70 },
+  };
+  const BRAND_IMAGE_X = 590;
+  const BRAND_IMAGE_Y = 109; // 55 + 10% of the board's own 540-tall height
+  const BRAND_IMAGE_WIDTH = 400;
+  let boardBrandImage = $derived(
+    MANUFACTURER_BRAND_IMAGES[FC.CONFIG.manufacturerId],
+  );
+
+  // The board's own model text, shown under the brand image -- e.g.
+  // "VANTAC_RF007" becomes just "RF007" (the brand image already
+  // shows "VANTAC"), stripping the leading "<brand>_" case
+  // insensitively. A board name that doesn't start with the brand
+  // (e.g. "NEXUS_XR") is shown exactly as reported, unstripped.
+  let boardModelName = $derived.by(() => {
+    const raw = FC.CONFIG.boardName ?? "";
+    const prefix = `${boardBrandName}_`;
+    return raw.slice(0, prefix.length).toUpperCase() === prefix.toUpperCase()
+      ? raw.slice(prefix.length)
+      : raw;
+  });
+
+  // The model text is drawn at a fixed base font size, then scaled
+  // (via boardModelTextScale, applied as a <g> transform around it)
+  // so its rendered width always matches MODEL_TEXT_TARGET_WIDTH --
+  // short names like "RF007" get scaled up, long ones scaled down,
+  // rather than every name just rendering at whatever width its own
+  // character count happens to produce. SVG has no CSS-style
+  // auto-fit for text, so this measures the actual rendered width via
+  // getComputedTextLength() and recomputes the scale whenever the
+  // name changes.
+  const MODEL_TEXT_TARGET_WIDTH = BRAND_IMAGE_WIDTH;
+  let modelTextEl = $state(null);
+  let boardModelTextScale = $state(1);
+  $effect(() => {
+    boardModelName; // re-measure whenever the displayed name changes
+    if (modelTextEl) {
+      const width = modelTextEl.getComputedTextLength();
+      boardModelTextScale = width > 0 ? MODEL_TEXT_TARGET_WIDTH / width : 1;
+    }
+  });
+
+  // A board reporting no reference design at all, or the generic
+  // "BTFL" placeholder Rotorflight uses for an unrecognised
+  // Betaflight target, isn't a real cased board -- it's shown as a
+  // bare, uncased PCB (see GENERIC.svg) instead of the cased shape
+  // below, matching the same condition remap_fc.js already uses to
+  // decide whether to fetch richer Betaflight-target defaults.
+  let isGenericBoard = $derived(
+    !FC.CONFIG.boardDesign || FC.CONFIG.boardDesign === "BTFL",
+  );
+
+  // Body/bezel colours for the board diagram -- grey is the generic
+  // fallback; manufacturers with a real reference diagram get their
+  // own real case colours instead.
+  const MANUFACTURER_BOARD_COLORS = {
+    RDMS: { bezel: "#c9d0d6", body: "#2f6f96" },
+    FDRC: { bezel: "#c9d0d6", body: "#a13d3d" },
+    GSKY: { bezel: "#c9d0d6", body: "#6f4a91" },
+    FRSK: { bezel: "#2b2d31", body: "#101113" },
+  };
+  let boardBezelColor = $derived(
+    MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId]?.bezel ?? "#9ba3ac",
+  );
+  let boardBodyColor = $derived(
+    MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId]?.body ?? "#4b5561",
+  );
+
+  // Pin -> board's own silkscreen name (e.g. "ESC", "TAIL") from the
+  // matching reference design; empty for an undocumented board.
   let referenceLabels = $derived(
     buildReferenceLabels(referenceDesigns, FC.CONFIG.boardDesign),
   );
 
-  // Pins the reference design wires to fixed onboard sensor/support
-  // hardware (the baro's I2C bus, the gyro's SPI lines, etc.) rather
-  // than a general-purpose connector -- excluded from "+ Add" below,
-  // since offering them for reassignment would silently break
-  // whatever that sensor is rather than free up a spare pin.
+  // Pins wired to fixed onboard sensors (baro, gyro, ...) -- excluded
+  // from "+ Add" so they can't be reassigned.
   let reservedPins = $derived(
     buildReservedPins(referenceDesigns, FC.CONFIG.boardDesign),
   );
 
-  // Pins this board's reference design documents as a specific,
-  // purpose-built connector (AUX, SBUS, TLM, RPM, ...) rather than a
-  // generic "Port X" one -- same set setHardware already uses to
-  // decide which UART/I2C options always get a row.
+  // Pins the reference design names as a specific connector (AUX,
+  // SBUS, TLM, RPM, ...) rather than a generic port.
   let namedConnectorPins = $derived(
     buildNamedConnectorPins(referenceDesigns, FC.CONFIG.boardDesign),
   );
 
-  // The UART/I2C option keys behind those named-connector pins (e.g.
-  // "RX2" for a board that calls it "TLM") -- passed to
-  // getRowSelectableOptions so a named connector can be picked as any
-  // row's Current Option (labelled through optionLabel the same as
-  // everything else, so the user sees "TLM", never the raw "RX2"), the
-  // same as a motor/servo can. Without this, clearing a named
-  // connector's own row leaves it reachable only through "+ Add",
-  // where nothing hints that "TLM" is what "RX2" is called there -- a
-  // user who doesn't already know that mapping would have no way to
-  // bring it back at all.
-  //
-  // Explicitly excludes TABLE_OPTION_KEYS: a servo/motor's own default
-  // pin can itself be a named connector (e.g. "TAIL" is S4's own pin
-  // on some boards), but getRowSelectableOptions's own pool already
-  // includes every TABLE_OPTION_KEYS member unconditionally -- adding
-  // S4 again here would offer it twice in the same dropdown, which
-  // Svelte's keyed {#each} in Select.svelte rejects outright as a
-  // duplicate key.
+  // Option keys behind those named connectors (e.g. "RX2" for "TLM"),
+  // fed into getRowSelectableOptions so they stay pickable by name.
+  // Excludes TABLE_OPTION_KEYS to avoid offering a key twice (e.g.
+  // "TAIL" can be S4's own default pin).
   let namedConnectorOptionKeys = $derived(
     Object.keys(defaultHardware).filter(
       (option) =>
@@ -237,42 +280,20 @@
     ),
   );
 
-  // Two labels displayName would otherwise resolve to that read
-  // misleadingly for how this board's outputs are actually used in
-  // practice, even though the FC's own reference design / CLI naming
-  // is unchanged: "TAIL" (a reference design usage name) is wired to a
-  // servo output, and "Motor 2" (expandOptionName's fallback for M2)
-  // is actually a second ESC output. Applied by optionLabel, on top of
-  // displayName's own result, wherever a *function* is being picked
-  // for a port rather than the port itself being named -- see
-  // optionLabel/displayName's own comments for the distinction.
-  //
-  // Only ever applies once this board actually matched a documented
-  // reference design (see optionLabel's own referenceLabels check) --
-  // "Motor 2" is displayName's own generic fallback for M2 on *any*
-  // undocumented board (see displayName), not just the reference
-  // design this override was actually written for, so without that
-  // gate every plain Betaflight-target board reading "Motor 2" would
-  // get silently relabelled "ESC 2" too, despite following no
-  // documented usage where that's actually true.
+  // Labels that read misleadingly as displayName's plain fallback
+  // (e.g. "Motor 2" is really a second ESC output) -- applied by
+  // optionLabel only once a reference design actually matched, so an
+  // undocumented board never gets these guessed at.
   const DISPLAY_LABEL_OVERRIDES = {
     TAIL: "Servo 4",
     "Motor 2": "ESC 2",
   };
 
-  // The board's own name for an option's default pin (e.g. "ESC" for
-  // "M1", "TAIL" for "S4") when this board's reference design
-  // documents one, since that's the label the user actually has
-  // printed on the board; otherwise falls back to expandOptionName's
-  // spelled-out CLI name (e.g. "Servo 1" for "S1"). Used anywhere a
-  // *physical port* is being named, never overridden, since that
-  // identity is the board's own connector name and can't change: a
-  // row's own "FC Pin" column, and "+ Add" (bringing a port into the
-  // table is about which port, not which logical function ends up
-  // occupying it -- see optionLabel for that). Always resolved via the
-  // option's *own* default pin, regardless of where it's currently
-  // sitting -- an option's identity, and so its reference label,
-  // doesn't change just because it's been reassigned elsewhere.
+  // Board's own name for a port (e.g. "ESC", "TAIL") from its
+  // reference design, falling back to expandOptionName's spelled-out
+  // CLI name. For the physical port itself -- never overridden, since
+  // that identity can't change (see optionLabel for the function
+  // being picked instead).
   function displayName(option) {
     const pin = defaultHardware[option]?.pin;
     return (
@@ -280,32 +301,18 @@
     );
   }
 
-  // The name to show for an option wherever it appears as a value
-  // being *picked* for some port's Current Option -- the dropdown's
-  // own selected-value display and its list of choices. Same as
-  // displayName, but with DISPLAY_LABEL_OVERRIDES applied on top --
-  // and only once this board actually matched a documented reference
-  // design (referenceLabels is {} otherwise, see its own comment) --
-  // since a function being assigned to a port reads better by its
-  // logical servo/ESC slot than by whichever other connector's name
-  // its own default pin happens to share (e.g. picking S4 to drive the
-  // TAIL port reads as "Servo 4", not as "TAIL" a second time). A
-  // board with no matched reference design has no such documented
-  // usage to read better by, so it always falls back to plain
-  // displayName instead, however that resolves.
+  // Label for a value being picked as some port's Current Option --
+  // displayName with DISPLAY_LABEL_OVERRIDES applied, only once a
+  // reference design matched (referenceLabels is {} otherwise).
   function optionLabel(option) {
     const name = displayName(option);
     const hasReferenceDesign = Object.keys(referenceLabels).length > 0;
     return hasReferenceDesign ? (DISPLAY_LABEL_OVERRIDES[name] ?? name) : name;
   }
 
-  // Builds the human-readable label for a pin-conflict suggestion (see
-  // pinConflictSuggestions/pin_conflict_suggestions.js), using this
-  // board's own reference-design labels the same way every other
-  // option label in this tab does -- pin_conflict_suggestions.js
-  // itself has no knowledge of reference designs, only raw CLI option
-  // keys (e.g. "M1"), so building the actual display label is this
-  // component's job, not that module's.
+  // Human-readable label for a pin-conflict suggestion, using this
+  // board's own reference-design labels (pin_conflict_suggestions.js
+  // only knows raw CLI keys like "M1").
   function suggestionLabel(suggestion) {
     return suggestion.type === "swap"
       ? $i18n.t("remapFcSuggestionSwap", {
@@ -318,21 +325,12 @@
         });
   }
 
-  // The option keys currently claimed as some row's Current Option —
-  // including a row showing itself, unchanged. Anything in this set is
-  // spoken for and shouldn't be offered anywhere else.
-  //
-  // Unioned with every TABLE_OPTION_KEYS member directly present as a
-  // key in workingCurrent, not just ones a row's join could discover:
-  // buildRowsForOptions finds a row's occupant by looking up who else
-  // sits on *that row's own default pin*, so an option the FC reports
-  // as actually assigned, but whose own default hardware never sets a
-  // pin for it (e.g. an LED strip pin some boards don't wire by
-  // default), has no row whose default pin ever points back to it —
-  // its row resolves to defaultPin: null, currentOption: null, even
-  // though it's genuinely still claimed. Without this, such an option
-  // would wrongly show back up in "+ Add" and other rows' dropdowns as
-  // if it were free.
+  // Options claimed by some row's Current Option right now. Also
+  // unions in any TABLE_OPTION_KEYS member present directly in
+  // workingCurrent, since a row's own join can't discover an occupant
+  // whose own default hardware sets no pin (e.g. an LED strip some
+  // boards don't wire by default) -- without this it would wrongly
+  // show back up as free.
   let claimedOptions = $derived([
     ...new Set([
       ...tableRows
@@ -342,16 +340,8 @@
     ]),
   ]);
 
-  // The full pool for the "+ Add" row: every default-structure option
-  // that isn't already spoken for — including ones that are currently
-  // assigned but never get an automatic row (UART/I2C resources),
-  // which still show up here so they can be brought into view
-  // (handleAddChange guards against re-adding an option that already
-  // has a row, so this can't create a duplicate when picked) — except
-  // reservedPins, which are never offered at all (see its own comment).
-  // No "None" sentinel here, unlike a row's own Current Option
-  // dropdown — "+ Add" only ever brings something new into view, so
-  // there's nothing for "None" to mean.
+  // Everything still addable via "+ Add" -- every default option not
+  // already shown a row, minus reservedPins.
   let addablePool = $derived(
     getAddableOptions(defaultHardware, visibleOptions).filter(
       (addable) => !reservedPins.has(addable.defaultPin),
@@ -367,48 +357,14 @@
   // tall when there's a lot to pick from.
   let addMenuSize = $derived(Math.min(addablePool.length + 1, 10));
 
-  // The pool offered by a given row's own "Current Option" dropdown.
-  // Computed per row, rather than shared, because eligibility depends
-  // on what this row currently holds: picking anything here other than
-  // "None" or the row's own option evicts row.currentOption (see
-  // handleCurrentOptionChange's previousOccupant), so that occupant is
-  // excluded from the claimed set passed into the M/S/Freq
-  // filling-order check (getRowSelectableOptions/isEligibleToAdd) —
-  // otherwise a candidate that's only eligible *because* the occupant
-  // is configured (e.g. M3 needs M2 configured, and M2 is what this
-  // row currently holds) would be offered, and picking it would
-  // immediately break the very invariant that made it eligible,
-  // leaving M3 configured with M2 gone. The row's own current value
-  // doesn't need to be included here regardless — the template always
-  // renders it as its own option separately.
-  //
-  // Otherwise excludes only options genuinely claimed elsewhere right
-  // now (claimedOptions, via getRowSelectableOptions) -- deliberately
-  // not options merely sitting in another row's unresolved "unset"
-  // state (e.g. a freshly "+ Add"ed row nobody's picked a value for
-  // yet). An earlier version excluded those too, on the theory that
-  // one row's edit could "steal" an option another row was mid-pick
-  // on -- but every row's own dropdown recomputes live off
-  // claimedOptions, so the moment anything actually claims an option,
-  // every other row's list drops it immediately regardless; there was
-  // no real race to guard against, only an option that's genuinely
-  // free being needlessly withheld from every row but its own.
-  //
-  // Deliberately uses claimedOptions rather than visibleOptions: an
-  // option can have its own row (visibleOptions) while having gone
-  // "homeless" — e.g. M1's row still exists, but a different row's edit
-  // moved M1 off its own default pin, so M1 itself is no longer any
-  // row's Current Option — and a homeless option must stay pickable
-  // elsewhere, exactly like it does in the "+ Add" pool (see
-  // getAddableOptions), or there'd be no way to place it anywhere but
-  // back onto its own original pin.
-  //
-  // namedConnectorOptionKeys extends getRowSelectableOptions's own
-  // pool beyond TABLE_OPTION_KEYS with this board's own named
-  // connectors (AUX, SBUS, TLM, RPM, ...) -- without it, clearing one
-  // is reachable only through "+ Add", where nothing hints that (say)
-  // "TLM" is what "RX2" is called here, so a user who doesn't already
-  // know that mapping would have no way to bring it back at all.
+  // Pool for a row's own Current Option dropdown. Excludes the row's
+  // own current pick from claimedOptions first, so a candidate that's
+  // only eligible because of it isn't offered (M3 needs M2 configured
+  // -- offering M3 while M2 is what this row holds would let picking
+  // it break that invariant). Otherwise excludes only options
+  // genuinely claimed elsewhere (not merely "unset" in another row),
+  // and includes namedConnectorOptionKeys so named connectors (AUX,
+  // SBUS, TLM, ...) stay pickable by name.
   /**
    * @param {import("@/js/remap_fc/remap_table.js").RemapRow} row
    */
@@ -423,29 +379,17 @@
     ].filter((option) => option !== row.currentOption);
   }
 
-  // The `resource` CLI commands needed to bring the flight controller
-  // from originalCurrent to workingCurrent -- recomputed on every edit
-  // so the "Load Changes" button and its preview panel always reflect
-  // exactly what's staged right now. hasPendingChanges is based on this
-  // alone (not commandsToSend below), since a "save" on its own with no
-  // resource changes to go with it is never something to offer.
+  // `resource` commands needed to reach workingCurrent from
+  // originalCurrent, recomputed on every edit.
   let pendingCommands = $derived(
     buildChangeCommands(originalCurrent, workingCurrent),
   );
   let hasPendingChanges = $derived(pendingCommands.length > 0);
 
-  // The single, always-current timer/DMA reallocation pass over the
-  // working state: whether it clashes right now, what a fresh
-  // allocation pass would assign each feature (forcing one through
-  // even if it still collides with something, rather than leaving a
-  // feature blank -- see pickBestOption/allocateDma's own comments for
-  // why), which features are still genuinely unresolved despite that,
-  // and the `timer`/`dma pin` commands needed to apply it. Recomputed
-  // on every table edit -- there's no separate "Allocate Timers/DMA"
-  // step to press; see markApplied for how it avoids proposing the
-  // same commands again forever once they've actually been sent. Empty/
-  // no-clash before the FC's been read, since there's nothing to check
-  // yet.
+  // Always-current timer/DMA reallocation pass over the working
+  // state, recomputed on every edit rather than needing a separate
+  // "Allocate" step (see markApplied for how re-sending is avoided).
+  // Empty/no-clash before the FC's been read.
   let reconciled = $derived(
     hasRead
       ? reconcileTimersAndDma(
@@ -467,19 +411,11 @@
   let calculatedAllocationTable = $derived(reconciled.calculatedTable);
   let unresolvedFeatures = $derived(reconciled.unresolved);
 
-  // Candidate pin swaps/moves that would let a fresh reallocation
-  // resolve everything, plus which features are genuinely unresolved
-  // regardless of whether any were found -- empty whenever a clash
-  // exists but a full reallocation pass on the *current* pin
-  // assignments would already resolve it (liveClash.hasClash true,
-  // unresolvedFeatures empty): that case only needs "Allocate
-  // Timers/DMA" pressed, not a pin-level fix, so the warning panel
-  // below stays hidden for it. unresolvedFeatures only non-empty once
-  // reallocation genuinely can't resolve the current pin layout at
-  // all -- see pin_conflict_suggestions.js for the search itself.
-  // suggestions can still be empty even then, when no single swap/move
-  // resolves it -- the panel falls back to pointing at
-  // lastChangedOption for that case rather than guessing at a fix.
+  // Candidate pin swaps/moves that would let reallocation resolve
+  // everything, plus which features are still genuinely unresolved
+  // (see pin_conflict_suggestions.js for the search). suggestions can
+  // still be empty with unresolvedFeatures non-empty, when no single
+  // swap/move fixes it.
   let pinConflictResult = $derived(
     hasRead
       ? findPinConflictSuggestions(
@@ -493,13 +429,8 @@
       : { unresolvedFeatures: [], suggestions: [] },
   );
 
-  // Bound to the suggestion picker dropdown when there's more than
-  // one candidate -- a string, like every other value this app's
-  // Select component binds (a native <select>'s own value is always a
-  // string regardless), rather than relying on the index surviving
-  // the round trip as a number. Clamped defensively in case the
-  // suggestion list itself shrinks (e.g. after a table edit) while an
-  // index past its new end is still selected.
+  // Bound to the suggestion picker as a string (native <select> values
+  // are always strings); clamped in case the list shrinks.
   let selectedSuggestionIndex = $state("0");
   let selectedSuggestion = $derived(
     pinConflictResult.suggestions[
@@ -527,37 +458,24 @@
     hasPendingChanges || timerDmaCommands.length > 0,
   );
 
-  // Every motor output this tool manages is assumed to run plain
-  // DMA-driven DSHOT (see feature_classifier.js's DMA_MANAGED_TYPES/
-  // featureNeedsDma) -- never bitbang, never DSHOT burst mode -- so
-  // these are forced alongside every other staged change, rather than
-  // read from (and only echoed back alongside) whatever the board's
-  // own current config happens to say.
+  // Every managed motor output is assumed to run plain DMA-driven
+  // DSHOT (see feature_classifier.js's featureNeedsDma), so these are
+  // forced alongside every staged change.
   const DSHOT_SETTING_COMMANDS = [
     "set dshot_burst = OFF",
     "set dshot_bitbang = OFF",
   ];
 
-  // Restores motor_pwm_protocol to whatever the FC reported on read
-  // (see currentMotorProtocol). Applying any `timer`/`dma pin` command
-  // makes the firmware drop the protocol back to PWM, so this has to
-  // go out after timerDmaCommands and as the last thing before `save`.
-  // Empty when there are no timer/DMA changes (nothing reset it) or
-  // the read couldn't determine the protocol.
+  // Restores motor_pwm_protocol after timer/DMA commands reset it to
+  // PWM; empty if nothing changed or the read couldn't determine it.
   let currentMotorProtocolCommand = $derived(
     currentMotorProtocol && timerDmaCommands.length > 0
       ? [`set motor_pwm_protocol = ${currentMotorProtocol}`]
       : [],
   );
 
-  // What "Load Changes" actually sends, and what the preview panel
-  // shows -- the two must always match exactly, so this is the single
-  // place "save" gets appended. `resource`/`timer`/`dma pin` commands
-  // only change the in-memory config; `save` is what persists them and
-  // reboots the flight controller so the new pin/timer/DMA assignments
-  // actually take effect. Timer/DMA commands go out after every
-  // `resource` command, since a pin's final timer options can depend
-  // on which feature ends up on it.
+  // What "Load Changes" sends and the preview panel shows -- the
+  // single place "save" gets appended.
   let commandsToSend = $derived([
     ...DSHOT_SETTING_COMMANDS,
     ...pendingCommands,
@@ -583,37 +501,10 @@
   }
 
   /**
-   * Seeds this component's editable working copy from a fresh CLI
-   * read: each row is a fixed, board-labeled physical pin, so a row is
-   * shown for an OPTION_KEYS identity only when its *default* pin is
-   * actually occupied by something right now — never for a genuinely
-   * empty default pin (e.g. one explicitly cleared to "None" and
-   * saved), which gets no row until it's brought back via "+ Add",
-   * same as a board that never had anything there.
-   *
-   * Which identities qualify differs by kind, though:
-   *  - A motor/servo/freq/LED (TABLE_OPTION_KEYS) always gets a row
-   *    once its default pin is occupied, regardless of *what* occupies
-   *    it — including itself (the normal case), or a different
-   *    TABLE_OPTION_KEYS feature that's been reassigned there (e.g.
-   *    Freq1's pin now holds M2, so Freq1's row still shows, with M2
-   *    as its occupant).
-   *  - A UART/I2C identity (RX/TX/SDA/SCL) gets an automatic row when
-   *    a motor/servo/freq/LED feature has been reassigned onto its
-   *    default pin (e.g. M2 moved onto RX2's own default pin, A03 —
-   *    RX2's row now shows M2, so M2 isn't left invisible just because
-   *    the pin it's actually on belongs to a resource that never gets
-   *    a row of its own), OR when the board's own reference design
-   *    (see reference_design_labels.js) names it as a specific,
-   *    purpose-built connector — AUX, SBUS, TLM, RPM, and the like —
-   *    in which case it always gets a row, occupied or not, the same
-   *    as a motor/servo header always does. A UART/I2C pin that's
-   *    just sitting on its own default with nothing special about it
-   *    (an undocumented board, or a generic "Port X" connector this
-   *    reference design deliberately leaves unlabelled) stays hidden —
-   *    it isn't reassignable through the table anyway (see
-   *    getRowSelectableOptions) and would just be clutter; "+ Add"
-   *    still reaches it explicitly.
+   * Seeds the editable working copy from a fresh CLI read. A row shows
+   * for a TABLE_OPTION_KEYS identity whenever its default pin is
+   * occupied; a UART/I2C identity only gets an automatic row when
+   * reassigned onto, or named as a connector by, the reference design.
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} current
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} defaultHw
    * @param {?string} mcu
@@ -638,21 +529,10 @@
     const occupantOf = (pin) =>
       Object.keys(current).find((key) => current[key].pin === pin);
 
-    // Deliberately no special-casing here for a beyond-capacity key
-    // (e.g. "M5" on an 8-motor target, only ever possible via
-    // wingflight_target_source.js's richer default set): an earlier
-    // version always showed one the moment the default set claimed
-    // it, forced to a "Set Option" placeholder regardless of what
-    // actually occupied its pin -- which, on real hardware, ended up
-    // *hiding* a genuine assignment instead of surfacing one. A
-    // board's own reference design can name a beyond-capacity slot's
-    // pin as something else entirely (e.g. "Motor 5" turning out to
-    // be a servo's own physical connector), so isOverCapacity's own
-    // TABLE_OPTION_KEYS exclusion is enough on its own: it can never
-    // be *picked* as a value (TABLE_OPTION_KEYS stays capped at the
-    // real range), but the row itself should behave exactly like any
-    // other pin -- shown when something real occupies it, offered
-    // through "+ Add" otherwise.
+    // No special-casing for a beyond-capacity key (e.g. "M5") -- it
+    // behaves like any other option, shown when occupied and offered
+    // via "+ Add" otherwise; TABLE_OPTION_KEYS already keeps it from
+    // ever being picked as a value.
     visibleOptions = OPTION_KEYS.filter((option) => {
       const defaultPin = defaultHw[option]?.pin;
       if (defaultPin === undefined) return false;
@@ -678,23 +558,11 @@
   }
 
   /**
-   * Called once the pending commands have actually been sent (see
-   * remap_fc.js's #doApplySequence): adopts the current working copy
-   * as the new baseline, collapsing pendingCommands back to nothing.
-   * Doesn't attempt to re-read the FC itself -- a "save" reboots it,
-   * so nothing at that point can safely wait for a fresh dump; the
-   * table simply keeps showing what was just staged and sent.
-   *
-   * Also writes reconciled's own just-applied timer/af and dma index
-   * into workingCurrent for every feature it resolved (never one still
-   * in reconciled.unresolved -- that one's commands were withheld, not
-   * sent, so its working state should stay exactly as it was). Without
-   * this, workingCurrent's entries would carry no timer/dma of their
-   * own forever (nothing else ever sets them -- a resource pick only
-   * ever sets a pin, see handleCurrentOptionChange), so the very next
-   * reactive pass would see the same "no timer chosen yet" gap it just
-   * fixed and immediately propose reallocating and resending the exact
-   * same commands again.
+   * Adopts the working copy as the new baseline once staged commands
+   * are actually sent (see remap_fc.js's #doApplySequence), and writes
+   * back reconciled's resolved timer/dma for every feature it
+   * resolved, so the next reactive pass doesn't propose resending the
+   * same commands.
    */
   export function markApplied() {
     const next = { ...workingCurrent };
@@ -788,13 +656,8 @@
     );
   }
 
-  // handleCurrentOptionChange fires when a row's "Current Option"
-  // dropdown changes: clear whoever currently occupies that row's
-  // default pin (a pin can only host one resource), then either
-  // assign the picked option to that pin, or — if "None" was chosen —
-  // remove the row entirely. That's how a row added by mistake gets
-  // undone, without having to allocate it to something first. Either
-  // way, the row is no longer "unset" once a choice has been made.
+  // Fires when a row's Current Option changes: frees whoever occupied
+  // that pin, then assigns the pick (or removes the row on "None").
   /**
    * @param {import("@/js/remap_fc/remap_table.js").RemapRow} row
    * @param {Event} e
@@ -819,12 +682,8 @@
     workingCurrent = next;
   }
 
-  // handleAcceptSuggestion fires when the pin-conflict warning panel's
-  // "Accept Suggestion" button is pressed: adopts the selected
-  // suggestion's precomputed pin layout wholesale (see
-  // pin_conflict_suggestions.js) -- always a "swap" or "move", which
-  // gives its feature(s) a freshly resolved pin, so any stale "unset"
-  // placeholder state they were carrying is cleared too.
+  // Adopts the selected suggestion's precomputed pin layout wholesale,
+  // clearing any stale "unset" state its feature(s) carried.
   function handleAcceptSuggestion() {
     if (!selectedSuggestion) return;
 
@@ -839,24 +698,12 @@
     selectedSuggestionIndex = "0";
   }
 
-  // handleResetToSetOption fires when the pin-conflict warning panel's
-  // manual-fix button is pressed -- shown instead of a suggestion
-  // picker when no swap/move resolves the clash (see
-  // pinConflictResult/manualFixTarget). Clears manualFixTarget's pin
-  // and marks its *row* -- deliberately never manualFixTarget itself
-  // -- as unset, so it shows "Set Option" rather than "None". "None"
-  // would risk the exact bug the old "clear" suggestion type had (see
-  // pin_conflict_suggestions.js's own file comment): a feature with no
-  // row of its own, once cleared, has no dropdown left to ever
-  // un-flag it through again, permanently blacklisting it from
-  // claimedOptions. The row always has one (it's a fixed part of the
-  // table, tied to its own default pin regardless of what currently
-  // occupies it), so marking it unset is always safe to undo --
-  // picking anything in that row's dropdown clears the flag the same
-  // way any other pick does. An explicit button rather than an
-  // automatic revert deliberately -- the clash and its reasons stay
-  // visible until the user actually confirms this, rather than the
-  // panel flashing away before it's even been read.
+  // handleResetToSetOption fires from the pin-conflict panel's
+  // manual-fix button (shown when no suggestion resolves the clash):
+  // clears the target's pin and marks its row unset -- not "None",
+  // which would blacklist a row-less feature from claimedOptions
+  // permanently. Explicit button rather than an automatic revert, so
+  // the clash stays visible until confirmed.
   function handleResetToSetOption() {
     if (!manualFixTarget) return;
 
@@ -884,13 +731,27 @@
 {/snippet}
 
 <Page {header} loading={false}>
-  <!-- Before a read, offer the button that triggers one; everything
-       else below only has anything to show once the FC's actually
-       been read. -->
+  <!-- Before a read, offer the button that triggers one, plus a short
+       explanation of what the tab actually does -- everything else
+       below only has anything to show once the FC's actually been
+       read, so there'd otherwise be nothing on screen to explain the
+       tab to someone opening it for the first time. -->
   {#if !hasRead}
-    <button class="btn run-btn" onclick={onClick} disabled={running}>
-      {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
-    </button>
+    <div class="intro-card">
+      <Section label="remapFcIntroHeading">
+        <div class="intro-content">
+          <p>{$i18n.t("remapFcIntroDescription")}</p>
+          <img
+            class="intro-illustration"
+            src="/images/remap_fc/REMAP_ILLUSTRATION.svg"
+            alt=""
+          />
+        </div>
+        <button class="btn run-btn" onclick={onClick} disabled={running}>
+          {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
+        </button>
+      </Section>
+    </div>
   {/if}
 
   <!-- Error from the last CLI sequence, if any. -->
@@ -899,210 +760,273 @@
   {/if}
 
   {#if hasRead}
-    <div class="board-info-card">
-      <Section>
-        {#snippet header()}
-          <div class="header">
-            <span class="title"
-              >{FC.CONFIG.manufacturerId} {FC.CONFIG.boardName}</span
-            >
-          </div>
-        {/snippet}
+    {#if mcuSupported}
+      <div class="board-info-card">
+        <Section>
+          {#snippet header()}
+            <div class="header">
+              <span class="title"
+                >{FC.CONFIG.manufacturerId} {FC.CONFIG.boardName}</span
+              >
+            </div>
+          {/snippet}
 
-        {#if mcuType || FC.CONFIG.boardDesign}
-          <table class="info-table">
-            <tbody>
-              {#if mcuType}
-                <tr>
-                  <td>{$i18n.t("remapFcMcuLabel")}</td>
-                  <td>{mcuType}</td>
-                </tr>
-              {/if}
-              <!-- The board's reference design (e.g. "F7A1"). This
+          {#if mcuType || FC.CONFIG.boardDesign}
+            <table class="info-table">
+              <tbody>
+                {#if mcuType}
+                  <tr>
+                    <td>{$i18n.t("remapFcMcuLabel")}</td>
+                    <td>{mcuType}</td>
+                  </tr>
+                {/if}
+                <!-- The board's reference design (e.g. "F7A1"). This
                    comes from FC.CONFIG (populated via MSP at connect
                    time, not parsed from the CLI dump), so it's
                    already known before any read, but this whole card
                    only renders once hasRead is true anyway. -->
-              {#if FC.CONFIG.boardDesign}
+                {#if FC.CONFIG.boardDesign}
+                  <tr>
+                    <td>{$i18n.t("remapFcDesignLabel")}</td>
+                    <td>{FC.CONFIG.boardDesign}</td>
+                  </tr>
+                {/if}
+              </tbody>
+            </table>
+          {/if}
+        </Section>
+      </div>
+
+      <!-- Controls the "Calculated config" card further down -- kept up
+         here, next to the board info it actually toggles context for,
+         rather than inside the card it hides, since a control that's
+         only visible once you've already shown the thing it hides
+         would be unreachable to turn back off from a glance. -->
+      {#if calculatedAllocationTable.length}
+        <label class="details-toggle">
+          <Switch bind:checked={showCalculatedDetails} />
+          <span>{$i18n.t("remapFcShowDetails")}</span>
+        </label>
+      {/if}
+
+      <div class="table-with-diagram">
+        <!-- Two fallback diagrams: a bare, uncased PCB (GENERIC.svg)
+           for a board reporting no real reference design at all (see
+           isGenericBoard), or a cased case shape for every other
+           board -- not board-specific artwork, building/fetching a
+           dedicated diagram per manufacturer doesn't scale. Outer/
+           inner body shape matches flydragon.svg's own outline (a
+           plain rounded rect, rx 20/14), in grey as the fallback
+           colour a board with no dedicated diagram of its own gets
+           (see boardBezelColor/boardBodyColor for manufacturers with
+           their own real case colours). The FC's own reported name
+           sits above the diagram, not overlaid on it. -->
+        <div class="board-diagram-column">
+          <div class="board-diagram-caption">
+            {boardBrandName}
+            {FC.CONFIG.boardName}
+          </div>
+          <div
+            class="board-diagram-wrap"
+            style="width: {diagramWidth}px; height: {diagramHeight}px;"
+          >
+            <svg
+              class="board-diagram"
+              viewBox="530 10 540 540"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {#if isGenericBoard}
+                <image
+                  href="/images/remap_fc/GENERIC.svg"
+                  x="530"
+                  y="10"
+                  width="540"
+                  height="540"
+                  preserveAspectRatio="xMidYMid meet"
+                />
+              {:else}
+                <rect
+                  x="30"
+                  y="10"
+                  width="1040"
+                  height="540"
+                  rx="20"
+                  fill={boardBezelColor}
+                />
+                <rect
+                  x="56"
+                  y="36"
+                  width="988"
+                  height="488"
+                  rx="14"
+                  fill={boardBodyColor}
+                />
+                <!-- Manufacturer branding: a single <MANUFACTURER>_BRAND.svg
+                 image (see boardBrandImage/MANUFACTURER_BRAND_IMAGES)
+                 laid over the board for whichever manufacturer is
+                 connected, scaled to one fixed width with height
+                 following that image's own aspect ratio. A new
+                 manufacturer only ever needs its own image file dropped
+                 in plus one line added to MANUFACTURER_BRAND_IMAGES. -->
+                {#if boardBrandImage}
+                  <image
+                    href="/images/remap_fc/{boardBrandImage.file}"
+                    x={BRAND_IMAGE_X}
+                    y={BRAND_IMAGE_Y}
+                    width={BRAND_IMAGE_WIDTH}
+                    height={BRAND_IMAGE_WIDTH / boardBrandImage.aspect}
+                    preserveAspectRatio="xMinYMin meet"
+                  />
+                  <g
+                    transform="translate({BRAND_IMAGE_X} 440) scale({boardModelTextScale})"
+                  >
+                    <text
+                      bind:this={modelTextEl}
+                      x="0"
+                      y="0"
+                      font-family="Arial, sans-serif"
+                      font-weight="900"
+                      font-size="70"
+                      letter-spacing="1"
+                      fill="#ffffff">{boardModelName}</text
+                    >
+                  </g>
+                {/if}
+              {/if}
+            </svg>
+          </div>
+        </div>
+
+        <!-- A re-read clears the table for several seconds while the
+           CLI sequence runs -- key off running rather than the row
+           counts, so a board with genuinely no rows still renders
+           nothing here. -->
+        {#if running}
+          <div class="table-loading">
+            <div class="spinner"></div>
+            <p>{$i18n.t("remapFcLoadingHardware")}</p>
+          </div>
+        {:else if tableRows.length || hasRealAddableOptions}
+          <table class="remap-table">
+            <thead>
+              <tr>
+                <th>{$i18n.t("remapFcTableOption")}</th>
+                {#if showCalculatedDetails}
+                  <th>{$i18n.t("remapFcTableDefaultPin")}</th>
+                {/if}
+                <th></th>
+                <th>{$i18n.t("remapFcTableCurrentOption")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each tableRows as row (row.option)}
+                {@const unset = unsetOptions.includes(row.option)}
                 <tr>
-                  <td>{$i18n.t("remapFcDesignLabel")}</td>
-                  <td>{FC.CONFIG.boardDesign}</td>
+                  <td>{displayName(row.option)}</td>
+                  {#if showCalculatedDetails}
+                    <td>{row.defaultPin ?? "—"}</td>
+                  {/if}
+                  <td class="arrow">
+                    <img
+                      class="arrow-cable"
+                      src="/images/remap_fc/CABLE_ARROW.svg"
+                      alt=""
+                    />
+                  </td>
+                  <td>
+                    <!-- Force a remount whenever the displayed value changes
+                     (e.g. because a different row's edit cleared this
+                     row's occupant, or this row just got resolved out
+                     of the "unset" placeholder state) so the select
+                     always reflects it. -->
+                    {#key unset ? "unset" : row.currentOption}
+                      <Select
+                        value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
+                        onchange={(e) => handleCurrentOptionChange(row, e)}
+                        options={[
+                          ...(unset
+                            ? [
+                                {
+                                  value: "",
+                                  label: $i18n.t("remapFcSetOption"),
+                                },
+                              ]
+                            : row.currentOption
+                              ? [
+                                  {
+                                    value: row.currentOption,
+                                    label: optionLabel(row.currentOption),
+                                  },
+                                ]
+                              : []),
+                          ...optionsForRow(row).map((option) => ({
+                            value: option,
+                            label:
+                              option === NONE_VALUE
+                                ? $i18n.t("remapFcNoneOption")
+                                : optionLabel(option),
+                          })),
+                        ]}
+                      />
+                    {/key}
+                  </td>
+                </tr>
+              {/each}
+              {#if hasRealAddableOptions}
+                <tr class="add-row">
+                  <td colspan={showCalculatedDetails ? 4 : 3}>
+                    {#if addMenuOpen}
+                      <Select
+                        bind:value={selectedAddOption}
+                        onchange={handleAddChange}
+                        size={addMenuSize}
+                        options={[
+                          { value: "", label: $i18n.t("remapFcAddOption") },
+                          ...addablePool.map((addable) => ({
+                            value: addable.option,
+                            label: displayName(addable.option),
+                          })),
+                        ]}
+                      />
+                    {:else}
+                      <button
+                        class="btn add-btn"
+                        onclick={() => (addMenuOpen = true)}
+                      >
+                        {$i18n.t("remapFcAddOption")}
+                      </button>
+                    {/if}
+                  </td>
                 </tr>
               {/if}
             </tbody>
           </table>
         {/if}
-      </Section>
-    </div>
-
-    <!-- Controls the "Calculated config" card further down -- kept up
-         here, next to the board info it actually toggles context for,
-         rather than inside the card it hides, since a control that's
-         only visible once you've already shown the thing it hides
-         would be unreachable to turn back off from a glance. -->
-    {#if calculatedAllocationTable.length}
-      <label class="details-toggle">
-        <Switch bind:checked={showCalculatedDetails} />
-        <span>{$i18n.t("remapFcShowDetails")}</span>
-      </label>
-    {/if}
-
-    <div class="table-with-diagram">
-      <!-- The generic diagram, with the FC's own reported name
-           overlaid on top -- cased once boardDesign names a real
-           reference design, bare PCB otherwise (see boardDiagramSrc).
-           Not board-specific artwork either way -- building a
-           dedicated diagram per manufacturer doesn't scale, so this
-           is deliberately generic (see CASED_GENERIC.svg's own file
-           comment). -->
-      <div
-        class="board-diagram-wrap"
-        style="width: {diagramSize}px; height: {diagramSize}px;"
-      >
-        <img class="board-diagram" src={boardDiagramSrc} alt="" />
-        <div class="board-diagram-label">
-          {FC.CONFIG.manufacturerId}
-          {FC.CONFIG.boardName}
-        </div>
       </div>
-
-      <!-- setHardware({}, {}, null) is called at the very start of a
-           re-read (see remap_fc.js's #doRunSequence) to clear out the
-           previous board's table before the new one's data has
-           actually arrived back -- that already flips hasRead true
-           (this whole section is showing), but leaves tableRows/
-           hasRealAddableOptions both empty for the several seconds
-           the CLI sequence takes, with nothing else on screen to
-           explain why the table's gone. running stays true for that
-           entire window (see remap_fc.js), so it's what this keys
-           off, rather than the row/addable counts themselves — a
-           board that genuinely has no rows to show (not just "not
-           read yet") should still just render nothing here, same as
-           before. -->
-      {#if running}
-        <div class="table-loading">
-          <div class="spinner"></div>
-          <p>{$i18n.t("remapFcLoadingHardware")}</p>
-        </div>
-      {:else if tableRows.length || hasRealAddableOptions}
-        <table class="remap-table">
-          <thead>
-            <tr>
-              <th>{$i18n.t("remapFcTableOption")}</th>
-              {#if showCalculatedDetails}
-                <th>{$i18n.t("remapFcTableDefaultPin")}</th>
-              {/if}
-              <th></th>
-              <th>{$i18n.t("remapFcTableCurrentOption")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each tableRows as row (row.option)}
-              {@const unset = unsetOptions.includes(row.option)}
-              <tr>
-                <td>{displayName(row.option)}</td>
-                {#if showCalculatedDetails}
-                  <td>{row.defaultPin ?? "—"}</td>
-                {/if}
-                <td class="arrow">
-                  <img
-                    class="arrow-cable"
-                    src="/images/remap_fc/CABLE_ARROW.svg"
-                    alt=""
-                  />
-                </td>
-                <td>
-                  <!-- Force a remount whenever the displayed value changes
-                     (e.g. because a different row's edit cleared this
-                     row's occupant, or this row just got resolved out
-                     of the "unset" placeholder state) so the select
-                     always reflects it. -->
-                  {#key unset ? "unset" : row.currentOption}
-                    <Select
-                      value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
-                      onchange={(e) => handleCurrentOptionChange(row, e)}
-                      options={[
-                        ...(unset
-                          ? [
-                              {
-                                value: "",
-                                label: $i18n.t("remapFcSetOption"),
-                              },
-                            ]
-                          : row.currentOption
-                            ? [
-                                {
-                                  value: row.currentOption,
-                                  label: optionLabel(row.currentOption),
-                                },
-                              ]
-                            : []),
-                        ...optionsForRow(row).map((option) => ({
-                          value: option,
-                          label:
-                            option === NONE_VALUE
-                              ? $i18n.t("remapFcNoneOption")
-                              : optionLabel(option),
-                        })),
-                      ]}
-                    />
-                  {/key}
-                </td>
-              </tr>
-            {/each}
-            {#if hasRealAddableOptions}
-              <tr class="add-row">
-                <td colspan={showCalculatedDetails ? 4 : 3}>
-                  {#if addMenuOpen}
-                    <Select
-                      bind:value={selectedAddOption}
-                      onchange={handleAddChange}
-                      size={addMenuSize}
-                      options={[
-                        { value: "", label: $i18n.t("remapFcAddOption") },
-                        ...addablePool.map((addable) => ({
-                          value: addable.option,
-                          label: displayName(addable.option),
-                        })),
-                      ]}
-                    />
-                  {:else}
-                    <button
-                      class="btn add-btn"
-                      onclick={() => (addMenuOpen = true)}
-                    >
-                      {$i18n.t("remapFcAddOption")}
-                    </button>
-                  {/if}
-                </td>
-              </tr>
-            {/if}
-          </tbody>
-        </table>
-      {/if}
-    </div>
+    {:else}
+      <div class="mcu-unsupported-card">
+        <Section>
+          {#snippet header()}
+            <div class="header">
+              <span class="title warning-title"
+                >{$i18n.t("remapFcMcuUnsupportedHeading")}</span
+              >
+            </div>
+          {/snippet}
+          <p class="allocation-warning">
+            {mcuType
+              ? $i18n.t("remapFcMcuUnsupportedMessage", { mcu: mcuType })
+              : $i18n.t("remapFcMcuUnknownMessage")}
+          </p>
+        </Section>
+      </div>
+    {/if}
   {/if}
 
-  <!-- Automatic warning: appears only once the working state's
-       current pin assignments have a timer/DMA clash that a full
-       reallocation pass genuinely can't resolve on its own (a
-       clash a fresh reallocation alone would fix stays silent
-       here -- calculatedAllocationTable below already reflects it
-       automatically, no button press needed for that either
-       anymore). reconciled.clash.reasons explains *why* the
-       current pins clash to begin with; calculatedAllocationTable
-       in the always-visible panel below shows what a reallocation
-       attempt produces regardless (including which feature(s) it
-       still couldn't resolve), so there's no need to repeat that
-       table here too -- and pinConflictResult.suggestions offers a
-       pin-level fix instead -- swapping/moving one of those
-       features onto a different pin so a fresh reallocation *can*
-       resolve everything -- when one was found; see the
-       suggestion-row below for what shows instead when it
-       wasn't. Shown above Pending Changes since "Load Changes" is
-       blocked while this is up (see its own disabled check below) --
-       the fix belongs in front of the button it's blocking. -->
-  {#if pinConflictResult.unresolvedFeatures.length}
+  <!-- Shown once the current pin assignment has a timer/DMA clash
+       reallocation alone can't resolve -- above Pending Changes,
+       since "Load Changes" is blocked while this is up. -->
+  {#if mcuSupported && pinConflictResult.unresolvedFeatures.length}
     <div class="pin-conflict-card">
       <Section>
         {#snippet header()}
@@ -1119,20 +1043,9 @@
           })}
         </p>
 
-        <!-- The pin-level fix itself, when the search actually found
-             one: a single suggestion shows as plain text, more than
-             one gets a picker so the user chooses which to apply --
-             either way, "Accept Suggestion" adopts
-             selectedSuggestion.apply wholesale (see
-             handleAcceptSuggestion). When no single swap/move
-             resolves everything, there's nothing to offer as a
-             one-click fix -- rather than guessing at some other
-             feature to touch on the user's behalf, this points back
-             at whichever option they most recently placed
-             (lastChangedOption), falling back to naming one of the
-             unresolved features itself if nothing's been touched
-             yet this session (e.g. the clash was already there on
-             read). -->
+        <!-- Accept Suggestion adopts selectedSuggestion.apply wholesale
+             (see handleAcceptSuggestion). No suggestion found means
+             the manual-fix message/button shows instead. -->
         {#if pinConflictResult.suggestions.length}
           <div class="suggestion-row">
             {#if pinConflictResult.suggestions.length > 1}
@@ -1174,12 +1087,8 @@
     </div>
   {/if}
 
-  <!-- Only appears once there's something staged to send: the
-       "Load Changes" button applies the diff between what was read
-       and the current edits, plus any staged timer/DMA fix (plus a
-       trailing "save" to persist it and reboot), and the panel next
-       to it lets the user see exactly which commands that means, in
-       the exact order they'll be sent, before committing to them. -->
+  <!-- "Load Changes" sends the staged diff (resource + timer/DMA +
+       save); the panel next to it previews the exact commands. -->
   {#if hasStagedCommands}
     <div class="pending-changes-card">
       <Section label="remapFcChangesHeading">
@@ -1221,15 +1130,10 @@
     </div>
   {/if}
 
-  <!-- calculatedAllocationTable is reconciled's own always-current
-       result -- what a from-scratch allocation pass computes, or the
-       working state's own current timer/DMA unchanged if nothing
-       needed fixing. A genuine problem (unresolvedFeatures) always
-       stays visible regardless of the toggle above (see
-       .details-toggle); the card itself -- header included -- is
-       implementation detail, so the whole thing hides behind "Show
-       details" rather than just the table inside it. -->
-  {#if calculatedAllocationTable.length}
+  <!-- A genuine problem (unresolvedFeatures) always stays visible
+       regardless of "Show details" -- only the table itself hides
+       behind the toggle. -->
+  {#if mcuSupported && calculatedAllocationTable.length}
     {#if unresolvedFeatures.length}
       <p class="allocation-warning">
         {$i18n.t("remapFcAllocationUnresolved", {
@@ -1284,7 +1188,8 @@
   .run-btn {
     @extend %button;
     align-self: flex-start;
-    margin-top: 20px;
+    margin: 16px 16px 24px 16px;
+    padding: 0 24px;
   }
 
   // Custom Section headers (board-info card, live-warning card):
@@ -1321,11 +1226,8 @@
     }
   }
 
-  // Sized to hug its own short content, matching Status.svelte's
-  // compact info cards, rather than stretching the full page width.
-  // margin-bottom separates it from .table-with-diagram right below --
-  // a plain div with no top spacing of its own, so without this the
-  // remap table's header row sits almost flush against this card.
+  // Hugs its own short content, matching Status.svelte's compact
+  // info cards; margin-bottom separates it from the table below.
   .board-info-card {
     max-width: 320px;
     margin-bottom: 24px;
@@ -1335,8 +1237,35 @@
   // still capped rather than spanning the full page.
   .calculated-config-card,
   .pending-changes-card,
-  .pin-conflict-card {
+  .pin-conflict-card,
+  .mcu-unsupported-card {
     max-width: 560px;
+  }
+
+  .intro-card {
+    max-width: 700px;
+  }
+
+  .intro-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-left: 16px; // lines up with .run-btn's own left margin below
+
+    p {
+      flex: 1 1 280px;
+      margin: 0;
+      color: var(--color-text);
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+  }
+
+  .intro-illustration {
+    flex: 0 0 auto;
+    width: 340px;
+    height: auto;
   }
 
   .details-toggle {
@@ -1365,12 +1294,8 @@
     flex-wrap: wrap;
   }
 
-  // Shown instead of .suggestion-row when the search found no
-  // swap/move that resolves everything -- .allocation-warning already
-  // gives it the same red, attention-grabbing colour as the reasons
-  // text above it; this just adds the same top spacing .suggestion-row
-  // has, so the two are visually interchangeable depending on which
-  // one applies.
+  // Shown instead of .suggestion-row when no swap/move resolves the
+  // clash -- same top spacing, so the two are interchangeable.
   .suggestion-manual-fix {
     margin: 10px 0 0;
   }
@@ -1401,12 +1326,9 @@
       color: var(--color-status-bad);
     }
 
-    // Flags a DMA cell shown for reference only -- a servo/frequency
-    // input's chosen timer happens to define a DMA option, but this
-    // tool never claims or sends it, since firmware never actually
-    // uses DMA for either regardless (see feature_classifier.js's
-    // featureNeedsDma). Struck through and faded so it reads as inert
-    // rather than something that will actually happen.
+    // A DMA cell shown for reference only (servo/freq inputs never
+    // actually use DMA -- see featureNeedsDma); struck through so it
+    // reads as inert.
     td.dma-unmanaged {
       opacity: 0.5;
       text-decoration: line-through;
@@ -1501,18 +1423,27 @@
     gap: 0;
   }
 
-  // Positions the board name overlay (see .board-diagram-label)
-  // relative to the diagram underneath it. Deliberately no CSS sizing
-  // here at all -- width/height come from the inline style set from
-  // diagramSize (see the ResizeObserver effect in <script>), which
-  // measures the table's own rendered height so the diagram grows
-  // alongside it as rows are added, clamped there to a sensible
-  // min/max. This app's own runtime doesn't support the CSS
-  // aspect-ratio property (it silently resolves to a height of 0), so
-  // this is the reliable alternative, not a stylistic choice.
+  .board-diagram-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 24px;
+  }
+
+  .board-diagram-caption {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--color-text);
+    text-align: center;
+  }
+
+  // No CSS sizing here -- width/height come from diagramWidth/
+  // diagramHeight (see <script>), since this app's runtime doesn't
+  // support CSS aspect-ratio.
   .board-diagram-wrap {
     position: relative;
-    flex-shrink: 0;
   }
 
   .board-diagram {
@@ -1521,43 +1452,14 @@
     height: 100%;
   }
 
-  // The FC's own reported name, overlaid on the generic diagram's
-  // shared label zone (see CASED_GENERIC.svg/GENERIC.svg's own file
-  // comments for that zone's coordinates -- kept identical between
-  // the two, and with boardDiagramSrc choosing between them, so
-  // switching which image sits underneath never moves the text).
-  .board-diagram-label {
-    position: absolute;
-    left: 26.6%;
-    right: 26.6%;
-    top: 26.25%;
-    bottom: 63.75%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #f2f4f6;
-    font-weight: 700;
-    font-size: 13px;
-    line-height: 1.3;
-    overflow-wrap: break-word;
-    pointer-events: none;
-  }
-
-  // Shown in place of the table while a read is still in flight --
-  // matches Page.svelte's own loading spinner (same image asset), just
-  // smaller and inline rather than filling the whole tab. align-self:
-  // stretch centers it vertically against the diagram's own height
-  // (rather than hugging the top of the row), but it otherwise hugs
-  // its own content width, right next to the diagram, instead of
-  // centering across the whole remaining row.
+  // Shown in place of the table while a read is in flight -- matches
+  // Page.svelte's own loading spinner, smaller and inline.
   .table-loading {
     display: flex;
     align-items: center;
     gap: 10px;
     align-self: stretch;
-    // Matches .remap-table's own th/td padding, so the loading state
-    // and the loaded table line up at the same left edge.
+    // Lines up with .remap-table's own th/td padding.
     padding-left: 12px;
     color: var(--color-text);
     opacity: 0.8;
@@ -1610,13 +1512,9 @@
       @extend %button;
     }
 
-    // The "Current Option" dropdown otherwise sizes itself to each
-    // row's own current label (a native <select>'s default sizing),
-    // so a short label like "SBUS" produces a narrower control than a
-    // longer one like "Frequency 1" sitting right above/below it --
-    // a fixed width keeps every row's dropdown the same size
-    // regardless of its own current label. :global(), since Select.svelte
-    // renders the actual <select> itself, not this file.
+    // Fixed width keeps every row's dropdown the same size regardless
+    // of its own label length. :global(), since Select.svelte renders
+    // the actual <select> itself.
     tr:not(.add-row) td:last-child :global(select) {
       width: 104px;
     }

@@ -13,22 +13,29 @@
   are known for an arbitrary board; only a plain header of square
   copper pads on the right edge, matching the same "pins on the
   right" convention every diagram in this set follows. Shown by
-  remap_fc.svelte before the FC's been read, switching to
-  CASED_GENERIC.svg once it has — the two share a label zone at
-  x=85-235, y=84-116 of this 320x320 viewBox (26.6%-73.4% width,
-  26.25%-36.25% height), between this file's own top mounting holes
-  and its central chip, kept clear here too even though this file
-  itself never has anything overlaid on it, so the position stays
-  identical if that ever changes. Explicit width/height (matching the
-  viewBox) alongside it, not just the viewBox alone — an <img> can't
-  reliably infer intrinsic size from viewBox-only SVGs on every
-  rendering engine, and without it this can render at zero height.
+  remap_fc.svelte for a board with no cased diagram of its own (see
+  boardDiagramSrc) — CASED_GENERIC.svg's own file comment explains
+  why its viewBox is a 280x188 landscape crop rather than this file's
+  280x280 square one: this board's own shape genuinely is square (a
+  PCB stack), unlike a cased board's landscape case, so remap_fc.svelte's
+  wrapper (sized to CASED_GENERIC's own landscape ratio) ends up
+  letterboxing this file left/right via object-fit: contain rather
+  than filling it edge to edge — an accepted tradeoff, not a bug, for
+  the less common of the two (a board reporting no real reference
+  design at all). The label zone at x=85-235, y=84-116 (between this
+  file's own top mounting holes and its central chip) is unaffected
+  by that crop — both files were only ever cropped from a shared
+  320x320 canvas, not redrawn, so their own absolute coordinates never
+  moved. Explicit width/height (matching the viewBox) alongside it,
+  not just the viewBox alone — an <img> can't reliably infer intrinsic
+  size from viewBox-only SVGs on every rendering engine, and without
+  it this can render at zero height.
 -->
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  width="320"
-  height="320"
-  viewBox="0 0 320 320"
+  width="280"
+  height="280"
+  viewBox="20 20 280 280"
 >
   <!-- PCB, matte black edge + surface, generously rounded corners
        matching the real board -->

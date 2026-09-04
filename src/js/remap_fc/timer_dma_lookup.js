@@ -88,6 +88,21 @@ function resolveMcuKey(mcuAllData, mcuType) {
 }
 
 /**
+ * Whether MCU-all.json has real timer/DMA data for the given reported
+ * MCU string, once resolved through MCU_ALIASES. False for a genuinely
+ * unrecognised MCU -- getPinTimerOptions would otherwise return []
+ * for every pin silently, with nothing telling the user why timer/DMA
+ * can never be resolved.
+ * @param {Object} mcuAllData
+ * @param {?string} mcuType
+ * @returns {boolean}
+ */
+export function isMcuSupported(mcuAllData, mcuType) {
+  if (!mcuType) return false;
+  return Boolean(mcuAllData?.[resolveMcuKey(mcuAllData, mcuType)]);
+}
+
+/**
  * Returns every timer option MCU-all.json reports for the given pin
  * on the given MCU, normalised for the allocators. Empty if the MCU
  * or pin isn't known, or the pin has no timer options at all.

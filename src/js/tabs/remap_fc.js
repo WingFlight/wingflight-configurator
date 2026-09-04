@@ -252,7 +252,15 @@ class RemapFcTab {
     this.#saveSent = false;
     this.#svelteComponent?.setError(null);
     this.#svelteComponent?.setRunning(true);
-    this.#svelteComponent?.setHardware({}, {}, null);
+    // Deliberately not clearing the Svelte component's own hardware
+    // state here -- setHardware({}, {}, null) used to be called at
+    // this point, but it also flips hasRead to true with mcuType
+    // null, which the component reads as "board not supported" for
+    // the whole read (see mcuSupported there). The table is already
+    // hidden behind the loading spinner while running is true, so
+    // any stale data underneath is invisible anyway, and the real
+    // setHardware call below overwrites it wholesale once the read
+    // actually completes.
     this.#currentHardware = null;
     this.#defaultHardware = null;
     this.#mcuType = null;

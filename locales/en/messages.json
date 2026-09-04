@@ -7411,6 +7411,12 @@
     "remapFcRunButton": {
         "message": "Read FC"
     },
+    "remapFcIntroHeading": {
+        "message": "What this does"
+    },
+    "remapFcIntroDescription": {
+        "message": "Remap FC lets you change servos, motors, and other functions that can connect to your flight controller. Swap a tail servo to motorised tail, add a buffer pack or onboard glow, or move a function to a different pin -- all without touching a soldering iron."
+    },
     "remapFcRunning": {
         "message": "Reading FC"
     },
@@ -7440,6 +7446,15 @@
     },
     "remapFcMcuLabel": {
         "message": "MCU"
+    },
+    "remapFcMcuUnsupportedHeading": {
+        "message": "Board not supported"
+    },
+    "remapFcMcuUnsupportedMessage": {
+        "message": "This board's MCU ({{mcu}}) isn't currently supported by the remapper, so pin/timer/DMA changes can't be safely calculated."
+    },
+    "remapFcMcuUnknownMessage": {
+        "message": "This board's MCU couldn't be determined, so pin/timer/DMA changes can't be safely calculated."
     },
     "remapFcDesignLabel": {
         "message": "Design"
