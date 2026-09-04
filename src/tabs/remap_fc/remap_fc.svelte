@@ -226,10 +226,10 @@
 
   // A board reporting no reference design at all, or the generic
   // "BTFL" placeholder Rotorflight uses for an unrecognised
-  // Betaflight target, isn't a real cased board -- it's shown as a
+  // Betaflight target, isn't a real cased board. It's shown as a
   // bare, uncased PCB (see GENERIC.svg) instead of the cased shape
-  // below, matching the same condition remap_fc.js already uses to
-  // decide whether to fetch richer Betaflight-target defaults.
+  // below -- the same condition remap_fc.js already uses to decide
+  // whether to fetch richer Betaflight-target defaults.
   let isGenericBoard = $derived(
     !FC.CONFIG.boardDesign || FC.CONFIG.boardDesign === "BTFL",
   );
