@@ -84,7 +84,7 @@
         "function": "T3CH4"
       }
     ],
-    "Tail": [
+    "TAIL": [
       {
         "pin": "PB3",
         "function": "T2CH2"
