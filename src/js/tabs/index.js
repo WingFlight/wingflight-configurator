@@ -25,6 +25,7 @@ import "./privacy_policy.js";
 import "./profiles.js";
 import "./rates.js";
 import "./receiver.js";
+import "./remap_fc.js";
 import "./sensors.js";
 import "./servos.js";
 import "./setup.js";

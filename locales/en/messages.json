@@ -7407,5 +7407,122 @@
     },
     "presetsDontShowAgain": {
         "message": "Don't show again"
+    },
+    "tabRemapFC": {
+        "message": "Remap FC"
+    },
+    "remapFcRunButton": {
+        "message": "Read FC"
+    },
+    "remapFcIntroHeading": {
+        "message": "What this does"
+    },
+    "remapFcIntroDescription": {
+        "message": "Remap FC lets you change servos, motors, and other functions that can connect to your flight controller. Swap a tail servo to motorised tail, add a buffer pack or onboard glow, or move a function to a different pin -- all without touching a soldering iron."
+    },
+    "remapFcRunning": {
+        "message": "Reading FC"
+    },
+    "remapFcRunningProgress": {
+        "message": "Reading FC ({{percent}}%)"
+    },
+    "remapFcLoadingHardware": {
+        "message": "Loading hardware..."
+    },
+    "remapFcError": {
+        "message": "Error reading FC"
+    },
+    "remapFcTableOption": {
+        "message": "FC Label"
+    },
+    "remapFcTableDefaultPin": {
+        "message": "Default Pin"
+    },
+    "remapFcTableCurrentOption": {
+        "message": "Current Option"
+    },
+    "remapFcAddOption": {
+        "message": "+ Add"
+    },
+    "remapFcNoneOption": {
+        "message": "None"
+    },
+    "remapFcSetOption": {
+        "message": "Set Option"
+    },
+    "remapFcMcuLabel": {
+        "message": "MCU"
+    },
+    "remapFcMcuUnsupportedHeading": {
+        "message": "Board not supported"
+    },
+    "remapFcMcuUnsupportedMessage": {
+        "message": "This board's MCU ({{mcu}}) isn't currently supported by the remapper, so pin/timer/DMA changes can't be safely calculated."
+    },
+    "remapFcMcuUnknownMessage": {
+        "message": "This board's MCU couldn't be determined, so pin/timer/DMA changes can't be safely calculated."
+    },
+    "remapFcDesignLabel": {
+        "message": "Design"
+    },
+    "remapFcLoadChangesButton": {
+        "message": "Load Changes"
+    },
+    "remapFcLoadChangesBlocked": {
+        "message": "Resolve the pin conflict below before sending changes"
+    },
+    "remapFcClearChangesButton": {
+        "message": "Clear Changes"
+    },
+    "remapFcApplying": {
+        "message": "Applying..."
+    },
+    "remapFcChangesHeading": {
+        "message": "Pending Changes"
+    },
+    "remapFcShowDetails": {
+        "message": "Show details"
+    },
+    "remapFcPendingCommands": {
+        "message": "Pending Commands ({{count}})"
+    },
+    "remapFcAllocationCalculatedHeading": {
+        "message": "Calculated config"
+    },
+    "remapFcAllocationInvalidHeading": {
+        "message": "Pin selection not valid"
+    },
+    "remapFcAllocationInvalidWarning": {
+        "message": "The current pin assignment can't work: {{reasons}}. Reallocating timers/DMA on the current pins alone can't resolve it either -- pick a suggestion below to fix the pin assignment itself."
+    },
+    "remapFcAcceptSuggestion": {
+        "message": "Accept Suggestion"
+    },
+    "remapFcSuggestionSwap": {
+        "message": "Swap pins for {{feature}} and {{otherFeature}}"
+    },
+    "remapFcSuggestionMove": {
+        "message": "Move {{feature}} to pin {{targetPin}} (currently unassigned)"
+    },
+    "remapFcSuggestionManualFix": {
+        "message": "No automatic fix found for {{feature}}. Reset it to unassigned and choose a different pin."
+    },
+    "remapFcResetToSetOption": {
+        "message": "Reset to Set Option"
+    },
+    "remapFcAllocationUnresolved": {
+        "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."
+    },
+    "remapFcAllocationFeature": {
+        "message": "Feature"
+    },
+    "remapFcAllocationPin": {
+        "message": "Pin"
+    },
+    "remapFcAllocationTimer": {
+        "message": "Timer"
+    },
+    "remapFcAllocationDma": {
+        "message": "DMA"
     }
 }
