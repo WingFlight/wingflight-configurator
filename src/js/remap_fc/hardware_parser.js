@@ -106,26 +106,6 @@ export function parseMcuType(dumpText) {
   return null;
 }
 
-// Matches the assigned value in a `get motor_pwm_protocol` CLI
-// response, e.g. the line:
-//   motor_pwm_protocol = DSHOT600
-// The echoed command line ("# get motor_pwm_protocol") and the
-// "Allowed values: ..." line have no `= <value>` after the name, so
-// they're skipped.
-const MOTOR_PWM_PROTOCOL_RE = /motor_pwm_protocol\s*=\s*(\S+)/i;
-
-/**
- * Parses the current motor_pwm_protocol setting (e.g. "DSHOT600") out
- * of a `get motor_pwm_protocol` CLI command's output. Returns null if
- * no value line is present.
- * @param {string} getOutput
- * @returns {?string}
- */
-export function parseMotorPwmProtocol(getOutput) {
-  const match = getOutput.match(MOTOR_PWM_PROTOCOL_RE);
-  return match ? match[1] : null;
-}
-
 /**
  * Parses the text output of a `dump hardware` CLI command into a
  * HardwareMap of configured resources, each enriched with its pin's
@@ -206,30 +186,4 @@ export function buildResourceCommand(optionKey, pin) {
   // relying on the firmware's CLI parser being case-insensitive about
   // its own commands.
   return `resource ${tag} ${index} ${pin ?? "NONE"}`;
-}
-
-/**
- * Builds the `timer`/`dma pin` CLI commands that put every pin in the
- * given HardwareMap back exactly as it was recorded -- the inverse of
- * parsePinMetadata's per-pin parsing, using each entry's own `timer`
- * (AF) and `dma` (index) fields verbatim rather than computing
- * anything. Used to replay a `dump hardware` snapshot's timer/DMA
- * state back onto the flight controller after `defaults nosave` has
- * overwritten it in RAM -- see remap_fc.js's #doRunSequence.
- * @param {HardwareMap} hardwareMap
- * @returns {string[]}
- */
-export function buildTimerDmaReplayCommands(hardwareMap) {
-  const commands = [];
-
-  for (const entry of Object.values(hardwareMap)) {
-    if (entry.timer !== undefined) {
-      commands.push(`timer ${entry.pin} ${entry.timer}`);
-    }
-    if (entry.dma !== undefined) {
-      commands.push(`dma pin ${entry.pin} ${entry.dma}`);
-    }
-  }
-
-  return commands;
 }

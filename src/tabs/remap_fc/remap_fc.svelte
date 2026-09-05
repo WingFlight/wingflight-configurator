@@ -60,6 +60,12 @@
   // --- Local UI state, all driven by remap_fc.js via the exported
   // setters below (this component never fetches anything itself). ---
   let running = $state(false);
+  // 0-100 while remap_fc.js's own CliEngine is mid-way through sending
+  // back a large batch (currently just the post-read full-config
+  // restore, which can run to a couple thousand lines) -- null the
+  // rest of the time, including for every other `running` step, which
+  // are all fast enough not to need it. Set via setRestoreProgress().
+  let restoreProgress = $state(null);
   let error = $state(null);
   // Whether a read has completed — flips the pre-read intro/button
   // over to the board info card and table.
@@ -67,10 +73,6 @@
   // MCU family (e.g. "STM32F7X2"), matching MCU-all.json's top-level
   // keys.
   let mcuType = $state(null);
-  // motor_pwm_protocol as read (e.g. "DSHOT600") -- reassigning a
-  // pin's timer/DMA resets it to PWM, so it's restored via
-  // commandsToSend. Set by remap_fc.js via setCurrentMotorProtocol().
-  let currentMotorProtocol = $state(null);
   // Editable working copy of the current hardware map, staged only
   // until "Load Changes" is pressed.
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
@@ -115,6 +117,23 @@
   // MCU -- false means pin remapping can't be safely calculated, so
   // the tool shows a warning instead of opening (see the template).
   let mcuSupported = $derived(isMcuSupported(mcuAllData, mcuType));
+
+  // The "Read FC" button's own label: plain while idle, "Reading FC"
+  // for the several fast steps that make up most of a read, and (once
+  // remap_fc.js's setRestoreProgress reports one) a live percentage
+  // for the one step slow enough to actually need it -- replaying the
+  // full config backup, which can run to a couple thousand lines. A
+  // static "Reading FC" for that whole stretch would look identical to
+  // a genuine hang; showing it actually advancing is the difference.
+  let runButtonLabel = $derived(
+    !running
+      ? $i18n.t("remapFcRunButton")
+      : restoreProgress != null
+        ? $i18n.t("remapFcRunningProgress", {
+            percent: Math.round(restoreProgress),
+          })
+        : $i18n.t("remapFcRunning"),
+  );
 
   // Keep the visible rows in the same fixed order as OPTION_KEYS,
   // regardless of the order options were added in.
@@ -466,21 +485,12 @@
     "set dshot_bitbang = OFF",
   ];
 
-  // Restores motor_pwm_protocol after timer/DMA commands reset it to
-  // PWM; empty if nothing changed or the read couldn't determine it.
-  let currentMotorProtocolCommand = $derived(
-    currentMotorProtocol && timerDmaCommands.length > 0
-      ? [`set motor_pwm_protocol = ${currentMotorProtocol}`]
-      : [],
-  );
-
   // What "Load Changes" sends and the preview panel shows -- the
   // single place "save" gets appended.
   let commandsToSend = $derived([
     ...DSHOT_SETTING_COMMANDS,
     ...pendingCommands,
     ...timerDmaCommands,
-    ...currentMotorProtocolCommand,
     "save",
   ]);
 
@@ -492,8 +502,8 @@
     running = value;
   }
 
-  export function setCurrentMotorProtocol(value) {
-    currentMotorProtocol = value;
+  export function setRestoreProgress(value) {
+    restoreProgress = value;
   }
 
   export function setError(message) {
@@ -589,7 +599,7 @@
     error = null;
     hasRead = false;
     mcuType = null;
-    currentMotorProtocol = null;
+    restoreProgress = null;
     workingCurrent = {};
     originalCurrent = {};
     defaultHardware = {};
@@ -748,7 +758,7 @@
           />
         </div>
         <button class="btn run-btn" onclick={onClick} disabled={running}>
-          {running ? $i18n.t("remapFcRunning") : $i18n.t("remapFcRunButton")}
+          {runButtonLabel}
         </button>
       </Section>
     </div>

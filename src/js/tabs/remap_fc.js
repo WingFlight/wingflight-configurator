@@ -11,13 +11,7 @@ import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 import { mount, unmount } from "svelte";
 import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
-import {
-  parseHardwareDump,
-  parseMcuType,
-  parseMotorPwmProtocol,
-  buildTimerDmaReplayCommands,
-} from "@/js/remap_fc/hardware_parser.js";
-import { buildChangeCommands } from "@/js/remap_fc/remap_table.js";
+import { parseHardwareDump, parseMcuType } from "@/js/remap_fc/hardware_parser.js";
 import {
   parseReservedDmaStreams,
   parseReservedTimers,
@@ -25,6 +19,54 @@ import {
 import { fetchWingflightTargetDefaults } from "@/js/remap_fc/wingflight_target_source.js";
 
 const IDLE_THRESHOLD_MS = 500;
+
+// A generous ceiling for the config-diff restore step -- replaying
+// `diff all`'s own captured text back to the flight controller once
+// it's been reset to defaults (see #doRunSequence). `diff` only lists
+// settings that actually differ from this firmware's own factory
+// defaults, so it's normally short, but a heavily customised config
+// (many mixer/servo rules, RC adjustment ranges, LED colours, ...)
+// can still run long enough that CliEngine.executeCommandsArray's
+// fixed ~15ms-per-line send delay, with no response synchronization,
+// adds up to a real, non-instant wait. This is only meant to catch
+// something actually going wrong (a dropped response, a serial write
+// callback that never lands, ...), not to bound how long a
+// legitimately large restore takes -- see the progress callback below
+// for what actually keeps the UI from looking stuck during that time.
+const BULK_TRANSFER_TIMEOUT_MS = 180000;
+
+// Races `promise` against a timeout, rejecting with an error naming
+// `label` if it fires first. Used to bound the two bulk-data steps in
+// #doRunSequence -- see BULK_TRANSFER_TIMEOUT_MS.
+function withTimeout(promise, ms, label) {
+  let timeoutId;
+  const timeout = new Promise((_resolve, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`Timed out waiting for ${label}`)),
+      ms,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+// `dump`/`diff` output is written to be self-contained when pasted
+// onto a fresh board, so it ends with a bare `save` line -- which is
+// exactly what we must NOT send here: this replay only exists to
+// correct the flight controller's RAM back to what EEPROM already has
+// after `defaults nosave` (see #doRunSequence), and `save` doesn't
+// just persist that (harmless on its own, since it's the original
+// config) -- it also reboots the flight controller, right in the
+// middle of a "Read FC" that isn't expecting one, dropping the CLI
+// session this whole sequence depends on. Drops any line that, once
+// trimmed, is exactly "save" (case-insensitively, matching the CLI's
+// own case-insensitive command parsing) -- deliberately not a prefix
+// match, so a `set`/`resource`/... line that merely happens to
+// contain the word "save" is left untouched.
+function stripTrailingSave(dumpText) {
+  return dumpText
+    .split(/\r?\n/)
+    .filter((line) => line.trim().toLowerCase() !== "save");
+}
 
 class RemapFcTab {
   // --- CLI engine and mounted Svelte component instances for this tab. ---
@@ -47,15 +89,6 @@ class RemapFcTab {
   // keys of MCU-all.json.
   /** @type {?string} */
   #mcuType = null;
-
-  // The flight controller's current motor_pwm_protocol (e.g.
-  // "DSHOT600"), read once per "Read FC" via `get motor_pwm_protocol`.
-  // Reassigning a pin's timer/DMA makes the firmware drop the protocol
-  // back to PWM, so this is appended as `set motor_pwm_protocol = ...`
-  // after the timer/DMA commands (see remap_fc.svelte's commandsToSend)
-  // to put it back before `save`.
-  /** @type {?string} */
-  #currentMotorProtocol = null;
 
   // DMA streams already claimed by something outside this tool's
   // control (SPI buses, ADC, ...), parsed from `dma show` -- see
@@ -234,13 +267,15 @@ class RemapFcTab {
     return this.#runSequencePromise;
   }
 
-  // #doRunSequence drives the whole "Read FC" flow: enter CLI mode,
-  // dump the current hardware config, reset to defaults and dump again
-  // so we have both pin layouts, restore the flight controller's live
-  // state back to what the first dump actually reported (see the
-  // restoreCommands comment below -- `defaults nosave` leaves the FC
-  // running on defaults otherwise), then hand the raw maps to the
-  // Svelte component, which builds and owns the editable table itself.
+  // #doRunSequence drives the whole "Read FC" flow: back up everything
+  // about the FC's current configuration that isn't already sitting on
+  // this firmware's own defaults (not just its hardware resources --
+  // see the restore comment below for why that distinction matters),
+  // reset to defaults and dump the hardware layout again so we have
+  // both pin layouts, restore the flight controller's live state back
+  // from that backup (`defaults nosave` leaves the FC running on
+  // defaults otherwise), then hand the raw maps to the Svelte
+  // component, which builds and owns the editable table itself.
   // Checks #tornDown between steps so a tab switch mid-run
   // stops it from sending further commands. Deliberately leaves the CLI
   // session open when the run finishes (or fails) — cleanup() is the
@@ -264,7 +299,6 @@ class RemapFcTab {
     this.#currentHardware = null;
     this.#defaultHardware = null;
     this.#mcuType = null;
-    this.#currentMotorProtocol = null;
     this.#reservedDmaStreams = new Set();
     this.#reservedTimers = new Set();
 
@@ -272,8 +306,35 @@ class RemapFcTab {
       await this.#activateCli();
       if (this.#tornDown) return;
 
+      // `dump hardware` -- unchanged from before -- for #currentHardware
+      // and #mcuType: this is the one thing that must list *every*
+      // resource regardless of whether it happens to match this board's
+      // own firmware defaults, which a diff, by definition, wouldn't
+      // (see currentDiffAll below for the settings that do need that).
       const currentDump = await this.#runCommandAndCapture("dump hardware");
       console.log("remap_fc: dump hardware output", currentDump);
+      if (this.#tornDown) return;
+
+      // `diff all` -- not `dump all` -- captures everything about to be
+      // wiped by `defaults nosave` further down (PID gains, rates, the
+      // ESC protocol, filters, resource reassignments, ...) that isn't
+      // *already* sitting on this firmware's own factory defaults. Once
+      // `defaults nosave` actually runs, the flight controller is by
+      // definition sitting on exactly those defaults -- so replaying
+      // this diff back onto it (see the restore step below) reconstructs
+      // the original live config exactly, without also resending every
+      // setting that was already at its default value and so needed no
+      // command at all. A full `dump all` restore is correct too (it's
+      // just the diff plus a lot of redundant already-default lines),
+      // but on a real config that's easily 1000+ lines it makes "Read
+      // FC" take tens of seconds longer than it needs to, for no
+      // benefit.
+      const currentDiffAll = await withTimeout(
+        this.#runCommandAndCapture("diff all"),
+        BULK_TRANSFER_TIMEOUT_MS,
+        "diff all",
+      );
+      console.log("remap_fc: diff all output", currentDiffAll);
       if (this.#tornDown) return;
 
       // `dma show` reports every DMA stream this board is actually
@@ -296,27 +357,13 @@ class RemapFcTab {
       this.#reservedTimers = parseReservedTimers(timerShowOutput);
       if (this.#tornDown) return;
 
-      // Capture the current motor_pwm_protocol before `defaults nosave`
-      // touches anything. Reassigning a pin's timer/DMA later forces the
-      // firmware to drop the protocol back to PWM, so the Svelte
-      // component appends `set motor_pwm_protocol = <this>` after its
-      // timer/DMA commands to restore it (see commandsToSend there).
-      const currentMotorProtocolOutput = await this.#runCommandAndCapture(
-        "get motor_pwm_protocol",
-      );
-      console.log(
-        "remap_fc: get motor_pwm_protocol output",
-        currentMotorProtocolOutput,
-      );
-      this.#currentMotorProtocol = parseMotorPwmProtocol(
-        currentMotorProtocolOutput,
-      );
-      console.log("remap_fc: currentMotorProtocol", this.#currentMotorProtocol);
-      if (this.#tornDown) return;
-
       await this.#runCommandAndCapture("defaults nosave");
       if (this.#tornDown) return;
 
+      // Deliberately `dump hardware`, not `dump all`, here -- all we
+      // need from the reset state is the factory-default pin layout
+      // for the table; there's no need to also capture (and never any
+      // intention of restoring) the FC's full factory-default config.
       const defaultDump = await this.#runCommandAndCapture("dump hardware");
       console.log("remap_fc: dump hardware (defaults) output", defaultDump);
 
@@ -328,7 +375,7 @@ class RemapFcTab {
       console.log("remap_fc: mcuType", this.#mcuType);
 
       // A board with no Rotorflight-specific build of its own (see
-      // remap_fc.svelte's boardDiagramSrc for the same check) only
+      // remap_fc.svelte's isGenericBoard for the same check) only
       // ever reports resources up to whatever Rotorflight's own
       // runtime was compiled to support -- kick off a lookup of the
       // richer default set its own shared Betaflight target actually
@@ -348,42 +395,82 @@ class RemapFcTab {
           : Promise.resolve(null);
 
       // `defaults nosave` doesn't just preview the factory defaults --
-      // it actually resets the flight controller's live resource/
-      // timer/DMA state to them in RAM (that's the only way the CLI
-      // can report what the defaults *are*). "nosave" only means it's
-      // never written to EEPROM, so the persisted config is untouched,
-      // but from this point on the FC is actually *running* on
-      // defaults until something puts it back. Replay the first
-      // dump's own resource/timer/DMA commands to restore the live
-      // state to match what was actually read, before the user starts
-      // editing anything -- no `save` needed, since this only corrects
-      // RAM back to what EEPROM already has.
+      // it actually resets the flight controller's *entire* live
+      // configuration to them in RAM (that's the only way the CLI can
+      // report what the defaults *are*), not only its resource/timer/
+      // DMA state: PID gains, rates, filters, the ESC protocol, every
+      // `set`-able value resets too. "nosave" only means it's never
+      // written to EEPROM, so the persisted config is untouched, but
+      // from this point on the FC is actually *running* on defaults
+      // until something puts it back -- and every one of those other
+      // settings would otherwise sit wrong in RAM for as long as the
+      // tab stays open, or permanently if the user saved before
+      // reading further.
+      //
+      // The fix is to replay currentDiffAll -- the raw `diff all` text
+      // captured above, before any of this ran -- back to the flight
+      // controller line for line, the exact mechanism presets.js's own
+      // backup/restore relies on for a full `dump` (a dump/diff's own
+      // header/section comments and blank lines are harmless to resend;
+      // the CLI ignores them), just with the diff's much shorter output
+      // instead. The flight controller is sitting on exactly this
+      // firmware's own factory defaults at this exact point (that's
+      // what `defaults nosave` just did), and a diff is precisely
+      // "default plus these commands equals the original config" by
+      // construction -- so replaying it here reconstructs the original
+      // live state exactly, with no separate command-building step
+      // needed.
+      //
+      // stripTrailingSave() is not optional: `dump`/`diff` output is
+      // written to be pasteable onto a fresh board, so it ends with a
+      // bare `save` line of its own -- sending that here would reboot
+      // the flight controller in the middle of "Read FC", which isn't
+      // expecting one and has no idea the CLI session it depends on is
+      // about to drop. This restore only ever needs to correct RAM
+      // back to what EEPROM already has, never to persist or reboot.
       //
       // Sent as a fast batch (CliEngine.executeCommandsArray -- the
-      // same paste-a-preset mechanism presets.js uses) rather than
-      // through #runCommandAndCapture one at a time: each of those
-      // waits out a full IDLE_THRESHOLD_MS of silence to confirm a
-      // command's *output* has finished, which matters when parsing a
-      // dump's text, but these commands have no output worth waiting
-      // for -- only that they were sent, which the batch send confirms
-      // far faster (a fixed ~15ms line delay instead of ~500ms+ per
-      // command). Still waits once for the whole batch to go idle
-      // afterwards, so nothing races the flight controller catching up
-      // before the user starts editing.
-      const restoreCommands = [
-        ...buildChangeCommands(this.#defaultHardware, this.#currentHardware),
-        ...buildTimerDmaReplayCommands(this.#currentHardware),
-      ];
-      console.log("remap_fc: loading config back to FC", restoreCommands);
-      if (restoreCommands.length > 0) {
-        await this.#cliEngine.executeCommandsArray(restoreCommands);
+      // array form of executeCommands, which is what presets.js's own
+      // restore calls) rather than through #runCommandAndCapture one
+      // at a time: each of those waits out a full IDLE_THRESHOLD_MS of
+      // silence to confirm a command's *output* has finished, which
+      // matters when parsing a dump's text, but these commands have no
+      // output worth waiting for -- only that they were sent, which
+      // the batch send confirms far faster (a fixed ~15ms line delay
+      // instead of ~500ms+ per command). Still waits once for the
+      // whole batch to go idle afterwards, so nothing races the flight
+      // controller catching up before the user starts editing.
+      const restoreStartedAt = performance.now();
+      console.log(
+        `remap_fc: restoring config diff to FC (${currentDiffAll.split(/\r?\n/).length} lines)`,
+      );
+      // Surfaces CliEngine's own per-line send progress (already tracked
+      // internally by executeCommandsArray for every batch send, e.g.
+      // presets.js's own restore) as a percentage on the "Reading FC"
+      // button, so a restore that takes more than a moment reads as
+      // "working" rather than "stuck" -- cleared in the `finally` below
+      // alongside every other per-run bit of state.
+      this.#cliEngine.setProgressCallback((percent) => {
+        this.#svelteComponent?.setRestoreProgress(percent);
+      });
+      const restoreConfigDiff = async () => {
+        await this.#cliEngine.executeCommandsArray(
+          stripTrailingSave(currentDiffAll),
+        );
         await this.#waitForIdle();
-        if (this.#tornDown) return;
-      }
+      };
+      await withTimeout(
+        restoreConfigDiff(),
+        BULK_TRANSFER_TIMEOUT_MS,
+        "the config restore",
+      );
+      console.log(
+        `remap_fc: config restored (${Math.round(performance.now() - restoreStartedAt)}ms)`,
+      );
+      if (this.#tornDown) return;
 
       const targetDefaults = await targetDefaultsPromise;
 
-      this.#svelteComponent?.setCurrentMotorProtocol(this.#currentMotorProtocol);
       this.#svelteComponent?.setHardware(
         this.#currentHardware,
         targetDefaults ?? this.#defaultHardware,
@@ -397,6 +484,8 @@ class RemapFcTab {
         err?.message ?? i18n.getMessage("remapFcError"),
       );
     } finally {
+      this.#cliEngine.setProgressCallback(null);
+      this.#svelteComponent?.setRestoreProgress(null);
       this.#svelteComponent?.setRunning(false);
       this.#runSequencePromise = null;
     }
