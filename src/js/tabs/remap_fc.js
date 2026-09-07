@@ -20,20 +20,21 @@ import { fetchWingflightTargetDefaults } from "@/js/remap_fc/wingflight_target_s
 
 const IDLE_THRESHOLD_MS = 500;
 
-// A generous ceiling for the config-diff restore step -- replaying
-// `diff all`'s own captured text back to the flight controller once
-// it's been reset to defaults (see #doRunSequence). `diff` only lists
-// settings that actually differ from this firmware's own factory
-// defaults, so it's normally short, but a heavily customised config
-// (many mixer/servo rules, RC adjustment ranges, LED colours, ...)
-// can still run long enough that CliEngine.executeCommandsArray's
-// fixed ~15ms-per-line send delay, with no response synchronization,
-// adds up to a real, non-instant wait. This is only meant to catch
-// something actually going wrong (a dropped response, a serial write
-// callback that never lands, ...), not to bound how long a
-// legitimately large restore takes -- see the progress callback below
-// for what actually keeps the UI from looking stuck during that time.
+// A generous ceiling for the config-diff restore step (see
+// #doRunSequence) -- a heavily customised config's diff can
+// legitimately take a while to replay, so this is only meant to catch
+// something actually going wrong, not to bound a normal restore. See
+// the progress callback below for what keeps the UI from looking
+// stuck in the meantime.
 const BULK_TRANSFER_TIMEOUT_MS = 180000;
+
+// How long #doApplySequence waits, after sending "save", for the base
+// CliEngine's own "Rebooting" text detection to actually fire (see
+// #waitForReboot) before giving up and treating the save as failed. A
+// real reboot starts printing that text within milliseconds, so this
+// is generous purely to absorb slow serial/USB latency, not because a
+// working save is ever expected to take anywhere near this long.
+const REBOOT_TIMEOUT_MS = 8000;
 
 // Races `promise` against a timeout, rejecting with an error naming
 // `label` if it fires first. Used to bound the two bulk-data steps in
@@ -49,19 +50,13 @@ function withTimeout(promise, ms, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-// `dump`/`diff` output is written to be self-contained when pasted
-// onto a fresh board, so it ends with a bare `save` line -- which is
-// exactly what we must NOT send here: this replay only exists to
-// correct the flight controller's RAM back to what EEPROM already has
-// after `defaults nosave` (see #doRunSequence), and `save` doesn't
-// just persist that (harmless on its own, since it's the original
-// config) -- it also reboots the flight controller, right in the
-// middle of a "Read FC" that isn't expecting one, dropping the CLI
-// session this whole sequence depends on. Drops any line that, once
-// trimmed, is exactly "save" (case-insensitively, matching the CLI's
-// own case-insensitive command parsing) -- deliberately not a prefix
-// match, so a `set`/`resource`/... line that merely happens to
-// contain the word "save" is left untouched.
+// `dump`/`diff` output ends with a bare `save` line, meant for
+// pasting straight onto a fresh board -- exactly what this restore
+// must never send, since it would reboot the flight controller mid-
+// "Read FC" and drop the CLI session the whole sequence depends on.
+// Only drops a line that trims to exactly "save" (case-insensitive),
+// so a `set`/`resource`/... line merely containing the word is left
+// untouched.
 function stripTrailingSave(dumpText) {
   return dumpText
     .split(/\r?\n/)
@@ -111,8 +106,8 @@ class RemapFcTab {
   #tornDown = false;
 
   // Set to true the moment "save" is actually sent to the flight
-  // controller (see #doApplySequence), and only cleared again at the
-  // start of the next #doRunSequence/#doApplySequence -- cleanup()
+  // controller (see #sendSaveAndConfirmReboot), and only cleared again
+  // at the start of the next #doRunSequence/#doApplySequence -- cleanup()
   // checks this before ever sending a real "exit": once "save" is on
   // the wire the FC is rebooting (or about to), and CONFIGURATOR's own
   // cliEngineActive/cliEngineValid flags can briefly still read true
@@ -125,6 +120,15 @@ class RemapFcTab {
   // anything at all; the base reconnect flow is the only thing allowed
   // to touch the port until a fresh sequence starts.
   #saveSent = false;
+
+  // Whether the diff-all restore batch in the most recent
+  // #doRunSequence produced any `###ERROR` CLI response (tracked via
+  // #cliEngine.errorsCount around that send). Per presets.js's own
+  // showFinalCliOptions, the firmware silently ignores a lone "save"
+  // after a batch that hit an error and needs a second one -- a real
+  // risk for a diff replay this large on a customised config. Read by
+  // #sendSaveAndConfirmReboot.
+  #restoreHadCliErrors = false;
 
   // The in-flight runSequence() promise, if any — cleanup() awaits it
   // so we don't switch tabs until the CLI session has actually been
@@ -268,20 +272,15 @@ class RemapFcTab {
   }
 
   // #doRunSequence drives the whole "Read FC" flow: back up everything
-  // about the FC's current configuration that isn't already sitting on
-  // this firmware's own defaults (not just its hardware resources --
-  // see the restore comment below for why that distinction matters),
-  // reset to defaults and dump the hardware layout again so we have
-  // both pin layouts, restore the flight controller's live state back
-  // from that backup (`defaults nosave` leaves the FC running on
-  // defaults otherwise), then hand the raw maps to the Svelte
+  // about the FC's current configuration, reset to defaults and dump
+  // the hardware layout again for both pin layouts, then restore the
+  // live state from that backup (`defaults nosave` otherwise leaves
+  // the FC running on defaults). The raw maps then go to the Svelte
   // component, which builds and owns the editable table itself.
-  // Checks #tornDown between steps so a tab switch mid-run
-  // stops it from sending further commands. Deliberately leaves the CLI
-  // session open when the run finishes (or fails) — cleanup() is the
-  // only place that actually exits CLI mode, once the user navigates
-  // away from this tab, so repeated reads don't pay the cost of
-  // re-entering CLI mode each time.
+  // Checks #tornDown between steps so a tab switch mid-run stops
+  // further commands, and deliberately leaves the CLI session open
+  // when done (or failed) -- cleanup() is the only place that exits
+  // CLI mode, so repeated reads skip re-entering it each time.
   async #doRunSequence() {
     this.#tornDown = false;
     this.#saveSent = false;
@@ -301,6 +300,7 @@ class RemapFcTab {
     this.#mcuType = null;
     this.#reservedDmaStreams = new Set();
     this.#reservedTimers = new Set();
+    this.#restoreHadCliErrors = false;
 
     try {
       await this.#activateCli();
@@ -315,20 +315,13 @@ class RemapFcTab {
       console.log("remap_fc: dump hardware output", currentDump);
       if (this.#tornDown) return;
 
-      // `diff all` -- not `dump all` -- captures everything about to be
-      // wiped by `defaults nosave` further down (PID gains, rates, the
-      // ESC protocol, filters, resource reassignments, ...) that isn't
-      // *already* sitting on this firmware's own factory defaults. Once
-      // `defaults nosave` actually runs, the flight controller is by
-      // definition sitting on exactly those defaults -- so replaying
-      // this diff back onto it (see the restore step below) reconstructs
-      // the original live config exactly, without also resending every
-      // setting that was already at its default value and so needed no
-      // command at all. A full `dump all` restore is correct too (it's
-      // just the diff plus a lot of redundant already-default lines),
-      // but on a real config that's easily 1000+ lines it makes "Read
-      // FC" take tens of seconds longer than it needs to, for no
-      // benefit.
+      // `diff all`, not `dump all`, captures only what differs from
+      // this firmware's own factory defaults (PID gains, rates,
+      // filters, resource reassignments, ...). Once `defaults nosave`
+      // runs below, the FC is sitting on exactly those defaults, so
+      // replaying this diff (see the restore step below) reconstructs
+      // the original config exactly, without also resending the
+      // ~1000+ already-default lines a full `dump all` would.
       const currentDiffAll = await withTimeout(
         this.#runCommandAndCapture("diff all"),
         BULK_TRANSFER_TIMEOUT_MS,
@@ -394,65 +387,41 @@ class RemapFcTab {
             )
           : Promise.resolve(null);
 
-      // `defaults nosave` doesn't just preview the factory defaults --
-      // it actually resets the flight controller's *entire* live
-      // configuration to them in RAM (that's the only way the CLI can
-      // report what the defaults *are*), not only its resource/timer/
-      // DMA state: PID gains, rates, filters, the ESC protocol, every
-      // `set`-able value resets too. "nosave" only means it's never
-      // written to EEPROM, so the persisted config is untouched, but
-      // from this point on the FC is actually *running* on defaults
-      // until something puts it back -- and every one of those other
-      // settings would otherwise sit wrong in RAM for as long as the
-      // tab stays open, or permanently if the user saved before
-      // reading further.
+      // `defaults nosave` resets the FC's *entire* live config in RAM,
+      // not just resources/timer/DMA -- PID gains, rates, filters, the
+      // ESC protocol, every `set`-able value resets too, and stays
+      // wrong until something puts it back ("nosave" only means it's
+      // never persisted, so EEPROM itself is untouched). Replaying
+      // currentDiffAll -- the raw `diff all` captured above, before any
+      // of this ran -- puts it straight back: the FC is now sitting on
+      // exactly the defaults that diff was computed against, so
+      // resending it reconstructs the original live config exactly
+      // (its own header/section comments and blank lines are harmless
+      // to resend; the CLI ignores them). stripTrailingSave() drops the
+      // diff's own trailing `save` line first -- see its own comment
+      // for why that must never reach the FC here.
       //
-      // The fix is to replay currentDiffAll -- the raw `diff all` text
-      // captured above, before any of this ran -- back to the flight
-      // controller line for line, the exact mechanism presets.js's own
-      // backup/restore relies on for a full `dump` (a dump/diff's own
-      // header/section comments and blank lines are harmless to resend;
-      // the CLI ignores them), just with the diff's much shorter output
-      // instead. The flight controller is sitting on exactly this
-      // firmware's own factory defaults at this exact point (that's
-      // what `defaults nosave` just did), and a diff is precisely
-      // "default plus these commands equals the original config" by
-      // construction -- so replaying it here reconstructs the original
-      // live state exactly, with no separate command-building step
-      // needed.
-      //
-      // stripTrailingSave() is not optional: `dump`/`diff` output is
-      // written to be pasteable onto a fresh board, so it ends with a
-      // bare `save` line of its own -- sending that here would reboot
-      // the flight controller in the middle of "Read FC", which isn't
-      // expecting one and has no idea the CLI session it depends on is
-      // about to drop. This restore only ever needs to correct RAM
-      // back to what EEPROM already has, never to persist or reboot.
-      //
-      // Sent as a fast batch (CliEngine.executeCommandsArray -- the
-      // array form of executeCommands, which is what presets.js's own
-      // restore calls) rather than through #runCommandAndCapture one
-      // at a time: each of those waits out a full IDLE_THRESHOLD_MS of
-      // silence to confirm a command's *output* has finished, which
-      // matters when parsing a dump's text, but these commands have no
-      // output worth waiting for -- only that they were sent, which
-      // the batch send confirms far faster (a fixed ~15ms line delay
-      // instead of ~500ms+ per command). Still waits once for the
-      // whole batch to go idle afterwards, so nothing races the flight
-      // controller catching up before the user starts editing.
+      // Sent as a fast batch (CliEngine.executeCommandsArray, the same
+      // mechanism presets.js's own restore uses) rather than through
+      // #runCommandAndCapture one at a time, since these commands have
+      // no output worth waiting for individually -- only that they
+      // were sent, which the batch send confirms far faster. Still
+      // waits once for the whole batch to go idle afterwards, so
+      // nothing races the flight controller catching up.
       const restoreStartedAt = performance.now();
       console.log(
         `remap_fc: restoring config diff to FC (${currentDiffAll.split(/\r?\n/).length} lines)`,
       );
-      // Surfaces CliEngine's own per-line send progress (already tracked
-      // internally by executeCommandsArray for every batch send, e.g.
-      // presets.js's own restore) as a percentage on the "Reading FC"
-      // button, so a restore that takes more than a moment reads as
-      // "working" rather than "stuck" -- cleared in the `finally` below
-      // alongside every other per-run bit of state.
+      // Surfaces CliEngine's own per-line send progress as a percentage
+      // on the "Reading FC" button, so a restore that takes a while
+      // reads as "working" rather than "stuck" -- cleared in the
+      // `finally` below.
       this.#cliEngine.setProgressCallback((percent) => {
         this.#svelteComponent?.setRestoreProgress(percent);
       });
+      // Recorded before the batch so #restoreHadCliErrors reflects only
+      // errors this restore itself produced.
+      const errorsBeforeRestore = this.#cliEngine.errorsCount;
       const restoreConfigDiff = async () => {
         await this.#cliEngine.executeCommandsArray(
           stripTrailingSave(currentDiffAll),
@@ -464,8 +433,10 @@ class RemapFcTab {
         BULK_TRANSFER_TIMEOUT_MS,
         "the config restore",
       );
+      this.#restoreHadCliErrors =
+        this.#cliEngine.errorsCount !== errorsBeforeRestore;
       console.log(
-        `remap_fc: config restored (${Math.round(performance.now() - restoreStartedAt)}ms)`,
+        `remap_fc: config restored (${Math.round(performance.now() - restoreStartedAt)}ms)${this.#restoreHadCliErrors ? " -- with CLI errors" : ""}`,
       );
       if (this.#tornDown) return;
 
@@ -507,28 +478,11 @@ class RemapFcTab {
   }
 
   // #doApplySequence sends the given commands (already ordered by
-  // buildChangeCommands() — every removal before any addition — with a
-  // trailing "save" appended by the Svelte component) to apply the
-  // table's staged edits. Checks #tornDown between commands the same
-  // way #doRunSequence does.
-  //
-  // "save" is deliberately handled differently to every other command
-  // here: it's what actually persists the resource reassignments and
-  // is what reboots the flight controller to make them take effect (a
-  // `resource` command alone only changes the in-memory config — the
-  // peripherals themselves aren't reinitialised until the next boot).
-  // Once it's sent, the CLI session is ending on its own terms, so
-  // unlike every other command we don't wait for it to go idle (that
-  // wait could race whatever the reconnect flow does once the flight
-  // controller actually drops), and we don't try to re-read
-  // `dump hardware` afterwards either, since there's nothing left to
-  // read it from until reconnected. The base CliEngine already detects
-  // the "Rebooting" text on its own and hands off to the same reconnect
-  // path every other "Save & Reboot" button in this app already relies
-  // on, so there's nothing more for this sequence to do once "save" is
-  // on the wire — including exiting CLI mode, which that same
-  // detection also takes care of, so cleanup() has nothing left to do
-  // if the user switches tabs while the flight controller is rebooting.
+  // buildChangeCommands() -- every removal before any addition -- with
+  // a trailing "save" appended by the Svelte component) to apply the
+  // table's staged edits, deferring to #sendSaveAndConfirmReboot for
+  // that final "save". Checks #tornDown between commands the same way
+  // #doRunSequence does.
   /**
    * @param {string[]} commands
    */
@@ -544,38 +498,31 @@ class RemapFcTab {
 
       for (const command of commands) {
         if (command === "save") {
-          this.#saveSent = true;
-          // The base CliEngine's own "Rebooting" text detection is
-          // what normally sets this, but only if this tab is still
-          // the active one when that text actually streams in --
-          // switch tabs first and nothing is listening for it, so
-          // main.js's tab-switch guard (`!GUI.reboot_in_progress`)
-          // never engages and a newly-activated tab (e.g. CLI) can
-          // start writing to the serial port while the flight
-          // controller is still mid-reboot, well before the real,
-          // USB-detection-based auto-reconnect has even noticed the
-          // device drop. Since we know for certain a reboot is about
-          // to happen, set it ourselves right now rather than waiting
-          // on that detection -- serial_backend.js's finishOpen()
-          // still clears it once the real reconnect completes,
-          // exactly as it would for any other "Save & Reboot" action.
-          GUI.reboot_in_progress = true;
-          this.#cliEngine.sendLine(command);
+          await this.#sendSaveAndConfirmReboot();
           break;
         }
 
+        console.log("remap_fc: apply sequence sending", command);
         await this.#runCommandAndCapture(command);
         if (this.#tornDown) return;
       }
 
-      // The resource commands are confirmed sent (whether or not "save"
-      // was reached yet) -- adopt the working copy as the new baseline
-      // so the "Load Changes" button/preview collapse, since staying
-      // staged after a successful send would just make the user think
-      // nothing happened.
+      // The resource commands are confirmed sent and the flight
+      // controller confirmed rebooting -- adopt the working copy as
+      // the new baseline so the "Load Changes" button/preview
+      // collapse, since staying staged after a successful send would
+      // just make the user think nothing happened.
       this.#svelteComponent?.markApplied();
     } catch (err) {
       console.error("remap_fc: apply sequence failed", err);
+      if (this.#saveSent) {
+        // #waitForReboot rejected -- nothing was actually persisted, so
+        // don't leave the tab thinking a reboot is still in flight:
+        // reset the bookkeeping so cleanup() can send a normal "exit"
+        // and the user can just retry "Load Changes".
+        this.#saveSent = false;
+        GUI.reboot_in_progress = false;
+      }
       this.#svelteComponent?.setError(
         err?.message ?? i18n.getMessage("remapFcError"),
       );
@@ -583,6 +530,77 @@ class RemapFcTab {
       this.#svelteComponent?.setRunning(false);
       this.#runSequencePromise = null;
     }
+  }
+
+  // Sends the final "save" of an apply sequence and confirms it was
+  // actually processed before returning -- the one command in that
+  // sequence that persists and reboots the FC, rather than just
+  // changing in-memory config, so unlike every other command it's
+  // worth verifying rather than assuming it landed.
+  //
+  // Sends a second "save" first if #restoreHadCliErrors is set (see
+  // that field's own comment, and presets.js's showFinalCliOptions for
+  // the identical workaround), then waits via #waitForReboot to
+  // confirm a reboot actually started -- without that, a save that's
+  // silently dropped (or never reaches a firmware already wedged by an
+  // earlier command) would still read as success, since
+  // serial.send()'s own completion callback only confirms the write
+  // was handed off, never that anything was done with it.
+  async #sendSaveAndConfirmReboot() {
+    this.#saveSent = true;
+    // Set explicitly rather than waiting for the base CliEngine's own
+    // "Rebooting" detection to do it: that only fires if this tab is
+    // still active when the text streams in, and switching tabs first
+    // would let a newly-activated tab (e.g. CLI) write to the port
+    // while the FC is still mid-reboot. serial_backend.js's
+    // finishOpen() clears it again once the real reconnect completes.
+    GUI.reboot_in_progress = true;
+    console.log("remap_fc: sending save");
+
+    if (this.#restoreHadCliErrors) {
+      await new Promise((resolve) => {
+        this.#cliEngine.subscribeResponseCallback(() => {
+          this.#cliEngine.unsubscribeResponseCallback();
+          console.log(
+            "remap_fc: restore had CLI errors -- sending a second save",
+          );
+          this.#cliEngine.sendLine("save");
+          resolve();
+        });
+        this.#cliEngine.sendLine("save");
+      });
+    } else {
+      this.#cliEngine.sendLine("save");
+    }
+
+    await this.#waitForReboot();
+  }
+
+  // Resolves once CONFIGURATOR.cliEngineValid flips false -- what the
+  // base CliEngine's own "Rebooting" detection does the moment the FC
+  // actually starts rebooting -- confirming "save" was processed, not
+  // just handed to serial.send(). Rejects after REBOOT_TIMEOUT_MS
+  // otherwise, so #sendSaveAndConfirmReboot's caller never calls
+  // markApplied() for a save that was never really applied.
+  #waitForReboot() {
+    return new Promise((resolve, reject) => {
+      const start = performance.now();
+      const intervalName = `remap_fc_reboot_wait_${start}`;
+      GUI.interval_add(
+        intervalName,
+        () => {
+          if (!CONFIGURATOR.cliEngineValid) {
+            GUI.interval_remove(intervalName);
+            resolve();
+          } else if (performance.now() - start > REBOOT_TIMEOUT_MS) {
+            GUI.interval_remove(intervalName);
+            reject(new Error(i18n.getMessage("remapFcSaveNoReboot")));
+          }
+        },
+        100,
+        false,
+      );
+    });
   }
 
   // read is called by the app's serial layer whenever this tab is the

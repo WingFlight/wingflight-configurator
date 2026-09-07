@@ -7429,6 +7429,9 @@
     "remapFcError": {
         "message": "Error reading FC"
     },
+    "remapFcSaveNoReboot": {
+        "message": "Flight controller did not reboot after Save -- the change may not have been applied. Check the connection and try again."
+    },
     "remapFcTableOption": {
         "message": "FC Label"
     },
