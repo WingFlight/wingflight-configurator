@@ -65,11 +65,6 @@
       "type": "branch",
       "name": "feature-modern_ui",
       "path": "./feature-modern_ui/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-tv-profiles",
-      "path": "./feature-tv-profiles/"
     }
   ]
 }
