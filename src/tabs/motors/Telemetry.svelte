@@ -11,6 +11,24 @@
   import Tooltip from "@/components/Tooltip.svelte";
 
   import motorState from "./state.svelte.js";
+
+  // FBUS/S.Port master and SRXL2 ESC both read via their own dedicated
+  // serial port function, not this module's own "ESC Telemetry" one -- the
+  // generic tooltip below is actively wrong for them (it used to point
+  // everyone at "ESC Telemetry" on the Configuration tab regardless of
+  // protocol), so they each get their own pointing at the right one.
+  let selectedProtocolName = $derived(
+    motorState.telemetryProtocols[FC.ESC_SENSOR_CONFIG.protocol],
+  );
+  let telemetryProtocolHelp = $derived.by(() => {
+    if (motorState.srxl2PortAssigned) {
+      return "motorsEscTelemetryProtocolSrxl2LockedHelp";
+    }
+    if (selectedProtocolName === "FrSky F.BUS") {
+      return "motorsEscTelemetryProtocolFbusHelp";
+    }
+    return "motorsEscTelemetryProtocolHelp";
+  });
 </script>
 
 <Section label="motorsEscTelemetry">
@@ -19,11 +37,7 @@
       <SubSection>
         <Field id="esc-telemetry-protocol" label="motorsEscTelemetryProtocol">
           {#snippet tooltip()}
-            <Tooltip
-              help={motorState.srxl2PortAssigned
-                ? "motorsEscTelemetryProtocolSrxl2LockedHelp"
-                : "motorsEscTelemetryProtocolHelp"}
-            />
+            <Tooltip help={telemetryProtocolHelp} />
           {/snippet}
           <select
             id="esc-telemetry-protocol"
