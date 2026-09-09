@@ -72,6 +72,19 @@
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
   );
 
+  let profileTabs = $derived(
+    Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
+  );
+
+  let copyDialogEl;
+  let copyDestination = $state(0);
+
+  let copyDestinationOptions = $derived(
+    profileTabs
+      .filter((i) => i !== FC.CONFIG.tvProfile)
+      .map((i) => ({ value: i, label: $i18n.t(`profilesSubTab${i + 1}`) })),
+  );
+
   let loading = $state(true);
   let initialState = $state(null);
 
@@ -141,6 +154,42 @@
     return dirty;
   }
 
+  function activateTvProfile(index) {
+    FC.CONFIG.tvProfile = index;
+    MSP.promise(MSPCodes.MSP2_WING_SELECT_TV_PROFILE, [index]).then(() => {
+      GUI.log($i18n.t("profilesActivateProfile", { 1: index + 1 }));
+      GUI.tab_switch_reload();
+    });
+  }
+
+  function onClickProfileTab(index) {
+    if (index === FC.CONFIG.tvProfile) {
+      return;
+    }
+    GUI.tab_switch_allowed(() => activateTvProfile(index));
+  }
+
+  function onClickCopyProfile() {
+    if (dirty) {
+      return;
+    }
+    copyDestination = copyDestinationOptions[0]?.value ?? 0;
+    copyDialogEl.showModal();
+  }
+
+  async function onConfirmCopyProfile() {
+    FC.COPY_PROFILE.dstProfile = copyDestination;
+    FC.COPY_PROFILE.srcProfile = FC.CONFIG.tvProfile;
+
+    await MSP.promise(
+      MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE,
+      mspHelper.crunch(MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE),
+    );
+    await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
+    GUI.log($i18n.t("eepromSaved"));
+    copyDialogEl.close();
+  }
+
   function onClickHelp() {
     window.open(getTabHelpURL("tabThrustVector"), "_system");
   }
@@ -149,6 +198,9 @@
 {#snippet header()}
   <h1>{$i18n.t("tabThrustVector")}</h1>
   <div class="grow"></div>
+  <button class="btn" disabled={dirty} onclick={onClickCopyProfile}>
+    {$i18n.t("profilesCopyProfile")}
+  </button>
   <button class="btn help-btn" onclick={onClickHelp}>
     {$i18n.t("buttonHelp")}
   </button>
@@ -160,6 +212,21 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
+  <div class="profile-tabs">
+    {#each profileTabs as index (index)}
+      <button
+        class={["profile-tab", index === FC.CONFIG.tvProfile && "active"]}
+        onclick={() => onClickProfileTab(index)}
+        aria-label={$i18n.t(`profilesSubTab${index + 1}`)}
+      >
+        <span class="tab-label-full">
+          {$i18n.t(`profilesSubTab${index + 1}`)}
+        </span>
+        <span class="tab-label-short" aria-hidden="true">#{index + 1}</span>
+      </button>
+    {/each}
+  </div>
+
   <div class="note">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <p>{@html $i18n.t("thrustVectorIntroNote")}</p>
@@ -663,6 +730,26 @@
   {/if}
 </Page>
 
+<dialog bind:this={copyDialogEl}>
+  <h3>{$i18n.t("dialogCopyProfileTitle")}</h3>
+  <div class="content">
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <p>{@html $i18n.t("dialogCopyProfileNote")}</p>
+    <div class="field-row">
+      <span>{$i18n.t("dialogCopyTvProfileText")}</span>
+      <Select bind:value={copyDestination} options={copyDestinationOptions} />
+    </div>
+  </div>
+  <div class="buttons">
+    <button class="btn" onclick={onConfirmCopyProfile}>
+      {$i18n.t("dialogCopyProfileConfirm")}
+    </button>
+    <button class="btn" onclick={() => copyDialogEl.close()}>
+      {$i18n.t("dialogCopyProfileClose")}
+    </button>
+  </div>
+</dialog>
+
 <style lang="scss">
   h1 {
     font-weight: 600;
@@ -689,6 +776,65 @@
     color: var(--color-text);
     background-color: var(--color-surface);
     border: 1px solid var(--color-border-accent);
+  }
+
+  // Mirrors Profiles.svelte/Rates.svelte's identical profile-tab bar.
+  .profile-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: var(--section-gap);
+  }
+
+  .profile-tab {
+    @extend %button;
+    padding: 0 14px;
+
+    &.active {
+      color: var(--color-text-inverse, #000);
+      background-color: var(--color-accent, var(--accent));
+    }
+  }
+
+  .tab-label-short {
+    display: none;
+  }
+
+  @media only screen and (max-width: 820px) {
+    .profile-tab {
+      padding: 0 10px;
+    }
+
+    .tab-label-full {
+      display: none;
+    }
+
+    .tab-label-short {
+      display: inline;
+    }
+  }
+
+  dialog {
+    width: 32em;
+    border-radius: 5px;
+  }
+
+  dialog .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 1.5em;
+  }
+
+  dialog h3 {
+    margin-bottom: 0.5em;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
   }
 
   .table-scroll {

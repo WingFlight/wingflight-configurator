@@ -1,3 +1,9 @@
+# 0.0.18
+
+Add Thrust Vector profile tabs and TV Profile adjustment function.
+Generalize the backup RX from SBUS-only into a provider-selectable input, recognizing FBUS, FPort, FPort2, Jeti EX Bus, and CRSF.
+Fix ESC Telemetry Protocol tooltip for FBUS.
+
 # 0.0.17
 
 Add Thrust Vector Attitude Hold.

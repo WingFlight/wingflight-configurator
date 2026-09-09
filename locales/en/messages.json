@@ -2081,6 +2081,9 @@
     "dialogCopyRateProfileText": {
         "message": "Copy values from the current rateprofile to"
     },
+    "dialogCopyTvProfileText": {
+        "message": "Copy values from the current TV profile to"
+    },
     "dialogCopyProfileTitle": {
         "message": "Copy Profile Values"
     },
@@ -3135,6 +3138,9 @@
     },
     "adjustmentsFunctionTVHoldGain": {
         "message": "TV Attitude Hold Gain"
+    },
+    "adjustmentsFunctionTVProfile": {
+        "message": "TV Profile Selection"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"

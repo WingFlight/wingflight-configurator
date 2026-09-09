@@ -120,6 +120,7 @@ export function getFunctions() {
         { id: 108,  name: 'TVYawF',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
     ];
 }
 
@@ -136,7 +137,7 @@ export function getFunctions() {
 // permanently hidden, so they disappear entirely rather than showing an
 // empty heading.
 export const FUNCTION_GROUPS = [
-    { label: 'adjustmentsGroupProfiles', ids: [82, 3, 4, 2, 1] },
+    { label: 'adjustmentsGroupProfiles', ids: [82, 3, 4, 2, 1, 111] },
     { label: 'adjustmentsGroupRates', ids: [5, 6, 7] },
     { label: 'adjustmentsGroupRcRates', ids: [8, 9, 10] },
     { label: 'adjustmentsGroupRcExpo', ids: [11, 12, 13] },

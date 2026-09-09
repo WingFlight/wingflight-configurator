@@ -900,6 +900,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP2_WING_TV_PID_CONFIG: {
+                // Leading byte identifies which TV profile the rest of this
+                // payload describes -- always "currently active" (see
+                // MSP2_WING_SELECT_TV_PROFILE).
+                FC.CONFIG.tvProfile = data.readU8();
                 for (let i = 0; i < 3; i++) { // RPY
                     for (let j = 0; j < 5; j++) { // PIDFB
                         FC.TV_PIDS[i][j] = data.readU16();
@@ -1808,6 +1812,14 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Copy profile');
                 break;
             }
+            case MSPCodes.MSP2_WING_SELECT_TV_PROFILE: {
+                console.log('Select TV profile');
+                break;
+            }
+            case MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE: {
+                console.log('Copy TV PID profile');
+                break;
+            }
             case MSPCodes.MSP_ARMING_DISABLE: {
                 console.log('Arming disable');
                 break;
@@ -2453,6 +2465,12 @@ MspHelper.prototype.crunch = function(code) {
         case MSPCodes.MSP_COPY_PROFILE: {
             buffer.push8(FC.COPY_PROFILE.type)
                 .push8(FC.COPY_PROFILE.dstProfile)
+                .push8(FC.COPY_PROFILE.srcProfile);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE: {
+            buffer.push8(FC.COPY_PROFILE.dstProfile)
                 .push8(FC.COPY_PROFILE.srcProfile);
             break;
         }
