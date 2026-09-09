@@ -37,6 +37,18 @@
 
   function onClickDetectWiring() {
     closeWizard();
+
+    // Snapshotted so a detection the user doesn't actually keep (closes the
+    // wizard instead of using its Save & Reboot) can be discarded rather than
+    // leaving the tab permanently dirty - see onClose below.
+    const before = {
+      inverted: FC.RX_CONFIG.serialrx_inverted,
+      halfDuplex: FC.RX_CONFIG.serialrx_halfduplex,
+      pinSwap: FC.RX_CONFIG.serialrx_pinswap,
+    };
+    let applied = false;
+    let saved = false;
+
     // Mounted to <body>, not nested here, for the same reason as
     // BoardAlignment.svelte's wizards: a native <dialog>'s built-in
     // centering resolves against the nearest ancestor with a transform, and
@@ -47,13 +59,28 @@
       props: {
         mspCode: MSPCodes.MSP2_WING_RX_SERIAL_TRIAL,
         onDetected: (inverted, halfDuplex, pinSwap) => {
+          applied = true;
           FC.RX_CONFIG.serialrx_inverted = inverted;
           FC.RX_CONFIG.serialrx_halfduplex = halfDuplex;
           FC.RX_CONFIG.serialrx_pinswap = pinSwap;
         },
         onButtonDisabled: (v) => (wizardDisabled = v),
-        onClose: closeWizard,
-        onSaveRequested,
+        onClose: () => {
+          // Closed (or auto-closed) without committing via Save & Reboot -
+          // undo the detected values rather than leaving the tab stuck
+          // dirty (and Detect Wiring stuck disabled by hasUnsavedChanges)
+          // from a result the user never actually asked to keep.
+          if (applied && !saved) {
+            FC.RX_CONFIG.serialrx_inverted = before.inverted;
+            FC.RX_CONFIG.serialrx_halfduplex = before.halfDuplex;
+            FC.RX_CONFIG.serialrx_pinswap = before.pinSwap;
+          }
+          closeWizard();
+        },
+        onSaveRequested: () => {
+          saved = true;
+          onSaveRequested?.();
+        },
       },
     });
   }

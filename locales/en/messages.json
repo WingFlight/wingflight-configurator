@@ -2236,7 +2236,7 @@
         "message": "Detect Wiring"
     },
     "receiverWiringDetectHelp": {
-        "message": "Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab. Requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection."
+        "message": "Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab. Requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection. Your transmitter must be powered on and bound to the receiver - detection can't find a wiring combination if the receiver has no signal to give it in the first place."
     },
     "receiverWiringDetectSaveFirst": {
         "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
@@ -2260,7 +2260,7 @@
         "message": "Signal found — Inverted: $1, Half-Duplex: $2, Pin Swap: $3. Closing in $4s — press Save on this tab to keep it."
     },
     "receiverWiringDetectFailed": {
-        "message": "No signal found on any wiring combination for this protocol. Check the protocol selection and connections, then try again."
+        "message": "No signal found on any wiring combination for this protocol. Make sure the transmitter is powered on and bound to the receiver, check the protocol selection and connections, then try again."
     },
     "receiverWiringDetectRejected": {
         "message": "Wiring detection needs a serial receiver protocol with an assigned UART."

@@ -48,19 +48,41 @@
 
   function onClickDetectBackupWiring() {
     closeBackupWizard();
+
+    // See ReceiverType.svelte's onClickDetectWiring() for why this is
+    // snapshotted and conditionally restored on close.
+    const before = {
+      inverted: FC.RX_INPUT_BACKUP_CONFIG.inverted,
+      halfDuplex: FC.RX_INPUT_BACKUP_CONFIG.halfDuplex,
+      pinSwap: FC.RX_INPUT_BACKUP_CONFIG.pinSwap,
+    };
+    let applied = false;
+    let saved = false;
+
     backupWizardInstance = mount(RxWiringDetectWizard, {
       target: document.body,
       props: {
         mspCode: MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL,
         titleKey: "receiverBackupWiringDetectWizardTitle",
         onDetected: (inverted, halfDuplex, pinSwap) => {
+          applied = true;
           FC.RX_INPUT_BACKUP_CONFIG.inverted = inverted;
           FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = halfDuplex;
           FC.RX_INPUT_BACKUP_CONFIG.pinSwap = pinSwap;
         },
         onButtonDisabled: (v) => (backupWizardDisabled = v),
-        onClose: closeBackupWizard,
-        onSaveRequested: onSave,
+        onClose: () => {
+          if (applied && !saved) {
+            FC.RX_INPUT_BACKUP_CONFIG.inverted = before.inverted;
+            FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = before.halfDuplex;
+            FC.RX_INPUT_BACKUP_CONFIG.pinSwap = before.pinSwap;
+          }
+          closeBackupWizard();
+        },
+        onSaveRequested: () => {
+          saved = true;
+          onSave();
+        },
       },
     });
   }
