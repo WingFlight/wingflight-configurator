@@ -2236,7 +2236,7 @@
         "message": "Detect Wiring"
     },
     "receiverWiringDetectHelp": {
-        "message": "Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab. Requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection. Your transmitter must be powered on and bound to the receiver - detection can't find a wiring combination if the receiver has no signal to give it in the first place."
+        "message": "<p>Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab.</p><p><strong>Note:</strong> requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection.</p><p>Your transmitter must be powered on and bound to the receiver - detection can't find a wiring combination if the receiver has no signal to give it in the first place.</p>"
     },
     "receiverWiringDetectSaveFirst": {
         "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."

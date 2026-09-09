@@ -107,6 +107,14 @@
     return diff(initialState, snapshotState());
   });
 
+  // TEMPORARY - tracking down a report of the tab reading dirty on first
+  // visit, before any edit. Remove once root-caused.
+  $effect(() => {
+    if (changes.length > 0) {
+      console.log("[Receiver tab] unsaved changes:", $state.snapshot(changes));
+    }
+  });
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
@@ -469,7 +477,10 @@
             >
               {$i18n.t("receiverWiringDetectButton")}
             </button>
-            <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+            <HelpIcon>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html $i18n.t("receiverWiringDetectHelp")}
+            </HelpIcon>
           </div>
         {/snippet}
         {#snippet backupConfigHeader()}

@@ -107,7 +107,10 @@
     >
       {$i18n.t("receiverWiringDetectButton")}
     </button>
-    <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+    <HelpIcon>
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html $i18n.t("receiverWiringDetectHelp")}
+    </HelpIcon>
   </div>
 {/snippet}
 
