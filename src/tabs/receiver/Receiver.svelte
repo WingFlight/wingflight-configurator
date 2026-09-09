@@ -434,6 +434,17 @@
           <div class="section-header">
             <span class="title">{$i18n.t("tabRxInputBackupConfig")}</span>
             <div class="grow"></div>
+            <div class="wiring-detect">
+              <button
+                class="btn"
+                disabled={backupWizardDisabled ||
+                  FC.RX_INPUT_BACKUP_CONFIG.provider === 0}
+                onclick={onClickDetectBackupWiring}
+              >
+                {$i18n.t("receiverWiringDetectButton")}
+              </button>
+              <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+            </div>
             <span
               class="badge"
               class:up={backupRxStatus.linkUp}
@@ -467,17 +478,6 @@
             </Field>
           </SubSection>
           <SubSection label="receiverBackupRxSignaling">
-            <div class="wiring-detect">
-              <button
-                class="btn"
-                disabled={backupWizardDisabled ||
-                  FC.RX_INPUT_BACKUP_CONFIG.provider === 0}
-                onclick={onClickDetectBackupWiring}
-              >
-                {$i18n.t("receiverWiringDetectButton")}
-              </button>
-              <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
-            </div>
             <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
               {#snippet tooltip()}
                 <Tooltip help="receiverBackupRxInvertedHelp" />
@@ -581,7 +581,10 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 0 8px 8px;
+  }
+
+  .wiring-detect .btn {
+    padding: 4px 8px;
   }
 
   .grow {

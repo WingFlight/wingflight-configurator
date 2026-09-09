@@ -69,6 +69,18 @@
   <div class="section-header">
     <span class="title">{$i18n.t("receiverSelection")}</span>
     <div class="grow"></div>
+    {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
+      <div class="wiring-detect">
+        <button
+          class="btn"
+          disabled={wizardDisabled || !hasSerialRxPort}
+          onclick={onClickDetectWiring}
+        >
+          {$i18n.t("receiverWiringDetectButton")}
+        </button>
+        <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+      </div>
+    {/if}
     {#if mainLinkUp !== null}
       <span class="badge" class:up={mainLinkUp} class:down={!mainLinkUp}>
         {mainLinkUp
@@ -110,16 +122,6 @@
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>
       <SubSection label="receiverSelectionSectionSignaling">
-        <div class="wiring-detect">
-          <button
-            class="btn"
-            disabled={wizardDisabled || !hasSerialRxPort}
-            onclick={onClickDetectWiring}
-          >
-            {$i18n.t("receiverWiringDetectButton")}
-          </button>
-          <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
-        </div>
         <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
           {#snippet tooltip()}
             <Tooltip help="receiverSerialInvertedHelp" />
@@ -164,11 +166,12 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 0 8px 8px;
   }
 
   .btn {
     @extend %button;
+
+    padding: 4px 8px;
   }
 
   // Custom Section header (badges live here, not in the body) - replicates
