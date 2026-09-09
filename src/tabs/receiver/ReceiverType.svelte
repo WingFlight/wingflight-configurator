@@ -21,6 +21,7 @@
     mainLinkUp,
     hasBackupRxPort,
     backupActive,
+    onSaveRequested,
   } = $props();
 
   let wizardDisabled = $state(false);
@@ -51,6 +52,7 @@
         },
         onButtonDisabled: (v) => (wizardDisabled = v),
         onClose: closeWizard,
+        onSaveRequested,
       },
     });
   }

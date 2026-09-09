@@ -10,12 +10,17 @@
   // called with (inverted, halfDuplex, pinSwap) on SUCCESS so the caller can
   // apply the result to whichever FC config object it owns (FC.RX_CONFIG vs
   // FC.RX_INPUT_BACKUP_CONFIG) - this component has no opinion on that.
+  // onSaveRequested is the tab's own onSave() - offered as a direct "Save &
+  // Reboot" action on the success screen so finding a working combo doesn't
+  // require the user to separately notice the tab went dirty and hunt for
+  // its own Save button.
   let {
     mspCode,
     onDetected,
     titleKey = "receiverWiringDetectWizardTitle",
     onButtonDisabled,
     onClose,
+    onSaveRequested,
   } = $props();
 
   // Keep in sync with wingflight-firmware's rx.h rxSerialTrialState_e.
@@ -35,6 +40,7 @@
   let wizardDetail = $state("");
   let wizardProgress = $state(0);
   let canRetry = $state(false);
+  let canSave = $state(false);
 
   let pollTimer;
   let autoCloseTimer;
@@ -78,11 +84,13 @@
     progressPercent,
     detailArgs = [],
     retry = false,
+    save = false,
   ) {
     wizardStep = t(stepKey);
     wizardDetail = t(detailKey, detailArgs);
     wizardProgress = progressPercent;
     canRetry = retry;
+    canSave = save;
   }
 
   function clearPoll() {
@@ -110,6 +118,8 @@
       "receiverWiringDetectSuccessCountdown",
       100,
       args,
+      false,
+      true,
     );
 
     autoCloseTimer = setInterval(() => {
@@ -124,6 +134,8 @@
         "receiverWiringDetectSuccessCountdown",
         100,
         [yesNo(inverted), yesNo(halfDuplex), yesNo(pinSwap), remaining],
+        false,
+        true,
       );
     }, 1000);
   }
@@ -203,11 +215,20 @@
       // response - this is the only place the result becomes visible. The
       // caller's onDetected writes it into whichever FC config it owns,
       // which rides that tab's existing dirty-diff/Save/Revert flow exactly
-      // like any manually-edited field. Nothing is pushed to the FC for
-      // real until the normal Save/Reboot button is pressed.
+      // like any manually-edited field.
+      //
+      // Deliberately NOT calling stopTrial() here - the firmware leaves a
+      // successful combo live (see rx.c's rxSerialTrialTick()) precisely so
+      // the existing Link Up/Active Source badges on the page can confirm it
+      // for real while this dialog is still open. Stopping immediately here
+      // silently reverted the FC back to the pre-trial (broken) wiring the
+      // instant detection finished, while this dialog kept showing success -
+      // exactly the "looks broken, nothing visibly changes" symptom this was
+      // reported as. stopTrial() still fires from handleDialogClose() once
+      // the countdown (or the user) actually closes the dialog, or from
+      // "Save & Reboot" superseding it entirely.
       onDetected(inverted, halfDuplex, pinSwap);
 
-      stopTrial();
       startAutoCloseCountdown(inverted, halfDuplex, pinSwap, 3);
       return;
     }
@@ -261,6 +282,15 @@
     dialogEl.close();
   }
 
+  function onClickSaveReboot() {
+    clearAutoClose();
+    onSaveRequested?.();
+    // The save flow itself reboots and reinitialises the whole connection,
+    // so there's nothing left for this dialog to keep polling for - close it
+    // rather than leaving it sitting open through that.
+    dialogEl.close();
+  }
+
   // Single source of truth for "this wizard is done" - a native <dialog>
   // fires `close` whether it was closed via our own dialogEl.close() calls
   // or the browser's own dismissal paths (Escape, backdrop click), which
@@ -310,12 +340,21 @@
     <button class="btn" onclick={onClickClose}>
       {$i18n.t("receiverWiringDetectWizardClose")}
     </button>
+    {#if canSave}
+      <button class="btn-primary" onclick={onClickSaveReboot}>
+        {$i18n.t("buttonSaveReboot")}
+      </button>
+    {/if}
   </div>
 </dialog>
 
 <style lang="scss">
   .btn {
     @extend %button;
+  }
+
+  .btn-primary {
+    @extend %button-primary;
   }
 
   dialog {

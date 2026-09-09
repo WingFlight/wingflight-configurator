@@ -60,6 +60,7 @@
         },
         onButtonDisabled: (v) => (backupWizardDisabled = v),
         onClose: closeBackupWizard,
+        onSaveRequested: onSave,
       },
     });
   }
@@ -428,6 +429,7 @@
         mainLinkUp={backupRxStatus.mainLinkUp}
         {hasBackupRxPort}
         backupActive={backupRxStatus.activeSource === "backup"}
+        onSaveRequested={onSave}
       />
       {#if hasBackupRxPort}
         {#snippet backupConfigHeader()}
