@@ -232,6 +232,7 @@ export const MSPCodes = {
     MSP2_WING_SELECT_TV_PROFILE:      0x5F10,
     MSP2_WING_COPY_TV_PID_PROFILE:    0x5F11,
     MSP2_WING_RX_SERIAL_TRIAL:        0x5F12,
+    MSP2_WING_RX_INPUT_BACKUP_TRIAL:  0x5F13,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

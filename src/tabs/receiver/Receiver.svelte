@@ -1,6 +1,6 @@
 <script>
   import diff from "microdiff";
-  import { onMount, onDestroy } from "svelte";
+  import { mount, onMount, onDestroy, unmount } from "svelte";
   import { SvelteURL } from "svelte/reactivity";
   import { slide } from "svelte/transition";
 
@@ -17,8 +17,10 @@
   import Field from "@/components/Field.svelte";
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
+  import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
   import TelemetrySettings from "./TelemetrySettings.svelte";
   import TelemetrySensors from "./TelemetrySensors/TelemetrySensors.svelte";
   import ChannelAssignment from "./ChannelAssignment/ChannelAssignment.svelte";
@@ -33,6 +35,34 @@
   let sensorUpdateIntervalId;
   let backupRxPollerIntervalId;
   let receiverTypeRef;
+
+  let backupWizardDisabled = $state(false);
+  let backupWizardInstance = null;
+
+  function closeBackupWizard() {
+    if (!backupWizardInstance) return;
+    const instance = backupWizardInstance;
+    backupWizardInstance = null;
+    unmount(instance);
+  }
+
+  function onClickDetectBackupWiring() {
+    closeBackupWizard();
+    backupWizardInstance = mount(RxWiringDetectWizard, {
+      target: document.body,
+      props: {
+        mspCode: MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL,
+        titleKey: "receiverBackupWiringDetectWizardTitle",
+        onDetected: (inverted, halfDuplex, pinSwap) => {
+          FC.RX_INPUT_BACKUP_CONFIG.inverted = inverted;
+          FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = halfDuplex;
+          FC.RX_INPUT_BACKUP_CONFIG.pinSwap = pinSwap;
+        },
+        onButtonDisabled: (v) => (backupWizardDisabled = v),
+        onClose: closeBackupWizard,
+      },
+    });
+  }
 
   function snapshotState() {
     return $state.snapshot({
@@ -102,6 +132,8 @@
     clearInterval(sensorUpdateIntervalId);
     clearInterval(backupRxPollerIntervalId);
     receiverTypeRef?.cleanup();
+    backupWizardInstance?.stop();
+    closeBackupWizard();
   });
 
   export async function onSave() {
@@ -138,6 +170,8 @@
     );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
     receiverTypeRef?.cleanup();
+    backupWizardInstance?.stop();
+    closeBackupWizard();
   }
 
   export function isDirty() {
@@ -433,6 +467,17 @@
             </Field>
           </SubSection>
           <SubSection label="receiverBackupRxSignaling">
+            <div class="wiring-detect">
+              <button
+                class="btn"
+                disabled={backupWizardDisabled ||
+                  FC.RX_INPUT_BACKUP_CONFIG.provider === 0}
+                onclick={onClickDetectBackupWiring}
+              >
+                {$i18n.t("receiverWiringDetectButton")}
+              </button>
+              <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+            </div>
             <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
               {#snippet tooltip()}
                 <Tooltip help="receiverBackupRxInvertedHelp" />
@@ -530,6 +575,13 @@
   .help-btn {
     padding: 4px 8px;
     min-width: 60px;
+  }
+
+  .wiring-detect {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 8px;
   }
 
   .grow {

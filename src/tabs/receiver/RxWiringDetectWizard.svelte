@@ -1,12 +1,22 @@
 <script>
   import { onMount } from "svelte";
 
-  import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSP } from "@/js/msp.svelte.js";
-  import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-  let { onButtonDisabled, onClose } = $props();
+  // mspCode: which trial command to drive - MSPCodes.MSP2_WING_RX_SERIAL_TRIAL
+  // for the main RX, MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL for the backup
+  // port. Both share the exact same start/poll/stop wire shape. onDetected is
+  // called with (inverted, halfDuplex, pinSwap) on SUCCESS so the caller can
+  // apply the result to whichever FC config object it owns (FC.RX_CONFIG vs
+  // FC.RX_INPUT_BACKUP_CONFIG) - this component has no opinion on that.
+  let {
+    mspCode,
+    onDetected,
+    titleKey = "receiverWiringDetectWizardTitle",
+    onButtonDisabled,
+    onClose,
+  } = $props();
 
   // Keep in sync with wingflight-firmware's rx.h rxSerialTrialState_e.
   const RX_SERIAL_TRIAL = {
@@ -48,13 +58,7 @@
       }
 
       timeout = setTimeout(() => finish(null), 1000);
-      MSP.send_message(
-        MSPCodes.MSP2_WING_RX_SERIAL_TRIAL,
-        payload,
-        false,
-        finish,
-        true,
-      );
+      MSP.send_message(mspCode, payload, false, finish, true);
     });
   }
 
@@ -196,13 +200,12 @@
 
     if (state === RX_SERIAL_TRIAL.SUCCESS) {
       // Apply now, while the combo is still live and reflected in this
-      // response - this is the only place the result becomes visible.
-      // Receiver.svelte's own dirty-diff picks this up automatically, same
-      // as any manually-edited field, so it rides the tab's normal
-      // Save/Revert flow. Nothing is pushed to the FC for real until then.
-      FC.RX_CONFIG.serialrx_inverted = inverted;
-      FC.RX_CONFIG.serialrx_halfduplex = halfDuplex;
-      FC.RX_CONFIG.serialrx_pinswap = pinSwap;
+      // response - this is the only place the result becomes visible. The
+      // caller's onDetected writes it into whichever FC config it owns,
+      // which rides that tab's existing dirty-diff/Save/Revert flow exactly
+      // like any manually-edited field. Nothing is pushed to the FC for
+      // real until the normal Save/Reboot button is pressed.
+      onDetected(inverted, halfDuplex, pinSwap);
 
       stopTrial();
       startAutoCloseCountdown(inverted, halfDuplex, pinSwap, 3);
@@ -292,7 +295,7 @@
 </script>
 
 <dialog bind:this={dialogEl} onclose={handleDialogClose}>
-  <h3>{$i18n.t("receiverWiringDetectWizardTitle")}</h3>
+  <h3>{$i18n.t(titleKey)}</h3>
   <div class="wizard-step">{wizardStep}</div>
   <div class="wizard-detail">{wizardDetail}</div>
   <div class="wizard-progress" aria-hidden="true">

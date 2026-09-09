@@ -4,6 +4,7 @@
 
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
+  import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import Switch from "@/components/Switch.svelte";
   import Field from "@/components/Field.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
@@ -42,6 +43,12 @@
     wizardInstance = mount(RxWiringDetectWizard, {
       target: document.body,
       props: {
+        mspCode: MSPCodes.MSP2_WING_RX_SERIAL_TRIAL,
+        onDetected: (inverted, halfDuplex, pinSwap) => {
+          FC.RX_CONFIG.serialrx_inverted = inverted;
+          FC.RX_CONFIG.serialrx_halfduplex = halfDuplex;
+          FC.RX_CONFIG.serialrx_pinswap = pinSwap;
+        },
         onButtonDisabled: (v) => (wizardDisabled = v),
         onClose: closeWizard,
       },

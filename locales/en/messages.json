@@ -2241,6 +2241,9 @@
     "receiverWiringDetectWizardTitle": {
         "message": "Detect RX Wiring"
     },
+    "receiverBackupWiringDetectWizardTitle": {
+        "message": "Detect Backup RX Wiring"
+    },
     "receiverWiringDetectWizardStep1": {
         "message": "Step 1 of 2: Scanning"
     },
