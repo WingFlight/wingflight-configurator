@@ -67,22 +67,23 @@
   }
 </script>
 
+{#snippet wiringDetectActions()}
+  <div class="wiring-detect">
+    <button
+      class="btn"
+      disabled={wizardDisabled || !hasSerialRxPort}
+      onclick={onClickDetectWiring}
+    >
+      {$i18n.t("receiverWiringDetectButton")}
+    </button>
+    <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+  </div>
+{/snippet}
+
 {#snippet header()}
   <div class="section-header">
     <span class="title">{$i18n.t("receiverSelection")}</span>
     <div class="grow"></div>
-    {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
-      <div class="wiring-detect">
-        <button
-          class="btn"
-          disabled={wizardDisabled || !hasSerialRxPort}
-          onclick={onClickDetectWiring}
-        >
-          {$i18n.t("receiverWiringDetectButton")}
-        </button>
-        <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
-      </div>
-    {/if}
     {#if mainLinkUp !== null}
       <span class="badge" class:up={mainLinkUp} class:down={!mainLinkUp}>
         {mainLinkUp
@@ -123,7 +124,10 @@
   </SubSection>
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>
-      <SubSection label="receiverSelectionSectionSignaling">
+      <SubSection
+        label="receiverSelectionSectionSignaling"
+        actions={wiringDetectActions}
+      >
         <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
           {#snippet tooltip()}
             <Tooltip help="receiverSerialInvertedHelp" />
