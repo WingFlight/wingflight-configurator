@@ -32,6 +32,7 @@
   let initialState;
   let sensorUpdateIntervalId;
   let backupRxPollerIntervalId;
+  let receiverTypeRef;
 
   function snapshotState() {
     return $state.snapshot({
@@ -100,6 +101,7 @@
   onDestroy(() => {
     clearInterval(sensorUpdateIntervalId);
     clearInterval(backupRxPollerIntervalId);
+    receiverTypeRef?.cleanup();
   });
 
   export async function onSave() {
@@ -135,6 +137,7 @@
       initialState.RX_INPUT_BACKUP_CONFIG,
     );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
+    receiverTypeRef?.cleanup();
   }
 
   export function isDirty() {
@@ -384,6 +387,7 @@
   <div class="content">
     <div>
       <ReceiverType
+        bind:this={receiverTypeRef}
         {rxProtoIndex}
         {hasSerialRxPort}
         {setRxProto}

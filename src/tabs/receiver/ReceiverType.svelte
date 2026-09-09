@@ -1,4 +1,5 @@
 <script>
+  import { mount, unmount } from "svelte";
   import { slide } from "svelte/transition";
 
   import { i18n } from "@/js/i18n.js";
@@ -6,8 +7,10 @@
   import Switch from "@/components/Switch.svelte";
   import Field from "@/components/Field.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Section from "@/components/Section.svelte";
+  import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
   import { RX_PROTOCOLS } from "./protocols.js";
 
   let {
@@ -18,6 +21,41 @@
     hasBackupRxPort,
     backupActive,
   } = $props();
+
+  let wizardDisabled = $state(false);
+  let wizardInstance = null;
+
+  function closeWizard() {
+    if (!wizardInstance) return;
+    const instance = wizardInstance;
+    wizardInstance = null;
+    unmount(instance);
+  }
+
+  function onClickDetectWiring() {
+    closeWizard();
+    // Mounted to <body>, not nested here, for the same reason as
+    // BoardAlignment.svelte's wizards: a native <dialog>'s built-in
+    // centering resolves against the nearest ancestor with a transform, and
+    // #content has a (no-op) transform applied as a long-standing Mac
+    // freeze fix.
+    wizardInstance = mount(RxWiringDetectWizard, {
+      target: document.body,
+      props: {
+        onButtonDisabled: (v) => (wizardDisabled = v),
+        onClose: closeWizard,
+      },
+    });
+  }
+
+  // Called by Receiver.svelte on unmount/revert, same as
+  // BoardAlignment.svelte's cleanup() - the wizard lives outside this
+  // component's own tree (mounted to <body>), so it isn't torn down
+  // automatically when this component is.
+  export function cleanup() {
+    wizardInstance?.stop();
+    closeWizard();
+  }
 </script>
 
 {#snippet header()}
@@ -65,6 +103,16 @@
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>
       <SubSection label="receiverSelectionSectionSignaling">
+        <div class="wiring-detect">
+          <button
+            class="btn"
+            disabled={wizardDisabled || !hasSerialRxPort}
+            onclick={onClickDetectWiring}
+          >
+            {$i18n.t("receiverWiringDetectButton")}
+          </button>
+          <HelpIcon>{$i18n.t("receiverWiringDetectHelp")}</HelpIcon>
+        </div>
         <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
           {#snippet tooltip()}
             <Tooltip help="receiverSerialInvertedHelp" />
@@ -103,6 +151,17 @@
 <style lang="scss">
   select {
     min-width: 180px;
+  }
+
+  .wiring-detect {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 8px;
+  }
+
+  .btn {
+    @extend %button;
   }
 
   // Custom Section header (badges live here, not in the body) - replicates
