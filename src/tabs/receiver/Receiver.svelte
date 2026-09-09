@@ -31,7 +31,15 @@
   } from "./protocols.js";
 
   let loading = $state(true);
-  let initialState;
+  // $state, not a plain let: `changes` below reads this inside an early
+  // return (`if (!initialState) return [];`) that touches nothing else
+  // reactive. A plain variable's reassignment isn't a tracked dependency in
+  // runes mode, so if `changes` is ever first evaluated before onMount sets
+  // this, its $derived.by would memoize at [] permanently - reassigning
+  // initialState later wouldn't be a change any tracked dependency saw, so
+  // it would never recompute again regardless of later edits. $state makes
+  // the assignment itself a tracked dependency.
+  let initialState = $state();
   let sensorUpdateIntervalId;
   let backupRxPollerIntervalId;
   let receiverTypeRef;
@@ -105,14 +113,6 @@
     }
 
     return diff(initialState, snapshotState());
-  });
-
-  // TEMPORARY - tracking down a report of the tab reading dirty on first
-  // visit, before any edit. Remove once root-caused.
-  $effect(() => {
-    if (changes.length > 0) {
-      console.log("[Receiver tab] unsaved changes:", $state.snapshot(changes));
-    }
   });
 
   onMount(async () => {
