@@ -2236,7 +2236,10 @@
         "message": "Detect Wiring"
     },
     "receiverWiringDetectHelp": {
-        "message": "Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab."
+        "message": "Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab. Requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection."
+    },
+    "receiverWiringDetectSaveFirst": {
+        "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
     },
     "receiverWiringDetectWizardTitle": {
         "message": "Detect RX Wiring"

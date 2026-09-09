@@ -430,6 +430,7 @@
         {hasBackupRxPort}
         backupActive={backupRxStatus.activeSource === "backup"}
         onSaveRequested={onSave}
+        hasUnsavedChanges={changes.length > 0}
       />
       {#if hasBackupRxPort}
         {#snippet backupWiringDetectActions()}
@@ -437,7 +438,11 @@
             <button
               class="btn"
               disabled={backupWizardDisabled ||
-                FC.RX_INPUT_BACKUP_CONFIG.provider === 0}
+                FC.RX_INPUT_BACKUP_CONFIG.provider === 0 ||
+                changes.length > 0}
+              title={changes.length > 0
+                ? $i18n.t("receiverWiringDetectSaveFirst")
+                : undefined}
               onclick={onClickDetectBackupWiring}
             >
               {$i18n.t("receiverWiringDetectButton")}
