@@ -111,7 +111,7 @@
   .changeBtn {
     background: none;
     border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     padding: 6px 14px;
     font-size: 0.8rem;
     color: var(--color-text-soft);

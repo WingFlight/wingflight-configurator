@@ -416,7 +416,7 @@
   .note {
     margin: 8px;
     padding: 10px 14px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);

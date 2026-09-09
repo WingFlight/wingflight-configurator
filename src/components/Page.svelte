@@ -51,7 +51,6 @@
 
   .content {
     margin: 0 var(--section-gap) var(--section-gap);
-    border-top-left-radius: 32px;
   }
 
   main {
@@ -64,19 +63,50 @@
   }
 
   .header {
-    padding: 8px var(--section-gap);
+    // Sticky so the tab title/controls stay put while the (often long)
+    // body scrolls underneath - the header lives inside .wrapper, which
+    // is the scroll container, so this costs nothing structurally.
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 10px var(--section-gap);
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-    border-bottom: 1px solid var(--color-border-accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid var(--color-border-soft);
 
-    color: var(--color-text-soft);
+    color: var(--color-text);
     background-color: var(--color-surface);
 
     :global(html[data-theme="light"]) & {
-      box-shadow: 0 2px 8px -4px var(--color-shadow);
+      box-shadow: var(--shadow-xs);
     }
+
+    :global(html[data-theme="dark"]) & {
+      border-bottom-color: var(--color-neutral-800);
+    }
+  }
+
+  // The one bit of brand colour in the tab chrome: a hairline accent rule
+  // under the header instead of the old full-weight red border, which
+  // read as a warning stripe rather than as structure.
+  .header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-500),
+      transparent 55%
+    );
+    pointer-events: none;
   }
 
   .loading {
@@ -85,6 +115,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
+
+  .loading p {
+    color: var(--color-text-muted);
   }
 
   .spinner {
@@ -115,13 +149,13 @@
 
     :global(html[data-theme="light"]) & {
       background: var(--color-surface);
-      border-top: 1px solid var(--color-border);
-      box-shadow: 0 -2px 8px -2px var(--color-shadow);
+      border-top: 1px solid var(--color-border-soft);
+      box-shadow: 0 -2px 10px -4px var(--color-shadow);
     }
 
     :global(html[data-theme="dark"]) & {
-      background: var(--color-neutral-700);
-      border-top: 1px solid var(--color-neutral-500);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-neutral-800);
     }
   }
 

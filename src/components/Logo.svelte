@@ -51,12 +51,14 @@
     position: absolute;
     left: 80px;
     top: 49px;
-    color: #d8d8d8;
+    color: var(--chrome-fg-muted);
     font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
     width: 230px;
     display: flex;
     flex-direction: column;
-    line-height: 1.15;
+    line-height: 1.25;
   }
 
   .logo-text span {

@@ -247,7 +247,7 @@
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-accent, var(--accent));
     color: var(--color-text-inverse, #fff);
     font-size: 0.62rem;

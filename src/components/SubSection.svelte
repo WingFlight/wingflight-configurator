@@ -17,13 +17,16 @@
 
 <style lang="scss">
   .header {
-    padding-bottom: 2px;
-    margin: 4px;
+    padding: 10px 8px 4px;
+    margin: 0 4px 4px;
 
-    font-weight: 900;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 
-    color: var(--color-text-soft);
-    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-soft);
   }
 
   @media only screen and (max-width: 480px) {

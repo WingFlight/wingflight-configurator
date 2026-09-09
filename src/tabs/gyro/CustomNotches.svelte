@@ -275,7 +275,7 @@
   }
 
   .reset-btn {
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     border: none;
     padding: 0.5rem;
     transition: var(--animation-speed);

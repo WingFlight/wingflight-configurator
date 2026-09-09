@@ -45,7 +45,7 @@
     border: 1px solid var(--subtleAccent);
     padding: 1.5ex;
     box-shadow: 2px 2px 5px rgba(92, 92, 92, 0.25);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     margin-bottom: 6px;
   }
 

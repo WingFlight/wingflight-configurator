@@ -322,7 +322,7 @@
     margin-top: 2px;
     padding: 2px 8px;
     text-align: center;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     font-size: 0.7rem;
     font-weight: 600;
 

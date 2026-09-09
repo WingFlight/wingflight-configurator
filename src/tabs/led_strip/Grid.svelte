@@ -145,7 +145,7 @@
     max-width: 496px;
     aspect-ratio: 1;
     padding: 4px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: #dcdcdc;
     background-image:
       repeating-linear-gradient(
@@ -257,7 +257,7 @@
     top: 15%;
     width: 30%;
     height: 30%;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     pointer-events: none;
   }
 

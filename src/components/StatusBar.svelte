@@ -62,22 +62,16 @@
     width: 100%;
     overflow: hidden;
 
-    :global(html[data-theme="light"]) & {
-      background-color: #bfbeb5;
-      border-top: 1px solid #7d7d79;
+    // The status bar belongs to the app chrome, not to the page, so it
+    // takes the same dark rail treatment as the header and side nav
+    // rather than a theme-dependent beige/grey of its own.
+    color: var(--chrome-fg-muted);
+    background-color: var(--chrome-bg);
+    border-top: 1px solid var(--chrome-border);
+    font-variant-numeric: tabular-nums;
 
-      & > span + span {
-        border-left: 1px solid #7d7d79;
-      }
-    }
-
-    :global(html[data-theme="dark"]) & {
-      background: #414443;
-      border-top: 1px solid #9c9c9c;
-
-      & > span + span {
-        border-left: 1px solid #9c9c9c;
-      }
+    & > span + span {
+      border-left: 1px solid var(--chrome-border);
     }
 
     & > span {

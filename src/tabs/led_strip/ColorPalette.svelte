@@ -83,7 +83,7 @@
   .swatch {
     height: 26px;
     border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     color: #fff;
     text-shadow:
       0 0 2px black,

@@ -7,20 +7,32 @@
 select,
 input {
   margin: 0;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 
   color: var(--color-text);
   background-color: var(--color-input-bg);
   border: 1px solid var(--color-border-soft);
+  transition:
+    border-color var(--animation-speed),
+    box-shadow var(--animation-speed),
+    background-color var(--animation-speed);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-border);
+  }
 
   &:focus {
     outline: none;
     border-color: var(--color-border-accent);
+    // A soft ring rather than a hard 2px outline: it reads as focus
+    // without shifting layout or fighting the 1px border already there.
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
   }
 
   &:disabled {
     color: var(--color-text-disabled);
     background-color: var(--color-input-bg-disabled);
+    border-color: var(--color-border-soft);
   }
 }
 
@@ -31,8 +43,11 @@ input {
   padding: 0 8px;
   border-width: 1px;
   border-style: solid;
-  border-radius: 2px;
   outline: none;
+
+  &::placeholder {
+    color: var(--color-text-disabled);
+  }
 
   &[type="number"] {
     text-align: right;
@@ -44,7 +59,24 @@ input {
 select {
   height: 1.5rem;
   min-width: 120px;
-  padding: 0 4px;
+  padding: 0 26px 0 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  // Native select chrome is the single most dated-looking control in the
+  // app, so it is replaced with a drawn chevron. The arrow colour is a
+  // fixed mid-grey rather than currentColor because a data: URI cannot
+  // inherit it - that grey is legible against both themes' input fills.
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%238a8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @media only screen and (max-width: 480px) {
@@ -60,28 +92,46 @@ select {
 }
 
 %section-shadow {
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
   :global(html[data-theme="light"]) & {
-    box-shadow: 0 4px 12px -4px var(--color-shadow);
+    border-color: var(--color-neutral-300);
+    box-shadow: var(--shadow-sm);
+  }
+
+  :global(html[data-theme="dark"]) & {
+    border-color: var(--color-neutral-800);
   }
 
   @media only screen and (max-width: 480px) {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+
     :global(html[data-theme="light"]) & {
-      box-shadow: 0 8px 12px -8px var(--color-shadow);
+      box-shadow: none;
     }
   }
 }
 
 %section-header {
   display: flex;
-  height: 32px;
-  font-size: 1rem;
-  font-weight: 400;
+  height: 38px;
+  padding: 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   align-items: center;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
 
-  color: var(--color-text-alt);
-  background-color: var(--color-surface-alt);
+  color: var(--color-header-fg);
+  background-color: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border-soft);
+
+  :global(html[data-theme="dark"]) & {
+    border-bottom-color: var(--color-neutral-700);
+  }
 
   @media only screen and (max-width: 480px) {
     margin-top: 16px;
@@ -96,8 +146,9 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 2px;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   // Fixed height (matching input/select below) so buttons render at a
   // consistent size regardless of the ambient font-size of whatever
   // context they're placed in - padding alone made height drift per-tab.
@@ -106,26 +157,39 @@ select {
   // own content, e.g. when a sibling button's label wraps to two lines.
   height: 1.5rem;
   line-height: 1.5rem;
-  padding: 0 8px;
+  padding: 0 12px;
   font-size: 0.8rem;
-  transition: var(--animation-speed);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--animation-speed),
+    border-color var(--animation-speed),
+    color var(--animation-speed),
+    box-shadow var(--animation-speed);
 
   color: var(--color-btn-fg);
   background-color: var(--color-btn-bg);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
 
   &:disabled {
     cursor: not-allowed;
     color: var(--color-btn-fg-disabled);
     background-color: var(--color-btn-bg-disabled);
+    box-shadow: none;
   }
 
   @media (hover: hover) {
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: var(--color-btn-bg-hover);
     }
   }
 
-  &:active {
+  &:active:not(:disabled) {
     background-color: var(--color-btn-bg-active);
   }
 
@@ -133,5 +197,30 @@ select {
     height: 2rem;
     line-height: 2rem;
     font-size: 1rem;
+  }
+}
+
+// Accent-filled variant for the one call-to-action in a toolbar (Save,
+// Connect, Flash). Everything else stays neutral so the primary action
+// is the only thing carrying colour.
+%button-primary {
+  @extend %button;
+
+  color: var(--color-accent-fg);
+  background-color: var(--color-accent-500);
+
+  &:disabled {
+    color: var(--color-btn-fg-disabled);
+    background-color: var(--color-btn-bg-disabled);
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-accent-hover);
+    }
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--color-accent-400);
   }
 }

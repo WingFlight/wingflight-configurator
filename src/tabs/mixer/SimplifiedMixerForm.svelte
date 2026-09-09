@@ -120,7 +120,7 @@
   .editBtn {
     background: none;
     border: 1px solid var(--color-border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 4px 10px;
     font-size: 0.75rem;
     color: var(--color-text-soft);

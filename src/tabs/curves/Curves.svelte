@@ -386,7 +386,7 @@
     padding: 10px 12px;
     background-color: var(--color-surface-float, var(--color-surface));
     border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     color: var(--color-text-soft);
     font-size: 0.7rem;
     line-height: 1.5;
