@@ -42,6 +42,7 @@
   let initialState = $state();
   let sensorUpdateIntervalId;
   let backupRxPollerIntervalId;
+  let armedPollerIntervalId;
   let receiverTypeRef;
 
   let backupWizardDisabled = $state(false);
@@ -150,11 +151,19 @@
     // look live for a status badge, not drive a hot loop always.
     backupRxPollerIntervalId = setInterval(() => {
       MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
-      // Keeps `armed` (below) live while this tab stays open - the initial
-      // fetch above is otherwise the only one this tab ever does, unlike
-      // e.g. Status.svelte's own slow-interval MSP_STATUS repoll.
-      MSP.promise(MSPCodes.MSP_STATUS);
     }, 200);
+
+    // Separate, slower interval for `armed` rather than folding it into the
+    // 200ms poll above - see wingflight-configurator's own Motors.svelte fix
+    // for why: piggybacking a status-only field onto an existing hot loop
+    // risks queueing/contending with a wizard's own polling under real
+    // (non-instant) serial traffic, which read there as the ESC wiring
+    // wizard "hanging" even though the firmware's trial kept running fine.
+    // Less traffic here (one MSP2_WING_RX_INPUT_BACKUP_STATUS call per
+    // cycle, not three), but the same shaped risk, so the same fix.
+    armedPollerIntervalId = setInterval(() => {
+      MSP.promise(MSPCodes.MSP_STATUS);
+    }, 1000);
 
     // initialState is snapshotted above before this block runs, so re-snapshot
     // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
@@ -166,6 +175,7 @@
   onDestroy(() => {
     clearInterval(sensorUpdateIntervalId);
     clearInterval(backupRxPollerIntervalId);
+    clearInterval(armedPollerIntervalId);
     receiverTypeRef?.cleanup();
     backupWizardInstance?.stop();
     closeBackupWizard();
