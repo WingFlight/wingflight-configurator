@@ -5497,6 +5497,42 @@
     "profilesItermRelaxCutoffHelp": {
         "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
     },
+    "profilesOscLimiter": {
+        "message": "Oscillation Limiter"
+    },
+    "profilesOscLimiterHelp": {
+        "message": "Watches this profile's per-axis tracking error for a sustained, periodic oscillation and, once confirmed, eases Master Gain down (never up) for the affected axis only -- one small step at a time for as long as the oscillation is present, down to a configurable floor at most. It never eases back up mid-flight: once the oscillation clears the reduced gain holds, and if it recurs later in the same flight the axis backs off further from there. Only a new arm restores full authority. Disabled by default; not yet flight-validated on all airframes."
+    },
+    "profilesOscLimiterMinHz": {
+        "message": "Detection Band Low [Hz]"
+    },
+    "profilesOscLimiterMinHzHelp": {
+        "message": "Low edge of the band-pass filter used to isolate the oscillation from the raw tracking error. Should sit below the frequency of typical gain-induced fixed-wing oscillations, and below normal trim/attitude drift."
+    },
+    "profilesOscLimiterMaxHz": {
+        "message": "Detection Band High [Hz]"
+    },
+    "profilesOscLimiterMaxHzHelp": {
+        "message": "High edge of the band-pass filter used to isolate the oscillation from the raw tracking error. Should stay below the dynamic notch filter's own range, since that already handles higher-frequency noise."
+    },
+    "profilesOscLimiterThreshold": {
+        "message": "Energy Threshold [&deg;/s]"
+    },
+    "profilesOscLimiterThresholdHelp": {
+        "message": "Band-passed tracking-error energy above which a sustained oscillation candidate starts being scored. Lower catches milder oscillations sooner but risks false positives; expect to tune this per airframe."
+    },
+    "profilesOscLimiterFloor": {
+        "message": "Gain Floor [%]"
+    },
+    "profilesOscLimiterFloorHelp": {
+        "message": "Minimum Master Gain scale the limiter may reach on a confirmed oscillation. The axis never loses all authority, even on a false positive, but a bad oscillation can still be cut by up to this much."
+    },
+    "profilesOscLimiterEngageMs": {
+        "message": "Engage Time [ms]"
+    },
+    "profilesOscLimiterEngageMsHelp": {
+        "message": "How long a candidate oscillation must persist before the gain cut fully engages. Long enough to reject a single gust or transient, short enough to intervene before a sustained oscillation damages the airframe."
+    },
     "tvItermRelaxLevelRoll": {
         "message": "Level for Roll"
     },
