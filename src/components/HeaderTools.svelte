@@ -46,13 +46,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    // Span the status boxes above and push the level control to their right
+    // edge, so the strip lines up with the row it sits under instead of
+    // stopping short of it.
+    width: 100%;
     height: 26px;
     color: var(--chrome-fg);
   }
 
   .level {
+    margin-left: auto;
+  }
+
+  .level {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 5px;
     font-size: 10px;
     line-height: 1;
@@ -68,5 +77,26 @@
     height: 24px;
     font-size: 11px;
     padding: 0 4px;
+  }
+
+  // On the phone/tablet header the strip is revealed on its own full-width
+  // row, so it can use touch-sized controls rather than the desktop chrome
+  // sizing.
+  @media all and (max-width: 1100px) {
+    .tools {
+      width: 100%;
+      height: 34px;
+      gap: 12px;
+    }
+
+    .level {
+      font-size: 12px;
+    }
+
+    select {
+      width: 128px;
+      height: 32px;
+      font-size: 13px;
+    }
   }
 </style>

@@ -215,7 +215,7 @@
 
   .canvas-row {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
     gap: 12px;
     align-items: start;
   }

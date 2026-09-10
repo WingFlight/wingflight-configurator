@@ -23,7 +23,10 @@
   let { padsInUse = [], surfaces = [] } = $props();
 
   const ROW = 30;
-  const TOP = 12;
+  // Must match the column headers' height and the .wires height below, or
+  // the connectors are drawn offset from the rows they join (and stretched,
+  // since the svg scales to fit with preserveAspectRatio="none").
+  const HEADER = 24;
   const WIDTH = 100; // percentage-based viewBox width
 
   function keyForSurface(surface) {
@@ -39,7 +42,7 @@
   let left = $derived(
     outputPads.map((pad, index) => ({
       ...pad,
-      y: TOP + index * ROW,
+      y: HEADER + index * ROW,
       surface:
         (surfaces ?? []).find((s) => keyForSurface(s) === pad.key) ?? null,
     })),
@@ -49,7 +52,7 @@
     (surfaces ?? []).map((surface, index) => ({
       ...surface,
       key: keyForSurface(surface),
-      y: TOP + index * ROW,
+      y: HEADER + index * ROW,
       pad: outputPads.find((pad) => pad.key === keyForSurface(surface)) ?? null,
     })),
   );
@@ -68,7 +71,7 @@
       }),
   );
 
-  let height = $derived(TOP * 2 + ROW * Math.max(left.length, right.length, 1));
+  let height = $derived(HEADER + ROW * Math.max(left.length, right.length, 1));
 </script>
 
 {#if left.length === 0 && right.length === 0}

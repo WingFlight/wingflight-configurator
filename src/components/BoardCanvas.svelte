@@ -28,16 +28,31 @@
     onSelectPad,
   } = $props();
 
-  // Drawing units are millimetres; MARGIN leaves room for labels that
-  // hang outside the PCB edge.
-  const MARGIN = 7;
+  // Drawing units are millimetres. Left and right need more room than top
+  // and bottom: pads on those edges are only a few millimetres apart, so
+  // their labels run outward on one line instead of stacking.
+  const MARGIN_X = 15;
+  const MARGIN_Y = 7;
   const PAD_RADIUS = 1.5;
 
   let width = $derived(profile?.outline?.width ?? 56);
   let height = $derived(profile?.outline?.height ?? 36);
   let viewBox = $derived(
-    `${-MARGIN} ${-MARGIN} ${width + 2 * MARGIN} ${height + 2 * MARGIN}`,
+    `${-MARGIN_X} ${-MARGIN_Y} ${width + 2 * MARGIN_X} ${height + 2 * MARGIN_Y}`,
   );
+
+  // Which edge a pad belongs to, by nearest edge rather than a threshold, so
+  // a corner pad (Vbat, LED, S1, S7) is labelled along the edge it sits on.
+  function edgeOf(pad) {
+    const d = [
+      ["left", pad.x],
+      ["right", width - pad.x],
+      ["top", pad.y],
+      ["bottom", height - pad.y],
+    ];
+    d.sort((a, b) => a[1] - b[1]);
+    return d[0][0];
+  }
 
   let assignedByPin = $derived(
     Object.fromEntries((padsInUse ?? []).map((entry) => [entry.pin, entry])),
@@ -76,6 +91,14 @@
         // Labels above the pad for the top row, below for everything else,
         // so nothing lands on top of the pad itself.
         labelAbove: pad.y < height / 2,
+        edge: edgeOf(pad),
+        // The canonical name, but only when it says something the silkscreen
+        // does not: an ADC or UART pad whose resource is called the same as
+        // its silkscreen was printing the identical word twice.
+        resource:
+          (assigned?.key ?? pad.pin) === pad.silkscreen
+            ? null
+            : (assigned?.key ?? pad.pin),
       };
     }),
   );
@@ -147,20 +170,36 @@
             <circle class="badge" cx={pad.x + 1.8} cy={pad.y - 1.8} r="1.1" />
             <text class="badge-text" x={pad.x + 1.8} y={pad.y - 1.35}>!</text>
           {/if}
-          <text
-            class="silk"
-            x={pad.x}
-            y={pad.labelAbove ? pad.y - 2.6 : pad.y + 4.3}
-          >
-            {pad.silkscreen}
-          </text>
-          <text
-            class="res"
-            x={pad.x}
-            y={pad.labelAbove ? pad.y - 5.2 : pad.y + 6.6}
-          >
-            {pad.assigned ? pad.assigned.key : pad.pin}
-          </text>
+          {#if pad.edge === "left" || pad.edge === "right"}
+            <text
+              class="edge-label"
+              class:to-left={pad.edge === "left"}
+              x={pad.edge === "left" ? pad.x - 2.8 : pad.x + 2.8}
+              y={pad.y + 0.7}
+            >
+              <tspan class="silk-part">{pad.silkscreen}</tspan>
+              {#if pad.resource}
+                <tspan class="res-part" dx="0.9">{pad.resource}</tspan>
+              {/if}
+            </text>
+          {:else}
+            <text
+              class="silk"
+              x={pad.x}
+              y={pad.labelAbove ? pad.y - 2.9 : pad.y + 4.3}
+            >
+              {pad.silkscreen}
+            </text>
+            {#if pad.resource}
+              <text
+                class="res"
+                x={pad.x}
+                y={pad.labelAbove ? pad.y - 6.0 : pad.y + 7.4}
+              >
+                {pad.resource}
+              </text>
+            {/if}
+          {/if}
         </g>
       {/each}
     </svg>
@@ -279,6 +318,26 @@
       font-size: 1.7px;
       text-anchor: middle;
       pointer-events: none;
+    }
+
+    .edge-label {
+      text-anchor: start;
+      pointer-events: none;
+
+      &.to-left {
+        text-anchor: end;
+      }
+
+      .silk-part {
+        fill: var(--color-text);
+        font-size: 2.1px;
+        font-weight: 600;
+      }
+
+      .res-part {
+        fill: var(--color-text-muted);
+        font-size: 1.7px;
+      }
     }
 
     .badge {

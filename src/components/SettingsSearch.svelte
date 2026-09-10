@@ -91,11 +91,13 @@
 </script>
 
 <div class="search" role="search" bind:this={rootEl}>
+  <span class="icon fas fa-search" aria-hidden="true"></span>
   <input
     bind:this={inputEl}
     bind:value={query}
     type="search"
-    placeholder={$i18n.t("settingsSearchPlaceholder")}
+    placeholder={$i18n.t("settingsSearchLabel")}
+    title={$i18n.t("settingsSearchPlaceholder")}
     aria-label={$i18n.t("settingsSearchPlaceholder")}
     oninput={update}
     onfocus={() => query.length >= 2 && update()}
@@ -137,11 +139,21 @@
     max-width: 260px;
   }
 
+  .icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--chrome-fg-muted);
+    pointer-events: none;
+  }
+
   input {
     width: 100%;
     height: 24px;
     font-size: 12px;
-    padding: 0 8px;
+    padding: 0 8px 0 24px;
     color: var(--chrome-fg);
     background: var(--chrome-bg-sunken, var(--chrome-bg-raised));
     border: 1px solid var(--chrome-border);
@@ -193,5 +205,18 @@
   .meta {
     font-size: 0.68rem;
     color: var(--color-text-muted);
+  }
+
+  // Touch sizing on the phone/tablet header, where the strip gets its own
+  // full-width row. Last in the file so it wins over the base rules above.
+  @media all and (max-width: 1100px) {
+    .search {
+      max-width: none;
+    }
+
+    input {
+      height: 32px;
+      font-size: 13px;
+    }
   }
 </style>

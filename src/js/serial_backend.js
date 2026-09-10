@@ -362,9 +362,7 @@ export function initializeSerialBackend() {
 }
 
 function finishClose() {
-    if (GUI.isCordova()) {
-        UI_PHONES.reset();
-    }
+    UI_PHONES.reset();
 
     const wasConnected = CONFIGURATOR.connectionValid;
 
@@ -670,9 +668,11 @@ function finishOpen() {
     GUI.reboot_in_progress = false;
     GUI.allowedTabs = GUI.defaultAllowedFCTabsWhenConnected.slice();
 
-    if (GUI.isCordova()) {
-        UI_PHONES.reset();
-    }
+    // The header swaps its contents on connect (port picker out, status
+    // boxes in), so any reveal/expand state from choosing a port is stale.
+    // Not Cordova-only: the narrow-window header applies under 1100px in
+    // any backend, where the two expanded states would otherwise stack.
+    UI_PHONES.reset();
 
     onConnect();
 
