@@ -1,6 +1,6 @@
 <script>
   import diff from "microdiff";
-  import { onMount, onDestroy } from "svelte";
+  import { mount, onMount, onDestroy, unmount } from "svelte";
   import { SvelteURL } from "svelte/reactivity";
   import { slide } from "svelte/transition";
 
@@ -17,8 +17,10 @@
   import Field from "@/components/Field.svelte";
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
+  import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
   import TelemetrySettings from "./TelemetrySettings.svelte";
   import TelemetrySensors from "./TelemetrySensors/TelemetrySensors.svelte";
   import ChannelAssignment from "./ChannelAssignment/ChannelAssignment.svelte";
@@ -29,9 +31,71 @@
   } from "./protocols.js";
 
   let loading = $state(true);
-  let initialState;
-  let sensorUpdateIntervalId;
-  let backupRxPollerIntervalId;
+  // $state, not a plain let: `changes` below reads this inside an early
+  // return (`if (!initialState) return [];`) that touches nothing else
+  // reactive. A plain variable's reassignment isn't a tracked dependency in
+  // runes mode, so if `changes` is ever first evaluated before onMount sets
+  // this, its $derived.by would memoize at [] permanently - reassigning
+  // initialState later wouldn't be a change any tracked dependency saw, so
+  // it would never recompute again regardless of later edits. $state makes
+  // the assignment itself a tracked dependency.
+  let initialState = $state();
+  let sensorUpdateTimer;
+  let backupRxPollerTimer;
+  let armedPollerTimer;
+  let pollersStopped = false;
+  let receiverTypeRef;
+
+  let backupWizardDisabled = $state(false);
+  let backupWizardInstance = null;
+
+  function closeBackupWizard() {
+    if (!backupWizardInstance) return;
+    const instance = backupWizardInstance;
+    backupWizardInstance = null;
+    unmount(instance);
+  }
+
+  function onClickDetectBackupWiring() {
+    closeBackupWizard();
+
+    // See ReceiverType.svelte's onClickDetectWiring() for why this is
+    // snapshotted and conditionally restored on close.
+    const before = {
+      inverted: FC.RX_INPUT_BACKUP_CONFIG.inverted,
+      halfDuplex: FC.RX_INPUT_BACKUP_CONFIG.halfDuplex,
+      pinSwap: FC.RX_INPUT_BACKUP_CONFIG.pinSwap,
+    };
+    let applied = false;
+    let saved = false;
+
+    backupWizardInstance = mount(RxWiringDetectWizard, {
+      target: document.body,
+      props: {
+        mspCode: MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL,
+        titleKey: "receiverBackupWiringDetectWizardTitle",
+        onDetected: (inverted, halfDuplex, pinSwap) => {
+          applied = true;
+          FC.RX_INPUT_BACKUP_CONFIG.inverted = inverted;
+          FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = halfDuplex;
+          FC.RX_INPUT_BACKUP_CONFIG.pinSwap = pinSwap;
+        },
+        onButtonDisabled: (v) => (backupWizardDisabled = v),
+        onClose: () => {
+          if (applied && !saved) {
+            FC.RX_INPUT_BACKUP_CONFIG.inverted = before.inverted;
+            FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = before.halfDuplex;
+            FC.RX_INPUT_BACKUP_CONFIG.pinSwap = before.pinSwap;
+          }
+          closeBackupWizard();
+        },
+        onSaveRequested: () => {
+          saved = true;
+          onSave();
+        },
+      },
+    });
+  }
 
   function snapshotState() {
     return $state.snapshot({
@@ -68,11 +132,29 @@
     initialState = snapshotState();
     loading = false;
 
-    sensorUpdateIntervalId = setInterval(async () => {
+    // Self-rescheduling (setTimeout that re-arms only after the previous
+    // round finishes), not setInterval with an async body. setInterval fires
+    // on a fixed wall-clock schedule regardless of whether the previous
+    // callback's awaits have resolved - on a real (non-instant) serial link
+    // 3 sequential MSP round-trips can exceed even a 25ms period, so ticks
+    // start overlapping and each overlap opens a fresh in-flight request for
+    // a different MSP code (MSP.send_message only dedupes a second request
+    // for a code already queued, not different codes). The backlog of
+    // concurrently outstanding requests then only grows, which is exactly
+    // what was flooding the link on the ESC wiring wizard (Motors.svelte,
+    // same shape, see its own fix) badly enough to starve its poll of ever
+    // getting a timely response back. Same risk here for the RX wiring
+    // wizard's poll, so the same fix.
+    async function pollSensors() {
+      if (pollersStopped) return;
       await MSP.promise(MSPCodes.MSP_RX_CHANNELS);
       await MSP.promise(MSPCodes.MSP_RC_COMMAND);
       await MSP.promise(MSPCodes.MSP_ANALOG);
-    }, 25);
+      if (!pollersStopped) {
+        sensorUpdateTimer = setTimeout(pollSensors, 25);
+      }
+    }
+    pollSensors();
 
     if (hasBackupRxPort) {
       await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG);
@@ -86,9 +168,31 @@
     await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
     // 200ms rather than the 25ms main-channel poll above - this only needs to
     // look live for a status badge, not drive a hot loop always.
-    backupRxPollerIntervalId = setInterval(() => {
-      MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
-    }, 200);
+    async function pollBackupRx() {
+      if (pollersStopped) return;
+      await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
+      if (!pollersStopped) {
+        backupRxPollerTimer = setTimeout(pollBackupRx, 200);
+      }
+    }
+    pollBackupRx();
+
+    // Separate, slower poll for `armed` rather than folding it into the
+    // 200ms poll above - see wingflight-configurator's own Motors.svelte fix
+    // for why: piggybacking a status-only field onto an existing hot loop
+    // risks queueing/contending with a wizard's own polling under real
+    // (non-instant) serial traffic, which read there as the ESC wiring
+    // wizard "hanging" even though the firmware's trial kept running fine.
+    // Less traffic here (one MSP2_WING_RX_INPUT_BACKUP_STATUS call per
+    // cycle, not three), but the same shaped risk, so the same fix.
+    async function pollArmed() {
+      if (pollersStopped) return;
+      await MSP.promise(MSPCodes.MSP_STATUS);
+      if (!pollersStopped) {
+        armedPollerTimer = setTimeout(pollArmed, 1000);
+      }
+    }
+    pollArmed();
 
     // initialState is snapshotted above before this block runs, so re-snapshot
     // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
@@ -98,8 +202,13 @@
   });
 
   onDestroy(() => {
-    clearInterval(sensorUpdateIntervalId);
-    clearInterval(backupRxPollerIntervalId);
+    pollersStopped = true;
+    clearTimeout(sensorUpdateTimer);
+    clearTimeout(backupRxPollerTimer);
+    clearTimeout(armedPollerTimer);
+    receiverTypeRef?.cleanup();
+    backupWizardInstance?.stop();
+    closeBackupWizard();
   });
 
   export async function onSave() {
@@ -135,6 +244,9 @@
       initialState.RX_INPUT_BACKUP_CONFIG,
     );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
+    receiverTypeRef?.cleanup();
+    backupWizardInstance?.stop();
+    closeBackupWizard();
   }
 
   export function isDirty() {
@@ -158,6 +270,12 @@
   let showToolbar = $derived(
     !loading && (changes.length > 0 || showSticksButton || showBindButton),
   );
+
+  // Same pattern as esc_programming/state.svelte.js's own `armed` - both
+  // wiring trials cycle live RX UART config, so this tab needs to refuse to
+  // even open a Detect Wiring wizard while armed, on top of the firmware's
+  // own ARMING_FLAG(ARMED) rejection.
+  let armed = $derived(bit_check(FC.CONFIG.mode, FC.AUX_CONFIG.indexOf("ARM")));
 
   const SERIALRX_FUNCTION = 64;
   let hasSerialRxPort = $derived(
@@ -384,14 +502,41 @@
   <div class="content">
     <div>
       <ReceiverType
+        bind:this={receiverTypeRef}
         {rxProtoIndex}
         {hasSerialRxPort}
         {setRxProto}
         mainLinkUp={backupRxStatus.mainLinkUp}
         {hasBackupRxPort}
         backupActive={backupRxStatus.activeSource === "backup"}
+        onSaveRequested={onSave}
+        hasUnsavedChanges={changes.length > 0}
+        {armed}
       />
       {#if hasBackupRxPort}
+        {#snippet backupWiringDetectActions()}
+          <div class="wiring-detect">
+            <button
+              class="btn"
+              disabled={backupWizardDisabled ||
+                FC.RX_INPUT_BACKUP_CONFIG.provider === 0 ||
+                changes.length > 0 ||
+                armed}
+              title={armed
+                ? $i18n.t("receiverWiringDetectArmedFirst")
+                : changes.length > 0
+                  ? $i18n.t("receiverWiringDetectSaveFirst")
+                  : undefined}
+              onclick={onClickDetectBackupWiring}
+            >
+              {$i18n.t("receiverWiringDetectButton")}
+            </button>
+            <HelpIcon>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html $i18n.t("receiverWiringDetectHelp")}
+            </HelpIcon>
+          </div>
+        {/snippet}
         {#snippet backupConfigHeader()}
           <div class="section-header">
             <span class="title">{$i18n.t("tabRxInputBackupConfig")}</span>
@@ -428,7 +573,10 @@
               </select>
             </Field>
           </SubSection>
-          <SubSection label="receiverBackupRxSignaling">
+          <SubSection
+            label="receiverBackupRxSignaling"
+            actions={backupWiringDetectActions}
+          >
             <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
               {#snippet tooltip()}
                 <Tooltip help="receiverBackupRxInvertedHelp" />
@@ -526,6 +674,16 @@
   .help-btn {
     padding: 4px 8px;
     min-width: 60px;
+  }
+
+  .wiring-detect {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .wiring-detect .btn {
+    padding: 4px 8px;
   }
 
   .grow {

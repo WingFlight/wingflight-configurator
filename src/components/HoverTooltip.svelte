@@ -134,6 +134,18 @@
     // app. The shadow is what separates it from the panel underneath.
     border: 1px solid var(--color-border-soft);
     box-shadow: var(--shadow-md);
+
+    // Multi-paragraph {@html} content (e.g. HelpIcon's) - same convention
+    // as Tooltip.svelte's .message: zero the UA default margin and space
+    // paragraphs deliberately instead, rather than however the browser's
+    // default <p> margin happens to render.
+    :global(p) {
+      margin: 0;
+    }
+
+    :global(p) + :global(p) {
+      margin-top: 10px;
+    }
   }
 
   .tooltip-arrow {
