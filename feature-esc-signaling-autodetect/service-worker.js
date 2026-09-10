@@ -1,4 +1,4 @@
-const CACHE_VERSION = "wingflight-configurator-0.0.0-d59a98f0";
+const CACHE_VERSION = "wingflight-configurator-0.0.0-e82d94b7";
 const APP_SHELL = [
   "./",
   "./index.html",
