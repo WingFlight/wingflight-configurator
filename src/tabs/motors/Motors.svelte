@@ -28,8 +28,9 @@
   // later edits - see wingflight-configurator commit cdce9cddc for the
   // full writeup of this exact bug in the Receiver tab.
   let initialState = $state();
-  let pollerInterval;
-  let armedPollerInterval;
+  let pollerTimer;
+  let armedPollerTimer;
+  let pollerStopped = false;
   let telemetryRef;
 
   let isEnabled = $derived(
@@ -83,29 +84,50 @@
     initialState = snapshotState();
     loading = false;
 
-    pollerInterval = setInterval(async () => {
+    // Self-rescheduling (setTimeout that re-arms only after the previous
+    // round finishes), not setInterval with an async body. The latter fires
+    // on a fixed 50ms wall-clock schedule regardless of whether the prior
+    // callback's awaits have resolved - on a real (non-instant) serial link,
+    // 3 sequential MSP round-trips easily exceed 50ms, so ticks start
+    // overlapping and pile up: each overlap opens a fresh in-flight request
+    // for a *different* code (MSP.send_message only dedupes same-code
+    // requests already queued), so the backlog of concurrently outstanding
+    // requests only grows over time. That was flooding the link badly enough
+    // to starve the ESC wiring wizard's own 200ms poll of ever getting a
+    // timely response - the trial kept running fine on the FC the whole
+    // time, the configurator just stopped hearing about it. Moving the
+    // armed-check out to its own interval (see below) didn't fix this: the
+    // pileup was already happening inside this loop by itself, independent
+    // of what else got called from it.
+    async function pollMotors() {
+      if (pollerStopped) return;
       await MSP.promise(MSPCodes.MSP_MOTOR);
       await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
       await MSP.promise(MSPCodes.MSP_BATTERY_STATE);
-    }, 50);
+      if (!pollerStopped) {
+        pollerTimer = setTimeout(pollMotors, 50);
+      }
+    }
+    pollMotors();
 
-    // Separate, much slower interval - not folded into the 50ms loop above.
-    // That loop is already 3 MSP round-trips deep every cycle; a 4th on a
-    // real (non-instant) serial link was enough to start queueing/
-    // contending badly enough to starve the ESC wiring wizard's own 200ms
-    // poll of ever getting a timely response back, which read as the wizard
-    // "hanging" - the trial kept running fine on the FC the whole time, the
-    // configurator just stopped hearing about it. `armed` doesn't need
-    // anywhere near 50ms freshness for a UI gate, so it gets its own light
-    // cadence instead of riding along on the hot one.
-    armedPollerInterval = setInterval(() => {
-      MSP.promise(MSPCodes.MSP_STATUS);
-    }, 1000);
+    // Same self-rescheduling shape, much slower cadence - not folded into
+    // the loop above. `armed` doesn't need anywhere near 50ms freshness for
+    // a UI gate, so it gets its own light cadence instead of riding along on
+    // the hot one.
+    async function pollArmed() {
+      if (pollerStopped) return;
+      await MSP.promise(MSPCodes.MSP_STATUS);
+      if (!pollerStopped) {
+        armedPollerTimer = setTimeout(pollArmed, 1000);
+      }
+    }
+    pollArmed();
   });
 
   onDestroy(() => {
-    clearInterval(pollerInterval);
-    clearInterval(armedPollerInterval);
+    pollerStopped = true;
+    clearTimeout(pollerTimer);
+    clearTimeout(armedPollerTimer);
     telemetryRef?.cleanup();
   });
 
