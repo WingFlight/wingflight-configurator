@@ -4186,8 +4186,8 @@
     "motorsEscWiringDetectScanning": {
         "message": "Trying combination $1 of $2…"
     },
-    "motorsEscWiringDetectSuccessCountdown": {
-        "message": "Signal found — Half-Duplex: $1, Pin Swap: $2. Closing in $3s — press Save on this tab to keep it."
+    "motorsEscWiringDetectSuccess": {
+        "message": "Signal found — Half-Duplex: $1, Pin Swap: $2. Save and reboot to keep it, or Close to discard and restore the previous setting."
     },
     "motorsEscWiringDetectFailed": {
         "message": "No valid frame found on any wiring combination for this protocol. Make sure the ESC(s) are powered and outputting telemetry, check the protocol selection and connections, then try again."

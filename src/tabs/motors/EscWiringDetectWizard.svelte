@@ -48,7 +48,6 @@
   let wizardDebug = $state("");
 
   let pollTimer;
-  let autoCloseTimer;
 
   // Same "race a single dropped/slow reply against a local timeout" pattern
   // as AutoAlignWizard's sendBoardAutoAlignQuery - MSP.promise() never
@@ -109,42 +108,6 @@
     pollTimer = null;
   }
 
-  function clearAutoClose() {
-    clearInterval(autoCloseTimer);
-    autoCloseTimer = null;
-  }
-
-  function startAutoCloseCountdown(halfDuplex, pinSwap, seconds = 3) {
-    clearAutoClose();
-
-    let remaining = seconds;
-    setWizard(
-      "motorsEscWiringDetectWizardStep2",
-      "motorsEscWiringDetectSuccessCountdown",
-      100,
-      [yesNo(halfDuplex), yesNo(pinSwap), remaining],
-      false,
-      true,
-    );
-
-    autoCloseTimer = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        clearAutoClose();
-        dialogEl.close();
-        return;
-      }
-      setWizard(
-        "motorsEscWiringDetectWizardStep2",
-        "motorsEscWiringDetectSuccessCountdown",
-        100,
-        [yesNo(halfDuplex), yesNo(pinSwap), remaining],
-        false,
-        true,
-      );
-    }, 1000);
-  }
-
   function onQueryFailed() {
     setWizard(
       "motorsEscWiringDetectWizardStep2",
@@ -167,7 +130,6 @@
     const response = await sendTrialQuery(startProcedure ? 1 : 0);
 
     if (!response) {
-      clearAutoClose();
       clearPoll();
       pollTimer = setTimeout(() => {
         queryTrial(false).catch(onQueryFailed);
@@ -178,7 +140,6 @@
     const { data } = response;
 
     if (!data || data.byteLength < 6) {
-      clearAutoClose();
       onButtonDisabled(true);
       setWizard(
         "motorsEscWiringDetectWizardStep2",
@@ -208,7 +169,6 @@
     }
 
     if (state === ESC_SENSOR_TRIAL.RUNNING) {
-      clearAutoClose();
       setWizard(
         "motorsEscWiringDetectWizardStep1",
         "motorsEscWiringDetectScanning",
@@ -237,16 +197,28 @@
       // successful combo live precisely so the live ESC telemetry values
       // elsewhere on this tab can confirm it for real while this dialog is
       // still open. stopTrial() still fires from handleDialogClose() once
-      // the countdown (or the user) actually closes the dialog, or from
-      // "Save & Reboot" superseding it entirely.
+      // the user actually closes the dialog, or from "Save & Reboot"
+      // superseding it entirely.
       onDetected(halfDuplex, pinSwap);
 
-      startAutoCloseCountdown(halfDuplex, pinSwap, 3);
+      // Deliberately no auto-close here (this used to count down and close
+      // itself after 3s) - closing without the user clicking "Save and
+      // Reboot" discards the result (Telemetry.svelte's onClose reverts
+      // FC.ESC_SENSOR_CONFIG since `saved` never got set), so an unattended
+      // auto-close silently threw away a successful detection. The result
+      // now sits here until the user takes an explicit action.
+      setWizard(
+        "motorsEscWiringDetectWizardStep2",
+        "motorsEscWiringDetectSuccess",
+        100,
+        [yesNo(halfDuplex), yesNo(pinSwap)],
+        false,
+        true,
+      );
       return;
     }
 
     if (state === ESC_SENSOR_TRIAL.FAILED) {
-      clearAutoClose();
       stopTrial();
       setWizard(
         "motorsEscWiringDetectWizardStep2",
@@ -259,7 +231,6 @@
     }
 
     if (state === ESC_SENSOR_TRIAL.REJECTED) {
-      clearAutoClose();
       setWizard(
         "motorsEscWiringDetectWizardStep2",
         "motorsEscWiringDetectRejected",
@@ -270,7 +241,6 @@
 
     // IDLE - shouldn't normally be observed mid-wizard, but handle it rather
     // than getting stuck if it ever is.
-    clearAutoClose();
     setWizard(
       "motorsEscWiringDetectWizardStep1",
       "motorsEscWiringDetectScanning",
@@ -280,7 +250,6 @@
   }
 
   function onClickRetry() {
-    clearAutoClose();
     setWizard(
       "motorsEscWiringDetectWizardStep1",
       "motorsEscWiringDetectScanning",
@@ -295,7 +264,6 @@
   }
 
   function onClickSaveReboot() {
-    clearAutoClose();
     onSaveRequested?.();
     // The save flow itself reboots and reinitialises the whole connection,
     // so there's nothing left for this dialog to keep polling for - close it
@@ -312,7 +280,6 @@
   // this doesn't arrive - e.g. the whole app closing).
   function handleDialogClose() {
     clearPoll();
-    clearAutoClose();
     stopTrial();
     onButtonDisabled(false);
     onClose();
@@ -320,7 +287,6 @@
 
   export function stop() {
     clearPoll();
-    clearAutoClose();
     stopTrial();
   }
 
