@@ -20,8 +20,16 @@
   import motorState from "./state.svelte.js";
 
   let loading = $state(true);
-  let initialState;
+  // $state, not a plain let: `changes` below reads this inside an early
+  // return (`if (!initialState) return [];`) that touches nothing else
+  // reactive. A plain variable's reassignment isn't a tracked dependency in
+  // runes mode, so if `changes` were ever first evaluated before onMount
+  // sets this, its $derived.by would memoize at [] permanently regardless of
+  // later edits - see wingflight-configurator commit cdce9cddc for the
+  // full writeup of this exact bug in the Receiver tab.
+  let initialState = $state();
   let pollerInterval;
+  let telemetryRef;
 
   let isEnabled = $derived(
     motorState.throttleEnabled && FC.CONFIG.motorCount > 0,
@@ -76,6 +84,7 @@
 
   onDestroy(() => {
     clearInterval(pollerInterval);
+    telemetryRef?.cleanup();
   });
 
   $effect(() => {
@@ -110,6 +119,7 @@
     Object.assign(FC.ESC_SENSOR_CONFIG, initialState.ESC_SENSOR_CONFIG);
     Object.assign(FC.GOVERNOR_CONFIG, initialState.GOVERNOR_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
+    telemetryRef?.cleanup();
   }
 
   function onClickHelp() {
@@ -145,7 +155,11 @@
       <Throttle />
       {#if isEnabled}
         <div transition:slide>
-          <Telemetry />
+          <Telemetry
+            bind:this={telemetryRef}
+            onSaveRequested={onSave}
+            hasUnsavedChanges={changes.length > 0}
+          />
         </div>
         <div transition:slide>
           <RPM />
