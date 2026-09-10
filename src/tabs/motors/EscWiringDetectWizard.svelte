@@ -39,6 +39,14 @@
   let wizardProgress = $state(0);
   let canRetry = $state(false);
   let canSave = $state(false);
+  // Bench-diagnostic line, temporary - see wingflight-firmware's
+  // escSensorTrialStatus_t for the extra fields this reads. Added to chase a
+  // report of this wizard sitting on "combination 1 of 4" indefinitely
+  // despite live telemetry apparently flowing on the tab behind it - this
+  // tells us, from the next bench test, whether the FC-side trial is
+  // actually ticking (elapsedMs growing), seeing any frames at all
+  // (frameDelta), and has the port open, without needing devtools open.
+  let wizardDebug = $state("");
 
   let pollTimer;
   let autoCloseTimer;
@@ -186,7 +194,19 @@
     const comboIndex = data.readU8();
     const halfDuplex = data.readU8();
     const pinSwap = data.readU8();
-    data.readU16(); // elapsedMs - not currently surfaced in the UI
+    const elapsedMs = data.readU16();
+
+    // Bench-diagnostic fields, temporary - appended after the original
+    // 6-byte response, so older firmware without them still parses fine
+    // (this block just doesn't run).
+    if (data.byteLength >= 10) {
+      const frameDelta = data.readU16();
+      const comboCount = data.readU8();
+      const portOpen = data.readU8();
+      wizardDebug = `combo ${comboIndex + 1}/${comboCount}  Δframes=${frameDelta}  port=${portOpen ? "open" : "closed"}  t=${elapsedMs}ms`;
+    } else {
+      wizardDebug = "";
+    }
 
     if (state === ESC_SENSOR_TRIAL.RUNNING) {
       clearAutoClose();
@@ -324,6 +344,12 @@
   <div class="wizard-progress" aria-hidden="true">
     <div class="wizard-progress-fill" style:width="{wizardProgress}%"></div>
   </div>
+  {#if wizardDebug}
+    <!-- Bench-diagnostic line, temporary - see the wizardDebug declaration
+         above. Remove this block once the "stuck on combination 1" report
+         is actually resolved. -->
+    <div class="wizard-debug">{wizardDebug}</div>
+  {/if}
   <div class="wizard-actions">
     {#if canRetry}
       <button class="btn" onclick={onClickRetry}>
@@ -371,6 +397,16 @@
   .wizard-detail {
     font-size: 0.75rem;
     line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  // Bench-diagnostic line, temporary - matches .wizard-debug in the markup.
+  .wizard-debug {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--color-text-secondary, var(--color-text));
+    opacity: 0.75;
+    margin-top: -4px;
     margin-bottom: 12px;
   }
 
