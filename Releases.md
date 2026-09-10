@@ -1,3 +1,8 @@
+# 0.0.19
+
+Add RX and ESC telemetry wiring auto-detect ("Detect Wiring") to the Receiver and Motors tabs, to help diagnose signal-inversion and pin-swap mismatches.
+Refresh UI styling with CSS-variable-based border-radius and color theming for a more consistent look.
+
 # 0.0.18
 
 Add Thrust Vector profile tabs and TV Profile adjustment function.
