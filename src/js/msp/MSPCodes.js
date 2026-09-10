@@ -231,6 +231,10 @@ export const MSPCodes = {
     MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: 0x5F0F,
     MSP2_WING_SELECT_TV_PROFILE:      0x5F10,
     MSP2_WING_COPY_TV_PID_PROFILE:    0x5F11,
+    // 0x5F14, not 0x5F12/0x5F13 - those are claimed by the RX wiring
+    // auto-detect PR's MSP2_WING_RX_SERIAL_TRIAL/
+    // MSP2_WING_RX_INPUT_BACKUP_TRIAL.
+    MSP2_WING_ESC_SENSOR_TRIAL:       0x5F14,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
