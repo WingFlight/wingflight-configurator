@@ -1261,6 +1261,42 @@ input[type="number"]::-webkit-inner-spin-button {
 /* Group labels are typographic dividers now, not shaded bands - the
    uppercase micro-label plus the space above it is enough separation and
    keeps the rail from looking striped. */
+/* All settings: the 26 tabs fold behind one entry (concept §8). */
+#tabs ul.mode-connected.all-settings-collapsed > li:not(.journey-group):not(.tab_journey):not(#all-settings-toggle) {
+    display: none !important;
+}
+
+#tabs li#all-settings-toggle button {
+    all: unset;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+
+#tabs li#all-settings-toggle button::before {
+    content: "B8  ";
+}
+
+#tabs li#all-settings-toggle button[aria-expanded="true"]::before {
+    content: "BE  ";
+}
+
+#tabs li#all-settings-toggle button:hover {
+    color: var(--chrome-fg);
+}
+
+.search-hit {
+    animation: search-hit-pulse 1.2s ease-out 2;
+}
+
+@keyframes search-hit-pulse {
+    0% { box-shadow: 0 0 0 0 var(--color-focus-ring); }
+    50% { box-shadow: 0 0 0 6px var(--color-focus-ring); }
+    100% { box-shadow: 0 0 0 0 var(--color-focus-ring); }
+}
+
 #tabs li.tab-group-header {
     margin-top: 14px;
     padding: 4px 10px;

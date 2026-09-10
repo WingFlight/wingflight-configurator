@@ -2,6 +2,7 @@ import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { getProfile } from "@/js/profile.svelte.js";
+import { openTabByName } from "@/js/tab_tree.js";
 
 import { ackStatus, markStageVerified, wasStageVerified } from "./acknowledgments.svelte.js";
 import { evaluateStage } from "./checks.js";
@@ -67,7 +68,7 @@ export function openOverview() {
 }
 
 export function openTab(tabName) {
-  clickTab(tabName);
+  openTabByName(tabName);
 }
 
 // ---- Evaluation -----------------------------------------------------------

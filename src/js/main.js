@@ -6,6 +6,7 @@ import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { mountComponents } from "@/js/main.svelte.js";
+import { initAllSettingsToggle } from "@/js/tab_tree.js";
 
 globalThis.TABS = {};
 
@@ -336,6 +337,8 @@ export function startProcess() {
     if (config.get('logopen')) {
         $("#showlog").trigger('click');
     }
+
+    initAllSettingsToggle();
 
     // Disclosure level (Essential / Standard / Expert). Migrates the old
     // boolean expertMode setting on first run.

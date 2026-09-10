@@ -33,6 +33,7 @@ import * as utilsCommon from "@/js/utils/common.js";
 
 import "@/js/injected_methods.js";
 import "@/js/tabs/index.js";
+import "@/js/fields/index.js";
 
 // Import all CSS files for proper styling
 // Node modules CSS
@@ -61,6 +62,7 @@ import "@/css/select2_custom.css";
 
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
+import SettingsSearch from "@/components/SettingsSearch.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
 
 // FirmwareCache/release_checker/FirmwareFlasher all persist via
@@ -135,6 +137,7 @@ export function mountComponents() {
   mount(StatusBar, { target: document.querySelector("#status-bar") });
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
+  mount(SettingsSearch, { target: document.querySelector("#settings-search") });
 }
 
 if (__BACKEND__ === "cordova") {

@@ -8,8 +8,10 @@
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
 
+  import AirframeCanvas from "@/components/AirframeCanvas.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import { getProfile } from "@/js/profile.svelte.js";
   import Switch from "@/components/Switch.svelte";
 
   import ServoConfigTable from "./ServoConfigTable.svelte";
@@ -304,6 +306,12 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
+  <Section label="servoAirframeCanvas" summary="servoAirframeCanvasHelp">
+    <div class="canvas">
+      <AirframeCanvas profile={getProfile()} live={true} />
+    </div>
+  </Section>
+
   <Section label="servoConfigurationPwm">
     {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate || warnings.unusualGeoCor}
       <div class="note">
@@ -391,6 +399,10 @@
 </Page>
 
 <style lang="scss">
+  .canvas {
+    padding: 4px 8px;
+  }
+
   h1 {
     font-weight: 600;
   }

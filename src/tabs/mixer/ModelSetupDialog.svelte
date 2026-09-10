@@ -4,6 +4,9 @@
   import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { updateTabList } from "@/js/main.js";
+  import { deriveProfile } from "@/js/profile/derive.js";
+
+  import AirframeCanvas from "@/components/AirframeCanvas.svelte";
 
   // modelType is passed to open() rather than taken as a prop -- callers
   // that let the user pick *which* type to configure (ModelTypePicker,
@@ -31,6 +34,24 @@
   let thrustVectorRoll = $state(false);
   let thrustVectorPitch = $state(false);
   let thrustVectorYaw = $state(false);
+
+  let previewProfile = $derived(
+    deriveProfile({
+      MIXER_CONFIG: { model_type: activeType.value },
+      MIXER_RULES: Mixer.buildWizardRules({
+        layout: activeType.layout,
+        ailerons: activeType.ailerons?.fixed ?? ailerons,
+        tailControl: activeType.tailControl?.fixed ?? tailControl,
+        wingYaw,
+        flaps,
+        motors,
+        diffThrustYaw,
+        thrustVectorRoll,
+        thrustVectorPitch,
+        thrustVectorYaw,
+      }),
+    }),
+  );
 
   export function open(modelType) {
     activeType = modelType;
@@ -234,6 +255,10 @@
     </div>
   </div>
 
+  <div class="preview">
+    <AirframeCanvas profile={previewProfile} compact={true} />
+  </div>
+
   <div class="buttons">
     <button class="btn" onclick={() => dialogEl.close()}>
       {$i18n.t("mixerWizardCancel")}
@@ -253,6 +278,10 @@
 
   h3 {
     margin-bottom: 0.5em;
+  }
+
+  .preview {
+    margin-top: 12px;
   }
 
   .wizardSection {

@@ -8439,5 +8439,236 @@
     },
     "journeyDetail.servoConfigNotRead": {
         "message": "Servo settings not read yet."
+    },
+    "wiringErrorNotConnected": {
+        "message": "Not connected to a flight controller."
+    },
+    "wiringErrorCliBusy": {
+        "message": "The CLI is already in use by another tab. Leave that tab first."
+    },
+    "wiringErrorCliEnter": {
+        "message": "The flight controller did not enter CLI mode. Check the connection and try again."
+    },
+    "wiringErrorCommandTimeout": {
+        "message": "Timed out waiting for the flight controller to answer \"{{command}}\"."
+    },
+    "wiringErrorCliError": {
+        "message": "The flight controller rejected \"{{command}}\": {{message}}. Nothing was saved."
+    },
+    "wiringErrorNotRecognised": {
+        "message": "This board is not recognised, so nothing will be written. Add a board profile first (docs/adding-a-board-profile.md)."
+    },
+    "wiringErrorNoPlan": {
+        "message": "There is nothing to write. Pick a pad and a function first."
+    },
+    "wiringErrorNotReady": {
+        "message": "Read the board first."
+    },
+    "wiringErrorBackupCancelled": {
+        "message": "Backup was cancelled, so nothing was written."
+    },
+    "wiringErrorSaveNoReboot": {
+        "message": "The flight controller did not reboot after Save. The change may not have been applied. Check the connection and read the board again."
+    },
+    "wiringErrorMcuUnsupported": {
+        "message": "The timer and DMA tables for this MCU ({{mcu}}) are not known, so pin changes cannot be checked. Only the current assignment is shown."
+    },
+    "wiringErrorIllegalOption": {
+        "message": "{{option}} cannot be placed on pin {{pin}}: that pin's timers do not support it."
+    },
+    "wiringErrorUnresolved": {
+        "message": "No conflict-free timer and DMA layout was found for {{features}}. Choose a suggestion or a different pad."
+    },
+    "wiringBoardUnrecognised": {
+        "message": "This board has no profile yet, so it cannot be drawn. The pin table below still works, but nothing can be written until a profile exists."
+    },
+    "wiringPadUnassigned": {
+        "message": "unassigned"
+    },
+    "wiringPadSelectPrompt": {
+        "message": "Select a pad on the board to see what can be connected to it."
+    },
+    "wiringLegendTitle": {
+        "message": "Legend"
+    },
+    "wiringLegend_outputs": {
+        "message": "Servo / motor outputs"
+    },
+    "wiringLegend_uart": {
+        "message": "UART"
+    },
+    "wiringLegend_i2c": {
+        "message": "I2C"
+    },
+    "wiringLegend_adc": {
+        "message": "Sensors (ADC)"
+    },
+    "wiringLegend_power": {
+        "message": "Power"
+    },
+    "wiringLegend_led": {
+        "message": "LED strip"
+    },
+    "wiringLegend_other": {
+        "message": "Other"
+    },
+    "wiringLegendAssigned": {
+        "message": "assigned"
+    },
+    "wiringLegendUnassigned": {
+        "message": "free"
+    },
+    "wiringLegendConflict": {
+        "message": "conflict"
+    },
+    "wiringSchematicNote": {
+        "message": "Pad positions are schematic, not measured."
+    },
+    "wiringPickerFunction": {
+        "message": "Function"
+    },
+    "wiringPickerNone": {
+        "message": "Nothing connected (free the pad)"
+    },
+    "wiringPickerRevert": {
+        "message": "Revert pad to default"
+    },
+    "wiringPickerNoOptions": {
+        "message": "This pad's pin has no timer, so no output can be placed here."
+    },
+    "wiringPickerDefault": {
+        "message": "Default"
+    },
+    "wiringCriticality_critical": {
+        "message": "flight critical"
+    },
+    "wiringCriticality_important": {
+        "message": "important"
+    },
+    "wiringCriticality_minor": {
+        "message": "minor"
+    },
+    "wiringDiffTitleAssign": {
+        "message": "Put {{option}} on {{pad}} ({{pin}})"
+    },
+    "wiringDiffTitleFree": {
+        "message": "Free {{pad}} ({{pin}})"
+    },
+    "wiringDiffTitleRevertPad": {
+        "message": "Revert {{pad}} ({{pin}}) to default"
+    },
+    "wiringDiffTitleRevertAll": {
+        "message": "Revert every pad to the board's defaults"
+    },
+    "wiringDiffDisplaced": {
+        "message": "{{option}} is currently on this pad and will be left unassigned."
+    },
+    "wiringDiffNoChanges": {
+        "message": "This is already how the board is configured. Nothing to write."
+    },
+    "wiringDiffWhat": {
+        "message": "Setting"
+    },
+    "wiringDiffBefore": {
+        "message": "Before"
+    },
+    "wiringDiffAfter": {
+        "message": "After"
+    },
+    "wiringDiffCommands": {
+        "message": "CLI commands that will be sent ({{count}})"
+    },
+    "wiringDiffUnresolved": {
+        "message": "No conflict-free timer or DMA channel could be found for {{features}} on the chosen pads. These changes will not be written."
+    },
+    "wiringDiffSuggestionsTitle": {
+        "message": "Suggested fixes"
+    },
+    "wiringDiffSuggestionSwap": {
+        "message": "Swap pads: {{feature}} and {{otherFeature}} trade places ({{target}})."
+    },
+    "wiringDiffSuggestionMove": {
+        "message": "Move {{feature}} to {{target}}."
+    },
+    "wiringDiffNoSuggestion": {
+        "message": "No single swap or move resolves this. Choose a different pad."
+    },
+    "wiringDiffUseSuggestion": {
+        "message": "Use this"
+    },
+    "wiringDiffNotRecognised": {
+        "message": "This board is not recognised, so nothing will be written. Add a board profile first."
+    },
+    "wiringDiffBackupNote": {
+        "message": "Before anything is written, a complete configuration backup (dump all) is saved to a file you choose. Cancelling the file dialog cancels the write. The flight controller reboots after saving."
+    },
+    "wiringDiffBackupSaved": {
+        "message": "Backup saved as {{filename}}."
+    },
+    "wiringDiffApplying": {
+        "message": "Writing {{command}}"
+    },
+    "wiringVirtualNote": {
+        "message": "Virtual flight controller: the change is applied to the on-screen model only."
+    },
+    "wiringTableEmpty": {
+        "message": "Read the board to see its pin table."
+    },
+    "wiringTableResource": {
+        "message": "Resource"
+    },
+    "wiringTableSilkscreen": {
+        "message": "Pad"
+    },
+    "wiringTablePin": {
+        "message": "Pin"
+    },
+    "wiringTableDefaultPin": {
+        "message": "Default pin"
+    },
+    "wiringTableTimer": {
+        "message": "Timer"
+    },
+    "wiringTableDma": {
+        "message": "DMA"
+    },
+    "wiringRibbonPads": {
+        "message": "Board pads"
+    },
+    "wiringRibbonSurfaces": {
+        "message": "Airframe"
+    },
+    "wiringRibbonNoSurface": {
+        "message": "no surface"
+    },
+    "wiringRibbonUnwired": {
+        "message": "not wired"
+    },
+    "wiringRibbonEmpty": {
+        "message": "No outputs are assigned yet."
+    },
+    "wiringRereadNote": {
+        "message": "The flight controller rebooted. Read the board again to see the new assignment."
+    },
+    "tabAllSettings": {
+        "message": "All settings"
+    },
+    "tabAllSettingsHelp": {
+        "message": "Show or hide the full settings tree. Every tab is still here, in its usual group."
+    },
+    "settingsSearchPlaceholder": {
+        "message": "Search settings (Ctrl+K)"
+    },
+    "mixerAirframeCanvas": {
+        "message": "Airframe"
+    },
+    "mixerAirframeCanvasHelp": {
+        "message": "The aircraft as the loaded mixer rules describe it: every control surface is a hit region carrying its output, and surfaces animate from live servo data. Click a surface for details."
+    },
+    "servoAirframeCanvas": {
+        "message": "Airframe"
+    },
+    "servoAirframeCanvasHelp": {
+        "message": "Which servo drives which surface, animated from live servo data. Surfaces without a mixer output are drawn grey."
     }
 }

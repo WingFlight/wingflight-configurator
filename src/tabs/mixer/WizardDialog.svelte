@@ -1,6 +1,10 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { Mixer } from "@/js/Mixer.js";
+  import { deriveProfile } from "@/js/profile/derive.js";
+
+  import AirframeCanvas from "@/components/AirframeCanvas.svelte";
 
   let { onApply } = $props();
 
@@ -38,36 +42,31 @@
     dialogEl.showModal();
   }
 
-  // All aircraft_shapes SVGs share the same viewBox and are layered in
-  // z-order -- shape first, then control surfaces on top.
-  let previewLayers = $derived.by(() => {
-    const layers = [];
-
-    if (layout === "flyingWing") {
-      layers.push("flying_wing_shape");
-      layers.push("flying_wing_aileron");
-
-      if (wingYaw === "rudder") layers.push("flying_wing_rudder");
-      if (flaps) layers.push("flying_wing_flaps");
-      if (motors === 1) layers.push("flying_wing_one_motor");
-      else if (motors === 2) layers.push("flying_wing_two_motor");
-    } else {
-      layers.push("conventional_shape");
-
-      if (ailerons !== "none") layers.push("conventional_aileron");
-      if (tailControl === "elevatorOnly")
-        layers.push("conventional_normal_tail_no_rudder");
-      else if (tailControl === "elevatorRudder")
-        layers.push("conventional_normal_tail");
-      else if (tailControl === "vtail") layers.push("conventional_v_tail");
-
-      if (flaps) layers.push("conventional_flaps");
-      if (motors === 1) layers.push("conventional_one_motor");
-      else if (motors === 2) layers.push("conventional_dual_motor");
-    }
-
-    return layers;
-  });
+  // Preview: derive a throwaway profile from the rules the wizard would
+  // generate, and draw it with the shared airframe canvas -- the same
+  // component the journey and the Servos/Mixer tabs use.
+  let previewProfile = $derived(
+    deriveProfile({
+      MIXER_CONFIG: {
+        model_type:
+          layout === "flyingWing"
+            ? Mixer.MODEL_TYPE_FLYING_WING
+            : Mixer.MODEL_TYPE_REGULAR_AIRPLANE,
+      },
+      MIXER_RULES: Mixer.buildWizardRules({
+        layout,
+        ailerons,
+        tailControl,
+        wingYaw,
+        flaps,
+        motors,
+        diffThrustYaw,
+        thrustVectorRoll,
+        thrustVectorPitch,
+        thrustVectorYaw,
+      }),
+    }),
+  );
 
   function apply() {
     dialogEl.close();
@@ -227,15 +226,7 @@
     </div>
 
     <div class="wizardPreview">
-      <div class="wizardPreviewLayers">
-        {#each previewLayers as name (name)}
-          <img
-            src="/images/aircraft_shapes/{name}.svg"
-            alt=""
-            aria-hidden="true"
-          />
-        {/each}
-      </div>
+      <AirframeCanvas profile={previewProfile} compact={true} />
     </div>
   </div>
 
@@ -306,28 +297,6 @@
   .wizardPreview {
     width: 340px;
     flex-shrink: 0;
-  }
-
-  // All aircraft_shapes SVGs share the same viewBox (103.58 x 48.52 mm)
-  .wizardPreviewLayers {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 103.58047 / 48.517796;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    padding: 10px;
-    box-sizing: border-box;
-    background: var(--color-surface-float, var(--color-surface));
-
-    img {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: calc(100% - 20px);
-      height: calc(100% - 20px);
-      display: block;
-    }
   }
 
   .buttons {

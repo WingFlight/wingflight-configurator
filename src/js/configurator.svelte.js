@@ -40,6 +40,8 @@ export const CONFIGURATOR = $state({
   disclosureLevel: "standard",
   // Whether the Setup Journey is the landing page when a board connects.
   journeyLanding: true,
+  // Field id that settings search asked to reveal regardless of tier.
+  revealedFieldId: null,
 });
 
 const DISCLOSURE_LEVELS = ["essential", "standard", "expert"];

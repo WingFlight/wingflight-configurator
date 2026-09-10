@@ -9,8 +9,10 @@
   import { getTabHelpURL } from "@/js/help";
   import { updateTabList } from "@/js/main.js";
 
+  import AirframeCanvas from "@/components/AirframeCanvas.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import { getProfile } from "@/js/profile.svelte.js";
 
   import RuleTable from "./RuleTable.svelte";
   import AxisConfig from "./AxisConfig.svelte";
@@ -152,6 +154,12 @@
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <ModelTypePicker />
 
+  <Section label="mixerAirframeCanvas" summary="mixerAirframeCanvasHelp">
+    <div class="canvas">
+      <AirframeCanvas profile={getProfile()} live={true} />
+    </div>
+  </Section>
+
   <Section label="mixerRulesTitle">
     {#if isCustom}
       <RuleTable onOpenWizard={() => wizardRef.open()} />
@@ -170,6 +178,10 @@
 <WizardDialog bind:this={wizardRef} onApply={onWizardApply} />
 
 <style lang="scss">
+  .canvas {
+    padding: 4px 8px;
+  }
+
   h1 {
     font-weight: 600;
   }
