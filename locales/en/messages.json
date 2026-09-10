@@ -2259,8 +2259,8 @@
     "receiverWiringDetectScanning": {
         "message": "Trying combination $1 of $2…"
     },
-    "receiverWiringDetectSuccessCountdown": {
-        "message": "Signal found — Inverted: $1, Half-Duplex: $2, Pin Swap: $3. Closing in $4s — press Save on this tab to keep it."
+    "receiverWiringDetectSuccess": {
+        "message": "Signal found — Inverted: $1, Half-Duplex: $2, Pin Swap: $3. Save and reboot to keep it, or Close to discard and restore the previous setting."
     },
     "receiverWiringDetectFailed": {
         "message": "No signal found on any wiring combination for this protocol. Make sure the transmitter is powered on and bound to the receiver, check the protocol selection and connections, then try again."

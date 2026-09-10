@@ -43,7 +43,6 @@
   let canSave = $state(false);
 
   let pollTimer;
-  let autoCloseTimer;
 
   // Same "race a single dropped/slow reply against a local timeout" pattern
   // as AutoAlignWizard's sendBoardAutoAlignQuery - MSP.promise() never
@@ -98,48 +97,6 @@
     pollTimer = null;
   }
 
-  function clearAutoClose() {
-    clearInterval(autoCloseTimer);
-    autoCloseTimer = null;
-  }
-
-  function startAutoCloseCountdown(inverted, halfDuplex, pinSwap, seconds = 3) {
-    clearAutoClose();
-
-    let remaining = seconds;
-    const args = [
-      yesNo(inverted),
-      yesNo(halfDuplex),
-      yesNo(pinSwap),
-      remaining,
-    ];
-    setWizard(
-      "receiverWiringDetectWizardStep2",
-      "receiverWiringDetectSuccessCountdown",
-      100,
-      args,
-      false,
-      true,
-    );
-
-    autoCloseTimer = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        clearAutoClose();
-        dialogEl.close();
-        return;
-      }
-      setWizard(
-        "receiverWiringDetectWizardStep2",
-        "receiverWiringDetectSuccessCountdown",
-        100,
-        [yesNo(inverted), yesNo(halfDuplex), yesNo(pinSwap), remaining],
-        false,
-        true,
-      );
-    }, 1000);
-  }
-
   function onQueryFailed() {
     setWizard(
       "receiverWiringDetectWizardStep2",
@@ -162,7 +119,6 @@
     const response = await sendTrialQuery(startProcedure ? 1 : 0);
 
     if (!response) {
-      clearAutoClose();
       clearPoll();
       pollTimer = setTimeout(() => {
         queryTrial(false).catch(onQueryFailed);
@@ -173,7 +129,6 @@
     const { data } = response;
 
     if (!data || data.byteLength < 7) {
-      clearAutoClose();
       onButtonDisabled(true);
       setWizard(
         "receiverWiringDetectWizardStep2",
@@ -192,7 +147,6 @@
     data.readU16(); // elapsedMs - not currently surfaced in the UI
 
     if (state === RX_SERIAL_TRIAL.RUNNING) {
-      clearAutoClose();
       setWizard(
         "receiverWiringDetectWizardStep1",
         "receiverWiringDetectScanning",
@@ -225,16 +179,30 @@
       // instant detection finished, while this dialog kept showing success -
       // exactly the "looks broken, nothing visibly changes" symptom this was
       // reported as. stopTrial() still fires from handleDialogClose() once
-      // the countdown (or the user) actually closes the dialog, or from
-      // "Save & Reboot" superseding it entirely.
+      // the user actually closes the dialog, or from "Save & Reboot"
+      // superseding it entirely.
       onDetected(inverted, halfDuplex, pinSwap);
 
-      startAutoCloseCountdown(inverted, halfDuplex, pinSwap, 3);
+      // Deliberately no auto-close here (this used to count down and close
+      // itself after 3s) - closing without the user clicking "Save and
+      // Reboot" discards the result (the caller's onClose reverts its FC
+      // config since `saved` never got set), so an unattended auto-close
+      // silently threw away a successful detection - see
+      // wingflight-configurator's EscWiringDetectWizard.svelte for the same
+      // fix and the full writeup. The result now sits here until the user
+      // takes an explicit action.
+      setWizard(
+        "receiverWiringDetectWizardStep2",
+        "receiverWiringDetectSuccess",
+        100,
+        [yesNo(inverted), yesNo(halfDuplex), yesNo(pinSwap)],
+        false,
+        true,
+      );
       return;
     }
 
     if (state === RX_SERIAL_TRIAL.FAILED) {
-      clearAutoClose();
       stopTrial();
       setWizard(
         "receiverWiringDetectWizardStep2",
@@ -247,7 +215,6 @@
     }
 
     if (state === RX_SERIAL_TRIAL.REJECTED) {
-      clearAutoClose();
       setWizard(
         "receiverWiringDetectWizardStep2",
         "receiverWiringDetectRejected",
@@ -258,7 +225,6 @@
 
     // IDLE - shouldn't normally be observed mid-wizard, but handle it rather
     // than getting stuck if it ever is.
-    clearAutoClose();
     setWizard(
       "receiverWiringDetectWizardStep1",
       "receiverWiringDetectScanning",
@@ -268,7 +234,6 @@
   }
 
   function onClickRetry() {
-    clearAutoClose();
     setWizard(
       "receiverWiringDetectWizardStep1",
       "receiverWiringDetectScanning",
@@ -283,7 +248,6 @@
   }
 
   function onClickSaveReboot() {
-    clearAutoClose();
     onSaveRequested?.();
     // The save flow itself reboots and reinitialises the whole connection,
     // so there's nothing left for this dialog to keep polling for - close it
@@ -300,7 +264,6 @@
   // this doesn't arrive - e.g. the whole app closing).
   function handleDialogClose() {
     clearPoll();
-    clearAutoClose();
     stopTrial();
     onButtonDisabled(false);
     onClose();
@@ -308,7 +271,6 @@
 
   export function stop() {
     clearPoll();
-    clearAutoClose();
     stopTrial();
   }
 
