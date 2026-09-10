@@ -150,6 +150,10 @@
     // look live for a status badge, not drive a hot loop always.
     backupRxPollerIntervalId = setInterval(() => {
       MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
+      // Keeps `armed` (below) live while this tab stays open - the initial
+      // fetch above is otherwise the only one this tab ever does, unlike
+      // e.g. Status.svelte's own slow-interval MSP_STATUS repoll.
+      MSP.promise(MSPCodes.MSP_STATUS);
     }, 200);
 
     // initialState is snapshotted above before this block runs, so re-snapshot
@@ -226,6 +230,12 @@
   let showToolbar = $derived(
     !loading && (changes.length > 0 || showSticksButton || showBindButton),
   );
+
+  // Same pattern as esc_programming/state.svelte.js's own `armed` - both
+  // wiring trials cycle live RX UART config, so this tab needs to refuse to
+  // even open a Detect Wiring wizard while armed, on top of the firmware's
+  // own ARMING_FLAG(ARMED) rejection.
+  let armed = $derived(bit_check(FC.CONFIG.mode, FC.AUX_CONFIG.indexOf("ARM")));
 
   const SERIALRX_FUNCTION = 64;
   let hasSerialRxPort = $derived(
@@ -461,6 +471,7 @@
         backupActive={backupRxStatus.activeSource === "backup"}
         onSaveRequested={onSave}
         hasUnsavedChanges={changes.length > 0}
+        {armed}
       />
       {#if hasBackupRxPort}
         {#snippet backupWiringDetectActions()}
@@ -469,10 +480,13 @@
               class="btn"
               disabled={backupWizardDisabled ||
                 FC.RX_INPUT_BACKUP_CONFIG.provider === 0 ||
-                changes.length > 0}
-              title={changes.length > 0
-                ? $i18n.t("receiverWiringDetectSaveFirst")
-                : undefined}
+                changes.length > 0 ||
+                armed}
+              title={armed
+                ? $i18n.t("receiverWiringDetectArmedFirst")
+                : changes.length > 0
+                  ? $i18n.t("receiverWiringDetectSaveFirst")
+                  : undefined}
               onclick={onClickDetectBackupWiring}
             >
               {$i18n.t("receiverWiringDetectButton")}

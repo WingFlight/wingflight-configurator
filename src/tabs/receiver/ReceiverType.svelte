@@ -23,6 +23,7 @@
     backupActive,
     onSaveRequested,
     hasUnsavedChanges,
+    armed,
   } = $props();
 
   let wizardDisabled = $state(false);
@@ -99,10 +100,15 @@
   <div class="wiring-detect">
     <button
       class="btn"
-      disabled={wizardDisabled || !hasSerialRxPort || hasUnsavedChanges}
-      title={hasUnsavedChanges
-        ? $i18n.t("receiverWiringDetectSaveFirst")
-        : undefined}
+      disabled={wizardDisabled ||
+        !hasSerialRxPort ||
+        hasUnsavedChanges ||
+        armed}
+      title={armed
+        ? $i18n.t("receiverWiringDetectArmedFirst")
+        : hasUnsavedChanges
+          ? $i18n.t("receiverWiringDetectSaveFirst")
+          : undefined}
       onclick={onClickDetectWiring}
     >
       {$i18n.t("receiverWiringDetectButton")}
