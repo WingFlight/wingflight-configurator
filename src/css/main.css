@@ -1276,11 +1276,11 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 #tabs li#all-settings-toggle button::before {
-    content: "B8  ";
+    content: "▸  ";
 }
 
 #tabs li#all-settings-toggle button[aria-expanded="true"]::before {
-    content: "BE  ";
+    content: "▾  ";
 }
 
 #tabs li#all-settings-toggle button:hover {

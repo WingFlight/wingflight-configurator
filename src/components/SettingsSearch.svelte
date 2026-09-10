@@ -48,21 +48,31 @@
     }
   }
 
+  let rootEl;
+
   onMount(() => {
-    // Ctrl/Cmd+K focuses the search from anywhere.
+    // Ctrl/Cmd+K focuses the search from anywhere; a click anywhere outside
+    // the box closes the results.
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         inputEl?.focus();
       }
     };
+    const outside = (e) => {
+      if (open && rootEl && !rootEl.contains(e.target)) open = false;
+    };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.removeEventListener("pointerdown", outside);
+    };
   });
 </script>
 
 {#if CONFIGURATOR.connectionValid}
-  <div class="search" role="search">
+  <div class="search" role="search" bind:this={rootEl}>
     <input
       bind:this={inputEl}
       bind:value={query}
