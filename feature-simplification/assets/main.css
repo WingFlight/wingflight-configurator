@@ -394,6 +394,15 @@ input[type="number"]::-webkit-inner-spin-button {
 
 
 /** Header **/
+/* Wrapped header content used to spill over the page below 1400px (the
+   status boxes already wrap there). Clip it instead; above 1100px nothing
+   expands the bar, so nothing legitimate is cut off. */
+@media all and (min-width: 1101px) {
+    .headerbar {
+        overflow: hidden;
+    }
+}
+
 .headerbar {
     height: 115px;
     background-color: var(--chrome-bg);
@@ -614,6 +623,36 @@ input[type="number"]::-webkit-inner-spin-button {
        phone layout at all - on any window wide enough for these to fit
        on one line (the common case), this changes nothing. */
     flex-wrap: wrap;
+
+    /* Two rows: the status boxes, then the settings search + detail level.
+       The tools row uses the vertical slack the header already had (the
+       status boxes are ~69px inside a 115px bar) - there is no horizontal
+       room left beside them, and the bar's height is baked into
+       #tab-content-container's height math, so it cannot grow. */
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.status-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Between the 1100px breakpoint and a full-width desktop the status boxes
+   are squeezed narrower than their content and wrap onto a second row,
+   which the fixed-height bar cannot show. Scale them instead, the same way
+   the <=1100px rules below already do for the whole wrapper. */
+@media all and (min-width: 1101px) and (max-width: 1399px) {
+    .status-row {
+        zoom: 78%;
+    }
+}
+
+@media all and (min-width: 1101px) and (max-width: 1250px) {
+    .status-row {
+        zoom: 62%;
+    }
 }
 
 #quad-status_wrapper,
@@ -830,24 +869,11 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-top:2px;
 }
 
-#disclosure-level {
-    margin-top: 22px;
-    width: 110px;
-    font-size: 10px;
-    color: var(--chrome-fg);
-}
-
-#disclosure-level label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-#disclosure-level select {
-    width: 100%;
-    height: 20px;
-    font-size: 11px;
-    padding: 0 2px;
+/* Settings search + detail level, mounted from HeaderTools.svelte. Sits with
+   the status boxes so it follows their reveal behaviour on narrow screens;
+   it renders nothing at all while disconnected. */
+#header-tools {
+    flex-shrink: 0;
 }
 
 /* Battery element styling*/
@@ -1063,6 +1089,9 @@ input[type="number"]::-webkit-inner-spin-button {
     .header-wrapper {
         order: 5;
         zoom: 62%;
+    }
+
+    .status-row {
         justify-content: space-around;
     }
 
