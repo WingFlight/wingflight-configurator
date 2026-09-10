@@ -7,6 +7,7 @@
   import { Mixer } from "@/js/Mixer.js";
 
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Switch from "@/components/Switch.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Slider from "@/components/Slider.svelte";
@@ -70,53 +71,58 @@
   }
 </script>
 
-<Section label="mixerOverrideTitle">
-  <div class="master-row">
-    <Switch bind:checked={() => anyEnabled, (v) => setMasterEnabled(v)} />
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    <span class="label">{@html $i18n.t("mixerEnableOverrideLabel")}</span>
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    <span class="description">{@html $i18n.t("mixerEnableOverrideText")}</span>
-  </div>
-
-  {#if anyEnabled}
-    <div class="rows" transition:slide>
-      <div class="header-row">
-        <span>{$i18n.t("mixerOverrideAxis")}</span>
-        <span>{$i18n.t("mixerOverrideEnable")}</span>
-        <span>{$i18n.t("mixerOverrideValue")}</span>
-        <span></span>
-      </div>
-
-      {#each OVERRIDE_AXES as index (index)}
-        <div class="axis-row">
-          <span class="col-axis">{$i18n.t(Mixer.inputNames[index])}</span>
-          <span class="col-enable">
-            <Switch
-              bind:checked={() => isEnabled(index), (v) => setEnabled(index, v)}
-            />
-          </span>
-          <span class="col-value">
-            <NumberInput
-              min={OVERRIDE_PERCENT_MIN}
-              max={OVERRIDE_PERCENT_MAX}
-              step="1"
-              disabled={!isEnabled(index)}
-              bind:value={() => percent(index), (v) => setPercent(index, v)}
-            />
-          </span>
-          <div class="col-slider" class:disabled={!isEnabled(index)}>
-            <Slider
-              opts={sliderOpts}
-              changeOnSlide={false}
-              bind:value={() => percent(index), (v) => setPercent(index, v)}
-            />
-          </div>
-        </div>
-      {/each}
+<Tier id="mixer.override.panel">
+  <Section label="mixerOverrideTitle">
+    <div class="master-row">
+      <Switch bind:checked={() => anyEnabled, (v) => setMasterEnabled(v)} />
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <span class="label">{@html $i18n.t("mixerEnableOverrideLabel")}</span>
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <span class="description">{@html $i18n.t("mixerEnableOverrideText")}</span
+      >
     </div>
-  {/if}
-</Section>
+
+    {#if anyEnabled}
+      <div class="rows" transition:slide>
+        <div class="header-row">
+          <span>{$i18n.t("mixerOverrideAxis")}</span>
+          <span>{$i18n.t("mixerOverrideEnable")}</span>
+          <span>{$i18n.t("mixerOverrideValue")}</span>
+          <span></span>
+        </div>
+
+        {#each OVERRIDE_AXES as index (index)}
+          <div class="axis-row">
+            <span class="col-axis">{$i18n.t(Mixer.inputNames[index])}</span>
+            <span class="col-enable">
+              <Switch
+                bind:checked={
+                  () => isEnabled(index), (v) => setEnabled(index, v)
+                }
+              />
+            </span>
+            <span class="col-value">
+              <NumberInput
+                min={OVERRIDE_PERCENT_MIN}
+                max={OVERRIDE_PERCENT_MAX}
+                step="1"
+                disabled={!isEnabled(index)}
+                bind:value={() => percent(index), (v) => setPercent(index, v)}
+              />
+            </span>
+            <div class="col-slider" class:disabled={!isEnabled(index)}>
+              <Slider
+                opts={sliderOpts}
+                changeOnSlide={false}
+                bind:value={() => percent(index), (v) => setPercent(index, v)}
+              />
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </Section>
+</Tier>
 
 <style lang="scss">
   .master-row {

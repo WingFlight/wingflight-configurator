@@ -7,6 +7,8 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
+  import { getProfile } from "@/js/profile.svelte.js";
+  import { visible } from "@/js/relevance.js";
   import {
     UNUSED_MODES,
     EXPERT_MODES,
@@ -16,6 +18,7 @@
   import Page from "@/components/Page.svelte";
   import Switch from "@/components/Switch.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import ModeCard from "./ModeCard.svelte";
 
@@ -37,9 +40,19 @@
   let rcPollerInterval;
   let statusPollerInterval;
 
+  // Expert-only modes follow the field registry (tier x relevance) like any
+  // other folded-away field.
+  let showExpertModes = $derived(
+    visible(
+      "auxiliary.modes.expertModes",
+      getProfile(),
+      CONFIGURATOR.disclosureLevel,
+    ),
+  );
+
   // ARM is always the first mode reported by the FC; keep it pinned at the
   // top of the list and alphabetize the rest by their display name. Modes
-  // that are heli-specific/unused, or expert-only while not in expert mode,
+  // that are heli-specific/unused, or expert-only below the expert tier,
   // are dropped from the list entirely -- and (matching legacy) from what
   // gets saved, since only modes represented here are written back.
   let modeIndices = $derived.by(() => {
@@ -47,7 +60,7 @@
     for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
       const modeName = FC.AUX_CONFIG[i];
       if (UNUSED_MODES.includes(modeName)) continue;
-      if (EXPERT_MODES.includes(modeName) && !CONFIGURATOR.expertMode) continue;
+      if (EXPERT_MODES.includes(modeName) && !showExpertModes) continue;
       indices.push(i);
     }
     const armIndex = indices.shift();
@@ -324,22 +337,24 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   {#each modeIndices as modeIndex (modeIndex)}
-    <ModeCard
-      modeId={FC.AUX_CONFIG_IDS[modeIndex]}
-      modeName={FC.AUX_CONFIG[modeIndex]}
-      items={entries[modeIndex] ?? []}
-      hidden={hideUnused &&
-        modeIndices.some((i) => entries[i]?.length > 0) &&
-        (entries[modeIndex]?.length ?? 0) === 0}
-      isOn={isModeOn(modeIndex)}
-      {channelOptions}
-      {logicOptions}
-      {linkOptions}
-      onAddRange={() => addRange(modeIndex)}
-      onAddLink={() => addLink(modeIndex)}
-      onDeleteItem={(item) => deleteItem(modeIndex, item)}
-      onEdit={markDirty}
-    />
+    <Tier id="auxiliary.modes.card">
+      <ModeCard
+        modeId={FC.AUX_CONFIG_IDS[modeIndex]}
+        modeName={FC.AUX_CONFIG[modeIndex]}
+        items={entries[modeIndex] ?? []}
+        hidden={hideUnused &&
+          modeIndices.some((i) => entries[i]?.length > 0) &&
+          (entries[modeIndex]?.length ?? 0) === 0}
+        isOn={isModeOn(modeIndex)}
+        {channelOptions}
+        {logicOptions}
+        {linkOptions}
+        onAddRange={() => addRange(modeIndex)}
+        onAddLink={() => addLink(modeIndex)}
+        onDeleteItem={(item) => deleteItem(modeIndex, item)}
+        onEdit={markDirty}
+      />
+    </Tier>
   {/each}
 </Page>
 

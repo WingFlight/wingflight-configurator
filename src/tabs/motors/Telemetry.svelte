@@ -8,6 +8,7 @@
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
   import motorState from "./state.svelte.js";
@@ -31,122 +32,154 @@
   });
 </script>
 
-<Section label="motorsEscTelemetry">
-  {#if !motorState.isCastleLink}
-    <div transition:slide>
-      <SubSection>
-        <Field id="esc-telemetry-protocol" label="motorsEscTelemetryProtocol">
-          {#snippet tooltip()}
-            <Tooltip help={telemetryProtocolHelp} />
-          {/snippet}
-          <select
-            id="esc-telemetry-protocol"
-            bind:value={FC.ESC_SENSOR_CONFIG.protocol}
-            disabled={motorState.srxl2PortAssigned}
-          >
-            {#each motorState.telemetryProtocols as proto, index (proto)}
-              <option value={index}>{proto}</option>
-            {/each}
-          </select>
-        </Field>
-      </SubSection>
-    </div>
-  {/if}
-  {#if motorState.telemEnabled && motorState.hasTelemPort}
-    <div transition:slide>
-      <SubSection label="motorsSectionSignaling">
-        <Field
-          id="esc-telemetry-half-duplex"
-          label="motorsEscTelemetryHalfDuplex"
-        >
-          {#snippet tooltip()}
-            <Tooltip
-              help={motorState.srxl2PortAssigned
-                ? "motorsEscTelemetryHalfDuplexSrxl2LockedHelp"
-                : "motorsEscTelemetryHalfDuplexHelp"}
-            />
-          {/snippet}
-          <Switch
-            id="esc-telemetry-half-duplex"
-            bind:checked={FC.ESC_SENSOR_CONFIG.half_duplex}
-            disabled={motorState.srxl2PortAssigned}
-          />
-        </Field>
+<Tier id="motors.telemetry.section">
+  <Section label="motorsEscTelemetry">
+    {#if !motorState.isCastleLink}
+      <div transition:slide>
+        <SubSection>
+          <Tier id="motors.telemetry.protocol">
+            <Field
+              id="esc-telemetry-protocol"
+              label="motorsEscTelemetryProtocol"
+            >
+              {#snippet tooltip()}
+                <Tooltip help={telemetryProtocolHelp} />
+              {/snippet}
+              <select
+                id="esc-telemetry-protocol"
+                bind:value={FC.ESC_SENSOR_CONFIG.protocol}
+                disabled={motorState.srxl2PortAssigned}
+              >
+                {#each motorState.telemetryProtocols as proto, index (proto)}
+                  <option value={index}>{proto}</option>
+                {/each}
+              </select>
+            </Field>
+          </Tier>
+        </SubSection>
+      </div>
+    {/if}
+    {#if motorState.telemEnabled && motorState.hasTelemPort}
+      <div transition:slide>
+        <Tier id="motors.telemetry.signaling">
+          <SubSection label="motorsSectionSignaling">
+            <Tier id="motors.telemetry.halfDuplex">
+              <Field
+                id="esc-telemetry-half-duplex"
+                label="motorsEscTelemetryHalfDuplex"
+              >
+                {#snippet tooltip()}
+                  <Tooltip
+                    help={motorState.srxl2PortAssigned
+                      ? "motorsEscTelemetryHalfDuplexSrxl2LockedHelp"
+                      : "motorsEscTelemetryHalfDuplexHelp"}
+                  />
+                {/snippet}
+                <Switch
+                  id="esc-telemetry-half-duplex"
+                  bind:checked={FC.ESC_SENSOR_CONFIG.half_duplex}
+                  disabled={motorState.srxl2PortAssigned}
+                />
+              </Field>
+            </Tier>
 
-        <Field id="esc-telemetry-pinswap" label="motorsEscTelemetryPinswap">
-          {#snippet tooltip()}
-            <Tooltip help="motorsEscTelemetryPinswapHelp" />
-          {/snippet}
-          <Switch
-            id="esc-telemetry-pinswap"
-            bind:checked={FC.ESC_SENSOR_CONFIG.pinswap}
-          />
-        </Field>
-      </SubSection>
-    </div>
-  {/if}
-  {#if motorState.telemEnabled}
-    <div transition:slide>
-      <SubSection label="motorsSectionSensorCorrection">
-        <Field id="voltage-correction" label="motorsVoltageCorrection" unit="%">
-          {#snippet tooltip()}
-            <Tooltip
-              help="motorsVoltageCorrectionHelp"
-              attrs={[
-                { name: "genericDefault", value: "0%" },
-                { name: "genericRange", value: "-100% - 125%" },
-              ]}
-            />
-          {/snippet}
-          <NumberInput
-            id="voltage-correction"
-            min="-100"
-            max="125"
-            bind:value={FC.ESC_SENSOR_CONFIG.voltage_correction}
-          />
-        </Field>
-        <Field id="current-correction" label="motorsCurrentCorrection" unit="%">
-          {#snippet tooltip()}
-            <Tooltip
-              help="motorsCurrentCorrectionHelp"
-              attrs={[
-                { name: "genericDefault", value: "0%" },
-                { name: "genericRange", value: "-100% - 125%" },
-              ]}
-            />
-          {/snippet}
-          <NumberInput
-            id="current-correction"
-            min="-100"
-            max="125"
-            bind:value={FC.ESC_SENSOR_CONFIG.current_correction}
-          />
-        </Field>
-        <Field
-          id="consumption-correction"
-          label="motorsConsumptionCorrection"
-          unit="%"
-        >
-          {#snippet tooltip()}
-            <Tooltip
-              help="motorsConsumptionCorrectionHelp"
-              attrs={[
-                { name: "genericDefault", value: "0%" },
-                { name: "genericRange", value: "-100% - 125%" },
-              ]}
-            />
-          {/snippet}
-          <NumberInput
-            id="consumption-correction"
-            min="-100"
-            max="125"
-            bind:value={FC.ESC_SENSOR_CONFIG.consumption_correction}
-          />
-        </Field>
-      </SubSection>
-    </div>
-  {/if}
-</Section>
+            <Tier id="motors.telemetry.pinswap">
+              <Field
+                id="esc-telemetry-pinswap"
+                label="motorsEscTelemetryPinswap"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="motorsEscTelemetryPinswapHelp" />
+                {/snippet}
+                <Switch
+                  id="esc-telemetry-pinswap"
+                  bind:checked={FC.ESC_SENSOR_CONFIG.pinswap}
+                />
+              </Field>
+            </Tier>
+          </SubSection>
+        </Tier>
+      </div>
+    {/if}
+    {#if motorState.telemEnabled}
+      <div transition:slide>
+        <Tier id="motors.telemetry.sensorCorrection">
+          <SubSection label="motorsSectionSensorCorrection">
+            <Tier id="motors.telemetry.voltageCorrection">
+              <Field
+                id="voltage-correction"
+                label="motorsVoltageCorrection"
+                unit="%"
+              >
+                {#snippet tooltip()}
+                  <Tooltip
+                    help="motorsVoltageCorrectionHelp"
+                    attrs={[
+                      { name: "genericDefault", value: "0%" },
+                      { name: "genericRange", value: "-100% - 125%" },
+                    ]}
+                  />
+                {/snippet}
+                <NumberInput
+                  id="voltage-correction"
+                  min="-100"
+                  max="125"
+                  bind:value={FC.ESC_SENSOR_CONFIG.voltage_correction}
+                />
+              </Field>
+            </Tier>
+            <Tier id="motors.telemetry.currentCorrection">
+              <Field
+                id="current-correction"
+                label="motorsCurrentCorrection"
+                unit="%"
+              >
+                {#snippet tooltip()}
+                  <Tooltip
+                    help="motorsCurrentCorrectionHelp"
+                    attrs={[
+                      { name: "genericDefault", value: "0%" },
+                      { name: "genericRange", value: "-100% - 125%" },
+                    ]}
+                  />
+                {/snippet}
+                <NumberInput
+                  id="current-correction"
+                  min="-100"
+                  max="125"
+                  bind:value={FC.ESC_SENSOR_CONFIG.current_correction}
+                />
+              </Field>
+            </Tier>
+            <Tier id="motors.telemetry.consumptionCorrection">
+              <Field
+                id="consumption-correction"
+                label="motorsConsumptionCorrection"
+                unit="%"
+              >
+                {#snippet tooltip()}
+                  <Tooltip
+                    help="motorsConsumptionCorrectionHelp"
+                    attrs={[
+                      { name: "genericDefault", value: "0%" },
+                      { name: "genericRange", value: "-100% - 125%" },
+                    ]}
+                  />
+                {/snippet}
+                <NumberInput
+                  id="consumption-correction"
+                  min="-100"
+                  max="125"
+                  bind:value={FC.ESC_SENSOR_CONFIG.consumption_correction}
+                />
+              </Field>
+            </Tier>
+          </SubSection>
+        </Tier>
+      </div>
+    {/if}
+  </Section>
+</Tier>
 
 <style lang="scss">
 </style>

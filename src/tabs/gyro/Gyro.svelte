@@ -3,7 +3,6 @@
   import { onMount } from "svelte";
   import diff from "microdiff";
 
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { getTabHelpURL } from "@/js/help";
@@ -12,6 +11,7 @@
   import DynamicFilter from "./DynamicFilter.svelte";
   import LowpassFilter from "./LowpassFilter.svelte";
   import Page from "@/components/Page.svelte";
+  import Tier from "@/components/Tier.svelte";
   import RpmFilter from "./RpmFilter.svelte";
   import NotchFilter from "./NotchFilter.svelte";
 
@@ -147,18 +147,18 @@
   <div class="content">
     <div>
       <LowpassFilter {FC} />
-      {#if CONFIGURATOR.expertMode}
-        <div transition:slide>
-          <NotchFilter {FC} />
-        </div>
-      {/if}
+      <Tier id="gyro.notch.section">
+        <NotchFilter {FC} />
+      </Tier>
       <DynamicFilter {FC} />
     </div>
     <div>
       <RpmFilter {FC} />
       {#if custom}
         <div transition:slide>
-          <CustomNotches {FC} {notches} {onResetNotches} />
+          <Tier id="gyro.rpmFilter.customNotches">
+            <CustomNotches {FC} {notches} {onResetNotches} />
+          </Tier>
         </div>
       {/if}
     </div>

@@ -8,6 +8,8 @@
   import { getTabHelpURL } from "@/js/help";
   import { LogicCondition } from "@/js/LogicCondition.js";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { getProfile } from "@/js/profile.svelte.js";
+  import { visible } from "@/js/relevance.js";
   import {
     UNUSED_MODES,
     EXPERT_MODES,
@@ -17,6 +19,7 @@
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import ConditionRow from "./ConditionRow.svelte";
   import { PRIMARY_CHANNEL_COUNT, isConditionUsed } from "./util.js";
@@ -66,13 +69,23 @@
     ),
   ]);
 
+  // Expert-only modes follow the field registry (tier x relevance) like any
+  // other folded-away field.
+  let showExpertModes = $derived(
+    visible(
+      "logic.conditions.expertModes",
+      getProfile(),
+      CONFIGURATOR.disclosureLevel,
+    ),
+  );
+
   // Same source, heli-only filter, and display names as the Modes tab.
   let modeOptions = $derived.by(() => {
     const options = [];
     for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
       const modeName = FC.AUX_CONFIG[i];
       if (UNUSED_MODES.includes(modeName)) continue;
-      if (EXPERT_MODES.includes(modeName) && !CONFIGURATOR.expertMode) continue;
+      if (EXPERT_MODES.includes(modeName) && !showExpertModes) continue;
       options.push({
         value: FC.AUX_CONFIG_IDS[i],
         label: getModeDisplayName(modeName),
@@ -184,58 +197,60 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  <Section label="logicConditionsTitle">
-    <div class="toolbox">
-      <span class="slot-count"
-        >{$i18n.t("logicSlotCount", {
-          used: visibleSlots.length,
-          total: slotCount,
-        })}</span
-      >
-      <div class="grow"></div>
-      <button
-        class="btn add-btn"
-        disabled={hiddenSlots.length === 0}
-        onclick={addCondition}
-      >
-        <em class="fas fa-plus"></em>
-        {$i18n.t("logicAddButton")}
-      </button>
-    </div>
-
-    {#if visibleSlots.length === 0}
-      <div class="empty-state">
-        <p>{$i18n.t("logicEmptyState")}</p>
-      </div>
-    {:else}
-      <div class="header-row">
-        <span></span>
-        <span>{$i18n.t("logicEnable")}</span>
-        <span>{$i18n.t("logicOperator")}</span>
-        <span>{$i18n.t("logicOperandA")}</span>
-        <span>{$i18n.t("logicOperandB")}</span>
-        <span>{$i18n.t("logicStatus")}</span>
-        <span></span>
+  <Tier id="logic.conditions.list">
+    <Section label="logicConditionsTitle">
+      <div class="toolbox">
+        <span class="slot-count"
+          >{$i18n.t("logicSlotCount", {
+            used: visibleSlots.length,
+            total: slotCount,
+          })}</span
+        >
+        <div class="grow"></div>
+        <button
+          class="btn add-btn"
+          disabled={hiddenSlots.length === 0}
+          onclick={addCondition}
+        >
+          <em class="fas fa-plus"></em>
+          {$i18n.t("logicAddButton")}
+        </button>
       </div>
 
-      {#each visibleSlots as index (index)}
-        <ConditionRow
-          condition={FC.LOGIC_CONDITIONS[index]}
-          {index}
-          active={!!FC.LOGIC_CONDITIONS_STATUS?.[index]}
-          {channelOptions}
-          {modeOptions}
-          {sensorOptions}
-          {profileOptions}
-          {conditionOptions}
-          onCommit={(newCondition) => {
-            FC.LOGIC_CONDITIONS[index] = newCondition;
-          }}
-          onRemove={() => removeCondition(index)}
-        />
-      {/each}
-    {/if}
-  </Section>
+      {#if visibleSlots.length === 0}
+        <div class="empty-state">
+          <p>{$i18n.t("logicEmptyState")}</p>
+        </div>
+      {:else}
+        <div class="header-row">
+          <span></span>
+          <span>{$i18n.t("logicEnable")}</span>
+          <span>{$i18n.t("logicOperator")}</span>
+          <span>{$i18n.t("logicOperandA")}</span>
+          <span>{$i18n.t("logicOperandB")}</span>
+          <span>{$i18n.t("logicStatus")}</span>
+          <span></span>
+        </div>
+
+        {#each visibleSlots as index (index)}
+          <ConditionRow
+            condition={FC.LOGIC_CONDITIONS[index]}
+            {index}
+            active={!!FC.LOGIC_CONDITIONS_STATUS?.[index]}
+            {channelOptions}
+            {modeOptions}
+            {sensorOptions}
+            {profileOptions}
+            {conditionOptions}
+            onCommit={(newCondition) => {
+              FC.LOGIC_CONDITIONS[index] = newCondition;
+            }}
+            onRemove={() => removeCondition(index)}
+          />
+        {/each}
+      {/if}
+    </Section>
+  </Tier>
 </Page>
 
 <style lang="scss">

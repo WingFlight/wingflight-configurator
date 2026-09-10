@@ -2,7 +2,6 @@
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
 
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -11,6 +10,7 @@
 
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import RatesTable from "./RatesTable.svelte";
   import RateCurveChart from "./RateCurveChart.svelte";
@@ -365,9 +365,9 @@
       />
     </div>
     <div>
-      {#if CONFIGURATOR.expertMode}
+      <Tier id="rates.dynamics.section">
         <Dynamics />
-      {/if}
+      </Tier>
       <RatePreview {liveSetpoints} />
     </div>
   </div>

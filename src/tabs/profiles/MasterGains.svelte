@@ -1,5 +1,4 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { GainCurve } from "@/js/GainCurve.js";
@@ -8,6 +7,7 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
   import {
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
@@ -18,11 +18,12 @@
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation
   // folded in as a fourth row since it's the same shape (a baseline gain
-  // optionally shaped by a curve from the same shared pool). Gain and Curve
-  // are both visible regardless of expert mode; expertOnly rows (throttle)
-  // are hidden entirely outside expert mode, matching the previous
-  // standalone Throttle Attenuation section; throttle gets its own help
-  // text since its mechanism differs from the per-axis gain/curve rows.
+  // optionally shaped by a curve from the same shared pool). Each row's
+  // disclosure tier and relevance come from the field registry via fieldId
+  // (throttle/TPA is expert and motor-only, matching the previous standalone
+  // Throttle Attenuation section); the Curve column folds away as a whole
+  // under its own id. Throttle gets its own help text since its mechanism
+  // differs from the per-axis gain/curve rows.
   const MASTER_GAIN_AXES = [
     {
       key: "roll",
@@ -30,6 +31,7 @@
       label: "axisROLL",
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
+      fieldId: "profiles.masterGains.roll",
     },
     {
       key: "pitch",
@@ -37,6 +39,7 @@
       label: "axisPITCH",
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
+      fieldId: "profiles.masterGains.pitch",
     },
     {
       key: "yaw",
@@ -44,6 +47,7 @@
       label: "axisYAW",
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
+      fieldId: "profiles.masterGains.yaw",
     },
     {
       key: "throttle",
@@ -54,7 +58,7 @@
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
-      expertOnly: true,
+      fieldId: "profiles.masterGains.throttle",
       gainMax: 200,
     },
   ];
@@ -95,17 +99,19 @@
               <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
             </span>
           </th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesGainCurveColumn")}
-              <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
-            </span>
-          </th>
+          <Tier id="profiles.masterGains.gainCurve">
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesGainCurveColumn")}
+                <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
+              </span>
+            </th>
+          </Tier>
         </tr>
       </thead>
       <tbody>
         {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-          {#if !axis.expertOnly || CONFIGURATOR.expertMode}
+          <Tier id={axis.fieldId}>
             {@const adjustment = masterGainAdjustmentState(axisIndex)}
             <tr>
               <td class="axis {axis.axisClass}">
@@ -152,14 +158,16 @@
                   {/if}
                 </div>
               </td>
-              <td>
-                <Select
-                  options={gainCurveOptions}
-                  bind:value={FC.PID_PROFILE[axis.curveKey]}
-                />
-              </td>
+              <Tier id="profiles.masterGains.gainCurve">
+                <td>
+                  <Select
+                    options={gainCurveOptions}
+                    bind:value={FC.PID_PROFILE[axis.curveKey]}
+                  />
+                </td>
+              </Tier>
             </tr>
-          {/if}
+          </Tier>
         {/each}
       </tbody>
     </table>

@@ -2,6 +2,8 @@
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
 
+  import Tier from "@/components/Tier.svelte";
+
   import escState from "./state.svelte.js";
 
   function select(manufacturer) {
@@ -31,18 +33,20 @@
 </div>
 
 {#if escState.acknowledgedWarning}
-  <h2>{$i18n.t("escProgrammingSelectManufacturer")}</h2>
-  <div class="grid">
-    {#each escState.manufacturers as manufacturer (manufacturer.id)}
-      <button
-        class="mfg-btn"
-        onclick={() => select(manufacturer)}
-        disabled={escState.armed || protocolMismatch(manufacturer)}
-      >
-        {manufacturer.name}
-      </button>
-    {/each}
-  </div>
+  <Tier id="esc_programming.picker.manufacturer">
+    <h2>{$i18n.t("escProgrammingSelectManufacturer")}</h2>
+    <div class="grid">
+      {#each escState.manufacturers as manufacturer (manufacturer.id)}
+        <button
+          class="mfg-btn"
+          onclick={() => select(manufacturer)}
+          disabled={escState.armed || protocolMismatch(manufacturer)}
+        >
+          {manufacturer.name}
+        </button>
+      {/each}
+    </div>
+  </Tier>
 {/if}
 
 <style lang="scss">

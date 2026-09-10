@@ -5,7 +5,15 @@
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
 </script>
+
+<!-- The yaw column folds away when the mixer drives no yaw output. The grid
+     is a fixed four columns, so a hidden yaw cell leaves an empty placeholder
+     behind (Tier's fallback) to keep the remaining rows aligned. -->
+{#snippet emptyCell()}
+  <div></div>
+{/snippet}
 
 <Section label="rateSetupDynamic">
   <div class="grid">
@@ -13,128 +21,155 @@
       <div class="header"></div>
       <div class="axis-title roll">{$i18n.t("axisROLL")}</div>
       <div class="axis-title pitch">{$i18n.t("axisPITCH")}</div>
-      <div class="axis-title yaw">{$i18n.t("axisYAW")}</div>
+      <Tier id="rates.dynamics.yaw" fallback={emptyCell}>
+        <div class="axis-title yaw">{$i18n.t("axisYAW")}</div>
+      </Tier>
     </div>
 
     <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateSetupResponse")}
-          >{$i18n.t("rateSetupResponse")}</span
-        >
-        <HelpIcon>{$i18n.t("rateSetupResponseHelp")}</HelpIcon>
-      </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_response_time}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_response_time}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_response_time}
-      />
+      <Tier id="rates.dynamics.responseTime">
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateSetupResponse")}
+            >{$i18n.t("rateSetupResponse")}</span
+          >
+          <HelpIcon>{$i18n.t("rateSetupResponseHelp")}</HelpIcon>
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_response_time}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_response_time}
+        />
+        <Tier id="rates.dynamics.yaw" fallback={emptyCell}>
+          <NumberInput
+            min="0"
+            max="250"
+            bind:value={FC.RC_TUNING.yaw_response_time}
+          />
+        </Tier>
+      </Tier>
     </div>
 
     <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateSetpointBoostGain")}
-          >{$i18n.t("rateSetpointBoostGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateSetpointBoostGainHelp")}</HelpIcon>
-      </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_setpoint_boost_gain}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_setpoint_boost_gain}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_setpoint_boost_gain}
-      />
+      <Tier id="rates.dynamics.setpointBoostGain">
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateSetpointBoostGain")}
+            >{$i18n.t("rateSetpointBoostGain")}</span
+          >
+          <HelpIcon>{$i18n.t("rateSetpointBoostGainHelp")}</HelpIcon>
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_setpoint_boost_gain}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_setpoint_boost_gain}
+        />
+        <Tier id="rates.dynamics.yaw" fallback={emptyCell}>
+          <NumberInput
+            min="0"
+            max="250"
+            bind:value={FC.RC_TUNING.yaw_setpoint_boost_gain}
+          />
+        </Tier>
+      </Tier>
 
-      <div class="row-label">
-        <span
-          class="label-text"
-          title="{$i18n.t('rateSetpointBoostCutoff')} [Hz]"
-          >{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span
-        >
-      </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_setpoint_boost_cutoff}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_setpoint_boost_cutoff}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_setpoint_boost_cutoff}
-      />
+      <Tier id="rates.dynamics.setpointBoostCutoff">
+        <div class="row-label">
+          <span
+            class="label-text"
+            title="{$i18n.t('rateSetpointBoostCutoff')} [Hz]"
+            >{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span
+          >
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_setpoint_boost_cutoff}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_setpoint_boost_cutoff}
+        />
+        <Tier id="rates.dynamics.yaw" fallback={emptyCell}>
+          <NumberInput
+            min="0"
+            max="250"
+            bind:value={FC.RC_TUNING.yaw_setpoint_boost_cutoff}
+          />
+        </Tier>
+      </Tier>
     </div>
 
-    <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateYawDynamicCeilingGain")}
-          >{$i18n.t("rateYawDynamicCeilingGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateYawDynamicCeilingGainHelp")}</HelpIcon>
-      </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_dynamic_ceiling_gain}
-      />
+    <Tier id="rates.dynamics.yaw">
+      <div class="group">
+        <Tier id="rates.dynamics.yawDynamicCeilingGain">
+          <div class="row-label">
+            <span
+              class="label-text"
+              title={$i18n.t("rateYawDynamicCeilingGain")}
+              >{$i18n.t("rateYawDynamicCeilingGain")}</span
+            >
+            <HelpIcon>{$i18n.t("rateYawDynamicCeilingGainHelp")}</HelpIcon>
+          </div>
+          <div></div>
+          <div></div>
+          <NumberInput
+            min="0"
+            max="250"
+            bind:value={FC.RC_TUNING.yaw_dynamic_ceiling_gain}
+          />
+        </Tier>
 
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateYawDynamicDeadbandGain")}
-          >{$i18n.t("rateYawDynamicDeadbandGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateYawDynamicDeadbandGainHelp")}</HelpIcon>
-      </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_dynamic_deadband_gain}
-      />
+        <Tier id="rates.dynamics.yawDynamicDeadbandGain">
+          <div class="row-label">
+            <span
+              class="label-text"
+              title={$i18n.t("rateYawDynamicDeadbandGain")}
+              >{$i18n.t("rateYawDynamicDeadbandGain")}</span
+            >
+            <HelpIcon>{$i18n.t("rateYawDynamicDeadbandGainHelp")}</HelpIcon>
+          </div>
+          <div></div>
+          <div></div>
+          <NumberInput
+            min="0"
+            max="250"
+            bind:value={FC.RC_TUNING.yaw_dynamic_deadband_gain}
+          />
+        </Tier>
 
-      <div class="row-label">
-        <span
-          class="label-text"
-          title="{$i18n.t('rateYawDynamicDeadbandFilter')} [Hz]"
-          >{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span
-        >
+        <Tier id="rates.dynamics.yawDynamicDeadbandFilter">
+          <div class="row-label">
+            <span
+              class="label-text"
+              title="{$i18n.t('rateYawDynamicDeadbandFilter')} [Hz]"
+              >{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span
+            >
+          </div>
+          <div></div>
+          <div></div>
+          <NumberInput
+            min="0"
+            max="25"
+            step="0.1"
+            bind:value={
+              () => FC.RC_TUNING.yaw_dynamic_deadband_filter / 10,
+              (v) =>
+                (FC.RC_TUNING.yaw_dynamic_deadband_filter = Math.round(v * 10))
+            }
+          />
+        </Tier>
       </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="25"
-        step="0.1"
-        bind:value={
-          () => FC.RC_TUNING.yaw_dynamic_deadband_filter / 10,
-          (v) => (FC.RC_TUNING.yaw_dynamic_deadband_filter = Math.round(v * 10))
-        }
-      />
-    </div>
+    </Tier>
   </div>
 </Section>
 

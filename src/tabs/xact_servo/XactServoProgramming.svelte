@@ -192,176 +192,204 @@
 
     <div class="pages">
       <Section label="xactServoSectionProtocol">
-        <Field id="physicalId" label="xactServoPhysicalId">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoPhysicalIdHelp" />
-          {/snippet}
-          <Select
-            id="physicalId"
-            bind:value={xactState.values.physicalId}
-            options={physicalIdOptions}
-          />
-        </Field>
-        <Field id="appIdOffset" label="xactServoAppIdOffset">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoAppIdOffsetHelp" />
-          {/snippet}
-          <Select
-            id="appIdOffset"
-            bind:value={xactState.values.appIdOffset}
-            options={appIdOptions}
-          />
-        </Field>
-        <Field id="firmwareVersion" label="xactServoFirmwareVersion">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoFirmwareVersionHelp" />
-          {/snippet}
-          <NumberInput
-            id="firmwareVersion"
-            value={xactState.values.firmwareVersion}
-            disabled
-            min={0}
-            max={255}
-            step={1}
-          />
-        </Field>
+        <Tier id="xact_servo.protocol.physicalId">
+          <Field id="physicalId" label="xactServoPhysicalId">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoPhysicalIdHelp" />
+            {/snippet}
+            <Select
+              id="physicalId"
+              bind:value={xactState.values.physicalId}
+              options={physicalIdOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.protocol.appIdOffset">
+          <Field id="appIdOffset" label="xactServoAppIdOffset">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoAppIdOffsetHelp" />
+            {/snippet}
+            <Select
+              id="appIdOffset"
+              bind:value={xactState.values.appIdOffset}
+              options={appIdOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.protocol.firmwareVersion">
+          <Field id="firmwareVersion" label="xactServoFirmwareVersion">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoFirmwareVersionHelp" />
+            {/snippet}
+            <NumberInput
+              id="firmwareVersion"
+              value={xactState.values.firmwareVersion}
+              disabled
+              min={0}
+              max={255}
+              step={1}
+            />
+          </Field>
+        </Tier>
       </Section>
 
       <Section label="xactServoSectionServo">
-        <Field id="range" label="xactServoRange">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoRangeHelp" />
-          {/snippet}
-          <Select
-            id="range"
-            bind:value={xactState.values.range}
-            options={rangeOptions}
-          />
-        </Field>
-        <Field id="direction" label="xactServoDirection">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoDirectionHelp" />
-          {/snippet}
-          <Select
-            id="direction"
-            bind:value={xactState.values.direction}
-            options={directionOptions}
-          />
-        </Field>
-        <Field id="pulseType" label="xactServoPulseType">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoPulseTypeHelp" />
-          {/snippet}
-          <Select
-            id="pulseType"
-            bind:value={xactState.values.pulseType}
-            options={pulseTypeOptions}
-          />
-        </Field>
-        <Field id="dataRate" label="xactServoDataRate" unit="ms">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoDataRateHelp" />
-          {/snippet}
-          <NumberInput
-            id="dataRate"
-            bind:value={xactState.values.dataRate}
-            min={10}
-            max={60000}
-            step={1}
-          />
-        </Field>
-        <Field id="channel" label="xactServoChannel">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoChannelHelp" />
-          {/snippet}
-          <NumberInput
-            id="channel"
-            bind:value={
-              () => xactState.values.channel + 1,
-              (v) => (xactState.values.channel = v - 1)
-            }
-            min={1}
-            max={24}
-            step={1}
-          />
-        </Field>
-        <Field id="center" label="xactServoCenter">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoCenterHelp" />
-          {/snippet}
-          <NumberInput
-            id="center"
-            bind:value={xactState.values.center}
-            min={-125}
-            max={125}
-            step={1}
-          />
-        </Field>
+        <Tier id="xact_servo.servo.range">
+          <Field id="range" label="xactServoRange">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoRangeHelp" />
+            {/snippet}
+            <Select
+              id="range"
+              bind:value={xactState.values.range}
+              options={rangeOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.servo.direction">
+          <Field id="direction" label="xactServoDirection">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoDirectionHelp" />
+            {/snippet}
+            <Select
+              id="direction"
+              bind:value={xactState.values.direction}
+              options={directionOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.servo.pulseType">
+          <Field id="pulseType" label="xactServoPulseType">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoPulseTypeHelp" />
+            {/snippet}
+            <Select
+              id="pulseType"
+              bind:value={xactState.values.pulseType}
+              options={pulseTypeOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.servo.dataRate">
+          <Field id="dataRate" label="xactServoDataRate" unit="ms">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoDataRateHelp" />
+            {/snippet}
+            <NumberInput
+              id="dataRate"
+              bind:value={xactState.values.dataRate}
+              min={10}
+              max={60000}
+              step={1}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.servo.channel">
+          <Field id="channel" label="xactServoChannel">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoChannelHelp" />
+            {/snippet}
+            <NumberInput
+              id="channel"
+              bind:value={
+                () => xactState.values.channel + 1,
+                (v) => (xactState.values.channel = v - 1)
+              }
+              min={1}
+              max={24}
+              step={1}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.servo.center">
+          <Field id="center" label="xactServoCenter">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoCenterHelp" />
+            {/snippet}
+            <NumberInput
+              id="center"
+              bind:value={xactState.values.center}
+              min={-125}
+              max={125}
+              step={1}
+            />
+          </Field>
+        </Tier>
       </Section>
 
       <Section label="xactServoSectionAdvanced">
-        <Field id="holdingStrength" label="xactServoHoldingStrength">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoHoldingStrengthHelp" />
-          {/snippet}
-          <NumberInput
-            id="holdingStrength"
-            bind:value={xactState.values.holdingStrength}
-            min={4}
-            max={15}
-            step={1}
-          />
-        </Field>
-        <Field id="operationSmoothing" label="xactServoOperationSmoothing">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoOperationSmoothingHelp" />
-          {/snippet}
-          <NumberInput
-            id="operationSmoothing"
-            bind:value={xactState.values.operationSmoothing}
-            min={0}
-            max={50}
-            step={1}
-          />
-        </Field>
-        <Field id="deadband" label="xactServoDeadband">
-          {#snippet tooltip()}
-            <Tooltip help="xactServoDeadbandHelp" />
-          {/snippet}
-          <NumberInput
-            id="deadband"
-            bind:value={xactState.values.deadband}
-            min={0}
-            max={90}
-            step={1}
-          />
-        </Field>
+        <Tier id="xact_servo.advanced.holdingStrength">
+          <Field id="holdingStrength" label="xactServoHoldingStrength">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoHoldingStrengthHelp" />
+            {/snippet}
+            <NumberInput
+              id="holdingStrength"
+              bind:value={xactState.values.holdingStrength}
+              min={4}
+              max={15}
+              step={1}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.advanced.operationSmoothing">
+          <Field id="operationSmoothing" label="xactServoOperationSmoothing">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoOperationSmoothingHelp" />
+            {/snippet}
+            <NumberInput
+              id="operationSmoothing"
+              bind:value={xactState.values.operationSmoothing}
+              min={0}
+              max={50}
+              step={1}
+            />
+          </Field>
+        </Tier>
+        <Tier id="xact_servo.advanced.deadband">
+          <Field id="deadband" label="xactServoDeadband">
+            {#snippet tooltip()}
+              <Tooltip help="xactServoDeadbandHelp" />
+            {/snippet}
+            <NumberInput
+              id="deadband"
+              bind:value={xactState.values.deadband}
+              min={0}
+              max={90}
+              step={1}
+            />
+          </Field>
+        </Tier>
       </Section>
 
       {#if xactState.values.hasExtendedParams}
         <Section label="xactServoSectionSeries65">
-          <Field id="workingMode" label="xactServoWorkingMode">
-            {#snippet tooltip()}
-              <Tooltip help="xactServoWorkingModeHelp" />
-            {/snippet}
-            <Select
-              id="workingMode"
-              bind:value={xactState.values.workingMode}
-              options={workingModeOptions}
-            />
-          </Field>
-          <Field id="maxAngle" label="xactServoMaxAngle" unit="°">
-            {#snippet tooltip()}
-              <Tooltip help="xactServoMaxAngleHelp" />
-            {/snippet}
-            <NumberInput
-              id="maxAngle"
-              bind:value={xactState.values.maxAngle}
-              min={0}
-              max={359}
-              step={1}
-            />
-          </Field>
+          <Tier id="xact_servo.series65.workingMode">
+            <Field id="workingMode" label="xactServoWorkingMode">
+              {#snippet tooltip()}
+                <Tooltip help="xactServoWorkingModeHelp" />
+              {/snippet}
+              <Select
+                id="workingMode"
+                bind:value={xactState.values.workingMode}
+                options={workingModeOptions}
+              />
+            </Field>
+          </Tier>
+          <Tier id="xact_servo.series65.maxAngle">
+            <Field id="maxAngle" label="xactServoMaxAngle" unit="°">
+              {#snippet tooltip()}
+                <Tooltip help="xactServoMaxAngleHelp" />
+              {/snippet}
+              <NumberInput
+                id="maxAngle"
+                bind:value={xactState.values.maxAngle}
+                min={0}
+                max={359}
+                step={1}
+              />
+            </Field>
+          </Tier>
         </Section>
       {/if}
     </div>

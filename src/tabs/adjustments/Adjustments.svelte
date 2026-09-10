@@ -8,6 +8,7 @@
   import { getTabHelpURL } from "@/js/help";
 
   import Page from "@/components/Page.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import AdjustmentRow from "./AdjustmentRow.svelte";
   import { ALWAYS_ON_CH, PRIMARY_CHANNEL_COUNT, resetToOff } from "./util.js";
@@ -198,40 +199,42 @@
     <p>{$i18n.t("adjustmentsHelp")}</p>
   </div>
 
-  <div class="toolbox">
-    <span class="slot-count"
-      >{$i18n.t("adjustmentsSlotCount", {
-        used: visibleSlots.length,
-        total: slotCount,
-      })}</span
-    >
-    <div class="grow"></div>
-    <button
-      class="btn add-btn"
-      disabled={hiddenSlots.length === 0}
-      onclick={addAdjustment}
-    >
-      <em class="fas fa-plus"></em>
-      {$i18n.t("adjustmentsAddButton")}
-    </button>
-  </div>
+  <Tier id="adjustments.slots.list">
+    <div class="toolbox">
+      <span class="slot-count"
+        >{$i18n.t("adjustmentsSlotCount", {
+          used: visibleSlots.length,
+          total: slotCount,
+        })}</span
+      >
+      <div class="grow"></div>
+      <button
+        class="btn add-btn"
+        disabled={hiddenSlots.length === 0}
+        onclick={addAdjustment}
+      >
+        <em class="fas fa-plus"></em>
+        {$i18n.t("adjustmentsAddButton")}
+      </button>
+    </div>
 
-  {#if visibleSlots.length === 0}
-    <div class="empty-state">
-      <p>{$i18n.t("adjustmentsEmptyState")}</p>
-    </div>
-  {:else}
-    <div class="rows">
-      {#each visibleSlots as index (index + ":" + revertGeneration)}
-        <AdjustmentRow
-          {index}
-          {enaChannelOptions}
-          {adjChannelOptions}
-          onRemove={() => removeAdjustment(index)}
-        />
-      {/each}
-    </div>
-  {/if}
+    {#if visibleSlots.length === 0}
+      <div class="empty-state">
+        <p>{$i18n.t("adjustmentsEmptyState")}</p>
+      </div>
+    {:else}
+      <div class="rows">
+        {#each visibleSlots as index (index + ":" + revertGeneration)}
+          <AdjustmentRow
+            {index}
+            {enaChannelOptions}
+            {adjChannelOptions}
+            onRemove={() => removeAdjustment(index)}
+          />
+        {/each}
+      </div>
+    {/if}
+  </Tier>
 </Page>
 
 <style lang="scss">

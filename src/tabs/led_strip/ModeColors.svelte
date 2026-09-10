@@ -3,6 +3,7 @@
   import { i18n } from "@/js/i18n.js";
 
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import { MODE_OPTIONS, SPECIAL_COLOR_SLOTS } from "./constants.js";
   import { hsvToColor } from "./util.js";
@@ -45,42 +46,46 @@
 </script>
 
 {#if ledState.panel.func === "f"}
-  <div class="mode-colors">
-    <div class="row">
-      <span class="label">{$i18n.t("ledStripModeColorsTitle")}</span>
-      <Select bind:value={selectedMode} options={modeOptions} />
+  <Tier id="led_strip.modeColors.modeColors">
+    <div class="mode-colors">
+      <div class="row">
+        <span class="label">{$i18n.t("ledStripModeColorsTitle")}</span>
+        <Select bind:value={selectedMode} options={modeOptions} />
+      </div>
+      <div class="buttons">
+        {#each DIRECTION_LABELS as label, direction (direction)}
+          <button
+            class="mode-btn"
+            class:active={isActive(selectedMode, direction)}
+            style:background={colorFor(selectedMode, direction)}
+            onclick={() => selectModeColor(selectedMode, direction)}
+          >
+            {$i18n.t(label)}
+          </button>
+        {/each}
+      </div>
     </div>
-    <div class="buttons">
-      {#each DIRECTION_LABELS as label, direction (direction)}
-        <button
-          class="mode-btn"
-          class:active={isActive(selectedMode, direction)}
-          style:background={colorFor(selectedMode, direction)}
-          onclick={() => selectModeColor(selectedMode, direction)}
-        >
-          {$i18n.t(label)}
-        </button>
-      {/each}
-    </div>
-  </div>
+  </Tier>
 {/if}
 
 {#if visibleSpecialSlots.length}
-  <div class="mode-colors">
-    <span class="label">{$i18n.t("ledStripModesSpecialColorsTitle")}</span>
-    <div class="buttons">
-      {#each visibleSpecialSlots as slot (slot.direction)}
-        <button
-          class="mode-btn"
-          class:active={isActive(6, slot.direction)}
-          style:background={colorFor(6, slot.direction)}
-          onclick={() => selectModeColor(6, slot.direction)}
-        >
-          {$i18n.t(slot.label)}
-        </button>
-      {/each}
+  <Tier id="led_strip.modeColors.specialColors">
+    <div class="mode-colors">
+      <span class="label">{$i18n.t("ledStripModesSpecialColorsTitle")}</span>
+      <div class="buttons">
+        {#each visibleSpecialSlots as slot (slot.direction)}
+          <button
+            class="mode-btn"
+            class:active={isActive(6, slot.direction)}
+            style:background={colorFor(6, slot.direction)}
+            onclick={() => selectModeColor(6, slot.direction)}
+          >
+            {$i18n.t(slot.label)}
+          </button>
+        {/each}
+      </div>
     </div>
-  </div>
+  </Tier>
 {/if}
 
 <style lang="scss">

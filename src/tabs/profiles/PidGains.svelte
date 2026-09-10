@@ -4,6 +4,7 @@
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import {
     PID_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
@@ -11,17 +12,45 @@
     getAdjustmentState,
   } from "@/tabs/adjustments/adjustmentState.js";
 
+  // fieldId: disclosure registry id (see fields.js) for the axis row / term
+  // column; rows and columns are folded independently.
   const AXES = ["ROLL", "PITCH", "YAW"];
+  const AXIS_FIELD_IDS = {
+    ROLL: "profiles.pidGains.roll",
+    PITCH: "profiles.pidGains.pitch",
+    YAW: "profiles.pidGains.yaw",
+  };
   const GAINS = [
     {
       key: "P",
       label: "profilesProportional",
       help: "profilesProportionalHelp",
+      fieldId: "profiles.pidGains.p",
     },
-    { key: "I", label: "profilesIntegral", help: "profilesIntegralHelp" },
-    { key: "D", label: "profilesDerivative", help: "profilesDerivativeHelp" },
-    { key: "F", label: "profilesFeedforward", help: "profilesFeedforwardHelp" },
-    { key: "B", label: "profilesBoost", help: "profilesBoostHelp" },
+    {
+      key: "I",
+      label: "profilesIntegral",
+      help: "profilesIntegralHelp",
+      fieldId: "profiles.pidGains.i",
+    },
+    {
+      key: "D",
+      label: "profilesDerivative",
+      help: "profilesDerivativeHelp",
+      fieldId: "profiles.pidGains.d",
+    },
+    {
+      key: "F",
+      label: "profilesFeedforward",
+      help: "profilesFeedforwardHelp",
+      fieldId: "profiles.pidGains.f",
+    },
+    {
+      key: "B",
+      label: "profilesBoost",
+      help: "profilesBoostHelp",
+      fieldId: "profiles.pidGains.b",
+    },
   ];
 
   function pidAdjustmentState(axisIndex, gainIndex) {
@@ -60,23 +89,29 @@
         <tr>
           <th></th>
           {#each GAINS as gain (gain.key)}
-            <th>
-              <span class="header-label">
-                {$i18n.t(gain.label)}
-                <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
-              </span>
-            </th>
+            <Tier id={gain.fieldId}>
+              <th>
+                <span class="header-label">
+                  {$i18n.t(gain.label)}
+                  <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+                </span>
+              </th>
+            </Tier>
           {/each}
         </tr>
       </thead>
       <tbody>
         {#each AXES as axis, axisIndex (axis)}
-          <tr>
-            <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
-            {#each GAINS as gain, gainIndex (gain.key)}
-              <td>{@render valueCell(axisIndex, gainIndex)}</td>
-            {/each}
-          </tr>
+          <Tier id={AXIS_FIELD_IDS[axis]}>
+            <tr>
+              <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
+              {#each GAINS as gain, gainIndex (gain.key)}
+                <Tier id={gain.fieldId}>
+                  <td>{@render valueCell(axisIndex, gainIndex)}</td>
+                </Tier>
+              {/each}
+            </tr>
+          </Tier>
         {/each}
       </tbody>
     </table>
@@ -91,23 +126,29 @@
         <tr>
           <th></th>
           {#each AXES as axis (axis)}
-            <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+            <Tier id={AXIS_FIELD_IDS[axis]}>
+              <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+            </Tier>
           {/each}
         </tr>
       </thead>
       <tbody>
         {#each GAINS as gain, gainIndex (gain.key)}
-          <tr>
-            <td class="term-label">
-              <span class="header-label">
-                <span class="term-key">{gain.key}</span>
-                <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
-              </span>
-            </td>
-            {#each AXES as axis, axisIndex (axis)}
-              <td>{@render valueCell(axisIndex, gainIndex)}</td>
-            {/each}
-          </tr>
+          <Tier id={gain.fieldId}>
+            <tr>
+              <td class="term-label">
+                <span class="header-label">
+                  <span class="term-key">{gain.key}</span>
+                  <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+                </span>
+              </td>
+              {#each AXES as axis, axisIndex (axis)}
+                <Tier id={AXIS_FIELD_IDS[axis]}>
+                  <td>{@render valueCell(axisIndex, gainIndex)}</td>
+                </Tier>
+              {/each}
+            </tr>
+          </Tier>
         {/each}
       </tbody>
     </table>

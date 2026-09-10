@@ -10,6 +10,7 @@
 
   import Page from "@/components/Page.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   // Mirrors fbusSensorGetSourceName() in drivers/fbus_sensor.c
   const SOURCE_NAMES = ["FBUS", "S.Port"];
@@ -217,12 +218,15 @@
                     ? $i18n.t("fbusSensorsForwardingUnavailable")
                     : undefined}
                 >
-                  <Switch
-                    checked={sensor.forwarded}
-                    disabled={!canForward ||
-                      (togglingKey !== null && togglingKey !== rowKey(sensor))}
-                    onchange={() => toggleForwarding(sensor)}
-                  />
+                  <Tier id="fbus_sensors.sensors.forwarded">
+                    <Switch
+                      checked={sensor.forwarded}
+                      disabled={!canForward ||
+                        (togglingKey !== null &&
+                          togglingKey !== rowKey(sensor))}
+                      onchange={() => toggleForwarding(sensor)}
+                    />
+                  </Tier>
                 </td>
               </tr>
             {/each}

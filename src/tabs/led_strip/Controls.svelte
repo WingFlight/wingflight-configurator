@@ -4,6 +4,7 @@
 
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import { BASE_FUNCS, FUNCTION_COLORS, FUNCTION_LABELS } from "./constants.js";
   import {
@@ -100,140 +101,150 @@
 
 <div class="section">{$i18n.t("ledStripFunctionSection")}</div>
 
-<div class="field">
-  <span
-    class="label swatch"
-    class:tinted={!!FUNCTION_COLORS[func]}
-    style:background={FUNCTION_COLORS[func]}
-  >
-    {$i18n.t("ledStripFunctionTitle")}
-  </span>
-  <Select
-    value={func}
-    options={functionOptions}
-    onchange={(e) => applyFunction(e.target.value)}
-  />
-</div>
+<Tier id="led_strip.function.function">
+  <div class="field">
+    <span
+      class="label swatch"
+      class:tinted={!!FUNCTION_COLORS[func]}
+      style:background={FUNCTION_COLORS[func]}
+    >
+      {$i18n.t("ledStripFunctionTitle")}
+    </span>
+    <Select
+      value={func}
+      options={functionOptions}
+      onchange={(e) => applyFunction(e.target.value)}
+    />
+  </div>
+</Tier>
 
 {#if showModifiers}
-  <div class="modifiers">
-    <span class="section-label">{$i18n.t("ledStripColorModifierTitle")}</span>
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.t}
-        onchange={(e) => setOverlay("t", e.target.checked)}
-      />
-      <Select
-        value={auxChannel}
-        options={AUX_CHANNEL_OPTIONS.map((label, value) => ({
-          value,
-          label: $i18n.t(label),
-        }))}
-        onchange={(e) => setAuxChannel(e.target.value)}
-      />
-    </label>
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.o}
-        onchange={(e) => setOverlay("o", e.target.checked)}
-      />
-      <span>{$i18n.t("ledStripVtxFunction")}</span>
-    </label>
-  </div>
+  <Tier id="led_strip.function.colorModifier">
+    <div class="modifiers">
+      <span class="section-label">{$i18n.t("ledStripColorModifierTitle")}</span>
+      <label class="checkbox">
+        <Switch
+          checked={ledState.panel.overlays.t}
+          onchange={(e) => setOverlay("t", e.target.checked)}
+        />
+        <Select
+          value={auxChannel}
+          options={AUX_CHANNEL_OPTIONS.map((label, value) => ({
+            value,
+            label: $i18n.t(label),
+          }))}
+          onchange={(e) => setAuxChannel(e.target.value)}
+        />
+      </label>
+      <label class="checkbox">
+        <Switch
+          checked={ledState.panel.overlays.o}
+          onchange={(e) => setOverlay("o", e.target.checked)}
+        />
+        <span>{$i18n.t("ledStripVtxFunction")}</span>
+      </label>
+    </div>
+  </Tier>
 {/if}
 
 {#if showBlinkers}
-  <div class="blinkers">
-    <span class="section-label">{$i18n.t("ledStripBlinkTitle")}</span>
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.b}
-        onchange={(e) => setOverlay("b", e.target.checked)}
-      />
-      {#if ledState.panel.overlays.b}
-        <span class="blinkbits">
-          {#each { length: 16 } as _, i (i)}
-            {@const bit = 15 - i}
+  <Tier id="led_strip.function.blink">
+    <div class="blinkers">
+      <span class="section-label">{$i18n.t("ledStripBlinkTitle")}</span>
+      <label class="checkbox">
+        <Switch
+          checked={ledState.panel.overlays.b}
+          onchange={(e) => setOverlay("b", e.target.checked)}
+        />
+        {#if ledState.panel.overlays.b}
+          <span class="blinkbits">
+            {#each { length: 16 } as _, i (i)}
+              {@const bit = 15 - i}
+              <input
+                type="checkbox"
+                checked={!!(ledState.panel.blinkPattern & (1 << bit))}
+                onchange={(e) => setBlinkBit(bit, e.target.checked)}
+              />
+            {/each}
+          </span>
+          <label class="pause">
+            <span>{$i18n.t("ledStripBlinkPause")}</span>
             <input
-              type="checkbox"
-              checked={!!(ledState.panel.blinkPattern & (1 << bit))}
-              onchange={(e) => setBlinkBit(bit, e.target.checked)}
+              type="number"
+              min="0"
+              max="15"
+              step="1"
+              value={ledState.panel.blinkPause}
+              onchange={(e) => setBlinkPause(Number(e.target.value))}
             />
-          {/each}
-        </span>
-        <label class="pause">
-          <span>{$i18n.t("ledStripBlinkPause")}</span>
-          <input
-            type="number"
-            min="0"
-            max="15"
-            step="1"
-            value={ledState.panel.blinkPause}
-            onchange={(e) => setBlinkPause(Number(e.target.value))}
-          />
-        </label>
-      {/if}
-    </label>
-  </div>
+          </label>
+        {/if}
+      </label>
+    </div>
+  </Tier>
 {/if}
 
 {#if showOverlays}
-  <div class="overlays">
-    <span class="section-label">{$i18n.t("ledStripOverlayTitle")}</span>
-    {#if showWarning}
+  <Tier id="led_strip.function.overlays">
+    <div class="overlays">
+      <span class="section-label">{$i18n.t("ledStripOverlayTitle")}</span>
+      {#if showWarning}
+        <label class="checkbox">
+          <Switch
+            checked={ledState.panel.overlays.w}
+            onchange={(e) => setOverlay("w", e.target.checked)}
+          />
+          <span>{$i18n.t("ledStripWarningsOverlay")}</span>
+        </label>
+      {/if}
       <label class="checkbox">
         <Switch
-          checked={ledState.panel.overlays.w}
-          onchange={(e) => setOverlay("w", e.target.checked)}
+          checked={ledState.panel.overlays.i}
+          onchange={(e) => setOverlay("i", e.target.checked)}
         />
-        <span>{$i18n.t("ledStripWarningsOverlay")}</span>
+        <span>{$i18n.t("ledStripIndecatorOverlay")}</span>
       </label>
-    {/if}
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.i}
-        onchange={(e) => setOverlay("i", e.target.checked)}
-      />
-      <span>{$i18n.t("ledStripIndecatorOverlay")}</span>
-    </label>
-    {#if showVtx}
+      {#if showVtx}
+        <label class="checkbox">
+          <Switch
+            checked={ledState.panel.overlays.v}
+            onchange={(e) => setOverlay("v", e.target.checked)}
+          />
+          <span>{$i18n.t("ledStripVtxOverlay")}</span>
+        </label>
+      {/if}
       <label class="checkbox">
         <Switch
-          checked={ledState.panel.overlays.v}
-          onchange={(e) => setOverlay("v", e.target.checked)}
+          checked={ledState.panel.overlays.d}
+          onchange={(e) => setOverlay("d", e.target.checked)}
         />
-        <span>{$i18n.t("ledStripVtxOverlay")}</span>
+        <span>{$i18n.t("ledStripFadeOverlay")}</span>
       </label>
-    {/if}
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.d}
-        onchange={(e) => setOverlay("d", e.target.checked)}
-      />
-      <span>{$i18n.t("ledStripFadeOverlay")}</span>
-    </label>
-    <label class="checkbox">
-      <Switch
-        checked={ledState.panel.overlays.k}
-        onchange={(e) => setOverlay("k", e.target.checked)}
-      />
-      <span>{$i18n.t("ledStripFlickerOverlay")}</span>
-    </label>
-  </div>
+      <label class="checkbox">
+        <Switch
+          checked={ledState.panel.overlays.k}
+          onchange={(e) => setOverlay("k", e.target.checked)}
+        />
+        <span>{$i18n.t("ledStripFlickerOverlay")}</span>
+      </label>
+    </div>
+  </Tier>
 {/if}
 
-<div class="section">{$i18n.t("ledStripModesColorTitle")}</div>
-<div class="directions">
-  {#each DIRECTION_BUTTONS as { letter, label } (letter)}
-    <button
-      class="dir-btn dir-{letter}"
-      class:active={ledState.panel.directions[letter]}
-      onclick={() => toggleDirection(letter)}
-    >
-      {$i18n.t(label)}
-    </button>
-  {/each}
-</div>
+<Tier id="led_strip.function.directions">
+  <div class="section">{$i18n.t("ledStripModesColorTitle")}</div>
+  <div class="directions">
+    {#each DIRECTION_BUTTONS as { letter, label } (letter)}
+      <button
+        class="dir-btn dir-{letter}"
+        class:active={ledState.panel.directions[letter]}
+        onclick={() => toggleDirection(letter)}
+      >
+        {$i18n.t(label)}
+      </button>
+    {/each}
+  </div>
+</Tier>
 
 <style lang="scss">
   .btn {

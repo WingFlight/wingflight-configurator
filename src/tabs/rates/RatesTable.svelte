@@ -4,6 +4,7 @@
 
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   let { maxAngularRoll, maxAngularPitch, maxAngularYaw } = $props();
 
@@ -20,10 +21,26 @@
   const EXPO_MAX = 100;
   const EXPO_STEP = 1;
 
+  // fieldId: disclosure registry id (see fields.js) for the axis row.
   const AXES = [
-    { key: "roll", label: "axisROLL", maxAngular: () => maxAngularRoll },
-    { key: "pitch", label: "axisPITCH", maxAngular: () => maxAngularPitch },
-    { key: "yaw", label: "axisYAW", maxAngular: () => maxAngularYaw },
+    {
+      key: "roll",
+      label: "axisROLL",
+      maxAngular: () => maxAngularRoll,
+      fieldId: "rates.rates.roll",
+    },
+    {
+      key: "pitch",
+      label: "axisPITCH",
+      maxAngular: () => maxAngularPitch,
+      fieldId: "rates.rates.pitch",
+    },
+    {
+      key: "yaw",
+      label: "axisYAW",
+      maxAngular: () => maxAngularYaw,
+      fieldId: "rates.rates.yaw",
+    },
   ];
 </script>
 
@@ -32,51 +49,65 @@
     <thead>
       <tr>
         <th></th>
-        <th>{$i18n.t("rateSetupRotorflightRate")}</th>
-        <th>{$i18n.t("rateSetupRotorflightShape")}</th>
-        <th>{$i18n.t("rateSetupRotorflightExpo")}</th>
+        <Tier id="rates.rates.rate">
+          <th>{$i18n.t("rateSetupRotorflightRate")}</th>
+        </Tier>
+        <Tier id="rates.rates.shape">
+          <th>{$i18n.t("rateSetupRotorflightShape")}</th>
+        </Tier>
+        <Tier id="rates.rates.expo">
+          <th>{$i18n.t("rateSetupRotorflightExpo")}</th>
+        </Tier>
         <th>{$i18n.t("rateSetupMaxVel")}</th>
       </tr>
     </thead>
     <tbody>
       {#each AXES as axis (axis.key)}
-        <tr>
-          <td class="axis {axis.key}">{$i18n.t(axis.label)}</td>
-          <td>
-            <NumberInput
-              min={RC_RATE_MIN}
-              max={RC_RATE_MAX}
-              step={RC_RATE_STEP}
-              bind:value={
-                () => FC.RC_TUNING[`${axis.key}_rc_rate`] * 500,
-                (v) => (FC.RC_TUNING[`${axis.key}_rc_rate`] = v / 500)
-              }
-            />
-          </td>
-          <td>
-            <NumberInput
-              min={SHAPE_MIN}
-              max={SHAPE_MAX}
-              step={SHAPE_STEP}
-              bind:value={
-                () => FC.RC_TUNING[`${axis.key}_srate`] * 100,
-                (v) => (FC.RC_TUNING[`${axis.key}_srate`] = v / 100)
-              }
-            />
-          </td>
-          <td>
-            <NumberInput
-              min={EXPO_MIN}
-              max={EXPO_MAX}
-              step={EXPO_STEP}
-              bind:value={
-                () => FC.RC_TUNING[`${axis.key}_rc_expo`] * 100,
-                (v) => (FC.RC_TUNING[`${axis.key}_rc_expo`] = v / 100)
-              }
-            />
-          </td>
-          <td class="max-vel">{axis.maxAngular().toFixed(0)}</td>
-        </tr>
+        <Tier id={axis.fieldId}>
+          <tr>
+            <td class="axis {axis.key}">{$i18n.t(axis.label)}</td>
+            <Tier id="rates.rates.rate">
+              <td>
+                <NumberInput
+                  min={RC_RATE_MIN}
+                  max={RC_RATE_MAX}
+                  step={RC_RATE_STEP}
+                  bind:value={
+                    () => FC.RC_TUNING[`${axis.key}_rc_rate`] * 500,
+                    (v) => (FC.RC_TUNING[`${axis.key}_rc_rate`] = v / 500)
+                  }
+                />
+              </td>
+            </Tier>
+            <Tier id="rates.rates.shape">
+              <td>
+                <NumberInput
+                  min={SHAPE_MIN}
+                  max={SHAPE_MAX}
+                  step={SHAPE_STEP}
+                  bind:value={
+                    () => FC.RC_TUNING[`${axis.key}_srate`] * 100,
+                    (v) => (FC.RC_TUNING[`${axis.key}_srate`] = v / 100)
+                  }
+                />
+              </td>
+            </Tier>
+            <Tier id="rates.rates.expo">
+              <td>
+                <NumberInput
+                  min={EXPO_MIN}
+                  max={EXPO_MAX}
+                  step={EXPO_STEP}
+                  bind:value={
+                    () => FC.RC_TUNING[`${axis.key}_rc_expo`] * 100,
+                    (v) => (FC.RC_TUNING[`${axis.key}_rc_expo`] = v / 100)
+                  }
+                />
+              </td>
+            </Tier>
+            <td class="max-vel">{axis.maxAngular().toFixed(0)}</td>
+          </tr>
+        </Tier>
       {/each}
     </tbody>
   </table>

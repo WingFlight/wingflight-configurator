@@ -10,6 +10,7 @@
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import BeeperList from "./BeeperList.svelte";
 
@@ -97,31 +98,37 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <div class="content">
-    <Section label="configurationBeeper" summary="configurationBeeperHelp">
-      <BeeperList
-        idPrefix="beeper"
-        beepers={FC.BEEPER_CONFIG.beepers}
-        bind:mask={beeperMask}
-      />
-    </Section>
-
-    <Section
-      label="configurationDshotBeeper"
-      summary="configurationDshotBeaconHelp"
-    >
-      <Field id="dshot-beacon-tone" label="configurationDshotBeaconTone">
-        <Select
-          id="dshot-beacon-tone"
-          bind:value={dshotBeaconTone}
-          options={toneOptions}
+    <Tier id="beepers.beeper.conditions">
+      <Section label="configurationBeeper" summary="configurationBeeperHelp">
+        <BeeperList
+          idPrefix="beeper"
+          beepers={FC.BEEPER_CONFIG.beepers}
+          bind:mask={beeperMask}
         />
-      </Field>
-      <BeeperList
-        idPrefix="dshot-beacon"
-        beepers={FC.BEEPER_CONFIG.dshotBeaconConditions}
-        bind:mask={dshotMask}
-      />
-    </Section>
+      </Section>
+    </Tier>
+
+    <Tier id="beepers.dshotBeacon.conditions">
+      <Section
+        label="configurationDshotBeeper"
+        summary="configurationDshotBeaconHelp"
+      >
+        <Tier id="beepers.dshotBeacon.tone">
+          <Field id="dshot-beacon-tone" label="configurationDshotBeaconTone">
+            <Select
+              id="dshot-beacon-tone"
+              bind:value={dshotBeaconTone}
+              options={toneOptions}
+            />
+          </Field>
+        </Tier>
+        <BeeperList
+          idPrefix="dshot-beacon"
+          beepers={FC.BEEPER_CONFIG.dshotBeaconConditions}
+          bind:mask={dshotMask}
+        />
+      </Section>
+    </Tier>
   </div>
 </Page>
 

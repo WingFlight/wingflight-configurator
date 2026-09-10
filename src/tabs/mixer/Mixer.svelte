@@ -12,6 +12,7 @@
   import AirframeCanvas from "@/components/AirframeCanvas.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import { getProfile } from "@/js/profile.svelte.js";
 
   import RuleTable from "./RuleTable.svelte";
@@ -152,19 +153,27 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  <ModelTypePicker />
+  <Tier id="mixer.model.type">
+    <ModelTypePicker />
+  </Tier>
 
-  <Section label="mixerAirframeCanvas" summary="mixerAirframeCanvasHelp">
-    <div class="canvas">
-      <AirframeCanvas profile={getProfile()} live={true} />
-    </div>
-  </Section>
+  <Tier id="mixer.airframe.canvas">
+    <Section label="mixerAirframeCanvas" summary="mixerAirframeCanvasHelp">
+      <div class="canvas">
+        <AirframeCanvas profile={getProfile()} live={true} />
+      </div>
+    </Section>
+  </Tier>
 
   <Section label="mixerRulesTitle">
     {#if isCustom}
-      <RuleTable onOpenWizard={() => wizardRef.open()} />
+      <Tier id="mixer.rules.table">
+        <RuleTable onOpenWizard={() => wizardRef.open()} />
+      </Tier>
     {:else}
-      <SimplifiedMixerForm />
+      <Tier id="mixer.rules.summary">
+        <SimplifiedMixerForm />
+      </Tier>
     {/if}
   </Section>
 

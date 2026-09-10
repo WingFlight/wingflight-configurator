@@ -8,6 +8,7 @@
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   let { telemetry, resetTelemetry } = $props();
   let enabled = $derived(FC.FEATURE_CONFIG.features.TELEMETRY);
@@ -16,85 +17,99 @@
 
 <Section label="receiverTelemetrySettings">
   <SubSection>
-    <Field id="telemetry-enable" label="genericEnable">
-      <Switch
-        id="telemetry-enable"
-        bind:checked={FC.FEATURE_CONFIG.features.TELEMETRY}
-      />
-    </Field>
+    <Tier id="receiver.telemetry.enable">
+      <Field id="telemetry-enable" label="genericEnable">
+        <Switch
+          id="telemetry-enable"
+          bind:checked={FC.FEATURE_CONFIG.features.TELEMETRY}
+        />
+      </Field>
+    </Tier>
   </SubSection>
   {#if enabled && telemetry.external}
     <SubSection label="receiverTelemetrySettingsSectionSignaling">
-      <Field id="telemetry-inverted" label="receiverTelemetryInverted">
-        <Switch
-          id="telemetry-inverted"
-          bind:checked={FC.TELEMETRY_CONFIG.telemetry_inverted}
-        />
-      </Field>
-      <Field id="telemetry-halfduplex" label="receiverTelemetryHalfDuplex">
-        <Switch
-          id="telemetry-halfduplex"
-          bind:checked={FC.TELEMETRY_CONFIG.telemetry_halfduplex}
-        />
-      </Field>
-      <Field id="telemetry-pinswap" label="receiverTelemetryPinSwap">
-        <Switch
-          id="telemetry-pinswap"
-          bind:checked={FC.TELEMETRY_CONFIG.telemetry_pinswap}
-        />
-      </Field>
+      <Tier id="receiver.telemetry.inverted">
+        <Field id="telemetry-inverted" label="receiverTelemetryInverted">
+          <Switch
+            id="telemetry-inverted"
+            bind:checked={FC.TELEMETRY_CONFIG.telemetry_inverted}
+          />
+        </Field>
+      </Tier>
+      <Tier id="receiver.telemetry.halfDuplex">
+        <Field id="telemetry-halfduplex" label="receiverTelemetryHalfDuplex">
+          <Switch
+            id="telemetry-halfduplex"
+            bind:checked={FC.TELEMETRY_CONFIG.telemetry_halfduplex}
+          />
+        </Field>
+      </Tier>
+      <Tier id="receiver.telemetry.pinSwap">
+        <Field id="telemetry-pinswap" label="receiverTelemetryPinSwap">
+          <Switch
+            id="telemetry-pinswap"
+            bind:checked={FC.TELEMETRY_CONFIG.telemetry_pinswap}
+          />
+        </Field>
+      </Tier>
     </SubSection>
   {/if}
   {#if enabled && !telemetry.external && crsfSettings}
     <div transition:slide>
       <SubSection label="receiverTelemetrySettingsSectionCRSF">
-        <Field id="telmetry-crsf-custom" label="receiverCrsfTelemetryMode">
-          {#snippet tooltip()}
-            <Tooltip help="receiverHelpCrsfTelemetryMode" />
-          {/snippet}
-          <Switch
-            id="telmetry-crsf-custom"
-            bind:checked={
-              () => Boolean(FC.TELEMETRY_CONFIG.crsf_telemetry_mode),
-              (v) => {
-                const currentProto = telemetry;
-                FC.TELEMETRY_CONFIG.crsf_telemetry_mode = Number(v);
-                resetTelemetry(currentProto);
+        <Tier id="receiver.telemetry.crsfCustomMode">
+          <Field id="telmetry-crsf-custom" label="receiverCrsfTelemetryMode">
+            {#snippet tooltip()}
+              <Tooltip help="receiverHelpCrsfTelemetryMode" />
+            {/snippet}
+            <Switch
+              id="telmetry-crsf-custom"
+              bind:checked={
+                () => Boolean(FC.TELEMETRY_CONFIG.crsf_telemetry_mode),
+                (v) => {
+                  const currentProto = telemetry;
+                  FC.TELEMETRY_CONFIG.crsf_telemetry_mode = Number(v);
+                  resetTelemetry(currentProto);
+                }
               }
-            }
-          />
-        </Field>
-        <Field
-          id="telemetry-crsf-packet-rate"
-          label="receiverCrsfTelemetryRate"
-          unit="Hz"
-        >
-          {#snippet tooltip()}
-            <Tooltip help="receiverHelpCrsfTelemetryRate" />
-          {/snippet}
-          <NumberInput
+            />
+          </Field>
+        </Tier>
+        <Tier id="receiver.telemetry.crsfRate">
+          <Field
             id="telemetry-crsf-packet-rate"
-            min="0"
-            max="1000"
-            step="1"
-            bind:value={FC.TELEMETRY_CONFIG.crsf_telemetry_rate}
-          />
-        </Field>
-        <Field
-          id="telmetry-crsf-packet-ratio"
-          label="receiverCrsfTelemetryRatio"
-        >
-          {#snippet tooltip()}
-            <Tooltip help="receiverHelpCrsfTelemetryRatio" />
-          {/snippet}
-          <NumberInput
+            label="receiverCrsfTelemetryRate"
+            unit="Hz"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="receiverHelpCrsfTelemetryRate" />
+            {/snippet}
+            <NumberInput
+              id="telemetry-crsf-packet-rate"
+              min="0"
+              max="1000"
+              step="1"
+              bind:value={FC.TELEMETRY_CONFIG.crsf_telemetry_rate}
+            />
+          </Field>
+        </Tier>
+        <Tier id="receiver.telemetry.crsfRatio">
+          <Field
             id="telmetry-crsf-packet-ratio"
-            min="0"
-            max="1000"
-            step="1"
-            bind:value={FC.TELEMETRY_CONFIG.crsf_telemetry_ratio}
-          />
-        </Field>
+            label="receiverCrsfTelemetryRatio"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="receiverHelpCrsfTelemetryRatio" />
+            {/snippet}
+            <NumberInput
+              id="telmetry-crsf-packet-ratio"
+              min="0"
+              max="1000"
+              step="1"
+              bind:value={FC.TELEMETRY_CONFIG.crsf_telemetry_ratio}
+            />
+          </Field>
+        </Tier>
       </SubSection>
     </div>
   {/if}

@@ -15,6 +15,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   const METER_SOURCE_KEYS = ["None", "Adc", "Esc", "Fbus"];
   const SMARTFUEL_SOURCE_KEYS = ["None", "Voltage", "Current", "Combined"];
@@ -352,168 +353,198 @@
       </Section>
 
       <Section label="powerBatteryHead">
-        <Field
-          id="power-min-cell-voltage"
-          label="powerBatteryMinimumCellVoltage"
-        >
-          <NumberInput
+        <Tier id="power.battery.minCellVoltage">
+          <Field
             id="power-min-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatmincellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field id="power-full-cell-voltage" label="powerBatteryFullCellVoltage">
-          <NumberInput
-            id="power-full-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatfullcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field
-          id="power-warning-cell-voltage"
-          label="powerBatteryWarningCellVoltage"
-        >
-          <NumberInput
-            id="power-warning-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatwarningcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field
-          id="power-max-cell-voltage"
-          label="powerBatteryMaximumCellVoltage"
-        >
-          <NumberInput
-            id="power-max-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatmaxcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field id="power-cell-count" label="powerBatteryCellCount">
-          <NumberInput
-            id="power-cell-count"
-            bind:value={FC.BATTERY_CONFIG.cellCount}
-            min={0}
-            max={24}
-            step={1}
-          />
-        </Field>
-
-        <div class="profile-capacities">
-          {#each Array.from({ length: 6 }) as _, i (i)}
-            <div
-              class={[
-                "profile-capacity",
-                i === FC.BATTERY_STATE.batteryProfile && "active",
-              ]}
-            >
-              <button
-                type="button"
-                class="profile-activate"
-                onclick={() => activateBatteryProfile(i)}
-              >
-                {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
-              </button>
-              <div class="profile-capacity-input">
-                <NumberInput
-                  id={`power-capacity-${i}`}
-                  bind:value={FC.BATTERY_CONFIG.capacities[i]}
-                  min={0}
-                  max={40000}
-                  step={10}
-                />
-                <span class="unit">mAh</span>
-              </div>
-            </div>
-          {/each}
-        </div>
-      </Section>
-
-      <Section label="powerSmartFuelHead" summary="powerSmartFuelSourceHelp">
-        <Field id="power-smartfuel-source" label="powerSmartFuelSource">
-          <Select
-            id="power-smartfuel-source"
-            bind:value={FC.SMARTFUEL_CONFIG.mode}
-            options={smartFuelSourceOptions}
-          />
-        </Field>
-        {#if smartFuelTuningEnabled}
-          <Field
-            id="power-smartfuel-vdrop"
-            label="powerSmartFuelVoltageDropRate"
-            unit="mV/s"
+            label="powerBatteryMinimumCellVoltage"
           >
-            {#snippet tooltip()}
-              <Tooltip help="powerSmartFuelVoltageDropRateHelp" />
-            {/snippet}
             <NumberInput
-              id="power-smartfuel-vdrop"
-              bind:value={FC.SMARTFUEL_CONFIG.voltageDropRate}
-              min={0}
-              max={250}
-              step={1}
-            />
-          </Field>
-          <Field
-            id="power-smartfuel-cdrop"
-            label="powerSmartFuelChargeDropRate"
-            unit="%/s"
-          >
-            {#snippet tooltip()}
-              <Tooltip help="powerSmartFuelChargeDropRateHelp" />
-            {/snippet}
-            <NumberInput
-              id="power-smartfuel-cdrop"
-              bind:value={getChargeDropRate, setChargeDropRate}
-              min={0}
-              max={2.5}
+              id="power-min-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatmincellvoltage}
+              min={1}
+              max={5}
               step={0.01}
             />
           </Field>
+        </Tier>
+        <Tier id="power.battery.fullCellVoltage">
           <Field
-            id="power-smartfuel-sag"
-            label="powerSmartFuelSagGain"
-            unit="%"
+            id="power-full-cell-voltage"
+            label="powerBatteryFullCellVoltage"
           >
-            {#snippet tooltip()}
-              <Tooltip help="powerSmartFuelSagGainHelp" />
-            {/snippet}
             <NumberInput
-              id="power-smartfuel-sag"
-              bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+              id="power-full-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatfullcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+        </Tier>
+        <Tier id="power.battery.warningCellVoltage">
+          <Field
+            id="power-warning-cell-voltage"
+            label="powerBatteryWarningCellVoltage"
+          >
+            <NumberInput
+              id="power-warning-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatwarningcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+        </Tier>
+        <Tier id="power.battery.maxCellVoltage">
+          <Field
+            id="power-max-cell-voltage"
+            label="powerBatteryMaximumCellVoltage"
+          >
+            <NumberInput
+              id="power-max-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatmaxcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+        </Tier>
+        <Tier id="power.battery.cellCount">
+          <Field id="power-cell-count" label="powerBatteryCellCount">
+            <NumberInput
+              id="power-cell-count"
+              bind:value={FC.BATTERY_CONFIG.cellCount}
               min={0}
-              max={100}
+              max={24}
               step={1}
             />
           </Field>
+        </Tier>
+
+        <Tier id="power.battery.capacities">
+          <div class="profile-capacities">
+            {#each Array.from({ length: 6 }) as _, i (i)}
+              <div
+                class={[
+                  "profile-capacity",
+                  i === FC.BATTERY_STATE.batteryProfile && "active",
+                ]}
+              >
+                <button
+                  type="button"
+                  class="profile-activate"
+                  onclick={() => activateBatteryProfile(i)}
+                >
+                  {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
+                </button>
+                <div class="profile-capacity-input">
+                  <NumberInput
+                    id={`power-capacity-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.capacities[i]}
+                    min={0}
+                    max={40000}
+                    step={10}
+                  />
+                  <span class="unit">mAh</span>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </Tier>
+      </Section>
+
+      <Section label="powerSmartFuelHead" summary="powerSmartFuelSourceHelp">
+        <Tier id="power.smartFuel.mode">
+          <Field id="power-smartfuel-source" label="powerSmartFuelSource">
+            <Select
+              id="power-smartfuel-source"
+              bind:value={FC.SMARTFUEL_CONFIG.mode}
+              options={smartFuelSourceOptions}
+            />
+          </Field>
+        </Tier>
+        {#if smartFuelTuningEnabled}
+          <Tier id="power.smartFuel.voltageDropRate">
+            <Field
+              id="power-smartfuel-vdrop"
+              label="powerSmartFuelVoltageDropRate"
+              unit="mV/s"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="powerSmartFuelVoltageDropRateHelp" />
+              {/snippet}
+              <NumberInput
+                id="power-smartfuel-vdrop"
+                bind:value={FC.SMARTFUEL_CONFIG.voltageDropRate}
+                min={0}
+                max={250}
+                step={1}
+              />
+            </Field>
+          </Tier>
+          <Tier id="power.smartFuel.chargeDropRate">
+            <Field
+              id="power-smartfuel-cdrop"
+              label="powerSmartFuelChargeDropRate"
+              unit="%/s"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="powerSmartFuelChargeDropRateHelp" />
+              {/snippet}
+              <NumberInput
+                id="power-smartfuel-cdrop"
+                bind:value={getChargeDropRate, setChargeDropRate}
+                min={0}
+                max={2.5}
+                step={0.01}
+              />
+            </Field>
+          </Tier>
+          <Tier id="power.smartFuel.sagGain">
+            <Field
+              id="power-smartfuel-sag"
+              label="powerSmartFuelSagGain"
+              unit="%"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="powerSmartFuelSagGainHelp" />
+              {/snippet}
+              <NumberInput
+                id="power-smartfuel-sag"
+                bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </Field>
+          </Tier>
         {/if}
       </Section>
     </div>
 
     <div class="column">
       <Section label="powerMetersHead">
-        <Field id="power-vbat-source" label="powerBatteryVoltageMeterSource">
-          <Select
-            id="power-vbat-source"
-            bind:value={FC.BATTERY_CONFIG.voltageMeterSource}
-            options={voltageMeterTypeOptions}
-          />
-        </Field>
-        <Field id="power-current-source" label="powerBatteryCurrentMeterSource">
-          <Select
+        <Tier id="power.meters.voltageSource">
+          <Field id="power-vbat-source" label="powerBatteryVoltageMeterSource">
+            <Select
+              id="power-vbat-source"
+              bind:value={FC.BATTERY_CONFIG.voltageMeterSource}
+              options={voltageMeterTypeOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="power.meters.currentSource">
+          <Field
             id="power-current-source"
-            bind:value={FC.BATTERY_CONFIG.currentMeterSource}
-            options={currentMeterTypeOptions}
-          />
-        </Field>
+            label="powerBatteryCurrentMeterSource"
+          >
+            <Select
+              id="power-current-source"
+              bind:value={FC.BATTERY_CONFIG.currentMeterSource}
+              options={currentMeterTypeOptions}
+            />
+          </Field>
+        </Tier>
       </Section>
 
       {#if FC.VOLTAGE_METERS.length > 0}
@@ -530,32 +561,36 @@
                 >
               </div>
               {#if config?.sensorType === 1}
-                <Field
-                  id={`power-vscale-${meter.id}`}
-                  label="powerVoltageScale"
-                >
-                  <NumberInput
+                <Tier id="power.voltage.scale">
+                  <Field
                     id={`power-vscale-${meter.id}`}
-                    bind:value={config.vbatscale}
-                    min={0}
-                    max={65535}
-                    step={1}
-                    onchange={() => sendVoltageMeterConfig(meter.id)}
-                  />
-                </Field>
-                <Field
-                  id={`power-vdiv-${meter.id}`}
-                  label="powerVoltageDivider"
-                >
-                  <NumberInput
+                    label="powerVoltageScale"
+                  >
+                    <NumberInput
+                      id={`power-vscale-${meter.id}`}
+                      bind:value={config.vbatscale}
+                      min={0}
+                      max={65535}
+                      step={1}
+                      onchange={() => sendVoltageMeterConfig(meter.id)}
+                    />
+                  </Field>
+                </Tier>
+                <Tier id="power.voltage.divider">
+                  <Field
                     id={`power-vdiv-${meter.id}`}
-                    bind:value={config.vbatresdivval}
-                    min={1}
-                    max={65535}
-                    step={1}
-                    onchange={() => sendVoltageMeterConfig(meter.id)}
-                  />
-                </Field>
+                    label="powerVoltageDivider"
+                  >
+                    <NumberInput
+                      id={`power-vdiv-${meter.id}`}
+                      bind:value={config.vbatresdivval}
+                      min={1}
+                      max={65535}
+                      step={1}
+                      onchange={() => sendVoltageMeterConfig(meter.id)}
+                    />
+                  </Field>
+                </Tier>
               {/if}
             </div>
           {/each}
@@ -576,32 +611,36 @@
                 >
               </div>
               {#if config?.sensorType === 1}
-                <Field
-                  id={`power-ascale-${meter.id}`}
-                  label="powerAmperageScale"
-                >
-                  <NumberInput
+                <Tier id="power.current.scale">
+                  <Field
                     id={`power-ascale-${meter.id}`}
-                    bind:value={config.scale}
-                    min={-16000}
-                    max={16000}
-                    step={1}
-                    onchange={() => sendCurrentMeterConfig(meter.id)}
-                  />
-                </Field>
-                <Field
-                  id={`power-aoffset-${meter.id}`}
-                  label="powerAmperageOffset"
-                >
-                  <NumberInput
+                    label="powerAmperageScale"
+                  >
+                    <NumberInput
+                      id={`power-ascale-${meter.id}`}
+                      bind:value={config.scale}
+                      min={-16000}
+                      max={16000}
+                      step={1}
+                      onchange={() => sendCurrentMeterConfig(meter.id)}
+                    />
+                  </Field>
+                </Tier>
+                <Tier id="power.current.offset">
+                  <Field
                     id={`power-aoffset-${meter.id}`}
-                    bind:value={config.offset}
-                    min={-32000}
-                    max={32000}
-                    step={1}
-                    onchange={() => sendCurrentMeterConfig(meter.id)}
-                  />
-                </Field>
+                    label="powerAmperageOffset"
+                  >
+                    <NumberInput
+                      id={`power-aoffset-${meter.id}`}
+                      bind:value={config.offset}
+                      min={-32000}
+                      max={32000}
+                      step={1}
+                      onchange={() => sendCurrentMeterConfig(meter.id)}
+                    />
+                  </Field>
+                </Tier>
               {/if}
             </div>
           {/each}

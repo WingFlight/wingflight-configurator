@@ -20,6 +20,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
   import BoardAlignment from "./BoardAlignment.svelte";
@@ -52,6 +53,13 @@
   );
 
   const otherFeatures = Features.GROUPS.OTHER;
+
+  // Disclosure registry ids for the "other features" switches (see fields.js).
+  const featureFieldIds = {
+    GPS: "configuration.features.gps",
+    LED_STRIP: "configuration.features.ledStrip",
+    THRUST_VECTOR: "configuration.features.thrustVector",
+  };
 
   function snapshotState() {
     return $state.snapshot({
@@ -256,151 +264,176 @@
   <div class="grid">
     <div class="column">
       <Section label="configurationPersonalization">
-        <Field id="craft-name" label="craftName">
-          <input
-            id="craft-name"
-            type="text"
-            maxlength="32"
-            bind:value={FC.CONFIG.name}
-          />
-        </Field>
-        <Field
-          id="model-id"
-          label="configuration.personalisation.model_id.label"
-        >
-          <NumberInput
-            id="model-id"
-            bind:value={FC.PILOT_CONFIG.model_id}
-            min={0}
-            max={99}
-            step={1}
-          />
-        </Field>
-      </Section>
-
-      <Section label="configuration.flight_stats.heading">
-        <Field
-          id="enable-flight-stats"
-          label="configuration.flight_stats.enable.label"
-        >
-          <Switch
-            id="enable-flight-stats"
-            checked={flightStatsEnabled}
-            onchange={(e) => onFlightStatsEnabledChange(e.target.checked)}
-          />
-        </Field>
-        {#if flightStatsEnabled}
+        <Tier id="configuration.personalisation.craftName">
+          <Field id="craft-name" label="craftName">
+            <input
+              id="craft-name"
+              type="text"
+              maxlength="32"
+              bind:value={FC.CONFIG.name}
+            />
+          </Field>
+        </Tier>
+        <Tier id="configuration.personalisation.modelId">
           <Field
-            id="min-armed-time"
-            label="configuration.flight_stats.min_armed_time.label"
-            unit="s"
+            id="model-id"
+            label="configuration.personalisation.model_id.label"
           >
-            {#snippet tooltip()}
-              <Tooltip help="configuration.flight_stats.min_armed_time.help" />
-            {/snippet}
             <NumberInput
-              id="min-armed-time"
-              bind:value={FC.FLIGHT_STATS.stats_min_armed_time_s}
+              id="model-id"
+              bind:value={FC.PILOT_CONFIG.model_id}
               min={0}
               max={99}
               step={1}
             />
           </Field>
-          <div class="flight-stats-display">
-            <table>
-              <tbody>
-                <tr>
-                  <th
-                    >{$i18n.t(
-                      "configuration.flight_stats.flight_count.label",
-                    )}</th
-                  >
-                  <td>{FC.FLIGHT_STATS.stats_total_flights}</td>
-                </tr>
-                <tr>
-                  <th
-                    >{$i18n.t(
-                      "configuration.flight_stats.flight_time.label",
-                    )}</th
-                  >
-                  <td>{flightStats.getDuration()}</td>
-                </tr>
-                <tr>
-                  <th>{$i18n.t("configuration.flight_stats.distance.label")}</th
-                  >
-                  <td
-                    >{FC.FLIGHT_STATS.stats_total_dist_m.toLocaleString()} m</td
-                  >
-                </tr>
-              </tbody>
-            </table>
-            <div class="grow"></div>
-            <button class="btn" onclick={onResetFlightStats}>
-              {$i18n.t("configuration.flight_stats.reset.label")}
-            </button>
-          </div>
-        {/if}
+        </Tier>
       </Section>
 
+      <Tier id="configuration.flightStats.enable">
+        <Section label="configuration.flight_stats.heading">
+          <Field
+            id="enable-flight-stats"
+            label="configuration.flight_stats.enable.label"
+          >
+            <Switch
+              id="enable-flight-stats"
+              checked={flightStatsEnabled}
+              onchange={(e) => onFlightStatsEnabledChange(e.target.checked)}
+            />
+          </Field>
+          {#if flightStatsEnabled}
+            <Tier id="configuration.flightStats.minArmedTime">
+              <Field
+                id="min-armed-time"
+                label="configuration.flight_stats.min_armed_time.label"
+                unit="s"
+              >
+                {#snippet tooltip()}
+                  <Tooltip
+                    help="configuration.flight_stats.min_armed_time.help"
+                  />
+                {/snippet}
+                <NumberInput
+                  id="min-armed-time"
+                  bind:value={FC.FLIGHT_STATS.stats_min_armed_time_s}
+                  min={0}
+                  max={99}
+                  step={1}
+                />
+              </Field>
+            </Tier>
+            <div class="flight-stats-display">
+              <table>
+                <tbody>
+                  <tr>
+                    <th
+                      >{$i18n.t(
+                        "configuration.flight_stats.flight_count.label",
+                      )}</th
+                    >
+                    <td>{FC.FLIGHT_STATS.stats_total_flights}</td>
+                  </tr>
+                  <tr>
+                    <th
+                      >{$i18n.t(
+                        "configuration.flight_stats.flight_time.label",
+                      )}</th
+                    >
+                    <td>{flightStats.getDuration()}</td>
+                  </tr>
+                  <tr>
+                    <th
+                      >{$i18n.t(
+                        "configuration.flight_stats.distance.label",
+                      )}</th
+                    >
+                    <td
+                      >{FC.FLIGHT_STATS.stats_total_dist_m.toLocaleString()} m</td
+                    >
+                  </tr>
+                </tbody>
+              </table>
+              <div class="grow"></div>
+              <button class="btn" onclick={onResetFlightStats}>
+                {$i18n.t("configuration.flight_stats.reset.label")}
+              </button>
+            </div>
+          {/if}
+        </Section>
+      </Tier>
+
       <Section label="configurationSystem">
-        <Field id="gyro-frequency" label="configurationGyroSyncDenom">
-          <input id="gyro-frequency" type="text" readonly value={gyroLabel} />
-        </Field>
-        <Field id="pid-denom" label="configurationPidProcessDenom">
-          {#snippet tooltip()}
-            <Tooltip help="configurationPidProcessDenomHelp" />
-          {/snippet}
-          <Select
-            id="pid-denom"
-            bind:value={FC.ADVANCED_CONFIG.pid_process_denom}
-            options={pidOptions}
-          />
-        </Field>
-        <Field id="acc-hardware" label="configurationAccHardware">
-          {#snippet tooltip()}
-            <Tooltip help="configurationAccHardwareHelp" />
-          {/snippet}
-          <Switch
-            id="acc-hardware"
-            bind:checked={
-              () => FC.SENSOR_CONFIG.acc_hardware !== 1,
-              (v) => (FC.SENSOR_CONFIG.acc_hardware = v ? 0 : 1)
-            }
-          />
-        </Field>
-        <Field id="baro-hardware" label="configurationBaroHardware">
-          {#snippet tooltip()}
-            <Tooltip help="configurationBaroHardwareHelp" />
-          {/snippet}
-          <Switch
-            id="baro-hardware"
-            bind:checked={
-              () => FC.SENSOR_CONFIG.baro_hardware !== 1,
-              (v) => (FC.SENSOR_CONFIG.baro_hardware = v ? 0 : 1)
-            }
-          />
-        </Field>
-        <Field id="mag-hardware" label="configurationMagHardware">
-          {#snippet tooltip()}
-            <Tooltip help="configurationMagHardwareHelp" />
-          {/snippet}
-          <Switch
-            id="mag-hardware"
-            bind:checked={
-              () => FC.SENSOR_CONFIG.mag_hardware !== 1,
-              (v) => (FC.SENSOR_CONFIG.mag_hardware = v ? 0 : 1)
-            }
-          />
-        </Field>
-        <Field id="wiggle-ready" label="configurationWiggleReady">
-          {#snippet tooltip()}
-            <Tooltip help="configurationWiggleReadyHelp" />
-          {/snippet}
-          <Switch
-            id="wiggle-ready"
-            bind:checked={FC.ARMING_CONFIG.wiggle.READY}
-          />
-        </Field>
+        <Tier id="configuration.system.gyroFrequency">
+          <Field id="gyro-frequency" label="configurationGyroSyncDenom">
+            <input id="gyro-frequency" type="text" readonly value={gyroLabel} />
+          </Field>
+        </Tier>
+        <Tier id="configuration.system.pidDenom">
+          <Field id="pid-denom" label="configurationPidProcessDenom">
+            {#snippet tooltip()}
+              <Tooltip help="configurationPidProcessDenomHelp" />
+            {/snippet}
+            <Select
+              id="pid-denom"
+              bind:value={FC.ADVANCED_CONFIG.pid_process_denom}
+              options={pidOptions}
+            />
+          </Field>
+        </Tier>
+        <Tier id="configuration.system.accHardware">
+          <Field id="acc-hardware" label="configurationAccHardware">
+            {#snippet tooltip()}
+              <Tooltip help="configurationAccHardwareHelp" />
+            {/snippet}
+            <Switch
+              id="acc-hardware"
+              bind:checked={
+                () => FC.SENSOR_CONFIG.acc_hardware !== 1,
+                (v) => (FC.SENSOR_CONFIG.acc_hardware = v ? 0 : 1)
+              }
+            />
+          </Field>
+        </Tier>
+        <Tier id="configuration.system.baroHardware">
+          <Field id="baro-hardware" label="configurationBaroHardware">
+            {#snippet tooltip()}
+              <Tooltip help="configurationBaroHardwareHelp" />
+            {/snippet}
+            <Switch
+              id="baro-hardware"
+              bind:checked={
+                () => FC.SENSOR_CONFIG.baro_hardware !== 1,
+                (v) => (FC.SENSOR_CONFIG.baro_hardware = v ? 0 : 1)
+              }
+            />
+          </Field>
+        </Tier>
+        <Tier id="configuration.system.magHardware">
+          <Field id="mag-hardware" label="configurationMagHardware">
+            {#snippet tooltip()}
+              <Tooltip help="configurationMagHardwareHelp" />
+            {/snippet}
+            <Switch
+              id="mag-hardware"
+              bind:checked={
+                () => FC.SENSOR_CONFIG.mag_hardware !== 1,
+                (v) => (FC.SENSOR_CONFIG.mag_hardware = v ? 0 : 1)
+              }
+            />
+          </Field>
+        </Tier>
+        <Tier id="configuration.system.wiggleReady">
+          <Field id="wiggle-ready" label="configurationWiggleReady">
+            {#snippet tooltip()}
+              <Tooltip help="configurationWiggleReadyHelp" />
+            {/snippet}
+            <Switch
+              id="wiggle-ready"
+              bind:checked={FC.ARMING_CONFIG.wiggle.READY}
+            />
+          </Field>
+        </Tier>
       </Section>
 
       <Section>
@@ -416,26 +449,31 @@
         {/snippet}
         <div class="features">
           {#each otherFeatures as name (name)}
-            <div class="feature-row">
-              <Switch
-                id={`feature-${name}`}
-                checked={FC.FEATURE_CONFIG.features.isEnabled(name)}
-                onchange={(e) => {
-                  FC.FEATURE_CONFIG.features.setFeature(name, e.target.checked);
-                  onFeatureChange();
-                }}
-              />
-              <label for={`feature-${name}`} class="feature-info">
-                <span class="feature-name">{name}</span>
-                <span class="feature-desc">{$i18n.t(`feature_${name}`)}</span>
-              </label>
-              {#if $i18n.exists(`featureTip_${name}`)}
-                <HelpIcon>
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html $i18n.t(`featureTip_${name}`)}
-                </HelpIcon>
-              {/if}
-            </div>
+            <Tier id={featureFieldIds[name]}>
+              <div class="feature-row">
+                <Switch
+                  id={`feature-${name}`}
+                  checked={FC.FEATURE_CONFIG.features.isEnabled(name)}
+                  onchange={(e) => {
+                    FC.FEATURE_CONFIG.features.setFeature(
+                      name,
+                      e.target.checked,
+                    );
+                    onFeatureChange();
+                  }}
+                />
+                <label for={`feature-${name}`} class="feature-info">
+                  <span class="feature-name">{name}</span>
+                  <span class="feature-desc">{$i18n.t(`feature_${name}`)}</span>
+                </label>
+                {#if $i18n.exists(`featureTip_${name}`)}
+                  <HelpIcon>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html $i18n.t(`featureTip_${name}`)}
+                  </HelpIcon>
+                {/if}
+              </div>
+            </Tier>
           {/each}
         </div>
       </Section>
@@ -478,30 +516,34 @@
               <HelpIcon>{$i18n.t("configurationAccelTrimsHelp")}</HelpIcon>
             </div>
           {/snippet}
-          <Field id="acc-trim-roll" label="configurationAccelTrimRoll">
-            {#snippet tooltip()}
-              <Tooltip help="configurationAccelRollTrimHelp" />
-            {/snippet}
-            <NumberInput
-              id="acc-trim-roll"
-              bind:value={FC.CONFIG.accelerometerTrims[1]}
-              min={-300}
-              max={300}
-              step={1}
-            />
-          </Field>
-          <Field id="acc-trim-pitch" label="configurationAccelTrimPitch">
-            {#snippet tooltip()}
-              <Tooltip help="configurationAccelPitchTrimHelp" />
-            {/snippet}
-            <NumberInput
-              id="acc-trim-pitch"
-              bind:value={FC.CONFIG.accelerometerTrims[0]}
-              min={-300}
-              max={300}
-              step={1}
-            />
-          </Field>
+          <Tier id="configuration.accelTrims.roll">
+            <Field id="acc-trim-roll" label="configurationAccelTrimRoll">
+              {#snippet tooltip()}
+                <Tooltip help="configurationAccelRollTrimHelp" />
+              {/snippet}
+              <NumberInput
+                id="acc-trim-roll"
+                bind:value={FC.CONFIG.accelerometerTrims[1]}
+                min={-300}
+                max={300}
+                step={1}
+              />
+            </Field>
+          </Tier>
+          <Tier id="configuration.accelTrims.pitch">
+            <Field id="acc-trim-pitch" label="configurationAccelTrimPitch">
+              {#snippet tooltip()}
+                <Tooltip help="configurationAccelPitchTrimHelp" />
+              {/snippet}
+              <NumberInput
+                id="acc-trim-pitch"
+                bind:value={FC.CONFIG.accelerometerTrims[0]}
+                min={-300}
+                max={300}
+                step={1}
+              />
+            </Field>
+          </Tier>
         </Section>
       {/if}
 

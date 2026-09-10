@@ -2,6 +2,8 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { getProfile } from "@/js/profile.svelte.js";
+  import { visible } from "@/js/relevance.js";
   import {
     SERVO_TRIM_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
@@ -63,6 +65,22 @@
     );
   }
 
+  // Column disclosure. The column set follows the field registry (see
+  // fields.js) instead of a single expert switch: a column is shown when its
+  // tier is at or below the current disclosure level and its relevance
+  // predicate passes, or when settings search has just jumped to it.
+  function columnShown(id) {
+    return (
+      CONFIGURATOR.revealedFieldId === id ||
+      visible(id, getProfile(), CONFIGURATOR.disclosureLevel)
+    );
+  }
+  let showScaleNeg = $derived(columnShown("servos.pwm.scaleNeg"));
+  let showScalePos = $derived(columnShown("servos.pwm.scalePos"));
+  let showRate = $derived(columnShown("servos.pwm.rate"));
+  let showSpeed = $derived(columnShown("servos.pwm.speed"));
+  let showGeoCor = $derived(columnShown("servos.pwm.geoCorrection"));
+
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
   // table instance is homogeneous (all PWM or all bus), so hide the whole
   // column rather than leaving an empty cell in every row.
@@ -120,13 +138,13 @@
   let columnWidths = $derived.by(() => {
     const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
     if (hasTrimAdjustments) cols.push(TRIM_COL);
-    cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
-    if (CONFIGURATOR.expertMode) {
-      if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
-      cols.push(VALUE_COL); // Speed
-    }
+    cols.push(VALUE_COL, VALUE_COL); // Min, Max
+    if (showScaleNeg) cols.push(VALUE_COL); // Scale neg
+    if (showScalePos) cols.push(VALUE_COL); // Scale pos
+    if (showRate && !isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
+    if (showSpeed) cols.push(VALUE_COL); // Speed
     cols.push(CHECKBOX_COL); // Reverse
-    if (CONFIGURATOR.expertMode) cols.push(CHECKBOX_COL); // Geo cor
+    if (showGeoCor) cols.push(CHECKBOX_COL); // Geo cor
     return cols;
   });
 
@@ -135,7 +153,7 @@
   );
 
   // The narrowest this table's *current* column set (which varies with
-  // Expert Mode / bus vs PWM / whether a Trim column is showing) can get
+  // disclosure level / bus vs PWM / whether a Trim column is showing) can get
   // before it needs its own horizontal scrollbar -- compared against the
   // actually-measured available width below to decide whether to show the
   // grid at all, rather than guessing a single fixed viewport breakpoint
@@ -208,7 +226,7 @@
     <div class="servo-config desktop-table">
       <div class="header-row" style="grid-template-columns: {gridColumns}">
         <span>{$i18n.t("servoNumber")}</span>
-        <span class="header-label-flex">
+        <span class="header-label-flex" data-field-id="servos.pwm.center">
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
         </span>
@@ -218,43 +236,50 @@
             <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
           </span>
         {/if}
-        <span class="header-label-flex">
+        <span class="header-label-flex" data-field-id="servos.pwm.min">
           <span>{$i18n.t("servoMin")}</span>
           <HelpIcon>{$i18n.t("servoMinHelp")}</HelpIcon>
         </span>
-        <span class="header-label-flex">
+        <span class="header-label-flex" data-field-id="servos.pwm.max">
           <span>{$i18n.t("servoMax")}</span>
           <HelpIcon>{$i18n.t("servoMaxHelp")}</HelpIcon>
         </span>
-        <span class="header-label-flex">
-          <span>{$i18n.t("servoScaleNeg")}</span>
-          <HelpIcon>{$i18n.t("servoScaleNegHelp")}</HelpIcon>
-        </span>
-        <span class="header-label-flex">
-          <span>{$i18n.t("servoScalePos")}</span>
-          <HelpIcon>{$i18n.t("servoScalePosHelp")}</HelpIcon>
-        </span>
-        {#if CONFIGURATOR.expertMode}
-          {#if !isBusTable}
-            <span class="header-label-flex">
-              <span>{$i18n.t("servoRate")}</span>
-              <HelpIcon>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html $i18n.t("servoRateHelp")}
-              </HelpIcon>
-            </span>
-          {/if}
-          <span class="header-label-flex">
+        {#if showScaleNeg}
+          <span class="header-label-flex" data-field-id="servos.pwm.scaleNeg">
+            <span>{$i18n.t("servoScaleNeg")}</span>
+            <HelpIcon>{$i18n.t("servoScaleNegHelp")}</HelpIcon>
+          </span>
+        {/if}
+        {#if showScalePos}
+          <span class="header-label-flex" data-field-id="servos.pwm.scalePos">
+            <span>{$i18n.t("servoScalePos")}</span>
+            <HelpIcon>{$i18n.t("servoScalePosHelp")}</HelpIcon>
+          </span>
+        {/if}
+        {#if showRate && !isBusTable}
+          <span class="header-label-flex" data-field-id="servos.pwm.rate">
+            <span>{$i18n.t("servoRate")}</span>
+            <HelpIcon>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html $i18n.t("servoRateHelp")}
+            </HelpIcon>
+          </span>
+        {/if}
+        {#if showSpeed}
+          <span class="header-label-flex" data-field-id="servos.pwm.speed">
             <span>{$i18n.t("servoSpeed")}</span>
             <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
           </span>
         {/if}
-        <span class="header-label-flex">
+        <span class="header-label-flex" data-field-id="servos.pwm.reverse">
           <span>{$i18n.t("servoReverse")}</span>
           <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
         </span>
-        {#if CONFIGURATOR.expertMode}
-          <span class="header-label-flex">
+        {#if showGeoCor}
+          <span
+            class="header-label-flex"
+            data-field-id="servos.pwm.geoCorrection"
+          >
             <span>{$i18n.t("servoGeometryCorrection")}</span>
             <HelpIcon>
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -307,33 +332,37 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          <span>
-            <NumberInput
-              min={scaleMin}
-              max="1000"
-              bind:value={config.rneg}
-              onchange={() => onFieldChange(servo.index)}
-            />
-          </span>
-          <span>
-            <NumberInput
-              min={scaleMin}
-              max="1000"
-              bind:value={config.rpos}
-              onchange={() => onFieldChange(servo.index)}
-            />
-          </span>
-          {#if CONFIGURATOR.expertMode}
-            {#if !isBusTable}
-              <span>
-                <NumberInput
-                  min="50"
-                  max="5000"
-                  bind:value={config.rate}
-                  onchange={() => onRateChange(servo.index)}
-                />
-              </span>
-            {/if}
+          {#if showScaleNeg}
+            <span>
+              <NumberInput
+                min={scaleMin}
+                max="1000"
+                bind:value={config.rneg}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
+          {/if}
+          {#if showScalePos}
+            <span>
+              <NumberInput
+                min={scaleMin}
+                max="1000"
+                bind:value={config.rpos}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
+          {/if}
+          {#if showRate && !isBusTable}
+            <span>
+              <NumberInput
+                min="50"
+                max="5000"
+                bind:value={config.rate}
+                onchange={() => onRateChange(servo.index)}
+              />
+            </span>
+          {/if}
+          {#if showSpeed}
             <span>
               <NumberInput
                 min="0"
@@ -352,7 +381,7 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          {#if CONFIGURATOR.expertMode}
+          {#if showGeoCor}
             <span class="servo-checkbox">
               <Switch
                 bind:checked={
@@ -441,38 +470,42 @@
             />
           </div>
 
-          <div class="mobile-field">
-            {@render fieldLabel("servoScaleNeg", "servoScaleNegHelp")}
-            <NumberInput
-              min={scaleMin}
-              max="1000"
-              bind:value={config.rneg}
-              onchange={() => onFieldChange(servo.index)}
-            />
-          </div>
+          {#if showScaleNeg}
+            <div class="mobile-field">
+              {@render fieldLabel("servoScaleNeg", "servoScaleNegHelp")}
+              <NumberInput
+                min={scaleMin}
+                max="1000"
+                bind:value={config.rneg}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </div>
+          {/if}
 
-          <div class="mobile-field">
-            {@render fieldLabel("servoScalePos", "servoScalePosHelp")}
-            <NumberInput
-              min={scaleMin}
-              max="1000"
-              bind:value={config.rpos}
-              onchange={() => onFieldChange(servo.index)}
-            />
-          </div>
+          {#if showScalePos}
+            <div class="mobile-field">
+              {@render fieldLabel("servoScalePos", "servoScalePosHelp")}
+              <NumberInput
+                min={scaleMin}
+                max="1000"
+                bind:value={config.rpos}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </div>
+          {/if}
 
-          {#if CONFIGURATOR.expertMode}
-            {#if !isBusTable}
-              <div class="mobile-field">
-                {@render fieldLabel("servoRate", "servoRateHelp")}
-                <NumberInput
-                  min="50"
-                  max="5000"
-                  bind:value={config.rate}
-                  onchange={() => onRateChange(servo.index)}
-                />
-              </div>
-            {/if}
+          {#if showRate && !isBusTable}
+            <div class="mobile-field">
+              {@render fieldLabel("servoRate", "servoRateHelp")}
+              <NumberInput
+                min="50"
+                max="5000"
+                bind:value={config.rate}
+                onchange={() => onRateChange(servo.index)}
+              />
+            </div>
+          {/if}
+          {#if showSpeed}
             <div class="mobile-field">
               {@render fieldLabel("servoSpeed", "servoSpeedHelp")}
               <NumberInput
@@ -495,7 +528,7 @@
             />
           </div>
 
-          {#if CONFIGURATOR.expertMode}
+          {#if showGeoCor}
             <div class="mobile-field">
               {@render fieldLabel(
                 "servoGeometryCorrection",

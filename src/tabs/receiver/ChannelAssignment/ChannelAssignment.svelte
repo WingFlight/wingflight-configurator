@@ -7,6 +7,7 @@
   import Meter from "@/components/Meter.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   const channelNames = [
     "controlAxisRoll",
@@ -129,66 +130,74 @@
 
 <Section label="receiverBars">
   <SubSection>
-    <Field id="receiver-channel-order-preset" label="receiverChannelOrder">
-      <select
-        id="receiver-channel-order-preset"
-        onchange={applyPreset}
-        value={selectedPreset}
-      >
-        <option value="" disabled selected>
-          {$i18n.t("receiverChannelOrderPresetPlaceholder")}
-        </option>
-        {#each presets as preset, i (preset.label)}
-          <option value={i}>{preset.label}</option>
-        {/each}
-      </select>
-    </Field>
+    <Tier id="receiver.channels.preset">
+      <Field id="receiver-channel-order-preset" label="receiverChannelOrder">
+        <select
+          id="receiver-channel-order-preset"
+          onchange={applyPreset}
+          value={selectedPreset}
+        >
+          <option value="" disabled selected>
+            {$i18n.t("receiverChannelOrderPresetPlaceholder")}
+          </option>
+          {#each presets as preset, i (preset.label)}
+            <option value={i}>{preset.label}</option>
+          {/each}
+        </select>
+      </Field>
+    </Tier>
   </SubSection>
 
   <div class="divider"></div>
 
-  <SubSection>
-    <div class="channel-group">
-      {#each { length: FC.RC_MAP.length } as _, i (i)}
-        <span class="channel-index">{i + 1}</span>
-        <select
-          bind:value={() => FC.RC_MAP.indexOf(i), (x) => swapAssignment(i, x)}
-        >
-          {#each channelNames.slice(0, FC.RC_MAP.length) as channel, i (i)}
-            <option value={i}>{$i18n.t(channel)}</option>
-          {/each}
-        </select>
-        <ChannelBar channel={i} />
-      {/each}
-      {#each { length: Math.min(FC.RC.active_channels, 18) - FC.RC_MAP.length } as _, i (i)}
-        {@const channel = i + FC.RC_MAP.length}
-        <span class="channel-index">{channel + 1}</span>
-        <span class="channel-assignment">{$i18n.t(channelNames[channel])}</span>
-        <ChannelBar {channel} />
-      {/each}
-      <div class="rssi-group">
-        <span class="channel-index">RSSI</span>
-        <select
-          bind:value={
-            () => selectedRssiSource,
-            (x) => {
-              FC.FEATURE_CONFIG.features.RSSI_ADC = x === 1;
-              FC.RSSI_CONFIG.channel = x > 4 ? x : 0;
-            }
-          }
-        >
-          {#each rssiOptions.slice(0, FC.RC.active_channels - 2) as rssiOpt (rssiOpt.value)}
-            <option value={rssiOpt.value}>{$i18n.t(rssiOpt.text)}</option>
-          {/each}
-        </select>
-        <Meter
-          leftLabel={FC.ANALOG.rssi}
-          value={rssiPercent}
-          rightLabel={`${rssiPercent.toFixed(0)}%`}
-        />
+  <Tier id="receiver.channels.map">
+    <SubSection>
+      <div class="channel-group">
+        {#each { length: FC.RC_MAP.length } as _, i (i)}
+          <span class="channel-index">{i + 1}</span>
+          <select
+            bind:value={() => FC.RC_MAP.indexOf(i), (x) => swapAssignment(i, x)}
+          >
+            {#each channelNames.slice(0, FC.RC_MAP.length) as channel, i (i)}
+              <option value={i}>{$i18n.t(channel)}</option>
+            {/each}
+          </select>
+          <ChannelBar channel={i} />
+        {/each}
+        {#each { length: Math.min(FC.RC.active_channels, 18) - FC.RC_MAP.length } as _, i (i)}
+          {@const channel = i + FC.RC_MAP.length}
+          <span class="channel-index">{channel + 1}</span>
+          <span class="channel-assignment"
+            >{$i18n.t(channelNames[channel])}</span
+          >
+          <ChannelBar {channel} />
+        {/each}
+        <Tier id="receiver.channels.rssiSource">
+          <div class="rssi-group">
+            <span class="channel-index">RSSI</span>
+            <select
+              bind:value={
+                () => selectedRssiSource,
+                (x) => {
+                  FC.FEATURE_CONFIG.features.RSSI_ADC = x === 1;
+                  FC.RSSI_CONFIG.channel = x > 4 ? x : 0;
+                }
+              }
+            >
+              {#each rssiOptions.slice(0, FC.RC.active_channels - 2) as rssiOpt (rssiOpt.value)}
+                <option value={rssiOpt.value}>{$i18n.t(rssiOpt.text)}</option>
+              {/each}
+            </select>
+            <Meter
+              leftLabel={FC.ANALOG.rssi}
+              value={rssiPercent}
+              rightLabel={`${rssiPercent.toFixed(0)}%`}
+            />
+          </div>
+        </Tier>
       </div>
-    </div>
-  </SubSection>
+    </SubSection>
+  </Tier>
 </Section>
 
 <style lang="scss">

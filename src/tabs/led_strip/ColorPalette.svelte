@@ -2,6 +2,8 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import Tier from "@/components/Tier.svelte";
+
   import { COLOR_COUNT, COLOR_TITLES } from "./constants.js";
   import { hsvToColor } from "./util.js";
   import {
@@ -37,41 +39,43 @@
   {/each}
 </div>
 
-<div class="sliders">
-  <div class="row">
-    <span class="label">{$i18n.t("ledStripH")}</span>
-    <input
-      type="range"
-      min="0"
-      max="359"
-      value={activeHsv.h}
-      oninput={(e) => updateColorHSV("h", Number(e.target.value))}
-    />
-    <span class="value">{activeHsv.h}</span>
+<Tier id="led_strip.palette.hsv">
+  <div class="sliders">
+    <div class="row">
+      <span class="label">{$i18n.t("ledStripH")}</span>
+      <input
+        type="range"
+        min="0"
+        max="359"
+        value={activeHsv.h}
+        oninput={(e) => updateColorHSV("h", Number(e.target.value))}
+      />
+      <span class="value">{activeHsv.h}</span>
+    </div>
+    <div class="row">
+      <span class="label">{$i18n.t("ledStripS")}</span>
+      <input
+        type="range"
+        min="0"
+        max="255"
+        value={activeHsv.s}
+        oninput={(e) => updateColorHSV("s", Number(e.target.value))}
+      />
+      <span class="value">{activeHsv.s}</span>
+    </div>
+    <div class="row">
+      <span class="label">{$i18n.t("ledStripV")}</span>
+      <input
+        type="range"
+        min="0"
+        max="255"
+        value={activeHsv.v}
+        oninput={(e) => updateColorHSV("v", Number(e.target.value))}
+      />
+      <span class="value">{activeHsv.v}</span>
+    </div>
   </div>
-  <div class="row">
-    <span class="label">{$i18n.t("ledStripS")}</span>
-    <input
-      type="range"
-      min="0"
-      max="255"
-      value={activeHsv.s}
-      oninput={(e) => updateColorHSV("s", Number(e.target.value))}
-    />
-    <span class="value">{activeHsv.s}</span>
-  </div>
-  <div class="row">
-    <span class="label">{$i18n.t("ledStripV")}</span>
-    <input
-      type="range"
-      min="0"
-      max="255"
-      value={activeHsv.v}
-      oninput={(e) => updateColorHSV("v", Number(e.target.value))}
-    />
-    <span class="value">{activeHsv.v}</span>
-  </div>
-</div>
+</Tier>
 
 <style lang="scss">
   .palette {

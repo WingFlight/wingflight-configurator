@@ -4,6 +4,7 @@
 
   import Section from "@/components/Section.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import RangeRow from "./RangeRow.svelte";
   import LinkRow from "./LinkRow.svelte";
@@ -38,9 +39,11 @@
       {$i18n.t("auxiliaryAddRange")}
     </button>
     {#if modeId !== 0}
-      <button class="add" onclick={onAddLink}>
-        {$i18n.t("auxiliaryAddLink")}
-      </button>
+      <Tier id="auxiliary.modes.link">
+        <button class="add" onclick={onAddLink}>
+          {$i18n.t("auxiliaryAddLink")}
+        </button>
+      </Tier>
     {/if}
   </div>
 {/snippet}
@@ -51,24 +54,28 @@
       {#if items.length > 0}
         {#each items as item, index (item)}
           {#if item.type === "range"}
-            <RangeRow
-              {item}
-              showLogic={index > 0}
-              {channelOptions}
-              {logicOptions}
-              {onEdit}
-              onDelete={() => onDeleteItem(item)}
-            />
+            <Tier id="auxiliary.modes.range">
+              <RangeRow
+                {item}
+                showLogic={index > 0}
+                {channelOptions}
+                {logicOptions}
+                {onEdit}
+                onDelete={() => onDeleteItem(item)}
+              />
+            </Tier>
           {:else}
-            <LinkRow
-              {item}
-              {modeId}
-              {linkOptions}
-              showLogic={index > 0}
-              {logicOptions}
-              {onEdit}
-              onDelete={() => onDeleteItem(item)}
-            />
+            <Tier id="auxiliary.modes.link">
+              <LinkRow
+                {item}
+                {modeId}
+                {linkOptions}
+                showLogic={index > 0}
+                {logicOptions}
+                {onEdit}
+                onDelete={() => onDeleteItem(item)}
+              />
+            </Tier>
           {/if}
         {/each}
       {:else}

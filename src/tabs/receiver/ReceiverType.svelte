@@ -8,6 +8,7 @@
   import Tooltip from "@/components/Tooltip.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import { RX_PROTOCOLS } from "./protocols.js";
 
   let {
@@ -43,58 +44,66 @@
 
 <Section {header}>
   <SubSection>
-    <Field id="receiver-protocol" label="receiverProtocol">
-      <select
-        id="receiver-protocol"
-        bind:value={() => rxProtoIndex, setRxProto}
-      >
-        {#each RX_PROTOCOLS as proto, i (proto.name)}
-          <!-- always show selected protocol -->
-          {#if !proto.hide || rxProtoIndex === i}
-            <option
-              value={i}
-              disabled={proto.feature === "RX_SERIAL" && !hasSerialRxPort}
-            >
-              {proto.name}
-            </option>
-          {/if}
-        {/each}
-      </select>
-    </Field>
+    <Tier id="receiver.selection.protocol">
+      <Field id="receiver-protocol" label="receiverProtocol">
+        <select
+          id="receiver-protocol"
+          bind:value={() => rxProtoIndex, setRxProto}
+        >
+          {#each RX_PROTOCOLS as proto, i (proto.name)}
+            <!-- always show selected protocol -->
+            {#if !proto.hide || rxProtoIndex === i}
+              <option
+                value={i}
+                disabled={proto.feature === "RX_SERIAL" && !hasSerialRxPort}
+              >
+                {proto.name}
+              </option>
+            {/if}
+          {/each}
+        </select>
+      </Field>
+    </Tier>
   </SubSection>
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>
       <SubSection label="receiverSelectionSectionSignaling">
-        <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
-          {#snippet tooltip()}
-            <Tooltip help="receiverSerialInvertedHelp" />
-          {/snippet}
-          <Switch
-            id="receiver-serialrx-inverted"
-            bind:checked={FC.RX_CONFIG.serialrx_inverted}
-          />
-        </Field>
-        <Field
-          id="receiver-serialrx-halfduplex"
-          label="receiverSerialHalfDuplex"
-        >
-          {#snippet tooltip()}
-            <Tooltip help="receiverSerialHalfDuplexHelp" />
-          {/snippet}
-          <Switch
+        <Tier id="receiver.selection.serialInverted">
+          <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
+            {#snippet tooltip()}
+              <Tooltip help="receiverSerialInvertedHelp" />
+            {/snippet}
+            <Switch
+              id="receiver-serialrx-inverted"
+              bind:checked={FC.RX_CONFIG.serialrx_inverted}
+            />
+          </Field>
+        </Tier>
+        <Tier id="receiver.selection.serialHalfDuplex">
+          <Field
             id="receiver-serialrx-halfduplex"
-            bind:checked={FC.RX_CONFIG.serialrx_halfduplex}
-          />
-        </Field>
-        <Field id="receiver-serialrx-pinswap" label="receiverSerialPinSwap">
-          {#snippet tooltip()}
-            <Tooltip help="receiverSerialPinSwapHelp" />
-          {/snippet}
-          <Switch
-            id="receiver-serialrx-pinswap"
-            bind:checked={FC.RX_CONFIG.serialrx_pinswap}
-          />
-        </Field>
+            label="receiverSerialHalfDuplex"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="receiverSerialHalfDuplexHelp" />
+            {/snippet}
+            <Switch
+              id="receiver-serialrx-halfduplex"
+              bind:checked={FC.RX_CONFIG.serialrx_halfduplex}
+            />
+          </Field>
+        </Tier>
+        <Tier id="receiver.selection.serialPinSwap">
+          <Field id="receiver-serialrx-pinswap" label="receiverSerialPinSwap">
+            {#snippet tooltip()}
+              <Tooltip help="receiverSerialPinSwapHelp" />
+            {/snippet}
+            <Switch
+              id="receiver-serialrx-pinswap"
+              bind:checked={FC.RX_CONFIG.serialrx_pinswap}
+            />
+          </Field>
+        </Tier>
       </SubSection>
     </div>
   {/if}

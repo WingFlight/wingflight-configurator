@@ -3,6 +3,7 @@
   import { i18n } from "@/js/i18n.js";
 
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
@@ -65,48 +66,52 @@
 {/snippet}
 
 <div class="grid">
-  <Section header={gainHeader}>
-    <table class="axis-table">
-      <tbody>
-        {#each AXES as axis (axis.key)}
-          <tr>
-            <td>{$i18n.t(axis.labelKey)}</td>
-            <td>
-              <NumberInput
-                min={AXIS_GAIN_MIN}
-                max={AXIS_GAIN_MAX}
-                step="5"
-                bind:value={
-                  () => gain(axis.index), (v) => setGain(axis.index, v)
-                }
-              />
-            </td>
-            <td class="unit">%</td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  </Section>
+  <Tier id="mixer.axis.gain">
+    <Section header={gainHeader}>
+      <table class="axis-table">
+        <tbody>
+          {#each AXES as axis (axis.key)}
+            <tr>
+              <td>{$i18n.t(axis.labelKey)}</td>
+              <td>
+                <NumberInput
+                  min={AXIS_GAIN_MIN}
+                  max={AXIS_GAIN_MAX}
+                  step="5"
+                  bind:value={
+                    () => gain(axis.index), (v) => setGain(axis.index, v)
+                  }
+                />
+              </td>
+              <td class="unit">%</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </Section>
+  </Tier>
 
-  <Section header={invertHeader}>
-    <table class="axis-table">
-      <tbody>
-        {#each AXES as axis (axis.key)}
-          <tr>
-            <td>{$i18n.t(axis.labelKey)}</td>
-            <td>
-              <Select
-                options={invertOptions}
-                bind:value={
-                  () => invert(axis.index), (v) => setInvert(axis.index, v)
-                }
-              />
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  </Section>
+  <Tier id="mixer.axis.invert">
+    <Section header={invertHeader}>
+      <table class="axis-table">
+        <tbody>
+          {#each AXES as axis (axis.key)}
+            <tr>
+              <td>{$i18n.t(axis.labelKey)}</td>
+              <td>
+                <Select
+                  options={invertOptions}
+                  bind:value={
+                    () => invert(axis.index), (v) => setInvert(axis.index, v)
+                  }
+                />
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </Section>
+  </Tier>
 </div>
 
 <style lang="scss">

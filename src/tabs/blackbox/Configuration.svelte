@@ -8,6 +8,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
   import {
@@ -117,120 +118,138 @@
       </div>
     {/snippet}
 
-    <Field id="bb-device" label="blackboxDevice">
-      {#snippet tooltip()}
-        <Tooltip help="blackboxDeviceHelp" />
-      {/snippet}
-      <Select
-        id="bb-device"
-        bind:value={FC.BLACKBOX.blackboxDevice}
-        options={deviceOptions}
-      />
-    </Field>
-
-    {#if showMode}
-      <Field id="bb-mode" label="blackboxMode">
+    <Tier id="blackbox.configuration.device">
+      <Field id="bb-device" label="blackboxDevice">
         {#snippet tooltip()}
-          <Tooltip help="blackboxModeHelp" />
+          <Tooltip help="blackboxDeviceHelp" />
         {/snippet}
         <Select
-          id="bb-mode"
-          bind:value={FC.BLACKBOX.blackboxMode}
-          options={modeOptions}
+          id="bb-device"
+          bind:value={FC.BLACKBOX.blackboxDevice}
+          options={deviceOptions}
         />
       </Field>
+    </Tier>
+
+    {#if showMode}
+      <Tier id="blackbox.configuration.mode">
+        <Field id="bb-mode" label="blackboxMode">
+          {#snippet tooltip()}
+            <Tooltip help="blackboxModeHelp" />
+          {/snippet}
+          <Select
+            id="bb-mode"
+            bind:value={FC.BLACKBOX.blackboxMode}
+            options={modeOptions}
+          />
+        </Field>
+      </Tier>
     {/if}
 
     {#if showRateAndFlags}
-      <Field id="bb-rate" label="blackboxRateOfLogging">
-        {#snippet tooltip()}
-          <Tooltip help="blackboxRateOfLoggingHelp" />
-        {/snippet}
-        <Select
-          id="bb-rate"
-          bind:value={FC.BLACKBOX.blackboxDenom}
-          options={rateOptions}
-        />
-      </Field>
+      <Tier id="blackbox.configuration.rate">
+        <Field id="bb-rate" label="blackboxRateOfLogging">
+          {#snippet tooltip()}
+            <Tooltip help="blackboxRateOfLoggingHelp" />
+          {/snippet}
+          <Select
+            id="bb-rate"
+            bind:value={FC.BLACKBOX.blackboxDenom}
+            options={rateOptions}
+          />
+        </Field>
+      </Tier>
     {/if}
 
     {#if showGracePeriod}
-      <Field id="bb-grace" label="blackboxGracePeriod" unit="s">
-        {#snippet tooltip()}
-          <Tooltip help="blackboxGracePeriodHelp" />
-        {/snippet}
-        <NumberInput
-          id="bb-grace"
-          bind:value={FC.BLACKBOX.blackboxGracePeriod}
-          min={0}
-          max={60}
-          step={1}
-        />
-      </Field>
+      <Tier id="blackbox.configuration.gracePeriod">
+        <Field id="bb-grace" label="blackboxGracePeriod" unit="s">
+          {#snippet tooltip()}
+            <Tooltip help="blackboxGracePeriodHelp" />
+          {/snippet}
+          <NumberInput
+            id="bb-grace"
+            bind:value={FC.BLACKBOX.blackboxGracePeriod}
+            min={0}
+            max={60}
+            step={1}
+          />
+        </Field>
+      </Tier>
     {/if}
 
-    <Field id="bb-debug-mode" label="blackboxDebugMode">
-      {#snippet tooltip()}
-        <Tooltip help="blackboxDebugModeHelp" />
-      {/snippet}
-      <Select
-        id="bb-debug-mode"
-        bind:value={FC.DEBUG_CONFIG.debugMode}
-        options={debugModeOptions}
-      />
-    </Field>
+    <Tier id="blackbox.configuration.debugMode">
+      <Field id="bb-debug-mode" label="blackboxDebugMode">
+        {#snippet tooltip()}
+          <Tooltip help="blackboxDebugModeHelp" />
+        {/snippet}
+        <Select
+          id="bb-debug-mode"
+          bind:value={FC.DEBUG_CONFIG.debugMode}
+          options={debugModeOptions}
+        />
+      </Field>
+    </Tier>
 
-    <Field id="bb-debug-axis" label="blackboxDebugAxis">
-      {#snippet tooltip()}
-        <Tooltip help="blackboxDebugAxisHelp" />
-      {/snippet}
-      <Select
-        id="bb-debug-axis"
-        bind:value={FC.DEBUG_CONFIG.debugAxis}
-        options={debugAxisOptions}
-      />
-    </Field>
+    <Tier id="blackbox.configuration.debugAxis">
+      <Field id="bb-debug-axis" label="blackboxDebugAxis">
+        {#snippet tooltip()}
+          <Tooltip help="blackboxDebugAxisHelp" />
+        {/snippet}
+        <Select
+          id="bb-debug-axis"
+          bind:value={FC.DEBUG_CONFIG.debugAxis}
+          options={debugAxisOptions}
+        />
+      </Field>
+    </Tier>
 
     {#if showEraseOptions}
-      <Field id="bb-initial-erase" label="blackboxInitialErase" unit="MiB">
-        {#snippet tooltip()}
-          <Tooltip help="blackboxInitialEraseHelp" />
-        {/snippet}
-        <NumberInput
-          id="bb-initial-erase"
-          bind:value={() => initialEraseMiB, onInitialEraseChange}
-          min={0}
-          max={initialEraseMax}
-          step={1}
-        />
-      </Field>
-      <Field id="bb-rolling-erase" label="blackboxRollingErase">
-        {#snippet tooltip()}
-          <Tooltip help="blackboxRollingEraseHelp" />
-        {/snippet}
-        <Switch
-          id="bb-rolling-erase"
-          bind:checked={FC.BLACKBOX.blackboxRollingErase}
-        />
-      </Field>
+      <Tier id="blackbox.configuration.initialErase">
+        <Field id="bb-initial-erase" label="blackboxInitialErase" unit="MiB">
+          {#snippet tooltip()}
+            <Tooltip help="blackboxInitialEraseHelp" />
+          {/snippet}
+          <NumberInput
+            id="bb-initial-erase"
+            bind:value={() => initialEraseMiB, onInitialEraseChange}
+            min={0}
+            max={initialEraseMax}
+            step={1}
+          />
+        </Field>
+      </Tier>
+      <Tier id="blackbox.configuration.rollingErase">
+        <Field id="bb-rolling-erase" label="blackboxRollingErase">
+          {#snippet tooltip()}
+            <Tooltip help="blackboxRollingEraseHelp" />
+          {/snippet}
+          <Switch
+            id="bb-rolling-erase"
+            bind:checked={FC.BLACKBOX.blackboxRollingErase}
+          />
+        </Field>
+      </Tier>
     {/if}
   </Section>
 
   {#if showRateAndFlags}
-    <Section label="blackboxOptions">
-      <div class="flags">
-        {#each logFields as field, index (field)}
-          <label class="flag">
-            <input
-              type="checkbox"
-              checked={!!(FC.BLACKBOX.blackboxFields & (1 << index))}
-              onchange={() => toggleLogField(index)}
-            />
-            {$i18n.t(`blackboxLog_${field}`)}
-          </label>
-        {/each}
-      </div>
-    </Section>
+    <Tier id="blackbox.options.fields">
+      <Section label="blackboxOptions">
+        <div class="flags">
+          {#each logFields as field, index (field)}
+            <label class="flag">
+              <input
+                type="checkbox"
+                checked={!!(FC.BLACKBOX.blackboxFields & (1 << index))}
+                onchange={() => toggleLogField(index)}
+              />
+              {$i18n.t(`blackboxLog_${field}`)}
+            </label>
+          {/each}
+        </div>
+      </Section>
+    </Tier>
   {/if}
 </div>
 

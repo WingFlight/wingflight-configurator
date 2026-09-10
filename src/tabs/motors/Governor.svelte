@@ -7,6 +7,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
 
@@ -50,143 +51,169 @@
   );
 </script>
 
-<Section label="motorsSectionLabelGovernor">
-  <div class="info-container">
-    <WarningNote message="motorsGovernorModeNote" />
-  </div>
-  <SubSection>
-    <Field id="governor-mode" label="motorsGovernorMode">
-      {#snippet tooltip()}
-        <Tooltip help="motorsGovernorModeHelp" />
-      {/snippet}
-      <Select
-        id="governor-mode"
-        bind:value={FC.GOVERNOR_CONFIG.governor_mode}
-        options={modeOptions}
-      />
-    </Field>
+<Tier id="motors.governor.section">
+  <Section label="motorsSectionLabelGovernor">
+    <div class="info-container">
+      <WarningNote message="motorsGovernorModeNote" />
+    </div>
+    <SubSection>
+      <Tier id="motors.governor.mode">
+        <Field id="governor-mode" label="motorsGovernorMode">
+          {#snippet tooltip()}
+            <Tooltip help="motorsGovernorModeHelp" />
+          {/snippet}
+          <Select
+            id="governor-mode"
+            bind:value={FC.GOVERNOR_CONFIG.governor_mode}
+            options={modeOptions}
+          />
+        </Field>
+      </Tier>
 
-    {#if rpmMode}
-      <Field id="governor-rpm" label="motorsGovernorRpm" unit="RPM">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorRpmHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-rpm"
-          min="0"
-          max="50000"
-          bind:value={FC.GOVERNOR_CONFIG.governor_rpm}
-        />
-      </Field>
+      {#if rpmMode}
+        <Tier id="motors.governor.rpm">
+          <Field id="governor-rpm" label="motorsGovernorRpm" unit="RPM">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorRpmHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-rpm"
+              min="0"
+              max="50000"
+              bind:value={FC.GOVERNOR_CONFIG.governor_rpm}
+            />
+          </Field>
+        </Tier>
 
-      <Field id="governor-rpm-max" label="motorsGovernorRpmMaxLimit" unit="RPM">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorRpmMaxLimitHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-rpm-max"
-          min="0"
-          max="50000"
-          bind:value={FC.GOVERNOR_CONFIG.governor_rpm_max}
-        />
-      </Field>
-    {/if}
+        <Tier id="motors.governor.rpmMaxLimit">
+          <Field
+            id="governor-rpm-max"
+            label="motorsGovernorRpmMaxLimit"
+            unit="RPM"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorRpmMaxLimitHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-rpm-max"
+              min="0"
+              max="50000"
+              bind:value={FC.GOVERNOR_CONFIG.governor_rpm_max}
+            />
+          </Field>
+        </Tier>
+      {/if}
 
-    {#if rpmRangeMode}
-      <Field id="governor-rpm-min" label="motorsGovernorRpmMin" unit="RPM">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorRpmMinHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-rpm-min"
-          min="0"
-          max="50000"
-          bind:value={FC.GOVERNOR_CONFIG.governor_rpm_min}
-        />
-      </Field>
+      {#if rpmRangeMode}
+        <Tier id="motors.governor.rpmMin">
+          <Field id="governor-rpm-min" label="motorsGovernorRpmMin" unit="RPM">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorRpmMinHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-rpm-min"
+              min="0"
+              max="50000"
+              bind:value={FC.GOVERNOR_CONFIG.governor_rpm_min}
+            />
+          </Field>
+        </Tier>
 
-      <Field id="governor-rpm-max" label="motorsGovernorRpmMax" unit="RPM">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorRpmMaxHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-rpm-max"
-          min="0"
-          max="50000"
-          bind:value={FC.GOVERNOR_CONFIG.governor_rpm_max}
-        />
-      </Field>
-    {/if}
+        <Tier id="motors.governor.rpmMax">
+          <Field id="governor-rpm-max" label="motorsGovernorRpmMax" unit="RPM">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorRpmMaxHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-rpm-max"
+              min="0"
+              max="50000"
+              bind:value={FC.GOVERNOR_CONFIG.governor_rpm_max}
+            />
+          </Field>
+        </Tier>
+      {/if}
 
-    {#if rpmControlMode}
-      <Field id="governor-gain" label="motorsGovernorGain">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorGainHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-gain"
-          min="0"
-          max="20000"
-          bind:value={FC.GOVERNOR_CONFIG.governor_gain}
-        />
-      </Field>
+      {#if rpmControlMode}
+        <Tier id="motors.governor.gain">
+          <Field id="governor-gain" label="motorsGovernorGain">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorGainHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-gain"
+              min="0"
+              max="20000"
+              bind:value={FC.GOVERNOR_CONFIG.governor_gain}
+            />
+          </Field>
+        </Tier>
 
-      <Field id="governor-i-gain" label="motorsGovernorIGain">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorIGainHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-i-gain"
-          min="0"
-          max="200"
-          bind:value={FC.GOVERNOR_CONFIG.governor_i_gain}
-        />
-      </Field>
-    {/if}
+        <Tier id="motors.governor.iGain">
+          <Field id="governor-i-gain" label="motorsGovernorIGain">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorIGainHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-i-gain"
+              min="0"
+              max="200"
+              bind:value={FC.GOVERNOR_CONFIG.governor_i_gain}
+            />
+          </Field>
+        </Tier>
+      {/if}
 
-    {#if rpmMode || throttleMode}
-      <Field id="governor-throttle" label="motorsGovernorThrottle" unit="%">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorThrottleHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-throttle"
-          min="0"
-          max="100"
-          bind:value={FC.GOVERNOR_CONFIG.governor_throttle}
-        />
-      </Field>
-    {/if}
+      {#if rpmMode || throttleMode}
+        <Tier id="motors.governor.throttle">
+          <Field id="governor-throttle" label="motorsGovernorThrottle" unit="%">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorThrottleHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-throttle"
+              min="0"
+              max="100"
+              bind:value={FC.GOVERNOR_CONFIG.governor_throttle}
+            />
+          </Field>
+        </Tier>
+      {/if}
 
-    {#if rpmMode || throttleMode}
-      <Field id="governor-handover" label="motorsGovernorHandover" unit="%">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorHandoverHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-handover"
-          min="0"
-          max="100"
-          bind:value={FC.GOVERNOR_CONFIG.governor_handover}
-        />
-      </Field>
-    {/if}
+      {#if rpmMode || throttleMode}
+        <Tier id="motors.governor.handover">
+          <Field id="governor-handover" label="motorsGovernorHandover" unit="%">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorHandoverHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-handover"
+              min="0"
+              max="100"
+              bind:value={FC.GOVERNOR_CONFIG.governor_handover}
+            />
+          </Field>
+        </Tier>
+      {/if}
 
-    {#if FC.GOVERNOR_CONFIG.governor_mode !== GOVERNOR_MODE_OFF}
-      <Field id="governor-ceiling" label="motorsGovernorCeiling" unit="%">
-        {#snippet tooltip()}
-          <Tooltip help="motorsGovernorCeilingHelp" />
-        {/snippet}
-        <NumberInput
-          id="governor-ceiling"
-          min="0"
-          max="100"
-          bind:value={FC.GOVERNOR_CONFIG.governor_ceiling}
-        />
-      </Field>
-    {/if}
-  </SubSection>
-</Section>
+      {#if FC.GOVERNOR_CONFIG.governor_mode !== GOVERNOR_MODE_OFF}
+        <Tier id="motors.governor.ceiling">
+          <Field id="governor-ceiling" label="motorsGovernorCeiling" unit="%">
+            {#snippet tooltip()}
+              <Tooltip help="motorsGovernorCeilingHelp" />
+            {/snippet}
+            <NumberInput
+              id="governor-ceiling"
+              min="0"
+              max="100"
+              bind:value={FC.GOVERNOR_CONFIG.governor_ceiling}
+            />
+          </Field>
+        </Tier>
+      {/if}
+    </SubSection>
+  </Section>
+</Tier>
 
 <style lang="scss">
   .info-container {

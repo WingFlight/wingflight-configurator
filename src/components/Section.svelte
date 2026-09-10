@@ -55,6 +55,15 @@
     padding-top: var(--section-gap);
   }
 
+  // A section whose every field folded away at the current disclosure level
+  // (Tier renders nothing, leaving no element children) hides itself rather
+  // than showing an empty header. Sections rendering a custom header snippet
+  // (no default .header element) are left alone: they may carry controls in
+  // the header itself.
+  .wrapper:has(> .container > .header):not(:has(.content-wrapper > *)) {
+    display: none;
+  }
+
   .container {
     @extend %section-shadow;
   }

@@ -10,6 +10,7 @@
 
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Select from "@/components/Select.svelte";
 
   import CurvePlot from "./CurvePlot.svelte";
@@ -177,125 +178,128 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  <div class="category-tabs">
-    {#each Object.keys(CATEGORIES) as key (key)}
-      <button
-        class={["category-tab", key === selectedCategory && "active"]}
-        onclick={() => selectCategory(key)}
-      >
-        {$i18n.t(CATEGORIES[key].tabKey)}
-      </button>
-    {/each}
-  </div>
-  <p class="category-help">{$i18n.t(category.helpKey)}</p>
-
-  <Section>
-    {#snippet header()}
-      <div class="section-header">
-        <span class="title">{$i18n.t(category.titleKey)}</span>
-      </div>
-    {/snippet}
-
-    <div class="toolbar-row">
-      <Select bind:value={selectedCurveIndex} options={curveOptions} />
-      <button class="btn" onclick={onReset}>{$i18n.t("curveReset")}</button>
+  <Tier id="curves.editor.curves">
+    <div class="category-tabs">
+      {#each Object.keys(CATEGORIES) as key (key)}
+        <button
+          class={["category-tab", key === selectedCategory && "active"]}
+          onclick={() => selectCategory(key)}
+        >
+          {$i18n.t(CATEGORIES[key].tabKey)}
+        </button>
+      {/each}
     </div>
-    <p class="hint">{$i18n.t("curveEditorHint")}</p>
+    <p class="category-help">{$i18n.t(category.helpKey)}</p>
 
-    <div class="editor-row">
-      <div class="plot-wrapper">
-        <CurvePlot
-          {curve}
-          model={category.model}
-          xMin={category.xMin}
-          xMax={category.xMax}
-          yMin={category.yMin}
-          yMax={category.yMax}
-          xAxisValue={category.xAxisValue}
-          yAxisValue={category.yAxisValue}
-          onEdit={markDirty}
-        />
+    <Section>
+      {#snippet header()}
+        <div class="section-header">
+          <span class="title">{$i18n.t(category.titleKey)}</span>
+        </div>
+      {/snippet}
+
+      <div class="toolbar-row">
+        <Select bind:value={selectedCurveIndex} options={curveOptions} />
+        <button class="btn" onclick={onReset}>{$i18n.t("curveReset")}</button>
       </div>
+      <p class="hint">{$i18n.t("curveEditorHint")}</p>
 
-      <p class="explain">{$i18n.t(category.explainKey)}</p>
+      <div class="editor-row">
+        <div class="plot-wrapper">
+          <CurvePlot
+            {curve}
+            model={category.model}
+            xMin={category.xMin}
+            xMax={category.xMax}
+            yMin={category.yMin}
+            yMax={category.yMax}
+            xAxisValue={category.xAxisValue}
+            yAxisValue={category.yAxisValue}
+            onEdit={markDirty}
+          />
+        </div>
 
-      <div class="point-list">
-        <table class="point-table">
-          <thead>
-            <tr>
-              <th>{$i18n.t("curvePointIndex")}</th>
-              <th>{$i18n.t("curvePointX")}</th>
-              <th>{$i18n.t("curvePointY")}</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each curve.points.slice(0, curve.count) as point, index (index)}
-              {@const isEndpoint = index === 0 || index === curve.count - 1}
+        <p class="explain">{$i18n.t(category.explainKey)}</p>
+
+        <div class="point-list">
+          <table class="point-table">
+            <thead>
               <tr>
-                <td class="point-index">{index + 1}</td>
-                <td>
-                  <input
-                    type="number"
-                    min={category.xMin}
-                    max={category.xMax}
-                    step="10"
-                    disabled={isEndpoint}
-                    title={isEndpoint
-                      ? $i18n.t("curveEndpointXLocked")
-                      : undefined}
-                    bind:value={
-                      () => point.x,
-                      (v) => onPointFieldChange(index, v, point.y)
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min={category.yMin}
-                    max={category.yMax}
-                    step="10"
-                    bind:value={
-                      () => point.y,
-                      (v) => onPointFieldChange(index, point.x, v)
-                    }
-                  />
-                </td>
-                <td>
-                  <button
-                    class="delete"
-                    onclick={() => onDeletePoint(index)}
-                    disabled={isEndpoint}
-                    title={isEndpoint
-                      ? $i18n.t("curveEndpointNoDelete")
-                      : undefined}
-                    aria-label="Delete point"
-                  >
-                    <span class="fas fa-times"></span>
-                  </button>
-                </td>
+                <th>{$i18n.t("curvePointIndex")}</th>
+                <th>{$i18n.t("curvePointX")}</th>
+                <th>{$i18n.t("curvePointY")}</th>
+                <th></th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {#each curve.points.slice(0, curve.count) as point, index (index)}
+                {@const isEndpoint = index === 0 || index === curve.count - 1}
+                <tr>
+                  <td class="point-index">{index + 1}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={category.xMin}
+                      max={category.xMax}
+                      step="10"
+                      disabled={isEndpoint}
+                      title={isEndpoint
+                        ? $i18n.t("curveEndpointXLocked")
+                        : undefined}
+                      bind:value={
+                        () => point.x,
+                        (v) => onPointFieldChange(index, v, point.y)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={category.yMin}
+                      max={category.yMax}
+                      step="10"
+                      bind:value={
+                        () => point.y,
+                        (v) => onPointFieldChange(index, point.x, v)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      class="delete"
+                      onclick={() => onDeletePoint(index)}
+                      disabled={isEndpoint}
+                      title={isEndpoint
+                        ? $i18n.t("curveEndpointNoDelete")
+                        : undefined}
+                      aria-label="Delete point"
+                    >
+                      <span class="fas fa-times"></span>
+                    </button>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
 
-        <div class="point-list-toolbar">
-          <button class="btn" onclick={onAddPoint}>
-            {$i18n.t("curveAddPoint")}
-          </button>
-          <span class="point-count-group">
-            <span class="point-count-label">{$i18n.t("curvePointCount")}</span>
-            <Select
-              value={curve.count}
-              options={pointCountOptions}
-              onchange={(e) => onPointCountChange(Number(e.target.value))}
-            />
-          </span>
+          <div class="point-list-toolbar">
+            <button class="btn" onclick={onAddPoint}>
+              {$i18n.t("curveAddPoint")}
+            </button>
+            <span class="point-count-group">
+              <span class="point-count-label">{$i18n.t("curvePointCount")}</span
+              >
+              <Select
+                value={curve.count}
+                options={pointCountOptions}
+                onchange={(e) => onPointCountChange(Number(e.target.value))}
+              />
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  </Section>
+    </Section>
+  </Tier>
 </Page>
 
 <style lang="scss">

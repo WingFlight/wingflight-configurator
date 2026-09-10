@@ -8,13 +8,13 @@
   import { reinitialiseConnection } from "@/js/serial_backend";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-  import Expert from "@/components/Expert.svelte";
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   let loading = $state(true);
   let initialState;
@@ -100,7 +100,7 @@
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <div class="content">
     <div>
-      <Expert>
+      <Tier id="failsafe.pulse.range">
         <div transition:slide>
           <Section
             label="failsafePulsrangeTitle"
@@ -142,49 +142,51 @@
             </SubSection>
           </Section>
         </div>
-      </Expert>
+      </Tier>
       <Section
         label="failsafeChannelFallbackSettingsTitle"
         summary="failsafeChannelFallbackSettingsHelp"
       >
-        <SubSection>
-          {#each { length: FC.RXFAIL_CONFIG?.length ?? 0 } as _, i (i)}
-            <Field
-              id={`fallback-${i}`}
-              label={channelNames[i] ??
-                `controlAxisAux${i - channelNames.length + 1}`}
-            >
-              <div class="fallback-group">
-                {#if FC.RXFAIL_CONFIG[i].mode === 2}
-                  <NumberInput
-                    id={`set-${i}`}
-                    min="875"
-                    max="2125"
-                    step="5"
-                    bind:value={FC.RXFAIL_CONFIG[i].value}
-                  />
-                {/if}
-                <select
-                  class="switchMode"
-                  id={`fallback-${i}`}
-                  bind:value={FC.RXFAIL_CONFIG[i].mode}
-                >
-                  {#if i < channelNames.length}
-                    <option value={0}>
-                      {$i18n.t("failsafeChannelFallbackOptionAuto")}
-                    </option>
+        <Tier id="failsafe.fallback.channels">
+          <SubSection>
+            {#each { length: FC.RXFAIL_CONFIG?.length ?? 0 } as _, i (i)}
+              <Field
+                id={`fallback-${i}`}
+                label={channelNames[i] ??
+                  `controlAxisAux${i - channelNames.length + 1}`}
+              >
+                <div class="fallback-group">
+                  {#if FC.RXFAIL_CONFIG[i].mode === 2}
+                    <NumberInput
+                      id={`set-${i}`}
+                      min="875"
+                      max="2125"
+                      step="5"
+                      bind:value={FC.RXFAIL_CONFIG[i].value}
+                    />
                   {/if}
-                  <option value={1}>
-                    {$i18n.t("failsafeChannelFallbackOptionHold")}
-                  </option>
-                  <option value={2}>
-                    {$i18n.t("failsafeChannelFallbackOptionSet")}
-                  </option>
-                </select>
-              </div>
-            </Field>
-          {/each}
-        </SubSection>
+                  <select
+                    class="switchMode"
+                    id={`fallback-${i}`}
+                    bind:value={FC.RXFAIL_CONFIG[i].mode}
+                  >
+                    {#if i < channelNames.length}
+                      <option value={0}>
+                        {$i18n.t("failsafeChannelFallbackOptionAuto")}
+                      </option>
+                    {/if}
+                    <option value={1}>
+                      {$i18n.t("failsafeChannelFallbackOptionHold")}
+                    </option>
+                    <option value={2}>
+                      {$i18n.t("failsafeChannelFallbackOptionSet")}
+                    </option>
+                  </select>
+                </div>
+              </Field>
+            {/each}
+          </SubSection>
+        </Tier>
       </Section>
     </div>
     <div></div>

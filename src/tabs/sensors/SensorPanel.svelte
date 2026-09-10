@@ -2,6 +2,7 @@
   import { i18n } from "@/js/i18n.js";
 
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import SensorGraph from "./SensorGraph.svelte";
 
@@ -24,16 +25,20 @@
       <div class="subtitle">{subtitle}</div>
     {/if}
     {#if rateOptions}
-      <div class="row">
-        <span class="dt">{$i18n.t("sensorsRefresh")}</span>
-        <Select bind:value={rate} options={rateOptions} />
-      </div>
+      <Tier id="sensors.graph.refreshRate">
+        <div class="row">
+          <span class="dt">{$i18n.t("sensorsRefresh")}</span>
+          <Select bind:value={rate} options={rateOptions} />
+        </div>
+      </Tier>
     {/if}
     {#if scaleOptions}
-      <div class="row">
-        <span class="dt">{$i18n.t("sensorsScale")}</span>
-        <Select bind:value={scale} options={scaleOptions} />
-      </div>
+      <Tier id="sensors.graph.scale">
+        <div class="row">
+          <span class="dt">{$i18n.t("sensorsScale")}</span>
+          <Select bind:value={scale} options={scaleOptions} />
+        </div>
+      </Tier>
     {/if}
     {#each readouts as readout (readout.label)}
       <div class="row">

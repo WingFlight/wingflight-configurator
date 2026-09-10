@@ -443,6 +443,16 @@ export function applyVirtualConfig() {
 
   FC.PID_PROFILE.pid_mode = 1;
 
+  // PID gains per axis (P, I, D, F, B, O, ...): MSP_PID fills these on real
+  // hardware; without values the Profiles tab's bound inputs have nothing to
+  // bind to.
+  FC.PIDS = [
+    [40, 60, 20, 100, 0, 0, 0, 0],
+    [40, 60, 20, 100, 0, 0, 0, 0],
+    [60, 80, 0, 100, 0, 0, 0, 0],
+  ];
+  FC.PIDS_ACTIVE = FC.PIDS.map((row) => row.slice());
+
   Object.assign(FC.RC_TUNING, {
     rates_type: 0,
   });

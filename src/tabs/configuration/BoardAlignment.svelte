@@ -7,6 +7,7 @@
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import AutoAlignWizard from "./AutoAlignWizard.svelte";
   import MountTrimAutoWizard from "./MountTrimAutoWizard.svelte";
@@ -111,36 +112,42 @@
 
 <div class="row">
   <div class="inputs">
-    <label class="axis">
-      <NumberInput
-        bind:value={FC.BOARD_ALIGNMENT_CONFIG.roll}
-        min={-180}
-        max={360}
-        step={1}
-      />
-      <span class="icon roll"></span>
-      <span>{$i18n.t("configurationBoardAlignmentRoll")}</span>
-    </label>
-    <label class="axis">
-      <NumberInput
-        bind:value={FC.BOARD_ALIGNMENT_CONFIG.pitch}
-        min={-180}
-        max={360}
-        step={1}
-      />
-      <span class="icon pitch"></span>
-      <span>{$i18n.t("configurationBoardAlignmentPitch")}</span>
-    </label>
-    <label class="axis">
-      <NumberInput
-        bind:value={FC.BOARD_ALIGNMENT_CONFIG.yaw}
-        min={-180}
-        max={360}
-        step={1}
-      />
-      <span class="icon yaw"></span>
-      <span>{$i18n.t("configurationBoardAlignmentYaw")}</span>
-    </label>
+    <Tier id="configuration.boardAlignment.roll">
+      <label class="axis">
+        <NumberInput
+          bind:value={FC.BOARD_ALIGNMENT_CONFIG.roll}
+          min={-180}
+          max={360}
+          step={1}
+        />
+        <span class="icon roll"></span>
+        <span>{$i18n.t("configurationBoardAlignmentRoll")}</span>
+      </label>
+    </Tier>
+    <Tier id="configuration.boardAlignment.pitch">
+      <label class="axis">
+        <NumberInput
+          bind:value={FC.BOARD_ALIGNMENT_CONFIG.pitch}
+          min={-180}
+          max={360}
+          step={1}
+        />
+        <span class="icon pitch"></span>
+        <span>{$i18n.t("configurationBoardAlignmentPitch")}</span>
+      </label>
+    </Tier>
+    <Tier id="configuration.boardAlignment.yaw">
+      <label class="axis">
+        <NumberInput
+          bind:value={FC.BOARD_ALIGNMENT_CONFIG.yaw}
+          min={-180}
+          max={360}
+          step={1}
+        />
+        <span class="icon yaw"></span>
+        <span>{$i18n.t("configurationBoardAlignmentYaw")}</span>
+      </label>
+    </Tier>
   </div>
 
   <div class="auto-align">
@@ -151,82 +158,86 @@
   </div>
 </div>
 
-<div class="mount-trim">
-  <div class="section-title">
-    <span>{$i18n.t("configurationBoardMountTrim")}</span>
-    <HelpIcon>{$i18n.t("configurationBoardMountTrimHelp")}</HelpIcon>
-  </div>
-
-  <div class="row">
-    <div class="inputs">
-      <label class="axis">
-        <NumberInput
-          bind:value={
-            () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.roll),
-            (v) => (FC.BOARD_MOUNT_TRIM.roll = degreesToDecidegrees(v))
-          }
-          min={-360}
-          max={360}
-          step={0.1}
-        />
-        <span class="icon roll"></span>
-        <span>{$i18n.t("configurationBoardMountTrimRoll")}</span>
-      </label>
-      <label class="axis">
-        <NumberInput
-          bind:value={
-            () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.pitch),
-            (v) => (FC.BOARD_MOUNT_TRIM.pitch = degreesToDecidegrees(v))
-          }
-          min={-360}
-          max={360}
-          step={0.1}
-        />
-        <span class="icon pitch"></span>
-        <span>{$i18n.t("configurationBoardMountTrimPitch")}</span>
-      </label>
-      <label class="axis">
-        <NumberInput
-          bind:value={
-            () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.yaw),
-            (v) => (FC.BOARD_MOUNT_TRIM.yaw = degreesToDecidegrees(v))
-          }
-          min={-360}
-          max={360}
-          step={0.1}
-        />
-        <span class="icon yaw"></span>
-        <span>{$i18n.t("configurationBoardMountTrimYaw")}</span>
-      </label>
+<Tier id="configuration.boardAlignment.mountTrim">
+  <div class="mount-trim">
+    <div class="section-title">
+      <span>{$i18n.t("configurationBoardMountTrim")}</span>
+      <HelpIcon>{$i18n.t("configurationBoardMountTrimHelp")}</HelpIcon>
     </div>
 
-    <div class="auto-align">
-      <button
-        class="btn"
-        disabled={mountTrimAutoDisabled}
-        onclick={onClickMountTrimAuto}
-      >
-        {$i18n.t("configurationBoardMountTrimAutoStart")}
-      </button>
-      <HelpIcon>{$i18n.t("configurationBoardMountTrimAutoHelp")}</HelpIcon>
-      <button class="btn" onclick={onClickResetMountTrim}>
-        {$i18n.t("configurationBoardMountTrimReset")}
-      </button>
+    <div class="row">
+      <div class="inputs">
+        <label class="axis">
+          <NumberInput
+            bind:value={
+              () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.roll),
+              (v) => (FC.BOARD_MOUNT_TRIM.roll = degreesToDecidegrees(v))
+            }
+            min={-360}
+            max={360}
+            step={0.1}
+          />
+          <span class="icon roll"></span>
+          <span>{$i18n.t("configurationBoardMountTrimRoll")}</span>
+        </label>
+        <label class="axis">
+          <NumberInput
+            bind:value={
+              () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.pitch),
+              (v) => (FC.BOARD_MOUNT_TRIM.pitch = degreesToDecidegrees(v))
+            }
+            min={-360}
+            max={360}
+            step={0.1}
+          />
+          <span class="icon pitch"></span>
+          <span>{$i18n.t("configurationBoardMountTrimPitch")}</span>
+        </label>
+        <label class="axis">
+          <NumberInput
+            bind:value={
+              () => decidegreesToDegrees(FC.BOARD_MOUNT_TRIM.yaw),
+              (v) => (FC.BOARD_MOUNT_TRIM.yaw = degreesToDecidegrees(v))
+            }
+            min={-360}
+            max={360}
+            step={0.1}
+          />
+          <span class="icon yaw"></span>
+          <span>{$i18n.t("configurationBoardMountTrimYaw")}</span>
+        </label>
+      </div>
+
+      <div class="auto-align">
+        <button
+          class="btn"
+          disabled={mountTrimAutoDisabled}
+          onclick={onClickMountTrimAuto}
+        >
+          {$i18n.t("configurationBoardMountTrimAutoStart")}
+        </button>
+        <HelpIcon>{$i18n.t("configurationBoardMountTrimAutoHelp")}</HelpIcon>
+        <button class="btn" onclick={onClickResetMountTrim}>
+          {$i18n.t("configurationBoardMountTrimReset")}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+</Tier>
 
 {#if magHardwareEnabled}
-  <div class="mag-align">
-    <div class="section-title">
-      <span>{$i18n.t("configurationSensorAlignmentMag")}</span>
+  <Tier id="configuration.boardAlignment.magAlign">
+    <div class="mag-align">
+      <div class="section-title">
+        <span>{$i18n.t("configurationSensorAlignmentMag")}</span>
+      </div>
+      <Select
+        id="mag-align"
+        bind:value={FC.SENSOR_ALIGNMENT.align_mag}
+        options={magAlignOptions}
+      />
     </div>
-    <Select
-      id="mag-align"
-      bind:value={FC.SENSOR_ALIGNMENT.align_mag}
-      options={magAlignOptions}
-    />
-  </div>
+  </Tier>
 {/if}
 
 <style lang="scss">

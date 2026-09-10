@@ -1,7 +1,6 @@
 <script>
   import { slide } from "svelte/transition";
 
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import motorState from "../motors/state.svelte.js";
 
@@ -10,6 +9,7 @@
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
 
@@ -30,47 +30,47 @@
   );
 </script>
 
-<Section label="gyroRpmFilterSettings" summary="gyroRpmFilterHelp">
-  {#if !fastRpm}
-    <div class="warning-container">
-      <WarningNote message="gyroRpmFilterConfigNote" />
-    </div>
-  {/if}
+<Tier id="gyro.rpmFilter.section">
+  <Section label="gyroRpmFilterSettings" summary="gyroRpmFilterHelp">
+    {#if !fastRpm}
+      <div class="warning-container">
+        <WarningNote message="gyroRpmFilterConfigNote" />
+      </div>
+    {/if}
 
-  <SubSection>
-    <Field id="rpm-filter-enable" label="genericEnable">
-      <Switch
-        id="rpm-filter-enable"
-        bind:checked={FC.FEATURE_CONFIG.features.RPM_FILTER}
-      />
-    </Field>
+    <SubSection>
+      <Field id="rpm-filter-enable" label="genericEnable">
+        <Switch
+          id="rpm-filter-enable"
+          bind:checked={FC.FEATURE_CONFIG.features.RPM_FILTER}
+        />
+      </Field>
 
-    {#if enabled}
-      <div transition:slide>
-        <SubSection>
-          <Field id="rpm-filter-preset" label="gyroRpmFilterPreset">
-            {#snippet tooltip()}
-              <Tooltip
-                help="gyroRpmFilterPresetHelp"
-                attrs={[
-                  {
-                    name: "genericDefault",
-                    value: $i18n.t("gyroRpmFilterPresetMedium"),
-                  },
-                ]}
-              />
-            {/snippet}
-            <select
-              id="rpm-filter-preset"
-              bind:value={FC.FILTER_CONFIG.rpm_preset}
-            >
-              {#each filterStrengths as strength, index (strength)}
-                <option value={index}>{$i18n.t(strength)}</option>
-              {/each}
-            </select>
-          </Field>
-          {#if CONFIGURATOR.expertMode}
-            <div transition:slide>
+      {#if enabled}
+        <div transition:slide>
+          <SubSection>
+            <Field id="rpm-filter-preset" label="gyroRpmFilterPreset">
+              {#snippet tooltip()}
+                <Tooltip
+                  help="gyroRpmFilterPresetHelp"
+                  attrs={[
+                    {
+                      name: "genericDefault",
+                      value: $i18n.t("gyroRpmFilterPresetMedium"),
+                    },
+                  ]}
+                />
+              {/snippet}
+              <select
+                id="rpm-filter-preset"
+                bind:value={FC.FILTER_CONFIG.rpm_preset}
+              >
+                {#each filterStrengths as strength, index (strength)}
+                  <option value={index}>{$i18n.t(strength)}</option>
+                {/each}
+              </select>
+            </Field>
+            <Tier id="gyro.rpmFilter.minFreq">
               <Field
                 id="rpm-filter-min-freq"
                 label="gyroRpmFilterMinFreq"
@@ -89,13 +89,13 @@
                   bind:value={FC.FILTER_CONFIG.rpm_min_hz}
                 />
               </Field>
-            </div>
-          {/if}
-        </SubSection>
-      </div>
-    {/if}
-  </SubSection>
-</Section>
+            </Tier>
+          </SubSection>
+        </div>
+      {/if}
+    </SubSection>
+  </Section>
+</Tier>
 
 <style lang="scss">
   .header {

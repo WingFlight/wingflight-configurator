@@ -13,6 +13,7 @@
   import Section from "@/components/Section.svelte";
   import { getProfile } from "@/js/profile.svelte.js";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
@@ -312,88 +313,103 @@
     </div>
   </Section>
 
-  <Section label="servoConfigurationPwm">
-    {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate || warnings.unusualGeoCor}
-      <div class="note">
-        {#if warnings.unusualLimit}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualLimitsWarning")}</p>
-        {/if}
-        {#if warnings.unusualScale}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualScalesWarning")}</p>
-        {/if}
-        {#if warnings.unusualRate}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualRatesWarning")}</p>
-        {/if}
-        {#if warnings.unusualGeoCor}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualGeometryCorrection")}</p>
-        {/if}
-      </div>
-    {/if}
+  <Tier id="servos.pwm.section">
+    <Section label="servoConfigurationPwm">
+      {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate || warnings.unusualGeoCor}
+        <div class="note">
+          {#if warnings.unusualLimit}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <p>{@html $i18n.t("servoUnusualLimitsWarning")}</p>
+          {/if}
+          {#if warnings.unusualScale}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <p>{@html $i18n.t("servoUnusualScalesWarning")}</p>
+          {/if}
+          {#if warnings.unusualRate}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <p>{@html $i18n.t("servoUnusualRatesWarning")}</p>
+          {/if}
+          {#if warnings.unusualGeoCor}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <p>{@html $i18n.t("servoUnusualGeometryCorrection")}</p>
+          {/if}
+        </div>
+      {/if}
 
-    {#if needReboot}
-      <div class="note">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <p>{@html $i18n.t("servoRateRebootNote")}</p>
-      </div>
-    {/if}
-
-    <div class="table-scroll">
-      <ServoConfigTable servos={pwmServos} {onFieldChange} {onRateChange} />
-    </div>
-  </Section>
-
-  {#if busActive}
-    <Section label="servoConfigurationBus">
-      <div class="override-toggle">
-        <Switch
-          id="servo-bus-clone-enable"
-          bind:checked={
-            () => FC.MIXER_CONFIG.bus_servo_clone_pwm === 1, onToggleBusClone
-          }
-        />
-        <label for="servo-bus-clone-enable">
+      {#if needReboot}
+        <div class="note">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <span>{@html $i18n.t("servoBusCloneLabel")}</span>
-        </label>
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
-      </div>
+          <p>{@html $i18n.t("servoRateRebootNote")}</p>
+        </div>
+      {/if}
 
       <div class="table-scroll">
-        <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
+        <ServoConfigTable servos={pwmServos} {onFieldChange} {onRateChange} />
       </div>
     </Section>
+  </Tier>
+
+  {#if busActive}
+    <Tier id="servos.bus.section">
+      <Section label="servoConfigurationBus">
+        <Tier id="servos.bus.clonePwm">
+          <div class="override-toggle">
+            <Switch
+              id="servo-bus-clone-enable"
+              bind:checked={
+                () => FC.MIXER_CONFIG.bus_servo_clone_pwm === 1,
+                onToggleBusClone
+              }
+            />
+            <label for="servo-bus-clone-enable">
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <span>{@html $i18n.t("servoBusCloneLabel")}</span>
+            </label>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <span class="description">{@html $i18n.t("servoBusCloneText")}</span
+            >
+          </div>
+        </Tier>
+
+        <div class="table-scroll">
+          <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
+        </div>
+      </Section>
+    </Tier>
   {/if}
 
-  <Section label="servoOverride" summary="servoOverrideHelp">
-    <div class="override-toggle">
-      <Switch
-        id="servo-override-enable"
-        bind:checked={() => overrideEnabled, onToggleOverrideEnabled}
-      />
-      <label for="servo-override-enable">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <span>{@html $i18n.t("servoEnableOverrideLabel")}</span>
-      </label>
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <span class="description">{@html $i18n.t("servoEnableOverrideText")}</span
-      >
-    </div>
-  </Section>
+  <Tier id="servos.override.enable">
+    <Section label="servoOverride" summary="servoOverrideHelp">
+      <div class="override-toggle">
+        <Switch
+          id="servo-override-enable"
+          bind:checked={() => overrideEnabled, onToggleOverrideEnabled}
+        />
+        <label for="servo-override-enable">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <span>{@html $i18n.t("servoEnableOverrideLabel")}</span>
+        </label>
+        <span class="description">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html $i18n.t("servoEnableOverrideText")}
+        </span>
+      </div>
+    </Section>
+  </Tier>
 
   {#if overrideEnabled}
-    <Section label="servoOverridePwm">
-      <ServoOverrideTable servos={pwmServos} />
-    </Section>
+    <Tier id="servos.override.pwmTable">
+      <Section label="servoOverridePwm">
+        <ServoOverrideTable servos={pwmServos} />
+      </Section>
+    </Tier>
 
     {#if busActive}
-      <Section label="servoOverrideBus">
-        <ServoOverrideTable servos={busServos} />
-      </Section>
+      <Tier id="servos.override.busTable">
+        <Section label="servoOverrideBus">
+          <ServoOverrideTable servos={busServos} />
+        </Section>
+      </Tier>
     {/if}
   {/if}
 </Page>

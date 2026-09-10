@@ -16,6 +16,11 @@
 </div>
 
 <style lang="scss">
+  // Hide a sub-section whose content folded away entirely (see Section).
+  .container:not(:has(.content > *)) {
+    display: none;
+  }
+
   .header {
     padding: 10px 8px 4px;
     margin: 0 4px 4px;

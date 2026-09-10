@@ -13,6 +13,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS"];
 
@@ -226,57 +227,72 @@
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <div class="primary-row">
     <Section label="configurationGPS">
-      <Field id="gps-protocol" label="configurationGPSProtocol">
-        <Select
-          id="gps-protocol"
-          bind:value={FC.GPS_CONFIG.provider}
-          options={protocolOptions}
-        />
-      </Field>
+      <Tier id="gps.configuration.protocol">
+        <Field id="gps-protocol" label="configurationGPSProtocol">
+          <Select
+            id="gps-protocol"
+            bind:value={FC.GPS_CONFIG.provider}
+            options={protocolOptions}
+          />
+        </Field>
+      </Tier>
 
       {#if !fbusSelected}
         {#if autoConfigEnabled && ubloxSelected}
-          <Field id="gps-ubx-sbas" label="configurationGPSubxSbas">
-            <Select
-              id="gps-ubx-sbas"
-              bind:value={FC.GPS_CONFIG.ublox_sbas}
-              options={sbasOptions}
-            />
-          </Field>
+          <Tier id="gps.configuration.ubxSbas">
+            <Field id="gps-ubx-sbas" label="configurationGPSubxSbas">
+              <Select
+                id="gps-ubx-sbas"
+                bind:value={FC.GPS_CONFIG.ublox_sbas}
+                options={sbasOptions}
+              />
+            </Field>
+          </Tier>
         {/if}
 
-        <Field id="gps-auto-baud" label="configurationGPSAutoBaud">
-          <Switch id="gps-auto-baud" bind:checked={getAutoBaud, setAutoBaud} />
-        </Field>
-        <Field id="gps-auto-config" label="configurationGPSAutoConfig">
-          <Switch
-            id="gps-auto-config"
-            bind:checked={getAutoConfig, setAutoConfig}
-          />
-        </Field>
-
-        {#if autoConfigEnabled && ubloxSelected}
-          <Field id="gps-ublox-galileo" label="configurationGPSGalileo">
-            {#snippet tooltip()}
-              {$i18n.t("configurationGPSGalileoHelp")}
-            {/snippet}
+        <Tier id="gps.configuration.autoBaud">
+          <Field id="gps-auto-baud" label="configurationGPSAutoBaud">
             <Switch
-              id="gps-ublox-galileo"
-              bind:checked={getUbloxGalileo, setUbloxGalileo}
+              id="gps-auto-baud"
+              bind:checked={getAutoBaud, setAutoBaud}
             />
           </Field>
+        </Tier>
+        <Tier id="gps.configuration.autoConfig">
+          <Field id="gps-auto-config" label="configurationGPSAutoConfig">
+            <Switch
+              id="gps-auto-config"
+              bind:checked={getAutoConfig, setAutoConfig}
+            />
+          </Field>
+        </Tier>
+
+        {#if autoConfigEnabled && ubloxSelected}
+          <Tier id="gps.configuration.ubloxGalileo">
+            <Field id="gps-ublox-galileo" label="configurationGPSGalileo">
+              {#snippet tooltip()}
+                {$i18n.t("configurationGPSGalileoHelp")}
+              {/snippet}
+              <Switch
+                id="gps-ublox-galileo"
+                bind:checked={getUbloxGalileo, setUbloxGalileo}
+              />
+            </Field>
+          </Tier>
         {/if}
       {/if}
 
-      <Field id="gps-home-once" label="configurationGPSHomeOnce">
-        {#snippet tooltip()}
-          {$i18n.t("configurationGPSHomeOnceHelp")}
-        {/snippet}
-        <Switch
-          id="gps-home-once"
-          bind:checked={getHomePointOnce, setHomePointOnce}
-        />
-      </Field>
+      <Tier id="gps.configuration.homePointOnce">
+        <Field id="gps-home-once" label="configurationGPSHomeOnce">
+          {#snippet tooltip()}
+            {$i18n.t("configurationGPSHomeOnceHelp")}
+          {/snippet}
+          <Switch
+            id="gps-home-once"
+            bind:checked={getHomePointOnce, setHomePointOnce}
+          />
+        </Field>
+      </Tier>
     </Section>
 
     <Section label="gpsHead" header={statusHeader}>

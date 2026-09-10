@@ -7,9 +7,12 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { getProfile } from "@/js/profile.svelte.js";
+  import { visible } from "@/js/relevance.js";
 
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import EffectivePidGains from "./EffectivePidGains.svelte";
   import PidGains from "./PidGains.svelte";
@@ -56,7 +59,22 @@
   });
 
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
-  let showSettingsColumn = $derived(showPidBoxes && CONFIGURATOR.expertMode);
+
+  // The right-hand settings column holds two expert sections; the column
+  // layout follows the same registry entries the <Tier> wrappers use, and
+  // stays open while settings search is revealing one of them.
+  const SETTINGS_COLUMN_IDS = [
+    "profiles.pidSettings.section",
+    "profiles.pidBandwidth.section",
+  ];
+  let showSettingsColumn = $derived(
+    showPidBoxes &&
+      SETTINGS_COLUMN_IDS.some(
+        (id) =>
+          CONFIGURATOR.revealedFieldId === id ||
+          visible(id, getProfile(), CONFIGURATOR.disclosureLevel),
+      ),
+  );
 
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
@@ -254,14 +272,18 @@
         <PidGains />
         <MasterGains />
       {/if}
-      {#if CONFIGURATOR.expertMode}
+      <Tier id="profiles.leveling.section">
         <LevelingSettings />
-      {/if}
+      </Tier>
     </div>
     {#if showSettingsColumn}
       <div>
-        <PidSettings />
-        <PidBandwidth />
+        <Tier id="profiles.pidSettings.section">
+          <PidSettings />
+        </Tier>
+        <Tier id="profiles.pidBandwidth.section">
+          <PidBandwidth />
+        </Tier>
       </div>
     {/if}
   </div>

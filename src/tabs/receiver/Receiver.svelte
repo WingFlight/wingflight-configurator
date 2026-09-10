@@ -17,6 +17,7 @@
   import Field from "@/components/Field.svelte";
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import Tier from "@/components/Tier.svelte";
   import ChannelRange from "./ChannelRange.svelte";
   import ReceiverType from "./ReceiverType.svelte";
   import TelemetrySettings from "./TelemetrySettings.svelte";
@@ -417,45 +418,56 @@
         {/snippet}
         <Section header={backupConfigHeader}>
           <SubSection>
-            <Field id="backup-rx-provider" label="receiverBackupRxProvider">
-              <select
-                id="backup-rx-provider"
-                bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
-              >
-                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
-                  <option value={i}>{name}</option>
-                {/each}
-              </select>
-            </Field>
+            <Tier id="receiver.backup.provider">
+              <Field id="backup-rx-provider" label="receiverBackupRxProvider">
+                <select
+                  id="backup-rx-provider"
+                  bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
+                >
+                  {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
+                    <option value={i}>{name}</option>
+                  {/each}
+                </select>
+              </Field>
+            </Tier>
           </SubSection>
           <SubSection label="receiverBackupRxSignaling">
-            <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxInvertedHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-inverted"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
-              />
-            </Field>
-            <Field id="backup-rx-halfduplex" label="receiverBackupRxHalfDuplex">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxHalfDuplexHelp" />
-              {/snippet}
-              <Switch
+            <Tier id="receiver.backup.inverted">
+              <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxInvertedHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-inverted"
+                  bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
+                />
+              </Field>
+            </Tier>
+            <Tier id="receiver.backup.halfDuplex">
+              <Field
                 id="backup-rx-halfduplex"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
-              />
-            </Field>
-            <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxPinSwapHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-pinswap"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
-              />
-            </Field>
+                label="receiverBackupRxHalfDuplex"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxHalfDuplexHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-halfduplex"
+                  bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
+                />
+              </Field>
+            </Tier>
+            <Tier id="receiver.backup.pinSwap">
+              <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxPinSwapHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-pinswap"
+                  bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
+                />
+              </Field>
+            </Tier>
           </SubSection>
         </Section>
       {/if}
@@ -466,14 +478,18 @@
         </div>
         {#if FC.FEATURE_CONFIG.features.TELEMETRY && telemetry.type !== TelemetryType.TOGGLE}
           <div transition:slide|global>
-            <TelemetrySensors {telemetry} />
+            <Tier id="receiver.telemetry.sensors">
+              <TelemetrySensors {telemetry} />
+            </Tier>
           </div>
         {/if}
       {/if}
     </div>
     <div>
       <ChannelAssignment />
-      <ModelPreview />
+      <Tier id="receiver.preview.model">
+        <ModelPreview />
+      </Tier>
     </div>
   </div>
 </Page>

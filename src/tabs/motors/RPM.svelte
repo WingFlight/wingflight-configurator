@@ -8,50 +8,62 @@
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
   import motorState from "./state.svelte.js";
 </script>
 
-<Section label="motorsSectionLabelRPM">
-  <SubSection>
-    <Field id="rpm-sensor" label="motorsRPMSensor">
-      {#snippet tooltip()}
-        <Tooltip help="motorsRPMSensorHelp" />
-      {/snippet}
-      <Switch
-        id="rpm-sensor"
-        bind:checked={FC.FEATURE_CONFIG.features.FREQ_SENSOR}
-      />
-    </Field>
-
-    {#if motorState.isDshot}
-      <div transition:slide>
-        <Field id="dshot-bidir" label="motorsDshotBidir">
+<Tier id="motors.rpm.section">
+  <Section label="motorsSectionLabelRPM">
+    <SubSection>
+      <Tier id="motors.rpm.freqSensor">
+        <Field id="rpm-sensor" label="motorsRPMSensor">
           {#snippet tooltip()}
-            <Tooltip help="motorsDshotBidirHelp" />
+            <Tooltip help="motorsRPMSensorHelp" />
           {/snippet}
           <Switch
-            id="dshot-bidir"
-            bind:checked={FC.MOTOR_CONFIG.use_dshot_telemetry}
+            id="rpm-sensor"
+            bind:checked={FC.FEATURE_CONFIG.features.FREQ_SENSOR}
           />
         </Field>
-      </div>
-    {/if}
+      </Tier>
 
-    {#each { length: FC.CONFIG.motorCount } as _, i (i)}
-      <Field id={`motor-poles-${i + 1}`} label={`motorsMotorPoles${i + 1}Long`}>
-        {#snippet tooltip()}
-          <Tooltip help="motorsMotorPolesHelp" />
-        {/snippet}
-        <NumberInput
-          id={`motor-poles-${i + 1}`}
-          min="2"
-          max="255"
-          step="2"
-          bind:value={FC.MOTOR_CONFIG.motor_poles[i]}
-        />
-      </Field>
-    {/each}
-  </SubSection>
-</Section>
+      {#if motorState.isDshot}
+        <div transition:slide>
+          <Tier id="motors.rpm.dshotTelemetry">
+            <Field id="dshot-bidir" label="motorsDshotBidir">
+              {#snippet tooltip()}
+                <Tooltip help="motorsDshotBidirHelp" />
+              {/snippet}
+              <Switch
+                id="dshot-bidir"
+                bind:checked={FC.MOTOR_CONFIG.use_dshot_telemetry}
+              />
+            </Field>
+          </Tier>
+        </div>
+      {/if}
+
+      {#each { length: FC.CONFIG.motorCount } as _, i (i)}
+        <Tier id="motors.rpm.motorPoles">
+          <Field
+            id={`motor-poles-${i + 1}`}
+            label={`motorsMotorPoles${i + 1}Long`}
+          >
+            {#snippet tooltip()}
+              <Tooltip help="motorsMotorPolesHelp" />
+            {/snippet}
+            <NumberInput
+              id={`motor-poles-${i + 1}`}
+              min="2"
+              max="255"
+              step="2"
+              bind:value={FC.MOTOR_CONFIG.motor_poles[i]}
+            />
+          </Field>
+        </Tier>
+      {/each}
+    </SubSection>
+  </Section>
+</Tier>

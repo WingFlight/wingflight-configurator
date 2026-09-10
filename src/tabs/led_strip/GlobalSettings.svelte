@@ -4,6 +4,7 @@
 
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import { bpmToMs, msToBpm } from "./util.js";
 
@@ -34,57 +35,67 @@
 
 <div class="section">{$i18n.t("ledStripGlobalSettings")}</div>
 
-<div class="field">
-  <span class="label">{$i18n.t("ledStripProfileTitle")}</span>
-  <Select
-    bind:value={FC.LED_STRIP_CONFIG.ledstrip_profile}
-    options={profileOptions}
-    {onchange}
-  />
-</div>
+<Tier id="led_strip.global.profile">
+  <div class="field">
+    <span class="label">{$i18n.t("ledStripProfileTitle")}</span>
+    <Select
+      bind:value={FC.LED_STRIP_CONFIG.ledstrip_profile}
+      options={profileOptions}
+      {onchange}
+    />
+  </div>
+</Tier>
 
-<label class="field">
-  <span class="label">{$i18n.t("ledStripGlobalBlinkRate")}</span>
-  <NumberInput
-    bind:value={() => blinkRateBpm, onBlinkRateChange}
-    min={30}
-    max={300}
-    step={1}
-  />
-</label>
+<Tier id="led_strip.global.blinkRate">
+  <label class="field">
+    <span class="label">{$i18n.t("ledStripGlobalBlinkRate")}</span>
+    <NumberInput
+      bind:value={() => blinkRateBpm, onBlinkRateChange}
+      min={30}
+      max={300}
+      step={1}
+    />
+  </label>
+</Tier>
 
-<label class="field">
-  <span class="label">{$i18n.t("ledStripGlobalFadeRate")}</span>
-  <NumberInput
-    bind:value={FC.LED_STRIP_CONFIG.ledstrip_fade_rate}
-    min={1}
-    max={100}
-    step={1}
-    {onchange}
-  />
-</label>
+<Tier id="led_strip.global.fadeRate">
+  <label class="field">
+    <span class="label">{$i18n.t("ledStripGlobalFadeRate")}</span>
+    <NumberInput
+      bind:value={FC.LED_STRIP_CONFIG.ledstrip_fade_rate}
+      min={1}
+      max={100}
+      step={1}
+      {onchange}
+    />
+  </label>
+</Tier>
 
-<label class="field">
-  <span class="label">{$i18n.t("ledStripGlobalFlickerRate")}</span>
-  <NumberInput
-    bind:value={FC.LED_STRIP_CONFIG.ledstrip_flicker_rate}
-    min={0}
-    max={100}
-    step={1}
-    {onchange}
-  />
-</label>
+<Tier id="led_strip.global.flickerRate">
+  <label class="field">
+    <span class="label">{$i18n.t("ledStripGlobalFlickerRate")}</span>
+    <NumberInput
+      bind:value={FC.LED_STRIP_CONFIG.ledstrip_flicker_rate}
+      min={0}
+      max={100}
+      step={1}
+      {onchange}
+    />
+  </label>
+</Tier>
 
-<label class="field">
-  <span class="label">{$i18n.t("ledStripGlobalBrightness")}</span>
-  <NumberInput
-    bind:value={FC.LED_STRIP_CONFIG.ledstrip_brightness}
-    min={5}
-    max={100}
-    step={1}
-    {onchange}
-  />
-</label>
+<Tier id="led_strip.global.brightness">
+  <label class="field">
+    <span class="label">{$i18n.t("ledStripGlobalBrightness")}</span>
+    <NumberInput
+      bind:value={FC.LED_STRIP_CONFIG.ledstrip_brightness}
+      min={5}
+      max={100}
+      step={1}
+      {onchange}
+    />
+  </label>
+</Tier>
 
 <style lang="scss">
   .section {

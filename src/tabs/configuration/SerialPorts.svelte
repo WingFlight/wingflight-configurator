@@ -4,6 +4,8 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import Tier from "@/components/Tier.svelte";
+
   import {
     BAUD_RATE_OPTIONS,
     PORT_FUNCTIONS,
@@ -111,28 +113,32 @@
           <div class="portid">{portLabel(port)}</div>
           <div class="uartid">{portUartLabel(port)}</div>
         </td>
-        <td>
-          <select
-            value={port.functionMask}
-            onchange={(e) => onFunctionChange(port, e.target.value)}
-          >
-            {#each functionOptionsFor(port) as opt (opt.value)}
-              <option value={opt.value} disabled={opt.disabled}
-                >{opt.label}</option
-              >
-            {/each}
-          </select>
-        </td>
-        <td>
-          <select
-            value={getPortBaudrate(port, getPortType(port.functionMask))}
-            onchange={(e) => onBaudrateChange(port, e.target.value)}
-          >
-            {#each baudrateOptionsFor(port) as opt (opt.value)}
-              <option value={opt.value}>{opt.label}</option>
-            {/each}
-          </select>
-        </td>
+        <Tier id="configuration.serialPorts.function">
+          <td>
+            <select
+              value={port.functionMask}
+              onchange={(e) => onFunctionChange(port, e.target.value)}
+            >
+              {#each functionOptionsFor(port) as opt (opt.value)}
+                <option value={opt.value} disabled={opt.disabled}
+                  >{opt.label}</option
+                >
+              {/each}
+            </select>
+          </td>
+        </Tier>
+        <Tier id="configuration.serialPorts.baudrate">
+          <td>
+            <select
+              value={getPortBaudrate(port, getPortType(port.functionMask))}
+              onchange={(e) => onBaudrateChange(port, e.target.value)}
+            >
+              {#each baudrateOptionsFor(port) as opt (opt.value)}
+                <option value={opt.value}>{opt.label}</option>
+              {/each}
+            </select>
+          </td>
+        </Tier>
       </tr>
     {/each}
   </tbody>

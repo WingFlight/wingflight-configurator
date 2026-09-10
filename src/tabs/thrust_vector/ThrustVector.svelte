@@ -6,7 +6,6 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
@@ -24,18 +23,47 @@
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tier from "@/components/Tier.svelte";
 
+  // fieldId: disclosure registry id (see fields.js) for the axis row / term
+  // column; rows and columns are folded independently.
   const AXES = ["ROLL", "PITCH", "YAW"];
+  const AXIS_FIELD_IDS = {
+    ROLL: "thrust_vector.pidGains.roll",
+    PITCH: "thrust_vector.pidGains.pitch",
+    YAW: "thrust_vector.pidGains.yaw",
+  };
   const GAINS = [
     {
       key: "P",
       label: "profilesProportional",
       help: "profilesProportionalHelp",
+      fieldId: "thrust_vector.pidGains.p",
     },
-    { key: "I", label: "profilesIntegral", help: "profilesIntegralHelp" },
-    { key: "D", label: "profilesDerivative", help: "profilesDerivativeHelp" },
-    { key: "F", label: "profilesFeedforward", help: "profilesFeedforwardHelp" },
-    { key: "B", label: "profilesBoost", help: "profilesBoostHelp" },
+    {
+      key: "I",
+      label: "profilesIntegral",
+      help: "profilesIntegralHelp",
+      fieldId: "thrust_vector.pidGains.i",
+    },
+    {
+      key: "D",
+      label: "profilesDerivative",
+      help: "profilesDerivativeHelp",
+      fieldId: "thrust_vector.pidGains.d",
+    },
+    {
+      key: "F",
+      label: "profilesFeedforward",
+      help: "profilesFeedforwardHelp",
+      fieldId: "thrust_vector.pidGains.f",
+    },
+    {
+      key: "B",
+      label: "profilesBoost",
+      help: "profilesBoostHelp",
+      fieldId: "thrust_vector.pidGains.b",
+    },
   ];
   const MASTER_GAIN_AXES = [
     {
@@ -43,18 +71,21 @@
       axisClass: "ROLL",
       label: "axisROLL",
       gainKey: "masterGainRoll",
+      fieldId: "thrust_vector.masterGains.roll",
     },
     {
       key: "pitch",
       axisClass: "PITCH",
       label: "axisPITCH",
       gainKey: "masterGainPitch",
+      fieldId: "thrust_vector.masterGains.pitch",
     },
     {
       key: "yaw",
       axisClass: "YAW",
       label: "axisYAW",
       gainKey: "masterGainYaw",
+      fieldId: "thrust_vector.masterGains.yaw",
     },
   ];
 
@@ -240,44 +271,50 @@
           <tr>
             <th></th>
             {#each GAINS as gain (gain.key)}
-              <th>
-                <span class="header-label">
-                  {$i18n.t(gain.label)}
-                  <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
-                </span>
-              </th>
+              <Tier id={gain.fieldId}>
+                <th>
+                  <span class="header-label">
+                    {$i18n.t(gain.label)}
+                    <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+                  </span>
+                </th>
+              </Tier>
             {/each}
           </tr>
         </thead>
         <tbody>
           {#each AXES as axis, axisIndex (axis)}
-            <tr>
-              <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
-              {#each GAINS as gain, gainIndex (gain.key)}
-                {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
-                <td>
-                  <div
-                    class="runtime-control"
-                    class:runtime-controlled={adjustment}
-                    class:runtime-active={adjustment?.active}
-                    title={adjustmentTitle(adjustment)}
-                  >
-                    <NumberInput
-                      min="0"
-                      max="1000"
-                      bind:value={FC.TV_PIDS[axisIndex][gainIndex]}
-                    />
-                    {#if adjustment}
-                      <span class="adjustment-badge">
-                        {adjustment.active
-                          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                          : "ADJ"}
-                      </span>
-                    {/if}
-                  </div>
-                </td>
-              {/each}
-            </tr>
+            <Tier id={AXIS_FIELD_IDS[axis]}>
+              <tr>
+                <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
+                {#each GAINS as gain, gainIndex (gain.key)}
+                  {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
+                  <Tier id={gain.fieldId}>
+                    <td>
+                      <div
+                        class="runtime-control"
+                        class:runtime-controlled={adjustment}
+                        class:runtime-active={adjustment?.active}
+                        title={adjustmentTitle(adjustment)}
+                      >
+                        <NumberInput
+                          min="0"
+                          max="1000"
+                          bind:value={FC.TV_PIDS[axisIndex][gainIndex]}
+                        />
+                        {#if adjustment}
+                          <span class="adjustment-badge">
+                            {adjustment.active
+                              ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                              : "ADJ"}
+                          </span>
+                        {/if}
+                      </div>
+                    </td>
+                  </Tier>
+                {/each}
+              </tr>
+            </Tier>
           {/each}
         </tbody>
       </table>
@@ -293,44 +330,50 @@
           <tr>
             <th></th>
             {#each AXES as axis (axis)}
-              <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+              <Tier id={AXIS_FIELD_IDS[axis]}>
+                <th class="axis-header {axis}">{$i18n.t(`axis${axis}`)}</th>
+              </Tier>
             {/each}
           </tr>
         </thead>
         <tbody>
           {#each GAINS as gain, gainIndex (gain.key)}
-            <tr>
-              <td class="term-label">
-                <span class="header-label">
-                  <span class="term-key">{gain.key}</span>
-                  <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
-                </span>
-              </td>
-              {#each AXES as axis, axisIndex (axis)}
-                {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
-                <td>
-                  <div
-                    class="runtime-control"
-                    class:runtime-controlled={adjustment}
-                    class:runtime-active={adjustment?.active}
-                    title={adjustmentTitle(adjustment)}
-                  >
-                    <NumberInput
-                      min="0"
-                      max="1000"
-                      bind:value={FC.TV_PIDS[axisIndex][gainIndex]}
-                    />
-                    {#if adjustment}
-                      <span class="adjustment-badge">
-                        {adjustment.active
-                          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                          : "ADJ"}
-                      </span>
-                    {/if}
-                  </div>
+            <Tier id={gain.fieldId}>
+              <tr>
+                <td class="term-label">
+                  <span class="header-label">
+                    <span class="term-key">{gain.key}</span>
+                    <HelpIcon>{$i18n.t(gain.help)}</HelpIcon>
+                  </span>
                 </td>
-              {/each}
-            </tr>
+                {#each AXES as axis, axisIndex (axis)}
+                  {@const adjustment = pidAdjustmentState(axisIndex, gainIndex)}
+                  <Tier id={AXIS_FIELD_IDS[axis]}>
+                    <td>
+                      <div
+                        class="runtime-control"
+                        class:runtime-controlled={adjustment}
+                        class:runtime-active={adjustment?.active}
+                        title={adjustmentTitle(adjustment)}
+                      >
+                        <NumberInput
+                          min="0"
+                          max="1000"
+                          bind:value={FC.TV_PIDS[axisIndex][gainIndex]}
+                        />
+                        {#if adjustment}
+                          <span class="adjustment-badge">
+                            {adjustment.active
+                              ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                              : "ADJ"}
+                          </span>
+                        {/if}
+                      </div>
+                    </td>
+                  </Tier>
+                {/each}
+              </tr>
+            </Tier>
           {/each}
         </tbody>
       </table>
@@ -353,31 +396,33 @@
         </thead>
         <tbody>
           {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-            {@const adjustment = masterGainAdjustmentState(axisIndex)}
-            <tr>
-              <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
-              <td>
-                <div
-                  class="runtime-control"
-                  class:runtime-controlled={adjustment}
-                  class:runtime-active={adjustment?.active}
-                  title={adjustmentTitle(adjustment)}
-                >
-                  <NumberInput
-                    min="25"
-                    max="1000"
-                    bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
-                  />
-                  {#if adjustment}
-                    <span class="adjustment-badge">
-                      {adjustment.active
-                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                        : "ADJ"}
-                    </span>
-                  {/if}
-                </div>
-              </td>
-            </tr>
+            <Tier id={axis.fieldId}>
+              {@const adjustment = masterGainAdjustmentState(axisIndex)}
+              <tr>
+                <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
+                <td>
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={adjustment}
+                    class:runtime-active={adjustment?.active}
+                    title={adjustmentTitle(adjustment)}
+                  >
+                    <NumberInput
+                      min="25"
+                      max="1000"
+                      bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
+                    />
+                    {#if adjustment}
+                      <span class="adjustment-badge">
+                        {adjustment.active
+                          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                </td>
+              </tr>
+            </Tier>
           {/each}
         </tbody>
       </table>
@@ -390,56 +435,62 @@
       <p>{@html $i18n.t("thrustVectorHoldIntroNote")}</p>
     </div>
 
-    <Field id="tv-hold-gain" label="thrustVectorHoldGain">
-      {#snippet tooltip()}
-        {$i18n.t("thrustVectorHoldGainHelp")}
-      {/snippet}
-      <div
-        class="runtime-control"
-        class:runtime-controlled={holdGainAdjustment}
-        class:runtime-active={holdGainAdjustment?.active}
-        title={adjustmentTitle(holdGainAdjustment)}
-      >
+    <Tier id="thrust_vector.hold.gain">
+      <Field id="tv-hold-gain" label="thrustVectorHoldGain">
+        {#snippet tooltip()}
+          {$i18n.t("thrustVectorHoldGainHelp")}
+        {/snippet}
+        <div
+          class="runtime-control"
+          class:runtime-controlled={holdGainAdjustment}
+          class:runtime-active={holdGainAdjustment?.active}
+          title={adjustmentTitle(holdGainAdjustment)}
+        >
+          <NumberInput
+            id="tv-hold-gain"
+            min="0"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.tvHoldGain}
+          />
+          {#if holdGainAdjustment}
+            <span class="adjustment-badge">
+              {holdGainAdjustment.active
+                ? (adjustmentChannelLabel(holdGainAdjustment) ?? "LIVE")
+                : "ADJ"}
+            </span>
+          {/if}
+        </div>
+      </Field>
+    </Tier>
+    <Tier id="thrust_vector.hold.deadband">
+      <Field id="tv-hold-deadband" label="thrustVectorHoldDeadband">
+        {#snippet tooltip()}
+          {$i18n.t("thrustVectorHoldDeadbandHelp")}
+        {/snippet}
         <NumberInput
-          id="tv-hold-gain"
+          id="tv-hold-deadband"
           min="0"
-          max="250"
-          bind:value={FC.TV_PID_PROFILE.tvHoldGain}
+          max="100"
+          bind:value={FC.TV_PID_PROFILE.tvHoldDeadband}
         />
-        {#if holdGainAdjustment}
-          <span class="adjustment-badge">
-            {holdGainAdjustment.active
-              ? (adjustmentChannelLabel(holdGainAdjustment) ?? "LIVE")
-              : "ADJ"}
-          </span>
-        {/if}
-      </div>
-    </Field>
-    <Field id="tv-hold-deadband" label="thrustVectorHoldDeadband">
-      {#snippet tooltip()}
-        {$i18n.t("thrustVectorHoldDeadbandHelp")}
-      {/snippet}
-      <NumberInput
-        id="tv-hold-deadband"
-        min="0"
-        max="100"
-        bind:value={FC.TV_PID_PROFILE.tvHoldDeadband}
-      />
-    </Field>
-    <Field id="tv-hold-max-rate" label="thrustVectorHoldMaxRate">
-      {#snippet tooltip()}
-        {$i18n.t("thrustVectorHoldMaxRateHelp")}
-      {/snippet}
-      <NumberInput
-        id="tv-hold-max-rate"
-        min="0"
-        max="1800"
-        bind:value={FC.TV_PID_PROFILE.tvHoldMaxRate}
-      />
-    </Field>
+      </Field>
+    </Tier>
+    <Tier id="thrust_vector.hold.maxRate">
+      <Field id="tv-hold-max-rate" label="thrustVectorHoldMaxRate">
+        {#snippet tooltip()}
+          {$i18n.t("thrustVectorHoldMaxRateHelp")}
+        {/snippet}
+        <NumberInput
+          id="tv-hold-max-rate"
+          min="0"
+          max="1800"
+          bind:value={FC.TV_PID_PROFILE.tvHoldMaxRate}
+        />
+      </Field>
+    </Tier>
   </Section>
 
-  {#if CONFIGURATOR.expertMode}
+  <Tier id="thrust_vector.pidSettings.section">
     <Section label="thrustVectorPidSettings">
       <SubSection label="profilesItermDecayGroup">
         <Field id="tv-iterm-decay-time" label="profilesItermDecayTime">
@@ -727,7 +778,7 @@
         </Field>
       </SubSection>
     </Section>
-  {/if}
+  </Tier>
 </Page>
 
 <dialog bind:this={copyDialogEl}>

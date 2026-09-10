@@ -4,6 +4,7 @@
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Select from "@/components/Select.svelte";
+  import Tier from "@/components/Tier.svelte";
 
   import escState from "./state.svelte.js";
   import {
@@ -31,42 +32,44 @@
   <p class="power-cycle-note">{$i18n.t("escProgrammingPowerCycleNote")}</p>
 {/if}
 
-<div class="pages">
-  {#each escState.manufacturer.pages as page (page.title)}
-    <Section label={page.title}>
-      {#each page.fields as pageField, i (pageField.apikey + "-" + i)}
-        {@const rawField = fieldMeta(pageField.apikey)}
-        {@const field =
-          rawField &&
-          resolveManufacturerField(
-            escState.manufacturer,
-            rawField,
-            escState.values,
-          )}
-        {@const fieldId = pageField.apikey + "-" + i}
-        {#if field && pageField.apikey in escState.values && isFieldVisible(field, escState.values) && keepPageField(pageField, escState.values.layout_revision)}
-          <Field id={fieldId} label={pageField.label} unit={field.unit}>
-            {#if hasEnum(field)}
-              <Select
-                id={fieldId}
-                bind:value={escState.values[pageField.apikey]}
-                options={fieldOptions(field)}
-              />
-            {:else}
-              <NumberInput
-                id={fieldId}
-                bind:value={escState.values[pageField.apikey]}
-                min={displayMin(field)}
-                max={displayMax(field)}
-                step={displayStep(field)}
-              />
-            {/if}
-          </Field>
-        {/if}
-      {/each}
-    </Section>
-  {/each}
-</div>
+<Tier id="esc_programming.form.parameters">
+  <div class="pages">
+    {#each escState.manufacturer.pages as page (page.title)}
+      <Section label={page.title}>
+        {#each page.fields as pageField, i (pageField.apikey + "-" + i)}
+          {@const rawField = fieldMeta(pageField.apikey)}
+          {@const field =
+            rawField &&
+            resolveManufacturerField(
+              escState.manufacturer,
+              rawField,
+              escState.values,
+            )}
+          {@const fieldId = pageField.apikey + "-" + i}
+          {#if field && pageField.apikey in escState.values && isFieldVisible(field, escState.values) && keepPageField(pageField, escState.values.layout_revision)}
+            <Field id={fieldId} label={pageField.label} unit={field.unit}>
+              {#if hasEnum(field)}
+                <Select
+                  id={fieldId}
+                  bind:value={escState.values[pageField.apikey]}
+                  options={fieldOptions(field)}
+                />
+              {:else}
+                <NumberInput
+                  id={fieldId}
+                  bind:value={escState.values[pageField.apikey]}
+                  min={displayMin(field)}
+                  max={displayMax(field)}
+                  step={displayStep(field)}
+                />
+              {/if}
+            </Field>
+          {/if}
+        {/each}
+      </Section>
+    {/each}
+  </div>
+</Tier>
 
 <style lang="scss">
   .pages {
