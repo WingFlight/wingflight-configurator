@@ -16,7 +16,7 @@
   import EscWiringDetectWizard from "./EscWiringDetectWizard.svelte";
   import motorState from "./state.svelte.js";
 
-  let { onSaveRequested, hasUnsavedChanges } = $props();
+  let { onSaveRequested, hasUnsavedChanges, armed } = $props();
 
   // FBUS/S.Port master and SRXL2 ESC both read via their own dedicated
   // serial port function, not this module's own "ESC Telemetry" one -- the
@@ -100,10 +100,13 @@
       disabled={wizardDisabled ||
         motorState.srxl2PortAssigned ||
         motorState.overrideEnabled ||
-        hasUnsavedChanges}
-      title={hasUnsavedChanges
-        ? $i18n.t("motorsEscWiringDetectSaveFirst")
-        : undefined}
+        hasUnsavedChanges ||
+        armed}
+      title={armed
+        ? $i18n.t("motorsEscWiringDetectArmedFirst")
+        : hasUnsavedChanges
+          ? $i18n.t("motorsEscWiringDetectSaveFirst")
+          : undefined}
       onclick={onClickDetectWiring}
     >
       {$i18n.t("motorsEscWiringDetectButton")}

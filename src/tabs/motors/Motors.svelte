@@ -41,6 +41,13 @@
       (motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry),
   );
 
+  // Same pattern as esc_programming/state.svelte.js's own `armed` - the ESC
+  // wiring trial cycles live UART config while motors could be spinning, so
+  // Telemetry.svelte needs this to refuse to even open its Detect Wiring
+  // wizard while armed, on top of the firmware's own ARMING_FLAG(ARMED)
+  // rejection.
+  let armed = $derived(bit_check(FC.CONFIG.mode, FC.AUX_CONFIG.indexOf("ARM")));
+
   function snapshotState() {
     return $state.snapshot({
       MOTOR_CONFIG: FC.MOTOR_CONFIG,
@@ -79,6 +86,10 @@
       await MSP.promise(MSPCodes.MSP_MOTOR);
       await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
       await MSP.promise(MSPCodes.MSP_BATTERY_STATE);
+      // Keeps `armed` (below) live while this tab stays open - the initial
+      // fetch above is otherwise the only one this tab ever does, unlike
+      // e.g. Status.svelte's own slow-interval MSP_STATUS repoll.
+      await MSP.promise(MSPCodes.MSP_STATUS);
     }, 50);
   });
 
@@ -159,6 +170,7 @@
             bind:this={telemetryRef}
             onSaveRequested={onSave}
             hasUnsavedChanges={changes.length > 0}
+            {armed}
           />
         </div>
         <div transition:slide>
