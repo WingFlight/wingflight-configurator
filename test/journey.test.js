@@ -167,12 +167,26 @@ describe("stage 4 · link", () => {
     expect(result(results, "link.endpointsInWindow").status).toBe(STATUS.PASS);
   });
 
-  it("reports the channel that did not move and endpoints out of window", () => {
+  it("stays unknown while nothing has moved, then reports the channel that did not move", () => {
     const fc = conventionalTrainer(); // RC_MAP AETR: throttle is channel 2
-    const observed = { min: [1000, 1000, 1500, 1000], max: [2000, 2000, 1520, 1700], samples: 5 };
-    const results = evaluateStage("link", ctxFor(fc, { observed }));
+    let observed = { min: [1500, 1500, 1500, 1500], max: [1500, 1500, 1500, 1500], samples: 5 };
+    let results = evaluateStage("link", ctxFor(fc, { observed }));
+    expect(result(results, "link.primariesMoving").status).toBe(STATUS.UNKNOWN);
+    expect(result(results, "link.endpointsInWindow").status).toBe(STATUS.UNKNOWN);
+
+    observed = { min: [1000, 1000, 1500, 1000], max: [2000, 2000, 1520, 1700], samples: 5 };
+    results = evaluateStage("link", ctxFor(fc, { observed }));
     expect(result(results, "link.primariesMoving")).toMatchObject({ status: STATUS.FAIL, values: { channels: "3" } });
-    expect(result(results, "link.endpointsInWindow").values.channels).toBe("3, 4");
+    // Endpoints are only judged once every primary has moved.
+    expect(result(results, "link.endpointsInWindow").status).toBe(STATUS.UNKNOWN);
+  });
+
+  it("reports endpoints out of window once every primary has moved", () => {
+    const fc = conventionalTrainer();
+    const observed = { min: [1000, 1000, 1300, 1000], max: [2000, 2000, 1900, 1700], samples: 5 };
+    const r = result(evaluateStage("link", ctxFor(fc, { observed })), "link.endpointsInWindow");
+    expect(r.status).toBe(STATUS.FAIL);
+    expect(r.values.channels).toBe("3, 4");
   });
 
   it("fails when no arm switch is bound", () => {

@@ -178,6 +178,9 @@ export const CHECKS = {
       const channels = primaryChannels(fc);
       if (channels.length < 4) return unknown("journeyDetail.noChannelMap");
       const still = channels.filter((c) => (observed.max[c] ?? 0) - (observed.min[c] ?? 0) < PRIMARY_MOVEMENT_US);
+      // Nothing moved at all: the sticks have not been touched yet, which is
+      // "not observed", not a failure.
+      if (still.length === channels.length) return unknown("journeyDetail.notObserved");
       if (still.length === 0) return pass("journeyDetail.primariesMoved");
       return fail("journeyDetail.primariesStill", { channels: still.map((c) => c + 1).sort((a, b) => a - b).join(", ") });
     },
@@ -200,6 +203,9 @@ export const CHECKS = {
       if (channels.length < 4) return unknown("journeyDetail.noChannelMap");
       const lo = profile.link.pulseMin || 885;
       const hi = profile.link.pulseMax || 2115;
+      // Endpoints can only be judged once every primary has been moved.
+      const unmoved = channels.some((c) => (observed.max[c] ?? 0) - (observed.min[c] ?? 0) < PRIMARY_MOVEMENT_US);
+      if (unmoved) return unknown("journeyDetail.notObserved");
       const bad = [];
       for (const c of channels) {
         const min = observed.min[c], max = observed.max[c];
