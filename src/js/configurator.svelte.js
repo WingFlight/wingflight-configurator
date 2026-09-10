@@ -1,3 +1,5 @@
+import * as config from "@/js/config.js";
+
 export const API_VERSION_22_0 = "22.0.0";
 export const API_VERSION_22_1 = "22.1.0";
 export const API_VERSION_22_2 = "22.2.0";
@@ -30,5 +32,59 @@ export const CONFIGURATOR = $state({
     "https://github.com/WingFlight/wingflight-configurator/releases",
   allReleasesUrl:
     "https://github.com/WingFlight/wingflight-configurator/releases",
+  // Legacy binary flag, kept in sync with disclosureLevel ("expert" <=> true)
+  // so tabs that still read it keep working. New code reads disclosureLevel
+  // (or, better, wraps fields in <Tier>).
   expertMode: false,
+  // Disclosure level: "essential" | "standard" | "expert". See relevance.js.
+  disclosureLevel: "standard",
+  // Whether the Setup Journey is the landing page when a board connects.
+  journeyLanding: true,
 });
+
+const DISCLOSURE_LEVELS = ["essential", "standard", "expert"];
+
+// Load the disclosure level from local config, migrating the pre-journey
+// boolean expertMode flag (true -> expert, otherwise standard).
+export function loadDisclosureLevel() {
+  const stored = config.get("disclosureLevel");
+  let level;
+  if (DISCLOSURE_LEVELS.includes(stored)) {
+    level = stored;
+  } else {
+    level = config.get("expertMode") === true ? "expert" : "standard";
+    config.set({ disclosureLevel: level });
+  }
+  applyDisclosureLevel(level);
+  return level;
+}
+
+export function setDisclosureLevel(level) {
+  if (!DISCLOSURE_LEVELS.includes(level)) level = "standard";
+  applyDisclosureLevel(level);
+  config.set({ disclosureLevel: level, expertMode: level === "expert" });
+}
+
+function applyDisclosureLevel(level) {
+  CONFIGURATOR.disclosureLevel = level;
+  CONFIGURATOR.expertMode = level === "expert";
+  // Keep the header quick-switch in step with wherever the change came from.
+  const headerSelect = globalThis.document?.querySelector?.(
+    "#disclosure-level select",
+  );
+  if (headerSelect && headerSelect.value !== level) {
+    headerSelect.value = level;
+  }
+}
+
+export function loadJourneyLanding() {
+  const stored = config.get("journeyLanding");
+  CONFIGURATOR.journeyLanding =
+    stored === undefined || stored === null ? true : !!stored;
+  return CONFIGURATOR.journeyLanding;
+}
+
+export function setJourneyLanding(enabled) {
+  CONFIGURATOR.journeyLanding = !!enabled;
+  config.set({ journeyLanding: !!enabled });
+}

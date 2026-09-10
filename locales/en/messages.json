@@ -7232,7 +7232,7 @@
     "presetsButtonReview": {
         "message": "Review Selected Presets"
     },
-    "presetsButtonReviewCLI":{
+    "presetsButtonReviewCLI": {
         "message": "Review CLI"
     },
     "presetsButtonApply": {
@@ -7413,5 +7413,1031 @@
     },
     "presetsDontShowAgain": {
         "message": "Don't show again"
+    },
+    "disclosureLevel": {
+        "message": "Detail level"
+    },
+    "disclosureLevelHelp": {
+        "message": "How much of the configuration is shown. <strong>Essential</strong> shows only what is needed to fly safely, <strong>Standard</strong> adds the commonly adjusted settings, <strong>Expert</strong> shows every field. Nothing is ever removed, only folded away; settings search always finds everything."
+    },
+    "disclosureLevelEssential": {
+        "message": "Essential"
+    },
+    "disclosureLevelStandard": {
+        "message": "Standard"
+    },
+    "disclosureLevelExpert": {
+        "message": "Expert"
+    },
+    "optionsDisclosureLevel": {
+        "message": "Detail level shown in the settings tabs"
+    },
+    "optionsJourneyLanding": {
+        "message": "Open the Setup Journey when a board connects"
+    },
+    "optionsJourneyLandingHelp": {
+        "message": "When enabled, connecting to a flight controller opens the guided eight-stage Setup Journey instead of the Status tab. The full settings tree stays reachable under <strong>All settings</strong>."
+    },
+    "tabGroupJourney": {
+        "message": "Guided"
+    },
+    "tabJourney": {
+        "message": "Setup journey"
+    },
+    "journeyIntro": {
+        "message": "Eight stages, in the order a plane is actually built. Each stage answers one question and knows how to tell whether it is finished. Derived checks are read from the board on every refresh; physical checks you confirm yourself, and they turn amber the moment a setting they depend on changes."
+    },
+    "journeyAllSettings": {
+        "message": "All settings"
+    },
+    "journeyProgress": {
+        "message": "{{passed}} of {{total}} checks"
+    },
+    "journeyChecksTitle": {
+        "message": "Checks"
+    },
+    "journeyOpenTab": {
+        "message": "Open:"
+    },
+    "journeyBackToOverview": {
+        "message": "Back to overview"
+    },
+    "journeyConfirm": {
+        "message": "Confirm"
+    },
+    "journeyReconfirm": {
+        "message": "Re-confirm"
+    },
+    "journeyRevoke": {
+        "message": "Revoke"
+    },
+    "journeyUnsavedHint": {
+        "message": "Unsaved changes"
+    },
+    "journeyCompleteTitle": {
+        "message": "Configuration verified."
+    },
+    "journeyCompleteText": {
+        "message": "Every stage checks out right now. What is left is tuning, which happens at the field, across several flights — see below."
+    },
+    "journeyVirtualNote": {
+        "message": "Virtual board: checks run against simulated data."
+    },
+    "journeyNoUidNote": {
+        "message": "This board reports no unique id, so physical confirmations cannot be stored for it."
+    },
+    "journeyBadge.notStarted": {
+        "message": "Not started"
+    },
+    "journeyBadge.inProgress": {
+        "message": "In progress"
+    },
+    "journeyBadge.needsAttention": {
+        "message": "Needs attention"
+    },
+    "journeyBadge.verified": {
+        "message": "Verified"
+    },
+    "journeyBadge.notApplicable": {
+        "message": "Not applicable"
+    },
+    "journeyKind.derived": {
+        "message": "read from board"
+    },
+    "journeyKind.observed": {
+        "message": "observed"
+    },
+    "journeyKind.acknowledged": {
+        "message": "you confirm"
+    },
+    "journeyStage.board.title": {
+        "message": "Board"
+    },
+    "journeyStage.board.question": {
+        "message": "Is the right firmware on it, and does it know which way is up?"
+    },
+    "journeyStage.airframe.title": {
+        "message": "Airframe"
+    },
+    "journeyStage.airframe.question": {
+        "message": "What am I flying?"
+    },
+    "journeyStage.wiring.title": {
+        "message": "Wiring"
+    },
+    "journeyStage.wiring.question": {
+        "message": "What is plugged into which pad?"
+    },
+    "journeyStage.link.title": {
+        "message": "Link"
+    },
+    "journeyStage.link.question": {
+        "message": "Does the radio reach the plane, and which stick is which?"
+    },
+    "journeyStage.outputs.title": {
+        "message": "Outputs"
+    },
+    "journeyStage.outputs.question": {
+        "message": "Do the surfaces move the right way, by the right amount?"
+    },
+    "journeyStage.safety.title": {
+        "message": "Safety"
+    },
+    "journeyStage.safety.question": {
+        "message": "What happens when the link drops, or I flip a switch?"
+    },
+    "journeyStage.power.title": {
+        "message": "Power"
+    },
+    "journeyStage.power.question": {
+        "message": "Can it read the battery, and will it warn me?"
+    },
+    "journeyStage.preflight.title": {
+        "message": "Pre-flight"
+    },
+    "journeyStage.preflight.question": {
+        "message": "Is it actually safe to throw?"
+    },
+    "journeyTab.status": {
+        "message": "Status"
+    },
+    "journeyTab.setup": {
+        "message": "Setup"
+    },
+    "journeyTab.configuration": {
+        "message": "Configuration"
+    },
+    "journeyTab.mixer": {
+        "message": "Mixer"
+    },
+    "journeyTab.servos": {
+        "message": "Servos"
+    },
+    "journeyTab.motors": {
+        "message": "Motors"
+    },
+    "journeyTab.curves": {
+        "message": "Curves"
+    },
+    "journeyTab.receiver": {
+        "message": "Receiver"
+    },
+    "journeyTab.auxiliary": {
+        "message": "Modes"
+    },
+    "journeyTab.failsafe": {
+        "message": "Failsafe"
+    },
+    "journeyTab.power": {
+        "message": "Power"
+    },
+    "journeyTab.profiles": {
+        "message": "Profiles"
+    },
+    "journeyTab.rates": {
+        "message": "Rates"
+    },
+    "journeyTab.gyro": {
+        "message": "Gyro"
+    },
+    "journeyTab.blackbox": {
+        "message": "Blackbox"
+    },
+    "journeyCheck.board.firmwareSupported.title": {
+        "message": "Firmware version supported"
+    },
+    "journeyCheck.board.accCalibrated.title": {
+        "message": "Accelerometer calibrated"
+    },
+    "journeyCheck.board.level.title": {
+        "message": "Level within tolerance"
+    },
+    "journeyCheck.board.orientationConfirmed.title": {
+        "message": "Board orientation confirmed on the model"
+    },
+    "journeyCheck.airframe.modelTypeSet.title": {
+        "message": "Model type chosen"
+    },
+    "journeyCheck.airframe.axesReachOutputs.title": {
+        "message": "Every commanded axis reaches an output"
+    },
+    "journeyCheck.wiring.outputsHavePads.title": {
+        "message": "Every mixer output resolves to a pad"
+    },
+    "journeyCheck.wiring.rxPortConfigured.title": {
+        "message": "Receiver pad matches the protocol"
+    },
+    "journeyCheck.wiring.noConflicts.title": {
+        "message": "No timer or DMA conflict"
+    },
+    "journeyCheck.link.primariesMoving.title": {
+        "message": "Four primary channels seen moving"
+    },
+    "journeyCheck.link.channelMapSet.title": {
+        "message": "Channel map set"
+    },
+    "journeyCheck.link.endpointsInWindow.title": {
+        "message": "Endpoints inside the valid window"
+    },
+    "journeyCheck.link.armSwitchBound.title": {
+        "message": "Arm switch bound"
+    },
+    "journeyCheck.outputs.direction.title": {
+        "message": "{{surface}} ({{output}}) moves the right way"
+    },
+    "journeyCheck.outputs.servoLimitsSane.title": {
+        "message": "Servo centre and travel limits are sane"
+    },
+    "journeyCheck.outputs.throttleCalibrated.title": {
+        "message": "Throttle range calibrated"
+    },
+    "journeyCheck.safety.failsafeProcedureSet.title": {
+        "message": "Failsafe procedure and timings set"
+    },
+    "journeyCheck.safety.failsafeVerified.title": {
+        "message": "Failsafe verified with the motor disconnected"
+    },
+    "journeyCheck.power.voltageCalibrated.title": {
+        "message": "Voltage scale calibrated against a measured pack"
+    },
+    "journeyCheck.power.currentCalibrated.title": {
+        "message": "Current scale set (or sensor disabled)"
+    },
+    "journeyCheck.power.warningThresholdsSet.title": {
+        "message": "Warning thresholds set"
+    },
+    "journeyCheck.preflight.surfaceDirections.title": {
+        "message": "Surface directions"
+    },
+    "journeyCheck.preflight.stabilisationDirection.title": {
+        "message": "Stabilisation correction direction"
+    },
+    "journeyCheck.preflight.centreOfGravity.title": {
+        "message": "Centre of gravity"
+    },
+    "journeyCheck.preflight.controlThrows.title": {
+        "message": "Control throws"
+    },
+    "journeyCheck.preflight.rangeCheck.title": {
+        "message": "Range check"
+    },
+    "journeyDetail.acknowledged": {
+        "message": "Confirmed for this configuration."
+    },
+    "journeyDetail.stale": {
+        "message": "A setting this check depends on changed since you confirmed it. Check again."
+    },
+    "journeyDetail.notAcknowledged": {
+        "message": "Not confirmed yet."
+    },
+    "journeyDetail.checkError": {
+        "message": "This check could not be evaluated."
+    },
+    "journeyDetail.noVersionYet": {
+        "message": "Version not read yet."
+    },
+    "journeyDetail.firmwareVersion": {
+        "message": "Firmware {{version}}."
+    },
+    "journeyDetail.firmwareUnsupported": {
+        "message": "Firmware {{version}} is outside the supported range {{min}} – {{max}}."
+    },
+    "journeyDetail.noAccelerometer": {
+        "message": "No accelerometer detected."
+    },
+    "journeyDetail.accNeedsCalibration": {
+        "message": "The board reports the accelerometer needs calibration. Place it level and calibrate."
+    },
+    "journeyDetail.accCalibrated": {
+        "message": "Calibrated."
+    },
+    "journeyDetail.levelOk": {
+        "message": "Roll {{roll}}°, pitch {{pitch}}° (±{{tolerance}}°)."
+    },
+    "journeyDetail.notLevel": {
+        "message": "Roll {{roll}}°, pitch {{pitch}}°. If the aircraft is sitting level, the board alignment or calibration is off."
+    },
+    "journeyDetail.noMixerYet": {
+        "message": "Mixer not read yet."
+    },
+    "journeyDetail.modelType": {
+        "message": "{{type}}."
+    },
+    "journeyDetail.customMixerWithSurfaces": {
+        "message": "Custom mixer with {{count}} driven output(s). The journey cannot judge a custom mix; the drawing is inferred from the rules."
+    },
+    "journeyDetail.customMixerEmpty": {
+        "message": "Custom mixer with no rules. Pick a model type or write rules in the Mixer tab."
+    },
+    "journeyDetail.noRules": {
+        "message": "No mixer rules drive any output."
+    },
+    "journeyDetail.axesReach": {
+        "message": "{{axes}} all reach an output."
+    },
+    "journeyDetail.axesMissing": {
+        "message": "No output is driven by: {{axes}}."
+    },
+    "journeyDetail.outputsHavePads": {
+        "message": "All {{count}} outputs have a pad."
+    },
+    "journeyDetail.outputsMissingPads": {
+        "message": "No pad for: {{outputs}}. Assign resources or reduce the mixer."
+    },
+    "journeyDetail.noReceiverType": {
+        "message": "No receiver type is enabled."
+    },
+    "journeyDetail.serialRxNoPort": {
+        "message": "{{protocol}} selected but no UART carries Serial RX. Assign one under Ports."
+    },
+    "journeyDetail.serialRxOnPort": {
+        "message": "{{protocol}} on UART {{port}}."
+    },
+    "journeyDetail.rxType": {
+        "message": "{{type}} receiver."
+    },
+    "journeyDetail.conflictsNotRead": {
+        "message": "Pin, timer and DMA tables not read from the board yet."
+    },
+    "journeyDetail.noConflicts": {
+        "message": "No conflicts."
+    },
+    "journeyDetail.conflicts": {
+        "message": "{{count}} conflict(s). Resolve them on the board canvas."
+    },
+    "journeyDetail.notObserved": {
+        "message": "Move every stick to both ends while this stage is open."
+    },
+    "journeyDetail.noChannelMap": {
+        "message": "Channel map not read yet."
+    },
+    "journeyDetail.primariesMoved": {
+        "message": "Roll, pitch, yaw and throttle all moved."
+    },
+    "journeyDetail.primariesStill": {
+        "message": "Not seen moving yet: channel {{channels}}."
+    },
+    "journeyDetail.channelMap": {
+        "message": "{{map}}."
+    },
+    "journeyDetail.channelMapInvalid": {
+        "message": "The first four map entries are not a valid permutation."
+    },
+    "journeyDetail.endpointsOk": {
+        "message": "All four primaries reach both ends inside {{lo}} – {{hi}} µs."
+    },
+    "journeyDetail.endpointsBad": {
+        "message": "Channel {{channels}} did not reach the expected range inside {{lo}} – {{hi}} µs. Adjust endpoints on the transmitter."
+    },
+    "journeyDetail.armSwitchUnbound": {
+        "message": "No switch arms the aircraft. Bind ARM to an AUX channel in Modes."
+    },
+    "journeyDetail.armSwitchBound": {
+        "message": "ARM on channel {{channel}}, {{start}} – {{end}} µs."
+    },
+    "journeyDetail.noServos": {
+        "message": "No servo outputs."
+    },
+    "journeyDetail.servoLimitsOk": {
+        "message": "{{count}} servo(s) have sane centre and limits."
+    },
+    "journeyDetail.servoLimitsBad": {
+        "message": "Check centre, min/max or scale on: {{outputs}}."
+    },
+    "journeyDetail.failsafeNotRead": {
+        "message": "Failsafe settings not read yet."
+    },
+    "journeyDetail.failsafeSet": {
+        "message": "Procedure {{procedure}}, stage 1 after {{delay}} s."
+    },
+    "journeyDetail.failsafeDelayZero": {
+        "message": "Failsafe stage 1 delay is zero."
+    },
+    "journeyDetail.currentSensorDisabled": {
+        "message": "Current sensor explicitly disabled."
+    },
+    "journeyDetail.noVoltageSensor": {
+        "message": "No voltage sensor configured."
+    },
+    "journeyDetail.thresholdsOk": {
+        "message": "Min {{min}} V, warning {{warn}} V per cell."
+    },
+    "journeyDetail.thresholdsBad": {
+        "message": "Cell voltage thresholds are missing or out of order (min < warning < max)."
+    },
+    "journeyAxis.roll": {
+        "message": "Roll"
+    },
+    "journeyAxis.pitch": {
+        "message": "Pitch"
+    },
+    "journeyAxis.yaw": {
+        "message": "Yaw"
+    },
+    "journeyAxis.throttle": {
+        "message": "Throttle"
+    },
+    "journeyAxis.tvRoll": {
+        "message": "TV roll"
+    },
+    "journeyAxis.tvPitch": {
+        "message": "TV pitch"
+    },
+    "journeyAxis.tvYaw": {
+        "message": "TV yaw"
+    },
+    "journeyAxis.flap": {
+        "message": "Flap (AUX1)"
+    },
+    "journeyAxis.aux": {
+        "message": "AUX"
+    },
+    "journeyRole.aileron": {
+        "message": "Aileron"
+    },
+    "journeyRole.elevon": {
+        "message": "Elevon"
+    },
+    "journeyRole.elevator": {
+        "message": "Elevator"
+    },
+    "journeyRole.rudder": {
+        "message": "Rudder"
+    },
+    "journeyRole.ruddervator": {
+        "message": "Ruddervator"
+    },
+    "journeyRole.rollYawMixed": {
+        "message": "Roll/yaw mix"
+    },
+    "journeyRole.flap": {
+        "message": "Flap"
+    },
+    "journeyRole.auxiliary": {
+        "message": "Auxiliary"
+    },
+    "journeyRole.thrustVector": {
+        "message": "Thrust vector"
+    },
+    "journeyRole.throttleServo": {
+        "message": "Throttle servo"
+    },
+    "journeyRole.throttle": {
+        "message": "Throttle"
+    },
+    "journeyRole.throttleDifferential": {
+        "message": "Throttle + differential"
+    },
+    "journeyRole.motorOther": {
+        "message": "Motor"
+    },
+    "journeyRole.unknown": {
+        "message": "Unknown"
+    },
+    "journeySide.left": {
+        "message": "left"
+    },
+    "journeySide.right": {
+        "message": "right"
+    },
+    "journeySurface.aileron.left": {
+        "message": "left aileron"
+    },
+    "journeySurface.aileron.right": {
+        "message": "right aileron"
+    },
+    "journeySurface.elevon.left": {
+        "message": "left elevon"
+    },
+    "journeySurface.elevon.right": {
+        "message": "right elevon"
+    },
+    "journeySurface.elevator.left": {
+        "message": "elevator"
+    },
+    "journeySurface.elevator.right": {
+        "message": "elevator"
+    },
+    "journeySurface.rudder": {
+        "message": "rudder"
+    },
+    "journeySurface.ruddervator.left": {
+        "message": "left ruddervator"
+    },
+    "journeySurface.ruddervator.right": {
+        "message": "right ruddervator"
+    },
+    "journeySurface.flap.left": {
+        "message": "left flap"
+    },
+    "journeySurface.flap.right": {
+        "message": "right flap"
+    },
+    "airframeCanvasLabel": {
+        "message": "Airframe with control surfaces"
+    },
+    "airframeCanvasUnassigned": {
+        "message": "{{surface}}: drawn but no mixer output drives it"
+    },
+    "airframeCanvasAssigned": {
+        "message": "assigned"
+    },
+    "airframeCanvasUnassignedLegend": {
+        "message": "no output"
+    },
+    "airframeCanvasConflicted": {
+        "message": "conflicted pad"
+    },
+    "airframeCanvasLive": {
+        "message": "live"
+    },
+    "surfaceCardPad": {
+        "message": "Pad"
+    },
+    "surfaceCardPadUnknown": {
+        "message": "not read from board"
+    },
+    "surfaceCardAxes": {
+        "message": "Driven by"
+    },
+    "surfaceCardLive": {
+        "message": "Live"
+    },
+    "surfaceCardCentre": {
+        "message": "Centre"
+    },
+    "surfaceCardTravel": {
+        "message": "Travel"
+    },
+    "surfaceCardDirection": {
+        "message": "Direction"
+    },
+    "surfaceCardReversed": {
+        "message": "Reversed"
+    },
+    "surfaceCardNormal": {
+        "message": "Normal"
+    },
+    "surfaceCardReverse": {
+        "message": "Reverse"
+    },
+    "surfaceCardCentreHere": {
+        "message": "Centre here"
+    },
+    "journeyBoard.identityTitle": {
+        "message": "Identity"
+    },
+    "journeyBoard.target": {
+        "message": "Target"
+    },
+    "journeyBoard.firmware": {
+        "message": "Firmware"
+    },
+    "journeyBoard.uid": {
+        "message": "Unique id"
+    },
+    "journeyBoard.pads": {
+        "message": "Output pads"
+    },
+    "journeyBoard.padCounts": {
+        "message": "{{servos}} servo, {{motors}} motor"
+    },
+    "journeyBoard.orientationTitle": {
+        "message": "Orientation"
+    },
+    "journeyBoard.roll": {
+        "message": "Roll"
+    },
+    "journeyBoard.pitch": {
+        "message": "Pitch"
+    },
+    "journeyBoard.heading": {
+        "message": "Heading"
+    },
+    "journeyBoard.resetHeading": {
+        "message": "Zero heading"
+    },
+    "journeyBoard.orientationHelp": {
+        "message": "<p>Set the aircraft level on the bench and calibrate the accelerometer. Then tilt it: the model must follow — nose up when you lift the nose, right wing down when you roll right.</p><p>If it moves the wrong way, fix the board alignment below, save, and confirm the orientation check once the model agrees.</p>"
+    },
+    "journeyBoard.alignmentTitle": {
+        "message": "Board alignment"
+    },
+    "journeyAirframe.typeTitle": {
+        "message": "Model type"
+    },
+    "journeyAirframe.typeHelp": {
+        "message": "<p>Pick the layout that matches your aircraft. The mixer rules are generated for it; you can still edit them in the Mixer tab. The drawing below is derived from the rules that are actually loaded, not from the type you picked.</p>"
+    },
+    "journeyAirframe.openMixer": {
+        "message": "Edit rules in Mixer"
+    },
+    "journeyAirframe.canvasTitle": {
+        "message": "Airframe"
+    },
+    "journeyAirframe.axesTitle": {
+        "message": "Axes → outputs"
+    },
+    "journeyAirframe.axis": {
+        "message": "Axis"
+    },
+    "journeyAirframe.outputs": {
+        "message": "Outputs"
+    },
+    "journeyAirframe.noOutput": {
+        "message": "no output"
+    },
+    "journeyWiring.boardTitle": {
+        "message": "Board"
+    },
+    "journeyWiring.outputsTitle": {
+        "message": "Outputs → pads"
+    },
+    "journeyWiring.output": {
+        "message": "Output"
+    },
+    "journeyWiring.drives": {
+        "message": "Drives"
+    },
+    "journeyWiring.pad": {
+        "message": "Pad"
+    },
+    "journeyWiring.padByIndex": {
+        "message": "output pad {{label}}"
+    },
+    "journeyWiring.noPad": {
+        "message": "no pad"
+    },
+    "journeyWiring.receiverTitle": {
+        "message": "Receiver"
+    },
+    "journeyWiring.serialSummary": {
+        "message": "{{protocol}} on UART {{port}}."
+    },
+    "journeyWiring.receiverHelp": {
+        "message": "<p>A serial receiver needs a UART with the <strong>Serial RX</strong> function; the receiver's signal wire goes to that UART's RX pad. PPM and PWM receivers use fixed pads on the board.</p>"
+    },
+    "journeyWiring.openPorts": {
+        "message": "Ports"
+    },
+    "journeyWiring.remapTitle": {
+        "message": "Pin, timer and DMA table"
+    },
+    "journeyWiring.canvasPending": {
+        "message": "The board canvas and pin mapping are not available in this build yet."
+    },
+    "journeyWiring.tablePending": {
+        "message": "The raw pin table is not available in this build yet."
+    },
+    "journeyLink.protocolTitle": {
+        "message": "Protocol"
+    },
+    "journeyLink.serialSummary": {
+        "message": "{{protocol}} on UART {{port}}"
+    },
+    "journeyLink.typeSummary": {
+        "message": "{{type}} receiver"
+    },
+    "journeyLink.channels": {
+        "message": "{{count}} channels"
+    },
+    "journeyLink.openReceiver": {
+        "message": "Receiver settings"
+    },
+    "journeyLink.observedTitle": {
+        "message": "Sticks"
+    },
+    "journeyLink.observedHelp": {
+        "message": "<p>With the transmitter on, move every stick slowly to both ends and back. The bars record the lowest and highest value seen on each primary channel while this stage is open. Nothing is stored.</p>"
+    },
+    "journeyLink.resetObserved": {
+        "message": "Reset observation"
+    },
+    "journeyLink.window": {
+        "message": "Valid pulse window {{lo}} – {{hi}} µs"
+    },
+    "journeyLink.armTitle": {
+        "message": "Arm switch"
+    },
+    "journeyLink.armHelp": {
+        "message": "<p>Bind <strong>ARM</strong> to a two-position switch in Modes. Arming on a stick position is not supported on fixed wing.</p>"
+    },
+    "journeyOutputs.canvasTitle": {
+        "message": "Surfaces"
+    },
+    "journeyOutputs.canvasHelp": {
+        "message": "<p>Click a surface (or tab to it) to see its output, pad, centre and travel. Surfaces animate from the live servo data as you move the sticks.</p>"
+    },
+    "journeyOutputs.surfaceTitle": {
+        "message": "Selected surface"
+    },
+    "journeyOutputs.yesMoves": {
+        "message": "Yes, it does"
+    },
+    "journeyOutputs.noMoves": {
+        "message": "No"
+    },
+    "journeyOutputs.noMovesHint": {
+        "message": "If not: press Reverse, then check again. Direction confirmations are stored per surface and turn amber if that servo or its mixer rule changes."
+    },
+    "journeyOutputs.q.aileronLeft": {
+        "message": "Roll left. The left aileron should rise. Does it?"
+    },
+    "journeyOutputs.q.aileronRight": {
+        "message": "Roll left. The right aileron should drop. Does it?"
+    },
+    "journeyOutputs.q.aileronBoth": {
+        "message": "Roll left. The left aileron should rise and the right one drop. Do they?"
+    },
+    "journeyOutputs.q.elevonLeft": {
+        "message": "Pull back. The left elevon should rise; roll left and it should rise further. Does it?"
+    },
+    "journeyOutputs.q.elevonRight": {
+        "message": "Pull back. The right elevon should rise; roll left and it should drop. Does it?"
+    },
+    "journeyOutputs.q.elevator": {
+        "message": "Pull back. The elevator should rise. Does it?"
+    },
+    "journeyOutputs.q.rudder": {
+        "message": "Yaw left. The rudder should swing left. Does it?"
+    },
+    "journeyOutputs.q.ruddervatorLeft": {
+        "message": "Pull back: the left ruddervator rises. Yaw left: it drops. Does it?"
+    },
+    "journeyOutputs.q.ruddervatorRight": {
+        "message": "Pull back: the right ruddervator rises. Yaw left: it rises further. Does it?"
+    },
+    "journeyOutputs.q.flap": {
+        "message": "Deploy flaps. This flap should drop. Does it?"
+    },
+    "journeyOutputs.q.thrustVector": {
+        "message": "Move the stick for this axis. The nozzle should move to steer the nose the same way. Does it?"
+    },
+    "journeyOutputs.q.generic": {
+        "message": "Move the input for this surface. Does it move the right way?"
+    },
+    "journeyOutputs.travelTitle": {
+        "message": "Centre and travel"
+    },
+    "journeyOutputs.travelHelp": {
+        "message": "<p>Centre each surface with sticks and trims centred using <em>Centre here</em>. Set min/max so a surface reaches full deflection at full stick without binding on its mechanical stop. Fine trim and scale live in the Servos tab.</p>"
+    },
+    "journeyOutputs.throttleTitle": {
+        "message": "Throttle range"
+    },
+    "journeyOutputs.throttleWarning": {
+        "message": "<p><strong>Remove the propeller before doing anything with the throttle.</strong></p>"
+    },
+    "journeyOutputs.throttleStep1": {
+        "message": "Propeller off. Receiver on, transmitter on, throttle at minimum."
+    },
+    "journeyOutputs.throttleStep2": {
+        "message": "Check the ESC endpoints: min {{min}} µs, max {{max}} µs, idle command {{cmd}} µs. Calibrate the ESC to these per its manual if it does not respond over the full range."
+    },
+    "journeyOutputs.throttleStep3": {
+        "message": "Raise the throttle slowly: the motor must start near minimum and reach full power at full stick."
+    },
+    "journeyOutputs.throttleStep4": {
+        "message": "Lower the throttle to minimum: the motor must stop."
+    },
+    "journeyOutputs.throttleConfirm": {
+        "message": "Throttle range confirmed"
+    },
+    "journeyOutputs.gliderNoThrottle": {
+        "message": "No motor in this mixer — throttle calibration does not apply."
+    },
+    "journeySafety.armTitle": {
+        "message": "Arm switch"
+    },
+    "journeySafety.armHelp": {
+        "message": "<p>The arm switch is the one control that must always work. Bind it to a dedicated two-position switch, never a shared one.</p>"
+    },
+    "journeySafety.failsafeTitle": {
+        "message": "Failsafe"
+    },
+    "journeySafety.procedure": {
+        "message": "Procedure"
+    },
+    "journeySafety.stage1Delay": {
+        "message": "Stage 1 after"
+    },
+    "journeySafety.stage2Delay": {
+        "message": "Stage 2 after"
+    },
+    "journeySafety.throttle": {
+        "message": "Failsafe throttle"
+    },
+    "journeySafety.pulseRange": {
+        "message": "Valid pulse range"
+    },
+    "journeySafety.procedureLand": {
+        "message": "Auto-level and descend"
+    },
+    "journeySafety.procedureDrop": {
+        "message": "Drop (motor off)"
+    },
+    "journeySafety.procedureGpsRescue": {
+        "message": "GPS rescue"
+    },
+    "journeySafety.procedureUnknown": {
+        "message": "Unknown"
+    },
+    "journeySafety.failsafeHelp": {
+        "message": "<p>Stage 1 holds the last good inputs briefly; stage 2 runs the procedure. The procedure and timings are set through the CLI (<code>failsafe_procedure</code>, <code>failsafe_delay</code>, <code>failsafe_off_delay</code>); the pulse range and per-channel fallbacks are on the Failsafe tab.</p>"
+    },
+    "journeySafety.verifyTitle": {
+        "message": "Verify failsafe"
+    },
+    "journeySafety.verifyWarning": {
+        "message": "<p><strong>Disconnect the motor (or remove the propeller) before this test.</strong> A failsafe test with a live motor is how fingers get lost.</p>"
+    },
+    "journeySafety.verifyStep1": {
+        "message": "Motor disconnected. Power the aircraft and the transmitter; arm it."
+    },
+    "journeySafety.verifyStep2": {
+        "message": "Move the sticks: surfaces respond."
+    },
+    "journeySafety.verifyStep3": {
+        "message": "Switch the transmitter off."
+    },
+    "journeySafety.verifyStep4": {
+        "message": "Within about {{delay}} s the aircraft must enter failsafe: throttle output drops to the failsafe value, surfaces go to the procedure's attitude."
+    },
+    "journeySafety.verifyStep5": {
+        "message": "Switch the transmitter back on: control must return only after re-arming as configured."
+    },
+    "journeySafety.verifyConfirm": {
+        "message": "Failsafe behaved as described"
+    },
+    "journeyPower.voltageTitle": {
+        "message": "Voltage"
+    },
+    "journeyPower.reading": {
+        "message": "Board reads {{volts}} V ({{cells}} cells)."
+    },
+    "journeyPower.voltageHelp": {
+        "message": "<p>Measure the pack with a meter, enter the value, apply the scale, and confirm once the reading matches.</p>"
+    },
+    "journeyPower.measuredVolts": {
+        "message": "Measured pack voltage"
+    },
+    "journeyPower.applyScale": {
+        "message": "Apply scale"
+    },
+    "journeyPower.voltageConfirm": {
+        "message": "Reading matches the meter"
+    },
+    "journeyPower.currentTitle": {
+        "message": "Current"
+    },
+    "journeyPower.currentReading": {
+        "message": "Board reads {{amps}} A."
+    },
+    "journeyPower.currentHelp": {
+        "message": "<p>With a known load (or a clamp meter) enter the real current and apply the scale. If you have no current sensor, disable it on the Power tab: an explicit \"none\" counts as done.</p>"
+    },
+    "journeyPower.measuredAmps": {
+        "message": "Measured current"
+    },
+    "journeyPower.currentConfirm": {
+        "message": "Reading matches the meter"
+    },
+    "journeyPower.thresholdsTitle": {
+        "message": "Warnings"
+    },
+    "journeyPower.minCell": {
+        "message": "Minimum per cell"
+    },
+    "journeyPower.warnCell": {
+        "message": "Warning per cell"
+    },
+    "journeyPower.maxCell": {
+        "message": "Maximum per cell"
+    },
+    "journeyPower.thresholdsHelp": {
+        "message": "<p>The warning threshold is what beeps and shows on telemetry; the minimum is the hard floor. Both are set on the Power tab.</p>"
+    },
+    "journeyPreflight.guideTitle": {
+        "message": "Physical checks"
+    },
+    "journeyPreflight.intro": {
+        "message": "<p>The board cannot see any of these. Do them with the aircraft assembled, on the bench and then at the field, and confirm each in the list. A confirmation covers the exact settings it depends on and turns amber if any of them change — reversing one servo invalidates only that surface's check.</p>"
+    },
+    "journeyPreflight.surfaceDirections": {
+        "message": "Sticks centred, then each axis in turn. Every surface moves the right way and returns to neutral. Redo after any servo or mixer change."
+    },
+    "journeyPreflight.stabilisationDirection": {
+        "message": "Stabilised mode on, propeller off. Roll the aircraft right by hand: the ailerons must move to roll it back left. Pitch the nose up: elevator must push it down. Yaw right: rudder must push left. Wrong direction here is the classic first-flight crash."
+    },
+    "journeyPreflight.centreOfGravity": {
+        "message": "Balance the aircraft at the point the manual gives, with the flight battery installed. Slightly nose-heavy is safe; tail-heavy is not."
+    },
+    "journeyPreflight.controlThrows": {
+        "message": "Measure deflection at full stick against the manual's low-rate figures. Reduce servo travel or rates rather than flying with too much throw."
+    },
+    "journeyPreflight.rangeCheck": {
+        "message": "Transmitter in range-check mode, walk away to the distance your radio's manual specifies, keep moving a surface. Any glitch means do not fly."
+    },
+    "journeyPreflight.cardTitle": {
+        "message": "Pre-flight card"
+    },
+    "journeyPreflight.cardHelp": {
+        "message": "A plain-text summary of every stage and check, with the time of each confirmation, to take to the field."
+    },
+    "journeyPreflight.copy": {
+        "message": "Copy card"
+    },
+    "journeyPreflight.copied": {
+        "message": "Copied"
+    },
+    "journeyPreflight.download": {
+        "message": "Download card"
+    },
+    "journeyTuning.title": {
+        "message": "After setup: tuning"
+    },
+    "journeyTuning.locked": {
+        "message": "Unlocks when stage 8 is verified. You can read ahead."
+    },
+    "journeyTuning.unlocked": {
+        "message": "Setup is verified. This is what is left, in order."
+    },
+    "journeyTuning.intro": {
+        "message": "Tuning is a different kind of work from setup: done at the field, across several flights. Each card says when to do it, the symptom that says you need it, and which safety check its changes would invalidate."
+    },
+    "journeyTuning.symptom": {
+        "message": "Symptom:"
+    },
+    "journeyTuning.invalidates": {
+        "message": "Affects {{stage}}"
+    },
+    "journeyTuning.invalidatesHelp": {
+        "message": "Changing this invalidates checks in the named stage; its current state is shown."
+    },
+    "journeyTuning.where.bench": {
+        "message": "Bench"
+    },
+    "journeyTuning.where.field": {
+        "message": "Field"
+    },
+    "journeyTuning.when.beforeFlight1": {
+        "message": "Before flight 1"
+    },
+    "journeyTuning.when.flight1": {
+        "message": "Flight 1"
+    },
+    "journeyTuning.when.flights2to4": {
+        "message": "Flights 2–4"
+    },
+    "journeyTuning.when.afterLog": {
+        "message": "After a blackbox log"
+    },
+    "journeyTuning.when.afterAnyChange": {
+        "message": "After any change above"
+    },
+    "journeyTuning.mechanicalTrim.title": {
+        "message": "Mechanical trim"
+    },
+    "journeyTuning.mechanicalTrim.symptom": {
+        "message": "Surfaces not neutral with sticks and trims centred."
+    },
+    "journeyTuning.subTrimTravel.title": {
+        "message": "Sub-trim and travel"
+    },
+    "journeyTuning.subTrimTravel.symptom": {
+        "message": "A surface hits its mechanical stop before full stick, or binds."
+    },
+    "journeyTuning.ratesExpo.title": {
+        "message": "Rates and expo"
+    },
+    "journeyTuning.ratesExpo.symptom": {
+        "message": "Too twitchy or too lazy around centre."
+    },
+    "journeyTuning.rollPitchGains.title": {
+        "message": "Roll and pitch gains"
+    },
+    "journeyTuning.rollPitchGains.symptom": {
+        "message": "Slow to hold an attitude, or a fast wobble after a correction."
+    },
+    "journeyTuning.yawCoordination.title": {
+        "message": "Yaw and coordination"
+    },
+    "journeyTuning.yawCoordination.symptom": {
+        "message": "Nose slides in turns, or hunts in level flight."
+    },
+    "journeyTuning.filters.title": {
+        "message": "Filters"
+    },
+    "journeyTuning.filters.symptom": {
+        "message": "Warm motor, buzzing servos, gyro noise in the log."
+    },
+    "journeyTuning.reverifyFailsafe.title": {
+        "message": "Re-verify failsafe"
+    },
+    "journeyTuning.reverifyFailsafe.symptom": {
+        "message": "Always — it is the check most often invalidated."
+    },
+    "journeyDetail.servoConfigNotRead": {
+        "message": "Servo settings not read yet."
     }
 }

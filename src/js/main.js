@@ -1,7 +1,7 @@
 import semver from "semver";
 
 import * as config from "@/js/config.js";
-import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+import { CONFIGURATOR, loadDisclosureLevel, setDisclosureLevel, loadJourneyLanding } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
@@ -337,24 +337,17 @@ export function startProcess() {
         $("#showlog").trigger('click');
     }
 
-    CONFIGURATOR.expertMode = config.get('expertMode') ?? false;
-    $('#expert-mode input')
-        .prop('checked', CONFIGURATOR.expertMode)
-        // .prop() doesn't fire a change event, but GuiControl.switchery()
-        // (called from content_ready, on an independent tab-load timeline)
-        // may have already wrapped this checkbox in a Switchery toggle
-        // widget that only repositions itself on 'change' -- if that race
-        // resolves before this line runs, the visual toggle is left
-        // showing the wrong state. Trigger before binding our own handler
-        // below so this only reaches Switchery's listener (if already
-        // attached), not ours, and doesn't cause a spurious tab reload.
-        .trigger('change')
+    // Disclosure level (Essential / Standard / Expert). Migrates the old
+    // boolean expertMode setting on first run.
+    const disclosureLevel = loadDisclosureLevel();
+    loadJourneyLanding();
+    $('#disclosure-level select')
+        .val(disclosureLevel)
         .on('change', function () {
-            CONFIGURATOR.expertMode = this.checked;
-            config.set({'expertMode': this.checked});
-            // Svelte tabs react to expertMode automatically, but the legacy
-            // jQuery tabs (e.g. Modes, Logic) build their DOM once on load
-            // and need a reload to pick up the new expert-mode filtering.
+            setDisclosureLevel(this.value);
+            // Svelte tabs react to the level automatically, but the legacy
+            // jQuery tabs build their DOM once on load and need a reload to
+            // pick up the new filtering.
             GUI.tab_switch_allowed(() => GUI.tab_switch_reload());
         });
 

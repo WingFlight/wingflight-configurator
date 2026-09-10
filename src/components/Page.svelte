@@ -1,10 +1,46 @@
 <script>
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { i18n } from "@/js/i18n.js";
+  import {
+    openOverview,
+    openStage,
+  } from "@/tabs/journey/journey_state.svelte.js";
+  import {
+    STAGE_BY_ID,
+    stageForTab,
+    stageTitleKey,
+  } from "@/tabs/journey/stages.js";
+
   let { children, loading = false, header, toolbar } = $props();
+
+  // Breadcrumb from a settings tab back to the journey stage that owns it.
+  // GUI.active_tab is set before the tab component mounts, so reading it once
+  // here is enough; Page is mounted fresh on every tab switch.
+  const activeTab = globalThis.GUI?.active_tab ?? null;
+  const owner =
+    activeTab && activeTab !== "journey" ? stageForTab(activeTab) : null;
+  const ownerStage = owner && owner !== "tuning" ? STAGE_BY_ID[owner] : null;
 </script>
 
 <div class="container">
   <div class="wrapper">
     <header class="header">
+      {#if CONFIGURATOR.connectionValid && owner}
+        <nav class="crumb" aria-label="breadcrumb">
+          <button class="crumb-link" onclick={openOverview}
+            >{$i18n.t("tabJourney")}</button
+          >
+          {#if ownerStage}
+            <span class="crumb-sep">›</span>
+            <button class="crumb-link" onclick={() => openStage(ownerStage.id)}>
+              {ownerStage.number} · {$i18n.t(stageTitleKey(ownerStage.id))}
+            </button>
+          {:else}
+            <span class="crumb-sep">›</span>
+            <span class="crumb-text">{$i18n.t("journeyTuning.title")}</span>
+          {/if}
+        </nav>
+      {/if}
       {@render header?.()}
     </header>
     <main>
@@ -107,6 +143,35 @@
       transparent 55%
     );
     pointer-events: none;
+  }
+
+  .crumb {
+    flex-basis: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: -4px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .crumb-link {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: var(--color-accent-600);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .crumb-sep,
+  .crumb-text {
+    color: var(--color-text-muted);
   }
 
   .loading {

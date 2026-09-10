@@ -1,12 +1,11 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import Tier from "@/components/Tier.svelte";
 
+  // Thin alias kept so existing tabs keep working: Expert content is the
+  // top disclosure tier. New code should use <Tier level="…" when={…}>.
   let { children } = $props();
 </script>
 
-{#if CONFIGURATOR.expertMode}
+<Tier level="expert">
   {@render children?.()}
-{/if}
-
-<style lang="scss">
-</style>
+</Tier>

@@ -12,6 +12,7 @@ import "./firmware_flasher.js";
 import "./gps.js";
 import "./gyro.js";
 import "./help.js";
+import "./journey.js";
 import "./landing.js";
 import "./led_strip.js";
 import "./xact_servo.js";

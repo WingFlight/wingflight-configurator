@@ -1,5 +1,10 @@
 <script>
   import * as config from "@/js/config.js";
+  import {
+    CONFIGURATOR,
+    setDisclosureLevel,
+    setJourneyLanding,
+  } from "@/js/configurator.svelte.js";
   import { DarkTheme } from "@/js/DarkTheme.js";
   import { i18n } from "@/js/i18n.js";
   import { checkForConfiguratorUpdates } from "@/js/main.js";
@@ -10,6 +15,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import Tooltip from "@/components/Tooltip.svelte";
 
   let checkUnstableVersions = $state(
     config.get("checkForConfiguratorUnstableVersions") ?? true,
@@ -26,6 +32,8 @@
     config.get("cordovaForceComputerUI") ?? false,
   );
   let darkTheme = $state(DarkTheme.configEnabled);
+  let disclosureLevel = $state(CONFIGURATOR.disclosureLevel);
+  let journeyLanding = $state(CONFIGURATOR.journeyLanding);
 
   const showConfiguratorUpdateOptions = __BACKEND__ !== "web";
   const showCordovaOption = GUI.isCordova() && cordovaUI.canChangeUI;
@@ -34,6 +42,12 @@
     value: v,
     label: String(v),
   }));
+
+  let disclosureLevelOptions = $derived([
+    { value: "essential", label: $i18n.t("disclosureLevelEssential") },
+    { value: "standard", label: $i18n.t("disclosureLevelStandard") },
+    { value: "expert", label: $i18n.t("disclosureLevelExpert") },
+  ]);
 
   let darkThemeOptions = $derived([
     { value: 0, label: $i18n.t("on") },
@@ -67,6 +81,14 @@
     cordovaUI?.set?.();
   }
 
+  function onDisclosureLevelChange() {
+    setDisclosureLevel(disclosureLevel);
+  }
+
+  function onJourneyLandingChange() {
+    setJourneyLanding(journeyLanding);
+  }
+
   function onDarkThemeChange() {
     config.set({ darkTheme });
     DarkTheme.setConfig(darkTheme);
@@ -75,6 +97,14 @@
 
 {#snippet header()}
   <h1>{$i18n.t("tabOptions")}</h1>
+{/snippet}
+
+{#snippet disclosureTooltip()}
+  <Tooltip help="disclosureLevelHelp" />
+{/snippet}
+
+{#snippet journeyTooltip()}
+  <Tooltip help="optionsJourneyLandingHelp" />
 {/snippet}
 
 <Page {header}>
@@ -91,6 +121,29 @@
         />
       </Field>
     {/if}
+    <Field
+      id="opt-disclosure-level"
+      label="optionsDisclosureLevel"
+      tooltip={disclosureTooltip}
+    >
+      <Select
+        id="opt-disclosure-level"
+        bind:value={disclosureLevel}
+        options={disclosureLevelOptions}
+        onchange={onDisclosureLevelChange}
+      />
+    </Field>
+    <Field
+      id="opt-journey-landing"
+      label="optionsJourneyLanding"
+      tooltip={journeyTooltip}
+    >
+      <Switch
+        id="opt-journey-landing"
+        bind:checked={journeyLanding}
+        onchange={onJourneyLandingChange}
+      />
+    </Field>
     <Field id="opt-remember-last-tab" label="rememberLastTab">
       <Switch
         id="opt-remember-last-tab"

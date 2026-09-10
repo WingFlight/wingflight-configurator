@@ -25,16 +25,33 @@ Please download the latest version from [github](https://github.com/WingFlight/w
 
 ## Features
 
-Wingflight has many features inherited from Rotorflight and Betaflight:
+Wingflight is built for fixed-wing aircraft. The configurator exposes:
 
-* Many receiver protocols: CRSF, S.BUS, F.Port, DSM, IBUS, XBUS, EXBUS, GHOST, CPPM
-* Support for various telemetry protocols: CSRF, S.Port, HoTT, etc.
-* ESC telemetry protocols: BLHeli32, Hobbywing, Scorpion, Kontronik, OMP Hobby, ZTW, APD, YGE
+* Airframe model types with a live aircraft preview: regular airplane, flying wing, V-tail,
+  delta wing and rudder/elevator trainer, plus a fully custom mixer
+  - Aileron, tail and wing-yaw options per model type, generating the mixer rules for you
+  - Fully customisable servo/motor mixer rule table underneath
+* Flight modes for wings: ANGLE and HORIZON self-levelling, ATT HOLD (attitude hold),
+  PASSTHROUGH (raw stick to surface, no stabilisation), TRAINER (bank/pitch limited acro),
+  ALTHOLD, GPS RESCUE
+* Thrust vector control with its own PID loop, profiles and TV Hold mode
+* Throttle-based gain attenuation for control surfaces, plus a motor RPM governor
+  (RPM idle/max, throttle idle and RPM range modes)
+* Board alignment and mount trim wizards, accelerometer calibration
+* Many receiver protocols: CRSF, S.BUS / S.BUS2, F.Port / F.Port2, FBUS, Spektrum
+  DSM / SRXL / SRXL2, GHOST, SUMD / SUMH, IBUS / IBUS2, XBUS, EXBUS, CPPM, ELRS over SPI
+* Backup receiver input on a second UART (CRSF, EXBUS, FBUS)
+* Support for various telemetry protocols: CRSF, S.Port, FBUS, HoTT, IBUS, Jeti EX Bus,
+  SRXL, LTM, MAVLink, MSP; S.BUS and FBUS output
+* ESC telemetry protocols: BLHeli32, Hobbywing, Scorpion, Kontronik, OMPHobby, ZTW, APD,
+  OpenYGE, FLYROTOR, Graupner, XDFLY, F.BUS, SRXL2
+* ESC forward programming for AM32, BLHeli_S, Bluejay, FLYROTOR, Hobbywing V5, OMPHobby,
+  Scorpion, XDFLY, YGE and ZTW
 * Remote configuration and tuning with the transmitter
-  - With knobs / switches assigned to functions
+  - With knobs / switches assigned to functions (Adjustments tab)
   - With LUA scripts on EdgeTX, OpenTX and Ethos
-* Extra servo/motor outputs for AUX functions
-* Fully customisable servo/motor mixer
+* Extra servo/motor outputs for AUX functions, and logic conditions for switching them
+* Custom curves (Curves tab) for shaping gains and inputs
 * Sensors for battery voltage, current, BEC, etc.
 * Advanced gyro filtering
   - Dynamic RPM based notch filters
@@ -43,17 +60,12 @@ Wingflight has many features inherited from Rotorflight and Betaflight:
 * High-speed Blackbox logging
 * Configuration profiles for changing various tuning parameters
 * Rates profiles for changing the stick feel and agility
-* Multiple ESC protocols: PWM, DSHOT, Multishot, etc.
+* Multiple ESC protocols: PWM, OneShot, Multishot, DShot, ProShot, Castle Link, SRXL2
 * Configurable buzzer sounds
 * Multi-color RGB LEDs
-* GPS support
+* GPS: telemetry, logging, GPS Rescue
 
 And many more...
-
-> Note: this feature list is inherited from Rotorflight and hasn't yet been audited for what
-> applies to fixed-wing aircraft specifically (e.g. heli-only features like rotor speed governor
-> and tail torque assist have been dropped from the list above, but the remaining items still need
-> a fixed-wing accuracy pass).
 
 
 ## Notes

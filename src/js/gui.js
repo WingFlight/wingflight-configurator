@@ -29,6 +29,7 @@ export const GuiControl = function () {
         'help',
     ];
     this.defaultAllowedFCTabsWhenConnected = [
+        'journey',
         'status',
         'setup',
         'failsafe',
@@ -449,7 +450,17 @@ GuiControl.prototype.saveDefaultTab = function(tabName) {
 };
 
 GuiControl.prototype.selectDefaultTabWhenConnected = function() {
+    // The Setup Journey is the connected landing page unless the user turned
+    // it off in Options (concept §10.1: permanently, so safety re-checks after
+    // a rebuild are always one click away; "remember last tab" still wins
+    // when enabled so experienced users land where they left off).
     const lastTab = config.get('lastTab');
+    const journeyLanding = config.get('journeyLanding');
+    if ((journeyLanding === undefined || journeyLanding === null || journeyLanding) &&
+        !(config.get('rememberLastTab') && lastTab && lastTab !== 'journey')) {
+        $('#tabs ul.mode-connected .tab_journey a').click();
+        return;
+    }
     if (config.get('rememberLastTab') && lastTab) {
         $(`#tabs ul.mode-connected .tab_${lastTab} a`).click();
     } else {
