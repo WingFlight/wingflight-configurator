@@ -40,9 +40,10 @@
   // it would never recompute again regardless of later edits. $state makes
   // the assignment itself a tracked dependency.
   let initialState = $state();
-  let sensorUpdateIntervalId;
-  let backupRxPollerIntervalId;
-  let armedPollerIntervalId;
+  let sensorUpdateTimer;
+  let backupRxPollerTimer;
+  let armedPollerTimer;
+  let pollersStopped = false;
   let receiverTypeRef;
 
   let backupWizardDisabled = $state(false);
@@ -131,11 +132,29 @@
     initialState = snapshotState();
     loading = false;
 
-    sensorUpdateIntervalId = setInterval(async () => {
+    // Self-rescheduling (setTimeout that re-arms only after the previous
+    // round finishes), not setInterval with an async body. setInterval fires
+    // on a fixed wall-clock schedule regardless of whether the previous
+    // callback's awaits have resolved - on a real (non-instant) serial link
+    // 3 sequential MSP round-trips can exceed even a 25ms period, so ticks
+    // start overlapping and each overlap opens a fresh in-flight request for
+    // a different MSP code (MSP.send_message only dedupes a second request
+    // for a code already queued, not different codes). The backlog of
+    // concurrently outstanding requests then only grows, which is exactly
+    // what was flooding the link on the ESC wiring wizard (Motors.svelte,
+    // same shape, see its own fix) badly enough to starve its poll of ever
+    // getting a timely response back. Same risk here for the RX wiring
+    // wizard's poll, so the same fix.
+    async function pollSensors() {
+      if (pollersStopped) return;
       await MSP.promise(MSPCodes.MSP_RX_CHANNELS);
       await MSP.promise(MSPCodes.MSP_RC_COMMAND);
       await MSP.promise(MSPCodes.MSP_ANALOG);
-    }, 25);
+      if (!pollersStopped) {
+        sensorUpdateTimer = setTimeout(pollSensors, 25);
+      }
+    }
+    pollSensors();
 
     if (hasBackupRxPort) {
       await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_CONFIG);
@@ -149,11 +168,16 @@
     await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
     // 200ms rather than the 25ms main-channel poll above - this only needs to
     // look live for a status badge, not drive a hot loop always.
-    backupRxPollerIntervalId = setInterval(() => {
-      MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
-    }, 200);
+    async function pollBackupRx() {
+      if (pollersStopped) return;
+      await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
+      if (!pollersStopped) {
+        backupRxPollerTimer = setTimeout(pollBackupRx, 200);
+      }
+    }
+    pollBackupRx();
 
-    // Separate, slower interval for `armed` rather than folding it into the
+    // Separate, slower poll for `armed` rather than folding it into the
     // 200ms poll above - see wingflight-configurator's own Motors.svelte fix
     // for why: piggybacking a status-only field onto an existing hot loop
     // risks queueing/contending with a wizard's own polling under real
@@ -161,9 +185,14 @@
     // wizard "hanging" even though the firmware's trial kept running fine.
     // Less traffic here (one MSP2_WING_RX_INPUT_BACKUP_STATUS call per
     // cycle, not three), but the same shaped risk, so the same fix.
-    armedPollerIntervalId = setInterval(() => {
-      MSP.promise(MSPCodes.MSP_STATUS);
-    }, 1000);
+    async function pollArmed() {
+      if (pollersStopped) return;
+      await MSP.promise(MSPCodes.MSP_STATUS);
+      if (!pollersStopped) {
+        armedPollerTimer = setTimeout(pollArmed, 1000);
+      }
+    }
+    pollArmed();
 
     // initialState is snapshotted above before this block runs, so re-snapshot
     // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
@@ -173,9 +202,10 @@
   });
 
   onDestroy(() => {
-    clearInterval(sensorUpdateIntervalId);
-    clearInterval(backupRxPollerIntervalId);
-    clearInterval(armedPollerIntervalId);
+    pollersStopped = true;
+    clearTimeout(sensorUpdateTimer);
+    clearTimeout(backupRxPollerTimer);
+    clearTimeout(armedPollerTimer);
     receiverTypeRef?.cleanup();
     backupWizardInstance?.stop();
     closeBackupWizard();
