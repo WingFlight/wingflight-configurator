@@ -8670,5 +8670,50 @@
     },
     "servoAirframeCanvasHelp": {
         "message": "Which servo drives which surface, animated from live servo data. Surfaces without a mixer output are drawn grey."
+    },
+    "journeyWiring.readBoard": {
+        "message": "Read board"
+    },
+    "journeyWiring.reread": {
+        "message": "Read again"
+    },
+    "journeyWiring.reading": {
+        "message": "Reading…"
+    },
+    "journeyWiring.revertAll": {
+        "message": "Revert whole board to defaults"
+    },
+    "journeyWiring.unrecognised": {
+        "message": "Unrecognised board ({{target}})"
+    },
+    "journeyWiring.padCount": {
+        "message": "{{count}} pads in use, {{conflicts}} conflict(s)"
+    },
+    "journeyWiring.readHelp": {
+        "message": "<p>Reading opens a command-line session to the board and pulls its pin, timer and DMA tables. Nothing is written. While the session is open the board is not in its normal mode; leaving this stage closes the session and the board restarts.</p>"
+    },
+    "journeyWiring.unrecognisedHelp": {
+        "message": "<p>No board profile matches <strong>{{target}}</strong>, so there is no drawing and writing pin assignments is refused. Pads are listed by pin instead. See docs/adding-a-board-profile.md to add one.</p>"
+    },
+    "journeyWiring.needsReread": {
+        "message": "The board changed since it was read. Read it again before planning any change."
+    },
+    "journeyWiring.cliOpenNote": {
+        "message": "Command-line session open — live data is paused until you leave this stage."
+    },
+    "journeyWiring.selectPadHint": {
+        "message": "Click a pad to see what is on it and what it could carry."
+    },
+    "journeyWiring.ribbonTitle": {
+        "message": "Pads → surfaces"
+    },
+    "journeyWiring.tableNeedsRead": {
+        "message": "Read the board above to fill the table."
+    },
+    "journeyStaleTitle": {
+        "message": "{{count}} confirmation(s) need re-checking."
+    },
+    "journeyStaleText": {
+        "message": "A setting they depend on changed since you confirmed them — a firmware flash, a restored backup, or an edited servo or mixer rule. Redo the physical check and confirm again."
     }
 }

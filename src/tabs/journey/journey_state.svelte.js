@@ -1,7 +1,8 @@
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
-import { getProfile } from "@/js/profile.svelte.js";
+import { getProfile, resetProfileExtras } from "@/js/profile.svelte.js";
+import { getWiringSession } from "@/js/remap_fc/wiring_session.svelte.js";
 import { openTabByName } from "@/js/tab_tree.js";
 
 import { ackStatus, markStageVerified, wasStageVerified } from "./acknowledgments.svelte.js";
@@ -43,11 +44,14 @@ export function observeChannels(channels, count) {
   if (touched || observed.samples === 0) observed.samples += 1;
 }
 
-// A new board id means new observations.
+// A new board id means new observations, and whatever the CLI reader knew
+// about the previous board is stale.
 export function syncObservedToBoard(uid) {
   if (journey.observedUid !== uid) {
     journey.observedUid = uid;
     resetObserved();
+    resetProfileExtras();
+    getWiringSession().reset();
   }
 }
 
@@ -95,18 +99,28 @@ export function buildContext() {
   };
 }
 
-// Evaluate one stage right now. Marks the stage as verified-once when it is.
+// Evaluate one stage right now. Pure: reads state, writes nothing, so it can
+// run inside a $derived. Remembering that a stage reached "verified" is a
+// state write and happens in rememberVerifiedStages() from an effect.
 export function evaluateStageNow(stageId, ctx = buildContext()) {
   const results = evaluateStage(stageId, ctx);
   const badge = stageBadge(results, { wasVerified: wasStageVerified(stageId, ctx.uid) });
-  if (badge === "verified") markStageVerified(stageId, ctx.uid);
-  return { stageId, results, badge, progress: stageProgress(results) };
+  return { stageId, results, badge, progress: stageProgress(results), uid: ctx.uid };
 }
 
 export function evaluateAllStages(ctx = buildContext()) {
   const out = {};
   for (const stage of STAGES) out[stage.id] = evaluateStageNow(stage.id, ctx);
   return out;
+}
+
+// The one bit of memory the badge logic has: once a stage has been verified
+// for this board, a later failing check reads "needs attention" rather than
+// "not started".
+export function rememberVerifiedStages(evaluation) {
+  for (const e of Object.values(evaluation ?? {})) {
+    if (e.badge === "verified" && e.uid) markStageVerified(e.stageId, e.uid);
+  }
 }
 
 // ---- Data -----------------------------------------------------------------

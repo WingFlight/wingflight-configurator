@@ -18,6 +18,7 @@
     openTab,
     pollLiveData,
     refreshJourneyData,
+    rememberVerifiedStages,
     syncObservedToBoard,
   } from "./journey_state.svelte.js";
   import {
@@ -45,8 +46,22 @@
       Object.entries(evaluation).map(([id, e]) => [id, e.badge]),
     ),
   );
+
+  $effect(() => {
+    rememberVerifiedStages(evaluation);
+  });
   let next = $derived(nextStageId(badges, STAGE_IDS));
   let complete = $derived(!loading && allStagesVerified(badges, STAGE_IDS));
+
+  // Re-verification prompt: a physical confirmation whose dependencies
+  // changed (firmware flash, settings restore, a reversed servo) is stale.
+  let staleChecks = $derived(
+    Object.values(evaluation).flatMap((e) =>
+      e.results
+        .filter((r) => r.status === "stale")
+        .map((r) => ({ ...r, stageId: e.stageId })),
+    ),
+  );
 
   onMount(async () => {
     await refreshJourneyData();
@@ -104,6 +119,22 @@
     />
   {:else}
     <p class="intro">{$i18n.t("journeyIntro")}</p>
+
+    {#if staleChecks.length > 0}
+      <div class="stale">
+        <strong
+          >{$i18n.t("journeyStaleTitle", { count: staleChecks.length })}</strong
+        >
+        <span>{$i18n.t("journeyStaleText")}</span>
+        <div class="stale-list">
+          {#each staleChecks as r (r.id)}
+            <button class="stale-item" onclick={() => openStage(r.stageId)}
+              >{$i18n.t(r.titleKey, r.titleValues ?? {})}</button
+            >
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     {#if complete}
       <div class="complete">
@@ -197,6 +228,33 @@
     flex-direction: column;
     gap: 4px;
     font-size: 0.85rem;
+  }
+
+  .stale {
+    margin: var(--section-gap) 0 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid
+      color-mix(in srgb, var(--color-status-bad) 45%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-status-bad) 8%,
+      var(--color-surface)
+    );
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+
+  .stale-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .stale-item {
+    @extend %button;
   }
 
   .stages {

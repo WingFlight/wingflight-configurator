@@ -387,6 +387,18 @@ export const MSP = {
 
         MSP.callbacks.push(obj);
 
+        // While a CLI session is open (interactive or headless -- see
+        // serial_backend.js's setHeadlessCliReader) the flight controller
+        // is not speaking MSP: a frame sent now would land in the CLI's
+        // line buffer as garbage, splitting or corrupting whatever command
+        // is being typed there. Skip the initial write but keep the
+        // request registered, so the existing retry timer above cancels
+        // it exactly as it already does for a request that timed out
+        // during CLI mode (nothing else about the flow changes).
+        if (CONFIGURATOR.cliEngineActive) {
+            return true;
+        }
+
         // always send messages with data payload (even when there is a message already in the queue)
         if (data || !requestExists) {
             serial.send(bufferOut, function (sendInfo) {

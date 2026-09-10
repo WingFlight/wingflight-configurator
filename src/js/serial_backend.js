@@ -778,6 +778,23 @@ function onClosed(result) {
     CONFIGURATOR.cliTab = "";
 }
 
+// A headless CLI session (see src/js/remap_fc/wiring_session.svelte.js)
+// is not a tab, so it cannot be reached through TABS[...].read() the way
+// the CLI and Presets tabs are. It registers its reader here and sets
+// CONFIGURATOR.cliTab = HEADLESS_CLI_TAB while its session is open, so
+// read_serial() below can route incoming bytes to it. Ported in spirit
+// from Rotorflight PR #433, which added a `case 'remap_fc'` for its tab.
+export const HEADLESS_CLI_TAB = 'headless';
+let headlessCliReader = null;
+
+/**
+ * @param {?function(Object): void} reader receives the same readInfo
+ *   read_serial() gets; pass null to unregister.
+ */
+export function setHeadlessCliReader(reader) {
+    headlessCliReader = reader;
+}
+
 export function read_serial(info) {
     if (!CONFIGURATOR.cliEngineActive) {
         MSP.read(info);
@@ -788,6 +805,9 @@ export function read_serial(info) {
                 break;
             case 'presets':
                 TABS.presets.read(info);
+                break;
+            case HEADLESS_CLI_TAB:
+                headlessCliReader?.(info);
                 break;
         }
     }
@@ -882,7 +902,13 @@ function update_live_status() {
        display: 'inline-block'
     });
 
-    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets') {
+    // Never poll MSP while any CLI session is open: the flight controller
+    // is in CLI mode then and would read the MSP frame as keyboard input.
+    // The tab check alone is not enough because a headless CLI session
+    // (wiring_session.svelte.js) can be open on a tab that is not the
+    // CLI tab -- the same reason Rotorflight PR #433 added its own tab
+    // to this condition.
+    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets' && !CONFIGURATOR.cliEngineActive) {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
     }
 

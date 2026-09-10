@@ -104,6 +104,12 @@ export function applyVirtualConfig() {
   FC.SERIAL_CONFIG.ports[1].functionMask = 64; // RX_SERIAL
   FC.SERIAL_CONFIG.ports[2].functionMask = 1024; // ESC_SENSOR
   FC.SERIAL_CONFIG.ports[3].functionMask = 2; // GPS
+  // The rest of the app reads port.functions (names), not the raw mask --
+  // keep both in step so tab-list gating and the journey's link checks see
+  // the same ports a real board would report.
+  FC.SERIAL_CONFIG.ports[1].functions = ["RX_SERIAL"];
+  FC.SERIAL_CONFIG.ports[2].functions = ["ESC_SENSOR"];
+  FC.SERIAL_CONFIG.ports[3].functions = ["GPS"];
 
   // Receiver
   FC.FEATURE_CONFIG.features.RX_SERIAL = true;
@@ -157,9 +163,9 @@ export function applyVirtualConfig() {
 
   // Power
   Object.assign(FC.BATTERY_CONFIG, {
-    vbatmincellvoltage: 1,
-    vbatmaxcellvoltage: 4,
-    vbatwarningcellvoltage: 3,
+    vbatmincellvoltage: 330,
+    vbatmaxcellvoltage: 430,
+    vbatwarningcellvoltage: 350,
     capacity: 10000,
     voltageMeterSource: 1,
     currentMeterSource: 1,
@@ -371,6 +377,69 @@ export function applyVirtualConfig() {
     { rate: 0, min: 0, max: 0 },
     { rate: 0, min: 0, max: 0 },
   ];
+
+  // Firmware default fixed-wing mixer (pg/mixer.c): S1 left aileron, S2
+  // right aileron (opposite sign), S3 elevator, S4 rudder, M1 throttle --
+  // so the setup journey / airframe canvas have something to draw and the
+  // derived checks can be exercised without hardware.
+  const rule = (oper, src, dst, weight) => ({
+    oper,
+    src,
+    dst,
+    offset: 0,
+    weight,
+    weightNeg: weight,
+    speed: 0,
+    curve: 0,
+    condition: 0,
+  });
+  FC.MIXER_CONFIG.model_type = 0; // REGULAR_AIRPLANE
+  FC.MIXER_RULES = [
+    rule(1, 1, 1, 1000),
+    rule(1, 1, 2, -1000),
+    rule(1, 2, 3, 1000),
+    rule(1, 3, 4, 1000),
+    rule(1, 4, 27, 1000),
+  ];
+  while (FC.MIXER_RULES.length < 32) {
+    FC.MIXER_RULES.push(rule(0, 0, 0, 0));
+  }
+
+  // ARM bound to AUX1 (channel 5) high, ANGLE on AUX2 -- mode ranges are
+  // stored as (value - 1500) / 5 steps on the wire, but the parsed form is
+  // absolute microseconds.
+  FC.MODE_RANGES = [
+    { id: 0, auxChannelIndex: 0, range: { start: 1700, end: 2100 } },
+    { id: 1, auxChannelIndex: 1, range: { start: 1300, end: 1700 } },
+  ];
+  FC.MODE_RANGES_EXTRA = [
+    { id: 0, modeLogic: 0, linkedTo: 0 },
+    { id: 1, modeLogic: 0, linkedTo: 0 },
+  ];
+
+  Object.assign(FC.FAILSAFE_CONFIG, {
+    failsafe_delay: 10,
+    failsafe_off_delay: 10,
+    failsafe_throttle: 1000,
+    failsafe_switch_mode: 0,
+    failsafe_throttle_low_delay: 100,
+    failsafe_procedure: 1,
+  });
+
+  Object.assign(FC.BOARD_ALIGNMENT_CONFIG, { roll: 0, pitch: 0, yaw: 0 });
+  FC.VOLTAGE_METER_CONFIGS = [
+    {
+      id: 10,
+      sensorType: 0,
+      vbatscale: 110,
+      vbatresdivval: 10,
+      vbatresdivmultiplier: 1,
+    },
+  ];
+  FC.CURRENT_METER_CONFIGS = [{ id: 10, sensorType: 1, scale: 400, offset: 0 }];
+  FC.VOLTAGE_METERS = [{ id: 10, voltage: 12.4 }];
+  FC.CURRENT_METERS = [{ id: 10, amperage: 1.2, mAhDrawn: 120 }];
+  FC.SERVO_DATA = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500];
 
   FC.PID_PROFILE.pid_mode = 1;
 
