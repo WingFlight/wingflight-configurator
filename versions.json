@@ -63,6 +63,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-esc-signaling-autodetect",
+      "path": "./feature-esc-signaling-autodetect/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
