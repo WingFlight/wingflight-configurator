@@ -1,7 +1,7 @@
 import semver from "semver";
 
 import * as config from "@/js/config.js";
-import { CONFIGURATOR, loadDisclosureLevel, setDisclosureLevel, loadJourneyLanding } from "@/js/configurator.svelte.js";
+import { CONFIGURATOR, loadDisclosureLevel, loadJourneyLanding } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
@@ -341,18 +341,11 @@ export function startProcess() {
     initAllSettingsToggle();
 
     // Disclosure level (Essential / Standard / Expert). Migrates the old
-    // boolean expertMode setting on first run.
-    const disclosureLevel = loadDisclosureLevel();
+    // boolean expertMode setting on first run. The control itself lives in
+    // HeaderTools.svelte; every tab resolves its tiers reactively, so a
+    // change needs no tab reload.
+    loadDisclosureLevel();
     loadJourneyLanding();
-    $('#disclosure-level select')
-        .val(disclosureLevel)
-        .on('change', function () {
-            setDisclosureLevel(this.value);
-            // Svelte tabs react to the level automatically, but the legacy
-            // jQuery tabs build their DOM once on load and need a reload to
-            // pick up the new filtering.
-            GUI.tab_switch_allowed(() => GUI.tab_switch_reload());
-        });
 
     CliAutoComplete.setEnabled(config.get('cliAutoComplete') ?? true);
 

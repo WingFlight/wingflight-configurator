@@ -62,7 +62,7 @@ import "@/css/select2_custom.css";
 
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
-import SettingsSearch from "@/components/SettingsSearch.svelte";
+import HeaderTools from "@/components/HeaderTools.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
 
 // FirmwareCache/release_checker/FirmwareFlasher all persist via
@@ -137,7 +137,7 @@ export function mountComponents() {
   mount(StatusBar, { target: document.querySelector("#status-bar") });
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
-  mount(SettingsSearch, { target: document.querySelector("#settings-search") });
+  mount(HeaderTools, { target: document.querySelector("#header-tools") });
 }
 
 if (__BACKEND__ === "cordova") {

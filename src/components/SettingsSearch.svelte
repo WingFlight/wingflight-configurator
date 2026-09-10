@@ -1,7 +1,6 @@
 <script>
   import { onMount } from "svelte";
 
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { invalidateIndex, jumpTo, search } from "@/js/settings_search.js";
 
@@ -71,57 +70,56 @@
   });
 </script>
 
-{#if CONFIGURATOR.connectionValid}
-  <div class="search" role="search" bind:this={rootEl}>
-    <input
-      bind:this={inputEl}
-      bind:value={query}
-      type="search"
-      placeholder={$i18n.t("settingsSearchPlaceholder")}
-      aria-label={$i18n.t("settingsSearchPlaceholder")}
-      oninput={update}
-      onfocus={() => query.length >= 2 && update()}
-      onblur={() => setTimeout(() => (open = false), 150)}
-      onkeydown={onKey}
-    />
-    {#if open}
-      <ul class="results" role="listbox">
-        {#each results as r, i (r.id ?? r.key)}
-          <li>
-            <button
-              class={["result", i === active && "active"]}
-              role="option"
-              aria-selected={i === active}
-              onmousedown={(e) => e.preventDefault()}
-              onclick={() => pick(r)}
-            >
-              <span class="label">{r.label}</span>
-              <span class="meta">
-                {$i18n.t(`journeyTab.${r.tab}`, { defaultValue: r.tab })}
-                {#if r.tier && r.tier !== "standard"}
-                  · {$i18n.t(
-                    `disclosureLevel${r.tier[0].toUpperCase()}${r.tier.slice(1)}`,
-                  )}
-                {/if}
-              </span>
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </div>
-{/if}
+<div class="search" role="search" bind:this={rootEl}>
+  <input
+    bind:this={inputEl}
+    bind:value={query}
+    type="search"
+    placeholder={$i18n.t("settingsSearchPlaceholder")}
+    aria-label={$i18n.t("settingsSearchPlaceholder")}
+    oninput={update}
+    onfocus={() => query.length >= 2 && update()}
+    onblur={() => setTimeout(() => (open = false), 150)}
+    onkeydown={onKey}
+  />
+  {#if open}
+    <ul class="results" role="listbox">
+      {#each results as r, i (r.id ?? r.key)}
+        <li>
+          <button
+            class={["result", i === active && "active"]}
+            role="option"
+            aria-selected={i === active}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => pick(r)}
+          >
+            <span class="label">{r.label}</span>
+            <span class="meta">
+              {$i18n.t(`journeyTab.${r.tab}`, { defaultValue: r.tab })}
+              {#if r.tier && r.tier !== "standard"}
+                · {$i18n.t(
+                  `disclosureLevel${r.tier[0].toUpperCase()}${r.tier.slice(1)}`,
+                )}
+              {/if}
+            </span>
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
 
 <style lang="scss">
   .search {
     position: relative;
-    width: 220px;
-    margin-right: 14px;
+    flex: 1 1 auto;
+    min-width: 90px;
+    max-width: 260px;
   }
 
   input {
     width: 100%;
-    height: 26px;
+    height: 24px;
     font-size: 12px;
     padding: 0 8px;
     color: var(--chrome-fg);
@@ -136,7 +134,7 @@
 
   .results {
     position: absolute;
-    top: 30px;
+    top: 28px;
     left: 0;
     right: 0;
     z-index: 200;
@@ -178,12 +176,5 @@
   .meta {
     font-size: 0.68rem;
     color: var(--color-text-muted);
-  }
-
-  @media only screen and (max-width: 1100px) {
-    .search {
-      width: 150px;
-      margin-right: 8px;
-    }
   }
 </style>

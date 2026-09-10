@@ -232,6 +232,19 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    // The drawing is a diagram, not a hero image: past this width the
+    // surfaces gain nothing and the stage body turns into one big plane.
+    // width + align-self rather than auto margins alone: an auto inline
+    // margin cancels the stretch a flex column would otherwise give it,
+    // which shrank the canvas to its label width inside a stage body.
+    width: 100%;
+    max-width: 560px;
+    align-self: center;
+    margin-inline: auto;
+  }
+
+  .compact {
+    max-width: none;
   }
 
   svg {

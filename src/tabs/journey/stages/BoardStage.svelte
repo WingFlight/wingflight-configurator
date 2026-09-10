@@ -111,7 +111,9 @@
 <Section label="journeyBoard.orientationTitle">
   <div class="orientation">
     <div class="model">
-      <Model bind:this={modelRef} />
+      <div class="model-box">
+        <Model bind:this={modelRef} />
+      </div>
       <div class="attitude">
         <span
           >{$i18n.t("journeyBoard.roll")}
@@ -205,10 +207,19 @@
   }
 
   .model {
-    min-height: 220px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+
+  // Definite height on purpose: <Model> sizes its canvas from this box's
+  // measured height, so an indefinite one makes it grow every frame.
+  .model-box {
+    position: relative;
+    height: 260px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
   }
 
   .attitude {

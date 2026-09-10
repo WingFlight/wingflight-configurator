@@ -70,13 +70,6 @@ export function setDisclosureLevel(level) {
 function applyDisclosureLevel(level) {
   CONFIGURATOR.disclosureLevel = level;
   CONFIGURATOR.expertMode = level === "expert";
-  // Keep the header quick-switch in step with wherever the change came from.
-  const headerSelect = globalThis.document?.querySelector?.(
-    "#disclosure-level select",
-  );
-  if (headerSelect && headerSelect.value !== level) {
-    headerSelect.value = level;
-  }
 }
 
 export function loadJourneyLanding() {
