@@ -29,6 +29,7 @@
   // full writeup of this exact bug in the Receiver tab.
   let initialState = $state();
   let pollerInterval;
+  let armedPollerInterval;
   let telemetryRef;
 
   let isEnabled = $derived(
@@ -86,15 +87,25 @@
       await MSP.promise(MSPCodes.MSP_MOTOR);
       await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
       await MSP.promise(MSPCodes.MSP_BATTERY_STATE);
-      // Keeps `armed` (below) live while this tab stays open - the initial
-      // fetch above is otherwise the only one this tab ever does, unlike
-      // e.g. Status.svelte's own slow-interval MSP_STATUS repoll.
-      await MSP.promise(MSPCodes.MSP_STATUS);
     }, 50);
+
+    // Separate, much slower interval - not folded into the 50ms loop above.
+    // That loop is already 3 MSP round-trips deep every cycle; a 4th on a
+    // real (non-instant) serial link was enough to start queueing/
+    // contending badly enough to starve the ESC wiring wizard's own 200ms
+    // poll of ever getting a timely response back, which read as the wizard
+    // "hanging" - the trial kept running fine on the FC the whole time, the
+    // configurator just stopped hearing about it. `armed` doesn't need
+    // anywhere near 50ms freshness for a UI gate, so it gets its own light
+    // cadence instead of riding along on the hot one.
+    armedPollerInterval = setInterval(() => {
+      MSP.promise(MSPCodes.MSP_STATUS);
+    }, 1000);
   });
 
   onDestroy(() => {
     clearInterval(pollerInterval);
+    clearInterval(armedPollerInterval);
     telemetryRef?.cleanup();
   });
 
