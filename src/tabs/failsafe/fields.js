@@ -4,11 +4,11 @@ import { registerFields } from "@/js/relevance.js";
 // Ids are "<tab>.<section>.<field>" and match <Tier id="..."> wrappers in the
 // tab's Svelte components.
 registerFields({
-  // Pulse width limits (min + max) -- previously behind <Expert>. Standard
-  // rather than expert so the tab is not empty below the expert level: the
-  // valid pulse window is what decides when failsafe triggers.
+  // Pulse width limits (min + max) -- previously behind <Expert>. Essential:
+  // this window is what decides when failsafe triggers at all, so a tab the
+  // Safety stage links to must not be blank without it.
   "failsafe.pulse.range": {
-    tier: "standard",
+    tier: "essential",
     tab: "failsafe",
     labelKey: "failsafePulsrangeTitle",
     helpKey: "failsafePulsrangeHelp",

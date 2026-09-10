@@ -18,10 +18,25 @@
     invalidateIndex();
   });
 
+  // The results panel is position:fixed and placed from the input's own
+  // rectangle: the header bar clips its overflow (so wrapped status boxes
+  // cannot spill over the page), and an absolutely positioned dropdown
+  // hanging below the bar would be clipped to a few pixels.
+  let menuStyle = $state("");
+
+  function positionMenu() {
+    if (!inputEl) return;
+    const r = inputEl.getBoundingClientRect();
+    const width = Math.max(Math.round(r.width), 260);
+    const left = Math.min(Math.round(r.left), window.innerWidth - width - 8);
+    menuStyle = `left:${Math.max(8, left)}px; top:${Math.round(r.bottom + 4)}px; width:${width}px;`;
+  }
+
   function update() {
     results = search(query);
     active = 0;
     open = results.length > 0;
+    if (open) positionMenu();
   }
 
   async function pick(entry) {
@@ -61,11 +76,16 @@
     const outside = (e) => {
       if (open && rootEl && !rootEl.contains(e.target)) open = false;
     };
+    const reposition = () => {
+      if (open) positionMenu();
+    };
     window.addEventListener("keydown", handler);
     document.addEventListener("pointerdown", outside);
+    window.addEventListener("resize", reposition);
     return () => {
       window.removeEventListener("keydown", handler);
       document.removeEventListener("pointerdown", outside);
+      window.removeEventListener("resize", reposition);
     };
   });
 </script>
@@ -83,7 +103,7 @@
     onkeydown={onKey}
   />
   {#if open}
-    <ul class="results" role="listbox">
+    <ul class="results" role="listbox" style={menuStyle}>
       {#each results as r, i (r.id ?? r.key)}
         <li>
           <button
@@ -133,15 +153,12 @@
   }
 
   .results {
-    position: absolute;
-    top: 28px;
-    left: 0;
-    right: 0;
+    position: fixed;
     z-index: 200;
     list-style: none;
     margin: 0;
     padding: 4px;
-    max-height: 360px;
+    max-height: min(360px, calc(100vh - 160px));
     overflow-y: auto;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);

@@ -8715,5 +8715,11 @@
     },
     "journeyStaleText": {
         "message": "A setting they depend on changed since you confirmed them — a firmware flash, a restored backup, or an edited servo or mixer rule. Redo the physical check and confirm again."
+    },
+    "disclosureNothingHere": {
+        "message": "Every setting on this tab is folded away at the current detail level. Nothing has been removed — search still finds all of it, and the CLI is untouched."
+    },
+    "disclosureShowEverything": {
+        "message": "Show everything (Expert)"
     }
 }

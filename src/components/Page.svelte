@@ -1,5 +1,8 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import {
+    CONFIGURATOR,
+    setDisclosureLevel,
+  } from "@/js/configurator.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import {
     openOverview,
@@ -12,6 +15,40 @@
   } from "@/tabs/journey/stages.js";
 
   let { children, loading = false, header, toolbar } = $props();
+
+  // A tab whose every field is folded away at the current detail level would
+  // otherwise render as a blank page with no explanation. Measure the content
+  // box (the note itself sits outside it, so this cannot feed back) and say
+  // what happened, with a way out.
+  let contentEl = $state(null);
+  let contentEmpty = $state(false);
+
+  $effect(() => {
+    if (!contentEl) {
+      contentEmpty = false;
+      return;
+    }
+    const measure = () => {
+      contentEmpty = contentEl.getBoundingClientRect().height < 4;
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(contentEl);
+    measure();
+    return () => observer.disconnect();
+  });
+
+  // Only when folding is actually the cause: at Expert nothing is hidden, so
+  // an empty tab there is empty for its own reasons.
+  let foldedAway = $derived(
+    contentEmpty &&
+      !loading &&
+      CONFIGURATOR.connectionValid &&
+      CONFIGURATOR.disclosureLevel !== "expert",
+  );
+
+  function showEverything() {
+    setDisclosureLevel("expert");
+  }
 
   // Breadcrumb from a settings tab back to the journey stage that owns it.
   // GUI.active_tab is set before the tab component mounts, so reading it once
@@ -50,9 +87,17 @@
           <p>Waiting for data...</p>
         </div>
       {:else}
-        <div class="content">
+        <div class="content" bind:this={contentEl}>
           {@render children?.()}
         </div>
+        {#if foldedAway}
+          <div class="folded">
+            <p>{$i18n.t("disclosureNothingHere")}</p>
+            <button class="btn" onclick={showEverything}>
+              {$i18n.t("disclosureShowEverything")}
+            </button>
+          </div>
+        {/if}
       {/if}
     </main>
   </div>
@@ -172,6 +217,29 @@
   .crumb-sep,
   .crumb-text {
     color: var(--color-text-muted);
+  }
+
+  .folded {
+    margin: var(--section-gap);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+    font-size: 0.85rem;
+    max-width: 60ch;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .folded .btn {
+    @extend %button;
   }
 
   .loading {
