@@ -1,0 +1,148 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  normalisePin,
+  normaliseProfile,
+  serialiseProfile,
+  validateProfile,
+} from "@/js/boardview/schema.js";
+import boardProfiles from "@/tabs/journey/board_profiles.json";
+
+const v1 = {
+  id: "TESTF405",
+  match: { targetName: ["TESTF405"] },
+  display: "Test F405",
+  mcu: "STM32F405",
+  outline: { width: 40, height: 30, mountHoles: [[3, 3]] },
+  pads: [
+    { pin: "b7", silkscreen: "S1", x: 4, y: 28, side: "top", group: "outputs" },
+    { pin: "A09", silkscreen: "T1", x: 1, y: 10, side: "top", group: "uart" },
+  ],
+};
+
+describe("normalisePin", () => {
+  it("canonicalises the CLI pin spellings", () => {
+    expect(normalisePin("b7")).toBe("B07");
+    expect(normalisePin("PA9")).toBe("A09");
+    expect(normalisePin("C06")).toBe("C06");
+  });
+
+  it("leaves something it does not recognise alone", () => {
+    expect(normalisePin("NONE")).toBe("NONE");
+  });
+});
+
+describe("normaliseProfile", () => {
+  it("turns a version 1 profile into a single top view", () => {
+    const profile = normaliseProfile(v1);
+    expect(profile.schema).toBe(2);
+    expect(Object.keys(profile.views)).toEqual(["top"]);
+    expect(profile.views.top.width).toBe(40);
+    expect(profile.pads.every((pad) => pad.view === "top")).toBe(true);
+    expect(profile.pads[0].pin).toBe("B07");
+    expect(profile.outline).toEqual({
+      width: 40,
+      height: 30,
+      mountHoles: [[3, 3]],
+    });
+  });
+
+  it("keeps every view a version 2 profile declares", () => {
+    const profile = normaliseProfile({
+      ...v1,
+      outline: undefined,
+      views: {
+        top: { width: 40, height: 30 },
+        left: { width: 40, height: 10 },
+        right: { width: 40, height: 10 },
+      },
+      pads: [{ pin: "A09", silkscreen: "T1", x: 5, y: 5, view: "left" }],
+    });
+    expect(Object.keys(profile.views).sort()).toEqual(["left", "right", "top"]);
+    expect(profile.pads[0].view).toBe("left");
+  });
+
+  it("drops a pad pointing at a view the profile does not have", () => {
+    const profile = normaliseProfile({
+      ...v1,
+      pads: [...v1.pads, { pin: "C01", x: 1, y: 1, view: "right" }],
+    });
+    expect(profile.pads.map((pad) => pad.pin)).not.toContain("C01");
+  });
+
+  it("does not mutate what it was given", () => {
+    const before = JSON.stringify(v1);
+    normaliseProfile(v1);
+    expect(JSON.stringify(v1)).toBe(before);
+  });
+});
+
+describe("serialiseProfile", () => {
+  it("round-trips through normalise unchanged", () => {
+    const once = normaliseProfile(v1);
+    const twice = normaliseProfile(serialiseProfile(once));
+    expect(serialiseProfile(twice)).toEqual(serialiseProfile(once));
+  });
+
+  it("omits optional fields that carry no information", () => {
+    const written = serialiseProfile(normaliseProfile(v1));
+    expect(written.pads[0]).not.toHaveProperty("labelSide");
+    expect(written.pads[0]).not.toHaveProperty("reserved");
+    expect(written).not.toHaveProperty("outline");
+  });
+});
+
+describe("validateProfile", () => {
+  it("passes a sound profile", () => {
+    expect(validateProfile(normaliseProfile(v1))).toEqual([]);
+  });
+
+  it("catches the same pin placed twice", () => {
+    const problems = validateProfile(
+      normaliseProfile({
+        ...v1,
+        pads: [...v1.pads, { pin: "B07", x: 9, y: 9, group: "uart" }],
+      }),
+    );
+    expect(problems.some((p) => p.level === "error" && p.pin === "B07")).toBe(true);
+  });
+
+  it("warns about a port pin that has no pad", () => {
+    const problems = validateProfile(
+      normaliseProfile({
+        ...v1,
+        ports: [{ id: "UART1", identifier: 0, tx: "A09", rx: "A10" }],
+      }),
+    );
+    expect(problems).toContainEqual(
+      expect.objectContaining({ level: "warning", pin: "A10" }),
+    );
+  });
+
+  it("rejects two ports claiming one serial identifier", () => {
+    const problems = validateProfile(
+      normaliseProfile({
+        ...v1,
+        ports: [
+          { id: "a", identifier: 0, tx: "A09" },
+          { id: "b", identifier: 0, tx: "B07" },
+        ],
+      }),
+    );
+    expect(problems.some((p) => p.level === "error")).toBe(true);
+  });
+});
+
+describe("the profiles shipped in this build", () => {
+  it.each(boardProfiles.boards.map((board) => [board.id, board]))(
+    "%s normalises and validates",
+    (_id, board) => {
+      const profile = normaliseProfile(board);
+      const errors = validateProfile(profile).filter(
+        (problem) => problem.level === "error",
+      );
+      expect(errors).toEqual([]);
+      expect(profile.pads.length).toBeGreaterThan(0);
+    },
+  );
+});

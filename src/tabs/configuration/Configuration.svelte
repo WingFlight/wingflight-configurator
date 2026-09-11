@@ -22,6 +22,7 @@
   import Switch from "@/components/Switch.svelte";
   import Tier from "@/components/Tier.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import PortMap from "@/components/boardview/PortMap.svelte";
 
   import BoardAlignment from "./BoardAlignment.svelte";
   import SerialPorts from "./SerialPorts.svelte";
@@ -489,6 +490,17 @@
           </div>
         {/snippet}
         <SerialPorts />
+      </Section>
+
+      <Section>
+        {#snippet header()}
+          <div class="section-header">
+            <span class="title">{$i18n.t("boardViewTitle")}</span>
+            <div class="grow"></div>
+            <HelpIcon>{$i18n.t("boardViewHelp")}</HelpIcon>
+          </div>
+        {/snippet}
+        <PortMap interactive={false} />
       </Section>
 
       <Section>

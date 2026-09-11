@@ -1,5 +1,5 @@
 {
-  "_note": "Pad coordinates in this file are SCHEMATIC placements, not measured: outputs run along the bottom edge, UARTs along the left/right sides, power/ADC/I2C/LED along the top, with the USB connector at the top edge. Pin-to-function defaults were taken from wingflight-firmware src/main/target/<TARGET>/target.c (timer table) and target.h (UART/I2C/ADC/LED pins); silkscreen names follow the Matek WING-series convention (S1..Sn outputs, TXn/RXn, SDA/SCL, Vbat/Curr/RSSI, LED) as far as those defaults let us infer them. Outline dimensions are approximate. Refine per docs/adding-a-board-profile.md.",
+  "_note": "Pad coordinates in this file are SCHEMATIC placements, not measured: outputs run along the bottom edge, UARTs along the left/right sides, power/ADC/I2C/LED along the top, with the USB connector at the top edge. Pin-to-function defaults were taken from wingflight-firmware src/main/target/<TARGET>/target.c (timer table) and target.h (UART/I2C/ADC/LED pins); silkscreen names follow the Matek WING-series convention (S1..Sn outputs, TXn/RXn, SDA/SCL, Vbat/Curr/RSSI, LED) as far as those defaults let us infer them. Outline dimensions are approximate. `ports` carries each UART's TX and RX pins from target.h; every one is marked split:false because these coordinates cannot say where the real connectors are -- remove that flag once a board has been measured and its headers entered. See docs/board-views.md.",
   "boards": [
     {
       "id": "MATEKF405",
@@ -16,27 +16,34 @@
       "display": "Matek F405-WING",
       "mcu": "STM32F405",
       "coordinatesSchematic": true,
-      "outline": {
-        "width": 56,
-        "height": 36,
-        "mountHoles": [
-          [
-            3,
-            3
+      "schema": 2,
+      "views": {
+        "top": {
+          "width": 56,
+          "height": 36,
+          "mountHoles": [
+            [
+              3,
+              3
+            ],
+            [
+              53,
+              3
+            ],
+            [
+              3,
+              33
+            ],
+            [
+              53,
+              33
+            ]
           ],
-          [
-            53,
-            3
-          ],
-          [
-            3,
-            33
-          ],
-          [
-            53,
-            33
-          ]
-        ]
+          "usb": {
+            "edge": "top",
+            "offset": 0.5
+          }
+        }
       },
       "pads": [
         {
@@ -215,6 +222,48 @@
           "side": "top",
           "group": "led"
         }
+      ],
+      "ports": [
+        {
+          "id": "UART1",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "A09",
+          "rx": "A10",
+          "split": false
+        },
+        {
+          "id": "UART2",
+          "identifier": 1,
+          "label": "UART2",
+          "tx": "A02",
+          "rx": "A03",
+          "split": false
+        },
+        {
+          "id": "UART3",
+          "identifier": 2,
+          "label": "UART3",
+          "tx": "C10",
+          "rx": "C11",
+          "split": false
+        },
+        {
+          "id": "UART4",
+          "identifier": 3,
+          "label": "UART4",
+          "tx": "A00",
+          "rx": "A01",
+          "split": false
+        },
+        {
+          "id": "UART5",
+          "identifier": 4,
+          "label": "UART5",
+          "tx": "C12",
+          "rx": "D02",
+          "split": false
+        }
       ]
     },
     {
@@ -232,27 +281,34 @@
       "display": "Matek F411-WING",
       "mcu": "STM32F411",
       "coordinatesSchematic": true,
-      "outline": {
-        "width": 36,
-        "height": 36,
-        "mountHoles": [
-          [
-            3,
-            3
+      "schema": 2,
+      "views": {
+        "top": {
+          "width": 36,
+          "height": 36,
+          "mountHoles": [
+            [
+              3,
+              3
+            ],
+            [
+              33,
+              3
+            ],
+            [
+              3,
+              33
+            ],
+            [
+              33,
+              33
+            ]
           ],
-          [
-            33,
-            3
-          ],
-          [
-            3,
-            33
-          ],
-          [
-            33,
-            33
-          ]
-        ]
+          "usb": {
+            "edge": "top",
+            "offset": 0.5
+          }
+        }
       },
       "pads": [
         {
@@ -383,6 +439,24 @@
           "side": "top",
           "group": "led"
         }
+      ],
+      "ports": [
+        {
+          "id": "UART1",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "A09",
+          "rx": "A10",
+          "split": false
+        },
+        {
+          "id": "UART2",
+          "identifier": 1,
+          "label": "UART2",
+          "tx": "A02",
+          "rx": "A03",
+          "split": false
+        }
       ]
     },
     {
@@ -400,27 +474,34 @@
       "display": "Matek F722-WING",
       "mcu": "STM32F722",
       "coordinatesSchematic": true,
-      "outline": {
-        "width": 54,
-        "height": 36,
-        "mountHoles": [
-          [
-            3,
-            3
+      "schema": 2,
+      "views": {
+        "top": {
+          "width": 54,
+          "height": 36,
+          "mountHoles": [
+            [
+              3,
+              3
+            ],
+            [
+              51,
+              3
+            ],
+            [
+              3,
+              33
+            ],
+            [
+              51,
+              33
+            ]
           ],
-          [
-            51,
-            3
-          ],
-          [
-            3,
-            33
-          ],
-          [
-            51,
-            33
-          ]
-        ]
+          "usb": {
+            "edge": "top",
+            "offset": 0.5
+          }
+        }
       },
       "pads": [
         {
@@ -607,6 +688,48 @@
           "side": "top",
           "group": "led"
         }
+      ],
+      "ports": [
+        {
+          "id": "UART1",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "A09",
+          "rx": "A10",
+          "split": false
+        },
+        {
+          "id": "UART2",
+          "identifier": 1,
+          "label": "UART2",
+          "tx": "A02",
+          "rx": "A03",
+          "split": false
+        },
+        {
+          "id": "UART3",
+          "identifier": 2,
+          "label": "UART3",
+          "tx": "C10",
+          "rx": "C11",
+          "split": false
+        },
+        {
+          "id": "UART4",
+          "identifier": 3,
+          "label": "UART4",
+          "tx": "A00",
+          "rx": "A01",
+          "split": false
+        },
+        {
+          "id": "UART5",
+          "identifier": 4,
+          "label": "UART5",
+          "tx": "C12",
+          "rx": "D02",
+          "split": false
+        }
       ]
     },
     {
@@ -624,27 +747,34 @@
       "display": "Matek H743-WING",
       "mcu": "STM32H743",
       "coordinatesSchematic": true,
-      "outline": {
-        "width": 54,
-        "height": 36,
-        "mountHoles": [
-          [
-            3,
-            3
+      "schema": 2,
+      "views": {
+        "top": {
+          "width": 54,
+          "height": 36,
+          "mountHoles": [
+            [
+              3,
+              3
+            ],
+            [
+              51,
+              3
+            ],
+            [
+              3,
+              33
+            ],
+            [
+              51,
+              33
+            ]
           ],
-          [
-            51,
-            3
-          ],
-          [
-            3,
-            33
-          ],
-          [
-            51,
-            33
-          ]
-        ]
+          "usb": {
+            "edge": "top",
+            "offset": 0.5
+          }
+        }
       },
       "pads": [
         {
@@ -942,6 +1072,64 @@
           "y": 2.5,
           "side": "top",
           "group": "other"
+        }
+      ],
+      "ports": [
+        {
+          "id": "UART1",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "A09",
+          "rx": "A10",
+          "split": false
+        },
+        {
+          "id": "UART2",
+          "identifier": 1,
+          "label": "UART2",
+          "tx": "D05",
+          "rx": "D06",
+          "split": false
+        },
+        {
+          "id": "UART3",
+          "identifier": 2,
+          "label": "UART3",
+          "tx": "D08",
+          "rx": "D09",
+          "split": false
+        },
+        {
+          "id": "UART4",
+          "identifier": 3,
+          "label": "UART4",
+          "tx": "B09",
+          "rx": "B08",
+          "split": false
+        },
+        {
+          "id": "UART6",
+          "identifier": 5,
+          "label": "UART6",
+          "tx": "C06",
+          "rx": "C07",
+          "split": false
+        },
+        {
+          "id": "UART7",
+          "identifier": 6,
+          "label": "UART7",
+          "tx": "E08",
+          "rx": "E07",
+          "split": false
+        },
+        {
+          "id": "UART8",
+          "identifier": 7,
+          "label": "UART8",
+          "tx": "E01",
+          "rx": "E00",
+          "split": false
         }
       ]
     }

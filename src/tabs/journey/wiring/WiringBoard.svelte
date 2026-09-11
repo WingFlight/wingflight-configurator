@@ -1,11 +1,13 @@
 <script>
   import { onDestroy } from "svelte";
 
+  import { resolveBoardView } from "@/js/boardview/board_views.js";
+  import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { getProfile, setProfileExtras } from "@/js/profile.svelte.js";
   import { getWiringSession } from "@/js/remap_fc/wiring_session.svelte.js";
 
-  import BoardCanvas from "@/components/BoardCanvas.svelte";
+  import PortMap from "@/components/boardview/PortMap.svelte";
 
   import StageNote from "../StageNote.svelte";
   import ConflictDiff from "./ConflictDiff.svelte";
@@ -22,6 +24,20 @@
   const session = getWiringSession();
   let profile = $derived(getProfile());
   let selectedPin = $state(null);
+
+  // The drawing: the matched board profile when one exists, and
+  // otherwise a schematic built from the pins the board just reported,
+  // so an undrawn board still gets a picture. This is deliberately not
+  // `session.profile` -- that one stays null for an unrecognised board,
+  // which is what stops the tool writing pin changes to it.
+  let boardView = $derived(
+    resolveBoardView({
+      matched: session.profile,
+      config: FC.CONFIG,
+      hardwareMap: session.hardwareMap,
+      serialPorts: FC.SERIAL_CONFIG?.ports ?? [],
+    }),
+  );
 
   // Everything the rest of the app reads about wiring flows through the
   // profile: pads in use, conflicts and the matched board profile.
@@ -159,26 +175,14 @@
 
       <div class="canvas-row">
         <div class="canvas">
-          {#if session.profile}
-            <BoardCanvas
-              profile={session.profile}
-              padsInUse={session.padsInUse}
-              conflicts={session.conflicts}
-              {selectedPin}
-              onSelectPad={(pin) => (selectedPin = pin)}
-            />
-          {:else}
-            <ul class="padlist">
-              {#each session.padsInUse as pad (pad.key)}
-                <li>
-                  <button
-                    class={["chip", selectedPin === pad.pin && "selected"]}
-                    onclick={() => (selectedPin = pad.pin)}>{pad.label}</button
-                  >
-                </li>
-              {/each}
-            </ul>
-          {/if}
+          <PortMap
+            profile={boardView}
+            hardwareMap={session.hardwareMap}
+            padsInUse={session.padsInUse}
+            conflicts={session.conflicts}
+            {selectedPin}
+            onSelectPad={(pin) => (selectedPin = pin)}
+          />
         </div>
         <div class="side">
           {#if selectedPin}
@@ -224,15 +228,6 @@
     min-width: 0;
   }
 
-  .padlist {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
   h4 {
     margin: 6px 0 0;
     font-size: 0.75rem;
@@ -254,13 +249,6 @@
 
   .primary {
     @extend %button-primary;
-  }
-
-  .chip {
-    @extend %button;
-    &.selected {
-      border-color: var(--color-accent-500);
-    }
   }
 
   @media only screen and (max-width: 800px) {

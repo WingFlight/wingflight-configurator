@@ -1,0 +1,404 @@
+{
+  "_note": "A worked example for tools/board-editor, not a real flight controller. It exists to show every part of the schema at once: three views, a CAD background, named connectors, and a UART whose TX and RX come out on opposite sides of the board.",
+  "boards": [
+    {
+      "schema": 2,
+      "id": "EXAMPLE-WING",
+      "match": {
+        "targetName": [
+          "EXAMPLEWING"
+        ],
+        "boardDesign": [
+          "EXAMPLEWING"
+        ]
+      },
+      "display": "Example Wing FC (not a real board)",
+      "mcu": "STM32F405",
+      "credit": "Worked example for the board editor. Invented, not measured.",
+      "views": {
+        "top": {
+          "width": 60.0,
+          "height": 38.0,
+          "background": "/images/boards/example-wing-top.svg",
+          "backgroundOpacity": 0.55,
+          "mountHoles": [
+            [
+              3,
+              3
+            ],
+            [
+              57,
+              3
+            ],
+            [
+              3,
+              35
+            ],
+            [
+              57,
+              35
+            ]
+          ],
+          "usb": {
+            "edge": "top",
+            "offset": 0.5
+          }
+        },
+        "left": {
+          "width": 60.0,
+          "height": 11.0,
+          "usb": {
+            "edge": "left",
+            "offset": 0.5
+          }
+        },
+        "right": {
+          "width": 60.0,
+          "height": 11.0,
+          "usb": null
+        }
+      },
+      "headers": [
+        {
+          "id": "j-outputs",
+          "label": "Servo rail S1-S8",
+          "view": "top"
+        },
+        {
+          "id": "j-power",
+          "label": "Power and sensors",
+          "view": "top"
+        },
+        {
+          "id": "j-uart1",
+          "label": "J3 UART1",
+          "view": "top"
+        },
+        {
+          "id": "j-uart2",
+          "label": "J4 UART2",
+          "view": "top"
+        },
+        {
+          "id": "j-uart3",
+          "label": "J5 UART3",
+          "view": "top"
+        },
+        {
+          "id": "j-left",
+          "label": "J6 left edge",
+          "view": "left"
+        },
+        {
+          "id": "j-right",
+          "label": "J7 right edge",
+          "view": "right"
+        }
+      ],
+      "pads": [
+        {
+          "pin": "C06",
+          "silkscreen": "S1",
+          "x": 5.0,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "C07",
+          "silkscreen": "S2",
+          "x": 11.4,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "C08",
+          "silkscreen": "S3",
+          "x": 17.8,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "C09",
+          "silkscreen": "S4",
+          "x": 24.200000000000003,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "A15",
+          "silkscreen": "S5",
+          "x": 30.6,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "A08",
+          "silkscreen": "S6",
+          "x": 37.0,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "B08",
+          "silkscreen": "S7",
+          "x": 43.400000000000006,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "B09",
+          "silkscreen": "S8",
+          "x": 49.800000000000004,
+          "y": 34.0,
+          "view": "top",
+          "side": "top",
+          "group": "outputs",
+          "header": "j-outputs",
+          "labelSide": "below"
+        },
+        {
+          "pin": "C05",
+          "silkscreen": "Vbat",
+          "x": 8.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "adc",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "C04",
+          "silkscreen": "Curr",
+          "x": 16.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "adc",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "B01",
+          "silkscreen": "RSSI",
+          "x": 24.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "adc",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "B07",
+          "silkscreen": "SDA",
+          "x": 34.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "i2c",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "B06",
+          "silkscreen": "SCL",
+          "x": 40.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "i2c",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "A00",
+          "silkscreen": "LED",
+          "x": 50.0,
+          "y": 4.0,
+          "view": "top",
+          "side": "top",
+          "group": "led",
+          "header": "j-power",
+          "labelSide": "above"
+        },
+        {
+          "pin": "A09",
+          "silkscreen": "TX1",
+          "x": 4.0,
+          "y": 12.0,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart1"
+        },
+        {
+          "pin": "A10",
+          "silkscreen": "RX1",
+          "x": 4.0,
+          "y": 14.54,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart1"
+        },
+        {
+          "pin": "A02",
+          "silkscreen": "TX2",
+          "x": 4.0,
+          "y": 22.0,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart2"
+        },
+        {
+          "pin": "A03",
+          "silkscreen": "RX2",
+          "x": 4.0,
+          "y": 24.54,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart2"
+        },
+        {
+          "pin": "C10",
+          "silkscreen": "TX3",
+          "x": 56.0,
+          "y": 12.0,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart3"
+        },
+        {
+          "pin": "C11",
+          "silkscreen": "RX3",
+          "x": 56.0,
+          "y": 14.54,
+          "view": "top",
+          "side": "top",
+          "group": "uart",
+          "header": "j-uart3"
+        },
+        {
+          "pin": "D00",
+          "silkscreen": "TX4",
+          "x": 14.0,
+          "y": 5.5,
+          "view": "left",
+          "side": "top",
+          "group": "uart",
+          "header": "j-left"
+        },
+        {
+          "pin": "A01",
+          "silkscreen": "RX4",
+          "x": 18.0,
+          "y": 5.5,
+          "view": "right",
+          "side": "top",
+          "group": "uart",
+          "header": "j-right"
+        },
+        {
+          "pin": "C12",
+          "silkscreen": "TX5",
+          "x": 26.0,
+          "y": 5.5,
+          "view": "left",
+          "side": "top",
+          "group": "uart",
+          "header": "j-left"
+        },
+        {
+          "pin": "D02",
+          "silkscreen": "RX5",
+          "x": 30.0,
+          "y": 5.5,
+          "view": "left",
+          "side": "top",
+          "group": "uart",
+          "header": "j-left"
+        },
+        {
+          "pin": "B04",
+          "silkscreen": "PPM",
+          "x": 30.0,
+          "y": 5.5,
+          "view": "right",
+          "side": "top",
+          "group": "uart",
+          "header": "j-right"
+        }
+      ],
+      "ports": [
+        {
+          "id": "UART1",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "A09",
+          "rx": "A10"
+        },
+        {
+          "id": "UART2",
+          "identifier": 1,
+          "label": "UART2",
+          "tx": "A02",
+          "rx": "A03"
+        },
+        {
+          "id": "UART3",
+          "identifier": 2,
+          "label": "UART3",
+          "tx": "C10",
+          "rx": "C11"
+        },
+        {
+          "id": "UART4",
+          "identifier": 3,
+          "label": "UART4",
+          "tx": "D00",
+          "rx": "A01",
+          "notes": "TX is on the left edge header, RX on the right edge header."
+        },
+        {
+          "id": "UART5",
+          "identifier": 4,
+          "label": "UART5",
+          "tx": "C12",
+          "rx": "D02"
+        }
+      ]
+    }
+  ]
+}
