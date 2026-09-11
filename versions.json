@@ -85,6 +85,11 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-web-usb-authorize-button",
+      "path": "./feature-web-usb-authorize-button/"
     }
   ]
 }
