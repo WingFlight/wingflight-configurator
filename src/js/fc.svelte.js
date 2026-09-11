@@ -622,6 +622,12 @@ class FlightController {
       gainCurveRoll:              0,
       gainCurvePitch:             0,
       gainCurveYaw:               0,
+      oscLimiter:                 0,
+      oscLimiterMinHz:            4,
+      oscLimiterMaxHz:            20,
+      oscLimiterThreshold:        30,
+      oscLimiterFloor:            50,
+      oscLimiterEngageMs:         250,
     };
 
     // Independent Thrust Vector PID loop (FEATURE_THRUST_VECTOR). One of
