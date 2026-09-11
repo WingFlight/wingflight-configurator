@@ -1026,7 +1026,7 @@ input[type="number"]::-webkit-inner-spin-button {
     }
 
     .headerbar.expand2 {
-        height: 118px;
+        height: 150px;
     }
 
     #menu_btn, #reveal_btn {
@@ -1088,17 +1088,26 @@ input[type="number"]::-webkit-inner-spin-button {
 
     .header-wrapper {
         order: 5;
-        zoom: 62%;
+        gap: 6px;
     }
 
+    /* The zoom applies to the status boxes only. On the whole wrapper it
+       also shrank the search and detail level to about 15px tall.
+       62% is what a 375px phone needs to keep the three boxes on one row;
+       above that there is room for them at full size (see below). */
     .status-row {
+        zoom: 62%;
         justify-content: space-around;
+    }
+
+    .header-wrapper.reveal #header-tools {
+        width: 100%;
     }
 
     .header-wrapper.reveal {
         display: flex !important;
         width: 100%;
-        margin-top: 24px;
+        margin-top: 10px;
     }
 
     #dataflash_wrapper_global, #sensor-status, #quad-status_wrapper {
@@ -1233,13 +1242,33 @@ input[type="number"]::-webkit-inner-spin-button {
         height: calc(100% - 181px);
     }
     #tab-content-container.header_expanded2 {
-        height: calc(100% - 145px);
+        height: calc(100% - 177px);
     }
     #tab-content-container.logopen.header_expanded {
         height: calc(100% - 265px);
     }
     #tab-content-container.logopen.header_expanded2 {
-        height: calc(100% - 229px);
+        height: calc(100% - 261px);
+    }
+}
+
+/* Between phone width and the desktop header there is room for the status
+   boxes at their real size; only the narrowest screens need them shrunk. */
+@media all and (min-width: 576px) and (max-width: 1100px) {
+    .status-row {
+        zoom: 100%;
+    }
+
+    .headerbar.expand2 {
+        height: 175px;
+    }
+
+    #tab-content-container.header_expanded2 {
+        height: calc(100% - 202px);
+    }
+
+    #tab-content-container.logopen.header_expanded2 {
+        height: calc(100% - 286px);
     }
 }
 
