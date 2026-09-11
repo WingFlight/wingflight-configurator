@@ -6,11 +6,19 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 
 // Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
 // connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
-// permission the moment DFU is selected -- mirrors Betaflight showing the
-// device chooser immediately on selecting its DFU picker option, rather than
-// waiting for the user to click Flash. Silent (no popup) if a matching device
-// is already authorized, so it's safe to run on every DFU selection.
-async function requestWebUsbDeviceFromPicker() {
+// permission ahead of that -- mirrors Betaflight showing the device chooser
+// immediately on selecting its DFU picker option, rather than waiting for
+// the user to click Flash. Silent (no popup) if a matching device is already
+// authorized, so it's safe to run unconditionally.
+//
+// Exported because the Firmware Flasher also offers this as an explicit
+// "Authorize USB Device" button (web backend only) -- flashing over a plain
+// serial port can still end up needing DFU access mid-flight, for boards
+// that reboot into a DFU-capable state on their own (see STM32.connect()'s
+// auto-reboot path), and by then there's no user gesture left to hang a
+// requestDevice() prompt off, so getDevices() alone would come up empty for
+// a device that was never granted access ahead of time.
+export async function authorizeWebUsbFlightController() {
     if (!('usb' in navigator)) {
         return;
     }
@@ -261,7 +269,7 @@ export function initializeSerialBackend() {
             } else if (selectedData.isRequestBluetooth) {
                 requestWebBluetoothDeviceFromPicker();
             } else if (selectedData.isDFU) {
-                requestWebUsbDeviceFromPicker();
+                authorizeWebUsbFlightController();
             }
         }
 

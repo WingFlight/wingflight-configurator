@@ -4855,6 +4855,12 @@
     "firmwareFlasherOnlineSelectFirmwareVersionDescription": {
         "message": "Select firmware version for your board."
     },
+    "firmwareFlasherAuthorizeUsbButton": {
+        "message": "Authorize USB Device"
+    },
+    "firmwareFlasherAuthorizeUsbDescription": {
+        "message": "Grants this browser permission to access your flight controller's USB DFU interface ahead of time, so flashing can still find it if it needs DFU mode. Only needed once per device; harmless to click again."
+    },
     "firmwareFlasherNoRebootDescription": {
         "message": "Enable if your FC is in boot mode. i.e. if you powered on your FC with the bootloader pins jumped or whilst holding your FC's BOOT button."
     },

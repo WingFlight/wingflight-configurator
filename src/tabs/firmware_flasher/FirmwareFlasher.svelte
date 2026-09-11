@@ -21,6 +21,7 @@
     BACKUP_TYPES,
   } from "@/js/cli_backup.js";
   import { ReleaseChecker } from "@/js/release_checker.js";
+  import { authorizeWebUsbFlightController } from "@/js/serial_backend.js";
   import { STM32 } from "@/js/protocols/stm32.js";
   import { STM32DFU } from "@/js/protocols/stm32usbdfu.js";
   import { usbDevices } from "@/js/port_handler.js";
@@ -680,6 +681,18 @@
     }
   }
 
+  // Web backend only. Flashing over a plain serial port can still end up
+  // needing DFU access mid-flight -- boards with native USB can reboot into
+  // a DFU-capable state on their own (see STM32.connect()'s auto-reboot
+  // path) -- and by then there's no user gesture left for the browser to
+  // hang a device-chooser prompt off, so a never-yet-authorized device
+  // would silently go undetected. This button lets the user grant that
+  // access ahead of time, the same way selecting "DFU" in the port picker
+  // already does.
+  function onClickAuthorizeUsb() {
+    authorizeWebUsbFlightController();
+  }
+
   // --- Backup-before-flash / restore-after-flash wizard ---------------------
   //
   // Driven step by step through wizardState (backup_wizard_state.svelte.js)
@@ -1211,6 +1224,17 @@
         )}</span
       >
     </div>
+
+    {#if __BACKEND__ === "web"}
+      <div class="field">
+        <button class="btn" onclick={onClickAuthorizeUsb}>
+          {$i18n.t("firmwareFlasherAuthorizeUsbButton")}
+        </button>
+        <span class="description"
+          >{$i18n.t("firmwareFlasherAuthorizeUsbDescription")}</span
+        >
+      </div>
+    {/if}
 
     <div class="field">
       <Select
