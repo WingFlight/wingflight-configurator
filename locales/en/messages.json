@@ -4543,6 +4543,24 @@
     "cliLoadFromFileBtn": {
         "message": "Load from file"
     },
+    "cliBackupToFileBtn": {
+        "message": "Backup"
+    },
+    "cliBackupInProgress": {
+        "message": "Running backup..."
+    },
+    "dialogCliBackupChoiceTitle": {
+        "message": "Backup Configuration"
+    },
+    "dialogCliBackupChoiceNote": {
+        "message": "Choose which backup to run. The result is captured from the CLI and saved to a file."
+    },
+    "dialogCliBackupChoiceDiffButton": {
+        "message": "Backup (diff all)"
+    },
+    "dialogCliBackupChoiceDumpButton": {
+        "message": "Backup (dump all)"
+    },
     "cliConfirmSnippetDialogTitle": {
         "message": "Loaded file <strong>{{fileName}}</strong>. Review the loaded commands"
     },
@@ -4851,6 +4869,87 @@
     },
     "firmwareFlasherFullChipEraseDescription": {
         "message": "Wipes all configuration data currently stored on the board."
+    },
+    "firmwareFlasherBackupModeNone": {
+        "message": "Don't back up"
+    },
+    "firmwareFlasherBackupBeforeFlashingDescription": {
+        "message": "Walks through backing up your current settings before flashing, then restoring them once the new firmware boots. Only available when flashing over a serial port (not DFU)."
+    },
+    "firmwareFlasherBackupTypeDiff": {
+        "message": "Diff (changed settings only)"
+    },
+    "firmwareFlasherBackupTypeDump": {
+        "message": "Dump (full configuration)"
+    },
+    "firmwareFlasherBackupTypeDescription": {
+        "message": "Diff is smaller and faster to capture/restore; Dump records every setting explicitly."
+    },
+    "firmwareFlasherBackupSkippedNoPort": {
+        "message": "No serial port selected, skipping pre-flash backup."
+    },
+    "firmwareFlasherBackupSkippedDfu": {
+        "message": "Board is in DFU mode, skipping pre-flash backup and restore."
+    },
+    "firmwareFlasherRestoreSkippedFlashFailed": {
+        "message": "Flashing did not complete successfully, skipping restore."
+    },
+    "firmwareFlasherWizardBackupTitle": {
+        "message": "Back Up Configuration"
+    },
+    "firmwareFlasherWizardConnecting": {
+        "message": "Connecting to flight controller..."
+    },
+    "firmwareFlasherWizardBackupRunning": {
+        "message": "Running {{command}}..."
+    },
+    "firmwareFlasherWizardBackupReady": {
+        "message": "Backup captured. Save it to a file, then continue to flash the new firmware -- you'll be asked whether to restore these settings once it boots."
+    },
+    "firmwareFlasherWizardBackupSaved": {
+        "message": "Saved to a file."
+    },
+    "firmwareFlasherWizardBackupFailed": {
+        "message": "Could not connect to the flight controller to run the backup."
+    },
+    "firmwareFlasherWizardSaveBackupFile": {
+        "message": "Save Backup File..."
+    },
+    "firmwareFlasherWizardContinueToFlash": {
+        "message": "Continue to Flash"
+    },
+    "firmwareFlasherWizardCancel": {
+        "message": "Cancel"
+    },
+    "firmwareFlasherWizardRetry": {
+        "message": "Retry"
+    },
+    "firmwareFlasherWizardSkip": {
+        "message": "Skip"
+    },
+    "firmwareFlasherWizardClose": {
+        "message": "Close"
+    },
+    "firmwareFlasherWizardRestoreTitle": {
+        "message": "Restore Configuration"
+    },
+    "firmwareFlasherWizardRestorePrompt": {
+        "message": "Flashing complete. Restore your saved configuration onto the new firmware now?"
+    },
+    "firmwareFlasherWizardRestoreNow": {
+        "message": "Restore Now"
+    },
+    "firmwareFlasherWizardRestoreWaiting": {
+        "message": "Waiting for the new firmware to finish booting..."
+    },
+    "firmwareFlasherWizardRestoreRunning": {
+        "message": "Restoring your configuration..."
+    },
+    "firmwareFlasherWizardRestoreDone": {
+        "message": "Configuration restored successfully."
+    },
+    "firmwareFlasherWizardRestoreFailed": {
+        "message": "Could not reconnect to restore the configuration automatically. You can retry, or use the CLI tab's Load button to replay the saved backup_pre_flash file manually."
     },
     "firmwareFlasherManualPort": {
         "message": "Port"

@@ -14,6 +14,12 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { MspHelper } from "@/js/msp/MSPHelper.js";
   import { readTextFile, writeTextFile } from "@/js/filesystem.js";
+  import {
+    backupOverSerial,
+    restoreOverSerial,
+    saveBackupToFile,
+    BACKUP_TYPES,
+  } from "@/js/cli_backup.js";
   import { ReleaseChecker } from "@/js/release_checker.js";
   import { STM32 } from "@/js/protocols/stm32.js";
   import { STM32DFU } from "@/js/protocols/stm32usbdfu.js";
@@ -23,6 +29,8 @@
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+  import BackupRestoreWizard from "./BackupRestoreWizard.svelte";
+  import { wizardState, resetWizard } from "./backup_wizard_state.svelte.js";
 
   import {
     buildTargetsByManufacturer,
@@ -77,6 +85,22 @@
   let eraseChip = $state(
     showAdvancedOpts ? (config.get("erase_chip") ?? true) : true,
   );
+
+  const BACKUP_MODE_NONE = "none";
+
+  // Folds the old "backup on/off" toggle + separate diff/dump select into
+  // one dropdown: "none" | BACKUP_TYPES.DIFF | BACKUP_TYPES.DUMP. Falls back
+  // to the previous two-setting config shape if that's what's stored, so an
+  // existing preference isn't silently reset.
+  function initialBackupMode() {
+    const stored = config.get("backupBeforeFlashingMode");
+    if (stored) return stored;
+    if (config.get("backupBeforeFlashing") === false) return BACKUP_MODE_NONE;
+    return config.get("backupBeforeFlashingType") ?? BACKUP_TYPES.DIFF;
+  }
+
+  let backupMode = $state(initialBackupMode());
+  let backupBeforeFlash = $derived(backupMode !== BACKUP_MODE_NONE);
 
   let localFirmwareLoaded = $state(false);
   let intelHex;
@@ -656,34 +680,168 @@
     }
   }
 
-  function flashFirmware(firmware) {
+  // --- Backup-before-flash / restore-after-flash wizard ---------------------
+  //
+  // Driven step by step through wizardState (backup_wizard_state.svelte.js)
+  // and rendered by <BackupRestoreWizard>. Nothing here proceeds to the next
+  // step on its own -- every transition either comes from an async operation
+  // settling (connect/backup/restore) or from the user clicking a button in
+  // the dialog, so e.g. saving the backup to a file is always fully awaited
+  // before flashing can start, and a failed restore leaves a visible retry
+  // control rather than just giving up silently.
+
+  // kept outside wizardState (which is UI-only) since the wizard needs to
+  // resume backup/restore with these across a retry.
+  let wizardBackupText = null;
+  let wizardPort = null;
+  let wizardBaud = null;
+
+  async function runBackupStep() {
+    wizardState.phase = "backup";
+    wizardState.status = "connecting";
+    wizardState.backupType = backupMode;
+    wizardState.backupSaved = false;
+
+    GUI.connect_lock = true;
+    setFlashingEnabled(false);
+
+    const text = await backupOverSerial(
+      wizardPort,
+      wizardBaud,
+      backupMode,
+      (status) => {
+        wizardState.status = status === "running" ? "running" : "connecting";
+      },
+    );
+
+    GUI.connect_lock = false;
+
+    if (!text) {
+      wizardState.status = "failed";
+      return;
+    }
+
+    wizardBackupText = text;
+    wizardState.status = "ready";
+  }
+
+  async function onWizardSaveBackup() {
+    const saved = await saveBackupToFile(wizardBackupText, "backup_pre_flash");
+    wizardState.backupSaved = !!saved;
+  }
+
+  function onWizardContinue() {
+    const backupText = wizardBackupText;
+    const port = wizardPort;
+    resetWizard();
+    setFlashingEnabled(true);
+    proceedToFlash(backupText, port);
+  }
+
+  function onWizardCancelBackup() {
+    resetWizard();
+    setFlashingEnabled(true);
+  }
+
+  function onWizardRetryBackup() {
+    runBackupStep();
+  }
+
+  async function runRestoreStep(backupText, port, baud) {
+    wizardBackupText = backupText;
+    wizardPort = port;
+    wizardBaud = baud;
+
+    wizardState.phase = "restore";
+    wizardState.status = "waiting";
+
+    GUI.connect_lock = true;
+    setFlashingEnabled(false);
+
+    // give the freshly-flashed firmware a moment to boot before talking to
+    // it again.
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const restored = await restoreOverSerial(
+      port,
+      baud,
+      backupText,
+      (status) => {
+        wizardState.status = status === "running" ? "running" : "connecting";
+      },
+    );
+
+    GUI.connect_lock = false;
+    setFlashingEnabled(true);
+    wizardState.status = restored ? "done" : "failed";
+  }
+
+  function onWizardRetryRestore() {
+    runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
+  }
+
+  function onWizardStartRestore() {
+    runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
+  }
+
+  function onWizardSkipRestore() {
+    resetWizard();
+  }
+
+  function onWizardCloseRestore() {
+    resetWizard();
+  }
+
+  // Runs after STM32/STM32DFU finish (successfully or not). Only offers a
+  // restore when we actually took a pre-flash backup -- see onClickFlash(),
+  // which never hands us `backupText`/`backupPort` for a DFU flash, since a
+  // DFU-flashed board typically re-enumerates on a different serial port we
+  // have no reliable way to find. Asks before doing anything -- the user may
+  // want to try the new firmware on its own defaults first.
+  function restoreAfterFlash(backupText, port, baud) {
+    if (flashState.messageType !== FLASH_MESSAGE_TYPES.VALID) {
+      GUI.log($i18n.t("firmwareFlasherRestoreSkippedFlashFailed"));
+      return;
+    }
+
+    wizardBackupText = backupText;
+    wizardPort = port;
+    wizardBaud = baud;
+    wizardState.phase = "restore";
+    wizardState.status = "prompt";
+  }
+
+  function flashFirmware(firmware, backupText, backupPort) {
     const options = {
       no_reboot: false,
       erase_chip: eraseChip,
       baud: getIntegerValue("select#baud") ?? 115200,
     };
 
+    const onFlashDone = backupText
+      ? () => restoreAfterFlash(backupText, backupPort, options.baud)
+      : undefined;
+
     if (!portIsDfu) {
       const el = portPickerElement();
       if (el && String(el.value) !== "0") {
-        STM32.connect(String(el.value), options.baud, firmware, options);
+        STM32.connect(
+          String(el.value),
+          options.baud,
+          firmware,
+          options,
+          onFlashDone,
+        );
       } else {
         GUI.log($i18n.t("firmwareFlasherNoValidPort"));
       }
     } else {
       GUI.connect_lock = true;
-      STM32DFU.connect(usbDevices, firmware, options);
+      STM32DFU.connect(usbDevices, firmware, options, onFlashDone);
     }
   }
 
-  function onClickFlash() {
-    if (GUI.connect_lock) return;
-    if (!parsedHex) {
-      flashState.message = $i18n.t("firmwareFlasherFirmwareNotLoaded");
-      flashState.messageType = FLASH_MESSAGE_TYPES.NEUTRAL;
-      return;
-    }
-
+  function proceedToFlash(backupText, backupPort) {
     try {
       if (unifiedTarget.config && !parsedHex.configInserted) {
         const configInserter = new ConfigInserter();
@@ -695,11 +853,39 @@
         }
       }
 
-      flashFirmware(parsedHex);
+      flashFirmware(parsedHex, backupText, backupPort);
       GUI.saveDefaultTab("status");
     } catch (e) {
       console.log(`Flashing failed: ${e.message}`);
     }
+  }
+
+  function onClickFlash() {
+    if (GUI.connect_lock) return;
+    if (!parsedHex) {
+      flashState.message = $i18n.t("firmwareFlasherFirmwareNotLoaded");
+      flashState.messageType = FLASH_MESSAGE_TYPES.NEUTRAL;
+      return;
+    }
+
+    if (backupBeforeFlash) {
+      if (portIsDfu) {
+        GUI.log($i18n.t("firmwareFlasherBackupSkippedDfu"));
+      } else {
+        const el = portPickerElement();
+        const port = el ? String(el.value) : "0";
+        if (port === "0") {
+          GUI.log($i18n.t("firmwareFlasherBackupSkippedNoPort"));
+        } else {
+          wizardPort = port;
+          wizardBaud = getIntegerValue("select#baud") ?? 115200;
+          runBackupStep();
+          return;
+        }
+      }
+    }
+
+    proceedToFlash(null, null);
   }
 
   async function onClickDetectBoard() {
@@ -843,6 +1029,11 @@
   function onEraseChipChange(checked) {
     eraseChip = checked;
     config.set({ erase_chip: checked });
+  }
+
+  function onBackupModeChange(value) {
+    backupMode = value;
+    config.set({ backupBeforeFlashingMode: value });
   }
 
   function onShowLegacyChange(checked) {
@@ -1021,6 +1212,32 @@
       >
     </div>
 
+    <div class="field">
+      <Select
+        value={backupMode}
+        options={[
+          {
+            value: BACKUP_MODE_NONE,
+            label: $i18n.t("firmwareFlasherBackupModeNone"),
+          },
+          {
+            value: BACKUP_TYPES.DIFF,
+            label: $i18n.t("firmwareFlasherBackupTypeDiff"),
+          },
+          {
+            value: BACKUP_TYPES.DUMP,
+            label: $i18n.t("firmwareFlasherBackupTypeDump"),
+          },
+        ]}
+        onchange={(e) => onBackupModeChange(e.target.value)}
+      />
+      <span class="description"
+        >{backupBeforeFlash
+          ? $i18n.t("firmwareFlasherBackupTypeDescription")
+          : $i18n.t("firmwareFlasherBackupBeforeFlashingDescription")}</span
+      >
+    </div>
+
     {#if showAdvancedOpts}
       <div class="field">
         <label>
@@ -1133,6 +1350,17 @@
     </button>
   </div>
 </dialog>
+
+<BackupRestoreWizard
+  onSaveBackup={onWizardSaveBackup}
+  onContinue={onWizardContinue}
+  onCancelBackup={onWizardCancelBackup}
+  onRetryBackup={onWizardRetryBackup}
+  onStartRestore={onWizardStartRestore}
+  onRetryRestore={onWizardRetryRestore}
+  onSkipRestore={onWizardSkipRestore}
+  onCloseRestore={onWizardCloseRestore}
+/>
 
 <style lang="scss">
   h1 {
