@@ -1,7 +1,7 @@
 {
   "_file": {
     "path": "src/js/remap_fc/MCU-all.json",
-    "description": "Per-MCU, per-pin timer alternate-function and DMA option data, merged from STM32_timers.json and STM32_DMA.json (the authoritative sources, cross-checked against raw dump timers/dma CLI output from real hardware). Imported unchanged from Rotorflight Configurator PR #433."
+    "description": "Per-MCU, per-pin timer alternate-function and DMA option data, merged from STM32_timers.json and STM32_DMA.json (the authoritative sources, cross-checked against raw dump timers/dma CLI output from real hardware). Imported from Rotorflight Configurator PR #433, with one correction: the STM32H743 and STM32G474 DMA option lists arrived truncated to three entries, which is the STM32F4/F7 limit (MAX_TIMER_DMA_OPTIONS). Those parts route a timer channel to any of sixteen DMA streams/channels through DMAMUX and the firmware's option index runs 0..15, so their lists are regenerated from the firmware's own dmaTimerMapping[] and dmaChannelSpec[] (src/main/drivers/dma_reqmap.c) with the DMA_REQUEST_TIMx_CHy numbers from the vendor CMSIS headers. The list index is the firmware's dmaopt value, so order matters: DMA1 first, then DMA2, ascending."
   },
   "STM32F411": {
     "pins": {
@@ -2562,7 +2562,20 @@
             "dma": [
               "DMA1 Stream 0 Request 18",
               "DMA1 Stream 1 Request 18",
-              "DMA1 Stream 2 Request 18"
+              "DMA1 Stream 2 Request 18",
+              "DMA1 Stream 3 Request 18",
+              "DMA1 Stream 4 Request 18",
+              "DMA1 Stream 5 Request 18",
+              "DMA1 Stream 6 Request 18",
+              "DMA1 Stream 7 Request 18",
+              "DMA2 Stream 0 Request 18",
+              "DMA2 Stream 1 Request 18",
+              "DMA2 Stream 2 Request 18",
+              "DMA2 Stream 3 Request 18",
+              "DMA2 Stream 4 Request 18",
+              "DMA2 Stream 5 Request 18",
+              "DMA2 Stream 6 Request 18",
+              "DMA2 Stream 7 Request 18"
             ]
           },
           {
@@ -2571,7 +2584,20 @@
             "dma": [
               "DMA1 Stream 0 Request 55",
               "DMA1 Stream 1 Request 55",
-              "DMA1 Stream 2 Request 55"
+              "DMA1 Stream 2 Request 55",
+              "DMA1 Stream 3 Request 55",
+              "DMA1 Stream 4 Request 55",
+              "DMA1 Stream 5 Request 55",
+              "DMA1 Stream 6 Request 55",
+              "DMA1 Stream 7 Request 55",
+              "DMA2 Stream 0 Request 55",
+              "DMA2 Stream 1 Request 55",
+              "DMA2 Stream 2 Request 55",
+              "DMA2 Stream 3 Request 55",
+              "DMA2 Stream 4 Request 55",
+              "DMA2 Stream 5 Request 55",
+              "DMA2 Stream 6 Request 55",
+              "DMA2 Stream 7 Request 55"
             ]
           }
         ]
@@ -2584,7 +2610,20 @@
             "dma": [
               "DMA1 Stream 0 Request 19",
               "DMA1 Stream 1 Request 19",
-              "DMA1 Stream 2 Request 19"
+              "DMA1 Stream 2 Request 19",
+              "DMA1 Stream 3 Request 19",
+              "DMA1 Stream 4 Request 19",
+              "DMA1 Stream 5 Request 19",
+              "DMA1 Stream 6 Request 19",
+              "DMA1 Stream 7 Request 19",
+              "DMA2 Stream 0 Request 19",
+              "DMA2 Stream 1 Request 19",
+              "DMA2 Stream 2 Request 19",
+              "DMA2 Stream 3 Request 19",
+              "DMA2 Stream 4 Request 19",
+              "DMA2 Stream 5 Request 19",
+              "DMA2 Stream 6 Request 19",
+              "DMA2 Stream 7 Request 19"
             ]
           },
           {
@@ -2593,7 +2632,20 @@
             "dma": [
               "DMA1 Stream 0 Request 56",
               "DMA1 Stream 1 Request 56",
-              "DMA1 Stream 2 Request 56"
+              "DMA1 Stream 2 Request 56",
+              "DMA1 Stream 3 Request 56",
+              "DMA1 Stream 4 Request 56",
+              "DMA1 Stream 5 Request 56",
+              "DMA1 Stream 6 Request 56",
+              "DMA1 Stream 7 Request 56",
+              "DMA2 Stream 0 Request 56",
+              "DMA2 Stream 1 Request 56",
+              "DMA2 Stream 2 Request 56",
+              "DMA2 Stream 3 Request 56",
+              "DMA2 Stream 4 Request 56",
+              "DMA2 Stream 5 Request 56",
+              "DMA2 Stream 6 Request 56",
+              "DMA2 Stream 7 Request 56"
             ]
           },
           {
@@ -2602,7 +2654,20 @@
             "dma": [
               "DMA1 Stream 0 Request 105",
               "DMA1 Stream 1 Request 105",
-              "DMA1 Stream 2 Request 105"
+              "DMA1 Stream 2 Request 105",
+              "DMA1 Stream 3 Request 105",
+              "DMA1 Stream 4 Request 105",
+              "DMA1 Stream 5 Request 105",
+              "DMA1 Stream 6 Request 105",
+              "DMA1 Stream 7 Request 105",
+              "DMA2 Stream 0 Request 105",
+              "DMA2 Stream 1 Request 105",
+              "DMA2 Stream 2 Request 105",
+              "DMA2 Stream 3 Request 105",
+              "DMA2 Stream 4 Request 105",
+              "DMA2 Stream 5 Request 105",
+              "DMA2 Stream 6 Request 105",
+              "DMA2 Stream 7 Request 105"
             ]
           }
         ]
@@ -2615,7 +2680,20 @@
             "dma": [
               "DMA1 Stream 0 Request 20",
               "DMA1 Stream 1 Request 20",
-              "DMA1 Stream 2 Request 20"
+              "DMA1 Stream 2 Request 20",
+              "DMA1 Stream 3 Request 20",
+              "DMA1 Stream 4 Request 20",
+              "DMA1 Stream 5 Request 20",
+              "DMA1 Stream 6 Request 20",
+              "DMA1 Stream 7 Request 20",
+              "DMA2 Stream 0 Request 20",
+              "DMA2 Stream 1 Request 20",
+              "DMA2 Stream 2 Request 20",
+              "DMA2 Stream 3 Request 20",
+              "DMA2 Stream 4 Request 20",
+              "DMA2 Stream 5 Request 20",
+              "DMA2 Stream 6 Request 20",
+              "DMA2 Stream 7 Request 20"
             ]
           },
           {
@@ -2624,7 +2702,20 @@
             "dma": [
               "DMA1 Stream 0 Request 57",
               "DMA1 Stream 1 Request 57",
-              "DMA1 Stream 2 Request 57"
+              "DMA1 Stream 2 Request 57",
+              "DMA1 Stream 3 Request 57",
+              "DMA1 Stream 4 Request 57",
+              "DMA1 Stream 5 Request 57",
+              "DMA1 Stream 6 Request 57",
+              "DMA1 Stream 7 Request 57",
+              "DMA2 Stream 0 Request 57",
+              "DMA2 Stream 1 Request 57",
+              "DMA2 Stream 2 Request 57",
+              "DMA2 Stream 3 Request 57",
+              "DMA2 Stream 4 Request 57",
+              "DMA2 Stream 5 Request 57",
+              "DMA2 Stream 6 Request 57",
+              "DMA2 Stream 7 Request 57"
             ]
           },
           {
@@ -2633,7 +2724,20 @@
             "dma": [
               "DMA1 Stream 0 Request 105",
               "DMA1 Stream 1 Request 105",
-              "DMA1 Stream 2 Request 105"
+              "DMA1 Stream 2 Request 105",
+              "DMA1 Stream 3 Request 105",
+              "DMA1 Stream 4 Request 105",
+              "DMA1 Stream 5 Request 105",
+              "DMA1 Stream 6 Request 105",
+              "DMA1 Stream 7 Request 105",
+              "DMA2 Stream 0 Request 105",
+              "DMA2 Stream 1 Request 105",
+              "DMA2 Stream 2 Request 105",
+              "DMA2 Stream 3 Request 105",
+              "DMA2 Stream 4 Request 105",
+              "DMA2 Stream 5 Request 105",
+              "DMA2 Stream 6 Request 105",
+              "DMA2 Stream 7 Request 105"
             ]
           }
         ]
@@ -2646,7 +2750,20 @@
             "dma": [
               "DMA1 Stream 0 Request 21",
               "DMA1 Stream 1 Request 21",
-              "DMA1 Stream 2 Request 21"
+              "DMA1 Stream 2 Request 21",
+              "DMA1 Stream 3 Request 21",
+              "DMA1 Stream 4 Request 21",
+              "DMA1 Stream 5 Request 21",
+              "DMA1 Stream 6 Request 21",
+              "DMA1 Stream 7 Request 21",
+              "DMA2 Stream 0 Request 21",
+              "DMA2 Stream 1 Request 21",
+              "DMA2 Stream 2 Request 21",
+              "DMA2 Stream 3 Request 21",
+              "DMA2 Stream 4 Request 21",
+              "DMA2 Stream 5 Request 21",
+              "DMA2 Stream 6 Request 21",
+              "DMA2 Stream 7 Request 21"
             ]
           },
           {
@@ -2655,7 +2772,20 @@
             "dma": [
               "DMA1 Stream 0 Request 58",
               "DMA1 Stream 1 Request 58",
-              "DMA1 Stream 2 Request 58"
+              "DMA1 Stream 2 Request 58",
+              "DMA1 Stream 3 Request 58",
+              "DMA1 Stream 4 Request 58",
+              "DMA1 Stream 5 Request 58",
+              "DMA1 Stream 6 Request 58",
+              "DMA1 Stream 7 Request 58",
+              "DMA2 Stream 0 Request 58",
+              "DMA2 Stream 1 Request 58",
+              "DMA2 Stream 2 Request 58",
+              "DMA2 Stream 3 Request 58",
+              "DMA2 Stream 4 Request 58",
+              "DMA2 Stream 5 Request 58",
+              "DMA2 Stream 6 Request 58",
+              "DMA2 Stream 7 Request 58"
             ]
           },
           {
@@ -2673,7 +2803,20 @@
             "dma": [
               "DMA1 Stream 0 Request 18",
               "DMA1 Stream 1 Request 18",
-              "DMA1 Stream 2 Request 18"
+              "DMA1 Stream 2 Request 18",
+              "DMA1 Stream 3 Request 18",
+              "DMA1 Stream 4 Request 18",
+              "DMA1 Stream 5 Request 18",
+              "DMA1 Stream 6 Request 18",
+              "DMA1 Stream 7 Request 18",
+              "DMA2 Stream 0 Request 18",
+              "DMA2 Stream 1 Request 18",
+              "DMA2 Stream 2 Request 18",
+              "DMA2 Stream 3 Request 18",
+              "DMA2 Stream 4 Request 18",
+              "DMA2 Stream 5 Request 18",
+              "DMA2 Stream 6 Request 18",
+              "DMA2 Stream 7 Request 18"
             ]
           },
           {
@@ -2682,7 +2825,20 @@
             "dma": [
               "DMA1 Stream 0 Request 47",
               "DMA1 Stream 1 Request 47",
-              "DMA1 Stream 2 Request 47"
+              "DMA1 Stream 2 Request 47",
+              "DMA1 Stream 3 Request 47",
+              "DMA1 Stream 4 Request 47",
+              "DMA1 Stream 5 Request 47",
+              "DMA1 Stream 6 Request 47",
+              "DMA1 Stream 7 Request 47",
+              "DMA2 Stream 0 Request 47",
+              "DMA2 Stream 1 Request 47",
+              "DMA2 Stream 2 Request 47",
+              "DMA2 Stream 3 Request 47",
+              "DMA2 Stream 4 Request 47",
+              "DMA2 Stream 5 Request 47",
+              "DMA2 Stream 6 Request 47",
+              "DMA2 Stream 7 Request 47"
             ]
           }
         ]
@@ -2695,7 +2851,20 @@
             "dma": [
               "DMA1 Stream 0 Request 23",
               "DMA1 Stream 1 Request 23",
-              "DMA1 Stream 2 Request 23"
+              "DMA1 Stream 2 Request 23",
+              "DMA1 Stream 3 Request 23",
+              "DMA1 Stream 4 Request 23",
+              "DMA1 Stream 5 Request 23",
+              "DMA1 Stream 6 Request 23",
+              "DMA1 Stream 7 Request 23",
+              "DMA2 Stream 0 Request 23",
+              "DMA2 Stream 1 Request 23",
+              "DMA2 Stream 2 Request 23",
+              "DMA2 Stream 3 Request 23",
+              "DMA2 Stream 4 Request 23",
+              "DMA2 Stream 5 Request 23",
+              "DMA2 Stream 6 Request 23",
+              "DMA2 Stream 7 Request 23"
             ]
           },
           {
@@ -2713,7 +2882,20 @@
             "dma": [
               "DMA1 Stream 0 Request 11",
               "DMA1 Stream 1 Request 11",
-              "DMA1 Stream 2 Request 11"
+              "DMA1 Stream 2 Request 11",
+              "DMA1 Stream 3 Request 11",
+              "DMA1 Stream 4 Request 11",
+              "DMA1 Stream 5 Request 11",
+              "DMA1 Stream 6 Request 11",
+              "DMA1 Stream 7 Request 11",
+              "DMA2 Stream 0 Request 11",
+              "DMA2 Stream 1 Request 11",
+              "DMA2 Stream 2 Request 11",
+              "DMA2 Stream 3 Request 11",
+              "DMA2 Stream 4 Request 11",
+              "DMA2 Stream 5 Request 11",
+              "DMA2 Stream 6 Request 11",
+              "DMA2 Stream 7 Request 11"
             ]
           },
           {
@@ -2722,7 +2904,20 @@
             "dma": [
               "DMA1 Stream 0 Request 24",
               "DMA1 Stream 1 Request 24",
-              "DMA1 Stream 2 Request 24"
+              "DMA1 Stream 2 Request 24",
+              "DMA1 Stream 3 Request 24",
+              "DMA1 Stream 4 Request 24",
+              "DMA1 Stream 5 Request 24",
+              "DMA1 Stream 6 Request 24",
+              "DMA1 Stream 7 Request 24",
+              "DMA2 Stream 0 Request 24",
+              "DMA2 Stream 1 Request 24",
+              "DMA2 Stream 2 Request 24",
+              "DMA2 Stream 3 Request 24",
+              "DMA2 Stream 4 Request 24",
+              "DMA2 Stream 5 Request 24",
+              "DMA2 Stream 6 Request 24",
+              "DMA2 Stream 7 Request 24"
             ]
           },
           {
@@ -2731,7 +2926,20 @@
             "dma": [
               "DMA1 Stream 0 Request 47",
               "DMA1 Stream 1 Request 47",
-              "DMA1 Stream 2 Request 47"
+              "DMA1 Stream 2 Request 47",
+              "DMA1 Stream 3 Request 47",
+              "DMA1 Stream 4 Request 47",
+              "DMA1 Stream 5 Request 47",
+              "DMA1 Stream 6 Request 47",
+              "DMA1 Stream 7 Request 47",
+              "DMA2 Stream 0 Request 47",
+              "DMA2 Stream 1 Request 47",
+              "DMA2 Stream 2 Request 47",
+              "DMA2 Stream 3 Request 47",
+              "DMA2 Stream 4 Request 47",
+              "DMA2 Stream 5 Request 47",
+              "DMA2 Stream 6 Request 47",
+              "DMA2 Stream 7 Request 47"
             ]
           },
           {
@@ -2749,7 +2957,20 @@
             "dma": [
               "DMA1 Stream 0 Request 11",
               "DMA1 Stream 1 Request 11",
-              "DMA1 Stream 2 Request 11"
+              "DMA1 Stream 2 Request 11",
+              "DMA1 Stream 3 Request 11",
+              "DMA1 Stream 4 Request 11",
+              "DMA1 Stream 5 Request 11",
+              "DMA1 Stream 6 Request 11",
+              "DMA1 Stream 7 Request 11",
+              "DMA2 Stream 0 Request 11",
+              "DMA2 Stream 1 Request 11",
+              "DMA2 Stream 2 Request 11",
+              "DMA2 Stream 3 Request 11",
+              "DMA2 Stream 4 Request 11",
+              "DMA2 Stream 5 Request 11",
+              "DMA2 Stream 6 Request 11",
+              "DMA2 Stream 7 Request 11"
             ]
           }
         ]
@@ -2762,7 +2983,20 @@
             "dma": [
               "DMA1 Stream 0 Request 12",
               "DMA1 Stream 1 Request 12",
-              "DMA1 Stream 2 Request 12"
+              "DMA1 Stream 2 Request 12",
+              "DMA1 Stream 3 Request 12",
+              "DMA1 Stream 4 Request 12",
+              "DMA1 Stream 5 Request 12",
+              "DMA1 Stream 6 Request 12",
+              "DMA1 Stream 7 Request 12",
+              "DMA2 Stream 0 Request 12",
+              "DMA2 Stream 1 Request 12",
+              "DMA2 Stream 2 Request 12",
+              "DMA2 Stream 3 Request 12",
+              "DMA2 Stream 4 Request 12",
+              "DMA2 Stream 5 Request 12",
+              "DMA2 Stream 6 Request 12",
+              "DMA2 Stream 7 Request 12"
             ]
           }
         ]
@@ -2772,7 +3006,24 @@
           {
             "af": "AF1",
             "timer": "TIM1 CH3",
-            "dma": []
+            "dma": [
+              "DMA1 Stream 0 Request 13",
+              "DMA1 Stream 1 Request 13",
+              "DMA1 Stream 2 Request 13",
+              "DMA1 Stream 3 Request 13",
+              "DMA1 Stream 4 Request 13",
+              "DMA1 Stream 5 Request 13",
+              "DMA1 Stream 6 Request 13",
+              "DMA1 Stream 7 Request 13",
+              "DMA2 Stream 0 Request 13",
+              "DMA2 Stream 1 Request 13",
+              "DMA2 Stream 2 Request 13",
+              "DMA2 Stream 3 Request 13",
+              "DMA2 Stream 4 Request 13",
+              "DMA2 Stream 5 Request 13",
+              "DMA2 Stream 6 Request 13",
+              "DMA2 Stream 7 Request 13"
+            ]
           }
         ]
       },
@@ -2781,7 +3032,24 @@
           {
             "af": "AF1",
             "timer": "TIM1 CH4",
-            "dma": []
+            "dma": [
+              "DMA1 Stream 0 Request 14",
+              "DMA1 Stream 1 Request 14",
+              "DMA1 Stream 2 Request 14",
+              "DMA1 Stream 3 Request 14",
+              "DMA1 Stream 4 Request 14",
+              "DMA1 Stream 5 Request 14",
+              "DMA1 Stream 6 Request 14",
+              "DMA1 Stream 7 Request 14",
+              "DMA2 Stream 0 Request 14",
+              "DMA2 Stream 1 Request 14",
+              "DMA2 Stream 2 Request 14",
+              "DMA2 Stream 3 Request 14",
+              "DMA2 Stream 4 Request 14",
+              "DMA2 Stream 5 Request 14",
+              "DMA2 Stream 6 Request 14",
+              "DMA2 Stream 7 Request 14"
+            ]
           }
         ]
       },
@@ -2793,7 +3061,20 @@
             "dma": [
               "DMA1 Stream 0 Request 18",
               "DMA1 Stream 1 Request 18",
-              "DMA1 Stream 2 Request 18"
+              "DMA1 Stream 2 Request 18",
+              "DMA1 Stream 3 Request 18",
+              "DMA1 Stream 4 Request 18",
+              "DMA1 Stream 5 Request 18",
+              "DMA1 Stream 6 Request 18",
+              "DMA1 Stream 7 Request 18",
+              "DMA2 Stream 0 Request 18",
+              "DMA2 Stream 1 Request 18",
+              "DMA2 Stream 2 Request 18",
+              "DMA2 Stream 3 Request 18",
+              "DMA2 Stream 4 Request 18",
+              "DMA2 Stream 5 Request 18",
+              "DMA2 Stream 6 Request 18",
+              "DMA2 Stream 7 Request 18"
             ]
           }
         ]
@@ -2806,7 +3087,20 @@
             "dma": [
               "DMA1 Stream 0 Request 12",
               "DMA1 Stream 1 Request 12",
-              "DMA1 Stream 2 Request 12"
+              "DMA1 Stream 2 Request 12",
+              "DMA1 Stream 3 Request 12",
+              "DMA1 Stream 4 Request 12",
+              "DMA1 Stream 5 Request 12",
+              "DMA1 Stream 6 Request 12",
+              "DMA1 Stream 7 Request 12",
+              "DMA2 Stream 0 Request 12",
+              "DMA2 Stream 1 Request 12",
+              "DMA2 Stream 2 Request 12",
+              "DMA2 Stream 3 Request 12",
+              "DMA2 Stream 4 Request 12",
+              "DMA2 Stream 5 Request 12",
+              "DMA2 Stream 6 Request 12",
+              "DMA2 Stream 7 Request 12"
             ]
           },
           {
@@ -2815,7 +3109,20 @@
             "dma": [
               "DMA1 Stream 0 Request 25",
               "DMA1 Stream 1 Request 25",
-              "DMA1 Stream 2 Request 25"
+              "DMA1 Stream 2 Request 25",
+              "DMA1 Stream 3 Request 25",
+              "DMA1 Stream 4 Request 25",
+              "DMA1 Stream 5 Request 25",
+              "DMA1 Stream 6 Request 25",
+              "DMA1 Stream 7 Request 25",
+              "DMA2 Stream 0 Request 25",
+              "DMA2 Stream 1 Request 25",
+              "DMA2 Stream 2 Request 25",
+              "DMA2 Stream 3 Request 25",
+              "DMA2 Stream 4 Request 25",
+              "DMA2 Stream 5 Request 25",
+              "DMA2 Stream 6 Request 25",
+              "DMA2 Stream 7 Request 25"
             ]
           }
         ]
@@ -2828,7 +3135,20 @@
             "dma": [
               "DMA1 Stream 0 Request 13",
               "DMA1 Stream 1 Request 13",
-              "DMA1 Stream 2 Request 13"
+              "DMA1 Stream 2 Request 13",
+              "DMA1 Stream 3 Request 13",
+              "DMA1 Stream 4 Request 13",
+              "DMA1 Stream 5 Request 13",
+              "DMA1 Stream 6 Request 13",
+              "DMA1 Stream 7 Request 13",
+              "DMA2 Stream 0 Request 13",
+              "DMA2 Stream 1 Request 13",
+              "DMA2 Stream 2 Request 13",
+              "DMA2 Stream 3 Request 13",
+              "DMA2 Stream 4 Request 13",
+              "DMA2 Stream 5 Request 13",
+              "DMA2 Stream 6 Request 13",
+              "DMA2 Stream 7 Request 13"
             ]
           },
           {
@@ -2837,7 +3157,20 @@
             "dma": [
               "DMA1 Stream 0 Request 26",
               "DMA1 Stream 1 Request 26",
-              "DMA1 Stream 2 Request 26"
+              "DMA1 Stream 2 Request 26",
+              "DMA1 Stream 3 Request 26",
+              "DMA1 Stream 4 Request 26",
+              "DMA1 Stream 5 Request 26",
+              "DMA1 Stream 6 Request 26",
+              "DMA1 Stream 7 Request 26",
+              "DMA2 Stream 0 Request 26",
+              "DMA2 Stream 1 Request 26",
+              "DMA2 Stream 2 Request 26",
+              "DMA2 Stream 3 Request 26",
+              "DMA2 Stream 4 Request 26",
+              "DMA2 Stream 5 Request 26",
+              "DMA2 Stream 6 Request 26",
+              "DMA2 Stream 7 Request 26"
             ]
           }
         ]
@@ -2850,7 +3183,20 @@
             "dma": [
               "DMA1 Stream 0 Request 19",
               "DMA1 Stream 1 Request 19",
-              "DMA1 Stream 2 Request 19"
+              "DMA1 Stream 2 Request 19",
+              "DMA1 Stream 3 Request 19",
+              "DMA1 Stream 4 Request 19",
+              "DMA1 Stream 5 Request 19",
+              "DMA1 Stream 6 Request 19",
+              "DMA1 Stream 7 Request 19",
+              "DMA2 Stream 0 Request 19",
+              "DMA2 Stream 1 Request 19",
+              "DMA2 Stream 2 Request 19",
+              "DMA2 Stream 3 Request 19",
+              "DMA2 Stream 4 Request 19",
+              "DMA2 Stream 5 Request 19",
+              "DMA2 Stream 6 Request 19",
+              "DMA2 Stream 7 Request 19"
             ]
           }
         ]
@@ -2863,7 +3209,20 @@
             "dma": [
               "DMA1 Stream 0 Request 23",
               "DMA1 Stream 1 Request 23",
-              "DMA1 Stream 2 Request 23"
+              "DMA1 Stream 2 Request 23",
+              "DMA1 Stream 3 Request 23",
+              "DMA1 Stream 4 Request 23",
+              "DMA1 Stream 5 Request 23",
+              "DMA1 Stream 6 Request 23",
+              "DMA1 Stream 7 Request 23",
+              "DMA2 Stream 0 Request 23",
+              "DMA2 Stream 1 Request 23",
+              "DMA2 Stream 2 Request 23",
+              "DMA2 Stream 3 Request 23",
+              "DMA2 Stream 4 Request 23",
+              "DMA2 Stream 5 Request 23",
+              "DMA2 Stream 6 Request 23",
+              "DMA2 Stream 7 Request 23"
             ]
           }
         ]
@@ -2876,7 +3235,20 @@
             "dma": [
               "DMA1 Stream 0 Request 24",
               "DMA1 Stream 1 Request 24",
-              "DMA1 Stream 2 Request 24"
+              "DMA1 Stream 2 Request 24",
+              "DMA1 Stream 3 Request 24",
+              "DMA1 Stream 4 Request 24",
+              "DMA1 Stream 5 Request 24",
+              "DMA1 Stream 6 Request 24",
+              "DMA1 Stream 7 Request 24",
+              "DMA2 Stream 0 Request 24",
+              "DMA2 Stream 1 Request 24",
+              "DMA2 Stream 2 Request 24",
+              "DMA2 Stream 3 Request 24",
+              "DMA2 Stream 4 Request 24",
+              "DMA2 Stream 5 Request 24",
+              "DMA2 Stream 6 Request 24",
+              "DMA2 Stream 7 Request 24"
             ]
           }
         ]
@@ -2889,7 +3261,20 @@
             "dma": [
               "DMA1 Stream 0 Request 109",
               "DMA1 Stream 1 Request 109",
-              "DMA1 Stream 2 Request 109"
+              "DMA1 Stream 2 Request 109",
+              "DMA1 Stream 3 Request 109",
+              "DMA1 Stream 4 Request 109",
+              "DMA1 Stream 5 Request 109",
+              "DMA1 Stream 6 Request 109",
+              "DMA1 Stream 7 Request 109",
+              "DMA2 Stream 0 Request 109",
+              "DMA2 Stream 1 Request 109",
+              "DMA2 Stream 2 Request 109",
+              "DMA2 Stream 3 Request 109",
+              "DMA2 Stream 4 Request 109",
+              "DMA2 Stream 5 Request 109",
+              "DMA2 Stream 6 Request 109",
+              "DMA2 Stream 7 Request 109"
             ]
           },
           {
@@ -2898,7 +3283,20 @@
             "dma": [
               "DMA1 Stream 0 Request 29",
               "DMA1 Stream 1 Request 29",
-              "DMA1 Stream 2 Request 29"
+              "DMA1 Stream 2 Request 29",
+              "DMA1 Stream 3 Request 29",
+              "DMA1 Stream 4 Request 29",
+              "DMA1 Stream 5 Request 29",
+              "DMA1 Stream 6 Request 29",
+              "DMA1 Stream 7 Request 29",
+              "DMA2 Stream 0 Request 29",
+              "DMA2 Stream 1 Request 29",
+              "DMA2 Stream 2 Request 29",
+              "DMA2 Stream 3 Request 29",
+              "DMA2 Stream 4 Request 29",
+              "DMA2 Stream 5 Request 29",
+              "DMA2 Stream 6 Request 29",
+              "DMA2 Stream 7 Request 29"
             ]
           }
         ]
@@ -2911,7 +3309,20 @@
             "dma": [
               "DMA1 Stream 0 Request 111",
               "DMA1 Stream 1 Request 111",
-              "DMA1 Stream 2 Request 111"
+              "DMA1 Stream 2 Request 111",
+              "DMA1 Stream 3 Request 111",
+              "DMA1 Stream 4 Request 111",
+              "DMA1 Stream 5 Request 111",
+              "DMA1 Stream 6 Request 111",
+              "DMA1 Stream 7 Request 111",
+              "DMA2 Stream 0 Request 111",
+              "DMA2 Stream 1 Request 111",
+              "DMA2 Stream 2 Request 111",
+              "DMA2 Stream 3 Request 111",
+              "DMA2 Stream 4 Request 111",
+              "DMA2 Stream 5 Request 111",
+              "DMA2 Stream 6 Request 111",
+              "DMA2 Stream 7 Request 111"
             ]
           },
           {
@@ -2920,7 +3331,20 @@
             "dma": [
               "DMA1 Stream 0 Request 30",
               "DMA1 Stream 1 Request 30",
-              "DMA1 Stream 2 Request 30"
+              "DMA1 Stream 2 Request 30",
+              "DMA1 Stream 3 Request 30",
+              "DMA1 Stream 4 Request 30",
+              "DMA1 Stream 5 Request 30",
+              "DMA1 Stream 6 Request 30",
+              "DMA1 Stream 7 Request 30",
+              "DMA2 Stream 0 Request 30",
+              "DMA2 Stream 1 Request 30",
+              "DMA2 Stream 2 Request 30",
+              "DMA2 Stream 3 Request 30",
+              "DMA2 Stream 4 Request 30",
+              "DMA2 Stream 5 Request 30",
+              "DMA2 Stream 6 Request 30",
+              "DMA2 Stream 7 Request 30"
             ]
           }
         ]
@@ -2933,7 +3357,20 @@
             "dma": [
               "DMA1 Stream 0 Request 109",
               "DMA1 Stream 1 Request 109",
-              "DMA1 Stream 2 Request 109"
+              "DMA1 Stream 2 Request 109",
+              "DMA1 Stream 3 Request 109",
+              "DMA1 Stream 4 Request 109",
+              "DMA1 Stream 5 Request 109",
+              "DMA1 Stream 6 Request 109",
+              "DMA1 Stream 7 Request 109",
+              "DMA2 Stream 0 Request 109",
+              "DMA2 Stream 1 Request 109",
+              "DMA2 Stream 2 Request 109",
+              "DMA2 Stream 3 Request 109",
+              "DMA2 Stream 4 Request 109",
+              "DMA2 Stream 5 Request 109",
+              "DMA2 Stream 6 Request 109",
+              "DMA2 Stream 7 Request 109"
             ]
           },
           {
@@ -2942,7 +3379,20 @@
             "dma": [
               "DMA1 Stream 0 Request 31",
               "DMA1 Stream 1 Request 31",
-              "DMA1 Stream 2 Request 31"
+              "DMA1 Stream 2 Request 31",
+              "DMA1 Stream 3 Request 31",
+              "DMA1 Stream 4 Request 31",
+              "DMA1 Stream 5 Request 31",
+              "DMA1 Stream 6 Request 31",
+              "DMA1 Stream 7 Request 31",
+              "DMA2 Stream 0 Request 31",
+              "DMA2 Stream 1 Request 31",
+              "DMA2 Stream 2 Request 31",
+              "DMA2 Stream 3 Request 31",
+              "DMA2 Stream 4 Request 31",
+              "DMA2 Stream 5 Request 31",
+              "DMA2 Stream 6 Request 31",
+              "DMA2 Stream 7 Request 31"
             ]
           }
         ]
@@ -2955,7 +3405,20 @@
             "dma": [
               "DMA1 Stream 0 Request 111",
               "DMA1 Stream 1 Request 111",
-              "DMA1 Stream 2 Request 111"
+              "DMA1 Stream 2 Request 111",
+              "DMA1 Stream 3 Request 111",
+              "DMA1 Stream 4 Request 111",
+              "DMA1 Stream 5 Request 111",
+              "DMA1 Stream 6 Request 111",
+              "DMA1 Stream 7 Request 111",
+              "DMA2 Stream 0 Request 111",
+              "DMA2 Stream 1 Request 111",
+              "DMA2 Stream 2 Request 111",
+              "DMA2 Stream 3 Request 111",
+              "DMA2 Stream 4 Request 111",
+              "DMA2 Stream 5 Request 111",
+              "DMA2 Stream 6 Request 111",
+              "DMA2 Stream 7 Request 111"
             ]
           },
           {
@@ -2973,7 +3436,20 @@
             "dma": [
               "DMA1 Stream 0 Request 20",
               "DMA1 Stream 1 Request 20",
-              "DMA1 Stream 2 Request 20"
+              "DMA1 Stream 2 Request 20",
+              "DMA1 Stream 3 Request 20",
+              "DMA1 Stream 4 Request 20",
+              "DMA1 Stream 5 Request 20",
+              "DMA1 Stream 6 Request 20",
+              "DMA1 Stream 7 Request 20",
+              "DMA2 Stream 0 Request 20",
+              "DMA2 Stream 1 Request 20",
+              "DMA2 Stream 2 Request 20",
+              "DMA2 Stream 3 Request 20",
+              "DMA2 Stream 4 Request 20",
+              "DMA2 Stream 5 Request 20",
+              "DMA2 Stream 6 Request 20",
+              "DMA2 Stream 7 Request 20"
             ]
           }
         ]
@@ -2986,7 +3462,20 @@
             "dma": [
               "DMA1 Stream 0 Request 21",
               "DMA1 Stream 1 Request 21",
-              "DMA1 Stream 2 Request 21"
+              "DMA1 Stream 2 Request 21",
+              "DMA1 Stream 3 Request 21",
+              "DMA1 Stream 4 Request 21",
+              "DMA1 Stream 5 Request 21",
+              "DMA1 Stream 6 Request 21",
+              "DMA1 Stream 7 Request 21",
+              "DMA2 Stream 0 Request 21",
+              "DMA2 Stream 1 Request 21",
+              "DMA2 Stream 2 Request 21",
+              "DMA2 Stream 3 Request 21",
+              "DMA2 Stream 4 Request 21",
+              "DMA2 Stream 5 Request 21",
+              "DMA2 Stream 6 Request 21",
+              "DMA2 Stream 7 Request 21"
             ]
           }
         ]
@@ -2999,7 +3488,20 @@
             "dma": [
               "DMA1 Stream 0 Request 11",
               "DMA1 Stream 1 Request 11",
-              "DMA1 Stream 2 Request 11"
+              "DMA1 Stream 2 Request 11",
+              "DMA1 Stream 3 Request 11",
+              "DMA1 Stream 4 Request 11",
+              "DMA1 Stream 5 Request 11",
+              "DMA1 Stream 6 Request 11",
+              "DMA1 Stream 7 Request 11",
+              "DMA2 Stream 0 Request 11",
+              "DMA2 Stream 1 Request 11",
+              "DMA2 Stream 2 Request 11",
+              "DMA2 Stream 3 Request 11",
+              "DMA2 Stream 4 Request 11",
+              "DMA2 Stream 5 Request 11",
+              "DMA2 Stream 6 Request 11",
+              "DMA2 Stream 7 Request 11"
             ]
           }
         ]
@@ -3012,7 +3514,20 @@
             "dma": [
               "DMA1 Stream 0 Request 12",
               "DMA1 Stream 1 Request 12",
-              "DMA1 Stream 2 Request 12"
+              "DMA1 Stream 2 Request 12",
+              "DMA1 Stream 3 Request 12",
+              "DMA1 Stream 4 Request 12",
+              "DMA1 Stream 5 Request 12",
+              "DMA1 Stream 6 Request 12",
+              "DMA1 Stream 7 Request 12",
+              "DMA2 Stream 0 Request 12",
+              "DMA2 Stream 1 Request 12",
+              "DMA2 Stream 2 Request 12",
+              "DMA2 Stream 3 Request 12",
+              "DMA2 Stream 4 Request 12",
+              "DMA2 Stream 5 Request 12",
+              "DMA2 Stream 6 Request 12",
+              "DMA2 Stream 7 Request 12"
             ]
           },
           {
@@ -3030,7 +3545,20 @@
             "dma": [
               "DMA1 Stream 0 Request 13",
               "DMA1 Stream 1 Request 13",
-              "DMA1 Stream 2 Request 13"
+              "DMA1 Stream 2 Request 13",
+              "DMA1 Stream 3 Request 13",
+              "DMA1 Stream 4 Request 13",
+              "DMA1 Stream 5 Request 13",
+              "DMA1 Stream 6 Request 13",
+              "DMA1 Stream 7 Request 13",
+              "DMA2 Stream 0 Request 13",
+              "DMA2 Stream 1 Request 13",
+              "DMA2 Stream 2 Request 13",
+              "DMA2 Stream 3 Request 13",
+              "DMA2 Stream 4 Request 13",
+              "DMA2 Stream 5 Request 13",
+              "DMA2 Stream 6 Request 13",
+              "DMA2 Stream 7 Request 13"
             ]
           },
           {
@@ -3048,7 +3576,20 @@
             "dma": [
               "DMA1 Stream 0 Request 23",
               "DMA1 Stream 1 Request 23",
-              "DMA1 Stream 2 Request 23"
+              "DMA1 Stream 2 Request 23",
+              "DMA1 Stream 3 Request 23",
+              "DMA1 Stream 4 Request 23",
+              "DMA1 Stream 5 Request 23",
+              "DMA1 Stream 6 Request 23",
+              "DMA1 Stream 7 Request 23",
+              "DMA2 Stream 0 Request 23",
+              "DMA2 Stream 1 Request 23",
+              "DMA2 Stream 2 Request 23",
+              "DMA2 Stream 3 Request 23",
+              "DMA2 Stream 4 Request 23",
+              "DMA2 Stream 5 Request 23",
+              "DMA2 Stream 6 Request 23",
+              "DMA2 Stream 7 Request 23"
             ]
           },
           {
@@ -3057,7 +3598,20 @@
             "dma": [
               "DMA1 Stream 0 Request 47",
               "DMA1 Stream 1 Request 47",
-              "DMA1 Stream 2 Request 47"
+              "DMA1 Stream 2 Request 47",
+              "DMA1 Stream 3 Request 47",
+              "DMA1 Stream 4 Request 47",
+              "DMA1 Stream 5 Request 47",
+              "DMA1 Stream 6 Request 47",
+              "DMA1 Stream 7 Request 47",
+              "DMA2 Stream 0 Request 47",
+              "DMA2 Stream 1 Request 47",
+              "DMA2 Stream 2 Request 47",
+              "DMA2 Stream 3 Request 47",
+              "DMA2 Stream 4 Request 47",
+              "DMA2 Stream 5 Request 47",
+              "DMA2 Stream 6 Request 47",
+              "DMA2 Stream 7 Request 47"
             ]
           }
         ]
@@ -3070,7 +3624,20 @@
             "dma": [
               "DMA1 Stream 0 Request 24",
               "DMA1 Stream 1 Request 24",
-              "DMA1 Stream 2 Request 24"
+              "DMA1 Stream 2 Request 24",
+              "DMA1 Stream 3 Request 24",
+              "DMA1 Stream 4 Request 24",
+              "DMA1 Stream 5 Request 24",
+              "DMA1 Stream 6 Request 24",
+              "DMA1 Stream 7 Request 24",
+              "DMA2 Stream 0 Request 24",
+              "DMA2 Stream 1 Request 24",
+              "DMA2 Stream 2 Request 24",
+              "DMA2 Stream 3 Request 24",
+              "DMA2 Stream 4 Request 24",
+              "DMA2 Stream 5 Request 24",
+              "DMA2 Stream 6 Request 24",
+              "DMA2 Stream 7 Request 24"
             ]
           },
           {
@@ -3079,7 +3646,20 @@
             "dma": [
               "DMA1 Stream 0 Request 48",
               "DMA1 Stream 1 Request 48",
-              "DMA1 Stream 2 Request 48"
+              "DMA1 Stream 2 Request 48",
+              "DMA1 Stream 3 Request 48",
+              "DMA1 Stream 4 Request 48",
+              "DMA1 Stream 5 Request 48",
+              "DMA1 Stream 6 Request 48",
+              "DMA1 Stream 7 Request 48",
+              "DMA2 Stream 0 Request 48",
+              "DMA2 Stream 1 Request 48",
+              "DMA2 Stream 2 Request 48",
+              "DMA2 Stream 3 Request 48",
+              "DMA2 Stream 4 Request 48",
+              "DMA2 Stream 5 Request 48",
+              "DMA2 Stream 6 Request 48",
+              "DMA2 Stream 7 Request 48"
             ]
           }
         ]
@@ -3092,7 +3672,20 @@
             "dma": [
               "DMA1 Stream 0 Request 25",
               "DMA1 Stream 1 Request 25",
-              "DMA1 Stream 2 Request 25"
+              "DMA1 Stream 2 Request 25",
+              "DMA1 Stream 3 Request 25",
+              "DMA1 Stream 4 Request 25",
+              "DMA1 Stream 5 Request 25",
+              "DMA1 Stream 6 Request 25",
+              "DMA1 Stream 7 Request 25",
+              "DMA2 Stream 0 Request 25",
+              "DMA2 Stream 1 Request 25",
+              "DMA2 Stream 2 Request 25",
+              "DMA2 Stream 3 Request 25",
+              "DMA2 Stream 4 Request 25",
+              "DMA2 Stream 5 Request 25",
+              "DMA2 Stream 6 Request 25",
+              "DMA2 Stream 7 Request 25"
             ]
           },
           {
@@ -3101,7 +3694,20 @@
             "dma": [
               "DMA1 Stream 0 Request 49",
               "DMA1 Stream 1 Request 49",
-              "DMA1 Stream 2 Request 49"
+              "DMA1 Stream 2 Request 49",
+              "DMA1 Stream 3 Request 49",
+              "DMA1 Stream 4 Request 49",
+              "DMA1 Stream 5 Request 49",
+              "DMA1 Stream 6 Request 49",
+              "DMA1 Stream 7 Request 49",
+              "DMA2 Stream 0 Request 49",
+              "DMA2 Stream 1 Request 49",
+              "DMA2 Stream 2 Request 49",
+              "DMA2 Stream 3 Request 49",
+              "DMA2 Stream 4 Request 49",
+              "DMA2 Stream 5 Request 49",
+              "DMA2 Stream 6 Request 49",
+              "DMA2 Stream 7 Request 49"
             ]
           }
         ]
@@ -3114,7 +3720,20 @@
             "dma": [
               "DMA1 Stream 0 Request 26",
               "DMA1 Stream 1 Request 26",
-              "DMA1 Stream 2 Request 26"
+              "DMA1 Stream 2 Request 26",
+              "DMA1 Stream 3 Request 26",
+              "DMA1 Stream 4 Request 26",
+              "DMA1 Stream 5 Request 26",
+              "DMA1 Stream 6 Request 26",
+              "DMA1 Stream 7 Request 26",
+              "DMA2 Stream 0 Request 26",
+              "DMA2 Stream 1 Request 26",
+              "DMA2 Stream 2 Request 26",
+              "DMA2 Stream 3 Request 26",
+              "DMA2 Stream 4 Request 26",
+              "DMA2 Stream 5 Request 26",
+              "DMA2 Stream 6 Request 26",
+              "DMA2 Stream 7 Request 26"
             ]
           },
           {
@@ -3123,7 +3742,20 @@
             "dma": [
               "DMA1 Stream 0 Request 50",
               "DMA1 Stream 1 Request 50",
-              "DMA1 Stream 2 Request 50"
+              "DMA1 Stream 2 Request 50",
+              "DMA1 Stream 3 Request 50",
+              "DMA1 Stream 4 Request 50",
+              "DMA1 Stream 5 Request 50",
+              "DMA1 Stream 6 Request 50",
+              "DMA1 Stream 7 Request 50",
+              "DMA2 Stream 0 Request 50",
+              "DMA2 Stream 1 Request 50",
+              "DMA2 Stream 2 Request 50",
+              "DMA2 Stream 3 Request 50",
+              "DMA2 Stream 4 Request 50",
+              "DMA2 Stream 5 Request 50",
+              "DMA2 Stream 6 Request 50",
+              "DMA2 Stream 7 Request 50"
             ]
           }
         ]
@@ -3136,7 +3768,20 @@
             "dma": [
               "DMA1 Stream 0 Request 29",
               "DMA1 Stream 1 Request 29",
-              "DMA1 Stream 2 Request 29"
+              "DMA1 Stream 2 Request 29",
+              "DMA1 Stream 3 Request 29",
+              "DMA1 Stream 4 Request 29",
+              "DMA1 Stream 5 Request 29",
+              "DMA1 Stream 6 Request 29",
+              "DMA1 Stream 7 Request 29",
+              "DMA2 Stream 0 Request 29",
+              "DMA2 Stream 1 Request 29",
+              "DMA2 Stream 2 Request 29",
+              "DMA2 Stream 3 Request 29",
+              "DMA2 Stream 4 Request 29",
+              "DMA2 Stream 5 Request 29",
+              "DMA2 Stream 6 Request 29",
+              "DMA2 Stream 7 Request 29"
             ]
           }
         ]
@@ -3149,7 +3794,20 @@
             "dma": [
               "DMA1 Stream 0 Request 30",
               "DMA1 Stream 1 Request 30",
-              "DMA1 Stream 2 Request 30"
+              "DMA1 Stream 2 Request 30",
+              "DMA1 Stream 3 Request 30",
+              "DMA1 Stream 4 Request 30",
+              "DMA1 Stream 5 Request 30",
+              "DMA1 Stream 6 Request 30",
+              "DMA1 Stream 7 Request 30",
+              "DMA2 Stream 0 Request 30",
+              "DMA2 Stream 1 Request 30",
+              "DMA2 Stream 2 Request 30",
+              "DMA2 Stream 3 Request 30",
+              "DMA2 Stream 4 Request 30",
+              "DMA2 Stream 5 Request 30",
+              "DMA2 Stream 6 Request 30",
+              "DMA2 Stream 7 Request 30"
             ]
           }
         ]
@@ -3162,7 +3820,20 @@
             "dma": [
               "DMA1 Stream 0 Request 31",
               "DMA1 Stream 1 Request 31",
-              "DMA1 Stream 2 Request 31"
+              "DMA1 Stream 2 Request 31",
+              "DMA1 Stream 3 Request 31",
+              "DMA1 Stream 4 Request 31",
+              "DMA1 Stream 5 Request 31",
+              "DMA1 Stream 6 Request 31",
+              "DMA1 Stream 7 Request 31",
+              "DMA2 Stream 0 Request 31",
+              "DMA2 Stream 1 Request 31",
+              "DMA2 Stream 2 Request 31",
+              "DMA2 Stream 3 Request 31",
+              "DMA2 Stream 4 Request 31",
+              "DMA2 Stream 5 Request 31",
+              "DMA2 Stream 6 Request 31",
+              "DMA2 Stream 7 Request 31"
             ]
           }
         ]
@@ -3184,7 +3855,20 @@
             "dma": [
               "DMA1 Stream 0 Request 105",
               "DMA1 Stream 1 Request 105",
-              "DMA1 Stream 2 Request 105"
+              "DMA1 Stream 2 Request 105",
+              "DMA1 Stream 3 Request 105",
+              "DMA1 Stream 4 Request 105",
+              "DMA1 Stream 5 Request 105",
+              "DMA1 Stream 6 Request 105",
+              "DMA1 Stream 7 Request 105",
+              "DMA2 Stream 0 Request 105",
+              "DMA2 Stream 1 Request 105",
+              "DMA2 Stream 2 Request 105",
+              "DMA2 Stream 3 Request 105",
+              "DMA2 Stream 4 Request 105",
+              "DMA2 Stream 5 Request 105",
+              "DMA2 Stream 6 Request 105",
+              "DMA2 Stream 7 Request 105"
             ]
           }
         ]
@@ -3197,7 +3881,20 @@
             "dma": [
               "DMA1 Stream 0 Request 105",
               "DMA1 Stream 1 Request 105",
-              "DMA1 Stream 2 Request 105"
+              "DMA1 Stream 2 Request 105",
+              "DMA1 Stream 3 Request 105",
+              "DMA1 Stream 4 Request 105",
+              "DMA1 Stream 5 Request 105",
+              "DMA1 Stream 6 Request 105",
+              "DMA1 Stream 7 Request 105",
+              "DMA2 Stream 0 Request 105",
+              "DMA2 Stream 1 Request 105",
+              "DMA2 Stream 2 Request 105",
+              "DMA2 Stream 3 Request 105",
+              "DMA2 Stream 4 Request 105",
+              "DMA2 Stream 5 Request 105",
+              "DMA2 Stream 6 Request 105",
+              "DMA2 Stream 7 Request 105"
             ]
           }
         ]
@@ -3219,7 +3916,20 @@
             "dma": [
               "DMA1 Stream 0 Request 11",
               "DMA1 Stream 1 Request 11",
-              "DMA1 Stream 2 Request 11"
+              "DMA1 Stream 2 Request 11",
+              "DMA1 Stream 3 Request 11",
+              "DMA1 Stream 4 Request 11",
+              "DMA1 Stream 5 Request 11",
+              "DMA1 Stream 6 Request 11",
+              "DMA1 Stream 7 Request 11",
+              "DMA2 Stream 0 Request 11",
+              "DMA2 Stream 1 Request 11",
+              "DMA2 Stream 2 Request 11",
+              "DMA2 Stream 3 Request 11",
+              "DMA2 Stream 4 Request 11",
+              "DMA2 Stream 5 Request 11",
+              "DMA2 Stream 6 Request 11",
+              "DMA2 Stream 7 Request 11"
             ]
           }
         ]
@@ -3232,7 +3942,20 @@
             "dma": [
               "DMA1 Stream 0 Request 11",
               "DMA1 Stream 1 Request 11",
-              "DMA1 Stream 2 Request 11"
+              "DMA1 Stream 2 Request 11",
+              "DMA1 Stream 3 Request 11",
+              "DMA1 Stream 4 Request 11",
+              "DMA1 Stream 5 Request 11",
+              "DMA1 Stream 6 Request 11",
+              "DMA1 Stream 7 Request 11",
+              "DMA2 Stream 0 Request 11",
+              "DMA2 Stream 1 Request 11",
+              "DMA2 Stream 2 Request 11",
+              "DMA2 Stream 3 Request 11",
+              "DMA2 Stream 4 Request 11",
+              "DMA2 Stream 5 Request 11",
+              "DMA2 Stream 6 Request 11",
+              "DMA2 Stream 7 Request 11"
             ]
           }
         ]
@@ -3245,7 +3968,20 @@
             "dma": [
               "DMA1 Stream 0 Request 12",
               "DMA1 Stream 1 Request 12",
-              "DMA1 Stream 2 Request 12"
+              "DMA1 Stream 2 Request 12",
+              "DMA1 Stream 3 Request 12",
+              "DMA1 Stream 4 Request 12",
+              "DMA1 Stream 5 Request 12",
+              "DMA1 Stream 6 Request 12",
+              "DMA1 Stream 7 Request 12",
+              "DMA2 Stream 0 Request 12",
+              "DMA2 Stream 1 Request 12",
+              "DMA2 Stream 2 Request 12",
+              "DMA2 Stream 3 Request 12",
+              "DMA2 Stream 4 Request 12",
+              "DMA2 Stream 5 Request 12",
+              "DMA2 Stream 6 Request 12",
+              "DMA2 Stream 7 Request 12"
             ]
           }
         ]
@@ -3258,7 +3994,20 @@
             "dma": [
               "DMA1 Stream 0 Request 12",
               "DMA1 Stream 1 Request 12",
-              "DMA1 Stream 2 Request 12"
+              "DMA1 Stream 2 Request 12",
+              "DMA1 Stream 3 Request 12",
+              "DMA1 Stream 4 Request 12",
+              "DMA1 Stream 5 Request 12",
+              "DMA1 Stream 6 Request 12",
+              "DMA1 Stream 7 Request 12",
+              "DMA2 Stream 0 Request 12",
+              "DMA2 Stream 1 Request 12",
+              "DMA2 Stream 2 Request 12",
+              "DMA2 Stream 3 Request 12",
+              "DMA2 Stream 4 Request 12",
+              "DMA2 Stream 5 Request 12",
+              "DMA2 Stream 6 Request 12",
+              "DMA2 Stream 7 Request 12"
             ]
           }
         ]
@@ -3271,7 +4020,20 @@
             "dma": [
               "DMA1 Stream 0 Request 13",
               "DMA1 Stream 1 Request 13",
-              "DMA1 Stream 2 Request 13"
+              "DMA1 Stream 2 Request 13",
+              "DMA1 Stream 3 Request 13",
+              "DMA1 Stream 4 Request 13",
+              "DMA1 Stream 5 Request 13",
+              "DMA1 Stream 6 Request 13",
+              "DMA1 Stream 7 Request 13",
+              "DMA2 Stream 0 Request 13",
+              "DMA2 Stream 1 Request 13",
+              "DMA2 Stream 2 Request 13",
+              "DMA2 Stream 3 Request 13",
+              "DMA2 Stream 4 Request 13",
+              "DMA2 Stream 5 Request 13",
+              "DMA2 Stream 6 Request 13",
+              "DMA2 Stream 7 Request 13"
             ]
           }
         ]
@@ -3284,7 +4046,20 @@
             "dma": [
               "DMA1 Stream 0 Request 13",
               "DMA1 Stream 1 Request 13",
-              "DMA1 Stream 2 Request 13"
+              "DMA1 Stream 2 Request 13",
+              "DMA1 Stream 3 Request 13",
+              "DMA1 Stream 4 Request 13",
+              "DMA1 Stream 5 Request 13",
+              "DMA1 Stream 6 Request 13",
+              "DMA1 Stream 7 Request 13",
+              "DMA2 Stream 0 Request 13",
+              "DMA2 Stream 1 Request 13",
+              "DMA2 Stream 2 Request 13",
+              "DMA2 Stream 3 Request 13",
+              "DMA2 Stream 4 Request 13",
+              "DMA2 Stream 5 Request 13",
+              "DMA2 Stream 6 Request 13",
+              "DMA2 Stream 7 Request 13"
             ]
           }
         ]
@@ -3297,7 +4072,20 @@
             "dma": [
               "DMA1 Stream 0 Request 14",
               "DMA1 Stream 1 Request 14",
-              "DMA1 Stream 2 Request 14"
+              "DMA1 Stream 2 Request 14",
+              "DMA1 Stream 3 Request 14",
+              "DMA1 Stream 4 Request 14",
+              "DMA1 Stream 5 Request 14",
+              "DMA1 Stream 6 Request 14",
+              "DMA1 Stream 7 Request 14",
+              "DMA2 Stream 0 Request 14",
+              "DMA2 Stream 1 Request 14",
+              "DMA2 Stream 2 Request 14",
+              "DMA2 Stream 3 Request 14",
+              "DMA2 Stream 4 Request 14",
+              "DMA2 Stream 5 Request 14",
+              "DMA2 Stream 6 Request 14",
+              "DMA2 Stream 7 Request 14"
             ]
           }
         ]
@@ -3314,7 +4102,20 @@
             "dma": [
               "DMA1 Channel 1 Request 56",
               "DMA1 Channel 2 Request 56",
-              "DMA1 Channel 3 Request 56"
+              "DMA1 Channel 3 Request 56",
+              "DMA1 Channel 4 Request 56",
+              "DMA1 Channel 5 Request 56",
+              "DMA1 Channel 6 Request 56",
+              "DMA1 Channel 7 Request 56",
+              "DMA1 Channel 8 Request 56",
+              "DMA2 Channel 1 Request 56",
+              "DMA2 Channel 2 Request 56",
+              "DMA2 Channel 3 Request 56",
+              "DMA2 Channel 4 Request 56",
+              "DMA2 Channel 5 Request 56",
+              "DMA2 Channel 6 Request 56",
+              "DMA2 Channel 7 Request 56",
+              "DMA2 Channel 8 Request 56"
             ]
           },
           {
@@ -3323,7 +4124,20 @@
             "dma": [
               "DMA1 Channel 1 Request 72",
               "DMA1 Channel 2 Request 72",
-              "DMA1 Channel 3 Request 72"
+              "DMA1 Channel 3 Request 72",
+              "DMA1 Channel 4 Request 72",
+              "DMA1 Channel 5 Request 72",
+              "DMA1 Channel 6 Request 72",
+              "DMA1 Channel 7 Request 72",
+              "DMA1 Channel 8 Request 72",
+              "DMA2 Channel 1 Request 72",
+              "DMA2 Channel 2 Request 72",
+              "DMA2 Channel 3 Request 72",
+              "DMA2 Channel 4 Request 72",
+              "DMA2 Channel 5 Request 72",
+              "DMA2 Channel 6 Request 72",
+              "DMA2 Channel 7 Request 72",
+              "DMA2 Channel 8 Request 72"
             ]
           }
         ]
@@ -3336,7 +4150,20 @@
             "dma": [
               "DMA1 Channel 1 Request 57",
               "DMA1 Channel 2 Request 57",
-              "DMA1 Channel 3 Request 57"
+              "DMA1 Channel 3 Request 57",
+              "DMA1 Channel 4 Request 57",
+              "DMA1 Channel 5 Request 57",
+              "DMA1 Channel 6 Request 57",
+              "DMA1 Channel 7 Request 57",
+              "DMA1 Channel 8 Request 57",
+              "DMA2 Channel 1 Request 57",
+              "DMA2 Channel 2 Request 57",
+              "DMA2 Channel 3 Request 57",
+              "DMA2 Channel 4 Request 57",
+              "DMA2 Channel 5 Request 57",
+              "DMA2 Channel 6 Request 57",
+              "DMA2 Channel 7 Request 57",
+              "DMA2 Channel 8 Request 57"
             ]
           },
           {
@@ -3345,7 +4172,20 @@
             "dma": [
               "DMA1 Channel 1 Request 73",
               "DMA1 Channel 2 Request 73",
-              "DMA1 Channel 3 Request 73"
+              "DMA1 Channel 3 Request 73",
+              "DMA1 Channel 4 Request 73",
+              "DMA1 Channel 5 Request 73",
+              "DMA1 Channel 6 Request 73",
+              "DMA1 Channel 7 Request 73",
+              "DMA1 Channel 8 Request 73",
+              "DMA2 Channel 1 Request 73",
+              "DMA2 Channel 2 Request 73",
+              "DMA2 Channel 3 Request 73",
+              "DMA2 Channel 4 Request 73",
+              "DMA2 Channel 5 Request 73",
+              "DMA2 Channel 6 Request 73",
+              "DMA2 Channel 7 Request 73",
+              "DMA2 Channel 8 Request 73"
             ]
           },
           {
@@ -3354,7 +4194,20 @@
             "dma": [
               "DMA1 Channel 1 Request 78",
               "DMA1 Channel 2 Request 78",
-              "DMA1 Channel 3 Request 78"
+              "DMA1 Channel 3 Request 78",
+              "DMA1 Channel 4 Request 78",
+              "DMA1 Channel 5 Request 78",
+              "DMA1 Channel 6 Request 78",
+              "DMA1 Channel 7 Request 78",
+              "DMA1 Channel 8 Request 78",
+              "DMA2 Channel 1 Request 78",
+              "DMA2 Channel 2 Request 78",
+              "DMA2 Channel 3 Request 78",
+              "DMA2 Channel 4 Request 78",
+              "DMA2 Channel 5 Request 78",
+              "DMA2 Channel 6 Request 78",
+              "DMA2 Channel 7 Request 78",
+              "DMA2 Channel 8 Request 78"
             ]
           }
         ]
@@ -3367,7 +4220,20 @@
             "dma": [
               "DMA1 Channel 1 Request 58",
               "DMA1 Channel 2 Request 58",
-              "DMA1 Channel 3 Request 58"
+              "DMA1 Channel 3 Request 58",
+              "DMA1 Channel 4 Request 58",
+              "DMA1 Channel 5 Request 58",
+              "DMA1 Channel 6 Request 58",
+              "DMA1 Channel 7 Request 58",
+              "DMA1 Channel 8 Request 58",
+              "DMA2 Channel 1 Request 58",
+              "DMA2 Channel 2 Request 58",
+              "DMA2 Channel 3 Request 58",
+              "DMA2 Channel 4 Request 58",
+              "DMA2 Channel 5 Request 58",
+              "DMA2 Channel 6 Request 58",
+              "DMA2 Channel 7 Request 58",
+              "DMA2 Channel 8 Request 58"
             ]
           },
           {
@@ -3376,7 +4242,20 @@
             "dma": [
               "DMA1 Channel 1 Request 74",
               "DMA1 Channel 2 Request 74",
-              "DMA1 Channel 3 Request 74"
+              "DMA1 Channel 3 Request 74",
+              "DMA1 Channel 4 Request 74",
+              "DMA1 Channel 5 Request 74",
+              "DMA1 Channel 6 Request 74",
+              "DMA1 Channel 7 Request 74",
+              "DMA1 Channel 8 Request 74",
+              "DMA2 Channel 1 Request 74",
+              "DMA2 Channel 2 Request 74",
+              "DMA2 Channel 3 Request 74",
+              "DMA2 Channel 4 Request 74",
+              "DMA2 Channel 5 Request 74",
+              "DMA2 Channel 6 Request 74",
+              "DMA2 Channel 7 Request 74",
+              "DMA2 Channel 8 Request 74"
             ]
           },
           {
@@ -3385,7 +4264,20 @@
             "dma": [
               "DMA1 Channel 1 Request 78",
               "DMA1 Channel 2 Request 78",
-              "DMA1 Channel 3 Request 78"
+              "DMA1 Channel 3 Request 78",
+              "DMA1 Channel 4 Request 78",
+              "DMA1 Channel 5 Request 78",
+              "DMA1 Channel 6 Request 78",
+              "DMA1 Channel 7 Request 78",
+              "DMA1 Channel 8 Request 78",
+              "DMA2 Channel 1 Request 78",
+              "DMA2 Channel 2 Request 78",
+              "DMA2 Channel 3 Request 78",
+              "DMA2 Channel 4 Request 78",
+              "DMA2 Channel 5 Request 78",
+              "DMA2 Channel 6 Request 78",
+              "DMA2 Channel 7 Request 78",
+              "DMA2 Channel 8 Request 78"
             ]
           }
         ]
@@ -3398,7 +4290,20 @@
             "dma": [
               "DMA1 Channel 1 Request 59",
               "DMA1 Channel 2 Request 59",
-              "DMA1 Channel 3 Request 59"
+              "DMA1 Channel 3 Request 59",
+              "DMA1 Channel 4 Request 59",
+              "DMA1 Channel 5 Request 59",
+              "DMA1 Channel 6 Request 59",
+              "DMA1 Channel 7 Request 59",
+              "DMA1 Channel 8 Request 59",
+              "DMA2 Channel 1 Request 59",
+              "DMA2 Channel 2 Request 59",
+              "DMA2 Channel 3 Request 59",
+              "DMA2 Channel 4 Request 59",
+              "DMA2 Channel 5 Request 59",
+              "DMA2 Channel 6 Request 59",
+              "DMA2 Channel 7 Request 59",
+              "DMA2 Channel 8 Request 59"
             ]
           },
           {
@@ -3407,7 +4312,20 @@
             "dma": [
               "DMA1 Channel 1 Request 75",
               "DMA1 Channel 2 Request 75",
-              "DMA1 Channel 3 Request 75"
+              "DMA1 Channel 3 Request 75",
+              "DMA1 Channel 4 Request 75",
+              "DMA1 Channel 5 Request 75",
+              "DMA1 Channel 6 Request 75",
+              "DMA1 Channel 7 Request 75",
+              "DMA1 Channel 8 Request 75",
+              "DMA2 Channel 1 Request 75",
+              "DMA2 Channel 2 Request 75",
+              "DMA2 Channel 3 Request 75",
+              "DMA2 Channel 4 Request 75",
+              "DMA2 Channel 5 Request 75",
+              "DMA2 Channel 6 Request 75",
+              "DMA2 Channel 7 Request 75",
+              "DMA2 Channel 8 Request 75"
             ]
           },
           {
@@ -3425,7 +4343,20 @@
             "dma": [
               "DMA1 Channel 1 Request 62",
               "DMA1 Channel 2 Request 62",
-              "DMA1 Channel 3 Request 62"
+              "DMA1 Channel 3 Request 62",
+              "DMA1 Channel 4 Request 62",
+              "DMA1 Channel 5 Request 62",
+              "DMA1 Channel 6 Request 62",
+              "DMA1 Channel 7 Request 62",
+              "DMA1 Channel 8 Request 62",
+              "DMA2 Channel 1 Request 62",
+              "DMA2 Channel 2 Request 62",
+              "DMA2 Channel 3 Request 62",
+              "DMA2 Channel 4 Request 62",
+              "DMA2 Channel 5 Request 62",
+              "DMA2 Channel 6 Request 62",
+              "DMA2 Channel 7 Request 62",
+              "DMA2 Channel 8 Request 62"
             ]
           }
         ]
@@ -3438,7 +4369,20 @@
             "dma": [
               "DMA1 Channel 1 Request 56",
               "DMA1 Channel 2 Request 56",
-              "DMA1 Channel 3 Request 56"
+              "DMA1 Channel 3 Request 56",
+              "DMA1 Channel 4 Request 56",
+              "DMA1 Channel 5 Request 56",
+              "DMA1 Channel 6 Request 56",
+              "DMA1 Channel 7 Request 56",
+              "DMA1 Channel 8 Request 56",
+              "DMA2 Channel 1 Request 56",
+              "DMA2 Channel 2 Request 56",
+              "DMA2 Channel 3 Request 56",
+              "DMA2 Channel 4 Request 56",
+              "DMA2 Channel 5 Request 56",
+              "DMA2 Channel 6 Request 56",
+              "DMA2 Channel 7 Request 56",
+              "DMA2 Channel 8 Request 56"
             ]
           }
         ]
@@ -3451,7 +4395,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3460,7 +4417,20 @@
             "dma": [
               "DMA1 Channel 1 Request 61",
               "DMA1 Channel 2 Request 61",
-              "DMA1 Channel 3 Request 61"
+              "DMA1 Channel 3 Request 61",
+              "DMA1 Channel 4 Request 61",
+              "DMA1 Channel 5 Request 61",
+              "DMA1 Channel 6 Request 61",
+              "DMA1 Channel 7 Request 61",
+              "DMA1 Channel 8 Request 61",
+              "DMA2 Channel 1 Request 61",
+              "DMA2 Channel 2 Request 61",
+              "DMA2 Channel 3 Request 61",
+              "DMA2 Channel 4 Request 61",
+              "DMA2 Channel 5 Request 61",
+              "DMA2 Channel 6 Request 61",
+              "DMA2 Channel 7 Request 61",
+              "DMA2 Channel 8 Request 61"
             ]
           }
         ]
@@ -3473,7 +4443,20 @@
             "dma": [
               "DMA1 Channel 1 Request 84",
               "DMA1 Channel 2 Request 84",
-              "DMA1 Channel 3 Request 84"
+              "DMA1 Channel 3 Request 84",
+              "DMA1 Channel 4 Request 84",
+              "DMA1 Channel 5 Request 84",
+              "DMA1 Channel 6 Request 84",
+              "DMA1 Channel 7 Request 84",
+              "DMA1 Channel 8 Request 84",
+              "DMA2 Channel 1 Request 84",
+              "DMA2 Channel 2 Request 84",
+              "DMA2 Channel 3 Request 84",
+              "DMA2 Channel 4 Request 84",
+              "DMA2 Channel 5 Request 84",
+              "DMA2 Channel 6 Request 84",
+              "DMA2 Channel 7 Request 84",
+              "DMA2 Channel 8 Request 84"
             ]
           },
           {
@@ -3482,7 +4465,20 @@
             "dma": [
               "DMA1 Channel 1 Request 62",
               "DMA1 Channel 2 Request 62",
-              "DMA1 Channel 3 Request 62"
+              "DMA1 Channel 3 Request 62",
+              "DMA1 Channel 4 Request 62",
+              "DMA1 Channel 5 Request 62",
+              "DMA1 Channel 6 Request 62",
+              "DMA1 Channel 7 Request 62",
+              "DMA1 Channel 8 Request 62",
+              "DMA2 Channel 1 Request 62",
+              "DMA2 Channel 2 Request 62",
+              "DMA2 Channel 3 Request 62",
+              "DMA2 Channel 4 Request 62",
+              "DMA2 Channel 5 Request 62",
+              "DMA2 Channel 6 Request 62",
+              "DMA2 Channel 7 Request 62",
+              "DMA2 Channel 8 Request 62"
             ]
           },
           {
@@ -3491,7 +4487,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           },
           {
@@ -3500,7 +4509,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           }
         ]
@@ -3513,7 +4535,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           }
         ]
@@ -3526,7 +4561,20 @@
             "dma": [
               "DMA1 Channel 1 Request 43",
               "DMA1 Channel 2 Request 43",
-              "DMA1 Channel 3 Request 43"
+              "DMA1 Channel 3 Request 43",
+              "DMA1 Channel 4 Request 43",
+              "DMA1 Channel 5 Request 43",
+              "DMA1 Channel 6 Request 43",
+              "DMA1 Channel 7 Request 43",
+              "DMA1 Channel 8 Request 43",
+              "DMA2 Channel 1 Request 43",
+              "DMA2 Channel 2 Request 43",
+              "DMA2 Channel 3 Request 43",
+              "DMA2 Channel 4 Request 43",
+              "DMA2 Channel 5 Request 43",
+              "DMA2 Channel 6 Request 43",
+              "DMA2 Channel 7 Request 43",
+              "DMA2 Channel 8 Request 43"
             ]
           },
           {
@@ -3535,7 +4583,20 @@
             "dma": [
               "DMA1 Channel 1 Request 58",
               "DMA1 Channel 2 Request 58",
-              "DMA1 Channel 3 Request 58"
+              "DMA1 Channel 3 Request 58",
+              "DMA1 Channel 4 Request 58",
+              "DMA1 Channel 5 Request 58",
+              "DMA1 Channel 6 Request 58",
+              "DMA1 Channel 7 Request 58",
+              "DMA1 Channel 8 Request 58",
+              "DMA2 Channel 1 Request 58",
+              "DMA2 Channel 2 Request 58",
+              "DMA2 Channel 3 Request 58",
+              "DMA2 Channel 4 Request 58",
+              "DMA2 Channel 5 Request 58",
+              "DMA2 Channel 6 Request 58",
+              "DMA2 Channel 7 Request 58",
+              "DMA2 Channel 8 Request 58"
             ]
           }
         ]
@@ -3548,7 +4609,20 @@
             "dma": [
               "DMA1 Channel 1 Request 44",
               "DMA1 Channel 2 Request 44",
-              "DMA1 Channel 3 Request 44"
+              "DMA1 Channel 3 Request 44",
+              "DMA1 Channel 4 Request 44",
+              "DMA1 Channel 5 Request 44",
+              "DMA1 Channel 6 Request 44",
+              "DMA1 Channel 7 Request 44",
+              "DMA1 Channel 8 Request 44",
+              "DMA2 Channel 1 Request 44",
+              "DMA2 Channel 2 Request 44",
+              "DMA2 Channel 3 Request 44",
+              "DMA2 Channel 4 Request 44",
+              "DMA2 Channel 5 Request 44",
+              "DMA2 Channel 6 Request 44",
+              "DMA2 Channel 7 Request 44",
+              "DMA2 Channel 8 Request 44"
             ]
           },
           {
@@ -3557,7 +4631,20 @@
             "dma": [
               "DMA1 Channel 1 Request 59",
               "DMA1 Channel 2 Request 59",
-              "DMA1 Channel 3 Request 59"
+              "DMA1 Channel 3 Request 59",
+              "DMA1 Channel 4 Request 59",
+              "DMA1 Channel 5 Request 59",
+              "DMA1 Channel 6 Request 59",
+              "DMA1 Channel 7 Request 59",
+              "DMA1 Channel 8 Request 59",
+              "DMA2 Channel 1 Request 59",
+              "DMA2 Channel 2 Request 59",
+              "DMA2 Channel 3 Request 59",
+              "DMA2 Channel 4 Request 59",
+              "DMA2 Channel 5 Request 59",
+              "DMA2 Channel 6 Request 59",
+              "DMA2 Channel 7 Request 59",
+              "DMA2 Channel 8 Request 59"
             ]
           }
         ]
@@ -3570,7 +4657,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           },
           {
@@ -3579,7 +4679,20 @@
             "dma": [
               "DMA1 Channel 1 Request 67",
               "DMA1 Channel 2 Request 67",
-              "DMA1 Channel 3 Request 67"
+              "DMA1 Channel 3 Request 67",
+              "DMA1 Channel 4 Request 67",
+              "DMA1 Channel 5 Request 67",
+              "DMA1 Channel 6 Request 67",
+              "DMA1 Channel 7 Request 67",
+              "DMA1 Channel 8 Request 67",
+              "DMA2 Channel 1 Request 67",
+              "DMA2 Channel 2 Request 67",
+              "DMA2 Channel 3 Request 67",
+              "DMA2 Channel 4 Request 67",
+              "DMA2 Channel 5 Request 67",
+              "DMA2 Channel 6 Request 67",
+              "DMA2 Channel 7 Request 67",
+              "DMA2 Channel 8 Request 67"
             ]
           },
           {
@@ -3588,7 +4701,20 @@
             "dma": [
               "DMA1 Channel 1 Request 45",
               "DMA1 Channel 2 Request 45",
-              "DMA1 Channel 3 Request 45"
+              "DMA1 Channel 3 Request 45",
+              "DMA1 Channel 4 Request 45",
+              "DMA1 Channel 5 Request 45",
+              "DMA1 Channel 6 Request 45",
+              "DMA1 Channel 7 Request 45",
+              "DMA1 Channel 8 Request 45",
+              "DMA2 Channel 1 Request 45",
+              "DMA2 Channel 2 Request 45",
+              "DMA2 Channel 3 Request 45",
+              "DMA2 Channel 4 Request 45",
+              "DMA2 Channel 5 Request 45",
+              "DMA2 Channel 6 Request 45",
+              "DMA2 Channel 7 Request 45",
+              "DMA2 Channel 8 Request 45"
             ]
           }
         ]
@@ -3601,7 +4727,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3610,7 +4749,20 @@
             "dma": [
               "DMA1 Channel 1 Request 43",
               "DMA1 Channel 2 Request 43",
-              "DMA1 Channel 3 Request 43"
+              "DMA1 Channel 3 Request 43",
+              "DMA1 Channel 4 Request 43",
+              "DMA1 Channel 5 Request 43",
+              "DMA1 Channel 6 Request 43",
+              "DMA1 Channel 7 Request 43",
+              "DMA1 Channel 8 Request 43",
+              "DMA2 Channel 1 Request 43",
+              "DMA2 Channel 2 Request 43",
+              "DMA2 Channel 3 Request 43",
+              "DMA2 Channel 4 Request 43",
+              "DMA2 Channel 5 Request 43",
+              "DMA2 Channel 6 Request 43",
+              "DMA2 Channel 7 Request 43",
+              "DMA2 Channel 8 Request 43"
             ]
           },
           {
@@ -3619,7 +4771,20 @@
             "dma": [
               "DMA1 Channel 1 Request 68",
               "DMA1 Channel 2 Request 68",
-              "DMA1 Channel 3 Request 68"
+              "DMA1 Channel 3 Request 68",
+              "DMA1 Channel 4 Request 68",
+              "DMA1 Channel 5 Request 68",
+              "DMA1 Channel 6 Request 68",
+              "DMA1 Channel 7 Request 68",
+              "DMA1 Channel 8 Request 68",
+              "DMA2 Channel 1 Request 68",
+              "DMA2 Channel 2 Request 68",
+              "DMA2 Channel 3 Request 68",
+              "DMA2 Channel 4 Request 68",
+              "DMA2 Channel 5 Request 68",
+              "DMA2 Channel 6 Request 68",
+              "DMA2 Channel 7 Request 68",
+              "DMA2 Channel 8 Request 68"
             ]
           }
         ]
@@ -3632,7 +4797,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3641,7 +4819,20 @@
             "dma": [
               "DMA1 Channel 1 Request 69",
               "DMA1 Channel 2 Request 69",
-              "DMA1 Channel 3 Request 69"
+              "DMA1 Channel 3 Request 69",
+              "DMA1 Channel 4 Request 69",
+              "DMA1 Channel 5 Request 69",
+              "DMA1 Channel 6 Request 69",
+              "DMA1 Channel 7 Request 69",
+              "DMA1 Channel 8 Request 69",
+              "DMA2 Channel 1 Request 69",
+              "DMA2 Channel 2 Request 69",
+              "DMA2 Channel 3 Request 69",
+              "DMA2 Channel 4 Request 69",
+              "DMA2 Channel 5 Request 69",
+              "DMA2 Channel 6 Request 69",
+              "DMA2 Channel 7 Request 69",
+              "DMA2 Channel 8 Request 69"
             ]
           }
         ]
@@ -3654,7 +4845,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           }
         ]
@@ -3667,7 +4871,20 @@
             "dma": [
               "DMA1 Channel 1 Request 56",
               "DMA1 Channel 2 Request 56",
-              "DMA1 Channel 3 Request 56"
+              "DMA1 Channel 3 Request 56",
+              "DMA1 Channel 4 Request 56",
+              "DMA1 Channel 5 Request 56",
+              "DMA1 Channel 6 Request 56",
+              "DMA1 Channel 7 Request 56",
+              "DMA1 Channel 8 Request 56",
+              "DMA2 Channel 1 Request 56",
+              "DMA2 Channel 2 Request 56",
+              "DMA2 Channel 3 Request 56",
+              "DMA2 Channel 4 Request 56",
+              "DMA2 Channel 5 Request 56",
+              "DMA2 Channel 6 Request 56",
+              "DMA2 Channel 7 Request 56",
+              "DMA2 Channel 8 Request 56"
             ]
           },
           {
@@ -3676,7 +4893,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           }
         ]
@@ -3689,7 +4919,20 @@
             "dma": [
               "DMA1 Channel 1 Request 63",
               "DMA1 Channel 2 Request 63",
-              "DMA1 Channel 3 Request 63"
+              "DMA1 Channel 3 Request 63",
+              "DMA1 Channel 4 Request 63",
+              "DMA1 Channel 5 Request 63",
+              "DMA1 Channel 6 Request 63",
+              "DMA1 Channel 7 Request 63",
+              "DMA1 Channel 8 Request 63",
+              "DMA2 Channel 1 Request 63",
+              "DMA2 Channel 2 Request 63",
+              "DMA2 Channel 3 Request 63",
+              "DMA2 Channel 4 Request 63",
+              "DMA2 Channel 5 Request 63",
+              "DMA2 Channel 6 Request 63",
+              "DMA2 Channel 7 Request 63",
+              "DMA2 Channel 8 Request 63"
             ]
           },
           {
@@ -3698,7 +4941,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           },
           {
@@ -3707,7 +4963,20 @@
             "dma": [
               "DMA1 Channel 1 Request 43",
               "DMA1 Channel 2 Request 43",
-              "DMA1 Channel 3 Request 43"
+              "DMA1 Channel 3 Request 43",
+              "DMA1 Channel 4 Request 43",
+              "DMA1 Channel 5 Request 43",
+              "DMA1 Channel 6 Request 43",
+              "DMA1 Channel 7 Request 43",
+              "DMA1 Channel 8 Request 43",
+              "DMA2 Channel 1 Request 43",
+              "DMA2 Channel 2 Request 43",
+              "DMA2 Channel 3 Request 43",
+              "DMA2 Channel 4 Request 43",
+              "DMA2 Channel 5 Request 43",
+              "DMA2 Channel 6 Request 43",
+              "DMA2 Channel 7 Request 43",
+              "DMA2 Channel 8 Request 43"
             ]
           }
         ]
@@ -3720,7 +4989,20 @@
             "dma": [
               "DMA1 Channel 1 Request 64",
               "DMA1 Channel 2 Request 64",
-              "DMA1 Channel 3 Request 64"
+              "DMA1 Channel 3 Request 64",
+              "DMA1 Channel 4 Request 64",
+              "DMA1 Channel 5 Request 64",
+              "DMA1 Channel 6 Request 64",
+              "DMA1 Channel 7 Request 64",
+              "DMA1 Channel 8 Request 64",
+              "DMA2 Channel 1 Request 64",
+              "DMA2 Channel 2 Request 64",
+              "DMA2 Channel 3 Request 64",
+              "DMA2 Channel 4 Request 64",
+              "DMA2 Channel 5 Request 64",
+              "DMA2 Channel 6 Request 64",
+              "DMA2 Channel 7 Request 64",
+              "DMA2 Channel 8 Request 64"
             ]
           },
           {
@@ -3729,7 +5011,20 @@
             "dma": [
               "DMA1 Channel 1 Request 51",
               "DMA1 Channel 2 Request 51",
-              "DMA1 Channel 3 Request 51"
+              "DMA1 Channel 3 Request 51",
+              "DMA1 Channel 4 Request 51",
+              "DMA1 Channel 5 Request 51",
+              "DMA1 Channel 6 Request 51",
+              "DMA1 Channel 7 Request 51",
+              "DMA1 Channel 8 Request 51",
+              "DMA2 Channel 1 Request 51",
+              "DMA2 Channel 2 Request 51",
+              "DMA2 Channel 3 Request 51",
+              "DMA2 Channel 4 Request 51",
+              "DMA2 Channel 5 Request 51",
+              "DMA2 Channel 6 Request 51",
+              "DMA2 Channel 7 Request 51",
+              "DMA2 Channel 8 Request 51"
             ]
           },
           {
@@ -3738,7 +5033,20 @@
             "dma": [
               "DMA1 Channel 1 Request 44",
               "DMA1 Channel 2 Request 44",
-              "DMA1 Channel 3 Request 44"
+              "DMA1 Channel 3 Request 44",
+              "DMA1 Channel 4 Request 44",
+              "DMA1 Channel 5 Request 44",
+              "DMA1 Channel 6 Request 44",
+              "DMA1 Channel 7 Request 44",
+              "DMA1 Channel 8 Request 44",
+              "DMA2 Channel 1 Request 44",
+              "DMA2 Channel 2 Request 44",
+              "DMA2 Channel 3 Request 44",
+              "DMA2 Channel 4 Request 44",
+              "DMA2 Channel 5 Request 44",
+              "DMA2 Channel 6 Request 44",
+              "DMA2 Channel 7 Request 44",
+              "DMA2 Channel 8 Request 44"
             ]
           }
         ]
@@ -3751,7 +5059,20 @@
             "dma": [
               "DMA1 Channel 1 Request 72",
               "DMA1 Channel 2 Request 72",
-              "DMA1 Channel 3 Request 72"
+              "DMA1 Channel 3 Request 72",
+              "DMA1 Channel 4 Request 72",
+              "DMA1 Channel 5 Request 72",
+              "DMA1 Channel 6 Request 72",
+              "DMA1 Channel 7 Request 72",
+              "DMA1 Channel 8 Request 72",
+              "DMA2 Channel 1 Request 72",
+              "DMA2 Channel 2 Request 72",
+              "DMA2 Channel 3 Request 72",
+              "DMA2 Channel 4 Request 72",
+              "DMA2 Channel 5 Request 72",
+              "DMA2 Channel 6 Request 72",
+              "DMA2 Channel 7 Request 72",
+              "DMA2 Channel 8 Request 72"
             ]
           },
           {
@@ -3760,7 +5081,20 @@
             "dma": [
               "DMA1 Channel 1 Request 86",
               "DMA1 Channel 2 Request 86",
-              "DMA1 Channel 3 Request 86"
+              "DMA1 Channel 3 Request 86",
+              "DMA1 Channel 4 Request 86",
+              "DMA1 Channel 5 Request 86",
+              "DMA1 Channel 6 Request 86",
+              "DMA1 Channel 7 Request 86",
+              "DMA1 Channel 8 Request 86",
+              "DMA2 Channel 1 Request 86",
+              "DMA2 Channel 2 Request 86",
+              "DMA2 Channel 3 Request 86",
+              "DMA2 Channel 4 Request 86",
+              "DMA2 Channel 5 Request 86",
+              "DMA2 Channel 6 Request 86",
+              "DMA2 Channel 7 Request 86",
+              "DMA2 Channel 8 Request 86"
             ]
           }
         ]
@@ -3773,7 +5107,20 @@
             "dma": [
               "DMA1 Channel 1 Request 57",
               "DMA1 Channel 2 Request 57",
-              "DMA1 Channel 3 Request 57"
+              "DMA1 Channel 3 Request 57",
+              "DMA1 Channel 4 Request 57",
+              "DMA1 Channel 5 Request 57",
+              "DMA1 Channel 6 Request 57",
+              "DMA1 Channel 7 Request 57",
+              "DMA1 Channel 8 Request 57",
+              "DMA2 Channel 1 Request 57",
+              "DMA2 Channel 2 Request 57",
+              "DMA2 Channel 3 Request 57",
+              "DMA2 Channel 4 Request 57",
+              "DMA2 Channel 5 Request 57",
+              "DMA2 Channel 6 Request 57",
+              "DMA2 Channel 7 Request 57",
+              "DMA2 Channel 8 Request 57"
             ]
           },
           {
@@ -3782,7 +5129,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           }
         ]
@@ -3795,7 +5155,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3804,7 +5177,20 @@
             "dma": [
               "DMA1 Channel 1 Request 61",
               "DMA1 Channel 2 Request 61",
-              "DMA1 Channel 3 Request 61"
+              "DMA1 Channel 3 Request 61",
+              "DMA1 Channel 4 Request 61",
+              "DMA1 Channel 5 Request 61",
+              "DMA1 Channel 6 Request 61",
+              "DMA1 Channel 7 Request 61",
+              "DMA1 Channel 8 Request 61",
+              "DMA2 Channel 1 Request 61",
+              "DMA2 Channel 2 Request 61",
+              "DMA2 Channel 3 Request 61",
+              "DMA2 Channel 4 Request 61",
+              "DMA2 Channel 5 Request 61",
+              "DMA2 Channel 6 Request 61",
+              "DMA2 Channel 7 Request 61",
+              "DMA2 Channel 8 Request 61"
             ]
           },
           {
@@ -3813,7 +5199,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           }
         ]
@@ -3826,7 +5225,20 @@
             "dma": [
               "DMA1 Channel 1 Request 62",
               "DMA1 Channel 2 Request 62",
-              "DMA1 Channel 3 Request 62"
+              "DMA1 Channel 3 Request 62",
+              "DMA1 Channel 4 Request 62",
+              "DMA1 Channel 5 Request 62",
+              "DMA1 Channel 6 Request 62",
+              "DMA1 Channel 7 Request 62",
+              "DMA1 Channel 8 Request 62",
+              "DMA2 Channel 1 Request 62",
+              "DMA2 Channel 2 Request 62",
+              "DMA2 Channel 3 Request 62",
+              "DMA2 Channel 4 Request 62",
+              "DMA2 Channel 5 Request 62",
+              "DMA2 Channel 6 Request 62",
+              "DMA2 Channel 7 Request 62",
+              "DMA2 Channel 8 Request 62"
             ]
           },
           {
@@ -3835,7 +5247,20 @@
             "dma": [
               "DMA1 Channel 1 Request 51",
               "DMA1 Channel 2 Request 51",
-              "DMA1 Channel 3 Request 51"
+              "DMA1 Channel 3 Request 51",
+              "DMA1 Channel 4 Request 51",
+              "DMA1 Channel 5 Request 51",
+              "DMA1 Channel 6 Request 51",
+              "DMA1 Channel 7 Request 51",
+              "DMA1 Channel 8 Request 51",
+              "DMA2 Channel 1 Request 51",
+              "DMA2 Channel 2 Request 51",
+              "DMA2 Channel 3 Request 51",
+              "DMA2 Channel 4 Request 51",
+              "DMA2 Channel 5 Request 51",
+              "DMA2 Channel 6 Request 51",
+              "DMA2 Channel 7 Request 51",
+              "DMA2 Channel 8 Request 51"
             ]
           },
           {
@@ -3844,7 +5269,20 @@
             "dma": [
               "DMA1 Channel 1 Request 84",
               "DMA1 Channel 2 Request 84",
-              "DMA1 Channel 3 Request 84"
+              "DMA1 Channel 3 Request 84",
+              "DMA1 Channel 4 Request 84",
+              "DMA1 Channel 5 Request 84",
+              "DMA1 Channel 6 Request 84",
+              "DMA1 Channel 7 Request 84",
+              "DMA1 Channel 8 Request 84",
+              "DMA2 Channel 1 Request 84",
+              "DMA2 Channel 2 Request 84",
+              "DMA2 Channel 3 Request 84",
+              "DMA2 Channel 4 Request 84",
+              "DMA2 Channel 5 Request 84",
+              "DMA2 Channel 6 Request 84",
+              "DMA2 Channel 7 Request 84",
+              "DMA2 Channel 8 Request 84"
             ]
           }
         ]
@@ -3857,7 +5295,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3866,7 +5317,20 @@
             "dma": [
               "DMA1 Channel 1 Request 67",
               "DMA1 Channel 2 Request 67",
-              "DMA1 Channel 3 Request 67"
+              "DMA1 Channel 3 Request 67",
+              "DMA1 Channel 4 Request 67",
+              "DMA1 Channel 5 Request 67",
+              "DMA1 Channel 6 Request 67",
+              "DMA1 Channel 7 Request 67",
+              "DMA1 Channel 8 Request 67",
+              "DMA2 Channel 1 Request 67",
+              "DMA2 Channel 2 Request 67",
+              "DMA2 Channel 3 Request 67",
+              "DMA2 Channel 4 Request 67",
+              "DMA2 Channel 5 Request 67",
+              "DMA2 Channel 6 Request 67",
+              "DMA2 Channel 7 Request 67",
+              "DMA2 Channel 8 Request 67"
             ]
           },
           {
@@ -3875,7 +5339,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           }
         ]
@@ -3888,7 +5365,20 @@
             "dma": [
               "DMA1 Channel 1 Request 84",
               "DMA1 Channel 2 Request 84",
-              "DMA1 Channel 3 Request 84"
+              "DMA1 Channel 3 Request 84",
+              "DMA1 Channel 4 Request 84",
+              "DMA1 Channel 5 Request 84",
+              "DMA1 Channel 6 Request 84",
+              "DMA1 Channel 7 Request 84",
+              "DMA1 Channel 8 Request 84",
+              "DMA2 Channel 1 Request 84",
+              "DMA2 Channel 2 Request 84",
+              "DMA2 Channel 3 Request 84",
+              "DMA2 Channel 4 Request 84",
+              "DMA2 Channel 5 Request 84",
+              "DMA2 Channel 6 Request 84",
+              "DMA2 Channel 7 Request 84",
+              "DMA2 Channel 8 Request 84"
             ]
           },
           {
@@ -3897,7 +5387,20 @@
             "dma": [
               "DMA1 Channel 1 Request 68",
               "DMA1 Channel 2 Request 68",
-              "DMA1 Channel 3 Request 68"
+              "DMA1 Channel 3 Request 68",
+              "DMA1 Channel 4 Request 68",
+              "DMA1 Channel 5 Request 68",
+              "DMA1 Channel 6 Request 68",
+              "DMA1 Channel 7 Request 68",
+              "DMA1 Channel 8 Request 68",
+              "DMA2 Channel 1 Request 68",
+              "DMA2 Channel 2 Request 68",
+              "DMA2 Channel 3 Request 68",
+              "DMA2 Channel 4 Request 68",
+              "DMA2 Channel 5 Request 68",
+              "DMA2 Channel 6 Request 68",
+              "DMA2 Channel 7 Request 68",
+              "DMA2 Channel 8 Request 68"
             ]
           },
           {
@@ -3906,7 +5409,20 @@
             "dma": [
               "DMA1 Channel 1 Request 64",
               "DMA1 Channel 2 Request 64",
-              "DMA1 Channel 3 Request 64"
+              "DMA1 Channel 3 Request 64",
+              "DMA1 Channel 4 Request 64",
+              "DMA1 Channel 5 Request 64",
+              "DMA1 Channel 6 Request 64",
+              "DMA1 Channel 7 Request 64",
+              "DMA1 Channel 8 Request 64",
+              "DMA2 Channel 1 Request 64",
+              "DMA2 Channel 2 Request 64",
+              "DMA2 Channel 3 Request 64",
+              "DMA2 Channel 4 Request 64",
+              "DMA2 Channel 5 Request 64",
+              "DMA2 Channel 6 Request 64",
+              "DMA2 Channel 7 Request 64",
+              "DMA2 Channel 8 Request 64"
             ]
           }
         ]
@@ -3919,7 +5435,20 @@
             "dma": [
               "DMA1 Channel 1 Request 82",
               "DMA1 Channel 2 Request 82",
-              "DMA1 Channel 3 Request 82"
+              "DMA1 Channel 3 Request 82",
+              "DMA1 Channel 4 Request 82",
+              "DMA1 Channel 5 Request 82",
+              "DMA1 Channel 6 Request 82",
+              "DMA1 Channel 7 Request 82",
+              "DMA1 Channel 8 Request 82",
+              "DMA2 Channel 1 Request 82",
+              "DMA2 Channel 2 Request 82",
+              "DMA2 Channel 3 Request 82",
+              "DMA2 Channel 4 Request 82",
+              "DMA2 Channel 5 Request 82",
+              "DMA2 Channel 6 Request 82",
+              "DMA2 Channel 7 Request 82",
+              "DMA2 Channel 8 Request 82"
             ]
           },
           {
@@ -3928,7 +5457,20 @@
             "dma": [
               "DMA1 Channel 1 Request 69",
               "DMA1 Channel 2 Request 69",
-              "DMA1 Channel 3 Request 69"
+              "DMA1 Channel 3 Request 69",
+              "DMA1 Channel 4 Request 69",
+              "DMA1 Channel 5 Request 69",
+              "DMA1 Channel 6 Request 69",
+              "DMA1 Channel 7 Request 69",
+              "DMA1 Channel 8 Request 69",
+              "DMA2 Channel 1 Request 69",
+              "DMA2 Channel 2 Request 69",
+              "DMA2 Channel 3 Request 69",
+              "DMA2 Channel 4 Request 69",
+              "DMA2 Channel 5 Request 69",
+              "DMA2 Channel 6 Request 69",
+              "DMA2 Channel 7 Request 69",
+              "DMA2 Channel 8 Request 69"
             ]
           },
           {
@@ -3937,7 +5479,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           }
         ]
@@ -3950,7 +5505,20 @@
             "dma": [
               "DMA1 Channel 1 Request 84",
               "DMA1 Channel 2 Request 84",
-              "DMA1 Channel 3 Request 84"
+              "DMA1 Channel 3 Request 84",
+              "DMA1 Channel 4 Request 84",
+              "DMA1 Channel 5 Request 84",
+              "DMA1 Channel 6 Request 84",
+              "DMA1 Channel 7 Request 84",
+              "DMA1 Channel 8 Request 84",
+              "DMA2 Channel 1 Request 84",
+              "DMA2 Channel 2 Request 84",
+              "DMA2 Channel 3 Request 84",
+              "DMA2 Channel 4 Request 84",
+              "DMA2 Channel 5 Request 84",
+              "DMA2 Channel 6 Request 84",
+              "DMA2 Channel 7 Request 84",
+              "DMA2 Channel 8 Request 84"
             ]
           },
           {
@@ -3964,7 +5532,20 @@
             "dma": [
               "DMA1 Channel 1 Request 51",
               "DMA1 Channel 2 Request 51",
-              "DMA1 Channel 3 Request 51"
+              "DMA1 Channel 3 Request 51",
+              "DMA1 Channel 4 Request 51",
+              "DMA1 Channel 5 Request 51",
+              "DMA1 Channel 6 Request 51",
+              "DMA1 Channel 7 Request 51",
+              "DMA1 Channel 8 Request 51",
+              "DMA2 Channel 1 Request 51",
+              "DMA2 Channel 2 Request 51",
+              "DMA2 Channel 3 Request 51",
+              "DMA2 Channel 4 Request 51",
+              "DMA2 Channel 5 Request 51",
+              "DMA2 Channel 6 Request 51",
+              "DMA2 Channel 7 Request 51",
+              "DMA2 Channel 8 Request 51"
             ]
           },
           {
@@ -3973,7 +5554,20 @@
             "dma": [
               "DMA1 Channel 1 Request 44",
               "DMA1 Channel 2 Request 44",
-              "DMA1 Channel 3 Request 44"
+              "DMA1 Channel 3 Request 44",
+              "DMA1 Channel 4 Request 44",
+              "DMA1 Channel 5 Request 44",
+              "DMA1 Channel 6 Request 44",
+              "DMA1 Channel 7 Request 44",
+              "DMA1 Channel 8 Request 44",
+              "DMA2 Channel 1 Request 44",
+              "DMA2 Channel 2 Request 44",
+              "DMA2 Channel 3 Request 44",
+              "DMA2 Channel 4 Request 44",
+              "DMA2 Channel 5 Request 44",
+              "DMA2 Channel 6 Request 44",
+              "DMA2 Channel 7 Request 44",
+              "DMA2 Channel 8 Request 44"
             ]
           }
         ]
@@ -3986,7 +5580,20 @@
             "dma": [
               "DMA1 Channel 1 Request 58",
               "DMA1 Channel 2 Request 58",
-              "DMA1 Channel 3 Request 58"
+              "DMA1 Channel 3 Request 58",
+              "DMA1 Channel 4 Request 58",
+              "DMA1 Channel 5 Request 58",
+              "DMA1 Channel 6 Request 58",
+              "DMA1 Channel 7 Request 58",
+              "DMA1 Channel 8 Request 58",
+              "DMA2 Channel 1 Request 58",
+              "DMA2 Channel 2 Request 58",
+              "DMA2 Channel 3 Request 58",
+              "DMA2 Channel 4 Request 58",
+              "DMA2 Channel 5 Request 58",
+              "DMA2 Channel 6 Request 58",
+              "DMA2 Channel 7 Request 58",
+              "DMA2 Channel 8 Request 58"
             ]
           }
         ]
@@ -3999,7 +5606,20 @@
             "dma": [
               "DMA1 Channel 1 Request 59",
               "DMA1 Channel 2 Request 59",
-              "DMA1 Channel 3 Request 59"
+              "DMA1 Channel 3 Request 59",
+              "DMA1 Channel 4 Request 59",
+              "DMA1 Channel 5 Request 59",
+              "DMA1 Channel 6 Request 59",
+              "DMA1 Channel 7 Request 59",
+              "DMA1 Channel 8 Request 59",
+              "DMA2 Channel 1 Request 59",
+              "DMA2 Channel 2 Request 59",
+              "DMA2 Channel 3 Request 59",
+              "DMA2 Channel 4 Request 59",
+              "DMA2 Channel 5 Request 59",
+              "DMA2 Channel 6 Request 59",
+              "DMA2 Channel 7 Request 59",
+              "DMA2 Channel 8 Request 59"
             ]
           }
         ]
@@ -4012,7 +5632,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           }
         ]
@@ -4025,7 +5658,20 @@
             "dma": [
               "DMA1 Channel 1 Request 78",
               "DMA1 Channel 2 Request 78",
-              "DMA1 Channel 3 Request 78"
+              "DMA1 Channel 3 Request 78",
+              "DMA1 Channel 4 Request 78",
+              "DMA1 Channel 5 Request 78",
+              "DMA1 Channel 6 Request 78",
+              "DMA1 Channel 7 Request 78",
+              "DMA1 Channel 8 Request 78",
+              "DMA2 Channel 1 Request 78",
+              "DMA2 Channel 2 Request 78",
+              "DMA2 Channel 3 Request 78",
+              "DMA2 Channel 4 Request 78",
+              "DMA2 Channel 5 Request 78",
+              "DMA2 Channel 6 Request 78",
+              "DMA2 Channel 7 Request 78",
+              "DMA2 Channel 8 Request 78"
             ]
           },
           {
@@ -4034,7 +5680,20 @@
             "dma": [
               "DMA1 Channel 1 Request 43",
               "DMA1 Channel 2 Request 43",
-              "DMA1 Channel 3 Request 43"
+              "DMA1 Channel 3 Request 43",
+              "DMA1 Channel 4 Request 43",
+              "DMA1 Channel 5 Request 43",
+              "DMA1 Channel 6 Request 43",
+              "DMA1 Channel 7 Request 43",
+              "DMA1 Channel 8 Request 43",
+              "DMA2 Channel 1 Request 43",
+              "DMA2 Channel 2 Request 43",
+              "DMA2 Channel 3 Request 43",
+              "DMA2 Channel 4 Request 43",
+              "DMA2 Channel 5 Request 43",
+              "DMA2 Channel 6 Request 43",
+              "DMA2 Channel 7 Request 43",
+              "DMA2 Channel 8 Request 43"
             ]
           }
         ]
@@ -4052,7 +5711,20 @@
             "dma": [
               "DMA1 Channel 1 Request 78",
               "DMA1 Channel 2 Request 78",
-              "DMA1 Channel 3 Request 78"
+              "DMA1 Channel 3 Request 78",
+              "DMA1 Channel 4 Request 78",
+              "DMA1 Channel 5 Request 78",
+              "DMA1 Channel 6 Request 78",
+              "DMA1 Channel 7 Request 78",
+              "DMA1 Channel 8 Request 78",
+              "DMA2 Channel 1 Request 78",
+              "DMA2 Channel 2 Request 78",
+              "DMA2 Channel 3 Request 78",
+              "DMA2 Channel 4 Request 78",
+              "DMA2 Channel 5 Request 78",
+              "DMA2 Channel 6 Request 78",
+              "DMA2 Channel 7 Request 78",
+              "DMA2 Channel 8 Request 78"
             ]
           },
           {
@@ -4061,7 +5733,20 @@
             "dma": [
               "DMA1 Channel 1 Request 44",
               "DMA1 Channel 2 Request 44",
-              "DMA1 Channel 3 Request 44"
+              "DMA1 Channel 3 Request 44",
+              "DMA1 Channel 4 Request 44",
+              "DMA1 Channel 5 Request 44",
+              "DMA1 Channel 6 Request 44",
+              "DMA1 Channel 7 Request 44",
+              "DMA1 Channel 8 Request 44",
+              "DMA2 Channel 1 Request 44",
+              "DMA2 Channel 2 Request 44",
+              "DMA2 Channel 3 Request 44",
+              "DMA2 Channel 4 Request 44",
+              "DMA2 Channel 5 Request 44",
+              "DMA2 Channel 6 Request 44",
+              "DMA2 Channel 7 Request 44",
+              "DMA2 Channel 8 Request 44"
             ]
           }
         ]
@@ -4074,7 +5759,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           }
         ]
@@ -4087,7 +5785,20 @@
             "dma": [
               "DMA1 Channel 1 Request 43",
               "DMA1 Channel 2 Request 43",
-              "DMA1 Channel 3 Request 43"
+              "DMA1 Channel 3 Request 43",
+              "DMA1 Channel 4 Request 43",
+              "DMA1 Channel 5 Request 43",
+              "DMA1 Channel 6 Request 43",
+              "DMA1 Channel 7 Request 43",
+              "DMA1 Channel 8 Request 43",
+              "DMA2 Channel 1 Request 43",
+              "DMA2 Channel 2 Request 43",
+              "DMA2 Channel 3 Request 43",
+              "DMA2 Channel 4 Request 43",
+              "DMA2 Channel 5 Request 43",
+              "DMA2 Channel 6 Request 43",
+              "DMA2 Channel 7 Request 43",
+              "DMA2 Channel 8 Request 43"
             ]
           }
         ]
@@ -4100,7 +5811,20 @@
             "dma": [
               "DMA1 Channel 1 Request 44",
               "DMA1 Channel 2 Request 44",
-              "DMA1 Channel 3 Request 44"
+              "DMA1 Channel 3 Request 44",
+              "DMA1 Channel 4 Request 44",
+              "DMA1 Channel 5 Request 44",
+              "DMA1 Channel 6 Request 44",
+              "DMA1 Channel 7 Request 44",
+              "DMA1 Channel 8 Request 44",
+              "DMA2 Channel 1 Request 44",
+              "DMA2 Channel 2 Request 44",
+              "DMA2 Channel 3 Request 44",
+              "DMA2 Channel 4 Request 44",
+              "DMA2 Channel 5 Request 44",
+              "DMA2 Channel 6 Request 44",
+              "DMA2 Channel 7 Request 44",
+              "DMA2 Channel 8 Request 44"
             ]
           },
           {
@@ -4109,7 +5833,20 @@
             "dma": [
               "DMA1 Channel 1 Request 87",
               "DMA1 Channel 2 Request 87",
-              "DMA1 Channel 3 Request 87"
+              "DMA1 Channel 3 Request 87",
+              "DMA1 Channel 4 Request 87",
+              "DMA1 Channel 5 Request 87",
+              "DMA1 Channel 6 Request 87",
+              "DMA1 Channel 7 Request 87",
+              "DMA1 Channel 8 Request 87",
+              "DMA2 Channel 1 Request 87",
+              "DMA2 Channel 2 Request 87",
+              "DMA2 Channel 3 Request 87",
+              "DMA2 Channel 4 Request 87",
+              "DMA2 Channel 5 Request 87",
+              "DMA2 Channel 6 Request 87",
+              "DMA2 Channel 7 Request 87",
+              "DMA2 Channel 8 Request 87"
             ]
           }
         ]
@@ -4122,7 +5859,20 @@
             "dma": [
               "DMA1 Channel 1 Request 45",
               "DMA1 Channel 2 Request 45",
-              "DMA1 Channel 3 Request 45"
+              "DMA1 Channel 3 Request 45",
+              "DMA1 Channel 4 Request 45",
+              "DMA1 Channel 5 Request 45",
+              "DMA1 Channel 6 Request 45",
+              "DMA1 Channel 7 Request 45",
+              "DMA1 Channel 8 Request 45",
+              "DMA2 Channel 1 Request 45",
+              "DMA2 Channel 2 Request 45",
+              "DMA2 Channel 3 Request 45",
+              "DMA2 Channel 4 Request 45",
+              "DMA2 Channel 5 Request 45",
+              "DMA2 Channel 6 Request 45",
+              "DMA2 Channel 7 Request 45",
+              "DMA2 Channel 8 Request 45"
             ]
           }
         ]
@@ -4135,7 +5885,20 @@
             "dma": [
               "DMA1 Channel 1 Request 45",
               "DMA1 Channel 2 Request 45",
-              "DMA1 Channel 3 Request 45"
+              "DMA1 Channel 3 Request 45",
+              "DMA1 Channel 4 Request 45",
+              "DMA1 Channel 5 Request 45",
+              "DMA1 Channel 6 Request 45",
+              "DMA1 Channel 7 Request 45",
+              "DMA1 Channel 8 Request 45",
+              "DMA2 Channel 1 Request 45",
+              "DMA2 Channel 2 Request 45",
+              "DMA2 Channel 3 Request 45",
+              "DMA2 Channel 4 Request 45",
+              "DMA2 Channel 5 Request 45",
+              "DMA2 Channel 6 Request 45",
+              "DMA2 Channel 7 Request 45",
+              "DMA2 Channel 8 Request 45"
             ]
           }
         ]
@@ -4148,7 +5911,20 @@
             "dma": [
               "DMA1 Channel 1 Request 61",
               "DMA1 Channel 2 Request 61",
-              "DMA1 Channel 3 Request 61"
+              "DMA1 Channel 3 Request 61",
+              "DMA1 Channel 4 Request 61",
+              "DMA1 Channel 5 Request 61",
+              "DMA1 Channel 6 Request 61",
+              "DMA1 Channel 7 Request 61",
+              "DMA1 Channel 8 Request 61",
+              "DMA2 Channel 1 Request 61",
+              "DMA2 Channel 2 Request 61",
+              "DMA2 Channel 3 Request 61",
+              "DMA2 Channel 4 Request 61",
+              "DMA2 Channel 5 Request 61",
+              "DMA2 Channel 6 Request 61",
+              "DMA2 Channel 7 Request 61",
+              "DMA2 Channel 8 Request 61"
             ]
           },
           {
@@ -4157,7 +5933,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           }
         ]
@@ -4170,7 +5959,20 @@
             "dma": [
               "DMA1 Channel 1 Request 62",
               "DMA1 Channel 2 Request 62",
-              "DMA1 Channel 3 Request 62"
+              "DMA1 Channel 3 Request 62",
+              "DMA1 Channel 4 Request 62",
+              "DMA1 Channel 5 Request 62",
+              "DMA1 Channel 6 Request 62",
+              "DMA1 Channel 7 Request 62",
+              "DMA1 Channel 8 Request 62",
+              "DMA2 Channel 1 Request 62",
+              "DMA2 Channel 2 Request 62",
+              "DMA2 Channel 3 Request 62",
+              "DMA2 Channel 4 Request 62",
+              "DMA2 Channel 5 Request 62",
+              "DMA2 Channel 6 Request 62",
+              "DMA2 Channel 7 Request 62",
+              "DMA2 Channel 8 Request 62"
             ]
           },
           {
@@ -4179,7 +5981,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           }
         ]
@@ -4192,7 +6007,20 @@
             "dma": [
               "DMA1 Channel 1 Request 63",
               "DMA1 Channel 2 Request 63",
-              "DMA1 Channel 3 Request 63"
+              "DMA1 Channel 3 Request 63",
+              "DMA1 Channel 4 Request 63",
+              "DMA1 Channel 5 Request 63",
+              "DMA1 Channel 6 Request 63",
+              "DMA1 Channel 7 Request 63",
+              "DMA1 Channel 8 Request 63",
+              "DMA2 Channel 1 Request 63",
+              "DMA2 Channel 2 Request 63",
+              "DMA2 Channel 3 Request 63",
+              "DMA2 Channel 4 Request 63",
+              "DMA2 Channel 5 Request 63",
+              "DMA2 Channel 6 Request 63",
+              "DMA2 Channel 7 Request 63",
+              "DMA2 Channel 8 Request 63"
             ]
           },
           {
@@ -4201,7 +6029,20 @@
             "dma": [
               "DMA1 Channel 1 Request 51",
               "DMA1 Channel 2 Request 51",
-              "DMA1 Channel 3 Request 51"
+              "DMA1 Channel 3 Request 51",
+              "DMA1 Channel 4 Request 51",
+              "DMA1 Channel 5 Request 51",
+              "DMA1 Channel 6 Request 51",
+              "DMA1 Channel 7 Request 51",
+              "DMA1 Channel 8 Request 51",
+              "DMA2 Channel 1 Request 51",
+              "DMA2 Channel 2 Request 51",
+              "DMA2 Channel 3 Request 51",
+              "DMA2 Channel 4 Request 51",
+              "DMA2 Channel 5 Request 51",
+              "DMA2 Channel 6 Request 51",
+              "DMA2 Channel 7 Request 51",
+              "DMA2 Channel 8 Request 51"
             ]
           },
           {
@@ -4210,7 +6051,20 @@
             "dma": [
               "DMA1 Channel 1 Request 88",
               "DMA1 Channel 2 Request 88",
-              "DMA1 Channel 3 Request 88"
+              "DMA1 Channel 3 Request 88",
+              "DMA1 Channel 4 Request 88",
+              "DMA1 Channel 5 Request 88",
+              "DMA1 Channel 6 Request 88",
+              "DMA1 Channel 7 Request 88",
+              "DMA1 Channel 8 Request 88",
+              "DMA2 Channel 1 Request 88",
+              "DMA2 Channel 2 Request 88",
+              "DMA2 Channel 3 Request 88",
+              "DMA2 Channel 4 Request 88",
+              "DMA2 Channel 5 Request 88",
+              "DMA2 Channel 6 Request 88",
+              "DMA2 Channel 7 Request 88",
+              "DMA2 Channel 8 Request 88"
             ]
           }
         ]
@@ -4223,7 +6077,20 @@
             "dma": [
               "DMA1 Channel 1 Request 64",
               "DMA1 Channel 2 Request 64",
-              "DMA1 Channel 3 Request 64"
+              "DMA1 Channel 3 Request 64",
+              "DMA1 Channel 4 Request 64",
+              "DMA1 Channel 5 Request 64",
+              "DMA1 Channel 6 Request 64",
+              "DMA1 Channel 7 Request 64",
+              "DMA1 Channel 8 Request 64",
+              "DMA2 Channel 1 Request 64",
+              "DMA2 Channel 2 Request 64",
+              "DMA2 Channel 3 Request 64",
+              "DMA2 Channel 4 Request 64",
+              "DMA2 Channel 5 Request 64",
+              "DMA2 Channel 6 Request 64",
+              "DMA2 Channel 7 Request 64",
+              "DMA2 Channel 8 Request 64"
             ]
           },
           {
@@ -4232,7 +6099,20 @@
             "dma": [
               "DMA1 Channel 1 Request 52",
               "DMA1 Channel 2 Request 52",
-              "DMA1 Channel 3 Request 52"
+              "DMA1 Channel 3 Request 52",
+              "DMA1 Channel 4 Request 52",
+              "DMA1 Channel 5 Request 52",
+              "DMA1 Channel 6 Request 52",
+              "DMA1 Channel 7 Request 52",
+              "DMA1 Channel 8 Request 52",
+              "DMA2 Channel 1 Request 52",
+              "DMA2 Channel 2 Request 52",
+              "DMA2 Channel 3 Request 52",
+              "DMA2 Channel 4 Request 52",
+              "DMA2 Channel 5 Request 52",
+              "DMA2 Channel 6 Request 52",
+              "DMA2 Channel 7 Request 52",
+              "DMA2 Channel 8 Request 52"
             ]
           }
         ]
@@ -4245,7 +6125,20 @@
             "dma": [
               "DMA1 Channel 1 Request 49",
               "DMA1 Channel 2 Request 49",
-              "DMA1 Channel 3 Request 49"
+              "DMA1 Channel 3 Request 49",
+              "DMA1 Channel 4 Request 49",
+              "DMA1 Channel 5 Request 49",
+              "DMA1 Channel 6 Request 49",
+              "DMA1 Channel 7 Request 49",
+              "DMA1 Channel 8 Request 49",
+              "DMA2 Channel 1 Request 49",
+              "DMA2 Channel 2 Request 49",
+              "DMA2 Channel 3 Request 49",
+              "DMA2 Channel 4 Request 49",
+              "DMA2 Channel 5 Request 49",
+              "DMA2 Channel 6 Request 49",
+              "DMA2 Channel 7 Request 49",
+              "DMA2 Channel 8 Request 49"
             ]
           }
         ]
@@ -4258,7 +6151,20 @@
             "dma": [
               "DMA1 Channel 1 Request 50",
               "DMA1 Channel 2 Request 50",
-              "DMA1 Channel 3 Request 50"
+              "DMA1 Channel 3 Request 50",
+              "DMA1 Channel 4 Request 50",
+              "DMA1 Channel 5 Request 50",
+              "DMA1 Channel 6 Request 50",
+              "DMA1 Channel 7 Request 50",
+              "DMA1 Channel 8 Request 50",
+              "DMA2 Channel 1 Request 50",
+              "DMA2 Channel 2 Request 50",
+              "DMA2 Channel 3 Request 50",
+              "DMA2 Channel 4 Request 50",
+              "DMA2 Channel 5 Request 50",
+              "DMA2 Channel 6 Request 50",
+              "DMA2 Channel 7 Request 50",
+              "DMA2 Channel 8 Request 50"
             ]
           }
         ]
@@ -4271,7 +6177,20 @@
             "dma": [
               "DMA1 Channel 1 Request 73",
               "DMA1 Channel 2 Request 73",
-              "DMA1 Channel 3 Request 73"
+              "DMA1 Channel 3 Request 73",
+              "DMA1 Channel 4 Request 73",
+              "DMA1 Channel 5 Request 73",
+              "DMA1 Channel 6 Request 73",
+              "DMA1 Channel 7 Request 73",
+              "DMA1 Channel 8 Request 73",
+              "DMA2 Channel 1 Request 73",
+              "DMA2 Channel 2 Request 73",
+              "DMA2 Channel 3 Request 73",
+              "DMA2 Channel 4 Request 73",
+              "DMA2 Channel 5 Request 73",
+              "DMA2 Channel 6 Request 73",
+              "DMA2 Channel 7 Request 73",
+              "DMA2 Channel 8 Request 73"
             ]
           },
           {
@@ -4280,7 +6199,20 @@
             "dma": [
               "DMA1 Channel 1 Request 51",
               "DMA1 Channel 2 Request 51",
-              "DMA1 Channel 3 Request 51"
+              "DMA1 Channel 3 Request 51",
+              "DMA1 Channel 4 Request 51",
+              "DMA1 Channel 5 Request 51",
+              "DMA1 Channel 6 Request 51",
+              "DMA1 Channel 7 Request 51",
+              "DMA1 Channel 8 Request 51",
+              "DMA2 Channel 1 Request 51",
+              "DMA2 Channel 2 Request 51",
+              "DMA2 Channel 3 Request 51",
+              "DMA2 Channel 4 Request 51",
+              "DMA2 Channel 5 Request 51",
+              "DMA2 Channel 6 Request 51",
+              "DMA2 Channel 7 Request 51",
+              "DMA2 Channel 8 Request 51"
             ]
           }
         ]
@@ -4293,7 +6225,20 @@
             "dma": [
               "DMA1 Channel 1 Request 42",
               "DMA1 Channel 2 Request 42",
-              "DMA1 Channel 3 Request 42"
+              "DMA1 Channel 3 Request 42",
+              "DMA1 Channel 4 Request 42",
+              "DMA1 Channel 5 Request 42",
+              "DMA1 Channel 6 Request 42",
+              "DMA1 Channel 7 Request 42",
+              "DMA1 Channel 8 Request 42",
+              "DMA2 Channel 1 Request 42",
+              "DMA2 Channel 2 Request 42",
+              "DMA2 Channel 3 Request 42",
+              "DMA2 Channel 4 Request 42",
+              "DMA2 Channel 5 Request 42",
+              "DMA2 Channel 6 Request 42",
+              "DMA2 Channel 7 Request 42",
+              "DMA2 Channel 8 Request 42"
             ]
           },
           {
@@ -4302,7 +6247,20 @@
             "dma": [
               "DMA1 Channel 1 Request 52",
               "DMA1 Channel 2 Request 52",
-              "DMA1 Channel 3 Request 52"
+              "DMA1 Channel 3 Request 52",
+              "DMA1 Channel 4 Request 52",
+              "DMA1 Channel 5 Request 52",
+              "DMA1 Channel 6 Request 52",
+              "DMA1 Channel 7 Request 52",
+              "DMA1 Channel 8 Request 52",
+              "DMA2 Channel 1 Request 52",
+              "DMA2 Channel 2 Request 52",
+              "DMA2 Channel 3 Request 52",
+              "DMA2 Channel 4 Request 52",
+              "DMA2 Channel 5 Request 52",
+              "DMA2 Channel 6 Request 52",
+              "DMA2 Channel 7 Request 52",
+              "DMA2 Channel 8 Request 52"
             ]
           }
         ]

@@ -291,3 +291,62 @@ describe("feature criticality", () => {
     expect(classifyCriticality("Vbat")).toBe("minor");
   });
 });
+
+// The H7 parts route a timer channel to any of sixteen DMA streams through
+// DMAMUX. The imported table listed only three, so the allocator saw a far
+// narrower choice than the silicon has and reported clashes it could
+// actually have resolved. See test/remap_fc/mcu_table.test.js.
+describe("reconciler on STM32H743 (DMAMUX)", () => {
+  // Six motor outputs from MATEKH743's target.c, all on DMAMUX-capable
+  // timer channels.
+  const current = {
+    M1: { pin: "B00" }, // TIM3 CH3
+    M2: { pin: "B01" }, // TIM3 CH4
+    M3: { pin: "A00" }, // TIM5 CH1
+    M4: { pin: "A01" }, // TIM5 CH2
+    M5: { pin: "A02" }, // TIM5 CH3
+    M6: { pin: "A03" }, // TIM5 CH4
+  };
+
+  it("offers every pin the full sixteen-stream DMA choice", () => {
+    for (const pin of Object.values(current).map((entry) => entry.pin)) {
+      const options = getPinTimerOptions(mcuAllData, "STM32H743", pin);
+      const withDma = options.filter((option) => option.dma.length > 0);
+      expect(withDma.length, pin).toBeGreaterThan(0);
+      for (const option of withDma) {
+        expect(option.dma.length, `${pin} ${option.timer}`).toBe(16);
+        expect(option.dma[0].stream).toBe("DMA1 Stream 0");
+        expect(option.dma[15].stream).toBe("DMA2 Stream 7");
+      }
+    }
+  });
+
+  it("resolves all six outputs onto distinct DMA streams", () => {
+    const result = reconcileTimersAndDma({
+      working: current,
+      mcuType: "STM32H743",
+      mcuAllData,
+    });
+
+    expect(result.unresolved ?? []).toEqual([]);
+
+    const rows = buildFeatureRows(result.working ?? current, "STM32H743", mcuAllData);
+    const clashes = collectClashes(rows);
+    expect(clashes.filter((clash) => clash.kind === "dma")).toEqual([]);
+
+    const streams = rows
+      .filter((row) => row.currentDma)
+      .map((row) => row.currentDma.stream);
+    expect(new Set(streams).size, "each output needs its own stream").toBe(streams.length);
+  });
+
+  it("reports a clash when two outputs are forced onto one stream", () => {
+    const rows = buildFeatureRows(current, "STM32H743", mcuAllData);
+    const forced = rows.map((row) => ({
+      ...row,
+      currentDma: { index: 0, stream: "DMA1 Stream 0", channel: "23" },
+    }));
+    const clashes = collectClashes(forced);
+    expect(clashes.some((clash) => clash.kind === "dma")).toBe(true);
+  });
+});
