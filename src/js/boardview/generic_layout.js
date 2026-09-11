@@ -36,7 +36,7 @@ import { normaliseProfile, normalisePin } from "./schema.js";
  */
 export function groupForOptionKey(key) {
   if (/^(M|S|Freq)\d+$/.test(key)) return "outputs";
-  if (/^(RX|TX|PWM)\d+$|^PPM$|^SOFTSERIAL_(RX|TX)\d+$/.test(key)) return "uart";
+  if (/^(RX|TX|PWM)\d+$|^PPM$/.test(key)) return "uart";
   if (/^(SDA|SCL)\d+$/.test(key)) return "i2c";
   if (/^(Vbat|Curr|RSSI|Vext)$/.test(key)) return "adc";
   if (key === "LED") return "led";
@@ -83,8 +83,6 @@ function serialIdentifiers(hardwareMap, serialPorts) {
   for (const key of Object.keys(hardwareMap ?? {})) {
     const uart = key.match(/^(?:RX|TX)(\d+)$/);
     if (uart) found.add(Number(uart[1]) - 1);
-    const soft = key.match(/^SOFTSERIAL_(?:RX|TX)(\d+)$/);
-    if (soft) found.add(30 + Number(soft[1]) - 1);
   }
   return [...found].sort((a, b) => a - b);
 }
@@ -210,12 +208,10 @@ export function synthesiseBoardView({
       const name = portName(identifier);
       const headerId = `port-${identifier}`;
       const keys = hardwareKeysFor(identifier);
-      const txPin = hardwareMap[keys.tx]?.pin
-        ? normalisePin(hardwareMap[keys.tx].pin)
-        : null;
-      const rxPin = hardwareMap[keys.rx]?.pin
-        ? normalisePin(hardwareMap[keys.rx].pin)
-        : null;
+      const pinFor = (key) =>
+        key && hardwareMap[key]?.pin ? normalisePin(hardwareMap[key].pin) : null;
+      const txPin = pinFor(keys.tx);
+      const rxPin = pinFor(keys.rx);
 
       const lines = [
         ["tx", txPin, `T${identifier + 1}`],

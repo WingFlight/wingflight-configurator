@@ -61,11 +61,21 @@ describe("hardwareKeysFor", () => {
     expect(hardwareKeysFor(0)).toEqual({ tx: "TX1", rx: "RX1" });
   });
 
-  it("spells soft serial ports the way the resource table does", () => {
-    expect(hardwareKeysFor(30)).toEqual({
-      tx: "SOFTSERIAL_TX1",
-      rx: "SOFTSERIAL_RX1",
+  it("has no resource keys for a soft serial port", () => {
+    // Soft serial borrows a timer pin; the resource table files it
+    // under that pin's owner, so there is nothing to look up by port.
+    expect(hardwareKeysFor(30)).toEqual({ tx: null, rx: null });
+  });
+
+  it("still lists a soft serial port, just without pins", () => {
+    const map = buildPortMap({
+      profile: null,
+      serialPorts: [{ identifier: 30, functionMask: 0 }],
+      hardwareMap: { TX1: { pin: "A09" } },
     });
+    expect(map).toHaveLength(1);
+    expect(map[0].name).toBe("SOFTSERIAL1");
+    expect(map[0].lines.every((line) => line.pin === null)).toBe(true);
   });
 });
 

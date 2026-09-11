@@ -67,6 +67,10 @@ class EditorState {
 
   #undo = [];
   #redo = [];
+  // $state cannot see into a plain array field, so depth is tracked
+  // alongside it for the buttons to bind to.
+  #undoDepth = $state(0);
+  #redoDepth = $state(0);
 
   board = $derived(this.boards[this.index] ?? null);
   view = $derived(this.board?.views?.[this.viewId] ?? null);
@@ -79,11 +83,6 @@ class EditorState {
     this.board?.pads?.find((pad) => pad.pin === this.selectedPin) ?? null,
   );
   canUndo = $derived(this.#undoDepth > 0);
-
-  // $state cannot see into a plain array field, so depth is tracked
-  // alongside it for the buttons to bind to.
-  #undoDepth = $state(0);
-  #redoDepth = $state(0);
   canRedo = $derived(this.#redoDepth > 0);
 
   /** Loads the profile file. Falls back to a single blank board offline. */
@@ -150,18 +149,36 @@ class EditorState {
   edit(change) {
     if (!this.board) return;
     this.#pushUndo();
-    const next = normaliseProfile(serialiseProfile($state.snapshot(this.board)));
+    // $state.snapshot is already a plain deep copy; the round trip
+    // through serialise/normalise afterwards is what canonicalises
+    // whatever `change` did (pin spelling, dropped pads, defaults).
+    const next = $state.snapshot(this.board);
     change(next);
     this.boards[this.index] = normaliseProfile(serialiseProfile(next));
     this.dirty = true;
     this.message = null;
   }
 
-  #pushUndo() {
-    this.#undo.push({
-      index: this.index,
-      boards: this.boards.map((board) => serialiseProfile($state.snapshot(board))),
-    });
+  // An undo entry is the one board that is about to change, not the
+  // whole file: a drag would otherwise serialise every board per step.
+  // Structural changes -- add, remove, import -- pass `whole: true`
+  // and snapshot the array instead.
+  #snapshot(whole = false) {
+    return whole
+      ? {
+          index: this.index,
+          boards: this.boards.map((board) =>
+            serialiseProfile($state.snapshot(board)),
+          ),
+        }
+      : {
+          index: this.index,
+          board: serialiseProfile($state.snapshot(this.board)),
+        };
+  }
+
+  #pushUndo(whole = false) {
+    this.#undo.push(this.#snapshot(whole));
     if (this.#undo.length > UNDO_LIMIT) this.#undo.shift();
     this.#undoDepth = this.#undo.length;
     this.#redo = [];
@@ -169,33 +186,33 @@ class EditorState {
   }
 
   #restore(snapshot) {
-    this.boards = snapshot.boards.map(normaliseProfile);
-    this.index = Math.min(snapshot.index, this.boards.length - 1);
+    if (snapshot.boards) {
+      this.boards = snapshot.boards.map(normaliseProfile);
+      this.index = Math.min(snapshot.index, this.boards.length - 1);
+    } else {
+      this.index = snapshot.index;
+      this.boards[snapshot.index] = normaliseProfile(snapshot.board);
+    }
     this.dirty = true;
+  }
+
+  // Undo and redo mirror each other: the entry being reversed decides
+  // whether its counterpart records one board or the whole file.
+  #swap(to, snapshot) {
+    to.push(this.#snapshot(Boolean(snapshot.boards)));
+    this.#undoDepth = this.#undo.length;
+    this.#redoDepth = this.#redo.length;
+    this.#restore(snapshot);
   }
 
   undo() {
     const snapshot = this.#undo.pop();
-    if (!snapshot) return;
-    this.#redo.push({
-      index: this.index,
-      boards: this.boards.map((board) => serialiseProfile($state.snapshot(board))),
-    });
-    this.#redoDepth = this.#redo.length;
-    this.#undoDepth = this.#undo.length;
-    this.#restore(snapshot);
+    if (snapshot) this.#swap(this.#redo, snapshot);
   }
 
   redo() {
     const snapshot = this.#redo.pop();
-    if (!snapshot) return;
-    this.#undo.push({
-      index: this.index,
-      boards: this.boards.map((board) => serialiseProfile($state.snapshot(board))),
-    });
-    this.#undoDepth = this.#undo.length;
-    this.#redoDepth = this.#redo.length;
-    this.#restore(snapshot);
+    if (snapshot) this.#swap(this.#undo, snapshot);
   }
 
   /**
@@ -211,7 +228,7 @@ class EditorState {
       this.error = "That file has no boards in it.";
       return 0;
     }
-    this.#pushUndo();
+    this.#pushUndo(true);
     const merged = this.boards.filter(
       (board) => !incoming.some((entry) => entry.id === board.id),
     );
@@ -228,7 +245,7 @@ class EditorState {
   // --- boards ---------------------------------------------------------
 
   addBoard(id) {
-    this.#pushUndo();
+    this.#pushUndo(true);
     this.boards = [...this.boards, blankBoard(id || "NEWBOARD")];
     this.index = this.boards.length - 1;
     this.viewId = "top";
@@ -237,7 +254,7 @@ class EditorState {
 
   removeBoard() {
     if (this.boards.length <= 1) return;
-    this.#pushUndo();
+    this.#pushUndo(true);
     this.boards = this.boards.filter((_, i) => i !== this.index);
     this.index = Math.max(0, this.index - 1);
     this.dirty = true;
@@ -316,6 +333,7 @@ class EditorState {
     return "A00";
   }
 
+  /** A single, undoable move; keyboard nudges use this. */
   movePad(pin, x, y) {
     this.edit((board) => {
       const pad = board.pads.find((entry) => entry.pin === pin);
@@ -323,6 +341,32 @@ class EditorState {
       pad.x = this.snapped(x);
       pad.y = this.snapped(y);
     });
+  }
+
+  /**
+   * A pointer drag is many moves but one edit. beginDrag takes the
+   * undo snapshot once; dragPad then writes straight into the reactive
+   * board, which redraws only what moved; endDrag rounds the result
+   * the way a saved file would hold it.
+   */
+  beginDrag() {
+    if (this.board) this.#pushUndo();
+  }
+
+  dragPad(pin, x, y) {
+    const pad = this.board?.pads.find((entry) => entry.pin === pin);
+    if (!pad) return;
+    pad.x = this.snapped(x);
+    pad.y = this.snapped(y);
+    this.dirty = true;
+    this.message = null;
+  }
+
+  endDrag(pin) {
+    const pad = this.board?.pads.find((entry) => entry.pin === pin);
+    if (!pad) return;
+    pad.x = Math.round(pad.x * 100) / 100;
+    pad.y = Math.round(pad.y * 100) / 100;
   }
 
   setPadField(pin, field, value) {

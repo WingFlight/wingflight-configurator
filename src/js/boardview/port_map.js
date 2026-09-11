@@ -32,19 +32,20 @@ export function portName(identifier) {
   return UART_NAMES[identifier] ?? `PORT${identifier}`;
 }
 
+/** First serial identifier the firmware uses for a soft serial port. */
+export const SOFTSERIAL_FIRST_IDENTIFIER = 30;
+
 /**
  * The hardware-map keys holding a serial identifier's pins, e.g.
- * 0 -> {tx: "TX1", rx: "RX1"}. Soft serial ports (30, 31) use the
- * same numbering continued past the hardware UARTs, which is how the
- * CLI's `resource` output spells them.
+ * 0 -> {tx: "TX1", rx: "RX1"}. A soft serial port (30, 31) gets null
+ * keys: it borrows a timer pin the resource parser files under that
+ * pin's own owner, so its pins cannot be looked up by port and the
+ * profile has to name them.
  * @param {number} identifier
- * @returns {{tx: string, rx: string}}
+ * @returns {{tx: ?string, rx: ?string}}
  */
 export function hardwareKeysFor(identifier) {
-  if (identifier >= 30) {
-    const index = identifier - 30 + 1;
-    return { tx: `SOFTSERIAL_TX${index}`, rx: `SOFTSERIAL_RX${index}` };
-  }
+  if (identifier >= SOFTSERIAL_FIRST_IDENTIFIER) return { tx: null, rx: null };
   return { tx: `TX${identifier + 1}`, rx: `RX${identifier + 1}` };
 }
 
@@ -133,9 +134,10 @@ export function buildPortMap({
 
       const lines = ["tx", "rx"].map((role) => {
         const fromProfile = spec?.[role] ? normalisePin(spec[role]) : null;
-        const fromBoard = hardwareMap?.[keys[role]]?.pin
-          ? normalisePin(hardwareMap[keys[role]].pin)
-          : null;
+        const fromBoard =
+          keys[role] && hardwareMap?.[keys[role]]?.pin
+            ? normalisePin(hardwareMap[keys[role]].pin)
+            : null;
         const pin = fromProfile ?? fromBoard;
         const pad = pin ? (pads[pin] ?? null) : null;
         return {

@@ -73,8 +73,13 @@
   function onPointerMove(event) {
     if (!dragging) return;
     const point = toBoard(event);
-    dragging.moved = true;
-    editor.movePad(
+    // The undo entry is taken on the first real move, not on the press,
+    // so a click that only selects leaves nothing to undo.
+    if (!dragging.moved) {
+      dragging.moved = true;
+      editor.beginDrag();
+    }
+    editor.dragPad(
       dragging.pin,
       point.x + dragging.offsetX,
       point.y + dragging.offsetY,
@@ -82,6 +87,7 @@
   }
 
   function onPointerUp() {
+    if (dragging?.moved) editor.endDrag(dragging.pin);
     dragging = null;
   }
 

@@ -17,7 +17,7 @@
    */
   import { resolveBoardView } from "@/js/boardview/board_views.js";
   import { describePortFunction } from "@/js/boardview/port_function.js";
-  import { buildPortMap, portsInView } from "@/js/boardview/port_map.js";
+  import { buildPortMap } from "@/js/boardview/port_map.js";
   import { VIEW_IDS } from "@/js/boardview/schema.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
@@ -99,13 +99,11 @@
     }),
   );
 
-  // Only offer a view the board actually has, and put the one the user
-  // most likely wants first.
+  // Only offer a view the board actually has, top first.
   let availableViews = $derived(
     VIEW_IDS.filter((id) => board?.views?.[id]).map((id) => ({
       id,
       label: $i18n.t(`boardViewName_${id}`),
-      ports: portsInView(portMap, id).length,
     })),
   );
 

@@ -82,7 +82,7 @@
       if (header.view !== viewId) continue;
       const own = padsHere.filter((pad) => pad.header === header.id);
       if (header.width !== null && header.height !== null) {
-        out.push({ ...header, pads: own });
+        out.push(header);
         continue;
       }
       if (!own.length) continue;
@@ -94,7 +94,6 @@
         y: Math.min(...ys) - 2.2,
         width: Math.max(...xs) - Math.min(...xs) + 4.4,
         height: Math.max(...ys) - Math.min(...ys) + 4.4,
-        pads: own,
       });
     }
     return out;
