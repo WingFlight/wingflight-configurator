@@ -8479,9 +8479,6 @@
     "wiringErrorUnresolved": {
         "message": "No conflict-free timer and DMA layout was found for {{features}}. Choose a suggestion or a different pad."
     },
-    "wiringBoardUnrecognised": {
-        "message": "This board has no profile yet, so it cannot be drawn. The pin table below still works, but nothing can be written until a profile exists."
-    },
     "wiringPadUnassigned": {
         "message": "unassigned"
     },
@@ -8523,6 +8520,57 @@
     },
     "wiringSchematicNote": {
         "message": "Pad positions are schematic, not measured."
+    },
+    "boardViewName_top": {
+        "message": "Top"
+    },
+    "boardViewName_left": {
+        "message": "Left side"
+    },
+    "boardViewName_right": {
+        "message": "Right side"
+    },
+    "boardViewSwitch": {
+        "message": "Which side of the board to show"
+    },
+    "boardViewCanvasLabel": {
+        "message": "{{board}}, {{view}} view, with its port assignments"
+    },
+    "boardViewPortFree": {
+        "message": "not in use"
+    },
+    "boardViewPortColumn": {
+        "message": "Port"
+    },
+    "boardViewFunctionColumn": {
+        "message": "Set to"
+    },
+    "boardViewSplit": {
+        "message": "split"
+    },
+    "boardViewSplitHelp": {
+        "message": "This port's TX and RX come out at two different places on the board, so it takes two wires from two connectors."
+    },
+    "boardViewLineMissing": {
+        "message": "not broken out"
+    },
+    "boardViewLineUndrawn": {
+        "message": "{{pin}} (not on the drawing)"
+    },
+    "boardViewNoDrawing": {
+        "message": "There is no drawing for this board yet, and it has not been read, so where each port comes out is unknown. Read the board on the Wiring stage of the setup journey, or add a board profile."
+    },
+    "boardViewNoPorts": {
+        "message": "This board reports no serial ports."
+    },
+    "boardViewSynthesised": {
+        "message": "No drawing exists for this board yet, so this is a schematic built from what the board reported. Pad positions are not where they are on the real PCB."
+    },
+    "boardViewTitle": {
+        "message": "Board and ports"
+    },
+    "boardViewHelp": {
+        "message": "Every serial port the board has, and the job it is currently set to do. Hover a port to find it on the drawing."
     },
     "wiringPickerFunction": {
         "message": "Function"
