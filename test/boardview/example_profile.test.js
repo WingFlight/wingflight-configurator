@@ -35,13 +35,37 @@ describe("the board editor's worked example", () => {
 
   // R1: a connector owns its positions and places them itself.
   it("places a connector's pins at its own pitch, in order", () => {
+    // Port A runs down the left edge, the way a peripheral port on
+    // one of these boards actually sits.
     const portA = profile.connectors.find((c) => c.id === "port-a");
+    expect(portA.rotation).toBe(90);
     const places = connectorPinPositions(portA);
     expect(places).toHaveLength(portA.pins.length);
     for (let i = 1; i < places.length; i += 1) {
-      expect(places[i].x - places[i - 1].x).toBeCloseTo(portA.pitch, 5);
-      expect(places[i].y).toBeCloseTo(places[0].y, 5);
+      expect(places[i].y - places[i - 1].y).toBeCloseTo(portA.pitch, 5);
+      expect(places[i].x).toBeCloseTo(places[0].x, 5);
     }
+  });
+
+  // The two new issues: a connector's labels all read to one side, and
+  // that side follows the run and which edge the connector is on.
+  it("labels each connector to one side, chosen by its run and its edge", () => {
+    const sideOf = (id) => {
+      const sides = new Set(
+        profile.allPads
+          .filter((pad) => pad.connector === id)
+          .map((pad) => pad.labelSide),
+      );
+      expect(sides.size, id).toBe(1);
+      return [...sides][0];
+    };
+    // Columns down the left and right edges read outwards.
+    expect(sideOf("port-a")).toBe("left");
+    expect(sideOf("port-b")).toBe("left");
+    expect(sideOf("port-c")).toBe("right");
+    // Rows along the top and bottom read above and below.
+    expect(sideOf("pwr")).toBe("above");
+    expect(sideOf("j1")).toBe("below");
   });
 
   it("puts every pad on a connector, with no loose pads left over", () => {

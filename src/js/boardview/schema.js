@@ -431,7 +431,7 @@ export function normaliseProfile(raw) {
     pads,
     // Every pad the drawing shows: a connector's positions and the
     // loose pads together, so callers never have to join the two.
-    allPads: [...connectorPads(connectors), ...pads],
+    allPads: [...connectorPads(connectors, views), ...pads],
     receivers: (raw.receivers ?? []).map(normaliseReceiver),
     ports: (raw.ports ?? []).map(normalisePort),
     // Kept so callers that read `outline` (BoardCanvas) keep working.

@@ -5,6 +5,7 @@ import {
   DEFAULT_PITCH,
   connectorBounds,
   connectorLabelAnchor,
+  connectorLabelSide,
   connectorPads,
   connectorPinPositions,
   emptyConnector,
@@ -426,5 +427,71 @@ describe("reordering a connector's positions", () => {
     expect(reversed.pins.map((pin) => pin.position)).toEqual([1, 2, 3, 4, 5]);
     expect(reversed.pins[4].net).toBe("GND");
     expect(reversed.pins[2].pin).toBe("B06");
+  });
+});
+
+// Every pad on a connector labels the same way, and that way follows
+// the connector: which direction its positions run, and which side of
+// the board it sits on. Deciding per pad split one connector's labels
+// across two sides and sent a pin in the middle of a board to whichever
+// edge happened to be a millimetre nearer.
+describe("which way a connector's labels read", () => {
+  const view = { width: 60, height: 38 };
+  const at = (over) =>
+    normaliseConnector({
+      id: "c",
+      kind: "port",
+      view: "top",
+      pitch: 2,
+      pins: [{ pin: "B06" }, { pin: "B07" }, { pin: "B08" }, { pin: "B09" }],
+      ...over,
+    });
+
+  it("sends a row of positions above or below, never sideways", () => {
+    expect(connectorLabelSide(at({ x: 20, y: 4, rotation: 0 }), view)).toBe(
+      "above",
+    );
+    expect(connectorLabelSide(at({ x: 20, y: 34, rotation: 0 }), view)).toBe(
+      "below",
+    );
+  });
+
+  it("sends a column of positions left or right, never up or down", () => {
+    expect(connectorLabelSide(at({ x: 4, y: 14, rotation: 90 }), view)).toBe(
+      "left",
+    );
+    expect(connectorLabelSide(at({ x: 56, y: 14, rotation: 90 }), view)).toBe(
+      "right",
+    );
+  });
+
+  it("does not care which end the run starts from", () => {
+    // The same column, described upwards instead of downwards.
+    expect(connectorLabelSide(at({ x: 4, y: 20, rotation: 270 }), view)).toBe(
+      "left",
+    );
+    expect(connectorLabelSide(at({ x: 20, y: 4, rotation: 180 }), view)).toBe(
+      "above",
+    );
+  });
+
+  it("gives every pad on one connector the same side", () => {
+    const connector = at({ x: 4, y: 14, rotation: 90 });
+    const pads = connectorPads([connector], { top: view });
+    expect(new Set(pads.map((pad) => pad.labelSide))).toEqual(
+      new Set(["left"]),
+    );
+  });
+
+  it("still honours a side the author fixed by hand", () => {
+    const connector = at({ x: 4, y: 14, rotation: 90, labelSide: "below" });
+    const pads = connectorPads([connector], { top: view });
+    for (const pad of pads) expect(pad.labelSide).toBe("below");
+  });
+
+  it("leaves it to the drawing when it has no view to judge by", () => {
+    const pads = connectorPads([at({ x: 4, y: 14, rotation: 90 })]);
+    // Still one side for the whole connector, taken from the run alone.
+    expect(new Set(pads.map((pad) => pad.labelSide)).size).toBe(1);
   });
 });

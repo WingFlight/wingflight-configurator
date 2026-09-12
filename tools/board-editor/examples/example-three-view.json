@@ -64,7 +64,8 @@
           "kind": "port",
           "view": "top",
           "x": 4.0,
-          "y": 11.0,
+          "y": 10.0,
+          "rotation": 90,
           "pitch": 2.0,
           "pins": [
             {
@@ -95,7 +96,8 @@
           "kind": "port",
           "view": "top",
           "x": 4.0,
-          "y": 20.0,
+          "y": 22.0,
+          "rotation": 90,
           "pitch": 2.0,
           "pins": [
             {
@@ -125,8 +127,9 @@
           "label": "Port C",
           "kind": "port",
           "view": "top",
-          "x": 52.0,
-          "y": 11.0,
+          "x": 56.0,
+          "y": 10.0,
+          "rotation": 90,
           "pitch": 2.0,
           "pins": [
             {

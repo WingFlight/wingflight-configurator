@@ -198,3 +198,24 @@ exercised against the shape of hardware we actually ship for.
   Note the default placement is the middle of the board, where there are often
   pads. The name is a watermark drawn behind them, so it reads as one; move it
   if you would rather it were clear of them.
+
+- ~~labels of the ports aren't moved to the side of the controller where the port
+  actually is~~
+- ~~labels of the ports do not respect the orientation of the port properly~~
+  **Both fixed, and they were one fault.** Each pad chose its own side, by
+  whichever board edge it happened to sit nearest. That is wrong twice over: it
+  split one connector's labels across two sides, and it ignored which way the
+  connector runs, so a column of pins could try to label upwards.
+
+  The side is decided by the connector now, from the two facts that actually
+  settle it. A run of positions has only one free side, its perpendicular, so a
+  column labels sideways and a row labels above or below. Which of that side's
+  two directions is outwards depends on where on the board the connector sits,
+  so a column on the left edge reads left and the same column on the right
+  edge reads right. Every pad on the connector gets that one side. An explicit
+  `labelSide` still overrides it, for a corner that needs a hand.
+
+  The worked example changed with it: its peripheral ports ran horizontally
+  across the middle of the board, which no real board does, and that put
+  fourteen labels along one 60 mm edge. They run down the edges now, as they
+  would be mounted.

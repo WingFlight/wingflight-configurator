@@ -223,24 +223,63 @@ export function connectorBounds(connector, depth = 3.4) {
  * @param {?{width: number, height: number}} [view] to face away from
  * @returns {{x: number, y: number, anchor: 'start'|'middle'|'end'}}
  */
-export function connectorLabelAnchor(connector, gap = 3, view = null) {
+/**
+ * Which way a connector faces: the perpendicular of its run, pointing
+ * away from the middle of the board.
+ *
+ * Everything a connector labels goes this way. Two facts decide it and
+ * both belong to the connector rather than to any one of its pins: a
+ * run of positions has only one free side, and which of that side's
+ * two directions is outwards depends on where on the board it sits.
+ *
+ * @param {Object} connector normalised
+ * @param {?{width: number, height: number}} [view]
+ * @returns {{x: number, y: number, midX: number, midY: number}} a unit
+ *   vector, plus the middle of the run it points away from
+ */
+export function connectorFacing(connector, view = null) {
   const radians = ((connector.rotation ?? 0) * Math.PI) / 180;
   const span = Math.max(0, connector.pins.length - 1) * connector.pitch;
   const midX = connector.x + (Math.cos(radians) * span) / 2;
   const midY = connector.y + (Math.sin(radians) * span) / 2;
 
-  // The run's perpendicular, and the same the other way round.
-  let awayX = Math.sin(radians);
-  let awayY = -Math.cos(radians);
+  let x = Math.sin(radians);
+  let y = -Math.cos(radians);
   if (view) {
     // Flip it if it points inwards.
     const towardsCentreX = view.width / 2 - midX;
     const towardsCentreY = view.height / 2 - midY;
-    if (awayX * towardsCentreX + awayY * towardsCentreY > 0) {
-      awayX = -awayX;
-      awayY = -awayY;
+    if (x * towardsCentreX + y * towardsCentreY > 0) {
+      x = -x;
+      y = -y;
     }
   }
+  return { x, y, midX, midY };
+}
+
+/**
+ * Which edge a connector's labels read towards.
+ *
+ * This is what makes a column of pins label sideways and a row label
+ * above or below, rather than each pin picking the board edge it
+ * happens to sit nearest. Picking per pin split one connector's labels
+ * across two sides and sent pins in the middle of a board to whichever
+ * edge was a millimetre closer.
+ *
+ * @param {Object} connector normalised
+ * @param {?{width: number, height: number}} [view]
+ * @returns {'left'|'right'|'above'|'below'}
+ */
+export function connectorLabelSide(connector, view = null) {
+  const facing = connectorFacing(connector, view);
+  if (Math.abs(facing.x) > Math.abs(facing.y)) {
+    return facing.x < 0 ? "left" : "right";
+  }
+  return facing.y < 0 ? "above" : "below";
+}
+
+export function connectorLabelAnchor(connector, gap = 3, view = null) {
+  const { x: awayX, y: awayY, midX, midY } = connectorFacing(connector, view);
 
   return {
     x: midX + awayX * gap,
@@ -261,10 +300,17 @@ export function connectorLabelAnchor(connector, gap = 3, view = null) {
  * @param {Object[]} connectors normalised
  * @returns {Object[]} pads, each carrying `connector` and `position`
  */
-export function connectorPads(connectors) {
+export function connectorPads(connectors, views = null) {
   const pads = [];
   for (const connector of connectors ?? []) {
     const places = connectorPinPositions(connector);
+    // Every pad on a connector labels the same way, decided by the
+    // connector: which way its positions run, and which side of the
+    // board it is on. An explicit labelSide still wins.
+    const side =
+      connector.labelSide === "auto"
+        ? connectorLabelSide(connector, views?.[connector.view] ?? null)
+        : connector.labelSide;
     connector.pins.forEach((pin, index) => {
       const role = pinRole(pin);
       if (role === "empty") return;
@@ -281,7 +327,7 @@ export function connectorPads(connectors) {
         connector: connector.id,
         connectorLabel: connector.label,
         position: pin.position,
-        labelSide: connector.labelSide,
+        labelSide: side,
         reserved: pin.reserved,
       });
     });
