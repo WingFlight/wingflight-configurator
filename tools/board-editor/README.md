@@ -79,8 +79,13 @@ longest function names there are, for checking that the labels still fit.
 **Validation.** Errors and warnings live under the toolbar and update as
 you type. Saving is refused while there are errors.
 
-**Saving.** *Save to repo* writes the profile file. *Download* gives you
-the same JSON as a file, for when you are not running the dev server.
+**Saving.** Edits are written to the profile file on their own, once
+editing has paused and the profile validates, so a half-typed pin never
+reaches a file the app ships and a drag does not write per frame. The
+toolbar says where things stand: *saving shortly*, *saved*, or *held
+back* with the error count. *Save now* writes immediately, the
+*Auto-save* toggle turns it off, and *Download* gives you the same JSON
+as a file for when you are not running the dev server.
 
 ## How it is wired up
 
@@ -112,5 +117,6 @@ a profile the editor accepts is one the configurator draws.
   cached on disk and works offline; so does the catalogue listing, for
   six hours, and a stale listing is served rather than none if GitHub
   cannot be reached.
-- It has no undo for a *Save*: the file is written in place. It is a
-  repository file, so `git diff` is the safety net.
+- It has no undo for a *Save*, automatic or otherwise: the file is
+  written in place. It is a repository file, so `git diff` is the
+  safety net.

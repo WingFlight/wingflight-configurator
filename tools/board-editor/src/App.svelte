@@ -33,8 +33,9 @@
     editor.load();
   });
 
-  // Leaving with unsaved edits is the one way to lose work here, since
-  // everything else is written straight to the repository.
+  // With auto-save on there is normally nothing to lose, but a profile
+  // that does not validate is held back deliberately, and that is
+  // exactly when a closed tab would cost work.
   $effect(() => {
     const guard = (event) => {
       if (!editor.dirty) return;
@@ -43,6 +44,25 @@
     };
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
+  });
+
+  // What the toolbar says about the file, in the order it matters.
+  let saveState = $derived.by(() => {
+    if (editor.offline) return { text: "not saving", tone: "warn" };
+    if (editor.status === "saving") return { text: "saving…", tone: "busy" };
+    if (editor.errors.length) {
+      return {
+        text: `held back · ${editor.errors.length} error(s)`,
+        tone: "warn",
+      };
+    }
+    if (editor.dirty) {
+      return {
+        text: editor.autoSave ? "saving shortly" : "unsaved",
+        tone: "busy",
+      };
+    }
+    return { text: editor.savedAt ? "saved" : "no changes", tone: "ok" };
   });
 
   async function onImport(event) {
@@ -71,8 +91,13 @@
 <header>
   <h1>Board editor</h1>
   <span class="file">src/tabs/journey/board_profiles.json</span>
-  {#if editor.dirty}<span class="dirty">unsaved</span>{/if}
+  <span class="state {saveState.tone}">{saveState.text}</span>
   <div class="grow"></div>
+  <label class="auto" title="Write changes to the file on their own, once the
+profile validates and editing has paused">
+    <input type="checkbox" bind:checked={editor.autoSave} />
+    Auto-save
+  </label>
   <button disabled={!editor.canUndo} onclick={() => editor.undo()}>Undo</button>
   <button disabled={!editor.canRedo} onclick={() => editor.redo()}>Redo</button>
   <button onclick={() => editor.importFile(example)}>Example</button>
@@ -83,10 +108,10 @@
   <button onclick={download}>Download</button>
   <button
     class="primary"
-    disabled={editor.status === "saving" || editor.offline}
+    disabled={editor.status === "saving" || editor.offline || !editor.dirty}
     onclick={() => editor.save()}
   >
-    {editor.status === "saving" ? "Saving…" : "Save to repo"}
+    {editor.status === "saving" ? "Saving…" : "Save now"}
   </button>
   <button
     class="theme"
@@ -169,11 +194,31 @@
     color: var(--color-text-muted);
   }
 
-  .dirty {
+  .state {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--color-yellow-500);
+
+    &.ok {
+      color: var(--color-status-good);
+    }
+
+    &.busy {
+      color: var(--color-text-muted);
+    }
+
+    &.warn {
+      color: var(--color-yellow-500);
+    }
+  }
+
+  .auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
   }
 
   .grow {

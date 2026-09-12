@@ -59,9 +59,23 @@ class EditorState {
   snap = $state(0.254);
   /** Whether the file could be loaded from a dev server at all. */
   offline = $state(false);
+  /**
+   * Whether edits are written to the profile file on their own.
+   *
+   * On by default, because losing an afternoon's placement work to a
+   * closed tab is the worst thing this tool can do. It is a repository
+   * file, though, so a write only happens once the profile validates
+   * and only after edits have stopped: a half-typed pin never reaches
+   * the file, and `git diff` stays reviewable rather than recording
+   * every keystroke.
+   */
+  autoSave = $state(true);
+  /** When the file was last written, for the toolbar. */
+  savedAt = $state(null);
 
   #undo = [];
   #redo = [];
+  #autoSaveTimer = null;
   // $state cannot see into a plain array field, so depth is tracked
   // alongside it for the buttons to bind to.
   #undoDepth = $state(0);
@@ -113,21 +127,31 @@ class EditorState {
     }
   }
 
-  /** Writes every board back to the profile file. */
-  async save() {
+  /**
+   * Writes every board back to the profile file.
+   * @param {{quiet?: boolean}} [options] `quiet` for an automatic save,
+   *   which should not announce itself or report a validation error the
+   *   author can already see in the problems list.
+   */
+  async save({ quiet = false } = {}) {
+    if (!quiet) this.cancelAutoSave();
     if (this.errors.length) {
-      this.error = "Fix the errors below before saving.";
+      if (!quiet) this.error = "Fix the errors below before saving.";
       return false;
     }
     this.status = "saving";
-    this.error = null;
+    if (!quiet) this.error = null;
     try {
       await api.putProfiles({
         _note: this.note ?? undefined,
         boards: this.boards.map(serialiseProfile),
       });
       this.dirty = false;
-      this.message = "Saved to src/tabs/journey/board_profiles.json";
+      this.savedAt = Date.now();
+      this.error = null;
+      if (!quiet) {
+        this.message = "Saved to src/tabs/journey/board_profiles.json";
+      }
       return true;
     } catch (error) {
       this.error = String(error.message ?? error);
@@ -135,6 +159,45 @@ class EditorState {
     } finally {
       this.status = "idle";
     }
+  }
+
+  /** How long editing has to stop before an automatic save happens. */
+  static AUTO_SAVE_QUIET_MS = 1200;
+
+  /**
+   * Marks the document changed and queues an automatic save.
+   *
+   * Every edit goes through here, including the pointer-rate ones, so
+   * a drag rearms the timer rather than writing the file per frame.
+   */
+  touch() {
+    this.dirty = true;
+    this.message = null;
+    this.queueAutoSave();
+  }
+
+  /**
+   * Queues an automatic save without disturbing the status line, for
+   * the operations that have something of their own to say.
+   */
+  queueAutoSave() {
+    if (!this.autoSave || this.offline) return;
+
+    clearTimeout(this.#autoSaveTimer);
+    this.#autoSaveTimer = setTimeout(() => {
+      this.#autoSaveTimer = null;
+      // Re-checked here rather than when queued: an edit can have been
+      // undone, or broken the profile, in the meantime.
+      if (!this.autoSave || this.offline || !this.dirty) return;
+      if (this.errors.length) return;
+      this.save({ quiet: true });
+    }, EditorState.AUTO_SAVE_QUIET_MS);
+  }
+
+  /** Stops a queued automatic save, for a deliberate save or a reload. */
+  cancelAutoSave() {
+    clearTimeout(this.#autoSaveTimer);
+    this.#autoSaveTimer = null;
   }
 
   /** The file as it would be written, for saving by hand. */
@@ -162,8 +225,7 @@ class EditorState {
     const next = $state.snapshot(this.board);
     change(next);
     this.boards[this.index] = normaliseProfile(serialiseProfile(next));
-    this.dirty = true;
-    this.message = null;
+    this.touch();
   }
 
   // An undo entry is the one board that is about to change, not the
@@ -201,6 +263,7 @@ class EditorState {
       this.boards[snapshot.index] = normaliseProfile(snapshot.board);
     }
     this.dirty = true;
+    this.queueAutoSave();
   }
 
   // Undo and redo mirror each other: the entry being reversed decides
@@ -244,8 +307,9 @@ class EditorState {
     this.viewId = "top";
     this.selectedPin = null;
     this.dirty = true;
+    this.queueAutoSave();
     this.error = null;
-    this.message = `Loaded ${incoming.length} board(s). Nothing is written until you save.`;
+    this.message = `Loaded ${incoming.length} board(s).${this.autoSave ? "" : " Nothing is written until you save."}`;
     return incoming.length;
   }
 
@@ -257,7 +321,7 @@ class EditorState {
     this.boards = this.boards.filter((_, i) => i !== this.index);
     this.index = Math.max(0, Math.min(this.index, this.boards.length - 1));
     this.selectedPin = null;
-    this.dirty = true;
+    this.touch();
   }
 
   setBoardField(field, value) {
@@ -358,8 +422,7 @@ class EditorState {
     if (!pad) return;
     pad.x = this.snapped(x);
     pad.y = this.snapped(y);
-    this.dirty = true;
-    this.message = null;
+    this.touch();
   }
 
   endDrag(pin) {
@@ -458,8 +521,7 @@ class EditorState {
     if (!connector) return;
     connector.x = this.snapped(x);
     connector.y = this.snapped(y);
-    this.dirty = true;
-    this.message = null;
+    this.touch();
   }
 
   removeConnector(id) {
@@ -624,8 +686,7 @@ class EditorState {
     if (!view?.title) return;
     view.title.x = this.snapped(x);
     view.title.y = this.snapped(y);
-    this.dirty = true;
-    this.message = null;
+    this.touch();
   }
 
   // --- the USB socket -------------------------------------------------
@@ -654,8 +715,7 @@ class EditorState {
     if (!view?.usb) return;
     view.usb.x = this.snapped(x);
     view.usb.y = this.snapped(y);
-    this.dirty = true;
-    this.message = null;
+    this.touch();
   }
 
   // --- ports ----------------------------------------------------------
@@ -832,10 +892,11 @@ class EditorState {
     this.selectedPin = null;
     this.selectedConnectorId = null;
     this.dirty = true;
+    this.queueAutoSave();
     this.error = null;
     this.message = previous
       ? `Refreshed ${id}: ${added} pin(s) added, ${removed} removed, everything you placed kept.`
-      : `Created ${id} with ${next.allPads.length} pins. Nothing is written until you save.`;
+      : `Created ${id} with ${next.allPads.length} pins.${this.autoSave ? "" : " Nothing is written until you save."}`;
     return id;
   }
 }

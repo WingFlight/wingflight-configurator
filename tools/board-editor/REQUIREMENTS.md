@@ -219,3 +219,20 @@ exercised against the shape of hardware we actually ship for.
   across the middle of the board, which no real board does, and that put
   fourteen labels along one 60 mm edge. They run down the edges now, as they
   would be mounted.
+
+- ~~there is no auto save of the config upon changes~~
+  **Fixed.** Edits are written on their own, and the toolbar says where the
+  file stands: *saving shortly*, *saved*, or *held back* with the number of
+  errors.
+
+  Two conditions, because this is a repository file and not a scratch
+  document. A write happens only once editing has paused, so a drag rearms the
+  timer instead of writing per frame and `git diff` stays reviewable rather
+  than recording every keystroke. And only once the profile validates, so a
+  half-typed pin or a pin placed twice never reaches a file the app ships. When
+  it is held back the problems list already says why.
+
+  *Save now* still writes immediately, and the auto-save toggle turns it off
+  for anyone who would rather it did not. The close-the-tab warning stays,
+  because a profile held back for errors is exactly when a closed tab would
+  still cost work.
