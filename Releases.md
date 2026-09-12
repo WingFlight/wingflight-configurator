@@ -1,3 +1,9 @@
+# 0.0.21
+
+Make the backup-before-flash / restore-after-flash wizard reliable across a full flash cycle: pace CLI defaults/save handling correctly, retry post-flash reconnects longer, add a "Select Port" recovery option, and default backups to Dump instead of Diff.
+Fix Web Serial losing track of the flight controller's port after it reboots mid-restore, which made restoring fail every time on the web build (desktop was unaffected).
+Fix a cached target config being reused even after its source was corrected, so a fixed board config could keep getting (re)flashed stale for up to two hours.
+
 # 0.0.20
 
 Add a CLI-based backup/restore wizard to the CLI tab and Firmware Flasher (Backup/Diff/Dump before flashing, with restore after).
