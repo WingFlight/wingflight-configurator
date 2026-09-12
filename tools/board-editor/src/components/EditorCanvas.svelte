@@ -24,7 +24,7 @@
     textWidth,
     titleLines,
   } from "@/js/boardview/label_layout.js";
-  import { portName } from "@/js/boardview/port_map.js";
+  import { receiverLines } from "@/js/boardview/port_map.js";
   import { receiverPlacement } from "@/js/boardview/schema.js";
 
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
@@ -121,12 +121,9 @@
         // Which serial port it holds, said on the block itself: it is
         // the one thing about a built-in receiver the author cannot
         // see anywhere else on the drawing.
-        const lines = [
-          receiver.protocol ?? receiver.label ?? "RX",
-          receiver.portIdentifier === null
-            ? "no port"
-            : portName(receiver.portIdentifier),
-        ];
+        const lines = receiver.portIdentifier === null
+          ? [...receiverLines(receiver), "no port"]
+          : receiverLines(receiver);
         const box = receiverPlacement(
           receiver,
           view,

@@ -32,6 +32,34 @@ export function portName(identifier) {
   return UART_NAMES[identifier] ?? `PORT${identifier}`;
 }
 
+/**
+ * What a built-in receiver's block says: its own name where the author
+ * gave it one, its protocol, and the serial port it occupies.
+ *
+ * The port is the point. A receiver soldered to the board is the one
+ * thing on it that takes a UART without any pad to show for it, so the
+ * drawing has to name that UART or the port simply looks unused. Both
+ * drawings build the block's text through here so the block is sized
+ * for exactly what is written in it.
+ *
+ * @param {{label?: ?string, protocol?: ?string, portIdentifier: ?number}}
+ *        receiver normalised
+ * @returns {string[]} one to three lines
+ */
+export function receiverLines(receiver) {
+  const protocol = receiver.protocol ?? null;
+  const label = receiver.label ?? null;
+  const plain = (text) => (text ?? "").replace(/\s+/g, "").toUpperCase();
+  return [
+    // A label that only repeats the protocol is not worth a line.
+    label && plain(label) !== plain(protocol) ? label : null,
+    protocol ?? (label ? null : "RX"),
+    receiver.portIdentifier === null
+      ? null
+      : portName(receiver.portIdentifier),
+  ].filter(Boolean);
+}
+
 /** First serial identifier the firmware uses for a soft serial port. */
 export const SOFTSERIAL_FIRST_IDENTIFIER = 30;
 

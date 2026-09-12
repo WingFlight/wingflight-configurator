@@ -23,7 +23,7 @@
     receiverFit,
     titleLines,
   } from "@/js/boardview/label_layout.js";
-  import { portName, portsByPin } from "@/js/boardview/port_map.js";
+  import { portsByPin, receiverLines } from "@/js/boardview/port_map.js";
   import { receiverPlacement } from "@/js/boardview/schema.js";
   import { i18n } from "@/js/i18n.js";
 
@@ -112,13 +112,7 @@
     (profile?.receivers ?? [])
       .filter((receiver) => receiver.view === viewId && view)
       .map((receiver) => {
-        // What the block says: the protocol, and the port it holds.
-        const lines = [
-          receiver.protocol ?? receiver.label ?? "RX",
-          receiver.portIdentifier === null
-            ? null
-            : portName(receiver.portIdentifier),
-        ].filter(Boolean);
+        const lines = receiverLines(receiver);
         const box = receiverPlacement(
           receiver,
           view,
@@ -216,8 +210,9 @@
         pad.silkscreen ?? `${line.role.toUpperCase()}${port.identifier + 1}`;
       // Both names, never one instead of the other: the letter printed
       // on the board and the UART the firmware knows (R3).
-      // Not `portName`: that name is taken by the import above, and a
-      // shadow here would be a trap for the next reader.
+      // Named portLabel, not portName: that is the name of the helper
+      // that turns an identifier into "UART3", and shadowing it here
+      // would be a trap for the next reader.
       const portLabel =
         port.label === port.name ? port.label : `${port.label} · ${port.name}`;
       // Which half of the port this pad is. On a dedicated port the
@@ -501,24 +496,6 @@
       </g>
     {/each}
 
-    <!-- Split ports: the two halves tied together -->
-    {#each ties as tie (tie.id)}
-      <path
-        class="tie"
-        d={`M ${tie.from.x} ${tie.from.y} L ${tie.to.x} ${tie.to.y}`}
-      />
-    {/each}
-
-    <!-- Leader lines, drawn under the pads -->
-    {#each labels.filter(Boolean) as label (label.id)}
-      {#if label.leader}
-        <path
-          class="leader"
-          d={`M ${label.leader[0][0]} ${label.leader[0][1]} L ${label.leader[1][0]} ${label.leader[1][1]}`}
-        />
-      {/if}
-    {/each}
-
     <!-- Pads -->
     {#each decorated as pad (padKey(pad))}
       {@const label = labelByKey[padKey(pad)]}
@@ -590,6 +567,26 @@
           {/if}
         {/if}
       </g>
+    {/each}
+    <!-- Split ports: the two halves tied together. Over the pads with
+         the leaders, for the same reason -->
+    {#each ties as tie (tie.id)}
+      <path
+        class="tie"
+        d={`M ${tie.from.x} ${tie.from.y} L ${tie.to.x} ${tie.to.y}`}
+      />
+    {/each}
+
+    <!-- Leader lines, on top of everything: a line that vanishes
+         behind a pad, the receiver block or the USB socket reads as a
+         different line, or as none at all -->
+    {#each labels.filter(Boolean) as label (label.id)}
+      {#if label.leader}
+        <path
+          class="leader"
+          d={`M ${label.leader[0][0]} ${label.leader[0][1]} L ${label.leader[1][0]} ${label.leader[1][1]}`}
+        />
+      {/if}
     {/each}
   </svg>
 {/if}

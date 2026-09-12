@@ -278,6 +278,93 @@ function relieveCrowding(resolved, view, margin) {
 }
 
 /**
+ * The order to hang one connector's labels in so that no two of its
+ * leader lines cross.
+ *
+ * Two leaders from pads at the same height to a column of labels cross
+ * exactly when the label of the pad further from the column is on the
+ * near side of its neighbour's: work through the geometry and the
+ * condition is that the sign of (label - pad) must match the sign of
+ * (label - other label). So above the pads the labels run away from the
+ * column downwards, and below them they run towards it downwards. That
+ * is the V a datasheet fan makes, and giving the leftmost pad the
+ * topmost label instead is what crossed seven leaders on one board.
+ *
+ * Pads spread along the edge need none of that: matching them in order
+ * is already crossing-free, and connectors are axis-aligned, so a
+ * connector is one case or the other and never both.
+ *
+ * @param {Object[]} items one connector's labels
+ * @param {Object} geometry
+ * @returns {Object[]} the same items, reordered
+ */
+function fanOrder(items, { along, awayFrom, extentOf, centre, length, shift }) {
+  const positions = items.map(along);
+  const spread = Math.max(...positions) - Math.min(...positions);
+  if (spread > 0.01) {
+    return [...items].sort((a, b) => along(a) - along(b));
+  }
+
+  // All at one height. The only freedom left is how many labels land
+  // on the near side of that height, and the two halves then run in
+  // opposite directions, so the orders worth trying are just that one
+  // number. Each is laid out and checked against the crossing
+  // condition rather than estimated: labels are not all the same
+  // depth, a second line making one twice as tall as its neighbour, so
+  // guessing the split from the block's length put the boundary in the
+  // wrong place and crossed the last pair.
+  const line = positions[0];
+  const byDistance = [...items].sort((a, b) => awayFrom(b) - awayFrom(a));
+
+  // Where each leader would actually end, baseline shift included: a
+  // label beside the board is drawn a third of its height below its
+  // slot, and that was enough to put one label on the far side of the
+  // pads' own line from where this reasoned it was.
+  const slotsFor = (order) => {
+    const out = [];
+    let cursor = centre - length / 2;
+    for (const item of order) {
+      const extent = extentOf(item);
+      const anchor = cursor + extent.before;
+      cursor = anchor + extent.after + MIN_GAP;
+      out.push(anchor + shift);
+    }
+    return out;
+  };
+
+  // Which of a pair is the farther pad is a fact about the board, not
+  // about where in the block its label ended up, so the pairs are
+  // taken by distance and not by index: half the candidate orders run
+  // the other way round, and reading it off the index called the wrong
+  // one far.
+  const anyCrossing = (order) => {
+    const slots = slotsFor(order);
+    for (let a = 0; a < order.length; a += 1) {
+      const side = Math.sign(slots[a] - line);
+      if (side === 0) continue;
+      for (let b = 0; b < order.length; b += 1) {
+        if (a === b) continue;
+        // Only the farther pad of the pair constrains the nearer one.
+        if (awayFrom(order[a]) <= awayFrom(order[b])) continue;
+        if (Math.sign(slots[a] - slots[b]) !== side) return true;
+      }
+    }
+    return false;
+  };
+
+  // Most above first: that keeps as much of the connector's own order
+  // as the geometry allows.
+  for (let above = items.length; above >= 0; above -= 1) {
+    const order = [
+      ...byDistance.slice(0, above),
+      ...byDistance.slice(above).reverse(),
+    ];
+    if (!anyCrossing(order)) return order;
+  }
+  return byDistance;
+}
+
+/**
  * The box a laid-out label occupies, in view millimetres.
  * @param {Object} label from layoutLabels
  * @param {{text: string, sub?: ?string}} item the label's own item
@@ -387,6 +474,19 @@ export function layoutLabels({
 
     const vertical = side === "left" || side === "right";
     const along = (item) => (vertical ? item.y : item.x);
+    // How far a pad is from the line the labels sit on, across the
+    // drawing rather than along it.
+    const offset = LABEL_OFFSET + (clearance[side] ?? 0);
+    const columnAt =
+      side === "left"
+        ? -offset
+        : side === "right"
+          ? view.width + offset
+          : side === "above"
+            ? -offset
+            : view.height + offset;
+    const awayFrom = (item) =>
+      Math.abs(columnAt - (vertical ? item.x : item.y));
     // Down a side, labels are spread by height, and a label reaches
     // further below its baseline than above it when it carries a
     // second line. Across the top or bottom they are spread by width,
@@ -424,19 +524,17 @@ export function layoutLabels({
     }
 
     for (const bundle of bundles) {
-      // Along the edge, not by position number: a connector whose
-      // positions run upwards would otherwise have its labels in
-      // reverse and every leader line crossing its neighbour's.
-      bundle.items.sort((a, b) => along(a) - along(b));
-      bundle.extents = bundle.items.map(extentOf);
-      bundle.length = bundle.extents.reduce(
-        (total, extent, index) =>
-          total + extent.before + extent.after + (index ? MIN_GAP : 0),
-        0,
-      );
+      // How long the block is does not depend on the order within it,
+      // so it can be measured before that order is decided.
+      bundle.length = bundle.items
+        .map(extentOf)
+        .reduce(
+          (total, extent, index) =>
+            total + extent.before + extent.after + (index ? MIN_GAP : 0),
+          0,
+        );
       const positions = bundle.items.map(along);
-      bundle.desired =
-        (Math.min(...positions) + Math.max(...positions)) / 2;
+      bundle.desired = (Math.min(...positions) + Math.max(...positions)) / 2;
     }
 
     const min = vertical ? -margin.y : -margin.x;
@@ -456,14 +554,24 @@ export function layoutLabels({
     const group = [];
     const placed = [];
     bundles.forEach((bundle, index) => {
-      let cursor = centres[index] - bundle.length / 2;
-      bundle.items.forEach((item, at) => {
-        const extent = bundle.extents[at];
+      const centre = centres[index];
+      bundle.items = fanOrder(bundle.items, {
+        along,
+        awayFrom,
+        extentOf,
+        centre,
+        length: bundle.length,
+        shift: vertical ? LABEL_FONT * 0.35 : 0,
+      });
+
+      let cursor = centre - bundle.length / 2;
+      for (const item of bundle.items) {
+        const extent = extentOf(item);
         const anchor = cursor + extent.before;
         cursor = anchor + extent.after + MIN_GAP;
         group.push(item);
         placed.push(anchor);
-      });
+      }
     });
 
     group.forEach((item, index) => {
@@ -472,7 +580,6 @@ export function layoutLabels({
       let y;
       let anchor;
 
-      const offset = LABEL_OFFSET + (clearance[side] ?? 0);
       if (side === "left") {
         x = -offset;
         y = along;
@@ -496,6 +603,20 @@ export function layoutLabels({
       const drift = Math.abs(along - (vertical ? item.y : item.x));
       const moved = drift > 0.35;
 
+      // Where the leader stops: clear of the text it points at, on the
+      // side the pad is on. The line is drawn over the board now, so
+      // that it cannot disappear behind a pad or a receiver block, and
+      // a line that ran on into its own label would be the same fault
+      // the other way round.
+      let end;
+      if (vertical) {
+        end = [x + (side === "left" ? 1 : -1), y];
+      } else {
+        const deep = (item.sub ? SUB_OFFSET : 0) + SUB_FONT * 0.3 + 0.4;
+        const high = LABEL_FONT * 0.8 + 0.4;
+        end = [x, side === "above" ? y + deep : y - high];
+      }
+
       out.push({
         id: item.id,
         x,
@@ -503,12 +624,7 @@ export function layoutLabels({
         anchor,
         side,
         moved,
-        leader: moved
-          ? [
-              [item.x, item.y],
-              vertical ? [x + (side === "left" ? 1 : -1), y] : [x, y],
-            ]
-          : null,
+        leader: moved ? [[item.x, item.y], end] : null,
       });
     });
   }

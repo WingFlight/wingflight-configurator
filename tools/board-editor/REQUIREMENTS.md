@@ -429,3 +429,40 @@ exercised against the shape of hardware we actually ship for.
   name breaks is a judgement about the board -- "VANTAC" over "RF007" reads
   better on a 44 mm board than one long line -- so it is the author's to
   make. A name with no breaks in it behaves exactly as it did.
+
+- ~~make sure that the label lines are not crossed~~
+  **Fixed, and it is now a rule the tests hold to.** Seven leaders crossed on
+  the RF007. The cause is one case: a connector lying across the board but
+  labelled down a side has all its pads at one height, so its labels fan out
+  from a single point, and giving the leftmost pad the topmost label makes
+  every leader cross its neighbour's.
+
+  Working through the geometry gives the exact condition. Two leaders cross
+  when the sign of (label - pad) differs from the sign of (label - the other
+  label), so above the pads the labels must run away from the column as they
+  go down, and below them they must run towards it. That is the V a datasheet
+  fan makes. The split between the two halves is not estimated from the
+  block's length -- labels are not all the same depth, a second line making
+  one twice as tall as its neighbour -- but found by laying each candidate out
+  and checking it, so the boundary is always in the right place. Pads spread
+  along the edge need none of this: matching them in order is already
+  crossing-free, and connectors are axis-aligned, so a connector is one case
+  or the other.
+
+  The cost is that a block whose labels sit below its pads reads in the
+  mirror of the connector's order. That is the only way round with no
+  crossings, and the leader lines say which pad each label belongs to.
+
+- ~~make sure that the connection lines are on the top most layer~~
+  **Done.** Leader lines and the ties between a split port's two halves are
+  drawn last, so a line no longer disappears behind a pad, a connector shell,
+  the USB socket or the receiver block, which made one line read as two or as
+  none. Each leader stops clear of its own label, since a line running on
+  into the text it points at would be the same fault the other way round.
+
+- ~~the receiver label with the UART is still missing~~
+  **Done.** The block carries the receiver's own name where it was given one,
+  its protocol, and the UART it occupies, each on its own line, and the block
+  grows to hold them. Both drawings build that text through one function, so
+  the editor and the configurator cannot drift apart. A name that only repeats
+  the protocol is left out rather than given a line of its own.

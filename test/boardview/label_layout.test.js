@@ -297,6 +297,82 @@ describe("labels grouped by connector", () => {
   });
 });
 
+// "Make sure that the label lines are not crossed." Crossed leaders
+// read as clutter however tidy the labels themselves are.
+describe("leader lines", () => {
+  const view = { width: 44, height: 34 };
+
+  // Two straight segments cross when each separates the other's ends.
+  const crosses = (a, b) => {
+    const side = (p, q, r) =>
+      (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+    const [A, B] = a;
+    const [C, D] = b;
+    return (
+      side(A, B, C) > 0 !== side(A, B, D) > 0 &&
+      side(C, D, A) > 0 !== side(C, D, B) > 0
+    );
+  };
+
+  const leadersFor = (items) => {
+    const labels = layoutLabels({ view, items });
+    return labels.map((label, index) => [
+      { x: items[index].x, y: items[index].y },
+      { x: label.x, y: label.y },
+    ]);
+  };
+
+  const countCrossings = (items) => {
+    const leaders = leadersFor(items);
+    let crossings = 0;
+    for (let i = 0; i < leaders.length; i += 1) {
+      for (let j = i + 1; j < leaders.length; j += 1) {
+        if (crosses(leaders[i], leaders[j])) crossings += 1;
+      }
+    }
+    return crossings;
+  };
+
+  // A connector lying across the board, labelled down the right side:
+  // every pad at one height, every label at a different one.
+  const flat = (owner, x, y, side) =>
+    ["TX", "RX", "5V", "GND"].map((text, index) => ({
+      id: `${owner}:${index}`,
+      owner,
+      x: x + index * 2.6,
+      y,
+      text,
+      sub: index < 2 ? `Port ${owner} · UART4 · S.Port telemetry` : null,
+      side,
+    }));
+
+  it("never crosses two leaders of one connector", () => {
+    expect(countCrossings(flat("A", 31.75, 14.48, "right"))).toBe(0);
+  });
+
+  it("never crosses them labelling the other way either", () => {
+    expect(countCrossings(flat("A", 4, 14.48, "left"))).toBe(0);
+  });
+
+  it("never crosses them on a board with several connectors", () => {
+    const column = Array.from({ length: 9 }, (unused, index) => ({
+      id: `main:${index}`,
+      owner: "main",
+      x: 4.32,
+      y: 2.79 + index * 3.5,
+      text: `S${index + 1}`,
+      sub: "B04",
+      side: "left",
+    }));
+    const items = [
+      ...column,
+      ...flat("A", 31.75, 5.08, "right"),
+      ...flat("C", 31.75, 14.48, "right"),
+    ];
+    expect(countCrossings(items)).toBe(0);
+  });
+});
+
 describe("titleLines", () => {
   it("keeps a line break the author typed", () => {
     expect(titleLines("VANTAC\nRF007", 40, LABEL_FONT)).toEqual([
