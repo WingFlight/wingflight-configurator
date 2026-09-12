@@ -1,3 +1,8 @@
+# 0.0.20
+
+Add a CLI-based backup/restore wizard to the CLI tab and Firmware Flasher (Backup/Diff/Dump before flashing, with restore after).
+Fix the flashing-completion callback being dropped when a serial flash falls back to DFU, so post-flash steps like restore never ran.
+
 # 0.0.19
 
 Add RX and ESC telemetry wiring auto-detect ("Detect Wiring") to the Receiver and Motors tabs, to help diagnose signal-inversion and pin-swap mismatches.
