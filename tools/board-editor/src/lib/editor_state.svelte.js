@@ -14,6 +14,11 @@
  * own inverse.
  */
 
+import {
+  DEFAULT_PITCH,
+  emptyConnector,
+  normaliseConnectorPin,
+} from "@/js/boardview/connectors.js";
 import { synthesiseBoardView } from "@/js/boardview/generic_layout.js";
 import {
   emptyView,
@@ -38,6 +43,8 @@ class EditorState {
   viewId = $state("top");
   /** @type {?string} pin of the selected pad */
   selectedPin = $state(null);
+  /** @type {?string} id of the connector being edited */
+  selectedConnectorId = $state(null);
   /** @type {?string} id of the selected port */
   selectedPortId = $state(null);
   /** @type {'idle'|'loading'|'saving'} */
@@ -64,11 +71,22 @@ class EditorState {
   view = $derived(this.board?.views?.[this.viewId] ?? null);
   problems = $derived(this.board ? validateProfile(this.board) : []);
   errors = $derived(this.problems.filter((p) => p.level === "error"));
+  // Every drawn position on the current view, connectors included.
   padsHere = $derived(
-    (this.board?.pads ?? []).filter((pad) => pad.view === this.viewId),
+    (this.board?.allPads ?? []).filter((pad) => pad.view === this.viewId),
+  );
+  connectorsHere = $derived(
+    (this.board?.connectors ?? []).filter(
+      (connector) => connector.view === this.viewId,
+    ),
+  );
+  selectedConnector = $derived(
+    this.board?.connectors?.find(
+      (connector) => connector.id === this.selectedConnectorId,
+    ) ?? null,
   );
   selectedPad = $derived(
-    this.board?.pads?.find((pad) => pad.pin === this.selectedPin) ?? null,
+    this.board?.allPads?.find((pad) => pad.pin === this.selectedPin) ?? null,
   );
   canUndo = $derived(this.#undoDepth > 0);
   canRedo = $derived(this.#redoDepth > 0);
@@ -376,45 +394,209 @@ class EditorState {
     return Math.round(value / this.snap) * this.snap;
   }
 
-  // --- headers --------------------------------------------------------
+  // --- connectors -----------------------------------------------------
 
-  addHeader(label) {
-    const id = `header-${(this.board?.headers?.length ?? 0) + 1}`;
+  /**
+   * Adds a connector with `count` empty positions (R1). Placing it
+   * places every position, so the author sets the count and the pitch
+   * once rather than dragging pads one at a time.
+   */
+  addConnector({ label, kind = "port", count = 4 } = {}) {
+    const id = `connector-${(this.board?.connectors?.length ?? 0) + 1}`;
     this.edit((board) => {
-      board.headers.push({
+      board.connectors.push(
+        emptyConnector({
+          id,
+          label: label || null,
+          kind,
+          view: this.viewId,
+          x: 6,
+          y: 6,
+          count,
+        }),
+      );
+    });
+    this.selectedConnectorId = id;
+    return id;
+  }
+
+  setConnectorField(id, field, value) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      if (field === "kind") {
+        connector.kind = value;
+        // A kind carries a conventional pitch. Following it on a
+        // change is what the author wants nine times in ten, and the
+        // pitch box is right there for the tenth.
+        connector.pitch = DEFAULT_PITCH[value] ?? connector.pitch;
+      } else if (["x", "y", "rotation", "pitch"].includes(field)) {
+        connector[field] = Number(value);
+      } else {
+        connector[field] = value;
+      }
+    });
+    if (field === "id") this.selectedConnectorId = value;
+  }
+
+  moveConnector(id, x, y) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      connector.x = this.snapped(x);
+      connector.y = this.snapped(y);
+    });
+  }
+
+  /** A connector drag is one edit, however many pointer moves it takes. */
+  beginConnectorDrag() {
+    if (this.board) this.#pushUndo();
+  }
+
+  dragConnector(id, x, y) {
+    const connector = this.board?.connectors.find((entry) => entry.id === id);
+    if (!connector) return;
+    connector.x = this.snapped(x);
+    connector.y = this.snapped(y);
+    this.dirty = true;
+    this.message = null;
+  }
+
+  removeConnector(id) {
+    this.edit((board) => {
+      const gone = board.connectors.find((entry) => entry.id === id);
+      const pins = new Set(
+        (gone?.pins ?? []).map((pin) => pin.pin).filter(Boolean),
+      );
+      board.connectors = board.connectors.filter((entry) => entry.id !== id);
+      // A port pointing at a pin that no longer exists anywhere would
+      // be a dangling reference, so it is cleared with the connector.
+      for (const port of board.ports) {
+        if (pins.has(port.tx)) port.tx = null;
+        if (pins.has(port.rx)) port.rx = null;
+      }
+    });
+    if (this.selectedConnectorId === id) this.selectedConnectorId = null;
+  }
+
+  /** Adds `count` empty positions to the end of a connector. */
+  addConnectorPins(id, count = 1) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      for (let i = 0; i < count; i += 1) {
+        connector.pins.push(
+          normaliseConnectorPin({ position: connector.pins.length + 1 }),
+        );
+      }
+    });
+  }
+
+  /**
+   * Sets what one position carries. `field` is `pin`, `net`,
+   * `silkscreen`, `group`, `side` or `reserved`; setting a pin clears
+   * any net and the other way round, because a position carries one
+   * thing (R2).
+   */
+  setConnectorPin(id, position, field, value) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      const pin = connector?.pins.find((entry) => entry.position === position);
+      if (!pin) return;
+      if (field === "pin") {
+        pin.pin = value ? normalisePin(value) : null;
+        if (pin.pin) pin.net = null;
+      } else if (field === "net") {
+        pin.net = value ? String(value).toUpperCase() : null;
+        if (pin.net) pin.pin = null;
+      } else {
+        pin[field] = value;
+      }
+    });
+  }
+
+  removeConnectorPin(id, position) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      connector.pins = connector.pins
+        .filter((pin) => pin.position !== position)
+        .map((pin, index) => ({ ...pin, position: index + 1 }));
+    });
+  }
+
+  // --- receivers ------------------------------------------------------
+
+  /** Declares a receiver soldered to the board (R6). */
+  addReceiver() {
+    const id = `receiver-${(this.board?.receivers?.length ?? 0) + 1}`;
+    this.edit((board) => {
+      board.receivers.push({
         id,
-        label: label || id,
+        label: null,
+        protocol: null,
+        portIdentifier: null,
         view: this.viewId,
-        x: null,
-        y: null,
-        width: null,
-        height: null,
+        x: 10,
+        y: 10,
+        width: 12,
+        height: 6,
+        antenna: null,
+        notes: null,
       });
     });
     return id;
   }
 
-  setHeaderField(id, field, value) {
+  setReceiverField(id, field, value) {
     this.edit((board) => {
-      const header = board.headers.find((entry) => entry.id === id);
-      if (!header) return;
-      const previous = header.id;
-      header[field] = value;
-      if (field === "id") {
-        for (const pad of board.pads) {
-          if (pad.header === previous) pad.header = value;
-        }
+      const receiver = board.receivers.find((entry) => entry.id === id);
+      if (!receiver) return;
+      if (["x", "y", "width", "height"].includes(field)) {
+        receiver[field] = Number(value);
+      } else if (field === "portIdentifier") {
+        receiver.portIdentifier =
+          value === "" || value === null ? null : Number(value);
+      } else {
+        receiver[field] = value || null;
       }
     });
   }
 
-  removeHeader(id) {
+  removeReceiver(id) {
     this.edit((board) => {
-      board.headers = board.headers.filter((header) => header.id !== id);
-      for (const pad of board.pads) {
-        if (pad.header === id) pad.header = null;
-      }
+      board.receivers = board.receivers.filter((entry) => entry.id !== id);
     });
+  }
+
+  // --- the USB socket -------------------------------------------------
+
+  /** Places the USB socket, or removes it when `place` is false (R5). */
+  setUsb(place) {
+    this.edit((board) => {
+      const view = board.views[this.viewId];
+      if (!view) return;
+      view.usb = place
+        ? { x: view.width / 2 - 4.5, y: -1.8, width: 9, height: 3.6, rotation: 0 }
+        : null;
+    });
+  }
+
+  setUsbField(field, value) {
+    this.edit((board) => {
+      const view = board.views[this.viewId];
+      if (!view?.usb) return;
+      view.usb[field] = Number(value);
+    });
+  }
+
+  dragUsb(x, y) {
+    const view = this.board?.views?.[this.viewId];
+    if (!view?.usb) return;
+    view.usb.x = this.snapped(x);
+    view.usb.y = this.snapped(y);
+    this.dirty = true;
+    this.message = null;
   }
 
   // --- ports ----------------------------------------------------------
@@ -504,24 +686,60 @@ class EditorState {
     }
 
     const at = this.boards.findIndex((board) => board.id === id);
-    const previous = at >= 0 ? serialiseProfile($state.snapshot(this.boards[at])) : null;
-    const authored = new Map(
-      (previous?.pads ?? []).map((pad) => [
-        pad.pin,
-        {
-          x: pad.x,
-          y: pad.y,
-          view: pad.view,
-          side: pad.side,
-          header: pad.header ?? null,
-          labelSide: pad.labelSide ?? "auto",
-          reserved: pad.reserved ?? false,
-          silkscreen: pad.silkscreen,
-        },
-      ]),
+    const previous =
+      at >= 0 ? serialiseProfile($state.snapshot(this.boards[at])) : null;
+    const fresh = serialiseProfile(seeded);
+
+    // The catalogue owns which pins exist. Everything else -- which
+    // connector a pin sits on, in which position, under what name,
+    // where that connector is, what the ground and power positions
+    // are -- is the author's, and a refresh must not touch it (R7).
+    const catalogue = new Set(
+      Object.values(hardwareMap)
+        .map((entry) => normalisePin(entry.pin))
+        .filter(Boolean),
     );
 
-    const fresh = serialiseProfile(seeded);
+    let connectors = fresh.connectors ?? [];
+    let removed = 0;
+    let added = 0;
+
+    if (previous) {
+      // Keep the author's connectors, dropping only positions whose
+      // pin the catalogue no longer has. An emptied position stays: it
+      // is a physical hole in the plug either way.
+      connectors = (previous.connectors ?? []).map((connector) => ({
+        ...connector,
+        pins: connector.pins.map((pin) => {
+          if (!pin.pin || catalogue.has(pin.pin)) return pin;
+          removed += 1;
+          const { pin: _gone, ...rest } = pin;
+          return rest;
+        }),
+      }));
+
+      // Pins the catalogue has that sit on none of them arrive in the
+      // freshly synthesised connectors, for the author to place.
+      const placed = new Set(
+        connectors.flatMap((connector) =>
+          connector.pins.map((pin) => pin.pin).filter(Boolean),
+        ),
+      );
+      for (const connector of fresh.connectors ?? []) {
+        const pins = connector.pins.filter(
+          (pin) => pin.pin && !placed.has(pin.pin),
+        );
+        if (!pins.length) continue;
+        added += pins.length;
+        connectors.push({
+          ...connector,
+          id: `${connector.id}-new`,
+          label: `${connector.label ?? connector.id} (new)`,
+          pins: pins.map((pin, index) => ({ ...pin, position: index + 1 })),
+        });
+      }
+    }
+
     const next = normaliseProfile({
       ...fresh,
       id,
@@ -535,11 +753,12 @@ class EditorState {
       coordinatesSchematic: previous
         ? Boolean(previous.coordinatesSchematic)
         : true,
-      // Views, connectors and backgrounds are the author's work, not
-      // the catalogue's, so a refresh leaves them as they were.
+      // Views, receivers, backgrounds and loose pads are the author's
+      // work, not the catalogue's, so a refresh leaves them alone.
       views: previous?.views ?? fresh.views,
-      headers: previous?.headers ?? fresh.headers,
-      pads: fresh.pads.map((pad) => ({ ...pad, ...(authored.get(pad.pin) ?? {}) })),
+      receivers: previous?.receivers ?? [],
+      pads: previous?.pads ?? [],
+      connectors,
     });
 
     this.#pushUndo(true);
@@ -552,11 +771,12 @@ class EditorState {
     }
     this.viewId = "top";
     this.selectedPin = null;
+    this.selectedConnectorId = null;
     this.dirty = true;
     this.error = null;
     this.message = previous
-      ? `Refreshed ${id} from the catalogue, keeping your pad positions.`
-      : `Created ${id} with ${next.pads.length} pads. Nothing is written until you save.`;
+      ? `Refreshed ${id}: ${added} pin(s) added, ${removed} removed, everything you placed kept.`
+      : `Created ${id} with ${next.allPads.length} pins. Nothing is written until you save.`;
     return id;
   }
 }

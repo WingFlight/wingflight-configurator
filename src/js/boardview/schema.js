@@ -1,18 +1,34 @@
 /**
  * File: src/js/boardview/schema.js
- * The board-view schema (version 2) and its normaliser.
+ * The board-view schema (version 3) and its normaliser.
  *
- * Version 1 was a single top-down `outline` plus a flat `pads` array,
- * keyed to a firmware target name. Version 2 identifies boards the
- * unified way -- manufacturer id plus board name -- and adds:
+ * A board profile says where a flight controller's connectors are and
+ * what is on each of their positions, so the configurator can draw the
+ * board and tell the user which way round to plug a cable in. The
+ * brief it answers to is tools/board-editor/REQUIREMENTS.md.
  *
+ * Version 3 is the one that describes hardware rather than a picture:
+ *
+ *   - `connectors`: physical plugs that own their positions. A
+ *     connector has a label, a pitch and an ordered list of pins, and
+ *     each position carries a board pin, a power net such as GND or
+ *     5V, or nothing at all. Positions are placed by the connector, so
+ *     a six-way header lands on its pitch rather than being dragged
+ *     pad by pad (R1, R2, R4);
+ *   - `receivers`: a receiver soldered to the board, which occupies a
+ *     serial port that the user can never wire (R6);
+ *   - `views[].usb`: placed freely rather than pinned to an edge (R5).
+ *
+ * Carried over from version 2:
+ *
+ *   - boards identified the unified way, by manufacturer id and board
+ *     name, never by a firmware target name;
  *   - `views`: up to three drawings of the same board (top, left,
  *     right), each with its own extent and an optional background SVG
  *     exported from CAD;
- *   - `headers`: the physical connectors pads are grouped into, so a
- *     label can name the connector rather than every pad on it;
+ *   - `pads`: loose solder pads that belong to no connector;
  *   - `ports`: the serial ports, each naming its TX pin and its RX
- *     pin. The two need not sit on the same header or even the same
+ *     pin. The two need not sit on the same connector or even the same
  *     view -- a board that breaks a UART out as TX on one row and RX
  *     on another is described by giving the two pins, and the drawing
  *     works out that the port is split.
@@ -21,21 +37,32 @@
  * and the board editor (tools/board-editor) both import this module,
  * so a profile the editor accepts is one the configurator draws.
  *
- * `normaliseProfile` still upgrades a version 1 profile's geometry in
- * memory, so an old hand-made file draws; its `match` has to be
- * restated in unified terms to be found at all.
+ * `normaliseProfile` upgrades older profiles in memory: a version 1
+ * `outline` becomes a top view, and version 2 `headers` become
+ * connectors that own the pads which named them.
  */
+
+import {
+  connectorPads,
+  normaliseConnector,
+  serialiseConnector,
+} from "./connectors.js";
 
 /** The views a board can be drawn from, in tab order. */
 export const VIEW_IDS = ["top", "left", "right"];
 
-/** Pad colour groups. `internal` is drawn but never offered for reassignment. */
+/**
+ * Pad colour groups. `internal` is drawn but never offered for
+ * reassignment; `ground` and `power` are what a connector position
+ * carrying a rail rather than a signal gets.
+ */
 export const PAD_GROUPS = [
   "outputs",
   "uart",
   "i2c",
   "adc",
   "power",
+  "ground",
   "led",
   "other",
   "internal",
@@ -83,7 +110,53 @@ export function emptyView(id) {
     background: null,
     backgroundOpacity: 1,
     mountHoles: [],
-    usb: { edge: id === "top" ? "top" : "left", offset: 0.5 },
+    usb: null,
+  };
+}
+
+/** Default USB socket footprint, in millimetres. */
+const USB_SIZE = { width: 9, height: 3.6 };
+
+/**
+ * The USB socket, as a rectangle placed anywhere on the view (R5).
+ *
+ * Version 2 pinned it to an edge with a fraction along that edge;
+ * those are converted here so an older profile keeps drawing.
+ *
+ * @param {?Object} raw
+ * @param {{width: number, height: number}} view
+ * @returns {?Object}
+ */
+function normaliseUsb(raw, view) {
+  if (raw === null || raw === undefined) return null;
+
+  if (raw.edge !== undefined && raw.x === undefined) {
+    const along = num(raw.offset, 0.5);
+    const vertical = raw.edge === "left" || raw.edge === "right";
+    const size = vertical
+      ? { width: USB_SIZE.height, height: USB_SIZE.width }
+      : USB_SIZE;
+    const x =
+      raw.edge === "left"
+        ? -size.width / 2
+        : raw.edge === "right"
+          ? view.width - size.width / 2
+          : view.width * along - size.width / 2;
+    const y =
+      raw.edge === "top"
+        ? -size.height / 2
+        : raw.edge === "bottom"
+          ? view.height - size.height / 2
+          : view.height * along - size.height / 2;
+    return { x, y, ...size, rotation: 0 };
+  }
+
+  return {
+    x: num(raw.x),
+    y: num(raw.y),
+    width: num(raw.width, USB_SIZE.width),
+    height: num(raw.height, USB_SIZE.height),
+    rotation: num(raw.rotation, 0),
   };
 }
 
@@ -102,33 +175,106 @@ function normaliseView(id, raw, fallback) {
     mountHoles: (source.mountHoles ?? [])
       .filter((hole) => Array.isArray(hole) && hole.length >= 2)
       .map((hole) => [num(hole[0]), num(hole[1])]),
-    // Where the board's USB connector sits in this view, so the drawing
-    // can orient itself. Explicit null means "do not draw it".
-    usb:
-      source.usb === null
-        ? null
-        : {
-            edge: str(source.usb?.edge) || blank.usb.edge,
-            offset:
-              source.usb?.offset === undefined ? 0.5 : num(source.usb.offset, 0.5),
-          },
+    usb: normaliseUsb(source.usb, {
+      width: num(source.width, blank.width),
+      height: num(source.height, blank.height),
+    }),
   };
 }
 
-function normaliseHeader(raw, index) {
+/**
+ * A receiver soldered to the board (R6).
+ *
+ * It matters for two reasons: it is a thing the user can see on the
+ * board and should recognise in the drawing, and it occupies a serial
+ * port that they can never wire, which the port list would otherwise
+ * report as simply "not broken out".
+ */
+function normaliseReceiver(raw, index) {
   return {
-    id: str(raw?.id) || `header-${index + 1}`,
+    id: str(raw?.id) || `receiver-${index + 1}`,
     label: str(raw?.label) || null,
+    // The protocol it speaks, e.g. "CRSF", "FBUS", "SBUS". Free text:
+    // it is shown to the user, never matched on.
+    protocol: str(raw?.protocol) || null,
+    // Which serial identifier it sits on, 0 for UART1. This is what
+    // lets the port list say the port is in use by hardware.
+    portIdentifier:
+      raw?.portIdentifier === undefined || raw?.portIdentifier === null
+        ? null
+        : num(raw.portIdentifier),
     view: VIEW_IDS.includes(str(raw?.view)) ? str(raw.view) : "top",
-    // The connector's footprint in millimetres, for the outline drawn
-    // behind its pads. Optional: a header with no extent is derived
-    // from the pads that name it.
-    x: raw?.x === undefined || raw?.x === null ? null : num(raw.x),
-    y: raw?.y === undefined || raw?.y === null ? null : num(raw.y),
-    width:
-      raw?.width === undefined || raw?.width === null ? null : num(raw.width),
-    height:
-      raw?.height === undefined || raw?.height === null ? null : num(raw.height),
+    x: num(raw?.x),
+    y: num(raw?.y),
+    width: num(raw?.width, 10),
+    height: num(raw?.height, 5),
+    // How its aerial leaves the board, for the drawing: "ufl", "wire"
+    // or null for a receiver with an on-board antenna.
+    antenna: str(raw?.antenna) || null,
+    notes: str(raw?.notes) || null,
+  };
+}
+
+/**
+ * Turns version 2 `headers` into connectors.
+ *
+ * A version 2 header was a label plus an optional box, with pads
+ * pointing at it by id and placing themselves. The pads are kept
+ * exactly where they are; they simply become the connector's
+ * positions, in the order the file listed them. Pitch is taken from
+ * the gap between the first two, so the connector's own geometry
+ * agrees with where its pads already were.
+ *
+ * @param {Object[]} headers raw version 2 headers
+ * @param {Object[]} pads normalised pads
+ * @returns {{connectors: Object[], remaining: Object[]}}
+ */
+function connectorsFromHeaders(headers, pads) {
+  const connectors = [];
+  const claimed = new Set();
+
+  (headers ?? []).forEach((header, index) => {
+    const id = str(header?.id) || `header-${index + 1}`;
+    const own = pads.filter((pad) => pad.header === id);
+    if (!own.length) return;
+
+    const ordered = [...own].sort((a, b) => a.order - b.order);
+    for (const pad of ordered) claimed.add(pad);
+
+    const first = ordered[0];
+    const second = ordered[1] ?? null;
+    const dx = second ? second.x - first.x : 0;
+    const dy = second ? second.y - first.y : 0;
+    const pitch = second ? Math.hypot(dx, dy) : 2.54;
+
+    connectors.push(
+      normaliseConnector(
+        {
+          id,
+          label: str(header?.label) || null,
+          kind: "solder",
+          view: first.view,
+          x: first.x,
+          y: first.y,
+          rotation: second ? (Math.atan2(dy, dx) * 180) / Math.PI : 0,
+          pitch: pitch || 2.54,
+          labelSide: first.labelSide,
+          pins: ordered.map((pad, position) => ({
+            position: position + 1,
+            pin: pad.pin,
+            silkscreen: pad.silkscreen,
+            side: pad.side,
+            reserved: pad.reserved,
+          })),
+        },
+        index,
+      ),
+    );
+  });
+
+  return {
+    connectors,
+    remaining: pads.filter((pad) => !claimed.has(pad)),
   };
 }
 
@@ -200,14 +346,26 @@ export function normaliseProfile(raw) {
   // A profile with pads but no view at all still has to draw something.
   if (!Object.keys(views).length) views.top = emptyView("top");
 
-  const pads = (raw.pads ?? [])
+  const loosePads = (raw.pads ?? [])
     .map(normalisePad)
     // Drop pads pointing at a view the profile does not define, rather
     // than drawing them at the origin of a view they do not belong to.
     .filter((pad) => views[pad.view]);
 
+  // Version 2 grouped pads under `headers`; version 3 has connectors
+  // that own their positions. A file carrying the old shape is
+  // migrated, and one carrying both keeps its own connectors.
+  const declared = (raw.connectors ?? []).map(normaliseConnector);
+  const migrated = raw.connectors
+    ? { connectors: [], remaining: loosePads }
+    : connectorsFromHeaders(raw.headers, loosePads);
+  const connectors = [...declared, ...migrated.connectors].filter(
+    (connector) => views[connector.view],
+  );
+  const pads = migrated.remaining;
+
   return {
-    schema: 2,
+    schema: 3,
     id: str(raw.id),
     display: str(raw.display) || str(raw.id),
     mcu: str(raw.mcu) || null,
@@ -229,8 +387,13 @@ export function normaliseProfile(raw) {
     synthesised: Boolean(raw.synthesised),
     credit: str(raw.credit) || null,
     views,
-    headers: (raw.headers ?? []).map(normaliseHeader),
+    connectors,
+    // Loose solder pads that belong to no connector.
     pads,
+    // Every pad the drawing shows: a connector's positions and the
+    // loose pads together, so callers never have to join the two.
+    allPads: [...connectorPads(connectors), ...pads],
+    receivers: (raw.receivers ?? []).map(normaliseReceiver),
     ports: (raw.ports ?? []).map(normalisePort),
     // Kept so callers that read `outline` (BoardCanvas) keep working.
     outline: {
@@ -250,7 +413,7 @@ export function normaliseProfile(raw) {
  */
 export function serialiseProfile(profile) {
   const out = {
-    schema: 2,
+    schema: 3,
     id: profile.id,
     match: {
       manufacturerId: profile.match?.manufacturerId ?? [],
@@ -276,15 +439,26 @@ export function serialiseProfile(profile) {
     out.views[id] = written;
   }
 
-  if (profile.headers?.length) {
-    out.headers = profile.headers.map((header) => {
-      const written = { id: header.id, view: header.view };
-      if (header.label) written.label = header.label;
-      for (const key of ["x", "y", "width", "height"]) {
-        if (header[key] !== null && header[key] !== undefined) {
-          written[key] = round(header[key]);
-        }
-      }
+  if (profile.connectors?.length) {
+    out.connectors = profile.connectors.map(serialiseConnector);
+  }
+
+  if (profile.receivers?.length) {
+    out.receivers = profile.receivers.map((receiver) => {
+      const written = {
+        id: receiver.id,
+        view: receiver.view,
+        x: round(receiver.x),
+        y: round(receiver.y),
+        width: round(receiver.width),
+        height: round(receiver.height),
+      };
+      if (receiver.label) written.label = receiver.label;
+      if (receiver.protocol) written.protocol = receiver.protocol;
+      if (receiver.portIdentifier !== null)
+        written.portIdentifier = receiver.portIdentifier;
+      if (receiver.antenna) written.antenna = receiver.antenna;
+      if (receiver.notes) written.notes = receiver.notes;
       return written;
     });
   }
@@ -299,7 +473,6 @@ export function serialiseProfile(profile) {
       side: pad.side,
       group: pad.group,
     };
-    if (pad.header) written.header = pad.header;
     if (pad.labelSide !== "auto") written.labelSide = pad.labelSide;
     if (pad.reserved) written.reserved = true;
     return written;
@@ -333,24 +506,38 @@ export function validateProfile(profile) {
   if (!profile) return [{ level: "error", message: "No profile." }];
   if (!profile.id) problems.push({ level: "error", message: "Missing id." });
 
+  // Every drawn position, whether it came from a connector or is a
+  // loose solder pad. Power and ground positions are checked
+  // differently: a board has many grounds, and `GND` is not a pin.
   const seen = new Map();
-  for (const pad of profile.pads) {
-    if (!/^[A-K]\d{2}$/.test(pad.pin)) {
-      problems.push({
-        level: "error",
-        pin: pad.pin,
-        message: `Pin "${pad.pin}" is not a port/number pin such as B07.`,
-      });
-    }
-    if (seen.has(pad.pin)) {
-      problems.push({
-        level: "error",
-        pin: pad.pin,
-        message: `Pin ${pad.pin} is placed twice (${seen.get(pad.pin)} and ${pad.view}).`,
-      });
+  for (const pad of profile.allPads ?? profile.pads) {
+    const where = pad.connectorLabel ?? pad.connector ?? pad.view;
+
+    if (pad.role === "net") {
+      if (!pad.net) {
+        problems.push({
+          level: "error",
+          message: `A position on ${where} carries neither a pin nor a net.`,
+        });
+      }
     } else {
-      seen.set(pad.pin, pad.view);
+      if (!/^[A-K]\d{2}$/.test(pad.pin ?? "")) {
+        problems.push({
+          level: "error",
+          pin: pad.pin,
+          message: `Pin "${pad.pin}" on ${where} is not a port/number pin such as B07.`,
+        });
+      } else if (seen.has(pad.pin)) {
+        problems.push({
+          level: "error",
+          pin: pad.pin,
+          message: `Pin ${pad.pin} is placed twice (${seen.get(pad.pin)} and ${where}).`,
+        });
+      } else {
+        seen.set(pad.pin, where);
+      }
     }
+
     const view = profile.views[pad.view];
     if (
       view &&
@@ -358,18 +545,32 @@ export function validateProfile(profile) {
     ) {
       problems.push({
         level: "warning",
-        pin: pad.pin,
-        message: `Pad ${pad.silkscreen ?? pad.pin} sits outside the ${pad.view} view.`,
-      });
-    }
-    if (pad.header && !profile.headers.some((header) => header.id === pad.header)) {
-      problems.push({
-        level: "warning",
-        pin: pad.pin,
-        message: `Pad ${pad.silkscreen ?? pad.pin} names header "${pad.header}", which does not exist.`,
+        pin: pad.pin ?? undefined,
+        message: `${pad.silkscreen ?? pad.pin ?? pad.net} on ${where} sits outside the ${pad.view} view.`,
       });
     }
   }
+
+  for (const connector of profile.connectors ?? []) {
+    if (!connector.pins.length) {
+      problems.push({
+        level: "warning",
+        message: `${connector.label ?? connector.id} has no positions.`,
+      });
+    }
+    if (connector.pitch <= 0) {
+      problems.push({
+        level: "error",
+        message: `${connector.label ?? connector.id} has a pitch of ${connector.pitch} mm.`,
+      });
+    }
+  }
+
+  const onReceiver = new Set(
+    (profile.receivers ?? [])
+      .map((receiver) => receiver.portIdentifier)
+      .filter((identifier) => identifier !== null),
+  );
 
   const identifiers = new Set();
   for (const port of profile.ports) {
@@ -379,14 +580,16 @@ export function validateProfile(profile) {
         problems.push({
           level: "warning",
           pin,
-          message: `${port.label ?? port.id} ${line.toUpperCase()} is pin ${pin}, which has no pad.`,
+          message: `${port.label ?? port.id} ${line.toUpperCase()} is pin ${pin}, which is on no connector or pad.`,
         });
       }
     }
-    if (!port.tx && !port.rx) {
+    // A port with no pins is fine when a receiver is soldered to it:
+    // there is nothing to break out. Otherwise it says nothing.
+    if (!port.tx && !port.rx && !onReceiver.has(port.identifier)) {
       problems.push({
         level: "error",
-        message: `${port.label ?? port.id} names neither a TX nor an RX pin.`,
+        message: `${port.label ?? port.id} names neither a TX nor an RX pin, and has no receiver on it.`,
       });
     }
     if (port.identifier !== null) {

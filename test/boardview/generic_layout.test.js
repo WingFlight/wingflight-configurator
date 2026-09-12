@@ -67,7 +67,7 @@ describe("synthesiseBoardView", () => {
   });
 
   it("places every pin it was given, once", () => {
-    const placed = profile.pads.map((pad) => pad.pin);
+    const placed = profile.allPads.map((pad) => pad.pin);
     expect(new Set(placed).size).toBe(placed.length);
     for (const entry of Object.values(hardwareMap)) {
       expect(placed).toContain(entry.pin);
@@ -75,7 +75,7 @@ describe("synthesiseBoardView", () => {
   });
 
   it("keeps every pad inside the board it sized", () => {
-    for (const pad of profile.pads) {
+    for (const pad of profile.allPads) {
       expect(pad.x).toBeGreaterThanOrEqual(0);
       expect(pad.y).toBeGreaterThanOrEqual(0);
       expect(pad.x).toBeLessThanOrEqual(profile.views.top.width);
@@ -83,11 +83,25 @@ describe("synthesiseBoardView", () => {
     }
   });
 
-  it("gives each serial port a header of its own", () => {
-    const ids = profile.headers.map((header) => header.id);
+  it("gives each serial port a connector of its own", () => {
+    const ids = profile.connectors.map((connector) => connector.id);
     expect(ids).toContain("port-0");
     expect(ids).toContain("port-1");
     expect(ids).toContain("port-2");
+  });
+
+  it("puts a port's two lines on one connector, at its own pitch", () => {
+    const port = profile.connectors.find((c) => c.id === "port-0");
+    expect(port.pins.map((pin) => pin.silkscreen)).toEqual(["TX1", "RX1"]);
+    expect(port.pitch).toBeGreaterThan(0);
+    // Straight down the side of the board.
+    expect(port.rotation).toBe(90);
+  });
+
+  it("puts the outputs on one pinheader", () => {
+    const header = profile.connectors.find((c) => c.id === "outputs");
+    expect(header.kind).toBe("header");
+    expect(header.pins.length).toBe(5);
   });
 
   it("never claims a port is split, because it drew both halves together", () => {
@@ -97,8 +111,11 @@ describe("synthesiseBoardView", () => {
   });
 
   it("alternates ports between the two sides so neither edge runs off", () => {
-    const uartPads = profile.pads.filter((pad) => pad.group === "uart");
-    const sides = new Set(uartPads.map((pad) => pad.labelSide));
+    const sides = new Set(
+      profile.connectors
+        .filter((connector) => connector.id.startsWith("port-"))
+        .map((connector) => connector.labelSide),
+    );
     expect(sides.has("left")).toBe(true);
     expect(sides.has("right")).toBe(true);
   });
@@ -109,7 +126,7 @@ describe("synthesiseBoardView", () => {
       serialPorts: [{ identifier: 0, functionMask: 0 }],
     });
     expect(sparse.ports.map((port) => port.identifier)).toEqual([0]);
-    expect(sparse.pads.map((pad) => pad.pin)).toEqual(["C06"]);
+    expect(sparse.allPads.map((pad) => pad.pin)).toEqual(["C06"]);
   });
 
   it("returns nothing when the board reported nothing", () => {

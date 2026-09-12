@@ -164,41 +164,52 @@ export function synthesiseBoardView({
   const nameFor = (pin, fallback) =>
     (ownersByPin[pin] ?? []).join("/") || fallback;
 
-  const pads = [];
-  const headers = [];
+  const connectors = [];
   const ports = [];
   const placed = new Set();
+  let placedCount = 0;
 
-  const place = (pin, rest) => {
-    const canonical = normalisePin(pin);
-    if (!canonical || placed.has(canonical)) return false;
-    placed.add(canonical);
-    pads.push({ pin: canonical, view: "top", side: "top", ...rest });
-    return true;
+  // A run of pins becomes a connector: the schematic has no idea what
+  // the real plugs are, but a row of pads at one pitch is exactly what
+  // a connector is, and emitting them this way means a seeded board is
+  // already in the shape an author will edit (R1).
+  const addConnector = ({ id, label, kind, x, y, rotation, pitch, labelSide, entries }) => {
+    const pins = [];
+    for (const entry of entries) {
+      const canonical = normalisePin(entry.pin);
+      if (!canonical || placed.has(canonical)) continue;
+      placed.add(canonical);
+      placedCount += 1;
+      pins.push({
+        position: pins.length + 1,
+        pin: canonical,
+        silkscreen: nameFor(canonical, entry.silkscreen),
+        group: entry.group,
+      });
+    }
+    if (!pins.length) return 0;
+    connectors.push({ id, label, kind, view: "top", x, y, rotation, pitch, labelSide, pins });
+    return pins.length;
   };
 
-  // Outputs along the bottom edge, in CLI order.
+  // Outputs along the bottom edge, in CLI order: one pinheader, which
+  // is what these boards actually have.
   if (outputs.length) {
     const span = (outputs.length - 1) * OUTPUT_PITCH;
-    const startX = (width - span) / 2;
-    headers.push({
+    addConnector({
       id: "outputs",
       label: "Servo / motor outputs",
-      view: "top",
-      x: startX - 2.5,
-      y: height - EDGE_INSET - 2,
-      width: span + 5,
-      height: 4,
-    });
-    outputs.forEach((key, index) => {
-      place(hardwareMap[key].pin, {
-        silkscreen: nameFor(normalisePin(hardwareMap[key].pin), key),
-        x: startX + index * OUTPUT_PITCH,
-        y: height - EDGE_INSET,
+      kind: "header",
+      x: (width - span) / 2,
+      y: height - EDGE_INSET,
+      rotation: 0,
+      pitch: OUTPUT_PITCH,
+      labelSide: "below",
+      entries: outputs.map((key) => ({
+        pin: hardwareMap[key].pin,
+        silkscreen: key,
         group: "outputs",
-        header: "outputs",
-        labelSide: "below",
-      });
+      })),
     });
   }
 
@@ -209,78 +220,66 @@ export function synthesiseBoardView({
       (width - 2 * EDGE_INSET) / Math.max(1, topRow.length - 1),
     );
     const span = (topRow.length - 1) * pitch;
-    const startX = (width - span) / 2;
-    headers.push({
+    addConnector({
       id: "top-row",
       label: "Power and sensors",
-      view: "top",
-      x: startX - 2.5,
-      y: TOP_ROW_Y - 2,
-      width: span + 5,
-      height: 4,
-    });
-    topRow.forEach((key, index) => {
-      place(hardwareMap[key].pin, {
-        silkscreen: nameFor(normalisePin(hardwareMap[key].pin), key),
-        x: startX + index * pitch,
-        y: TOP_ROW_Y,
+      kind: "solder",
+      x: (width - span) / 2,
+      y: TOP_ROW_Y,
+      rotation: 0,
+      pitch,
+      labelSide: "above",
+      entries: topRow.map((key) => ({
+        pin: hardwareMap[key].pin,
+        silkscreen: key,
         group: groupForOptionKey(key),
-        header: "top-row",
-        labelSide: "above",
-      });
+      })),
     });
   }
 
-  // Serial ports down the sides, TX above RX, one header per port so
-  // the drawing can label the pair once.
+  // Serial ports down the sides, TX above RX, one connector per port
+  // so the drawing can label the pair once.
   for (const [side, list] of Object.entries(sides)) {
     const x = side === "left" ? EDGE_INSET : width - EDGE_INSET;
     let y = TOP_ROW_Y + 5;
     for (const identifier of list) {
       const name = portName(identifier);
-      const headerId = `port-${identifier}`;
+      const connectorId = `port-${identifier}`;
       const keys = hardwareKeysFor(identifier);
       const pinFor = (key) =>
         key && hardwareMap[key]?.pin ? normalisePin(hardwareMap[key].pin) : null;
       const txPin = pinFor(keys.tx);
       const rxPin = pinFor(keys.rx);
 
-      const lines = [
-        ["tx", txPin, `T${identifier + 1}`],
-        ["rx", rxPin, `R${identifier + 1}`],
-      ].filter(([, pin]) => pin);
+      const entries = [
+        { pin: txPin, silkscreen: `T${identifier + 1}`, group: "uart" },
+        { pin: rxPin, silkscreen: `R${identifier + 1}`, group: "uart" },
+      ].filter((entry) => entry.pin);
 
-      if (lines.length) {
-        headers.push({
-          id: headerId,
+      if (entries.length) {
+        const added = addConnector({
+          id: connectorId,
           label: name,
-          view: "top",
-          x: x - 2.5,
-          y: y - 2,
-          width: 5,
-          height: (lines.length - 1) * LINE_PITCH + 4,
+          kind: "port",
+          x,
+          y,
+          // Straight down the side of the board.
+          rotation: 90,
+          pitch: LINE_PITCH,
+          labelSide: side,
+          entries,
         });
-        lines.forEach(([, pin, silkscreen], index) => {
-          place(pin, {
-            silkscreen: nameFor(pin, silkscreen),
-            x,
-            y: y + index * LINE_PITCH,
-            group: "uart",
-            header: headerId,
-            labelSide: side,
-          });
-        });
-        y += (lines.length - 1) * LINE_PITCH + PORT_GAP;
+        if (added) y += (added - 1) * LINE_PITCH + PORT_GAP;
       }
 
       ports.push({
-        id: headerId,
+        id: connectorId,
         identifier,
         label: name,
         tx: txPin,
         rx: rxPin,
-        // A synthesised board draws both lines of a port on one header
-        // by construction, so it must not claim to know about splits.
+        // A synthesised board draws both lines of a port on one
+        // connector by construction, so it must not claim a split.
         split: false,
       });
     }
@@ -289,8 +288,8 @@ export function synthesiseBoardView({
   // Ports the firmware listed but whose pins nobody knows are worth a
   // row in the port list, but they are not worth a drawing: an empty
   // rectangle says less than saying there is no drawing. So a board
-  // that placed no pad at all gets none.
-  if (!pads.length) return null;
+  // that placed no pin at all gets none.
+  if (!placedCount) return null;
 
   return normaliseProfile({
     id: boardName ? `GENERIC-${boardName}` : "GENERIC",
@@ -300,10 +299,16 @@ export function synthesiseBoardView({
     coordinatesSchematic: true,
     synthesised: true,
     views: {
-      top: { width, height, mountHoles: [], usb: { edge: "top", offset: 0.5 } },
+      top: {
+        width,
+        height,
+        mountHoles: [],
+        // Centred on the top edge: a guess, and the first thing an
+        // author moves once they have the board's outline (R5).
+        usb: { edge: "top", offset: 0.5 },
+      },
     },
-    headers,
-    pads,
+    connectors,
     ports,
   });
 }

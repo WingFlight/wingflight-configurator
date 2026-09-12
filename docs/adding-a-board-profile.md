@@ -8,7 +8,12 @@ is the procedure.
 
 A board with no profile is not left blank: the configurator synthesises
 a schematic from what the board itself reports once the Wiring stage has
-read it. A profile is what turns that schematic into the real board.
+read it. A profile is what turns that schematic into the real board —
+where the plugs are, what they are called, and which position on each
+one is ground.
+
+The brief this schema answers to is
+[tools/board-editor/REQUIREMENTS.md](../tools/board-editor/REQUIREMENTS.md).
 
 ## Use the editor
 
@@ -43,35 +48,54 @@ adding one is worth the trouble only when you can measure it.
    ruler and trace it. Load it under *Background from CAD*; the view's
    extent is taken from the file when it carries a real size.
 
-3. **Drag each pad onto its pad on the drawing.** Snap to 2.54 mm to sit
-   on a header pitch; arrow keys nudge, shift moves five steps.
+3. **Drag each connector onto its plug on the drawing.** A connector
+   carries all of its positions at its own pitch, so one drag places the
+   lot. Snap to 2.54 mm to sit on a header pitch; arrow keys nudge,
+   shift moves five steps.
 
-4. **Correct the silkscreen names** to what is actually printed on the
+4. **Say what every position carries.** Seeding gives you the signals;
+   the ground and power positions are the ones only you can supply, and
+   they are what tells a user which way round the plug goes. Set the
+   pin count to the real one and fill each position in: a signal, a rail
+   such as `GND` or `5V`, or nothing.
+
+5. **Name the connectors the way the board does.** `Port A`, `Port B`,
+   `Port C`. That letter is what the user is looking for; the UART
+   number stays alongside it, never replaced by it.
+
+6. **Correct the silkscreen names** to what is actually printed on the
    board. The silkscreen is shown together with the canonical pin and
    resource name, never instead of them, so a wrong one is confusing
    rather than dangerous — but it is the name the user is looking at.
 
-5. **Group the pads into connectors.** Add a connector per plug and
-   assign its pads. This is what tells the configurator that a UART's TX
-   and RX are one plug rather than two places.
+7. **Place the USB socket** where the board actually has it, by
+   dragging it or typing its position. Remove it from a view that does
+   not show it.
 
-6. **Add the side views** if the board breaks anything out on its edges.
-   Press *+ Left* or *+ Right*, set the extent, and move those pads to
-   that view.
+8. **Declare a built-in receiver**, if the board has one, with its
+   protocol and the port it occupies. Without that, the port list
+   reports its port as "not broken out", which is wrong: the port is in
+   use by hardware that is already connected.
 
-7. **Check the ports.** Each port's TX and RX pin, and its serial
-   identifier (0 is UART1, following the target rather than the
-   silkscreen). The panel shows how each port will be drawn — *together*
-   or *split* — as soon as the pads are placed.
+9. **Add the side views** if the board breaks anything out on its edges.
+   Press *+ Left* or *+ Right*, set the extent, and move those
+   connectors to that view.
 
-8. **Clear the validation list**, then **uncheck "Coordinates are
-   schematic"** once the positions are measured rather than invented,
-   and Save.
+10. **Check the ports.** Each port's TX and RX pin, and its serial
+    identifier (0 is UART1, following the target rather than the
+    silkscreen). The panel shows how each port will be drawn —
+    *together* or *split* — as soon as the connectors are placed.
+
+11. **Clear the validation list**, then **uncheck "Coordinates are
+    schematic"** once the positions are measured rather than invented,
+    and Save.
 
 Coming back to a board later, press *Refresh from catalogue*. That
-re-reads the config and keeps everything you placed: pad positions,
-connectors, views and backgrounds all survive, and only pins the
-catalogue has added or dropped change.
+re-reads the config and keeps everything you placed: connectors and
+their positions, ground and power assignments, views, receivers and
+backgrounds all survive. A pin the catalogue has dropped is cleared from
+its position, and a pin it has added arrives in a connector marked
+*(new)* for you to move onto the right plug.
 
 ## Where the pin data comes from
 
@@ -99,7 +123,10 @@ Editing the JSON directly works too; the schema is in
 
 - `id` is the catalogue target id, `<MANUFACTURER>-<BOARD>`.
 - `match` names `manufacturerId` and `boardName`, never a target name.
-- `pin` in CLI form (`A09`, `B07`), each pin once per board.
+- `pin` in CLI form (`A09`, `B07`), each pin once per board. A `net`
+  such as `GND` may repeat as often as the board does.
+- A connector's `x`, `y` are the centre of position 1; the rest follow
+  from `pitch` and `rotation`.
 - Coordinates in millimetres from the top-left of the view.
 - `coordinatesSchematic: true` until the positions are measured.
 

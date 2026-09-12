@@ -47,37 +47,50 @@ export function textWidth(text, font = LABEL_FONT) {
 }
 
 /**
- * Spreads positions along one axis so that consecutive items keep at
- * least `sizes[i]` of room, preserving the given order and staying
- * inside [min, max] when it can.
- * @param {number[]} desired preferred centres, any order
- * @param {number[]} sizes extent of each item along the axis
+ * Spreads positions along one axis so that consecutive items keep
+ * their room, preserving the given order and staying inside
+ * [min, max] when it can.
+ *
+ * Extents are given per side of the anchor, because a label is not
+ * centred on it: a two-line label reaches barely above its baseline
+ * and a whole second line below. Treating that as symmetric is what
+ * let a tall label overlap the short one beneath it.
+ *
+ * @param {number[]} desired preferred anchors, any order
+ * @param {({before: number, after: number}|number)[]} extents how far
+ *        each item reaches either side of its anchor; a bare number is
+ *        read as symmetric, half each way
  * @param {number} min
  * @param {number} max
- * @returns {number[]} resolved centres, matching `desired` by index
+ * @returns {number[]} resolved anchors, matching `desired` by index
  */
-export function spreadAlong(desired, sizes, min, max) {
-  const order = desired.map((value, index) => index).sort((a, b) => desired[a] - desired[b]);
+export function spreadAlong(desired, extents, min, max) {
+  const reach = extents.map((extent) =>
+    typeof extent === "number"
+      ? { before: extent / 2, after: extent / 2 }
+      : extent,
+  );
+  const order = desired
+    .map((value, index) => index)
+    .sort((a, b) => desired[a] - desired[b]);
   const placed = new Array(desired.length);
 
   // Forward: never let an item start before the previous one ended.
   let cursor = min;
   for (const index of order) {
-    const half = sizes[index] / 2;
-    const centre = Math.max(desired[index], cursor + half);
-    placed[index] = centre;
-    cursor = centre + half + MIN_GAP;
+    const anchor = Math.max(desired[index], cursor + reach[index].before);
+    placed[index] = anchor;
+    cursor = anchor + reach[index].after + MIN_GAP;
   }
 
   // Backward: if the run overflowed the far end, pull it back in. The
-  // block may end up wider than the space, in which case it simply
-  // overhangs symmetrically rather than piling up at one end.
+  // block may end up longer than the space, in which case it simply
+  // overhangs rather than piling up at one end.
   let limit = max;
   for (let i = order.length - 1; i >= 0; i -= 1) {
     const index = order[i];
-    const half = sizes[index] / 2;
-    placed[index] = Math.min(placed[index], limit - half);
-    limit = placed[index] - half - MIN_GAP;
+    placed[index] = Math.min(placed[index], limit - reach[index].after);
+    limit = placed[index] - reach[index].before - MIN_GAP;
   }
 
   return placed;
@@ -102,62 +115,73 @@ export function nearestEdge(pad, view) {
 }
 
 /**
- * How much room, in millimetres, the labels need outside each edge of
- * the view. A fixed margin either clips a long label ("UART1 · Serial
- * receiver" is 19 characters) or wastes space on a board that has
- * none, so the drawing measures instead and sizes its own viewBox.
- *
- * @param {Object} args same `view`, `items`, `margin` and `clearance`
- *        as layoutLabels, so the two agree about where text goes
+ * The box a laid-out label occupies, in view millimetres.
+ * @param {Object} label from layoutLabels
+ * @param {{text: string, sub?: ?string}} item the label's own item
  * @returns {{left: number, right: number, top: number, bottom: number}}
  */
-export function measureMargins({
-  view,
-  items,
-  margin = { x: 15, y: 9 },
-  clearance = {},
-}) {
+function labelBox(label, item) {
+  const width = Math.max(
+    textWidth(item.text, LABEL_FONT),
+    textWidth(item.sub ?? "", SUB_FONT),
+  );
+  const left =
+    label.anchor === "start"
+      ? label.x
+      : label.anchor === "end"
+        ? label.x - width
+        : label.x - width / 2;
+  return {
+    left,
+    right: left + width,
+    top: label.y - LABEL_FONT * 0.8,
+    bottom: label.y + (item.sub ? SUB_OFFSET : 0) + SUB_FONT * 0.3,
+  };
+}
+
+/**
+ * How much room the labels need outside each edge of the view.
+ *
+ * Measured from the labels as actually laid out, not estimated from
+ * the items: a crowded edge pushes labels sideways past the corner by
+ * however much it takes, and guessing that distance is what let them
+ * run off the drawing.
+ *
+ * @param {Object} args
+ * @param {{width: number, height: number}} args.view
+ * @param {Object[]} args.items the same items given to layoutLabels
+ * @param {Object[]} args.labels what layoutLabels returned for them
+ * @returns {{left: number, right: number, top: number, bottom: number}}
+ */
+export function marginsForLabels({ view, items, labels }) {
   const out = { left: 0, right: 0, top: 0, bottom: 0 };
-  const widest = { above: 0, below: 0 };
-  let hasVertical = false;
-
-  for (const item of items) {
-    const side =
-      !item.side || item.side === "auto" ? nearestEdge(item, view) : item.side;
-    const width = Math.max(
-      textWidth(item.text, LABEL_FONT),
-      textWidth(item.sub ?? "", SUB_FONT),
-    );
-    const offset = LABEL_OFFSET + (clearance[side] ?? 0);
-
-    if (side === "left" || side === "right") {
-      hasVertical = true;
-      out[side] = Math.max(out[side], width + offset);
-    } else {
-      const depth = offset + LABEL_FONT + (item.sub ? SUB_OFFSET : 0);
-      out[side === "above" ? "top" : "bottom"] = Math.max(
-        out[side === "above" ? "top" : "bottom"],
-        depth,
-      );
-      widest[side] = Math.max(widest[side], width);
-    }
-  }
-
-  // A top or bottom label can slide sideways past the board's corner,
-  // and a side label can slide above or below it.
-  const overhangX = Math.max(widest.above, widest.below) / 2;
-  if (overhangX) {
-    out.left = Math.max(out.left, overhangX);
-    out.right = Math.max(out.right, overhangX);
-  }
-  if (hasVertical) {
-    out.top = Math.max(out.top, margin.y);
-    out.bottom = Math.max(out.bottom, margin.y);
-  }
-
+  labels.forEach((label, index) => {
+    if (!label) return;
+    const box = labelBox(label, items[index]);
+    out.left = Math.max(out.left, -box.left);
+    out.right = Math.max(out.right, box.right - view.width);
+    out.top = Math.max(out.top, -box.top);
+    out.bottom = Math.max(out.bottom, box.bottom - view.height);
+  });
   // A little air so nothing touches the edge of the box.
-  for (const key of Object.keys(out)) out[key] = Math.ceil(out[key] + 1);
+  for (const key of Object.keys(out)) {
+    out[key] = Math.max(0, Math.ceil(out[key] + 1));
+  }
   return out;
+}
+
+/**
+ * The margins a set of items will need, laying them out to find out.
+ * Callers that already have the labels should use marginsForLabels.
+ * @param {Object} args as layoutLabels
+ * @returns {{left: number, right: number, top: number, bottom: number}}
+ */
+export function measureMargins(args) {
+  return marginsForLabels({
+    view: args.view,
+    items: args.items,
+    labels: layoutLabels(args),
+  });
 }
 
 /**
@@ -195,24 +219,29 @@ export function layoutLabels({
     if (!group.length) continue;
 
     const vertical = side === "left" || side === "right";
-    // Down a side, labels are spread by height, and a label with a
-    // second line is more than twice as tall as one without. Getting
-    // this wrong is what let a two-line label land on its neighbour.
-    const sizes = group.map((item) =>
-      vertical
-        ? item.sub
-          ? LABEL_FONT * 0.8 + SUB_OFFSET + SUB_FONT * 0.3
-          : LABEL_FONT + 0.5
-        : Math.max(
+    // Down a side, labels are spread by height, and a label reaches
+    // further below its baseline than above it when it carries a
+    // second line. Across the top or bottom they are spread by width,
+    // which is symmetric because that text is centred.
+    const extents = group.map((item) => {
+      if (!vertical) {
+        const half =
+          Math.max(
             textWidth(item.text, LABEL_FONT),
             textWidth(item.sub ?? "", SUB_FONT),
-          ),
-    );
+          ) / 2;
+        return { before: half, after: half };
+      }
+      return {
+        before: LABEL_FONT * 0.8,
+        after: (item.sub ? SUB_OFFSET : 0) + SUB_FONT * 0.5,
+      };
+    });
 
     const desired = group.map((item) => (vertical ? item.y : item.x));
     const min = vertical ? -margin.y : -margin.x;
     const max = vertical ? view.height + margin.y : view.width + margin.x;
-    const placed = spreadAlong(desired, sizes, min, max);
+    const placed = spreadAlong(desired, extents, min, max);
 
     group.forEach((item, index) => {
       const along = placed[index];

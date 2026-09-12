@@ -58,6 +58,7 @@
     "i2c",
     "adc",
     "power",
+    "ground",
     "led",
     "other",
   ];
@@ -120,17 +121,22 @@
   // connector if the profile names one, otherwise the view when there
   // is more than one to choose between, otherwise just the pin. Saying
   // "Top" on a board that only has a top view tells nobody anything.
-  function whereIs(line) {
+  function whereIs(line, port) {
+    // A port with a receiver soldered to it is not "not broken out":
+    // it is in use, by hardware already connected (R6).
+    if (!line.pin && port?.internal) return $i18n.t("boardViewLineOnReceiver");
     if (!line.pin) return $i18n.t("boardViewLineMissing");
     if (!line.pad) return $i18n.t("boardViewLineUndrawn", { pin: line.pin });
-    const header = (board?.headers ?? []).find(
-      (entry) => entry.id === line.pad.header,
+    // The connector, when the pad is on one: "TX · Port A pin 3" is
+    // something a user can act on.
+    const connector = (board?.connectors ?? []).find(
+      (entry) => entry.id === line.pad.connector,
     );
-    const place =
-      header?.label ??
-      (availableViews.length > 1
+    const place = connector
+      ? `${connector.label ?? connector.id} pin ${line.pad.position}`
+      : availableViews.length > 1
         ? $i18n.t(`boardViewName_${line.pad.view}`)
-        : line.pin);
+        : line.pin;
     const name = line.pad.silkscreen ?? line.pin;
     return name === place ? name : `${name} · ${place}`;
   }
@@ -211,13 +217,21 @@
         <tr
           class={[
             activePortId === port.id && "active",
-            !port.assigned && "off",
+            !port.assigned && !port.internal && "off",
           ]}
           onmouseenter={() => (activePortId = port.id)}
           onmouseleave={() => (activePortId = null)}
         >
           <th scope="row">
             {port.label}
+            {#if port.label !== port.name}
+              <span class="uart">{port.name}</span>
+            {/if}
+            {#if port.internal}
+              <span class="rx-tag" title={port.receiver?.label ?? ""}>
+                {port.receiver?.protocol ?? $i18n.t("boardViewReceiverColumn")}
+              </span>
+            {/if}
             {#if port.split}
               <span class="split-tag" title={$i18n.t("boardViewSplitHelp")}>
                 {$i18n.t("boardViewSplit")}
@@ -230,7 +244,7 @@
               : $i18n.t("boardViewPortFree")}</td
           >
           {#each port.lines as line (line.role)}
-            <td class="where">{whereIs(line)}</td>
+            <td class="where">{whereIs(line, port)}</td>
           {/each}
         </tr>
       {/each}
@@ -281,6 +295,7 @@
     --pad-power: var(--color-yellow-500);
     --pad-led: var(--color-status-good);
     --pad-other: var(--color-neutral-500);
+    --pad-ground: var(--color-neutral-600);
     --pad-conflict: var(--color-red-500);
   }
 
@@ -317,6 +332,9 @@
     }
     &.group-other {
       --pad-color: var(--pad-other);
+    }
+    &.group-ground {
+      --pad-color: var(--pad-ground);
     }
     &.state-assigned .swatch {
       --pad-color: var(--color-text-muted);
@@ -372,6 +390,24 @@
       color: var(--color-text-muted);
       font-variant-numeric: tabular-nums;
     }
+  }
+
+  .uart {
+    margin-left: 5px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+
+  .rx-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: var(--color-neutral-500);
+    color: var(--color-accent-fg);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
   }
 
   .split-tag {

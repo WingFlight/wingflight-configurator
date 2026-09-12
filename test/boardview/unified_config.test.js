@@ -135,7 +135,7 @@ describe("a catalogue config, seeded into a drawing", () => {
   });
 
   it("places every pin the config gave it, once", () => {
-    const placed = profile.pads.map((pad) => pad.pin);
+    const placed = profile.allPads.map((pad) => pad.pin);
     expect(new Set(placed).size).toBe(placed.length);
     for (const entry of Object.values(hardwareMap)) {
       expect(placed).toContain(entry.pin);
@@ -179,5 +179,53 @@ describe("findBoardProfile under unified identity", () => {
     expect(findBoardProfile({ manufacturerId: "MTKS" })).toBeNull();
     expect(findBoardProfile({})).toBeNull();
     expect(findBoardProfile(null)).toBeNull();
+  });
+});
+
+// R8: the simulator presents a real board from the families we ship
+// for, so everything downstream is exercised against real hardware.
+describe("the simulator's board", () => {
+  const config = fs.readFileSync(
+    path.join(import.meta.dirname, "fixtures/FRSK-VANTAC_RF007.config"),
+    "utf8",
+  );
+  const identity = readIdentity(config);
+
+  it("is the Vantac RF007", () => {
+    expect(identity.targetId).toBe("FRSK-VANTAC_RF007");
+    expect(identity.mcu).toBe("STM32F7X2");
+  });
+
+  it("matches what virtual mode reports over MSP", async () => {
+    const { VANTAC_RF007_CONFIG } = await import(
+      "@/js/remap_fc/fixtures/vantac_rf007.js"
+    );
+    expect(VANTAC_RF007_CONFIG.boardName).toBe(identity.boardName);
+    expect(VANTAC_RF007_CONFIG.manufacturerId).toBe(identity.manufacturerId);
+  });
+
+  it("gives the CLI fixture the same pins the catalogue has", async () => {
+    const { VANTAC_RF007_DUMP_HARDWARE } = await import(
+      "@/js/remap_fc/fixtures/vantac_rf007.js"
+    );
+    const fromCatalogue = readTargetConfig(config).hardwareMap;
+    const fromFixture = readTargetConfig(VANTAC_RF007_DUMP_HARDWARE).hardwareMap;
+    for (const [key, entry] of Object.entries(fromCatalogue)) {
+      expect(fromFixture[key]?.pin, key).toBe(entry.pin);
+    }
+  });
+
+  it("draws every UART the board has", async () => {
+    const { VANTAC_RF007_DUMP_HARDWARE } = await import(
+      "@/js/remap_fc/fixtures/vantac_rf007.js"
+    );
+    const { hardwareMap, serialPorts } = readTargetConfig(
+      VANTAC_RF007_DUMP_HARDWARE,
+    );
+    const profile = synthesiseBoardView({ hardwareMap, serialPorts });
+    expect(validateProfile(profile)).toEqual([]);
+    const map = buildPortMap({ profile, serialPorts });
+    expect(map.length).toBeGreaterThanOrEqual(5);
+    for (const port of map) expect(port.drawn, port.label).toBe(true);
   });
 });

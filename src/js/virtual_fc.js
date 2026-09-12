@@ -1,5 +1,6 @@
 import { FC } from "@/js/fc.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
+import { VANTAC_RF007_CONFIG } from "@/js/remap_fc/fixtures/vantac_rf007.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
 
 let virtualEscManufacturerId = null;
@@ -53,8 +54,13 @@ export function getVirtualEscResponse(code, requestData) {
 export function applyVirtualConfig() {
   FC.resetState();
 
+  // The simulator presents a real board from the families we ship for,
+  // so the board drawing, the port map and the wiring stage are all
+  // exercised against hardware rather than a stand-in
+  // (tools/board-editor/REQUIREMENTS.md, R8). Its CLI output lives in
+  // src/js/remap_fc/fixtures/vantac_rf007.js.
   Object.assign(FC.CONFIG, {
-    targetName: "VirtualFC",
+    ...VANTAC_RF007_CONFIG,
     name: "VirtualFC",
     buildVersion: CONFIGURATOR.virtualFwVersion,
     flightControllerVersion: CONFIGURATOR.virtualFwVersion,
@@ -77,45 +83,40 @@ export function applyVirtualConfig() {
     stats_min_armed_time_s: 30,
   });
 
-  // Configuration
-  FC.SERIAL_CONFIG.ports = new Array(6);
-  FC.SERIAL_CONFIG.ports[0] = {
-    identifier: 20,
+  // Configuration. The RF007 has UART1 to UART5, so the simulated
+  // board offers exactly those, plus the USB virtual port.
+  const port = (identifier, functionMask = 0, functions = []) => ({
+    identifier,
     auxChannelIndex: 0,
-    functions: ["MSP"],
+    functionMask,
+    functions,
     msp_baudrate: 115200,
     gps_baudrate: 57600,
     telemetry_baudrate: "AUTO",
     blackbox_baudrate: 115200,
-  };
+  });
 
-  for (let i = 1; i < FC.SERIAL_CONFIG.ports.length; i++) {
-    FC.SERIAL_CONFIG.ports[i] = {
-      identifier: i - 1,
-      auxChannelIndex: 0,
-      functions: [],
-      msp_baudrate: 115200,
-      gps_baudrate: 57600,
-      telemetry_baudrate: "AUTO",
-      blackbox_baudrate: 115200,
-    };
-  }
-
-  FC.SERIAL_CONFIG.ports[1].functionMask = 64; // RX_SERIAL
-  FC.SERIAL_CONFIG.ports[2].functionMask = 1024; // ESC_SENSOR
-  FC.SERIAL_CONFIG.ports[3].functionMask = 2; // GPS
-  // The rest of the app reads port.functions (names), not the raw mask --
-  // keep both in step so tab-list gating and the journey's link checks see
-  // the same ports a real board would report.
-  FC.SERIAL_CONFIG.ports[1].functions = ["RX_SERIAL"];
-  FC.SERIAL_CONFIG.ports[2].functions = ["ESC_SENSOR"];
-  FC.SERIAL_CONFIG.ports[3].functions = ["GPS"];
+  // Identifier 4 is UART5, which is where the board's own config puts
+  // its serial receiver. ESC telemetry and GPS are the simulator's
+  // additions, so those tabs and the journey's link checks have
+  // something to read; the rest of the app reads port.functions
+  // (names) rather than the raw mask, so both are kept in step.
+  FC.SERIAL_CONFIG.ports = [
+    port(20, 1, ["MSP"]),
+    port(0, 1024, ["ESC_SENSOR"]),
+    port(1),
+    port(2, 2, ["GPS"]),
+    port(3),
+    port(4, 64, ["RX_SERIAL"]),
+  ];
 
   // Receiver
   FC.FEATURE_CONFIG.features.RX_SERIAL = true;
   FC.FEATURE_CONFIG.features.TELEMETRY = true;
   Object.assign(FC.RX_CONFIG, {
-    serialrx_provider: 9, // CRSF
+    // What the board's own config sets: see `set serialrx_provider =
+    // FBUS` in configs/FRSK-VANTAC_RF007.config.
+    serialrx_provider: 17, // FBUS
   });
 
   Object.assign(FC.RC_CONFIG, {

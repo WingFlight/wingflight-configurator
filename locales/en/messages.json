@@ -8539,6 +8539,18 @@
     "boardViewPortFree": {
         "message": "not in use"
     },
+    "boardViewPortInternal": {
+        "message": "built-in receiver"
+    },
+    "boardViewLineOnReceiver": {
+        "message": "on the built-in receiver"
+    },
+    "boardViewReceiverColumn": {
+        "message": "Receiver"
+    },
+    "wiringLegend_ground": {
+        "message": "Ground"
+    },
     "boardViewPortColumn": {
         "message": "Port"
     },

@@ -80,26 +80,26 @@ describe("hardwareKeysFor", () => {
 });
 
 describe("layoutOfLines", () => {
-  const pad = (over) => ({ x: 0, y: 0, view: "top", header: null, ...over });
+  const pad = (over) => ({ x: 0, y: 0, view: "top", connector: null, ...over });
 
   it("calls one line a single-ended port", () => {
     expect(layoutOfLines([{ pad: pad() }, { pad: null }])).toBe("single");
   });
 
-  it("calls two pads on one header together", () => {
+  it("calls two pads on one connector together", () => {
     expect(
       layoutOfLines([
-        { pad: pad({ header: "j1" }) },
-        { pad: pad({ header: "j1", y: 2.5 }) },
+        { pad: pad({ connector: "j1" }) },
+        { pad: pad({ connector: "j1", y: 2.5 }) },
       ]),
     ).toBe("together");
   });
 
-  it("calls two pads on different headers split", () => {
+  it("calls two pads on different connectors split", () => {
     expect(
       layoutOfLines([
-        { pad: pad({ header: "j1" }) },
-        { pad: pad({ header: "j2", y: 2.5 }) },
+        { pad: pad({ connector: "j1" }) },
+        { pad: pad({ connector: "j2", y: 2.5 }) },
       ]),
     ).toBe("split");
   });
@@ -110,7 +110,7 @@ describe("layoutOfLines", () => {
     ).toBe("split");
   });
 
-  it("falls back to distance when no headers are given", () => {
+  it("falls back to distance when no connectors are given", () => {
     expect(layoutOfLines([{ pad: pad() }, { pad: pad({ y: 2.5 }) }])).toBe(
       "together",
     );
@@ -120,7 +120,10 @@ describe("layoutOfLines", () => {
   });
 
   it("lets a profile override what the geometry says", () => {
-    const lines = [{ pad: pad({ header: "j1" }) }, { pad: pad({ header: "j2" }) }];
+    const lines = [
+      { pad: pad({ connector: "j1" }) },
+      { pad: pad({ connector: "j2" }) },
+    ];
     expect(layoutOfLines(lines, false)).toBe("together");
   });
 });
@@ -153,7 +156,8 @@ describe("buildPortMap", () => {
     const tx = map[0].lines.find((line) => line.role === "tx");
     expect(tx.pin).toBe("A09");
     expect(tx.silkscreen).toBe("T1");
-    expect(tx.header).toBe("j1");
+    expect(tx.connector).toBe("j1");
+    expect(tx.position).toBe(1);
   });
 
   it("falls back to the board's own resource table when the profile is silent", () => {

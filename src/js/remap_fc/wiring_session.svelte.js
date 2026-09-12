@@ -28,7 +28,7 @@
  * live state. See hardware_parser.js's parseHardwareDefaults.
  *
  * In virtual mode (CONFIGURATOR.virtualMode) read() returns a canned
- * MATEKF405 factory dump (fixtures/matekf405.js) and apply() only
+ * Vantac RF007 factory dump (fixtures/vantac_rf007.js) and apply() only
  * updates the in-memory maps, so the UI can be developed without
  * hardware.
  */
@@ -49,13 +49,13 @@ import mcuAllData from "./MCU-all.json";
 import { findBoardProfile, padForPin } from "./board_profiles.js";
 import { classifyCriticality } from "./feature_classifier.js";
 import {
-  MATEKF405_CONFIG,
-  MATEKF405_DIFF_HARDWARE_DEFAULTS,
-  MATEKF405_DMA_SHOW,
-  MATEKF405_DUMP_HARDWARE,
-  MATEKF405_STATUS,
-  MATEKF405_TIMER_SHOW,
-} from "./fixtures/matekf405.js";
+  VANTAC_RF007_CONFIG,
+  VANTAC_RF007_DIFF_HARDWARE_DEFAULTS,
+  VANTAC_RF007_DMA_SHOW,
+  VANTAC_RF007_DUMP_HARDWARE,
+  VANTAC_RF007_STATUS,
+  VANTAC_RF007_TIMER_SHOW,
+} from "./fixtures/vantac_rf007.js";
 import {
   buildResourceCommand,
   parseDefaultPinMetadata,
@@ -325,12 +325,12 @@ class WiringSession {
       let config;
 
       if (CONFIGURATOR.virtualMode) {
-        config = MATEKF405_CONFIG;
-        dump = MATEKF405_DUMP_HARDWARE;
-        diff = MATEKF405_DIFF_HARDWARE_DEFAULTS;
-        dmaShow = MATEKF405_DMA_SHOW;
-        timerShow = MATEKF405_TIMER_SHOW;
-        statusOut = MATEKF405_STATUS;
+        config = VANTAC_RF007_CONFIG;
+        dump = VANTAC_RF007_DUMP_HARDWARE;
+        diff = VANTAC_RF007_DIFF_HARDWARE_DEFAULTS;
+        dmaShow = VANTAC_RF007_DMA_SHOW;
+        timerShow = VANTAC_RF007_TIMER_SHOW;
+        statusOut = VANTAC_RF007_STATUS;
       } else {
         config = FC.CONFIG;
         await this.#openCli();

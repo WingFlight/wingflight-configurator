@@ -14,10 +14,12 @@
    * margin and spread there by label_layout.js, with a leader line
    * back to any pad whose label had to move.
    */
+  import { connectorBounds } from "@/js/boardview/connectors.js";
+  import { groupForOptionKey } from "@/js/boardview/generic_layout.js";
   import {
     SUB_OFFSET,
     layoutLabels,
-    measureMargins,
+    marginsForLabels,
   } from "@/js/boardview/label_layout.js";
   import { portsByPin } from "@/js/boardview/port_map.js";
   import { i18n } from "@/js/i18n.js";
@@ -69,57 +71,79 @@
     return byPin;
   });
 
+  // Every drawn position on this view: a connector's pins and the
+  // loose solder pads together.
   let padsHere = $derived(
-    (profile?.pads ?? []).filter((pad) => pad.view === viewId),
+    (profile?.allPads ?? profile?.pads ?? []).filter(
+      (pad) => pad.view === viewId,
+    ),
   );
 
-  // The headers on this view, with an extent: either the one the
-  // profile gave or the bounding box of the pads that name it, so a
-  // connector is outlined even when only its pins were captured.
-  let headers = $derived.by(() => {
-    const out = [];
-    for (const header of profile?.headers ?? []) {
-      if (header.view !== viewId) continue;
-      const own = padsHere.filter((pad) => pad.header === header.id);
-      if (header.width !== null && header.height !== null) {
-        out.push(header);
-        continue;
-      }
-      if (!own.length) continue;
-      const xs = own.map((pad) => pad.x);
-      const ys = own.map((pad) => pad.y);
-      out.push({
-        ...header,
-        x: Math.min(...xs) - 2.2,
-        y: Math.min(...ys) - 2.2,
-        width: Math.max(...xs) - Math.min(...xs) + 4.4,
-        height: Math.max(...ys) - Math.min(...ys) + 4.4,
-      });
-    }
-    return out;
-  });
+  // Connector shells, drawn behind their pins so a plug reads as one
+  // thing rather than a row of dots.
+  let shells = $derived(
+    (profile?.connectors ?? [])
+      .filter(
+        (connector) => connector.view === viewId && connector.pins.length > 0,
+      )
+      .map((connector) => ({
+        id: connector.id,
+        kind: connector.kind,
+        label: connector.label,
+        box: connectorBounds(connector),
+      })),
+  );
+
+  let receiversHere = $derived(
+    (profile?.receivers ?? []).filter((receiver) => receiver.view === viewId),
+  );
 
   function padState(pad) {
+    if (pad.role === "net") return "net";
     if (conflictByPin[pad.pin]?.length) return "conflict";
     const port = portByPin[pad.pin]?.port ?? null;
     if (port) return port.assigned ? "assigned" : "free";
     return assignedByPin[pad.pin] ? "assigned" : "free";
   }
 
+  // A signal pad's colour follows whatever resource it turns out to
+  // carry, so an author never has to keep a group in step with the
+  // catalogue. An explicit group on the pin still wins.
+  function padGroup(pad) {
+    if (pad.group && pad.group !== "other") return pad.group;
+    const key = portByPin[pad.pin]?.line
+      ? "uart"
+      : (assignedByPin[pad.pin]?.key ?? null);
+    if (key === "uart") return "uart";
+    return key ? groupForOptionKey(key) : (pad.group ?? "other");
+  }
+
   // What a pad says. A port pad leads with its line ("TX" / "RX") and
   // names the port and what the port is set to underneath; any other
   // pad leads with its silkscreen and names its resource.
   function padText(pad) {
+    // A ground or power position says what rail it is and which
+    // connector it is on. That is the whole point of drawing it: it
+    // tells the user which way round the plug goes.
+    if (pad.role === "net") return { text: pad.net, sub: null };
+
     const entry = portByPin[pad.pin] ?? null;
     if (entry) {
       const { port, line } = entry;
       const head =
         pad.silkscreen ?? `${line.role.toUpperCase()}${port.identifier + 1}`;
-      const detail = port.assigned
-        ? `${port.label} · ${port.functionLabel}`
-        : `${port.label} · ${$i18n.t("boardViewPortFree")}`;
+      // Both names, never one instead of the other: the letter printed
+      // on the board and the UART the firmware knows (R3).
+      const port_name =
+        port.label === port.name ? port.label : `${port.label} · ${port.name}`;
+      const detail = port.internal
+        ? `${port_name} · ${$i18n.t("boardViewPortInternal")}`
+        : port.assigned
+          ? `${port_name} · ${port.functionLabel}`
+          : `${port_name} · ${$i18n.t("boardViewPortFree")}`;
       return { text: head, sub: detail };
     }
+
     const assigned = assignedByPin[pad.pin] ?? null;
     const head = pad.silkscreen ?? pad.pin;
     const sub = assigned?.resource ?? (pad.silkscreen ? pad.pin : null);
@@ -135,12 +159,16 @@
         ...pad,
         text,
         sub,
+        group: padGroup(pad),
         port: entry?.port ?? null,
         line: entry?.line ?? null,
         state: padState(pad),
         conflicts: padConflicts,
         critical: Boolean(assignedByPin[pad.pin]?.critical),
         title: [
+          pad.connectorLabel && pad.position
+            ? `${pad.connectorLabel} pin ${pad.position}`
+            : null,
           text,
           sub,
           pad.pin,
@@ -161,9 +189,14 @@
     ] ?? null,
   );
 
+  // A board has one B07 but many grounds, so the drawing keys a
+  // position by where it is rather than by what is on it.
+  const padKey = (pad) =>
+    pad.connector ? `${pad.connector}:${pad.position}` : `pad:${pad.pin}`;
+
   let labelItems = $derived(
     decorated.map((pad) => ({
-      id: pad.pin,
+      id: padKey(pad),
       x: pad.x,
       y: pad.y,
       text: pad.text,
@@ -189,7 +222,7 @@
   // a long function name widens the picture instead of being cut off.
   let margins = $derived(
     layoutArgs
-      ? measureMargins(layoutArgs)
+      ? marginsForLabels({ view, items: labelItems, labels })
       : { left: 0, right: 0, top: 0, bottom: 0 },
   );
 
@@ -199,7 +232,7 @@
       : "0 0 1 1",
   );
 
-  let labelByPin = $derived(
+  let labelByKey = $derived(
     Object.fromEntries(
       labels.filter(Boolean).map((label) => [label.id, label]),
     ),
@@ -219,6 +252,10 @@
         to: lines[1].pad,
       })),
   );
+
+  function isSelected(pad) {
+    return Boolean(pad.pin) && pad.pin === selectedPin;
+  }
 
   function dimmed(pad) {
     return Boolean(activePortId) && pad.port?.id !== activePortId;
@@ -280,41 +317,58 @@
       {/if}
     {/if}
 
+    <!-- USB, wherever the board actually puts it (R5) -->
     {#if view.usb}
-      {@const along =
-        view.usb.edge === "top" || view.usb.edge === "bottom"
-          ? view.width * view.usb.offset
-          : view.height * view.usb.offset}
-      {#if view.usb.edge === "top" || view.usb.edge === "bottom"}
-        <rect
-          class="usb"
-          x={along - 4.5}
-          y={view.usb.edge === "top" ? -1.8 : view.height - 1.8}
-          width="9"
-          height="3.6"
-          rx="0.8"
-        />
-      {:else}
-        <rect
-          class="usb"
-          x={view.usb.edge === "left" ? -1.8 : view.width - 1.8}
-          y={along - 4.5}
-          width="3.6"
-          height="9"
-          rx="0.8"
-        />
-      {/if}
+      <rect
+        class="usb"
+        x={view.usb.x}
+        y={view.usb.y}
+        width={view.usb.width}
+        height={view.usb.height}
+        rx="0.8"
+        transform={view.usb.rotation
+          ? `rotate(${view.usb.rotation} ${view.usb.x + view.usb.width / 2} ${view.usb.y + view.usb.height / 2})`
+          : null}
+      />
     {/if}
 
-    <!-- Connectors -->
-    {#each headers as header (header.id)}
-      <g class="header">
+    <!-- A receiver soldered to the board (R6) -->
+    {#each receiversHere as receiver (receiver.id)}
+      <g class="receiver">
         <rect
-          x={header.x}
-          y={header.y}
-          width={header.width}
-          height={header.height}
-          rx="0.8"
+          x={receiver.x}
+          y={receiver.y}
+          width={receiver.width}
+          height={receiver.height}
+          rx="0.6"
+        />
+        <text
+          x={receiver.x + receiver.width / 2}
+          y={receiver.y + receiver.height / 2 + 0.6}
+        >
+          {receiver.protocol ?? receiver.label ?? "RX"}
+        </text>
+        {#if receiver.antenna}
+          <path
+            class="antenna"
+            d={`M ${receiver.x + receiver.width} ${receiver.y + receiver.height / 2} l 4 -2.5`}
+          />
+        {/if}
+      </g>
+    {/each}
+
+    <!-- Connector shells -->
+    {#each shells as shell (shell.id)}
+      <g class="shell kind-{shell.kind}">
+        <rect
+          x={shell.box.x}
+          y={shell.box.y}
+          width={shell.box.width}
+          height={shell.box.height}
+          rx="0.5"
+          transform={shell.box.rotation
+            ? `rotate(${shell.box.rotation} ${shell.box.x + shell.box.width / 2} ${shell.box.y + shell.box.height / 2})`
+            : null}
         />
       </g>
     {/each}
@@ -338,21 +392,24 @@
     {/each}
 
     <!-- Pads -->
-    {#each decorated as pad (pad.pin)}
-      {@const label = labelByPin[pad.pin]}
+    {#each decorated as pad (padKey(pad))}
+      {@const label = labelByKey[padKey(pad)]}
       <g
-        class="pad group-{pad.group} state-{pad.state}"
-        class:selected={selectedPin === pad.pin}
+        class="pad group-{pad.group} state-{pad.state} role-{pad.role ??
+          'signal'}"
+        class:selected={isSelected(pad)}
         class:bottom-side={pad.side === "bottom"}
         class:critical={pad.critical}
         class:dim={dimmed(pad)}
         class:static={!interactive}
-        role={interactive ? "button" : "img"}
-        tabindex={interactive ? 0 : null}
+        role={interactive && pad.role !== "net" ? "button" : "img"}
+        tabindex={interactive && pad.role !== "net" ? 0 : null}
         aria-label={pad.title}
-        aria-pressed={interactive ? selectedPin === pad.pin : null}
-        onclick={() => select(pad.pin)}
-        onkeydown={(event) => onKey(event, pad.pin)}
+        aria-pressed={interactive && pad.role !== "net"
+          ? isSelected(pad)
+          : null}
+        onclick={() => pad.role !== "net" && select(pad.pin)}
+        onkeydown={(event) => pad.role !== "net" && onKey(event, pad.pin)}
         onmouseenter={() => onHoverPort?.(pad.port?.id ?? null)}
         onmouseleave={() => onHoverPort?.(null)}
         onfocus={() => onHoverPort?.(pad.port?.id ?? null)}
@@ -360,7 +417,20 @@
       >
         <title>{pad.title}</title>
         <circle class="hit" cx={pad.x} cy={pad.y} r={PAD_RADIUS + 1.8} />
-        <circle class="dot" cx={pad.x} cy={pad.y} r={PAD_RADIUS} />
+        {#if pad.role === "net"}
+          <!-- A rail is drawn square, so it never reads as something
+               you could click through to reassign. -->
+          <rect
+            class="dot"
+            x={pad.x - PAD_RADIUS}
+            y={pad.y - PAD_RADIUS}
+            width={PAD_RADIUS * 2}
+            height={PAD_RADIUS * 2}
+            rx="0.3"
+          />
+        {:else}
+          <circle class="dot" cx={pad.x} cy={pad.y} r={PAD_RADIUS} />
+        {/if}
         {#if pad.state === "conflict"}
           <circle class="badge" cx={pad.x + 1.7} cy={pad.y - 1.7} r="1.1" />
           <text class="badge-text" x={pad.x + 1.7} y={pad.y - 1.25}>!</text>
@@ -418,6 +488,7 @@
     --pad-led: var(--color-status-good);
     --pad-other: var(--color-neutral-500);
     --pad-internal: var(--color-neutral-500);
+    --pad-ground: var(--color-neutral-600);
     --pad-conflict: var(--color-red-500);
   }
 
@@ -453,11 +524,47 @@
     stroke-width: 0.3;
   }
 
-  .header rect {
-    fill: none;
+  // A connector's shell. A port gets a solid body because it is a
+  // plug you push a cable into; a pinheader gets an outline; bare
+  // solder pads get nothing but a dashed hint.
+  .shell rect {
+    fill: var(--color-neutral-200);
     stroke: var(--color-border);
+    stroke-width: 0.2;
+  }
+
+  .shell.kind-header rect {
+    fill: none;
     stroke-width: 0.25;
+  }
+
+  .shell.kind-solder rect {
+    fill: none;
     stroke-dasharray: 0.9 0.7;
+    stroke-width: 0.2;
+  }
+
+  .receiver {
+    rect {
+      fill: var(--color-neutral-300);
+      stroke: var(--color-border);
+      stroke-width: 0.25;
+    }
+
+    text {
+      fill: var(--color-text-muted);
+      font-size: 1.8px;
+      font-weight: 600;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .antenna {
+      stroke: var(--color-neutral-500);
+      stroke-width: 0.4;
+      fill: none;
+      stroke-linecap: round;
+    }
   }
 
   .tie {
@@ -550,6 +657,13 @@
     &.group-other,
     &.group-internal {
       --pad-color: var(--pad-other);
+    }
+    &.group-ground {
+      --pad-color: var(--pad-ground);
+    }
+
+    &.role-net {
+      cursor: default;
     }
 
     // Free: hollow. Assigned: filled. Conflict: red ring.

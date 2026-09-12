@@ -1,16 +1,25 @@
 <script>
   /**
    * File: tools/board-editor/src/components/EditorCanvas.svelte
-   * Where the pads get placed: the view's background at its real size,
-   * a millimetre grid over it, and one draggable marker per pad.
+   * Where the board gets laid out: the view's background at its real
+   * size, a millimetre grid over it, and the things an author moves.
+   *
+   * What you drag is a connector, not a pin. A connector owns its
+   * positions and spaces them at its own pitch, so placing one places
+   * all of them at once and they stay in line
+   * (tools/board-editor/REQUIREMENTS.md, R1). The USB socket and each
+   * built-in receiver drag the same way.
    *
    * Coordinates are the profile's own millimetres throughout. Screen
    * pixels are converted through the SVG's own transform, so the
-   * numbers the author drags are the numbers that get written.
+   * numbers being dragged are the numbers that get written.
    */
-  import { getEditorState } from "~editor/lib/editor_state.svelte.js";
+  import {
+    connectorBounds,
+    connectorPinPositions,
+  } from "@/js/boardview/connectors.js";
 
-  let { onPick = null } = $props();
+  import { getEditorState } from "~editor/lib/editor_state.svelte.js";
 
   const editor = getEditorState();
 
@@ -19,8 +28,6 @@
 
   let svgElement = $state(null);
   let dragging = $state(null);
-  /** Clicking empty space adds a pad while this is on. */
-  let addMode = $state(false);
 
   let view = $derived(editor.view);
   let viewBox = $derived(
@@ -30,7 +37,7 @@
   );
 
   // A grid fine enough to place against but coarse enough to see
-  // through: minor lines at the snap step, major every 5 mm.
+  // through: minor lines every millimetre, major every five.
   let gridLines = $derived.by(() => {
     if (!view) return { minor: [], major: [] };
     const minor = [];
@@ -44,8 +51,18 @@
     return { minor, major };
   });
 
-  let headers = $derived(
-    (editor.board?.headers ?? []).filter((header) => header.view === editor.viewId),
+  let placed = $derived(
+    editor.connectorsHere.map((connector) => ({
+      connector,
+      box: connectorBounds(connector),
+      places: connectorPinPositions(connector),
+    })),
+  );
+
+  let receiversHere = $derived(
+    (editor.board?.receivers ?? []).filter(
+      (receiver) => receiver.view === editor.viewId,
+    ),
   );
 
   function toBoard(event) {
@@ -56,15 +73,14 @@
     return { x: local.x, y: local.y };
   }
 
-  function onPadPointerDown(event, pad) {
+  function startDrag(event, kind, id, anchor) {
     event.stopPropagation();
-    editor.selectedPin = pad.pin;
-    onPick?.(pad.pin);
     const start = toBoard(event);
     dragging = {
-      pin: pad.pin,
-      offsetX: pad.x - start.x,
-      offsetY: pad.y - start.y,
+      kind,
+      id,
+      offsetX: anchor.x - start.x,
+      offsetY: anchor.y - start.y,
       moved: false,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -73,36 +89,33 @@
   function onPointerMove(event) {
     if (!dragging) return;
     const point = toBoard(event);
-    // The undo entry is taken on the first real move, not on the press,
-    // so a click that only selects leaves nothing to undo.
+    // The undo entry is taken on the first real move, not on the
+    // press, so a click that only selects leaves nothing to undo.
     if (!dragging.moved) {
       dragging.moved = true;
-      editor.beginDrag();
+      editor.beginConnectorDrag();
     }
-    editor.dragPad(
-      dragging.pin,
-      point.x + dragging.offsetX,
-      point.y + dragging.offsetY,
-    );
+    const x = point.x + dragging.offsetX;
+    const y = point.y + dragging.offsetY;
+    if (dragging.kind === "connector") {
+      editor.dragConnector(dragging.id, x, y);
+    } else if (dragging.kind === "usb") {
+      editor.dragUsb(x, y);
+    } else if (dragging.kind === "receiver") {
+      editor.setReceiverField(dragging.id, "x", editor.snapped(x));
+      editor.setReceiverField(dragging.id, "y", editor.snapped(y));
+    }
   }
 
   function onPointerUp() {
-    if (dragging?.moved) editor.endDrag(dragging.pin);
     dragging = null;
   }
 
-  function onCanvasClick(event) {
-    if (!addMode || dragging) return;
-    const point = toBoard(event);
-    editor.addPad({ x: editor.snapped(point.x), y: editor.snapped(point.y) });
-    addMode = false;
-  }
-
-  // Arrow keys nudge the selected pad by one snap step, shift by five,
-  // which is how you get a pad exactly onto a 2.54 mm pitch.
+  // Arrow keys nudge the selected connector by one snap step, shift by
+  // five, which is how you get a connector exactly onto its row.
   function onKeyDown(event) {
-    const pad = editor.selectedPad;
-    if (!pad || pad.view !== editor.viewId) return;
+    const connector = editor.selectedConnector;
+    if (!connector || connector.view !== editor.viewId) return;
     const step = (editor.snap || 0.1) * (event.shiftKey ? 5 : 1);
     const moves = {
       ArrowLeft: [-step, 0],
@@ -113,7 +126,11 @@
     const move = moves[event.key];
     if (!move) return;
     event.preventDefault();
-    editor.movePad(pad.pin, pad.x + move[0], pad.y + move[1]);
+    editor.moveConnector(
+      connector.id,
+      connector.x + move[0],
+      connector.y + move[1],
+    );
   }
 </script>
 
@@ -121,13 +138,6 @@
 
 <div class="wrap">
   <div class="tools">
-    <button
-      class={["tool", addMode && "on"]}
-      onclick={() => (addMode = !addMode)}
-      aria-pressed={addMode}
-    >
-      {addMode ? "Click the board to place" : "Add pad"}
-    </button>
     <label>
       Snap
       <select
@@ -142,21 +152,21 @@
       </select>
     </label>
     <span class="hint">
-      Drag a pad to move it. Arrow keys nudge, shift for five steps.
+      Drag a connector to move it with all its pins. Arrow keys nudge, shift for
+      five steps.
     </span>
   </div>
 
   {#if view}
     <svg
       bind:this={svgElement}
-      class={["canvas", addMode && "adding"]}
+      class="canvas"
       {viewBox}
       role="application"
       aria-label="Board layout"
       onpointermove={onPointerMove}
       onpointerup={onPointerUp}
       onpointercancel={onPointerUp}
-      onclick={onCanvasClick}
     >
       <rect
         class="pcb"
@@ -202,83 +212,130 @@
         <circle class="hole" cx={hx} cy={hy} r="1.5" />
       {/each}
 
-      {#each headers as header (header.id)}
-        {@const own = editor.padsHere.filter((pad) => pad.header === header.id)}
-        {#if own.length || header.width !== null}
-          {@const box =
-            header.width !== null && header.height !== null
-              ? header
-              : {
-                  x: Math.min(...own.map((p) => p.x)) - 2.2,
-                  y: Math.min(...own.map((p) => p.y)) - 2.2,
-                  width:
-                    Math.max(...own.map((p) => p.x)) -
-                    Math.min(...own.map((p) => p.x)) +
-                    4.4,
-                  height:
-                    Math.max(...own.map((p) => p.y)) -
-                    Math.min(...own.map((p) => p.y)) +
-                    4.4,
-                }}
-          {@const tall = box.height > box.width}
-          {@const left = box.x + box.width / 2 < view.width / 2}
-          <g class="header">
-            <rect
-              x={box.x}
-              y={box.y}
-              width={box.width}
-              height={box.height}
-              rx="0.8"
-            />
-            <!-- Connector names go outside the board, clear of the pad
-                 tags: beside a column of pads, above or below a row. -->
-            {#if tall}
-              <text
-                x={left ? -1 : view.width + 1}
-                y={box.y + box.height / 2}
-                text-anchor={left ? "end" : "start"}>{header.label ?? header.id}</text
-              >
-            {:else}
-              <text
-                x={box.x + box.width / 2}
-                y={box.y + box.height / 2 < view.height / 2
-                  ? -1
-                  : view.height + 2.4}
-                text-anchor="middle">{header.label ?? header.id}</text
-              >
-            {/if}
-          </g>
-        {/if}
-      {/each}
-
-      {#each editor.padsHere as pad (pad.pin)}
-        <g
-          class="pad group-{pad.group}"
-          class:selected={editor.selectedPin === pad.pin}
+      {#if view.usb}
+        <rect
+          class="usb"
+          x={view.usb.x}
+          y={view.usb.y}
+          width={view.usb.width}
+          height={view.usb.height}
+          rx="0.8"
           role="button"
           tabindex="0"
-          aria-label={`${pad.silkscreen ?? pad.pin} at ${pad.x}, ${pad.y}`}
-          onpointerdown={(event) => onPadPointerDown(event, pad)}
-          onkeydown={(event) => {
-            if (event.key === "Enter") {
-              editor.selectedPin = pad.pin;
-              onPick?.(pad.pin);
-            }
+          aria-label="USB socket"
+          onpointerdown={(event) =>
+            startDrag(event, "usb", "usb", { x: view.usb.x, y: view.usb.y })}
+        />
+      {/if}
+
+      {#each receiversHere as receiver (receiver.id)}
+        <g
+          class="receiver"
+          role="button"
+          tabindex="0"
+          aria-label={receiver.label ?? "Receiver"}
+          onpointerdown={(event) =>
+            startDrag(event, "receiver", receiver.id, {
+              x: receiver.x,
+              y: receiver.y,
+            })}
+        >
+          <rect
+            x={receiver.x}
+            y={receiver.y}
+            width={receiver.width}
+            height={receiver.height}
+            rx="0.6"
+          />
+          <text
+            x={receiver.x + receiver.width / 2}
+            y={receiver.y + receiver.height / 2 + 0.6}
+          >
+            {receiver.protocol ?? receiver.label ?? "RX"}
+          </text>
+        </g>
+      {/each}
+
+      {#each placed as item (item.connector.id)}
+        {@const selected = editor.selectedConnectorId === item.connector.id}
+        <g
+          class={["connector", `kind-${item.connector.kind}`, selected && "on"]}
+          role="button"
+          tabindex="0"
+          aria-label={`${item.connector.label ?? item.connector.id}, ${item.connector.pins.length} positions`}
+          onpointerdown={(event) => {
+            editor.selectedConnectorId = item.connector.id;
+            startDrag(event, "connector", item.connector.id, {
+              x: item.connector.x,
+              y: item.connector.y,
+            });
           }}
         >
-          <circle class="dot" cx={pad.x} cy={pad.y} r={PAD_RADIUS} />
-          <text class="tag" x={pad.x} y={pad.y - 2}>
-            {pad.silkscreen ?? pad.pin}
+          <rect
+            class="shell"
+            x={item.box.x}
+            y={item.box.y}
+            width={item.box.width}
+            height={item.box.height}
+            rx="0.5"
+            transform={item.box.rotation
+              ? `rotate(${item.box.rotation} ${item.box.x + item.box.width / 2} ${item.box.y + item.box.height / 2})`
+              : null}
+          />
+          {#each item.connector.pins as pin, index (pin.position)}
+            {@const place = item.places[index]}
+            {#if pin.pin}
+              <circle
+                class="dot signal"
+                cx={place.x}
+                cy={place.y}
+                r={PAD_RADIUS}
+              />
+            {:else if pin.net}
+              <rect
+                class={["dot", "net", pin.net === "GND" && "ground"]}
+                x={place.x - PAD_RADIUS}
+                y={place.y - PAD_RADIUS}
+                width={PAD_RADIUS * 2}
+                height={PAD_RADIUS * 2}
+                rx="0.3"
+              />
+            {:else}
+              <circle
+                class="dot empty"
+                cx={place.x}
+                cy={place.y}
+                r={PAD_RADIUS}
+              />
+            {/if}
+          {/each}
+          <!-- A ring round position 1: which end is pin 1 is the thing
+               a connector drawing has to get across. -->
+          <circle
+            class="first"
+            cx={item.places[0]?.x ?? item.connector.x}
+            cy={item.places[0]?.y ?? item.connector.y}
+            r={PAD_RADIUS + 1}
+          />
+          <text
+            class="tag"
+            x={item.box.x + item.box.width / 2}
+            y={item.box.y - 0.9}
+          >
+            {item.connector.label ?? item.connector.id}
           </text>
         </g>
       {/each}
     </svg>
 
     <p class="readout">
-      {view.width} × {view.height} mm · {editor.padsHere.length} pads on this view
-      {#if editor.selectedPad && editor.selectedPad.view === editor.viewId}
-        · selected {editor.selectedPad.silkscreen ?? editor.selectedPad.pin} at
-        {editor.selectedPad.x.toFixed(2)}, {editor.selectedPad.y.toFixed(2)}
+      {view.width} × {view.height} mm · {editor.connectorsHere.length} connectors,
+      {editor.padsHere.length} positions on this view
+      {#if editor.selectedConnector && editor.selectedConnector.view === editor.viewId}
+        · {editor.selectedConnector.label ?? editor.selectedConnector.id} at
+        {editor.selectedConnector.x.toFixed(2)}, {editor.selectedConnector.y.toFixed(
+          2,
+        )}
       {/if}
     </p>
   {:else}
@@ -302,14 +359,6 @@
     font-size: 0.8rem;
   }
 
-  .tool {
-    @extend %button;
-
-    &.on {
-      border-color: var(--color-border-accent);
-    }
-  }
-
   .hint {
     color: var(--color-text-muted);
   }
@@ -323,10 +372,6 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     touch-action: none;
-
-    &.adding {
-      cursor: crosshair;
-    }
   }
 
   .pcb {
@@ -360,59 +405,86 @@
     stroke-width: 0.3;
   }
 
-  .header {
-    pointer-events: none;
+  .usb {
+    fill: var(--color-neutral-400);
+    stroke: var(--color-border);
+    stroke-width: 0.3;
+    cursor: grab;
+  }
+
+  .receiver {
+    cursor: grab;
 
     rect {
-      fill: none;
-      stroke: var(--color-border-accent);
-      stroke-width: 0.2;
-      stroke-dasharray: 0.9 0.7;
+      fill: var(--color-neutral-300);
+      stroke: var(--color-border);
+      stroke-width: 0.25;
     }
 
     text {
       fill: var(--color-text-muted);
       font-size: 1.6px;
-    }
-  }
-
-  .pad {
-    cursor: grab;
-
-    .dot {
-      fill: var(--pad-color, var(--color-neutral-500));
-      stroke: var(--color-surface);
-      stroke-width: 0.25;
-    }
-
-    .tag {
-      fill: var(--color-text);
-      font-size: 1.4px;
       font-weight: 600;
       text-anchor: middle;
       pointer-events: none;
     }
+  }
 
-    &.selected .dot {
+  .connector {
+    cursor: grab;
+
+    .shell {
+      fill: var(--color-neutral-200);
+      stroke: var(--color-border);
+      stroke-width: 0.2;
+    }
+
+    &.kind-solder .shell {
+      fill: none;
+      stroke-dasharray: 0.9 0.7;
+    }
+
+    &.on .shell {
       stroke: var(--color-border-accent);
-      stroke-width: 0.6;
+      stroke-width: 0.5;
     }
 
-    &.group-outputs {
-      --pad-color: var(--color-accent-500);
+    .dot {
+      stroke: var(--color-surface);
+      stroke-width: 0.2;
     }
-    &.group-uart {
-      --pad-color: var(--color-pitch);
+
+    .signal {
+      fill: var(--color-accent-500);
     }
-    &.group-i2c {
-      --pad-color: var(--color-yaw);
+
+    .net {
+      fill: var(--color-yellow-500);
+
+      &.ground {
+        fill: var(--color-neutral-600);
+      }
     }
-    &.group-adc,
-    &.group-power {
-      --pad-color: var(--color-yellow-500);
+
+    .empty {
+      fill: none;
+      stroke: var(--color-border);
+      stroke-width: 0.2;
     }
-    &.group-led {
-      --pad-color: var(--color-status-good);
+
+    .first {
+      fill: none;
+      stroke: var(--color-text-muted);
+      stroke-width: 0.2;
+      pointer-events: none;
+    }
+
+    .tag {
+      fill: var(--color-text);
+      font-size: 1.5px;
+      font-weight: 600;
+      text-anchor: middle;
+      pointer-events: none;
     }
   }
 

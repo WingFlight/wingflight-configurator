@@ -6,10 +6,11 @@
    * and the inspectors down the right.
    */
   import BoardPanel from "./components/BoardPanel.svelte";
+  import ConnectorPanel from "./components/ConnectorPanel.svelte";
   import EditorCanvas from "./components/EditorCanvas.svelte";
-  import PadPanel from "./components/PadPanel.svelte";
   import PortsPanel from "./components/PortsPanel.svelte";
   import PreviewPanel from "./components/PreviewPanel.svelte";
+  import ReceiverPanel from "./components/ReceiverPanel.svelte";
   import ViewPanel from "./components/ViewPanel.svelte";
   import { getEditorState } from "./lib/editor_state.svelte.js";
   // A worked example that uses every part of the schema at once: three
@@ -128,7 +129,8 @@
   <aside>
     <BoardPanel />
     <ViewPanel />
-    <PadPanel />
+    <ConnectorPanel />
+    <ReceiverPanel />
     <PortsPanel />
   </aside>
 </main>

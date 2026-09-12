@@ -39,8 +39,21 @@ backgrounds — and only pins the catalogue has added or dropped change.
 You can also load a profile file someone sent you, and *Example* loads a
 worked profile that uses every part of the schema at once.
 
+**Connectors.** A connector is a plug: a label the user reads, a kind, a
+pitch, and an ordered list of positions. Each position carries a signal,
+a power or ground rail, or nothing. Placing a connector places every one
+of its positions at the right spacing, so a ten-way header is one drag
+rather than ten. This is what lets the drawing say which way round a
+cable goes.
+
+**Receivers and the USB socket.** A receiver soldered to the board is
+declared with its protocol and the port it occupies, so the port list
+stops calling that port "not broken out". The USB socket is placed
+freely rather than pinned to an edge. Both drag on the canvas.
+
 **Views.** Top, left and right, each with its own extent in millimetres,
-its own CAD background and its own pads. Only the top view is required.
+its own CAD background and its own connectors. Only the top view is
+required.
 
 **Backgrounds.** Load an SVG exported from CAD. It is parsed, stripped of
 scripts, event handlers and external references, and written to
@@ -48,12 +61,11 @@ scripts, event handlers and external references, and written to
 millimetre units — the view's extent is taken from it, and every pad
 placed afterwards is in real board coordinates.
 
-**Pads.** Click *Add pad* and click the board, then drag. Arrow keys
-nudge by the snap step, shift by five. Snap defaults to 0.254 mm; 2.54 mm
-puts a pad exactly on a header pitch.
-
-**Connectors.** Group a port's pads into one plug. This is what tells the
-configurator that a UART is one connector rather than two places.
+**Placing.** Drag a connector on the canvas. Arrow keys nudge the
+selected one by the snap step, shift by five. Snap defaults to 0.254 mm;
+2.54 mm puts a connector exactly on a header pitch. A ring marks
+position 1, because which end is pin 1 is the thing a connector drawing
+has to get across.
 
 **Ports.** Each port's TX pin, RX pin and serial identifier. The panel
 says how the port will be drawn — *together*, *split* or *single* — from
@@ -83,6 +95,8 @@ the same JSON as a file, for when you are not running the dev server.
   first.
 - `src/lib/editor_state.svelte.js` — the document: boards, selection and
   an undo stack of snapshots.
+- `REQUIREMENTS.md` — what this has to be able to describe, and why.
+  The schema answers to that file.
 - `src/lib/svg_import.js` — reading and sanitising a CAD export.
 - `examples/` — the worked example, also loaded by the *Example* button.
 

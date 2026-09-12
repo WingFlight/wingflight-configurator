@@ -35,7 +35,7 @@ describe("normalisePin", () => {
 describe("normaliseProfile", () => {
   it("turns a version 1 profile into a single top view", () => {
     const profile = normaliseProfile(v1);
-    expect(profile.schema).toBe(2);
+    expect(profile.schema).toBe(3);
     expect(Object.keys(profile.views)).toEqual(["top"]);
     expect(profile.views.top.width).toBe(40);
     expect(profile.pads.every((pad) => pad.view === "top")).toBe(true);

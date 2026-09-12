@@ -1,7 +1,13 @@
 <script>
   /**
    * File: tools/board-editor/src/components/PortsPanel.svelte
-   * The serial ports and the connectors they come out on.
+   * The serial ports: which TX and RX pin each one is, and which
+   * serial identifier the firmware knows it by.
+   *
+   * A port's *label* is what the board prints -- "Port A" -- and is
+   * edited here too, because both names have to be right: the letter
+   * is what a user looks for, the identifier is what the firmware's
+   * serial configuration is keyed to (REQUIREMENTS.md, R3).
    *
    * A port is its TX pin and its RX pin, nothing more. Whether it is
    * "split" is worked out from where those two pins landed, and shown
@@ -14,14 +20,16 @@
 
   const editor = getEditorState();
 
-  let newHeaderLabel = $state("");
-
+  // Every signal position on the board, named by where it is, so
+  // choosing a port's TX is picking a physical place on a plug.
   let pinOptions = $derived(
-    (editor.board?.pads ?? [])
-      .filter((pad) => pad.group === "uart" || pad.group === "other")
+    (editor.board?.allPads ?? [])
+      .filter((pad) => pad.pin)
       .map((pad) => ({
         pin: pad.pin,
-        label: `${pad.silkscreen ?? pad.pin} (${pad.pin})`,
+        label: pad.connectorLabel
+          ? `${pad.silkscreen ?? pad.pin} · ${pad.connectorLabel} pin ${pad.position}`
+          : `${pad.silkscreen ?? pad.pin} (${pad.pin})`,
       })),
   );
 
@@ -41,7 +49,7 @@
     Object.fromEntries(derivedPorts.map((port) => [port.id, port])),
   );
 
-  function headersOf(port) {
+  function whereLines(port) {
     const row = layoutById[port.id];
     if (!row) return "";
     return row.lines
@@ -52,46 +60,6 @@
 </script>
 
 <section>
-  <h2>Connectors</h2>
-  <div class="row">
-    <input placeholder="Label, e.g. UART3 / GPS" bind:value={newHeaderLabel} />
-    <button
-      onclick={() => {
-        editor.addHeader(newHeaderLabel.trim());
-        newHeaderLabel = "";
-      }}>Add</button
-    >
-  </div>
-  <ul class="list">
-    {#each editor.board?.headers ?? [] as header (header.id)}
-      <li class="header-row">
-        <input
-          value={header.label ?? ""}
-          onchange={(event) =>
-            editor.setHeaderField(header.id, "label", event.currentTarget.value)}
-        />
-        <select
-          value={header.view}
-          onchange={(event) =>
-            editor.setHeaderField(header.id, "view", event.currentTarget.value)}
-        >
-          {#each Object.keys(editor.board.views) as id (id)}
-            <option value={id}>{id}</option>
-          {/each}
-        </select>
-        <button class="danger" onclick={() => editor.removeHeader(header.id)}>
-          ×
-        </button>
-      </li>
-    {/each}
-    {#if !editor.board?.headers?.length}
-      <li class="note">
-        No connectors yet. Grouping a port's two pads into one connector is
-        what tells the configurator they are a single plug.
-      </li>
-    {/if}
-  </ul>
-
   <h2>Serial ports</h2>
   <button onclick={() => editor.addPort()}>Add port</button>
 
@@ -153,7 +121,7 @@
       </label>
       <p class="verdict">
         Drawn as: <strong>{row?.layout ?? "—"}</strong>
-        {#if headersOf(port)}· {headersOf(port)}{/if}
+        {#if whereLines(port)}· {whereLines(port)}{/if}
       </p>
       <button class="danger" onclick={() => editor.removePort(port.id)}>
         Delete port

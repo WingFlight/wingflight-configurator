@@ -13,6 +13,7 @@ this is the reference for what the editor writes and what the app reads.
 | The profile file | `src/tabs/journey/board_profiles.json` |
 | Background drawings | `src/images/boards/*.svg`, served at `/images/boards/…` |
 | Schema and normaliser | `src/js/boardview/schema.js` |
+| Connectors and their positions | `src/js/boardview/connectors.js` |
 | Reading a unified target config | `src/js/boardview/unified_config.js` |
 | Port joining and split detection | `src/js/boardview/port_map.js` |
 | Fallback for an undrawn board | `src/js/boardview/generic_layout.js` |
@@ -52,39 +53,49 @@ In order of preference:
 3. **No drawing at all**, when the board is neither known nor read. The
    port list still appears, and says why there is no picture.
 
-## Schema, version 2
+## Schema, version 3
 
 ```json
 {
-  "schema": 2,
-  "id": "MTKS-MATEKH743",
-  "match": { "manufacturerId": ["MTKS"], "boardName": ["MATEKH743"] },
-  "display": "Matek H743-WING",
-  "mcu": "STM32H743",
+  "schema": 3,
+  "id": "FRSK-VANTAC_RF007",
+  "match": { "manufacturerId": ["FRSK"], "boardName": ["VANTAC_RF007"] },
+  "display": "Vantac RF007",
+  "mcu": "STM32F7X2",
   "coordinatesSchematic": true,
 
   "views": {
-    "top":   { "width": 56, "height": 36,
-               "background": "/images/boards/matek-h743-top.svg",
+    "top":   { "width": 36, "height": 36,
+               "background": "/images/boards/vantac-rf007-top.svg",
                "backgroundOpacity": 0.6,
-               "mountHoles": [[3, 3], [53, 3], [3, 33], [53, 33]],
-               "usb": { "edge": "top", "offset": 0.5 } },
-    "left":  { "width": 56, "height": 11 },
-    "right": { "width": 56, "height": 11 }
+               "mountHoles": [[3, 3], [33, 3], [3, 33], [33, 33]],
+               "usb": { "x": 14, "y": -1.8, "width": 9, "height": 3.6 } },
+    "left":  { "width": 36, "height": 11, "usb": null },
+    "right": { "width": 36, "height": 11, "usb": null }
   },
 
-  "headers": [
-    { "id": "j3", "label": "J3 UART1", "view": "top" }
+  "connectors": [
+    { "id": "port-a", "label": "Port A", "kind": "port", "view": "top",
+      "x": 4, "y": 11, "pitch": 2, "rotation": 0,
+      "pins": [
+        { "position": 1, "net": "GND" },
+        { "position": 2, "net": "5V" },
+        { "position": 3, "pin": "B06", "silkscreen": "TX" },
+        { "position": 4, "pin": "B07", "silkscreen": "RX" }
+      ] }
   ],
 
-  "pads": [
-    { "pin": "A09", "silkscreen": "TX1", "x": 4, "y": 12,
-      "view": "top", "side": "top", "group": "uart", "header": "j3" }
+  "receivers": [
+    { "id": "rx", "label": "Built-in ELRS", "protocol": "CRSF",
+      "portIdentifier": 4, "view": "top",
+      "x": 22, "y": 26, "width": 12, "height": 6, "antenna": "ufl" }
   ],
+
+  "pads": [],
 
   "ports": [
-    { "id": "UART1", "identifier": 0, "label": "UART1",
-      "tx": "A09", "rx": "A10" }
+    { "id": "UART1", "identifier": 0, "label": "Port A",
+      "tx": "B06", "rx": "B07" }
   ]
 }
 ```
@@ -104,9 +115,10 @@ the profile does not declare simply is not offered in the switcher.
 - `background` is a path under `/images/boards/`. With a background the
   drawing puts the pads over it and draws no outline of its own; without
   one it draws a plain rounded rectangle and the board's name.
-- `usb` says which edge the USB connector is on and how far along it
-  (`0` to `1`). Labels on that edge are moved out to clear it. `null`
-  means do not draw it.
+- `usb` is a rectangle placed anywhere on the view: `x`, `y`, `width`,
+  `height` and an optional `rotation`. `null` means the view does not
+  show it. Labels near it are moved out to clear it. The older
+  `{edge, offset}` form is still read and converted.
 
 **Exporting a background from CAD.** Export SVG at 1:1 with millimetre
 units, so the file carries `width="56mm"`. The editor then takes the
@@ -115,17 +127,56 @@ in real board coordinates. An export with no units still works, but the
 extent comes from the viewBox and has to be corrected by hand. See
 `src/images/boards/example-wing-top.svg` for the convention.
 
-### headers
+### connectors
 
-A header is a physical connector. It exists so a label can name the plug
-rather than each pin on it, and so the drawing can tell whether a port's
-two pins are one connector or two.
+A connector is a physical plug, and it owns its positions. This is the
+heart of the schema: placing a connector places every one of its pins,
+at its pitch, in order, so a ten-way header lands in one move instead of
+ten.
 
-`x`, `y`, `width`, `height` are optional: with them the connector's
-footprint is drawn as given, without them it is the bounding box of the
-pads that name it.
+- `label` is what is printed on the board, e.g. `Port A`. It is shown
+  wherever that port appears, alongside the UART number rather than
+  instead of it.
+- `kind` is `port`, `header` or `solder`. It decides how the shell is
+  drawn and what pitch a new connector defaults to: a peripheral plug, a
+  2.54 mm pinheader, or a row of bare pads.
+- `x`, `y` are the centre of **position 1**, in millimetres.
+- `rotation` is degrees clockwise from "positions run to the right", so
+  `90` runs down the board. Position *n* sits `pitch` millimetres along
+  that direction from position *n-1*.
+- `pitch` is centre to centre, in millimetres.
+- `labelSide` behaves as on a pad, and applies to every position. Leave
+  it `auto` unless a corner is crowded: forcing a dozen labels onto one
+  short edge makes the drawing very wide.
+
+Each entry in `pins` is one physical position, and carries exactly one
+of:
+
+- `pin` — an MCU pin such as `B06`, which joins it to a resource, a
+  serial port and the timer/DMA tables;
+- `net` — a power or ground rail: `GND`, `3V3`, `5V`, `VBAT`, `VBEC`,
+  or whatever the board silkscreens. Drawn as a square, never a
+  resource, never offered for reassignment, and exempt from the
+  one-pin-per-board rule, because a board has many grounds;
+- neither — a position that exists on the plug and carries nothing. It
+  keeps its place in the numbering and gets no pad.
+
+`silkscreen` names the position, and `group` overrides its colour; leave
+`group` out for a signal and the drawing takes it from whatever resource
+the pin turns out to carry.
+
+### receivers
+
+A receiver soldered to the board. Declaring it does two things: it is
+drawn as a block with its aerial, and the port at `portIdentifier` is
+reported as carrying it rather than as "not broken out", which would be
+wrong. A port with a receiver on it is allowed to have no pins at all.
 
 ### pads
+
+Loose solder pads that belong to no connector. Most boards have none,
+and a pad is easier to describe as a one-position `solder` connector, so
+this is mostly a migration path for older profiles.
 
 - `pin` is the CLI form: `A09`, `B07`. No `P` prefix, two digits. It is
   the key that joins a pad to everything else, and no pin may appear
@@ -168,14 +219,28 @@ when they are on the same view; the port list names where each half is.
 `tools/board-editor/examples/example-three-view.json` is a worked
 example of exactly this.
 
+## Reading a profile
+
+`normaliseProfile` adds `allPads`: every drawn position, a connector's
+pins and the loose pads together, each carrying `connector`, `position`,
+`role` (`signal` or `net`) and its resolved coordinates. Anything that
+draws or searches a board should read that rather than joining
+`connectors` and `pads` itself.
+
 ## Backwards compatibility
 
-A version 1 profile's *geometry* — an `outline` and pads with no `view`
-— is upgraded in memory to a single top view by `normaliseProfile`, so
-an old file still draws. Its `match` is not carried over: a profile
-keyed to a firmware target name is dropped to an empty match and will
-never be found, which is the honest outcome, since that key no longer
-identifies a board. Restate it in unified terms.
+Older profiles are upgraded in memory:
+
+- a version 1 `outline` becomes a single top view;
+- version 2 `headers` become `solder` connectors that own the pads which
+  named them, keeping those pads exactly where they were and taking the
+  connector's pitch and rotation from the gap between the first two;
+- a `usb` pinned to an edge becomes a placed rectangle.
+
+`match` is the exception. A profile keyed to a firmware target name is
+dropped to an empty match and will never be found, which is the honest
+outcome since that key no longer identifies a board. Restate it in
+unified terms.
 
 ## Checking a profile
 

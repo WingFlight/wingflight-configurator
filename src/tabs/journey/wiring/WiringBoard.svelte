@@ -30,6 +30,13 @@
   // so an undrawn board still gets a picture. This is deliberately not
   // `session.profile` -- that one stays null for an unrecognised board,
   // which is what stops the tool writing pin changes to it.
+  // How to name the board to the user. Under unified firmware the
+  // target name is the MCU build, the same for every board on that
+  // silicon, so the board's own name is what to say.
+  let boardLabel = $derived(
+    profile.board.boardName || profile.board.targetName || "?",
+  );
+
   let boardView = $derived(
     resolveBoardView({
       matched: session.profile,
@@ -133,7 +140,7 @@
           {session.profile
             ? session.profile.display
             : $i18n.t("journeyWiring.unrecognised", {
-                target: profile.board.targetName,
+                target: boardLabel,
               })}
           · {$i18n.t("journeyWiring.padCount", {
             count: session.padsInUse.length,
@@ -160,7 +167,7 @@
         <StageNote tone="warning">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html $i18n.t("journeyWiring.unrecognisedHelp", {
-            target: profile.board.targetName || "?",
+            target: boardLabel,
           })}
         </StageNote>
       {/if}

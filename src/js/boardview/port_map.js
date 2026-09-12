@@ -51,7 +51,11 @@ export function hardwareKeysFor(identifier) {
 
 function padIndex(profile) {
   const byPin = {};
-  for (const pad of profile?.pads ?? []) byPin[pad.pin] = pad;
+  // `allPads` is every drawn position, connectors included; older
+  // callers that hand over a bare `pads` list still work.
+  for (const pad of profile?.allPads ?? profile?.pads ?? []) {
+    if (pad.pin) byPin[pad.pin] = pad;
+  }
   return byPin;
 }
 
@@ -59,9 +63,9 @@ function padIndex(profile) {
  * Where a port's two lines sit relative to one another.
  *
  * - `single`   only one of TX and RX is broken out at all.
- * - `together` both pads are on one header, or within a few
+ * - `together` both pads are on one connector, or within a few
  *              millimetres of each other on the same view.
- * - `split`    the two pads are on different headers or different
+ * - `split`    the two pads are on different connectors or different
  *              views: the user has to run two wires to two places.
  *
  * @param {{pad: ?Object}[]} lines
@@ -76,7 +80,9 @@ export function layoutOfLines(lines, override = null) {
 
   const [a, b] = placed.map((line) => line.pad);
   if (a.view !== b.view) return "split";
-  if (a.header && b.header) return a.header === b.header ? "together" : "split";
+  if (a.connector && b.connector) {
+    return a.connector === b.connector ? "together" : "split";
+  }
   const distance = Math.hypot(a.x - b.x, a.y - b.y);
   return distance > SPLIT_DISTANCE_MM ? "split" : "together";
 }
@@ -108,6 +114,15 @@ export function buildPortMap({
   describeFunction = null,
 } = {}) {
   const pads = padIndex(profile);
+
+  // A receiver soldered to the board occupies a port that nobody can
+  // wire. Saying "not broken out" about it would be misleading: the
+  // port is in use, by hardware that is already connected (R6).
+  const receiverByIdentifier = new Map(
+    (profile?.receivers ?? [])
+      .filter((receiver) => receiver.portIdentifier !== null)
+      .map((receiver) => [receiver.portIdentifier, receiver]),
+  );
   const declared = new Map();
   for (const port of profile?.ports ?? []) {
     if (port.identifier !== null) declared.set(port.identifier, port);
@@ -145,7 +160,10 @@ export function buildPortMap({
           pin,
           pad,
           view: pad?.view ?? null,
-          header: pad?.header ?? null,
+          connector: pad?.connector ?? null,
+          // Which position on that connector, 1-based, which is what a
+          // user counts along the plug.
+          position: pad?.position ?? null,
           silkscreen: pad?.silkscreen ?? null,
           // A pin the firmware knows about but the profile never drew:
           // it exists, it just cannot be pointed at on the picture.
@@ -156,13 +174,21 @@ export function buildPortMap({
       const present = lines.filter((line) => line.pin);
       const layout = layoutOfLines(lines, spec?.split ?? null);
       const functionLabel = describeFunction?.(config) ?? "";
+      const receiver = receiverByIdentifier.get(identifier) ?? null;
 
       return {
         id: spec?.id ?? portName(identifier),
         identifier,
         name: portName(identifier),
+        // What is printed on the board wins over the UART number:
+        // these boards letter their ports (R3). The UART number is
+        // still carried, and both are shown, never one instead of the
+        // other.
         label: spec?.label ?? portName(identifier),
         notes: spec?.notes ?? null,
+        // The receiver soldered to this port, if any.
+        receiver,
+        internal: Boolean(receiver),
         functionMask: config?.functionMask ?? 0,
         functionLabel,
         assigned: Boolean(config && config.functionMask),
