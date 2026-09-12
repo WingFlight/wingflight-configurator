@@ -375,11 +375,55 @@
         chrome.storage.local.get("unifiedConfigLast", resolve),
       );
       const cacheAge = now - (unifiedConfigLast?.lastUpdate ?? 0);
+      const cacheCouldApply =
+        unifiedConfigLast?.targetId === targetSpec.target &&
+        cacheAge <= expirationPeriod;
 
-      if (
-        unifiedConfigLast?.targetId !== targetSpec.target ||
-        cacheAge > expirationPeriod
-      ) {
+      async function fetchLatestCommit() {
+        return targetSpec.supported
+          ? github.getFileLastCommitInfo(
+              "WingFlight/wingflight-targets",
+              "master",
+              targetSpec.path,
+            )
+          : github.getFileLastCommitInfo(
+              "rotorflight/rotorflight-targets",
+              "rotorflight",
+              targetSpec.path,
+            );
+      }
+
+      // A target config directly controls what gets flashed onto real
+      // hardware, so even inside the cache window, cheaply confirm the
+      // source file actually hasn't changed since we cached it rather than
+      // trusting age alone -- otherwise a config fix (e.g.
+      // WingFlight/wingflight-targets#1) can go completely unnoticed for up
+      // to expirationPeriod: every reflash keeps re-injecting the same
+      // stale, already-fixed-upstream blob, no matter how thoroughly the
+      // board itself is erased and reflashed, since chrome.storage.local
+      // here is entirely separate from the board's own flash. This is a
+      // metadata-only request (the latest commit touching this one file),
+      // much cheaper than refetching and reprocessing the full config.
+      let latestCommit = null;
+      let cacheIsFresh = false;
+      if (cacheCouldApply) {
+        try {
+          latestCommit = await fetchLatestCommit();
+          cacheIsFresh = latestCommit?.commitHash === unifiedConfigLast.commitHash;
+        } catch (err) {
+          console.log(
+            "Failed to check target config freshness, refetching",
+            err,
+          );
+        }
+      }
+
+      if (cacheIsFresh) {
+        const cached = unifiedConfigLast.unifiedTarget;
+        const bare = grabBuildNameFromConfig(cached?.config ?? "");
+        bareBoard = bare;
+        unifiedTarget = target === bare ? {} : cached;
+      } else {
         try {
           const res = await fetch(targetSpec.download_url);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -390,17 +434,7 @@
           const bare = grabBuildNameFromConfig(cfg);
           bareBoard = bare;
 
-          const commit = targetSpec.supported
-            ? await github.getFileLastCommitInfo(
-                "WingFlight/wingflight-targets",
-                "master",
-                targetSpec.path,
-              )
-            : await github.getFileLastCommitInfo(
-                "rotorflight/rotorflight-targets",
-                "rotorflight",
-                targetSpec.path,
-              );
+          const commit = latestCommit ?? (await fetchLatestCommit());
           cfg = injectDefaultDesign(cfg, "BTFL");
           cfg = injectTargetInfo(
             cfg,
@@ -425,6 +459,7 @@
                 unifiedConfigLast: {
                   unifiedTarget,
                   targetId: targetSpec.target,
+                  commitHash: commit?.commitHash,
                   lastUpdate: now,
                 },
               },
@@ -441,11 +476,6 @@
             }),
           );
         }
-      } else {
-        const cached = unifiedConfigLast.unifiedTarget;
-        const bare = grabBuildNameFromConfig(cached?.config ?? "");
-        bareBoard = bare;
-        unifiedTarget = target === bare ? {} : cached;
       }
 
       populateBuilds(builds, targetSpec.manufacturer, releases[bareBoard]);
