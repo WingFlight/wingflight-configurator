@@ -12,7 +12,7 @@
           "VANTAC_RF007"
         ]
       },
-      "display": "VANTAC_RF007",
+      "display": "VANTAC RF007",
       "mcu": "STM32F7X2",
       "coordinatesSchematic": true,
       "views": {
@@ -25,6 +25,12 @@
             "width": 9,
             "height": 3.6,
             "rotation": 0
+          },
+          "title": {
+            "x": 20.07,
+            "y": 18.8,
+            "anchor": "middle",
+            "show": "auto"
           }
         }
       },
@@ -71,50 +77,21 @@
             },
             {
               "position": 7,
-              "silkscreen": "TLM",
               "pin": "A03",
+              "silkscreen": "TLM",
               "group": "uart"
             },
             {
               "position": 8,
-              "silkscreen": "AUX",
               "pin": "B06",
+              "silkscreen": "AUX",
               "group": "uart"
             },
             {
               "position": 9,
-              "silkscreen": "SBUS",
               "pin": "B07",
+              "silkscreen": "SBUS",
               "group": "uart"
-            }
-          ]
-        },
-        {
-          "id": "top-row",
-          "kind": "solder",
-          "view": "top",
-          "x": 16.5,
-          "y": 5,
-          "pitch": 5.5,
-          "label": "Power and sensors",
-          "pins": [
-            {
-              "position": 1,
-              "pin": "B09",
-              "silkscreen": "SDA1",
-              "group": "i2c"
-            },
-            {
-              "position": 2,
-              "pin": "B08",
-              "silkscreen": "SCL1",
-              "group": "i2c"
-            },
-            {
-              "position": 3,
-              "pin": "C00",
-              "silkscreen": "Vbat",
-              "group": "adc"
             }
           ]
         },
@@ -122,11 +99,10 @@
           "id": "port-2",
           "kind": "port",
           "view": "top",
-          "x": 26.67,
-          "y": 20.83,
+          "x": 31.75,
+          "y": 14.48,
           "pitch": 2.6,
           "label": "Port C",
-          "rotation": 90,
           "pins": [
             {
               "position": 1,
@@ -154,11 +130,11 @@
           "id": "port-3",
           "kind": "port",
           "view": "top",
-          "x": 39,
-          "y": 14.2,
+          "x": 31.75,
+          "y": 5.08,
           "pitch": 2.6,
           "label": "Port A",
-          "rotation": 90,
+          "labelSide": "above",
           "pins": [
             {
               "position": 1,
@@ -184,21 +160,22 @@
         },
         {
           "id": "j-ain",
-          "label": "AIN",
           "kind": "header",
           "view": "top",
-          "x": 35.56,
-          "y": 7.37,
-          "rotation": 90,
+          "x": 16.51,
+          "y": 6.35,
           "pitch": 2.54,
+          "label": "AIN",
+          "labelSide": "above",
           "pins": [
             {
               "position": 1,
-              "net": "GND"
+              "pin": "C00",
+              "silkscreen": "AIN"
             },
             {
               "position": 2,
-              "silkscreen": "AIN"
+              "net": "GND"
             }
           ]
         }
@@ -207,13 +184,13 @@
         {
           "id": "receiver-1",
           "view": "top",
-          "width": 14,
-          "height": 6,
-          "label": "Built-in receiver",
-          "protocol": "FBUS",
-          "portIdentifier": 4,
           "side": "bottom",
-          "offset": 0.4
+          "offset": 0.41,
+          "width": 11,
+          "height": 6,
+          "label": "RX",
+          "protocol": "FBUS",
+          "portIdentifier": 4
         }
       ],
       "pads": [],
