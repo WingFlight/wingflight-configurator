@@ -68,6 +68,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-backup-restore-reliability",
+      "path": "./feature-backup-restore-reliability/"
+    },
+    {
+      "type": "branch",
       "name": "feature-crsf-sensors",
       "path": "./feature-crsf-sensors/"
     },
