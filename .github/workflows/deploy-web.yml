@@ -175,6 +175,41 @@ jobs:
             echo "Latest stable: https://cfg.wingflight.org/latest/"
           fi
 
+      - name: Create/update GitHub Release notes
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
+          VERSION="${TAG##*/}"
+
+          if [[ "$TAG" == release/* ]]; then
+            TITLE="Wingflight Configurator Release $VERSION"
+            PRERELEASE_ARGS=()
+          else
+            TITLE="Wingflight Configurator Snapshot $VERSION"
+            PRERELEASE_ARGS=(--prerelease)
+          fi
+
+          .github/scripts/extract-release-notes.py "$VERSION" Releases.md > Notes.md
+          if [ ! -s Notes.md ]; then
+            echo "_No release notes recorded for $VERSION._" > Notes.md
+          fi
+          {
+            echo
+            echo "---"
+            echo
+            echo "🔗 Try this build: https://cfg.wingflight.org/$DEPLOY_PATH/"
+          } >> Notes.md
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file Notes.md
+          else
+            gh release create "$TAG" --title "$TITLE" --notes-file Notes.md "${PRERELEASE_ARGS[@]}"
+          fi
+
   cleanup-deleted-branch:
     name: Cleanup Deleted Branch Deployment
     if: github.event_name == 'delete' && github.event.ref_type == 'branch'
