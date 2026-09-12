@@ -8539,6 +8539,9 @@
     "boardViewPortFree": {
         "message": "not in use"
     },
+    "boardViewPadUnassigned": {
+        "message": "no pin assigned"
+    },
     "boardViewPortInternal": {
         "message": "built-in receiver"
     },

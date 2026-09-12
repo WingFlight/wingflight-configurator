@@ -54,7 +54,8 @@
       editor.setConnectorPin(connector.id, position, "net", "GND");
     } else {
       // Clearing both is what makes it empty; for "signal" the pin box
-      // then appears, waiting for a pin.
+      // then appears, waiting for a pin, and for "label" the name in
+      // the next column is all there is to give.
       editor.setConnectorPin(connector.id, position, "pin", "");
       editor.setConnectorPin(connector.id, position, "net", "");
     }
@@ -263,6 +264,7 @@
               >
                 <option value="signal">signal</option>
                 <option value="net">power / ground</option>
+                <option value="label">name only</option>
                 <option value="empty">nothing</option>
               </select>
             </td>
@@ -292,6 +294,8 @@
                       event.currentTarget.value,
                     )}
                 />
+              {:else if role === "label"}
+                <span class="muted">named in the next column</span>
               {:else}
                 <span class="muted">—</span>
               {/if}

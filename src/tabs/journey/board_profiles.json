@@ -228,6 +228,19 @@
           ]
         }
       ],
+      "receivers": [
+        {
+          "id": "receiver-1",
+          "view": "top",
+          "x": 13.97,
+          "y": 27.69,
+          "width": 12,
+          "height": 6,
+          "label": "RX",
+          "protocol": "FBUS",
+          "portIdentifier": 4
+        }
+      ],
       "pads": [],
       "ports": [
         {

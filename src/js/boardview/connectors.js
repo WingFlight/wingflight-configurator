@@ -42,12 +42,22 @@ const GROUND_NETS = new Set(["GND", "AGND", "0V"]);
 
 /**
  * What a position carries.
- * @param {{pin?: string, net?: string}} pin
- * @returns {'signal'|'net'|'empty'}
+ *
+ * `label` is the awkward but common case: a pad that physically
+ * exists and is silkscreened, whose MCU pin the board's own
+ * configuration does not assign. The Vantac RF007 has two, an `AUX`
+ * pad on a UART the config leaves without a TX and an `AIN` pad whose
+ * ADC input is `NONE`. Calling those power rails would colour and
+ * describe them wrongly; leaving them out would hide pads the user can
+ * see on the board in front of them.
+ *
+ * @param {{pin?: string, net?: string, silkscreen?: string}} pin
+ * @returns {'signal'|'net'|'label'|'empty'}
  */
 export function pinRole(pin) {
   if (pin?.pin) return "signal";
   if (pin?.net) return "net";
+  if (pin?.silkscreen) return "label";
   return "empty";
 }
 
@@ -294,8 +304,10 @@ export function connectorLabelAnchor(connector, gap = 3, view = null) {
  * Flattens every connector into the drawing's pad shape, so a pad on a
  * connector and a loose solder pad render through the same code.
  *
- * Positions carrying nothing are dropped: they exist on the plug, and
- * the shell shows them, but there is no pad to label or click.
+ * Positions carrying nothing at all are dropped: they exist on the
+ * plug, and the shell shows them, but there is nothing to label or
+ * click. A position with only a name is kept, because a named pad is
+ * something the user can see and find.
  *
  * @param {Object[]} connectors normalised
  * @returns {Object[]} pads, each carrying `connector` and `position`

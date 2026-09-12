@@ -5,7 +5,7 @@
  * formats and where they come from). Used by virtual mode, so the
  * wiring stage and the board drawing are developed against the shape
  * of hardware we actually ship for (tools/board-editor/REQUIREMENTS.md,
- * R8).
+ * R9).
  *
  * Generated from the board's own entry in the unified catalogue,
  * configs/FRSK-VANTAC_RF007.config in WingFlight/wingflight-targets, a

@@ -43,7 +43,7 @@ right spacing, in the right order. Dragging six pads individually onto a
 A connector's pin count is set by the author and varies from one to
 several dozen.
 
-### R2 — A pin is a signal, a power net, or nothing
+### R2 — A pin is a signal, a power net, a bare name, or nothing
 
 Each position on a connector carries exactly one of:
 
@@ -51,6 +51,10 @@ Each position on a connector carries exactly one of:
   it to a resource, a serial port and the timer/DMA tables;
 - **a power net** — `GND`, `3V3`, `5V`, `VBAT`, `VBEC`, or any other
   rail the board silkscreens, drawn and labelled but never a resource;
+- **a name only** — a pad that exists and is silkscreened but whose MCU
+  pin the board's own configuration does not assign. `AUX` and `AIN` on
+  the RF007 are both this, and neither is an omission: see R8. Drawn
+  hollow and named, never a resource;
 - **nothing** — a position that exists physically and carries no
   connection.
 
@@ -108,12 +112,58 @@ what is on the positions that are not signals.
 
 Re-reading the catalogue must not discard that work.
 
-### R8 — The simulator uses a real board
+### R8 — A worked board: the FrSky Vantac RF007
+
+The reference board, as described by someone holding one. Everything
+above has to express this layout, which makes it the test of whether
+the model is adequate rather than merely tidy. It is checked end to end
+in `test/boardview/rf007_layout.test.js`.
+
+**Main header**, down the **left** edge, nine positions on 2.54 mm.
+Being on the left, its labels read left:
+
+| # | Silkscreen | Is |
+| --- | --- | --- |
+| 1 | `S1` | servo 1 |
+| 2 | `S2` | servo 2 |
+| 3 | `S3` | servo 3 |
+| 4 | `S4 / Tail` | servo 4 |
+| 5 | `ESC` | motor 1 |
+| 6 | `RPM` | frequency input |
+| 7 | `TLM` | UART2 RX |
+| 8 | `AUX` | UART2 TX |
+| 9 | `SBUS` | UART1 TX |
+
+One header mixing servo outputs, a frequency input and three UART lines
+is exactly what a "a connector is one peripheral" model would get
+wrong.
+
+**A two-position header**: `GND`, `AIN`.
+
+**Two lettered UART ports**, each carrying its own power and ground:
+
+- **Port A** (UART4): `TX`, `RX`, `5V`, `GND`
+- **Port C** (UART3): `TX / SCL`, `RX / SDA`, `5V`, `GND`
+
+**A built-in FBUS receiver on UART5**, which the user cannot wire.
+
+Two of those pads have no MCU pin, and not through omission: the
+board's own catalogue config gives UART2 no TX, so `AUX` has none, and
+its `ADC_EXT 1` is `NONE`, so neither has `AIN`. That is why a bare
+name is a first-class kind of position in R2.
+
+One thing still to confirm with the board in hand: whether Port C's
+`TX / SCL` and `RX / SDA` are single pads carrying either function, or
+the silkscreen documenting two separate connectors. The catalogue puts
+UART3 on B10/B11 and I2C1 on B08/B09, which are four distinct pins, so
+one pad cannot be both.
+
+### R9 — The simulator uses a real board
 
 Virtual mode must present a board from these families rather than a
 generic stand-in, so the drawing, the port map and the wiring stage are
 exercised against the shape of hardware we actually ship for.
-`FRSK-VANTAC_RF007` is that board.
+`FRSK-VANTAC_RF007` is that board, and R8 is its layout.
 
 ## Non-requirements
 
@@ -135,7 +185,8 @@ exercised against the shape of hardware we actually ship for.
 | R5 | `views[].usb` as a placed rectangle |
 | R6 | `receivers[]`, and `port.internal` in `src/js/boardview/port_map.js` |
 | R7 | `seedFromConfig` in `tools/board-editor/src/lib/editor_state.svelte.js` |
-| R8 | `src/js/virtual_fc.js` and `src/js/remap_fc/fixtures/` |
+| R8 | `test/boardview/rf007_layout.test.js`; the bare-name role in `connectors.js` |
+| R9 | `src/js/virtual_fc.js` and `src/js/remap_fc/fixtures/` |
 
 
 # Known Issues

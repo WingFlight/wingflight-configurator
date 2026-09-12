@@ -568,11 +568,14 @@ export function validateProfile(profile) {
   for (const pad of profile.allPads ?? profile.pads) {
     const where = pad.connectorLabel ?? pad.connector ?? pad.view;
 
-    if (pad.role === "net") {
-      if (!pad.net) {
+    if (pad.role === "net" || pad.role === "label") {
+      // A rail, or a pad the board names but its own configuration
+      // leaves without a pin. Neither is a resource, so neither is
+      // held to the one-pin-per-board rule.
+      if (!pad.net && !pad.silkscreen) {
         problems.push({
           level: "error",
-          message: `A position on ${where} carries neither a pin nor a net.`,
+          message: `A position on ${where} carries nothing and has no name.`,
         });
       }
     } else {

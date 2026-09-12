@@ -57,7 +57,7 @@ export function applyVirtualConfig() {
   // The simulator presents a real board from the families we ship for,
   // so the board drawing, the port map and the wiring stage are all
   // exercised against hardware rather than a stand-in
-  // (tools/board-editor/REQUIREMENTS.md, R8). Its CLI output lives in
+  // (tools/board-editor/REQUIREMENTS.md, R9). Its CLI output lives in
   // src/js/remap_fc/fixtures/vantac_rf007.js.
   Object.assign(FC.CONFIG, {
     ...VANTAC_RF007_CONFIG,

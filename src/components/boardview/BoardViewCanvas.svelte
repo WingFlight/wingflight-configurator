@@ -125,6 +125,9 @@
 
   function padState(pad) {
     if (pad.role === "net") return "net";
+    // A pad the board names but whose pin its own configuration leaves
+    // unassigned: there is nothing on it to be assigned or free.
+    if (pad.role === "label") return "unassigned";
     if (conflictByPin[pad.pin]?.length) return "conflict";
     const port = portByPin[pad.pin]?.port ?? null;
     if (port) return port.assigned ? "assigned" : "free";
@@ -151,6 +154,9 @@
     // connector it is on. That is the whole point of drawing it: it
     // tells the user which way round the plug goes.
     if (pad.role === "net") return { text: pad.net, sub: null };
+    if (pad.role === "label") {
+      return { text: pad.silkscreen, sub: $i18n.t("boardViewPadUnassigned") };
+    }
 
     const entry = portByPin[pad.pin] ?? null;
     if (entry) {
@@ -432,14 +438,12 @@
         class:critical={pad.critical}
         class:dim={dimmed(pad)}
         class:static={!interactive}
-        role={interactive && pad.role !== "net" ? "button" : "img"}
-        tabindex={interactive && pad.role !== "net" ? 0 : null}
+        role={interactive && pad.pin ? "button" : "img"}
+        tabindex={interactive && pad.pin ? 0 : null}
         aria-label={pad.title}
-        aria-pressed={interactive && pad.role !== "net"
-          ? isSelected(pad)
-          : null}
-        onclick={() => pad.role !== "net" && select(pad.pin)}
-        onkeydown={(event) => pad.role !== "net" && onKey(event, pad.pin)}
+        aria-pressed={interactive && pad.pin ? isSelected(pad) : null}
+        onclick={() => pad.pin && select(pad.pin)}
+        onkeydown={(event) => pad.pin && onKey(event, pad.pin)}
         onmouseenter={() => onHoverPort?.(pad.port?.id ?? null)}
         onmouseleave={() => onHoverPort?.(null)}
         onfocus={() => onHoverPort?.(pad.port?.id ?? null)}
@@ -691,8 +695,16 @@
       --pad-color: var(--pad-ground);
     }
 
-    &.role-net {
+    &.role-net,
+    &.role-label {
       cursor: default;
+    }
+
+    // A named pad with no pin is drawn hollow with a dashed edge: it is
+    // there on the board, and there is nothing on it.
+    &.role-label .dot {
+      fill: var(--color-surface);
+      stroke-dasharray: 0.7 0.5;
     }
 
     // Free: hollow. Assigned: filled. Conflict: red ring.
