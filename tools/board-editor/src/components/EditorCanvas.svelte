@@ -19,6 +19,8 @@
     connectorLabelAnchor,
     connectorPinPositions,
   } from "@/js/boardview/connectors.js";
+  import { textWidth } from "@/js/boardview/label_layout.js";
+  import { receiverPlacement } from "@/js/boardview/schema.js";
 
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
 
@@ -31,11 +33,6 @@
   let dragging = $state(null);
 
   let view = $derived(editor.view);
-  let viewBox = $derived(
-    view
-      ? `${-MARGIN} ${-MARGIN} ${view.width + 2 * MARGIN} ${view.height + 2 * MARGIN}`
-      : "0 0 1 1",
-  );
 
   // A grid fine enough to place against but coarse enough to see
   // through: minor lines every millimetre, major every five.
@@ -63,10 +60,42 @@
     })),
   );
 
+  // A connector name sits outside the board, and "Servo / motor
+  // outputs" beside the left edge is far wider than the fixed margin:
+  // the box grows to hold whatever the names actually need, instead of
+  // cutting the first half of one off.
+  const TAG_FONT = 1.5;
+  let box = $derived.by(() => {
+    const room = { left: MARGIN, right: MARGIN, top: MARGIN, bottom: MARGIN };
+    if (!view) return room;
+    for (const item of placed) {
+      const { x, y, anchor } = item.labelAt;
+      const width = textWidth(
+        item.connector.label ?? item.connector.id,
+        TAG_FONT,
+      );
+      const from = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x;
+      room.left = Math.max(room.left, -from + 1);
+      room.right = Math.max(room.right, from + width - view.width + 1);
+      room.top = Math.max(room.top, -(y - TAG_FONT) + 1);
+      room.bottom = Math.max(room.bottom, y + TAG_FONT - view.height + 1);
+    }
+    return room;
+  });
+
+  let viewBox = $derived(
+    view
+      ? `${-box.left} ${-box.top} ${view.width + box.left + box.right} ${view.height + box.top + box.bottom}`
+      : "0 0 1 1",
+  );
+
   let receiversHere = $derived(
-    (editor.board?.receivers ?? []).filter(
-      (receiver) => receiver.view === editor.viewId,
-    ),
+    (editor.board?.receivers ?? [])
+      .filter((receiver) => receiver.view === editor.viewId && view)
+      .map((receiver) => ({
+        ...receiver,
+        box: receiverPlacement(receiver, view),
+      })),
   );
 
   function toBoard(event) {
@@ -108,8 +137,22 @@
     } else if (dragging.kind === "title") {
       editor.dragTitle(x, y);
     } else if (dragging.kind === "receiver") {
-      editor.setReceiverField(dragging.id, "x", editor.snapped(x));
-      editor.setReceiverField(dragging.id, "y", editor.snapped(y));
+      // A receiver slides along the edge it is mounted on. Which edge
+      // it is on is a decision, not something to fall out of a drag.
+      const receiver = editor.board?.receivers.find(
+        (entry) => entry.id === dragging.id,
+      );
+      if (receiver) {
+        const vertical = receiver.side === "left" || receiver.side === "right";
+        const extent = vertical ? view.height : view.width;
+        const size = vertical ? receiver.height : receiver.width;
+        const centre = (vertical ? y : x) + size / 2;
+        editor.setReceiverField(
+          dragging.id,
+          "offset",
+          extent ? Math.min(1, Math.max(0, centre / extent)) : 0.5,
+        );
+      }
     }
   }
 
@@ -262,20 +305,20 @@
           aria-label={receiver.label ?? "Receiver"}
           onpointerdown={(event) =>
             startDrag(event, "receiver", receiver.id, {
-              x: receiver.x,
-              y: receiver.y,
+              x: receiver.box.x,
+              y: receiver.box.y,
             })}
         >
           <rect
-            x={receiver.x}
-            y={receiver.y}
-            width={receiver.width}
-            height={receiver.height}
+            x={receiver.box.x}
+            y={receiver.box.y}
+            width={receiver.box.width}
+            height={receiver.box.height}
             rx="0.6"
           />
           <text
-            x={receiver.x + receiver.width / 2}
-            y={receiver.y + receiver.height / 2 + 0.6}
+            x={receiver.box.x + receiver.box.width / 2}
+            y={receiver.box.y + receiver.box.height / 2 + 0.6}
           >
             {receiver.protocol ?? receiver.label ?? "RX"}
           </text>

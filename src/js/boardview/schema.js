@@ -229,7 +229,50 @@ function normaliseView(id, raw, fallback) {
  * port that they can never wire, which the port list would otherwise
  * report as simply "not broken out".
  */
-function normaliseReceiver(raw, index) {
+/** Which edge of the board a receiver is mounted against. */
+export const RECEIVER_SIDES = ["top", "bottom", "left", "right"];
+
+/**
+ * A receiver soldered to the board.
+ *
+ * It is placed against an edge rather than at free coordinates,
+ * because that is how one is actually built: the module sits at the
+ * edge of the housing with its aerials leaving the board from there,
+ * and the aerials are the part a user has to find room for. So the
+ * author says which edge and how far along it, and the drawing puts
+ * the block and its two aerials there.
+ *
+ * Older profiles gave an x and a y. Those are converted to the nearest
+ * edge and the position along it, so a profile drawn before this keeps
+ * its receiver roughly where it was put.
+ */
+function normaliseReceiver(raw, index, view) {
+  const extent = view ?? { width: DEFAULT_EXTENT.width, height: DEFAULT_EXTENT.height };
+  const width = num(raw?.width, 12);
+  const height = num(raw?.height, 6);
+
+  let side = RECEIVER_SIDES.includes(str(raw?.side)) ? str(raw.side) : null;
+  let offset = raw?.offset === undefined ? null : num(raw.offset, 0.5);
+
+  if (!side) {
+    // Nearest edge to where it used to sit, and how far along it.
+    const x = num(raw?.x, extent.width / 2);
+    const y = num(raw?.y, extent.height / 2);
+    const distances = [
+      ["top", y],
+      ["bottom", extent.height - (y + height)],
+      ["left", x],
+      ["right", extent.width - (x + width)],
+    ].sort((a, b) => a[1] - b[1]);
+    side = distances[0][0];
+    if (offset === null) {
+      offset =
+        side === "left" || side === "right"
+          ? extent.height ? (y + height / 2) / extent.height : 0.5
+          : extent.width ? (x + width / 2) / extent.width : 0.5;
+    }
+  }
+
   return {
     id: str(raw?.id) || `receiver-${index + 1}`,
     label: str(raw?.label) || null,
@@ -243,15 +286,69 @@ function normaliseReceiver(raw, index) {
         ? null
         : num(raw.portIdentifier),
     view: VIEW_IDS.includes(str(raw?.view)) ? str(raw.view) : "top",
-    x: num(raw?.x),
-    y: num(raw?.y),
-    width: num(raw?.width, 10),
-    height: num(raw?.height, 5),
-    // How its aerial leaves the board, for the drawing: "ufl", "wire"
-    // or null for a receiver with an on-board antenna.
+    side,
+    offset: Math.min(1, Math.max(0, offset ?? 0.5)),
+    width,
+    height,
+    // How its aerials leave the board, for the drawing: "ufl", "wire",
+    // or null for a receiver with them printed on its own board.
     antenna: str(raw?.antenna) || null,
     notes: str(raw?.notes) || null,
   };
+}
+
+/**
+ * Where a receiver's block sits, and which way its aerials point.
+ *
+ * @param {Object} receiver normalised
+ * @param {{width: number, height: number}} view
+ * @returns {{x: number, y: number, width: number, height: number,
+ *            aerialX: number, aerialY: number}} the block, plus a unit
+ *   vector pointing out of the board along the side it is on
+ */
+export function receiverPlacement(receiver, view) {
+  const { width, height, side, offset } = receiver;
+  const along = (extent, size) =>
+    Math.min(Math.max(extent * offset - size / 2, 0), Math.max(0, extent - size));
+
+  switch (side) {
+    case "bottom":
+      return {
+        x: along(view.width, width),
+        y: view.height - height,
+        width,
+        height,
+        aerialX: 0,
+        aerialY: 1,
+      };
+    case "left":
+      return {
+        x: 0,
+        y: along(view.height, height),
+        width,
+        height,
+        aerialX: -1,
+        aerialY: 0,
+      };
+    case "right":
+      return {
+        x: view.width - width,
+        y: along(view.height, height),
+        width,
+        height,
+        aerialX: 1,
+        aerialY: 0,
+      };
+    default:
+      return {
+        x: along(view.width, width),
+        y: 0,
+        width,
+        height,
+        aerialX: 0,
+        aerialY: -1,
+      };
+  }
 }
 
 /**
@@ -432,7 +529,9 @@ export function normaliseProfile(raw) {
     // Every pad the drawing shows: a connector's positions and the
     // loose pads together, so callers never have to join the two.
     allPads: [...connectorPads(connectors, views), ...pads],
-    receivers: (raw.receivers ?? []).map(normaliseReceiver),
+    receivers: (raw.receivers ?? []).map((receiver, index) =>
+      normaliseReceiver(receiver, index, views[str(receiver?.view) || "top"]),
+    ),
     ports: (raw.ports ?? []).map(normalisePort),
     // Kept so callers that read `outline` (BoardCanvas) keep working.
     outline: {
@@ -503,8 +602,8 @@ export function serialiseProfile(profile) {
       const written = {
         id: receiver.id,
         view: receiver.view,
-        x: round(receiver.x),
-        y: round(receiver.y),
+        side: receiver.side,
+        offset: round(receiver.offset),
         width: round(receiver.width),
         height: round(receiver.height),
       };
@@ -634,7 +733,10 @@ export function validateProfile(profile) {
   for (const port of profile.ports) {
     for (const line of PORT_LINES) {
       const pin = port[line];
-      if (pin && !seen.has(pin)) {
+      // A receiver soldered to the port is wired inside the board, so
+      // its pins are not on a pad and are not meant to be. Saying so
+      // would report the board's own design as a fault.
+      if (pin && !seen.has(pin) && !onReceiver.has(port.identifier)) {
         problems.push({
           level: "warning",
           pin,

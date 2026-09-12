@@ -173,7 +173,11 @@ export function synthesiseBoardView({
   // the real plugs are, but a row of pads at one pitch is exactly what
   // a connector is, and emitting them this way means a seeded board is
   // already in the shape an author will edit (R1).
-  const addConnector = ({ id, label, kind, x, y, rotation, pitch, labelSide, entries }) => {
+  // Label sides are left on "auto" throughout: every connector here is
+  // placed against the edge it belongs to, so the geometry already says
+  // where its labels read, and a stored side would go stale the moment
+  // an author moved the connector in the editor.
+  const addConnector = ({ id, label, kind, x, y, rotation, pitch, entries }) => {
     const pins = [];
     for (const entry of entries) {
       const canonical = normalisePin(entry.pin);
@@ -188,7 +192,7 @@ export function synthesiseBoardView({
       });
     }
     if (!pins.length) return 0;
-    connectors.push({ id, label, kind, view: "top", x, y, rotation, pitch, labelSide, pins });
+    connectors.push({ id, label, kind, view: "top", x, y, rotation, pitch, pins });
     return pins.length;
   };
 
@@ -204,7 +208,6 @@ export function synthesiseBoardView({
       y: height - EDGE_INSET,
       rotation: 0,
       pitch: OUTPUT_PITCH,
-      labelSide: "below",
       entries: outputs.map((key) => ({
         pin: hardwareMap[key].pin,
         silkscreen: key,
@@ -228,7 +231,6 @@ export function synthesiseBoardView({
       y: TOP_ROW_Y,
       rotation: 0,
       pitch,
-      labelSide: "above",
       entries: topRow.map((key) => ({
         pin: hardwareMap[key].pin,
         silkscreen: key,
@@ -266,7 +268,6 @@ export function synthesiseBoardView({
           // Straight down the side of the board.
           rotation: 90,
           pitch: LINE_PITCH,
-          labelSide: side,
           entries,
         });
         if (added) y += (added - 1) * LINE_PITCH + PORT_GAP;

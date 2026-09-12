@@ -638,8 +638,10 @@ class EditorState {
         protocol: null,
         portIdentifier: null,
         view: this.viewId,
-        x: 10,
-        y: 10,
+        // Against an edge, because that is where a receiver module and
+        // its aerials actually go (R6).
+        side: "top",
+        offset: 0.5,
         width: 12,
         height: 6,
         antenna: null,
@@ -653,7 +655,7 @@ class EditorState {
     this.edit((board) => {
       const receiver = board.receivers.find((entry) => entry.id === id);
       if (!receiver) return;
-      if (["x", "y", "width", "height"].includes(field)) {
+      if (["offset", "width", "height"].includes(field)) {
         receiver[field] = Number(value);
       } else if (field === "portIdentifier") {
         receiver.portIdentifier =

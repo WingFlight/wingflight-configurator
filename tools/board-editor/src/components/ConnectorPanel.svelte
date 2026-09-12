@@ -42,9 +42,12 @@
 
   function roleOf(pin) {
     const stored = pinRole(pin);
-    // A position that carries something has settled the question; an
-    // empty one falls back to whatever the author last asked for.
-    return stored === "empty" ? (intended[intendKey(pin.position)] ?? stored) : stored;
+    // A pin or a rail settles the question. Anything else -- an empty
+    // position, or one carrying only a name -- is still open, so the
+    // author's choice governs. Reading the role back from a name alone
+    // made a named pad impossible to turn into a signal.
+    const settled = stored === "signal" || stored === "net";
+    return settled ? stored : (intended[intendKey(pin.position)] ?? stored);
   }
 
   function setRole(position, role) {

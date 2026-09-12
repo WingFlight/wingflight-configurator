@@ -119,6 +119,21 @@ describe("validateProfile", () => {
     );
   });
 
+  // R6: the receiver's own pins are wired inside the board, so their
+  // absence from every pad is the design rather than an omission.
+  it("says nothing about the pins of a port a receiver occupies", () => {
+    const problems = validateProfile(
+      normaliseProfile({
+        ...v1,
+        ports: [{ id: "UART5", identifier: 4, tx: "C12" }],
+        receivers: [
+          { id: "rx", protocol: "FBUS", portIdentifier: 4, view: "top" },
+        ],
+      }),
+    );
+    expect(problems).toEqual([]);
+  });
+
   it("rejects two ports claiming one serial identifier", () => {
     const problems = validateProfile(
       normaliseProfile({

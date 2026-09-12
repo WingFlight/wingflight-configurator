@@ -22,7 +22,8 @@
     marginsForLabels,
     wrapText,
   } from "@/js/boardview/label_layout.js";
-  import { portsByPin } from "@/js/boardview/port_map.js";
+  import { portName, portsByPin } from "@/js/boardview/port_map.js";
+  import { receiverPlacement } from "@/js/boardview/schema.js";
   import { i18n } from "@/js/i18n.js";
 
   /**
@@ -95,8 +96,53 @@
       })),
   );
 
+  // A built-in receiver is drawn as a block against the edge it is
+  // mounted on, with two aerials leaving the board from there. The
+  // aerials are the part a user has to find room for, so they are what
+  // makes the block read as a receiver rather than a chip.
+  const AERIAL_LENGTH = 5;
+  const AERIAL_SPREAD = 1.6;
+
   let receiversHere = $derived(
-    (profile?.receivers ?? []).filter((receiver) => receiver.view === viewId),
+    (profile?.receivers ?? [])
+      .filter((receiver) => receiver.view === viewId && view)
+      .map((receiver) => {
+        const box = receiverPlacement(receiver, view);
+        // Two aerials, from either end of the block's outer edge,
+        // splayed a little so they read as a pair.
+        const outX = box.x + box.width / 2 + (box.aerialX * box.width) / 2;
+        const outY = box.y + box.height / 2 + (box.aerialY * box.height) / 2;
+        const acrossX = box.aerialY === 0 ? 0 : 1;
+        const acrossY = box.aerialY === 0 ? 1 : 0;
+        const aerials = [-1, 1].map((end) => {
+          const baseX = outX + acrossX * end * (box.width / 3);
+          const baseY = outY + acrossY * end * (box.height / 3);
+          return {
+            x1: baseX,
+            y1: baseY,
+            x2:
+              baseX +
+              box.aerialX * AERIAL_LENGTH +
+              acrossX * end * AERIAL_SPREAD,
+            y2:
+              baseY +
+              box.aerialY * AERIAL_LENGTH +
+              acrossY * end * AERIAL_SPREAD,
+          };
+        });
+        return {
+          ...receiver,
+          box,
+          aerials,
+          // What the block says: the protocol, and the port it holds.
+          lines: [
+            receiver.protocol ?? receiver.label ?? "RX",
+            receiver.portIdentifier === null
+              ? null
+              : portName(receiver.portIdentifier),
+          ].filter(Boolean),
+        };
+      }),
   );
 
   // The board's name, wrapped to fit the board and placed where the
@@ -165,13 +211,29 @@
         pad.silkscreen ?? `${line.role.toUpperCase()}${port.identifier + 1}`;
       // Both names, never one instead of the other: the letter printed
       // on the board and the UART the firmware knows (R3).
-      const port_name =
+      // Not `portName`: that name is taken by the import above, and a
+      // shadow here would be a trap for the next reader.
+      const portLabel =
         port.label === port.name ? port.label : `${port.label} · ${port.name}`;
+      // Which half of the port this pad is. On a dedicated port the
+      // silkscreen says "TX" or "RX" already; on a main servo header a
+      // UART line is silkscreened by what it is for -- TLM, AUX, SBUS
+      // on the RF007 -- and then nothing else says which line it is.
+      const role = line.role.toUpperCase();
+      // Split into words rather than matched with a pattern: inside a
+      // template literal a backslash-b is a backspace character, not a
+      // word boundary, and a silkscreen is a handful of tokens anyway.
+      // "TX / SCL" says TX; "SBUS" and "TLM" do not.
+      const saysRole = head
+        .toUpperCase()
+        .split(/[^A-Z0-9]+/)
+        .includes(role);
+      const where = saysRole ? portLabel : `${portLabel} ${role}`;
       const detail = port.internal
-        ? `${port_name} · ${$i18n.t("boardViewPortInternal")}`
+        ? `${where} · ${$i18n.t("boardViewPortInternal")}`
         : port.assigned
-          ? `${port_name} · ${port.functionLabel}`
-          : `${port_name} · ${$i18n.t("boardViewPortFree")}`;
+          ? `${where} · ${port.functionLabel}`
+          : `${where} · ${$i18n.t("boardViewPortFree")}`;
       return { text: head, sub: detail };
     }
 
@@ -214,11 +276,25 @@
   // The USB connector sticks out of one edge, so labels on that edge
   // have to clear it or they land on top of it.
   const USB_DEPTH = 3.6;
-  let usbSide = $derived(
-    { top: "above", bottom: "below", left: "left", right: "right" }[
-      view?.usb?.edge
-    ] ?? null,
-  );
+  // Clear of the 1.8 px type in the receiver block, ascenders and
+  // descenders included, so the two lines never touch.
+  const RECEIVER_LINE = 2.4;
+  let usbSide = $derived.by(() => {
+    // A socket is placed at a coordinate, not named after an edge, so
+    // which edge it is on is read off where it sits. Anything well
+    // inside the board is not in the labels' way at all.
+    const usb = view?.usb;
+    if (!usb) return null;
+    const cx = usb.x + usb.width / 2;
+    const cy = usb.y + usb.height / 2;
+    const near = [
+      ["left", cx],
+      ["right", view.width - cx],
+      ["above", cy],
+      ["below", view.height - cy],
+    ].sort((a, b) => a[1] - b[1])[0];
+    return near[1] <= Math.max(usb.width, usb.height) ? near[0] : null;
+  });
 
   // A board has one B07 but many grounds, so the drawing keys a
   // position by where it is rather than by what is on it.
@@ -368,28 +444,38 @@
       />
     {/if}
 
-    <!-- A receiver soldered to the board (R6) -->
+    <!-- A receiver soldered to the board, with its aerials (R6) -->
     {#each receiversHere as receiver (receiver.id)}
       <g class="receiver">
+        {#each receiver.aerials as aerial, index (index)}
+          <line
+            class="aerial"
+            x1={aerial.x1}
+            y1={aerial.y1}
+            x2={aerial.x2}
+            y2={aerial.y2}
+          />
+          <circle class="aerial-tip" cx={aerial.x2} cy={aerial.y2} r="0.6" />
+        {/each}
         <rect
-          x={receiver.x}
-          y={receiver.y}
-          width={receiver.width}
-          height={receiver.height}
+          x={receiver.box.x}
+          y={receiver.box.y}
+          width={receiver.box.width}
+          height={receiver.box.height}
           rx="0.6"
         />
-        <text
-          x={receiver.x + receiver.width / 2}
-          y={receiver.y + receiver.height / 2 + 0.6}
-        >
-          {receiver.protocol ?? receiver.label ?? "RX"}
-        </text>
-        {#if receiver.antenna}
-          <path
-            class="antenna"
-            d={`M ${receiver.x + receiver.width} ${receiver.y + receiver.height / 2} l 4 -2.5`}
-          />
-        {/if}
+        {#each receiver.lines as line, index (index)}
+          <text
+            x={receiver.box.x + receiver.box.width / 2}
+            y={receiver.box.y +
+              receiver.box.height / 2 +
+              0.7 -
+              ((receiver.lines.length - 1) * RECEIVER_LINE) / 2 +
+              index * RECEIVER_LINE}
+          >
+            {line}
+          </text>
+        {/each}
       </g>
     {/each}
 
@@ -592,11 +678,20 @@
       pointer-events: none;
     }
 
-    .antenna {
+    text + text {
+      font-weight: 400;
+      font-size: 1.6px;
+    }
+
+    .aerial {
       stroke: var(--color-neutral-500);
-      stroke-width: 0.4;
-      fill: none;
+      stroke-width: 0.45;
       stroke-linecap: round;
+    }
+
+    .aerial-tip {
+      fill: var(--color-neutral-500);
+      stroke: none;
     }
   }
 

@@ -10,7 +10,11 @@ import {
 } from "@/js/boardview/connectors.js";
 import { describePortFunction } from "@/js/boardview/port_function.js";
 import { buildPortMap } from "@/js/boardview/port_map.js";
-import { normaliseProfile, validateProfile } from "@/js/boardview/schema.js";
+import {
+  normaliseProfile,
+  receiverPlacement,
+  validateProfile,
+} from "@/js/boardview/schema.js";
 import { readTargetConfig } from "@/js/boardview/unified_config.js";
 
 // The FrSky Vantac RF007's real layout, as described by someone with
@@ -19,16 +23,21 @@ import { readTargetConfig } from "@/js/boardview/unified_config.js";
 // tools/board-editor/REQUIREMENTS.md.
 //
 //   Main servo header, down the left edge, nine positions:
-//     S1, S2, S3, S4/Tail, ESC, RPM, TLM (RX2), AUX (TX2), SBUS (TX1)
+//     S1, S2, S3, S4/Tail, ESC, RPM, TLM (A03, UART2 RX),
+//     AUX (B06, UART1 TX), SBUS (B07, UART1 RX)
 //   A two-position header: GND, AIN
 //   Port A (UART4): TX, RX, 5V, GND
 //   Port C (UART3): TX/SCL, RX/SDA, 5V, GND
 //   A built-in FBUS receiver on UART5
 //
+// Three UART lines come out on the main header rather than on a
+// lettered port, and they are silkscreened by what they are for rather
+// than by which line they are, so UART1 and UART2 keep their plain
+// names and the drawing has to say TX or RX itself.
+//
 // Pins come from the board's own catalogue config wherever it assigns
-// one. Two do not exist there and the layout still has to carry them:
-// the config gives UART2 no TX, so `AUX` has no pin, and its
-// `ADC_EXT 1` is `NONE`, so `AIN` has none either.
+// one. `AIN` is the exception: `ADC_EXT 1` is `NONE` there, so that pad
+// exists and is named and has no pin.
 const config = fs.readFileSync(
   path.join(import.meta.dirname, "fixtures/FRSK-VANTAC_RF007.config"),
   "utf8",
@@ -73,9 +82,8 @@ const profile = normaliseProfile({
         signal("M1", "ESC", "outputs"),
         signal("Freq1", "RPM", "other"),
         signal("RX2", "TLM", "uart"),
-        // The config gives UART2 no TX, so this pad has no pin.
-        named("AUX"),
-        signal("TX1", "SBUS", "uart"),
+        signal("TX1", "AUX", "uart"),
+        signal("RX1", "SBUS", "uart"),
       ],
     },
     {
@@ -130,18 +138,20 @@ const profile = normaliseProfile({
       protocol: "FBUS",
       portIdentifier: 4,
       view: "top",
-      x: 10,
-      y: 34,
-      width: 12,
+      side: "bottom",
+      offset: 0.5,
+      width: 14,
       height: 6,
     },
   ],
   ports: [
-    { id: "UART1", identifier: 0, label: "SBUS", tx: pin("TX1"), rx: pin("RX1") },
-    { id: "UART2", identifier: 1, label: "TLM", rx: pin("RX2") },
+    // UART1 and UART2 come out on the main header, not on a lettered
+    // port, so they keep the names the firmware uses.
+    { id: "UART1", identifier: 0, tx: pin("TX1"), rx: pin("RX1") },
+    { id: "UART2", identifier: 1, rx: pin("RX2") },
     { id: "UART3", identifier: 2, label: "Port C", tx: pin("TX3"), rx: pin("RX3") },
     { id: "UART4", identifier: 3, label: "Port A", tx: pin("TX4"), rx: pin("RX4") },
-    { id: "UART5", identifier: 4, label: "UART5" },
+    { id: "UART5", identifier: 4 },
   ],
 });
 
@@ -159,15 +169,8 @@ const portMap = buildPortMap({
 });
 
 describe("the Vantac RF007's real layout", () => {
-  it("validates, with one honest warning", () => {
-    const problems = validateProfile(profile);
-    expect(problems.filter((problem) => problem.level === "error")).toEqual([]);
-    // The firmware has UART1's RX on B07; this board only breaks out
-    // its TX, as SBUS. Saying so is the point of the warning, not a
-    // fault in the profile.
-    expect(problems).toEqual([
-      expect.objectContaining({ level: "warning", pin: "B07" }),
-    ]);
+  it("validates cleanly", () => {
+    expect(validateProfile(profile)).toEqual([]);
   });
 
   it("takes every pin it can from the board's own config", () => {
@@ -179,30 +182,27 @@ describe("the Vantac RF007's real layout", () => {
     expect(byName.ESC).toBe("A09");
     expect(byName.RPM).toBe("A02");
     expect(byName.TLM).toBe("A03");
-    expect(byName.SBUS).toBe("B06");
+    // Both halves of UART1 are on the main header.
+    expect(byName.AUX).toBe("B06");
+    expect(byName.SBUS).toBe("B07");
   });
 
   // The capability this layout needed and the model did not have.
-  it("carries the two pads the config leaves without a pin", () => {
+  it("carries the pad the config leaves without a pin", () => {
     const named = profile.allPads.filter((pad) => pad.role === "label");
-    expect(named.map((pad) => pad.silkscreen).sort()).toEqual(["AIN", "AUX"]);
-    for (const pad of named) {
-      expect(pad.pin).toBeNull();
-      expect(pad.net).toBeNull();
-    }
+    expect(named.map((pad) => pad.silkscreen)).toEqual(["AIN"]);
+    expect(named[0].pin).toBeNull();
+    expect(named[0].net).toBeNull();
   });
 
   it("does not mistake a named pad for a power rail", () => {
-    const aux = profile.allPads.find((pad) => pad.silkscreen === "AUX");
-    expect(aux.group).not.toBe("power");
-    expect(aux.group).not.toBe("ground");
+    const ain = profile.allPads.find((pad) => pad.silkscreen === "AIN");
+    expect(ain.group).not.toBe("power");
+    expect(ain.group).not.toBe("ground");
   });
 
   it("does not let a named pad claim a pin, or trip the duplicate rule", () => {
-    // Two of them, on two connectors, with no pin between them.
-    expect(
-      validateProfile(profile).filter((problem) => problem.level === "error"),
-    ).toEqual([]);
+    expect(validateProfile(profile)).toEqual([]);
     const pins = profile.allPads.map((pad) => pad.pin).filter(Boolean);
     expect(new Set(pins).size).toBe(pins.length);
   });
@@ -232,22 +232,18 @@ describe("the Vantac RF007's real layout", () => {
     expect(places[8].x).toBeCloseTo(places[0].x, 5);
   });
 
-  it("mixes outputs, a frequency input, two UART lines and a bare name on one header", () => {
+  it("mixes servo outputs, a motor, a frequency input and three UART lines on one header", () => {
     const main = connectorPads(
       [normaliseConnector(profile.connectors.find((c) => c.id === "j-main"))],
       { top: profile.views.top },
     );
-    expect(main.map((pad) => pad.role)).toEqual([
-      "signal",
-      "signal",
-      "signal",
-      "signal",
-      "signal",
-      "signal",
-      "signal",
-      "label",
-      "signal",
-    ]);
+    expect(main).toHaveLength(9);
+    expect(main.every((pad) => pad.role === "signal")).toBe(true);
+    // Four servos, one motor, one frequency input, three UART lines.
+    const groups = main.map((pad) => pad.group);
+    expect(groups.filter((group) => group === "outputs")).toHaveLength(5);
+    expect(groups.filter((group) => group === "uart")).toHaveLength(3);
+    expect(groups.filter((group) => group === "other")).toHaveLength(1);
   });
 
   it("gives each port connector a ground and a 5V position", () => {
@@ -260,14 +256,6 @@ describe("the Vantac RF007's real layout", () => {
     }
   });
 
-  it("says a pin the firmware has but the board does not break out", () => {
-    const sbus = portMap.find((entry) => entry.identifier === 0);
-    const rx = sbus.lines.find((line) => line.role === "rx");
-    expect(rx.pin).toBe("B07");
-    // Known to the firmware, on no pad: it exists and cannot be reached.
-    expect(rx.undrawn).toBe(true);
-  });
-
   it("shows the built-in FBUS receiver on UART5, with nothing to wire", () => {
     const port = portMap.find((entry) => entry.identifier === 4);
     expect(port.internal).toBe(true);
@@ -277,7 +265,7 @@ describe("the Vantac RF007's real layout", () => {
     expect(portMap.filter((entry) => entry.internal)).toHaveLength(1);
   });
 
-  it("names each port the way the board does, and keeps the UART too", () => {
+  it("names a lettered port the way the board does, and keeps the UART too", () => {
     const byIdentifier = Object.fromEntries(
       portMap.map((port) => [port.identifier, port]),
     );
@@ -285,18 +273,39 @@ describe("the Vantac RF007's real layout", () => {
     expect(byIdentifier[3].name).toBe("UART4");
     expect(byIdentifier[2].label).toBe("Port C");
     expect(byIdentifier[2].name).toBe("UART3");
-    expect(byIdentifier[1].label).toBe("TLM");
   });
 
-  it("reports the half-broken-out ports honestly", () => {
+  // The reported issue: a UART broken out on the main servo header has
+  // no letter, so it keeps the name the firmware uses.
+  it("leaves a header-only UART under its own name", () => {
     const byIdentifier = Object.fromEntries(
       portMap.map((port) => [port.identifier, port]),
     );
-    // TLM is UART2's RX only: the config gives it no TX.
-    expect(byIdentifier[1].layout).toBe("single");
-    expect(byIdentifier[1].lines.find((l) => l.role === "tx").pin).toBeNull();
-    // SBUS is UART1's TX on the main header; its RX is not broken out.
-    expect(byIdentifier[0].lines.find((l) => l.role === "tx").pin).toBe("B06");
+    expect(byIdentifier[0].label).toBe("UART1");
+    expect(byIdentifier[1].label).toBe("UART2");
+  });
+
+  it("has UART1 fully broken out across two header positions", () => {
+    const uart1 = portMap.find((entry) => entry.identifier === 0);
+    expect(uart1.layout).toBe("together");
+    const byRole = Object.fromEntries(
+      uart1.lines.map((line) => [line.role, line]),
+    );
+    expect(byRole.tx.pin).toBe("B06");
+    expect(byRole.tx.silkscreen).toBe("AUX");
+    expect(byRole.tx.position).toBe(8);
+    expect(byRole.rx.pin).toBe("B07");
+    expect(byRole.rx.silkscreen).toBe("SBUS");
+    expect(byRole.rx.position).toBe(9);
+  });
+
+  it("reports UART2 as the RX-only port it is", () => {
+    const uart2 = portMap.find((entry) => entry.identifier === 1);
+    expect(uart2.layout).toBe("single");
+    expect(uart2.lines.find((line) => line.role === "tx").pin).toBeNull();
+    expect(uart2.lines.find((line) => line.role === "rx").silkscreen).toBe(
+      "TLM",
+    );
   });
 
   it("names where each port line comes out, connector and position", () => {
@@ -307,5 +316,17 @@ describe("the Vantac RF007's real layout", () => {
 
     const tlm = portMap.find((entry) => entry.identifier === 1);
     expect(tlm.lines.find((line) => line.role === "rx").position).toBe(7);
+  });
+
+  // R6, as reported: the receiver sits against a chosen edge with two
+  // aerials leaving the board from there.
+  it("mounts the receiver on a chosen edge, with its aerials outward", () => {
+    const receiver = profile.receivers[0];
+    expect(receiver.side).toBe("bottom");
+    const box = receiverPlacement(receiver, profile.views.top);
+    expect(box.y + box.height).toBeCloseTo(profile.views.top.height, 5);
+    // Aerials point out of the board, away from the pads.
+    expect(box.aerialY).toBe(1);
+    expect(box.aerialX).toBe(0);
   });
 });

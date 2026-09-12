@@ -5,6 +5,7 @@ import {
   groupForOptionKey,
   synthesiseBoardView,
 } from "@/js/boardview/generic_layout.js";
+import { connectorLabelSide } from "@/js/boardview/connectors.js";
 import { buildPortMap } from "@/js/boardview/port_map.js";
 import { validateProfile } from "@/js/boardview/schema.js";
 
@@ -111,10 +112,13 @@ describe("synthesiseBoardView", () => {
   });
 
   it("alternates ports between the two sides so neither edge runs off", () => {
+    // Read off the placement rather than a stored side: nothing here
+    // pins a label side, because where a connector sits already says
+    // which way its labels read.
     const sides = new Set(
       profile.connectors
         .filter((connector) => connector.id.startsWith("port-"))
-        .map((connector) => connector.labelSide),
+        .map((connector) => connectorLabelSide(connector, profile.views.top)),
     );
     expect(sides.has("left")).toBe(true);
     expect(sides.has("right")).toBe(true);

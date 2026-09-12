@@ -119,6 +119,36 @@ export function findBoardProfile(config) {
 }
 
 /**
+ * Every drawn position on a profile that carries a pin, connectors
+ * included.
+ *
+ * A board's pins live on its connectors, and `pads` holds only the odd
+ * one that is on no connector at all, so anything reading `pads` alone
+ * sees almost nothing: that is what left the wiring stage showing
+ * "? · B04" where the board's own silkscreen says "S1". This reads the
+ * file's own shape, so a connector's position comes back with the
+ * connector it is on.
+ *
+ * @param {?BoardProfile} profile
+ * @returns {BoardPad[]}
+ */
+export function boardPads(profile) {
+  const out = [...(profile?.pads ?? [])];
+  for (const connector of profile?.connectors ?? []) {
+    for (const entry of connector.pins ?? []) {
+      if (!entry?.pin) continue;
+      out.push({
+        ...entry,
+        view: connector.view,
+        connector: connector.id,
+        connectorLabel: connector.label ?? connector.id,
+      });
+    }
+  }
+  return out;
+}
+
+/**
  * The pad on a profile for a CLI pin name, or null.
  * @param {?BoardProfile} profile
  * @param {string} pin e.g. "B07"
@@ -126,7 +156,7 @@ export function findBoardProfile(config) {
  */
 export function padForPin(profile, pin) {
   const wanted = normalise(pin);
-  return profile?.pads?.find((pad) => normalise(pad.pin) === wanted) ?? null;
+  return boardPads(profile).find((pad) => normalise(pad.pin) === wanted) ?? null;
 }
 
 /**

@@ -52,9 +52,9 @@ Each position on a connector carries exactly one of:
 - **a power net** — `GND`, `3V3`, `5V`, `VBAT`, `VBEC`, or any other
   rail the board silkscreens, drawn and labelled but never a resource;
 - **a name only** — a pad that exists and is silkscreened but whose MCU
-  pin the board's own configuration does not assign. `AUX` and `AIN` on
-  the RF007 are both this, and neither is an omission: see R8. Drawn
-  hollow and named, never a resource;
+  pin the board's own configuration does not assign. `AIN` on the RF007
+  is this, and not through omission: see R8. Drawn hollow and named,
+  never a resource;
 - **nothing** — a position that exists physically and carries no
   connection.
 
@@ -64,7 +64,7 @@ is which. They must not appear in the hardware map, must never be
 offered as a resource, and must not collide with the rule that an MCU
 pin may appear only once on a board: a board has many grounds.
 
-### R3 — Ports lettered, not numbered
+### R3 — Ports lettered where the board letters them
 
 Boards in these families label their UART connectors `Port A`, `Port B`,
 `Port C`, not `UART1`, `UART2`, `UART3`. Both names matter: the letter
@@ -73,6 +73,16 @@ number is what the firmware's serial configuration is keyed to. The
 drawing and the port list must show the letter, and must still resolve
 to the right serial identifier underneath. Neither may replace the
 other.
+
+Not every UART gets a letter. A board may break individual UART lines
+out on its main servo header instead of on a dedicated port, and the
+RF007 does: `TLM` is UART2's RX, `AUX` and `SBUS` are UART1's TX and RX.
+Those pads are silkscreened by what they are *for*, so nothing on them
+says which line they are, and inventing a letter for the port would be
+worse than saying nothing. Such a port keeps the firmware's own name,
+and the drawing says which half of it each pad is: `AUX` reads
+`UART1 TX`, `SBUS` reads `UART1 RX`. On a dedicated port, where the pad
+is already silkscreened `TX` or `RX`, that is not repeated.
 
 ### R4 — Main pinheaders
 
@@ -95,12 +105,19 @@ be:
 
 - **listed**, as part of the board, with its protocol and which serial
   identifier it occupies;
-- **drawn**, as a block on the board with its antenna, so the user can
-  see it is there;
-- **considered** by the port list, which today would report the serial
-  port it sits on as "not broken out". That is misleading: the port is
-  in use by hardware that is already connected, and there is nothing for
-  the user to wire.
+- **drawn** the way it is built: a block against one edge of the board
+  carrying the receiver's details, with **two aerials** leaving the
+  board from that edge. The aerials are the part the user has to find
+  room for when they mount the board, and they are what makes the block
+  read as a receiver rather than as a chip;
+- **placed by the author**, who says which edge it is mounted on and how
+  far along that edge. Which edge is a fact about the board, not
+  something to be guessed or dragged into by accident, so the drawing
+  never moves it to another one;
+- **considered** by the port list, which would otherwise report the
+  serial port it sits on as "not broken out". That is misleading: the
+  port is in use by hardware that is already connected, and there is
+  nothing for the user to wire.
 
 ### R7 — The catalogue stays the source of pin data
 
@@ -130,13 +147,14 @@ Being on the left, its labels read left:
 | 4 | `S4 / Tail` | servo 4 |
 | 5 | `ESC` | motor 1 |
 | 6 | `RPM` | frequency input |
-| 7 | `TLM` | UART2 RX |
-| 8 | `AUX` | UART2 TX |
-| 9 | `SBUS` | UART1 TX |
+| 7 | `TLM` | `A03`, UART2 RX |
+| 8 | `AUX` | `B06`, UART1 TX |
+| 9 | `SBUS` | `B07`, UART1 RX |
 
-One header mixing servo outputs, a frequency input and three UART lines
-is exactly what a "a connector is one peripheral" model would get
-wrong.
+One header mixing four servo outputs, a motor, a frequency input and
+three UART lines is exactly what a "a connector is one peripheral"
+model would get wrong. It is also why R3 has to cope with a UART that
+has no letter: UART1 and UART2 come out here, not on a lettered port.
 
 **A two-position header**: `GND`, `AIN`.
 
@@ -147,16 +165,22 @@ wrong.
 
 **A built-in FBUS receiver on UART5**, which the user cannot wire.
 
-Two of those pads have no MCU pin, and not through omission: the
-board's own catalogue config gives UART2 no TX, so `AUX` has none, and
-its `ADC_EXT 1` is `NONE`, so neither has `AIN`. That is why a bare
-name is a first-class kind of position in R2.
+Every pad on the main header has a pin, all of them from the board's
+own catalogue config. `AIN` is the one that does not: `ADC_EXT 1` is
+`NONE` there, so that pad exists, is silkscreened, and has no pin. That
+is why a bare name is a first-class kind of position in R2.
 
-One thing still to confirm with the board in hand: whether Port C's
-`TX / SCL` and `RX / SDA` are single pads carrying either function, or
-the silkscreen documenting two separate connectors. The catalogue puts
-UART3 on B10/B11 and I2C1 on B08/B09, which are four distinct pins, so
-one pad cannot be both.
+The receiver is mounted on the bottom edge, so its block and both
+aerials are drawn there.
+
+Port C's `TX / SCL` and `RX / SDA` are single dual-purpose pads, and
+the catalogue says so: `B10` and `B11` are UART3's pair, and the same
+two pins appear again, commented out, as I2C2's `SCL` and `SDA`. The
+pad is one hole that is either a serial line or an I2C line depending
+on how the port is configured, which is exactly what its silkscreen
+says. (I2C1, on `B08` and `B09`, is a different pair and is broken out
+separately.) So the pad carries one pin and a name that mentions both
+jobs, and nothing in the model needs a pad to hold two pins.
 
 ### R9 — The simulator uses a real board
 
@@ -182,10 +206,10 @@ exercised against the shape of hardware we actually ship for.
 | --- | --- |
 | R1, R2, R4 | `connectors[]` in the schema, `src/js/boardview/schema.js` |
 | R3 | connector `label` plus `ports[].identifier` |
-| R5 | `views[].usb` as a placed rectangle |
-| R6 | `receivers[]`, and `port.internal` in `src/js/boardview/port_map.js` |
+| R5 | `views[].usb` as a placed rectangle, dragged on the canvas or typed |
+| R6 | `receivers[]` with `side`, `receiverPlacement` in `schema.js`, and `port.internal` in `port_map.js` |
 | R7 | `seedFromConfig` in `tools/board-editor/src/lib/editor_state.svelte.js` |
-| R8 | `test/boardview/rf007_layout.test.js`; the bare-name role in `connectors.js` |
+| R8 | `test/boardview/rf007_layout.test.js`, `FRSK-VANTAC_RF007` in `src/tabs/journey/board_profiles.json`; the bare-name role in `connectors.js` |
 | R9 | `src/js/virtual_fc.js` and `src/js/remap_fc/fixtures/` |
 
 
@@ -287,3 +311,75 @@ exercised against the shape of hardware we actually ship for.
   for anyone who would rather it did not. The close-the-tab warning stays,
   because a profile held back for errors is exactly when a closed tab would
   still cost work.
+
+- ~~no proper visualisation of the RX: if a FC has a built in RX, add two
+  antennas to one side of the housing and add a block containing RX info to
+  that side of the housing. I want to be able to set the side the RX shall be
+  added to~~
+  **Fixed, and written into R6.** A receiver was a rectangle at free
+  coordinates with an optional single aerial, which reads as a chip rather
+  than as a receiver. It is now mounted on an edge you choose, with a block
+  carrying its protocol and the port it holds, and two aerials leaving the
+  board from that edge. It slides along its edge when dragged and never hops
+  to another one, because which edge it is on is a fact about the board rather
+  than something to fall out of a gesture. Older profiles that gave an x and a
+  y are converted to the nearest edge, so nothing drawn before this moves far.
+
+- ~~UARTS aren't shown properly on the servo header. Some FC contain dedicated
+  UART ports but have individual UART pins broken out on the main servo
+  header, like the 007. It has UART pins assigned to the TLM and AUX pins~~
+  **Fixed, and written into R3.** Two things were wrong. A port with no
+  dedicated connector had no letter to show, so it needed to keep the
+  firmware's own name rather than borrow one from a pad. And a pad on the main
+  header is silkscreened by what it is *for* -- `TLM`, `AUX`, `SBUS` -- so
+  nothing said which half of the UART it was. The drawing says it now: `AUX`
+  reads `UART1 TX`, `SBUS` reads `UART1 RX`, `TLM` reads `UART2 RX`. On a
+  dedicated port, where the pad already says `TX` or `RX`, it is not
+  repeated.
+
+  The RF007 pinout in R8 was wrong on this and is corrected: `AUX` is UART1's
+  TX on `B06` and `SBUS` is UART1's RX on `B07`, so the main header carries
+  both halves of UART1 and the RX-only half of UART2.
+
+  The shipped drawing carried those same mistakes and is corrected with it.
+  It had UART1, UART2 and UART5 drawn as lettered ports of their own, which
+  the board does not have: UART1 and UART2 come out on the main header, and
+  UART5 is the built-in receiver. Removing them also removed three
+  duplicate-pin errors, since the same pins were on two connectors at once.
+  Port A and Port C now carry their `5V` and `GND` as R8 says, the
+  two-position `GND`/`AIN` header is there, and the receiver is on the bottom
+  edge.
+
+  Four faults surfaced while checking it, each of which would have bitten the
+  next board too:
+
+  - A pad carrying only a name could not be turned into a signal. Reading the
+    role back from the stored value is right for a pin and a rail, which
+    settle the question, and wrong for a name, which does not: choosing
+    "signal" cleared the pin and the panel then read "name only" back off the
+    silkscreen, snapped the dropdown back and dropped the name. The author's
+    choice governs until a value makes it real, which is the same rule the
+    empty-position fault above needed.
+  - A label side written into a seeded profile went stale. A board seeded
+    from the catalogue got explicit sides from the synthesised layout, so the
+    main header kept labelling *below* long after it had been moved to the
+    left edge, which is the "labels on the wrong side" fault coming back
+    through the data. Nothing pins a side now: where a connector sits already
+    says which way its labels read, and an explicit side stays available for
+    a corner that needs one.
+  - The validator reported the receiver's own port as a fault: "UART5 TX is
+    pin C12, which is on no connector or pad". It is on no pad because the
+    receiver is wired to it inside the board. A port a receiver occupies is
+    exempt.
+  - The editor still had the USB control it had before R5, a "USB on edge"
+    dropdown. It said *not drawn* for a socket that was drawn, and picking an
+    edge would have thrown away a freely placed position. R5's placement, by
+    dragging or by typing x and y, is the only one now.
+  - The wiring stage named every pad "?". It read silkscreens from the
+    profile's loose `pads`, which under R1 holds only the odd position that is
+    on no connector at all, so on any board drawn as connectors it found
+    nothing: the outputs table read "? · B04" where the board says `S1`. Pin
+    lookups read every drawn position now, and the table says `Tail · A15` and
+    `ESC · A09` the way the silkscreen does. The test that was meant to catch
+    this iterated the same empty list and so asserted nothing; it walks the
+    connectors too, and fails if a board draws no positions at all.

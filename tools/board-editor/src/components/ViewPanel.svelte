@@ -144,47 +144,6 @@
       />
     </label>
 
-    <div class="pair">
-      <label>
-        USB on edge
-        <select
-          value={editor.view.usb ? editor.view.usb.edge : "none"}
-          onchange={(event) => {
-            const value = event.currentTarget.value;
-            editor.setViewField(
-              "usb",
-              value === "none"
-                ? null
-                : { edge: value, offset: editor.view.usb?.offset ?? 0.5 },
-            );
-          }}
-        >
-          <option value="none">not drawn</option>
-          <option value="top">top</option>
-          <option value="bottom">bottom</option>
-          <option value="left">left</option>
-          <option value="right">right</option>
-        </select>
-      </label>
-      {#if editor.view.usb}
-        <label>
-          Along that edge
-          <input
-            type="number"
-            min="0"
-            max="1"
-            step="0.05"
-            value={editor.view.usb.offset}
-            onchange={(event) =>
-              editor.setViewField("usb", {
-                edge: editor.view.usb.edge,
-                offset: Number(event.currentTarget.value),
-              })}
-          />
-        </label>
-      {/if}
-    </div>
-
     {#if editor.viewId === "top" && editor.view.title}
       <h3>Board name</h3>
       <label>

@@ -5,6 +5,7 @@ import boardProfiles from "@/tabs/journey/board_profiles.json";
 import {
   findBoardProfile,
   matchBoardProfile,
+  boardPads,
   padForPin,
   silkscreenFor,
 } from "@/js/remap_fc/board_profiles.js";
@@ -320,11 +321,40 @@ describe("board profiles", () => {
     expect(silkscreenFor(profile, "Z99")).toBeNull();
   });
 
+  // The wiring stage reads silkscreens through this, and it showed
+  // "? · B04" for every pin on every shipped board: they are all on
+  // connectors, and this looked only at the loose `pads`.
+  it("finds a pin that sits on a connector", () => {
+    const profile = {
+      id: "TEST-BOARD",
+      connectors: [
+        {
+          id: "j-main",
+          label: "Main header",
+          view: "top",
+          pins: [
+            { position: 1, pin: "B04", silkscreen: "S1", group: "outputs" },
+            { position: 2, net: "GND" },
+          ],
+        },
+      ],
+      pads: [{ pin: "C00", silkscreen: "Vbat", group: "adc" }],
+    };
+    expect(silkscreenFor(profile, "b04")).toBe("S1");
+    expect(padForPin(profile, "B04")?.connectorLabel).toBe("Main header");
+    // A rail carries no pin, so it is not a pin anyone can look up.
+    expect(boardPads(profile).map((pad) => pad.pin)).toEqual(["C00", "B04"]);
+  });
+
   it("have unique pins and timer data for every output pad", () => {
     for (const board of boardProfiles.boards) {
-      const pins = board.pads.map((pad) => pad.pin);
+      // Every drawn position, not just the loose ones: a board's pins
+      // are on its connectors, so reading `pads` alone checked nothing.
+      const pads = boardPads(board);
+      expect(pads.length).toBeGreaterThan(0);
+      const pins = pads.map((pad) => pad.pin);
       expect(new Set(pins).size).toBe(pins.length);
-      for (const pad of board.pads.filter((p) => p.group === "outputs")) {
+      for (const pad of pads.filter((p) => p.group === "outputs")) {
         expect(
           getPinTimerOptions(mcuAllData, board.mcu, pad.pin).length,
           `${board.id} ${pad.silkscreen} ${pad.pin}`,

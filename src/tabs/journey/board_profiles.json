@@ -36,9 +36,8 @@
           "x": 4.32,
           "y": 2.79,
           "pitch": 3.5,
-          "label": "Servo / motor outputs",
+          "label": "Main header",
           "rotation": 90,
-          "labelSide": "below",
           "pins": [
             {
               "position": 1,
@@ -72,15 +71,21 @@
             },
             {
               "position": 7,
-              "silkscreen": "TLM"
+              "silkscreen": "TLM",
+              "pin": "A03",
+              "group": "uart"
             },
             {
               "position": 8,
-              "silkscreen": "AUX"
+              "silkscreen": "AUX",
+              "pin": "B06",
+              "group": "uart"
             },
             {
               "position": 9,
-              "silkscreen": "SBUS"
+              "silkscreen": "SBUS",
+              "pin": "B07",
+              "group": "uart"
             }
           ]
         },
@@ -92,7 +97,6 @@
           "y": 5,
           "pitch": 5.5,
           "label": "Power and sensors",
-          "labelSide": "above",
           "pins": [
             {
               "position": 1,
@@ -115,90 +119,34 @@
           ]
         },
         {
-          "id": "port-0",
-          "kind": "port",
-          "view": "top",
-          "x": 19.05,
-          "y": 14.48,
-          "pitch": 2.6,
-          "label": "UART1",
-          "rotation": 90,
-          "labelSide": "left",
-          "pins": [
-            {
-              "position": 1,
-              "pin": "B06",
-              "silkscreen": "TX1",
-              "group": "uart"
-            },
-            {
-              "position": 2,
-              "pin": "B07",
-              "silkscreen": "RX1",
-              "group": "uart"
-            }
-          ]
-        },
-        {
           "id": "port-2",
-          "kind": "port",
-          "view": "top",
-          "x": 21.59,
-          "y": 26.92,
-          "pitch": 2.6,
-          "label": "UART3",
-          "rotation": 90,
-          "labelSide": "left",
-          "pins": [
-            {
-              "position": 1,
-              "pin": "B10",
-              "silkscreen": "TX3",
-              "group": "uart"
-            },
-            {
-              "position": 2,
-              "pin": "B11",
-              "silkscreen": "RX3",
-              "group": "uart"
-            }
-          ]
-        },
-        {
-          "id": "port-4",
           "kind": "port",
           "view": "top",
           "x": 26.67,
           "y": 20.83,
           "pitch": 2.6,
-          "label": "UART5",
+          "label": "Port C",
           "rotation": 90,
-          "labelSide": "left",
           "pins": [
             {
               "position": 1,
-              "pin": "C12",
-              "silkscreen": "TX5",
+              "pin": "B10",
+              "silkscreen": "TX / SCL",
               "group": "uart"
-            }
-          ]
-        },
-        {
-          "id": "port-1",
-          "kind": "port",
-          "view": "top",
-          "x": 35.56,
-          "y": 7.37,
-          "pitch": 2.6,
-          "label": "UART2",
-          "rotation": 90,
-          "labelSide": "right",
-          "pins": [
+            },
             {
-              "position": 1,
-              "pin": "A03",
-              "silkscreen": "RX2",
+              "position": 2,
+              "pin": "B11",
+              "silkscreen": "RX / SDA",
               "group": "uart"
+            },
+            {
+              "position": 3,
+              "net": "5V"
+            },
+            {
+              "position": 4,
+              "net": "GND"
             }
           ]
         },
@@ -209,21 +157,48 @@
           "x": 39,
           "y": 14.2,
           "pitch": 2.6,
-          "label": "UART4",
+          "label": "Port A",
           "rotation": 90,
-          "labelSide": "right",
           "pins": [
             {
               "position": 1,
               "pin": "A00",
-              "silkscreen": "TX4",
+              "silkscreen": "TX",
               "group": "uart"
             },
             {
               "position": 2,
               "pin": "A01",
-              "silkscreen": "RX4",
+              "silkscreen": "RX",
               "group": "uart"
+            },
+            {
+              "position": 3,
+              "net": "5V"
+            },
+            {
+              "position": 4,
+              "net": "GND"
+            }
+          ]
+        },
+        {
+          "id": "j-ain",
+          "label": "AIN",
+          "kind": "header",
+          "view": "top",
+          "x": 35.56,
+          "y": 7.37,
+          "rotation": 90,
+          "pitch": 2.54,
+          "pins": [
+            {
+              "position": 1,
+              "net": "GND"
+            },
+            {
+              "position": 2,
+              "silkscreen": "AIN"
             }
           ]
         }
@@ -232,13 +207,13 @@
         {
           "id": "receiver-1",
           "view": "top",
-          "x": 13.97,
-          "y": 27.69,
-          "width": 12,
+          "width": 14,
           "height": 6,
-          "label": "RX",
+          "label": "Built-in receiver",
           "protocol": "FBUS",
-          "portIdentifier": 4
+          "portIdentifier": 4,
+          "side": "bottom",
+          "offset": 0.4
         }
       ],
       "pads": [],
@@ -246,7 +221,6 @@
         {
           "id": "port-0",
           "identifier": 0,
-          "label": "UART1",
           "tx": "B06",
           "rx": "B07",
           "split": false
@@ -254,7 +228,7 @@
         {
           "id": "port-2",
           "identifier": 2,
-          "label": "UART3",
+          "label": "Port C",
           "tx": "B10",
           "rx": "B11",
           "split": false
@@ -262,21 +236,19 @@
         {
           "id": "port-4",
           "identifier": 4,
-          "label": "UART5",
           "tx": "C12",
           "split": false
         },
         {
           "id": "port-1",
           "identifier": 1,
-          "label": "UART2",
           "rx": "A03",
           "split": false
         },
         {
           "id": "port-3",
           "identifier": 3,
-          "label": "UART4",
+          "label": "Port A",
           "tx": "A00",
           "rx": "A01",
           "split": false

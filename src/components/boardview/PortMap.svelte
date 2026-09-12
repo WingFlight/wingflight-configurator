@@ -123,8 +123,12 @@
   // "Top" on a board that only has a top view tells nobody anything.
   function whereIs(line, port) {
     // A port with a receiver soldered to it is not "not broken out":
-    // it is in use, by hardware already connected (R6).
-    if (!line.pin && port?.internal) return $i18n.t("boardViewLineOnReceiver");
+    // it is in use, by hardware already connected (R6). That holds
+    // whether or not the firmware names a pin for the line -- the
+    // RF007's receiver is on UART5, whose TX the firmware puts on C12
+    // -- because either way the wire is inside the board and "C12, not
+    // on the drawing" reads as a fault in the drawing.
+    if (port?.internal && !line.pad) return $i18n.t("boardViewLineOnReceiver");
     if (!line.pin) return $i18n.t("boardViewLineMissing");
     if (!line.pad) return $i18n.t("boardViewLineUndrawn", { pin: line.pin });
     // The connector, when the pad is on one: "TX · Port A pin 3" is

@@ -8,6 +8,8 @@
    * wire, which is why it has to be declared rather than merely drawn
    * (tools/board-editor/REQUIREMENTS.md, R5 and R6).
    */
+  import { RECEIVER_SIDES } from "@/js/boardview/schema.js";
+
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
 
   const editor = getEditorState();
@@ -130,23 +132,35 @@
       </label>
       <div class="pair">
         <label>
-          x (mm)
-          <input
-            type="number"
-            step="0.1"
-            value={receiver.x}
+          Mounted on
+          <select
+            value={receiver.side}
             onchange={(event) =>
-              editor.setReceiverField(receiver.id, "x", event.currentTarget.value)}
-          />
+              editor.setReceiverField(
+                receiver.id,
+                "side",
+                event.currentTarget.value,
+              )}
+          >
+            {#each RECEIVER_SIDES as side (side)}
+              <option value={side}>{side} edge</option>
+            {/each}
+          </select>
         </label>
         <label>
-          y (mm)
+          Along that edge
           <input
             type="number"
-            step="0.1"
-            value={receiver.y}
+            min="0"
+            max="1"
+            step="0.05"
+            value={receiver.offset}
             onchange={(event) =>
-              editor.setReceiverField(receiver.id, "y", event.currentTarget.value)}
+              editor.setReceiverField(
+                receiver.id,
+                "offset",
+                event.currentTarget.value,
+              )}
           />
         </label>
       </div>
@@ -166,22 +180,24 @@
           />
         </label>
         <label>
-          Antenna
-          <select
-            value={receiver.antenna ?? ""}
+          height (mm)
+          <input
+            type="number"
+            step="0.1"
+            value={receiver.height}
             onchange={(event) =>
               editor.setReceiverField(
                 receiver.id,
-                "antenna",
+                "height",
                 event.currentTarget.value,
               )}
-          >
-            <option value="">on the board</option>
-            <option value="ufl">u.FL pigtail</option>
-            <option value="wire">bare wire</option>
-          </select>
+          />
         </label>
       </div>
+      <p class="note">
+        The block sits against that edge with its two aerials leaving the board
+        from there, which is how a receiver module is actually built in.
+      </p>
       <button class="danger" onclick={() => editor.removeReceiver(receiver.id)}>
         Delete receiver
       </button>

@@ -15,7 +15,11 @@ import {
   serialiseConnector,
 } from "@/js/boardview/connectors.js";
 import { buildPortMap } from "@/js/boardview/port_map.js";
-import { normaliseProfile, validateProfile } from "@/js/boardview/schema.js";
+import {
+  normaliseProfile,
+  receiverPlacement,
+  validateProfile,
+} from "@/js/boardview/schema.js";
 
 // A four-way peripheral port, the shape these boards actually use:
 // ground, power, and one UART.
@@ -493,5 +497,80 @@ describe("which way a connector's labels read", () => {
     const pads = connectorPads([at({ x: 4, y: 14, rotation: 90 })]);
     // Still one side for the whole connector, taken from the run alone.
     expect(new Set(pads.map((pad) => pad.labelSide)).size).toBe(1);
+  });
+});
+
+// R6: a receiver is mounted against an edge, and its aerials leave the
+// board from there. Free coordinates read as a chip on the board
+// rather than as a receiver module at its rim.
+describe("where a built-in receiver sits", () => {
+  const view = { width: 40, height: 30 };
+  const at = (over) =>
+    normaliseProfile({
+      id: "T-B",
+      match: { manufacturerId: ["T"], boardName: ["B"] },
+      display: "B",
+      views: { top: view },
+      connectors: [serialiseConnector(portA)],
+      receivers: [
+        {
+          id: "rx",
+          protocol: "CRSF",
+          portIdentifier: 5,
+          view: "top",
+          width: 12,
+          height: 6,
+          ...over,
+        },
+      ],
+      ports: [
+        { id: "A", identifier: 0, label: "A", tx: "B06", rx: "B07" },
+        { id: "F", identifier: 5, label: "F" },
+      ],
+    }).receivers[0];
+
+  it("hugs the edge it is mounted on", () => {
+    expect(receiverPlacement(at({ side: "top" }), view).y).toBe(0);
+    expect(
+      receiverPlacement(at({ side: "bottom" }), view).y + 6,
+    ).toBeCloseTo(30, 5);
+    expect(receiverPlacement(at({ side: "left" }), view).x).toBe(0);
+    expect(receiverPlacement(at({ side: "right" }), view).x + 12).toBeCloseTo(
+      40,
+      5,
+    );
+  });
+
+  it("points its aerials out of the board, whichever edge it is on", () => {
+    expect(receiverPlacement(at({ side: "top" }), view)).toMatchObject({
+      aerialX: 0,
+      aerialY: -1,
+    });
+    expect(receiverPlacement(at({ side: "bottom" }), view)).toMatchObject({
+      aerialX: 0,
+      aerialY: 1,
+    });
+    expect(receiverPlacement(at({ side: "left" }), view)).toMatchObject({
+      aerialX: -1,
+      aerialY: 0,
+    });
+    expect(receiverPlacement(at({ side: "right" }), view)).toMatchObject({
+      aerialX: 1,
+      aerialY: 0,
+    });
+  });
+
+  it("slides along that edge, and stays on the board at the ends", () => {
+    const left = receiverPlacement(at({ side: "top", offset: 0 }), view);
+    const right = receiverPlacement(at({ side: "top", offset: 1 }), view);
+    expect(left.x).toBe(0);
+    expect(right.x + right.width).toBeCloseTo(40, 5);
+  });
+
+  it("converts an older profile's coordinates to the nearest edge", () => {
+    // Drawn before receivers had a side: near the bottom of the board.
+    const legacy = at({ x: 14, y: 24, side: undefined, offset: undefined });
+    expect(legacy.side).toBe("bottom");
+    expect(legacy.offset).toBeCloseTo(0.5, 1);
   });
 });
