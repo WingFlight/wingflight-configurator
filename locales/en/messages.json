@@ -4924,6 +4924,9 @@
     "firmwareFlasherWizardRetry": {
         "message": "Retry"
     },
+    "firmwareFlasherWizardSelectPort": {
+        "message": "Select Port..."
+    },
     "firmwareFlasherWizardSkip": {
         "message": "Skip"
     },

@@ -22,8 +22,20 @@ const BACKUP_COMMANDS = {
 
 const CLI_ENTER_TIMEOUT_MS = 8000;
 const CLI_IDLE_MS = 750;
-const CLI_RECONNECT_ATTEMPTS = 3;
-const CLI_RECONNECT_DELAY_MS = 2000;
+// A freshly-flashed wing FC has a lot more to bring up on boot (servo mixer,
+// gyro RPM notch filters, etc.) than a simple quad, and how long that takes
+// varies with the board and firmware. These used to allow ~28s of total
+// retry budget (3 attempts, 2s apart), which was routinely not enough --
+// the FC just wasn't back on the bus yet, so every attempt failed and the
+// wizard fell back to "Skip", pushing the user to a manual CLI restore
+// instead. Retrying more, and for longer between attempts, costs nothing
+// when the FC comes back quickly and saves the manual fallback when it
+// doesn't.
+const CLI_RECONNECT_ATTEMPTS = 8;
+const CLI_RECONNECT_DELAY_MS = 3000;
+
+// See replayBackup() below for what this is working around.
+const SAVE_RETRY_ATTEMPTS = 2;
 
 // This firmware's CLI has no "just switch back to MSP" exit -- both `exit`
 // and `save` always end in a real cliReboot() (see cliExit()/cliSave() in
@@ -107,6 +119,65 @@ export async function runBackupCommand(cliEngine, backupType) {
   return cliEngine.outputHistory;
 }
 
+// True if `text`'s last non-blank line is a bare `save` -- i.e. it looks
+// like a full `dump all`/`diff all` backup capture rather than some other
+// snippet (a handful of `set`s, say) that was never meant to save/reboot
+// anything. Gates replayBackup()'s save-retry below: resending `save` after
+// a snippet that doesn't end with one would just be sending a command that
+// was never part of what was loaded.
+function endsWithSave(text) {
+  const lines = text.split("\n").map((line) => line.trim());
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (lines[i].length === 0) continue;
+    return lines[i].toLowerCase() === "save";
+  }
+  return false;
+}
+
+/**
+ * Executes `commandsText` on an already-connected, already-in-CLI-mode
+ * `cliEngine`, same as `cliEngine.executeCommands()` -- except that when
+ * the text looks like a full backup capture (see endsWithSave() above), it
+ * also makes sure the trailing `save` actually takes.
+ *
+ * This firmware's cliSave() refuses to actually persist/reboot if any CLI
+ * error was recorded earlier in the session -- and `defaults nosave`, which
+ * every replayed backup starts with, reliably raises a spurious one of its
+ * own (`###ERROR IN map: PARSING FAILED###`, an artifact of the FC's own
+ * internal reset -- see cli_engine.js's #defaultsDelayMs comment). So the
+ * `save` a backup ends with routinely gets rejected ("...PLEASE FIX ERRORS
+ * THEN 'SAVE'###") instead of acted on, leaving the FC sitting in CLI mode
+ * -- never rebooting. Resending a bare `save` is what clears it in
+ * practice, so this keeps resending (up to SAVE_RETRY_ATTEMPTS extra times)
+ * until the FC actually reboots -- readSerial() sees "Rebooting" and flips
+ * cliEngineValid off.
+ *
+ * Resolves true if nothing needed confirming, or a reboot was observed;
+ * false if the text looked like a backup but the FC never rebooted after
+ * all the retries.
+ */
+export async function replayBackup(cliEngine, commandsText) {
+  await cliEngine.executeCommands(commandsText);
+
+  if (!endsWithSave(commandsText)) {
+    return true;
+  }
+
+  let rebooted = false;
+  for (let attempt = 0; attempt <= SAVE_RETRY_ATTEMPTS; attempt++) {
+    await waitForIdle(cliEngine, CLI_IDLE_MS);
+    rebooted = !CONFIGURATOR.cliEngineValid;
+    if (rebooted || attempt === SAVE_RETRY_ATTEMPTS) break;
+
+    console.log(
+      `Restore: FC did not reboot after 'save' -- resending (attempt ${attempt + 1}/${SAVE_RETRY_ATTEMPTS})`,
+    );
+    cliEngine.sendLine("save");
+  }
+
+  return rebooted;
+}
+
 /**
  * Connects to `port`, enters CLI mode, runs a `dump all`/`diff all` backup
  * and disconnects again -- headless, no CLI tab/dialog needs to be mounted.
@@ -151,10 +222,10 @@ export async function backupOverSerial(port, baud, backupType, onStatus) {
 
 /**
  * Reconnects to `port` (retrying a few times while a freshly-flashed board
- * boots) and replays a previously-captured `dump all`/`diff all` backup.
- * That text ends with `save`, so the flight controller saves and reboots on
- * its own once it's replayed -- this just waits for that before
- * disconnecting. Resolves true/false for whether the replay was sent.
+ * boots) and replays a previously-captured `dump all`/`diff all` backup via
+ * replayBackup() above -- see there for why its trailing `save` can need
+ * resending. Resolves true only once a reboot was actually observed; false
+ * if the replay couldn't be sent at all, or the FC never rebooted after it.
  * `onStatus`, if given, is called with "connecting" then "running".
  */
 export async function restoreOverSerial(port, baud, backupText, onStatus) {
@@ -174,7 +245,12 @@ export async function restoreOverSerial(port, baud, backupText, onStatus) {
     CONFIGURATOR.cliEngineValid = false;
 
     const opened = await openSerial(port, baud);
-    if (!opened) continue;
+    if (!opened) {
+      console.log(
+        `Restore: reconnect attempt ${attempt + 1}/${CLI_RECONNECT_ATTEMPTS} -- port not open yet, retrying`,
+      );
+      continue;
+    }
 
     cliEngine = headlessCliEngine();
     onReceive = (info) => cliEngine.readSerial(info);
@@ -184,6 +260,9 @@ export async function restoreOverSerial(port, baud, backupText, onStatus) {
 
     valid = await waitForCliValid(CLI_ENTER_TIMEOUT_MS);
     if (!valid) {
+      console.log(
+        `Restore: reconnect attempt ${attempt + 1}/${CLI_RECONNECT_ATTEMPTS} -- port opened but FC never entered CLI mode, retrying`,
+      );
       serial.onReceive.removeListener(onReceive);
       await closeSerial();
     }
@@ -192,11 +271,20 @@ export async function restoreOverSerial(port, baud, backupText, onStatus) {
   if (!valid) return false;
 
   onStatus?.("running");
-  await cliEngine.executeCommands(backupText);
+  const rebooted = await replayBackup(cliEngine, backupText);
 
-  // the replayed commands end with `save`, which -- like `exit` -- reboots
-  // the flight controller (see CLI_REBOOT_WAIT_MS above). Give it that same
-  // window to finish before we disconnect.
+  if (!rebooted) {
+    console.log(
+      "Restore: FC never rebooted after replaying the backup -- treating restore as failed",
+    );
+    serial.onReceive.removeListener(onReceive);
+    await closeSerial();
+    return false;
+  }
+
+  // the FC is rebooting (or about to) -- like `exit`, that's not instant, so
+  // give it the same window CLI_REBOOT_WAIT_MS elsewhere allows for it to
+  // actually finish before we disconnect.
   await new Promise((resolve) => setTimeout(resolve, CLI_REBOOT_WAIT_MS));
 
   serial.onReceive.removeListener(onReceive);

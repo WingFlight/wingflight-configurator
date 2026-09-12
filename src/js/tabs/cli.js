@@ -1,7 +1,7 @@
 import * as clipboard from "@/js/clipboard.js";
 import * as filesystem from '@/js/filesystem.js';
 import CliEngine from '@/js/cli_engine.js';
-import { BACKUP_TYPES, runBackupCommand, saveBackupToFile } from '@/js/cli_backup.js';
+import { BACKUP_TYPES, runBackupCommand, saveBackupToFile, replayBackup } from '@/js/cli_backup.js';
 
 const tab = {
     tabName: 'cli',
@@ -113,7 +113,12 @@ tab.initialize = function (callback) {
 
             function executeSnippet() {
                 const commands = previewArea.val();
-                self.cliEngine.executeCommands(commands);
+                // A full backup capture ends with `save`, which this FC's
+                // CLI can refuse the first attempt at -- see replayBackup()
+                // for why. Loading a backup this way is exactly what that
+                // helper is for, same as the Firmware Flasher wizard's
+                // automatic restore.
+                replayBackup(self.cliEngine, commands);
                 self.GUI.snippetPreviewWindow.close();
             }
 

@@ -12,6 +12,8 @@
     onRetryRestore,
     onSkipRestore,
     onCloseRestore,
+    onSelectPort,
+    showSelectPort = false,
   } = $props();
 
   let dialogEl;
@@ -70,6 +72,11 @@
         <button class="btn" onclick={onCancelBackup}>
           {$i18n.t("firmwareFlasherWizardCancel")}
         </button>
+        {#if showSelectPort}
+          <button class="btn" onclick={onSelectPort}>
+            {$i18n.t("firmwareFlasherWizardSelectPort")}
+          </button>
+        {/if}
         <button class="btn primary" onclick={onRetryBackup}>
           {$i18n.t("firmwareFlasherWizardRetry")}
         </button>
@@ -113,6 +120,11 @@
         <button class="btn" onclick={onSkipRestore}>
           {$i18n.t("firmwareFlasherWizardSkip")}
         </button>
+        {#if showSelectPort}
+          <button class="btn" onclick={onSelectPort}>
+            {$i18n.t("firmwareFlasherWizardSelectPort")}
+          </button>
+        {/if}
         <button class="btn primary" onclick={onRetryRestore}>
           {$i18n.t("firmwareFlasherWizardRetry")}
         </button>

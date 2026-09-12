@@ -88,15 +88,29 @@
 
   const BACKUP_MODE_NONE = "none";
 
+  // Web Serial's permission model (and thus the wizard's "Select Port"
+  // recovery button, see onWizardSelectPort()) only exists in the browser
+  // build -- the packaged app's native serial backend has no such prompt.
+  const isWebSerialBackend = __BACKEND__ === "web";
+
   // Folds the old "backup on/off" toggle + separate diff/dump select into
   // one dropdown: "none" | BACKUP_TYPES.DIFF | BACKUP_TYPES.DUMP. Falls back
   // to the previous two-setting config shape if that's what's stored, so an
   // existing preference isn't silently reset.
+  //
+  // Defaults to Dump rather than Diff: a `diff all` backup always opens with
+  // `defaults nosave`, and on this firmware that replays the target's
+  // embedded custom-defaults blob with a bug that can leave a bogus
+  // `###ERROR IN map: PARSING FAILED###` in the CLI output (see
+  // replayBackup() in cli_backup.js for the save-retry workaround this
+  // forces on restore). `dump all` never emits `defaults nosave`, so it
+  // never hits that bug at all -- Dump sidesteps it rather than papering
+  // over it.
   function initialBackupMode() {
     const stored = config.get("backupBeforeFlashingMode");
     if (stored) return stored;
     if (config.get("backupBeforeFlashing") === false) return BACKUP_MODE_NONE;
-    return config.get("backupBeforeFlashingType") ?? BACKUP_TYPES.DIFF;
+    return config.get("backupBeforeFlashingType") ?? BACKUP_TYPES.DUMP;
   }
 
   let backupMode = $state(initialBackupMode());
@@ -747,6 +761,34 @@
     runBackupStep();
   }
 
+  // Recovery for the case runBackupStep()/runRestoreStep() can't retry their
+  // way out of: the browser never granted (or has since forgotten) Web
+  // Serial permission for wizardPort, so every reconnect attempt fails with
+  // "port not found" -- no amount of waiting fixes that, only the user
+  // re-picking the device through the browser's own chooser can. That
+  // chooser requires a real user gesture, which a wizard button click is and
+  // a background retry loop isn't, so this can't be done automatically.
+  // Only relevant to the browser build (Web Serial permissions don't exist
+  // for the packaged app's native serial backend) -- see isWebSerialBackend.
+  async function onWizardSelectPort() {
+    try {
+      const entry = await serial.requestWebSerialPort();
+      wizardPort = entry.path;
+    } catch (error) {
+      console.warn(
+        "Wizard: Web Serial permission request failed or was cancelled",
+        error,
+      );
+      return;
+    }
+
+    if (wizardState.phase === "backup") {
+      runBackupStep();
+    } else if (wizardState.phase === "restore") {
+      runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
+    }
+  }
+
   async function runRestoreStep(backupText, port, baud) {
     wizardBackupText = backupText;
     wizardPort = port;
@@ -1360,6 +1402,8 @@
   onRetryRestore={onWizardRetryRestore}
   onSkipRestore={onWizardSkipRestore}
   onCloseRestore={onWizardCloseRestore}
+  onSelectPort={onWizardSelectPort}
+  showSelectPort={isWebSerialBackend}
 />
 
 <style lang="scss">
