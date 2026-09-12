@@ -21,18 +21,21 @@ import boardEditorApi from "./server/api.mjs";
 
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "../..");
+// Vite's dependency cache and the target-catalogue cache share one
+// gitignored directory, so cleaning the tool is one `rm -rf`.
+const cacheRoot = path.resolve(here, "node_modules/.cache");
 
 export default defineConfig({
   root: here,
   // Its own dependency cache. Sharing node_modules/.vite with the app
   // makes each server invalidate the other's optimised deps, and the
   // app then serves 504s until it is restarted.
-  cacheDir: path.resolve(here, "node_modules/.vite"),
+  cacheDir: cacheRoot,
   plugins: [
     // The configurator's own Svelte settings, so a component behaves
     // here exactly as it does in the app.
     svelte({ configFile: path.resolve(repoRoot, "svelte.config.mjs") }),
-    boardEditorApi({ repoRoot }),
+    boardEditorApi({ repoRoot, cacheRoot }),
   ],
   resolve: {
     alias: {

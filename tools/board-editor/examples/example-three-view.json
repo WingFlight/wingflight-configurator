@@ -1,14 +1,14 @@
 {
-  "_note": "A worked example for tools/board-editor, not a real flight controller. It exists to show every part of the schema at once: three views, a CAD background, named connectors, and a UART whose TX and RX come out on opposite sides of the board.",
+  "_note": "A worked example for tools/board-editor, not a real flight controller. It exists to show every part of the schema at once: three views, a CAD background, named connectors, and a UART whose TX and RX come out on opposite sides of the board. Its manufacturer id XMPL matches nothing in the real catalogue, so it can never claim a user's board.",
   "boards": [
     {
       "schema": 2,
-      "id": "EXAMPLE-WING",
+      "id": "XMPL-EXAMPLEWING",
       "match": {
-        "targetName": [
-          "EXAMPLEWING"
+        "manufacturerId": [
+          "XMPL"
         ],
-        "boardDesign": [
+        "boardName": [
           "EXAMPLEWING"
         ]
       },

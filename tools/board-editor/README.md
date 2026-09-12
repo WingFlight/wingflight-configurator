@@ -15,22 +15,29 @@ from the configurator root, then open <http://localhost:5078>.
 
 A board profile is a few hundred coordinates. Typing them into JSON and
 reloading the app to see whether they landed anywhere near right is slow
-enough that nobody does it, which is why only four boards have profiles.
-This makes it a drag-and-drop job against the board's own outline, and
-shows the result through the app's own drawing component as you work —
+enough that nobody does it, which is why no boards have profiles. This
+makes it a drag-and-drop job against the board's own outline, starting
+from the pins the catalogue already knows, and shows the result through
+the app's own drawing component as you work —
 `src/components/boardview/BoardViewCanvas.svelte`, imported directly, not
 a lookalike. If it looks right here it looks right in the configurator.
 
 ## What it does
 
-**Boards.** Pick one of the profiles in the file, add a new one, or load
-a profile file someone sent you. *Example* loads a worked profile that
-uses every part of the schema at once.
+**Boards from the catalogue.** Filter
+[WingFlight/wingflight-targets](https://github.com/WingFlight/wingflight-targets),
+the same catalogue the Firmware Flasher loads boards from, and press
+*Create board*. It downloads that board's `.config` and turns it into a
+laid-out schematic: every pin the board reports, in the right colour
+group, one connector per UART, every port joined to its two pads. Drawing
+a board starts from a real board, never from an empty rectangle.
 
-**Seed from a firmware target.** Reads `target.h`, `target.c` and
-`target.mk` from `../wingflight-firmware` and creates a pad for every pin
-the target defines, plus one port per UART. Pads that already exist are
-left alone, so it is safe to re-run against a half-finished profile.
+*Refresh from catalogue* re-reads a board you have already worked on.
+Everything you placed survives — pad positions, connectors, views,
+backgrounds — and only pins the catalogue has added or dropped change.
+
+You can also load a profile file someone sent you, and *Example* loads a
+worked profile that uses every part of the schema at once.
 
 **Views.** Top, left and right, each with its own extent in millimetres,
 its own CAD background and its own pads. Only the top view is required.
@@ -69,9 +76,11 @@ the same JSON as a file, for when you are not running the dev server.
   pointing at the configurator's `src` and its own dependency cache so
   it does not disturb the app's dev server.
 - `server/api.mjs` — a Vite plugin serving the handful of routes the
-  editor needs. It can write exactly two places, the profile file and
-  `src/images/boards/`, and every path is resolved and checked against
-  its root first.
+  editor needs, including the catalogue, which it fetches and caches on
+  disk so the editor keeps working offline once primed. It can write
+  exactly two places, the profile file and `src/images/boards/`, plus
+  its own cache, and every path is resolved and checked against its root
+  first.
 - `src/lib/editor_state.svelte.js` — the document: boards, selection and
   an undo stack of snapshots.
 - `src/lib/svg_import.js` — reading and sanitising a CAD export.
@@ -83,8 +92,11 @@ a profile the editor accepts is one the configurator draws.
 
 ## Limitations
 
-- It needs the dev server to read or write anything. Offline it starts
-  on a blank board and *Download* is the only way out.
-- Seeding needs the firmware checked out at `../wingflight-firmware`.
+- It needs the dev server to read or write anything. Without one, the
+  catalogue and saving are both unavailable.
+- The first use of a board needs the network. After that its config is
+  cached on disk and works offline; so does the catalogue listing, for
+  six hours, and a stale listing is served rather than none if GitHub
+  cannot be reached.
 - It has no undo for a *Save*: the file is written in place. It is a
   repository file, so `git diff` is the safety net.

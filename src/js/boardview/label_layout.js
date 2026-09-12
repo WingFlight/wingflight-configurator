@@ -20,8 +20,17 @@ export const LABEL_FONT = 2.1;
 export const SUB_FONT = 1.7;
 /** Baseline-to-baseline distance from a label to its second line. */
 export const SUB_OFFSET = 2.5;
-/** Rough advance width per character, as a fraction of the font size. */
-const CHAR_WIDTH = 0.56;
+/**
+ * Advance width per character, as a fraction of the font size. There is
+ * no way to measure text without a DOM here, so this is an estimate,
+ * and it has to be a generous one: underestimating makes labels
+ * overlap, which is the fault this module exists to prevent, while
+ * overestimating only spreads them a little further apart.
+ *
+ * Measured against the app's own font on a row of "MOTOR n" labels,
+ * where 0.56 came out 15% short.
+ */
+const CHAR_WIDTH = 0.66;
 /** Smallest gap between two labels' boxes. */
 const MIN_GAP = 0.6;
 /** How far outside the board the label column sits. */

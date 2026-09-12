@@ -5,7 +5,15 @@
  * src/tabs/journey/board_profiles.json; see docs/board-views.md for the
  * schema and docs/adding-a-board-profile.md for how to add one.
  *
- * This module deliberately returns the file's own shape, unnormalised:
+ * Boards are identified the way unified firmware identifies them: by
+ * `manufacturer_id` and `board_name`, the pair the catalogue at
+ * WingFlight/wingflight-targets names its files after and the pair a
+ * flashed board reports over MSP. The old target name deliberately
+ * plays no part -- under unified firmware every H743 board reports the
+ * same one, so matching on it would hand one board's drawing to every
+ * other board of the same silicon.
+ *
+ * This module returns the file's own shape, unnormalised:
  * `findBoardProfile` returning null is what tells the wiring session
  * the board is unrecognised and pin changes must not be written to it.
  * Anything that wants to *draw* a board should go through
@@ -29,10 +37,10 @@ import boardProfiles from "@/tabs/journey/board_profiles.json";
 
 /**
  * @typedef {Object} BoardProfile
- * @property {string} id
- * @property {{targetName?: string[], boardDesign?: string[]}} match
+ * @property {string} id - the catalogue target id, e.g. "MTKS-MATEKH743".
+ * @property {{manufacturerId?: string[], boardName?: string[]}} match
  * @property {string} display
- * @property {string} mcu - e.g. "STM32F405".
+ * @property {string} mcu - e.g. "STM32H743".
  * @property {boolean} [coordinatesSchematic]
  * @property {Object.<string, Object>} views one entry per drawn side
  * @property {BoardPad[]} pads
@@ -46,6 +54,13 @@ function normalise(value) {
     .toUpperCase();
 }
 
+function matches(profile, field, wanted) {
+  if (!wanted) return false;
+  return (profile.match?.[field] ?? []).some(
+    (entry) => normalise(entry) === wanted,
+  );
+}
+
 /**
  * All known profiles.
  * @returns {BoardProfile[]}
@@ -55,31 +70,52 @@ export function allBoardProfiles() {
 }
 
 /**
- * Finds the profile matching a board's FC.CONFIG identity. `match`
- * values are compared case-insensitively against `targetName` first
- * (the firmware build's own target), then `boardDesign`.
- * @param {{targetName?: string, boardDesign?: string}} config e.g. FC.CONFIG
+ * Picks the profile for a board's MSP identity out of a given list.
+ *
+ * A profile naming both a manufacturer and a board name wins, because
+ * that pair is unique in the catalogue. A profile naming only a board
+ * name is accepted next: board names are very nearly unique on their
+ * own, and it lets one profile cover a board sold under two
+ * manufacturer ids. Nothing matches on manufacturer alone, and nothing
+ * matches without a board name at all.
+ *
+ * Exported separately from `findBoardProfile` so the rule can be
+ * tested against profiles of the test's own choosing rather than
+ * against whatever happens to ship.
+ *
+ * @param {BoardProfile[]} profiles
+ * @param {{boardName?: string, manufacturerId?: string}} config
+ * @returns {?BoardProfile}
+ */
+export function matchBoardProfile(profiles, config) {
+  const boardName = normalise(config?.boardName);
+  const manufacturerId = normalise(config?.manufacturerId);
+  if (!boardName) return null;
+
+  const candidates = (profiles ?? []).filter((profile) =>
+    matches(profile, "boardName", boardName),
+  );
+
+  return (
+    candidates.find((profile) =>
+      matches(profile, "manufacturerId", manufacturerId),
+    ) ??
+    candidates.find(
+      (profile) => !(profile.match?.manufacturerId ?? []).length,
+    ) ??
+    null
+  );
+}
+
+/**
+ * The profile for the connected board, or null when nobody has drawn
+ * it. Null is also what tells the wiring session the board is
+ * unrecognised and pin changes must not be written to it.
+ * @param {{boardName?: string, manufacturerId?: string}} config e.g. FC.CONFIG
  * @returns {?BoardProfile}
  */
 export function findBoardProfile(config) {
-  const targetName = normalise(config?.targetName);
-  const boardDesign = normalise(config?.boardDesign);
-  if (!targetName && !boardDesign) return null;
-
-  const byTarget = allBoardProfiles().find((profile) =>
-    (profile.match?.targetName ?? []).some(
-      (name) => targetName && normalise(name) === targetName,
-    ),
-  );
-  if (byTarget) return byTarget;
-
-  return (
-    allBoardProfiles().find((profile) =>
-      (profile.match?.boardDesign ?? []).some(
-        (name) => boardDesign && normalise(name) === boardDesign,
-      ),
-    ) ?? null
-  );
+  return matchBoardProfile(allBoardProfiles(), config);
 }
 
 /**

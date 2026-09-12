@@ -50,7 +50,7 @@ describe("synthesiseBoardView", () => {
   const profile = synthesiseBoardView({
     hardwareMap,
     serialPorts,
-    targetName: "MYSTERYF405",
+    boardName: "MYSTERYF405",
     mcu: "STM32F405",
   });
 
@@ -118,29 +118,43 @@ describe("synthesiseBoardView", () => {
 });
 
 describe("resolveBoardView", () => {
-  it("prefers a hand-made profile", () => {
+  // The wiring session matches a profile against the board it actually
+  // read, and hands the answer over; a fresh lookup by MSP identity is
+  // the fallback. No profile ships by default, so the schematic is what
+  // nearly every board gets.
+  const drawn = {
+    id: "TEST-BOARD",
+    display: "Drawn board",
+    match: { manufacturerId: ["TEST"], boardName: ["TESTBOARD"] },
+    views: { top: { width: 40, height: 30 } },
+    pads: [{ pin: "C06", silkscreen: "S1", x: 5, y: 25, group: "outputs" }],
+  };
+
+  it("prefers a profile the caller already matched", () => {
     const profile = resolveBoardView({
-      config: { targetName: "MATEKF405" },
+      matched: drawn,
+      config: { boardName: "TESTBOARD", manufacturerId: "TEST" },
       hardwareMap,
       serialPorts,
     });
     expect(profile.synthesised).toBe(false);
-    expect(profile.id).toBe("MATEKF405");
+    expect(profile.id).toBe("TEST-BOARD");
   });
 
-  it("falls back to a schematic for an unknown board", () => {
+  it("falls back to a schematic for a board nobody has drawn", () => {
     const profile = resolveBoardView({
-      config: { targetName: "NOSUCHBOARD" },
+      config: { boardName: "NOSUCHBOARD", manufacturerId: "NONE" },
       hardwareMap,
       serialPorts,
     });
     expect(profile.synthesised).toBe(true);
+    expect(profile.display).toBe("NOSUCHBOARD");
   });
 
   it("returns nothing when told not to synthesise", () => {
     expect(
       resolveBoardView({
-        config: { targetName: "NOSUCHBOARD" },
+        config: { boardName: "NOSUCHBOARD" },
         hardwareMap,
         allowSynthesised: false,
       }),

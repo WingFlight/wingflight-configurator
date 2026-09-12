@@ -115,8 +115,15 @@
 
 <main>
   <div class="work">
-    <EditorCanvas />
-    <PreviewPanel />
+    {#if editor.board}
+      <EditorCanvas />
+      <PreviewPanel />
+    {:else}
+      <p class="empty">
+        No board open. Pick one from the catalogue on the right to start
+        drawing it, or load a profile file.
+      </p>
+    {/if}
   </div>
   <aside>
     <BoardPanel />
@@ -242,6 +249,15 @@
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+  }
+
+  .empty {
+    margin: 0;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
   }
 
   aside {

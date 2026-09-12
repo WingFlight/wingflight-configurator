@@ -13,6 +13,7 @@ this is the reference for what the editor writes and what the app reads.
 | The profile file | `src/tabs/journey/board_profiles.json` |
 | Background drawings | `src/images/boards/*.svg`, served at `/images/boards/…` |
 | Schema and normaliser | `src/js/boardview/schema.js` |
+| Reading a unified target config | `src/js/boardview/unified_config.js` |
 | Port joining and split detection | `src/js/boardview/port_map.js` |
 | Fallback for an undrawn board | `src/js/boardview/generic_layout.js` |
 | Label placement | `src/js/boardview/label_layout.js` |
@@ -20,13 +21,29 @@ this is the reference for what the editor writes and what the app reads.
 | Drawing plus view switcher and port list | `src/components/boardview/PortMap.svelte` |
 | Editor | `tools/board-editor` |
 
+## Identifying a board
+
+Boards are identified the way unified firmware identifies them: by
+`manufacturer_id` and `board_name`. That pair is what the catalogue at
+[WingFlight/wingflight-targets](https://github.com/WingFlight/wingflight-targets)
+names its config files after, and it is what a flashed board reports
+over MSP.
+
+The firmware target name deliberately plays no part. Under unified
+firmware every board on one MCU reports the same target name, so
+matching on it would hand one board's drawing to every other board
+built on the same silicon.
+
+A profile naming both halves wins. A profile naming only a board name
+is accepted next, which lets one drawing cover a board sold under two
+manufacturer ids. Nothing matches on manufacturer alone.
+
 ## What gets drawn, and when
 
 In order of preference:
 
-1. **A hand-made profile**, matched on the board's target name or board
-   design. This is the only case where the pads are where they really
-   are on the board.
+1. **A hand-made profile**, matched as above. This is the only case
+   where the pads are where they really are on the board.
 2. **A schematic synthesised from the board's own report**, for a board
    nobody has drawn yet. Outputs along the bottom, serial ports down the
    sides, power and sensing across the top. It needs the pin data the
@@ -40,15 +57,15 @@ In order of preference:
 ```json
 {
   "schema": 2,
-  "id": "MATEKF405",
-  "match": { "targetName": ["MATEKF405"], "boardDesign": ["MATEKF405"] },
-  "display": "Matek F405-WING",
-  "mcu": "STM32F405",
+  "id": "MTKS-MATEKH743",
+  "match": { "manufacturerId": ["MTKS"], "boardName": ["MATEKH743"] },
+  "display": "Matek H743-WING",
+  "mcu": "STM32H743",
   "coordinatesSchematic": true,
 
   "views": {
     "top":   { "width": 56, "height": 36,
-               "background": "/images/boards/matek-f405-top.svg",
+               "background": "/images/boards/matek-h743-top.svg",
                "backgroundOpacity": 0.6,
                "mountHoles": [[3, 3], [53, 3], [3, 33], [53, 33]],
                "usb": { "edge": "top", "offset": 0.5 } },
@@ -71,6 +88,10 @@ In order of preference:
   ]
 }
 ```
+
+`id` is the catalogue's target id, `<MANUFACTURER>-<BOARD>`. Nothing
+enforces that, but keeping to it means a profile and its catalogue
+entry are obviously the same board.
 
 ### views
 
@@ -149,9 +170,12 @@ example of exactly this.
 
 ## Backwards compatibility
 
-A version 1 profile — an `outline` and pads with no `view` — is upgraded
-in memory to a single top view by `normaliseProfile`. Nothing has to be
-migrated for an old profile to keep working.
+A version 1 profile's *geometry* — an `outline` and pads with no `view`
+— is upgraded in memory to a single top view by `normaliseProfile`, so
+an old file still draws. Its `match` is not carried over: a profile
+keyed to a firmware target name is dropped to an empty match and will
+never be found, which is the honest outcome, since that key no longer
+identifies a board. Restate it in unified terms.
 
 ## Checking a profile
 

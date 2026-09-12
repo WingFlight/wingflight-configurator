@@ -220,6 +220,8 @@
                     Math.min(...own.map((p) => p.y)) +
                     4.4,
                 }}
+          {@const tall = box.height > box.width}
+          {@const left = box.x + box.width / 2 < view.width / 2}
           <g class="header">
             <rect
               x={box.x}
@@ -228,7 +230,23 @@
               height={box.height}
               rx="0.8"
             />
-            <text x={box.x} y={box.y - 0.8}>{header.label ?? header.id}</text>
+            <!-- Connector names go outside the board, clear of the pad
+                 tags: beside a column of pads, above or below a row. -->
+            {#if tall}
+              <text
+                x={left ? -1 : view.width + 1}
+                y={box.y + box.height / 2}
+                text-anchor={left ? "end" : "start"}>{header.label ?? header.id}</text
+              >
+            {:else}
+              <text
+                x={box.x + box.width / 2}
+                y={box.y + box.height / 2 < view.height / 2
+                  ? -1
+                  : view.height + 2.4}
+                text-anchor="middle">{header.label ?? header.id}</text
+              >
+            {/if}
           </g>
         {/if}
       {/each}

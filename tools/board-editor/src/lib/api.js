@@ -53,12 +53,30 @@ export function putBackground(name, svg) {
   }).then(json);
 }
 
-/** The firmware targets sitting next to this checkout. */
-export function getTargets() {
-  return fetch("/api/targets").then(json);
+/**
+ * The unified target catalogue, as `{source, entries}` where entries
+ * are the raw GitHub contents rows. `source` says whether the answer
+ * came from GitHub, a fresh cache, or a stale cache because the
+ * network was unavailable.
+ */
+export function getTargets({ refresh = false } = {}) {
+  return fetch(`/api/targets${refresh ? "?refresh=1" : ""}`).then(json);
 }
 
-/** One target's pins, parsed from its target.h and target.c. */
-export function getTarget(name) {
-  return fetch(`/api/targets/${encodeURIComponent(name)}`).then(json);
+/** One target's `.config` file, verbatim. */
+export async function getTargetConfig(targetId, { refresh = false } = {}) {
+  const response = await fetch(
+    `/api/targets/${encodeURIComponent(targetId)}${refresh ? "?refresh=1" : ""}`,
+  );
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    let message = `${response.status} ${response.statusText}`;
+    try {
+      message = JSON.parse(detail).error ?? message;
+    } catch {
+      /* the body was not JSON; the status line will have to do */
+    }
+    throw new Error(message);
+  }
+  return response.text();
 }

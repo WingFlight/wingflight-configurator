@@ -2,9 +2,9 @@
  * File: src/js/boardview/schema.js
  * The board-view schema (version 2) and its normaliser.
  *
- * Version 1 -- what src/tabs/journey/board_profiles.json still holds --
- * is a single top-down `outline` plus a flat `pads` array. Version 2
- * adds:
+ * Version 1 was a single top-down `outline` plus a flat `pads` array,
+ * keyed to a firmware target name. Version 2 identifies boards the
+ * unified way -- manufacturer id plus board name -- and adds:
  *
  *   - `views`: up to three drawings of the same board (top, left,
  *     right), each with its own extent and an optional background SVG
@@ -21,8 +21,9 @@
  * and the board editor (tools/board-editor) both import this module,
  * so a profile the editor accepts is one the configurator draws.
  *
- * `normaliseProfile` upgrades a version 1 profile in memory, so the
- * four existing profiles keep working untouched.
+ * `normaliseProfile` still upgrades a version 1 profile's geometry in
+ * memory, so an old hand-made file draws; its `match` has to be
+ * restated in unified terms to be found at all.
  */
 
 /** The views a board can be drawn from, in tab order. */
@@ -210,9 +211,17 @@ export function normaliseProfile(raw) {
     id: str(raw.id),
     display: str(raw.display) || str(raw.id),
     mcu: str(raw.mcu) || null,
+    // Boards are identified the unified way: manufacturer id plus
+    // board name, the pair the catalogue names its files after. See
+    // src/js/remap_fc/board_profiles.js for why the target name is not
+    // part of this.
     match: {
-      targetName: (raw.match?.targetName ?? []).map(str).filter(Boolean),
-      boardDesign: (raw.match?.boardDesign ?? []).map(str).filter(Boolean),
+      manufacturerId: (raw.match?.manufacturerId ?? [])
+        .map((entry) => str(entry).toUpperCase())
+        .filter(Boolean),
+      boardName: (raw.match?.boardName ?? [])
+        .map((entry) => str(entry).toUpperCase())
+        .filter(Boolean),
     },
     coordinatesSchematic: Boolean(raw.coordinatesSchematic),
     // True for a profile this build synthesised rather than read from
@@ -244,8 +253,8 @@ export function serialiseProfile(profile) {
     schema: 2,
     id: profile.id,
     match: {
-      targetName: profile.match?.targetName ?? [],
-      boardDesign: profile.match?.boardDesign ?? [],
+      manufacturerId: profile.match?.manufacturerId ?? [],
+      boardName: profile.match?.boardName ?? [],
     },
     display: profile.display,
     mcu: profile.mcu,

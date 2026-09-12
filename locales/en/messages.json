@@ -8741,7 +8741,7 @@
         "message": "<p>Reading opens a command-line session to the board and pulls its pin, timer and DMA tables. Nothing is written. While the session is open the board is not in its normal mode; leaving this stage closes the session and the board restarts.</p>"
     },
     "journeyWiring.unrecognisedHelp": {
-        "message": "<p>No board profile matches <strong>{{target}}</strong>, so there is no drawing and writing pin assignments is refused. Pads are listed by pin instead. See docs/adding-a-board-profile.md to add one.</p>"
+        "message": "<p>No board profile matches <strong>{{target}}</strong>. The drawing below is a schematic built from the pins the board just reported, so the pads are in the right groups with the right names but not where they physically are. Writing pin assignments is refused until the board has a profile. See docs/adding-a-board-profile.md to draw one.</p>"
     },
     "journeyWiring.needsReread": {
         "message": "The board changed since it was read. Read it again before planning any change."

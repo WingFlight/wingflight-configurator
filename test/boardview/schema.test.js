@@ -9,8 +9,8 @@ import {
 import boardProfiles from "@/tabs/journey/board_profiles.json";
 
 const v1 = {
-  id: "TESTF405",
-  match: { targetName: ["TESTF405"] },
+  id: "TEST-F405",
+  match: { manufacturerId: ["TEST"], boardName: ["TESTF405"] },
   display: "Test F405",
   mcu: "STM32F405",
   outline: { width: 40, height: 30, mountHoles: [[3, 3]] },
@@ -134,15 +134,45 @@ describe("validateProfile", () => {
 });
 
 describe("the profiles shipped in this build", () => {
-  it.each(boardProfiles.boards.map((board) => [board.id, board]))(
-    "%s normalises and validates",
-    (_id, board) => {
+  // The file starts empty: a board earns an entry only once someone
+  // has it in hand and can place the pads where they really are.
+  // Everything else falls back to the synthesised schematic.
+  it("is a well-formed file", () => {
+    expect(Array.isArray(boardProfiles.boards)).toBe(true);
+  });
+
+  it("holds only profiles that normalise, validate and match by identity", () => {
+    for (const board of boardProfiles.boards) {
       const profile = normaliseProfile(board);
-      const errors = validateProfile(profile).filter(
-        (problem) => problem.level === "error",
-      );
-      expect(errors).toEqual([]);
-      expect(profile.pads.length).toBeGreaterThan(0);
-    },
-  );
+      expect(
+        validateProfile(profile).filter((p) => p.level === "error"),
+        board.id,
+      ).toEqual([]);
+      expect(profile.pads.length, board.id).toBeGreaterThan(0);
+      // Without a board name a profile can never be found, so shipping
+      // one would be shipping dead data.
+      expect(profile.match.boardName.length, board.id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("match", () => {
+  it("upper-cases the identity, so a lower-case file still matches", () => {
+    const profile = normaliseProfile({
+      ...v1,
+      match: { manufacturerId: ["mtks"], boardName: ["matekh743"] },
+    });
+    expect(profile.match).toEqual({
+      manufacturerId: ["MTKS"],
+      boardName: ["MATEKH743"],
+    });
+  });
+
+  it("drops a legacy target-name match rather than pretending it works", () => {
+    const profile = normaliseProfile({
+      ...v1,
+      match: { targetName: ["MATEKF405"], boardDesign: ["MATEKF405"] },
+    });
+    expect(profile.match).toEqual({ manufacturerId: [], boardName: [] });
+  });
 });

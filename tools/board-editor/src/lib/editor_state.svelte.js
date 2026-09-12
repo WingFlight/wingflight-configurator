@@ -14,6 +14,7 @@
  * own inverse.
  */
 
+import { synthesiseBoardView } from "@/js/boardview/generic_layout.js";
 import {
   emptyView,
   normalisePin,
@@ -22,24 +23,11 @@ import {
   validateProfile,
   VIEW_IDS,
 } from "@/js/boardview/schema.js";
+import { readTargetConfig } from "@/js/boardview/unified_config.js";
 
 import * as api from "./api.js";
 
 const UNDO_LIMIT = 100;
-
-function blankBoard(id = "NEWBOARD") {
-  return normaliseProfile({
-    id,
-    display: id,
-    mcu: null,
-    match: { targetName: [id], boardDesign: [id] },
-    coordinatesSchematic: true,
-    views: { top: emptyView("top") },
-    pads: [],
-    headers: [],
-    ports: [],
-  });
-}
 
 class EditorState {
   /** @type {Object[]} every board in the profile file, normalised */
@@ -94,13 +82,14 @@ class EditorState {
       this.boards = (file.boards ?? []).map(normaliseProfile);
       this.note = file._note ?? null;
       this.offline = false;
-      if (!this.boards.length) this.boards = [blankBoard()];
+      // An empty file is the normal state: a board earns an entry only
+      // once someone has drawn it. Pick one from the catalogue to start.
       this.index = 0;
       this.dirty = false;
     } catch (error) {
       this.offline = true;
-      this.error = `${error.message}. Editing a blank board; use Download to keep your work.`;
-      this.boards = [blankBoard()];
+      this.error = `${error.message}. The catalogue and saving are unavailable; use Download to keep any work.`;
+      this.boards = [];
     } finally {
       this.status = "idle";
     }
@@ -244,28 +233,21 @@ class EditorState {
 
   // --- boards ---------------------------------------------------------
 
-  addBoard(id) {
-    this.#pushUndo(true);
-    this.boards = [...this.boards, blankBoard(id || "NEWBOARD")];
-    this.index = this.boards.length - 1;
-    this.viewId = "top";
-    this.dirty = true;
-  }
-
   removeBoard() {
-    if (this.boards.length <= 1) return;
+    if (!this.board) return;
     this.#pushUndo(true);
     this.boards = this.boards.filter((_, i) => i !== this.index);
-    this.index = Math.max(0, this.index - 1);
+    this.index = Math.max(0, Math.min(this.index, this.boards.length - 1));
+    this.selectedPin = null;
     this.dirty = true;
   }
 
   setBoardField(field, value) {
     this.edit((board) => {
-      if (field === "targetName" || field === "boardDesign") {
+      if (field === "manufacturerId" || field === "boardName") {
         board.match[field] = String(value)
           .split(",")
-          .map((entry) => entry.trim())
+          .map((entry) => entry.trim().toUpperCase())
           .filter(Boolean);
       } else {
         board[field] = value;
@@ -481,68 +463,101 @@ class EditorState {
     if (this.selectedPortId === id) this.selectedPortId = null;
   }
 
-  /**
-   * Fills a board from a firmware target: one pad per pin the target
-   * defines, laid out the way the generic schematic lays them out, and
-   * one port per UART. Existing pads for the same pins are left alone,
-   * so this can be run against a half-finished profile.
-   * @param {Object} target parsed by the dev server's /api/targets
-   */
-  seedFromTarget(target) {
-    this.edit((board) => {
-      // A plain lookup rather than a Set: this is scratch state inside
-      // one synchronous edit, never anything the UI reads back.
-      const taken = Object.fromEntries(board.pads.map((pad) => [pad.pin, true]));
-      const view = board.views[this.viewId] ?? emptyView(this.viewId);
-      // Anything new lands in a staging row along the top, for the
-      // author to drag into place against the background.
-      let column = 0;
-      const add = (pin, silkscreen, group) => {
-        if (!pin || taken[pin]) return;
-        taken[pin] = true;
-        board.pads.push({
-          pin,
-          silkscreen,
-          x: 2 + ((column * 3) % Math.max(6, view.width - 4)),
-          y: 2 + Math.floor((column * 3) / Math.max(6, view.width - 4)) * 3,
-          view: this.viewId,
-          side: "top",
-          group,
-          header: null,
-          labelSide: "auto",
-          reserved: false,
-        });
-        column += 1;
-      };
+  // --- the unified target catalogue -----------------------------------
 
-      for (const output of target.outputs ?? []) {
-        add(output.pin, output.key, output.group);
-      }
-      for (const [index, lines] of Object.entries(target.uarts ?? {})) {
-        add(lines.tx, `TX${index}`, "uart");
-        add(lines.rx, `RX${index}`, "uart");
-        const identifier = Number(index) - 1;
-        if (!board.ports.some((port) => port.identifier === identifier)) {
-          board.ports.push({
-            id: `UART${index}`,
-            identifier,
-            label: `UART${index}`,
-            tx: lines.tx ?? null,
-            rx: lines.rx ?? null,
-            split: null,
-            notes: null,
-          });
-        }
-      }
-      for (const [index, lines] of Object.entries(target.i2c ?? {})) {
-        add(lines.sda, `SDA${index}`, "i2c");
-        add(lines.scl, `SCL${index}`, "i2c");
-      }
-      for (const [key, entry] of Object.entries(target.singles ?? {})) {
-        add(entry.pin, key, entry.group);
-      }
-      if (target.mcu && !board.mcu) board.mcu = target.mcu;
+  /**
+   * Creates or refreshes a board from a unified target config.
+   *
+   * The config's `resource` lines are read with the configurator's own
+   * parser and laid out with its own schematic layout, so a freshly
+   * seeded board is already a correct drawing: outputs along the
+   * bottom, serial ports down the sides, power across the top, each
+   * port joined to its two pins. What is left is loading the CAD
+   * background and dragging the pads onto where they really are.
+   *
+   * Seeding a board that already exists refreshes it from the
+   * catalogue while keeping what the author decided: where each pad
+   * sits, which view and connector it is on, what it is called, and
+   * the views and backgrounds themselves. A pin the catalogue dropped
+   * goes; a pin it added arrives in its schematic position.
+   *
+   * @param {string} configText a `.config` file from the catalogue
+   * @returns {?string} the id of the board now selected
+   */
+  seedFromConfig(configText) {
+    const { identity, hardwareMap, serialPorts } = readTargetConfig(configText);
+    const id = identity.targetId;
+    if (!id) {
+      this.error = "That config names no board_name and manufacturer_id.";
+      return null;
+    }
+
+    const seeded = synthesiseBoardView({
+      hardwareMap,
+      serialPorts,
+      boardName: identity.boardName,
+      mcu: identity.mcu,
     });
+    if (!seeded) {
+      this.error = `${id} declares no pins to draw.`;
+      return null;
+    }
+
+    const at = this.boards.findIndex((board) => board.id === id);
+    const previous = at >= 0 ? serialiseProfile($state.snapshot(this.boards[at])) : null;
+    const authored = new Map(
+      (previous?.pads ?? []).map((pad) => [
+        pad.pin,
+        {
+          x: pad.x,
+          y: pad.y,
+          view: pad.view,
+          side: pad.side,
+          header: pad.header ?? null,
+          labelSide: pad.labelSide ?? "auto",
+          reserved: pad.reserved ?? false,
+          silkscreen: pad.silkscreen,
+        },
+      ]),
+    );
+
+    const fresh = serialiseProfile(seeded);
+    const next = normaliseProfile({
+      ...fresh,
+      id,
+      display: previous?.display ?? identity.boardName ?? id,
+      mcu: identity.mcu,
+      match: {
+        manufacturerId: [identity.manufacturerId],
+        boardName: [identity.boardName],
+      },
+      // Only the author's own measurements earn the right to drop this.
+      coordinatesSchematic: previous
+        ? Boolean(previous.coordinatesSchematic)
+        : true,
+      // Views, connectors and backgrounds are the author's work, not
+      // the catalogue's, so a refresh leaves them as they were.
+      views: previous?.views ?? fresh.views,
+      headers: previous?.headers ?? fresh.headers,
+      pads: fresh.pads.map((pad) => ({ ...pad, ...(authored.get(pad.pin) ?? {}) })),
+    });
+
+    this.#pushUndo(true);
+    if (at >= 0) {
+      this.boards[at] = next;
+      this.index = at;
+    } else {
+      this.boards = [...this.boards, next];
+      this.index = this.boards.length - 1;
+    }
+    this.viewId = "top";
+    this.selectedPin = null;
+    this.dirty = true;
+    this.error = null;
+    this.message = previous
+      ? `Refreshed ${id} from the catalogue, keeping your pad positions.`
+      : `Created ${id} with ${next.pads.length} pads. Nothing is written until you save.`;
+    return id;
   }
 }
 

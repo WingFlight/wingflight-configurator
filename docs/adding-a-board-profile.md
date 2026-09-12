@@ -24,14 +24,19 @@ through the app's own component, and validates as you go. See
 Press **Example** in its toolbar to load a worked profile that uses
 every part of the schema, including a UART split across two connectors.
 
+No profiles ship by default. Every board falls back to the synthesised
+schematic until someone with that board in hand draws it, which is why
+adding one is worth the trouble only when you can measure it.
+
 ## The procedure
 
-1. **Start from the firmware target.** In the editor, pick the target
-   under *Seed from firmware target* and press Seed. That creates a pad
-   for every pin the target defines — outputs from the `timerHardware[]`
-   table in `target.c`, UARTs, I2C, the ADC inputs, the LED strip and
-   the beeper from `target.h` — plus one port per UART. They land
-   stacked in the top-left corner.
+1. **Pick the board from the catalogue.** Filter the list at the top of
+   the editor and press *Create board*. It downloads that board's
+   `.config` from
+   [WingFlight/wingflight-targets](https://github.com/WingFlight/wingflight-targets)
+   and turns it into a laid-out schematic: every pin the board reports,
+   in the right colour group, with one connector per UART and each port
+   joined to its two pads. Nothing is written to the repository yet.
 
 2. **Get a background.** Export the board's outline from CAD as SVG at
    1:1 with millimetre units, or photograph the board square-on with a
@@ -63,21 +68,28 @@ every part of the schema, including a UART split across two connectors.
    schematic"** once the positions are measured rather than invented,
    and Save.
 
-## Where the defaults come from
+Coming back to a board later, press *Refresh from catalogue*. That
+re-reads the config and keeps everything you placed: pad positions,
+connectors, views and backgrounds all survive, and only pins the
+catalogue has added or dropped change.
 
-Pin-to-function defaults are read from the firmware target in
-`wingflight-firmware/src/main/target/<TARGET>/`:
+## Where the pin data comes from
 
-- `target.c` — the `timerHardware[]` table: `TIM_USE_MOTOR` entries
-  become `MOTOR 1..4` in order, `TIM_USE_SERVO` entries become
-  `SERVO 1..n`, `TIM_USE_LED` the LED strip, `TIM_USE_PPM` the PPM input.
-- `target.h` — `UARTn_TX_PIN` / `UARTn_RX_PIN`, `I2Cn_SCL` / `I2Cn_SDA`,
-  `VBAT_ADC_PIN`, `CURRENT_METER_ADC_PIN`, `RSSI_ADC_PIN`,
-  `EXTERNAL1_ADC_PIN`, `LED_STRIP_PIN`, `BEEPER_PIN`, `PINIOn_PIN`.
-- `target.mk` — which MCU family the target builds for.
+Everything the seed knows is read from the board's `.config` file in the
+catalogue. Those files are the custom defaults the Firmware Flasher
+writes when it flashes a board, so they are the same pin assignments the
+board will actually boot with.
+
+The `resource` lines are parsed by the configurator's own
+`src/js/remap_fc/hardware_parser.js`, the same code that reads a live
+board's `dump hardware`. Resources that are not user-facing pads — SPI
+buses, chip selects, gyro interrupts — are ignored rather than drawn.
+The `serial` lines give the board's default port assignments, used to
+show realistic labels while drawing and never written into a profile.
 
 Compare against a real `dump hardware` from the board before trusting a
-profile: the firmware's own defaults are what the wiring stage reverts
+profile: a board that has been remapped no longer matches its catalogue
+entry, and the firmware's own defaults are what the wiring stage reverts
 to.
 
 ## Doing it by hand
@@ -85,6 +97,8 @@ to.
 Editing the JSON directly works too; the schema is in
 [board-views.md](board-views.md). Keep to the same conventions:
 
+- `id` is the catalogue target id, `<MANUFACTURER>-<BOARD>`.
+- `match` names `manufacturerId` and `boardName`, never a target name.
 - `pin` in CLI form (`A09`, `B07`), each pin once per board.
 - Coordinates in millimetres from the top-left of the view.
 - `coordinatesSchematic: true` until the positions are measured.
@@ -98,6 +112,8 @@ pnpm vitest run test/remap_fc
 
 `test/boardview` validates every profile in the file: no duplicate pins,
 no pad outside its view, no port claiming a pin that has no pad, no two
-ports on one serial identifier. `test/remap_fc` checks that every pad in
-the `outputs` group has timer data in `src/js/remap_fc/MCU-all.json` for
-the profile's MCU.
+ports on one serial identifier, and a board name to match on. It also
+runs a real catalogue config end to end through the seeding pipeline
+against a vendored fixture, so the checks work offline. `test/remap_fc`
+checks that every pad in the `outputs` group has timer data in
+`src/js/remap_fc/MCU-all.json` for the profile's MCU.

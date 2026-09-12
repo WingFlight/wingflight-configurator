@@ -94,7 +94,7 @@ function serialIdentifiers(hardwareMap, serialPorts) {
  * @param {Object.<string, {pin: string}>} [args.hardwareMap] wiring
  *        session hardware map, keyed by option key ("S1", "TX2")
  * @param {{identifier: number}[]} [args.serialPorts] FC.SERIAL_CONFIG.ports
- * @param {?string} [args.targetName] for the title
+ * @param {?string} [args.boardName] the board's own name, for the title
  * @param {?string} [args.mcu]
  * @returns {?Object} a normalised profile, or null when there is
  *          nothing at all to draw
@@ -102,12 +102,32 @@ function serialIdentifiers(hardwareMap, serialPorts) {
 export function synthesiseBoardView({
   hardwareMap = {},
   serialPorts = [],
-  targetName = null,
+  boardName = null,
   mcu = null,
 } = {}) {
   const outputs = outputKeys(hardwareMap);
-  const topRow = topRowKeys(hardwareMap);
   const identifiers = serialIdentifiers(hardwareMap, serialPorts);
+
+  // Pins the serial ports will claim. A pad shared between a port and
+  // something else -- PPM sitting on UART2's RX pad, say -- belongs
+  // with its port on a drawing whose job is showing ports, so the top
+  // row gives way. One pad per pin, whoever else names it.
+  const portPins = new Set();
+  for (const identifier of identifiers) {
+    const keys = hardwareKeysFor(identifier);
+    for (const role of ["tx", "rx"]) {
+      const pin = keys[role] ? hardwareMap[keys[role]]?.pin : null;
+      if (pin) portPins.add(normalisePin(pin));
+    }
+  }
+
+  const seenInTopRow = new Set();
+  const topRow = topRowKeys(hardwareMap).filter((key) => {
+    const pin = normalisePin(hardwareMap[key].pin);
+    if (portPins.has(pin) || seenInTopRow.has(pin)) return false;
+    seenInTopRow.add(pin);
+    return true;
+  });
 
   if (!outputs.length && !topRow.length && !identifiers.length) return null;
 
@@ -131,6 +151,18 @@ export function synthesiseBoardView({
     sideHeight(sides.left),
     sideHeight(sides.right),
   );
+
+  // A pin can carry more than one owner: a board that breaks out one
+  // pad as either PPM input or UART2 RX reports both. There is still
+  // only one pad, so it is drawn once and named after everything on
+  // it, rather than one owner being silently dropped.
+  const ownersByPin = {};
+  for (const [key, entry] of Object.entries(hardwareMap)) {
+    const pin = normalisePin(entry?.pin);
+    if (pin) (ownersByPin[pin] ??= []).push(key);
+  }
+  const nameFor = (pin, fallback) =>
+    (ownersByPin[pin] ?? []).join("/") || fallback;
 
   const pads = [];
   const headers = [];
@@ -160,7 +192,7 @@ export function synthesiseBoardView({
     });
     outputs.forEach((key, index) => {
       place(hardwareMap[key].pin, {
-        silkscreen: key,
+        silkscreen: nameFor(normalisePin(hardwareMap[key].pin), key),
         x: startX + index * OUTPUT_PITCH,
         y: height - EDGE_INSET,
         group: "outputs",
@@ -189,7 +221,7 @@ export function synthesiseBoardView({
     });
     topRow.forEach((key, index) => {
       place(hardwareMap[key].pin, {
-        silkscreen: key,
+        silkscreen: nameFor(normalisePin(hardwareMap[key].pin), key),
         x: startX + index * pitch,
         y: TOP_ROW_Y,
         group: groupForOptionKey(key),
@@ -230,7 +262,7 @@ export function synthesiseBoardView({
         });
         lines.forEach(([, pin, silkscreen], index) => {
           place(pin, {
-            silkscreen,
+            silkscreen: nameFor(pin, silkscreen),
             x,
             y: y + index * LINE_PITCH,
             group: "uart",
@@ -261,8 +293,8 @@ export function synthesiseBoardView({
   if (!pads.length) return null;
 
   return normaliseProfile({
-    id: targetName ? `GENERIC-${targetName}` : "GENERIC",
-    display: targetName ?? "Flight controller",
+    id: boardName ? `GENERIC-${boardName}` : "GENERIC",
+    display: boardName ?? "Flight controller",
     mcu,
     match: {},
     coordinatesSchematic: true,

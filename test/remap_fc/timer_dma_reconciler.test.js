@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import mcuAllData from "@/js/remap_fc/MCU-all.json";
 import boardProfiles from "@/tabs/journey/board_profiles.json";
-import { findBoardProfile, padForPin, silkscreenFor } from "@/js/remap_fc/board_profiles.js";
+import {
+  findBoardProfile,
+  matchBoardProfile,
+  padForPin,
+  silkscreenFor,
+} from "@/js/remap_fc/board_profiles.js";
 import { classifyCriticality } from "@/js/remap_fc/feature_classifier.js";
 import {
   MATEKF405_DIFF_HARDWARE_DEFAULTS,
@@ -241,21 +246,76 @@ describe("reconciler on STM32F722 (MATEKF722 defaults)", () => {
 });
 
 describe("board profiles", () => {
-  it("match the four in-tree targets case-insensitively", () => {
-    expect(findBoardProfile({ targetName: "matekf405" })?.id).toBe("MATEKF405");
-    expect(findBoardProfile({ targetName: "", boardDesign: "MATEKF722-WING" })?.id).toBe(
-      "MATEKF722",
-    );
-    expect(findBoardProfile({ targetName: "MATEKH743" })?.id).toBe("MATEKH743");
-    expect(findBoardProfile({ targetName: "MATEKF411" })?.id).toBe("MATEKF411");
-    expect(findBoardProfile({ targetName: "VirtualFC" })).toBeNull();
+  // Boards are identified the unified way: manufacturer id plus board
+  // name. The old target name plays no part, because under unified
+  // firmware every board on one MCU reports the same one.
+  const profiles = [
+    {
+      id: "MTKS-MATEKH743",
+      match: { manufacturerId: ["MTKS"], boardName: ["MATEKH743"] },
+      pads: [
+        { pin: "B00", silkscreen: "S1", group: "outputs" },
+        { pin: "A09", silkscreen: "TX1", group: "uart" },
+      ],
+    },
+    {
+      id: "ANY-CLONEBOARD",
+      match: { manufacturerId: [], boardName: ["CLONEBOARD"] },
+      pads: [],
+    },
+    {
+      id: "OTHR-MATEKH743",
+      match: { manufacturerId: ["OTHR"], boardName: ["MATEKH743"] },
+      pads: [],
+    },
+  ];
+
+  it("matches on manufacturer and board name, case-insensitively", () => {
+    expect(
+      matchBoardProfile(profiles, {
+        manufacturerId: "mtks",
+        boardName: "matekh743",
+      })?.id,
+    ).toBe("MTKS-MATEKH743");
+    expect(
+      matchBoardProfile(profiles, {
+        manufacturerId: "OTHR",
+        boardName: "MATEKH743",
+      })?.id,
+    ).toBe("OTHR-MATEKH743");
+  });
+
+  it("lets a profile cover every manufacturer of one board name", () => {
+    expect(
+      matchBoardProfile(profiles, {
+        manufacturerId: "WHOEVER",
+        boardName: "CLONEBOARD",
+      })?.id,
+    ).toBe("ANY-CLONEBOARD");
+  });
+
+  it("never matches without a board name, or on manufacturer alone", () => {
+    expect(matchBoardProfile(profiles, { manufacturerId: "MTKS" })).toBeNull();
+    expect(matchBoardProfile(profiles, {})).toBeNull();
+    // An unknown manufacturer for a board name that is claimed by two
+    // specific manufacturers is not a match for either of them.
+    expect(
+      matchBoardProfile(profiles, {
+        manufacturerId: "NOPE",
+        boardName: "MATEKH743",
+      }),
+    ).toBeNull();
+  });
+
+  it("finds nothing for a board nobody has drawn", () => {
+    expect(findBoardProfile({ boardName: "VIRTUALFC" })).toBeNull();
     expect(findBoardProfile({})).toBeNull();
   });
 
   it("labels pads and finds them by pin", () => {
-    const profile = findBoardProfile({ targetName: "MATEKF405" });
-    expect(silkscreenFor(profile, "C06")).toBe("S1");
-    expect(silkscreenFor(profile, "c09")).toBe("S4");
+    const profile = profiles[0];
+    expect(silkscreenFor(profile, "B00")).toBe("S1");
+    expect(silkscreenFor(profile, "b00")).toBe("S1");
     expect(padForPin(profile, "A09")?.group).toBe("uart");
     expect(silkscreenFor(profile, "Z99")).toBeNull();
   });

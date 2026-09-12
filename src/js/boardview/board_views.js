@@ -4,7 +4,7 @@
  *
  * In order of preference:
  *   1. a hand-made profile from src/tabs/journey/board_profiles.json,
- *      matched on the board's target name or board design;
+ *      matched on the board's manufacturer id and board name;
  *   2. a schematic synthesised from what the board itself reported
  *      (generic_layout.js), for a board nobody has drawn yet;
  *   3. nothing, when the board has not been read and is not known.
@@ -20,7 +20,7 @@ import { normaliseProfile } from "./schema.js";
 
 /**
  * The hand-made profile for a board, normalised, or null.
- * @param {{targetName?: string, boardDesign?: string}} config e.g. FC.CONFIG
+ * @param {{boardName?: string, manufacturerId?: string}} config e.g. FC.CONFIG
  * @returns {?Object}
  */
 export function findBoardView(config) {
@@ -34,7 +34,7 @@ export function findBoardView(config) {
  *        matched. The wiring session matches on the board it actually
  *        read, which in virtual mode is not the same identity as
  *        FC.CONFIG, so its answer wins over a fresh lookup.
- * @param {{targetName?: string, boardDesign?: string}} [args.config]
+ * @param {{boardName?: string, manufacturerId?: string}} [args.config]
  * @param {Object.<string, {pin: string}>} [args.hardwareMap]
  * @param {{identifier: number}[]} [args.serialPorts]
  * @param {boolean} [args.allowSynthesised] set false to get null
@@ -55,7 +55,10 @@ export function resolveBoardView({
   return synthesiseBoardView({
     hardwareMap: hardwareMap ?? {},
     serialPorts,
-    targetName: config?.targetName ?? null,
+    // The board's own name, falling back to the target name only as a
+    // title for the picture. Matching never does this: under unified
+    // firmware every board on one MCU reports the same target name.
+    boardName: config?.boardName || config?.targetName || null,
     mcu: config?.mcu ?? null,
   });
 }

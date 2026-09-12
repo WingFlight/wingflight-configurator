@@ -1,22 +1,31 @@
 /**
  * File: tools/board-editor/server/api.mjs
  * The board editor's dev-server side: a small Vite plugin that lets
- * the editor read and write the files the configurator ships.
+ * the editor read and write the files the configurator ships, and
+ * fetches the unified target catalogue on its behalf.
  *
- * It is deliberately narrow. Only three paths are writable -- the
- * profile file, the board images directory and nothing else -- and
- * every path is resolved and checked against its root before use, so
- * a crafted request cannot walk out of the repository.
+ * It is deliberately narrow. Only two places are writable -- the
+ * profile file and the board images directory -- plus a cache
+ * directory of its own, and every path is resolved and checked against
+ * its root before use, so a crafted request cannot walk out of the
+ * repository.
+ *
+ * The catalogue is WingFlight/wingflight-targets, the same repository
+ * the Firmware Flasher loads boards from. Fetching it here rather than
+ * in the browser keeps the GitHub calls on one host and lets the
+ * answers be cached on disk, so the editor keeps working offline once
+ * it has been primed.
  *
  * Routes:
  *   GET  /api/profiles           the profile file, verbatim
  *   PUT  /api/profiles           replace it (formatted, 2-space JSON)
  *   GET  /api/backgrounds        the SVGs already in src/images/boards
  *   POST /api/backgrounds/<name> save an SVG there
- *   GET  /api/targets            the firmware targets found next door
- *   GET  /api/targets/<name>     one target's pins, parsed from its
- *                                target.h and target.c
+ *   GET  /api/targets            the catalogue listing (cached)
+ *   GET  /api/targets/<id>       one target's .config text (cached)
  *   GET  /images/...             src/images, the way the app serves it
+ *
+ * Both target routes take `?refresh=1` to bypass the cache.
  */
 
 import fs from "node:fs/promises";
@@ -25,10 +34,15 @@ import path from "node:path";
 const PROFILE_RELATIVE = "src/tabs/journey/board_profiles.json";
 const IMAGES_RELATIVE = "src/images";
 const BOARDS_RELATIVE = "src/images/boards";
-/** Where the firmware repository sits relative to the configurator's. */
-const FIRMWARE_RELATIVE = "../wingflight-firmware/src/main/target";
+
+/** The unified target catalogue. */
+const TARGETS_REPO = "WingFlight/wingflight-targets";
+const TARGETS_BRANCH = "master";
+const TARGETS_DIR = "configs";
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+/** How long a cached catalogue listing is served before refetching. */
+const LISTING_TTL_MS = 6 * 60 * 60 * 1000;
 
 /** Resolves `relative` under `root`, refusing anything that escapes it. */
 function resolveWithin(root, relative) {
@@ -64,142 +78,103 @@ function readBody(req, limit = MAX_UPLOAD_BYTES) {
   });
 }
 
-// --- firmware target parsing ------------------------------------------
-
-const PIN_RE = /P([A-K])(\d{1,2})/;
-
-function toPin(text) {
-  const match = String(text ?? "").match(PIN_RE);
-  return match ? `${match[1]}${match[2].padStart(2, "0")}` : null;
-}
+// --- the target catalogue ---------------------------------------------
 
 /**
- * Pulls the pin definitions out of a target's headers: the UART pairs,
- * I2C, the ADC inputs, the LED strip and the beeper. This is the same
- * source docs/adding-a-board-profile.md tells a profile author to read,
- * so the editor can seed a new profile instead of making them type it.
+ * A disk cache under the tool's own directory. It exists so the editor
+ * is usable on a train: the catalogue is 400-odd small files that
+ * change rarely, and refetching all of them to redraw one board would
+ * be rude to GitHub as well as slow.
  */
-function parseTargetHeader(text) {
-  const uarts = {};
-  for (const match of text.matchAll(
-    /#define\s+UART(\d+)_(TX|RX)_PIN\s+(\S+)/g,
-  )) {
-    const pin = toPin(match[3]);
-    if (!pin) continue;
-    const index = Number(match[1]);
-    (uarts[index] ??= {})[match[2].toLowerCase()] = pin;
-  }
+function makeCache(cacheRoot) {
+  const ensure = () => fs.mkdir(cacheRoot, { recursive: true });
 
-  const softSerial = {};
-  for (const match of text.matchAll(
-    /#define\s+SOFTSERIAL(\d+)_(TX|RX)_PIN\s+(\S+)/g,
-  )) {
-    const pin = toPin(match[3]);
-    if (!pin) continue;
-    (softSerial[Number(match[1])] ??= {})[match[2].toLowerCase()] = pin;
-  }
-
-  const singles = {};
-  const SINGLE_DEFINES = {
-    VBAT_ADC_PIN: { key: "Vbat", group: "adc" },
-    CURRENT_METER_ADC_PIN: { key: "Curr", group: "adc" },
-    RSSI_ADC_PIN: { key: "RSSI", group: "adc" },
-    EXTERNAL1_ADC_PIN: { key: "Vext", group: "adc" },
-    LED_STRIP_PIN: { key: "LED", group: "led" },
-    BEEPER_PIN: { key: "Beeper", group: "other" },
-  };
-  for (const [define, meta] of Object.entries(SINGLE_DEFINES)) {
-    const match = text.match(new RegExp(`#define\\s+${define}\\s+(\\S+)`));
-    const pin = match ? toPin(match[1]) : null;
-    if (pin) singles[meta.key] = { pin, group: meta.group };
-  }
-
-  const i2c = {};
-  for (const match of text.matchAll(
-    /#define\s+I2C(\d+)_(SCL|SDA)\s+(\S+)/g,
-  )) {
-    const pin = toPin(match[3]);
-    if (!pin) continue;
-    (i2c[Number(match[1])] ??= {})[match[2].toLowerCase()] = pin;
-  }
-
-  const mcu =
-    text.match(/#define\s+TARGET_MCU\s+(\w+)/)?.[1] ??
-    text.match(/#define\s+(STM32[A-Z0-9]+)\b/)?.[1] ??
-    null;
-
-  return { uarts, softSerial, singles, i2c, mcu };
-}
-
-/**
- * Walks a target's timerHardware[] table and hands back its motor,
- * servo and LED entries in declaration order, which is how the
- * firmware numbers them.
- */
-function parseTargetTimers(text) {
-  const outputs = [];
-  let motors = 0;
-  let servos = 0;
-  for (const match of text.matchAll(
-    /DEF_TIM\(\s*\w+\s*,\s*\w+\s*,\s*P([A-K])(\d{1,2})\s*,\s*(TIM_USE_\w+)/g,
-  )) {
-    const pin = `${match[1]}${match[2].padStart(2, "0")}`;
-    const use = match[3];
-    if (use.includes("MOTOR")) {
-      motors += 1;
-      outputs.push({ key: `M${motors}`, pin, group: "outputs" });
-    } else if (use.includes("SERVO")) {
-      servos += 1;
-      outputs.push({ key: `S${servos}`, pin, group: "outputs" });
-    } else if (use.includes("LED")) {
-      outputs.push({ key: "LED", pin, group: "led" });
-    } else if (use.includes("PPM")) {
-      outputs.push({ key: "PPM", pin, group: "uart" });
-    }
-  }
-  return outputs;
-}
-
-/**
- * The MCU a target builds for. It is not in the headers: the build
- * system picks it up from target.mk's `F405_TARGETS += $(TARGET)`
- * line, so that is where to read it.
- */
-function parseTargetMcu(makefile) {
-  const match = makefile.match(/^\s*([FH]\w+)_TARGETS\s*\+?=/m);
-  return match ? `STM32${match[1]}` : null;
-}
-
-async function readTarget(targetRoot, name) {
-  const dir = resolveWithin(targetRoot, name);
-  const read = (file) =>
-    fs.readFile(path.join(dir, file), "utf8").catch(() => "");
-  const [header, source, makefile] = await Promise.all([
-    read("target.h"),
-    read("target.c"),
-    read("target.mk"),
-  ]);
-  if (!header && !source) return null;
-  const parsed = parseTargetHeader(header);
   return {
-    name,
-    ...parsed,
-    mcu: parsed.mcu ?? parseTargetMcu(makefile),
-    outputs: parseTargetTimers(source),
+    async read(name) {
+      try {
+        const file = resolveWithin(cacheRoot, name);
+        const [text, stat] = await Promise.all([
+          fs.readFile(file, "utf8"),
+          fs.stat(file),
+        ]);
+        return { text, ageMs: Date.now() - stat.mtimeMs };
+      } catch {
+        return null;
+      }
+    },
+    async write(name, text) {
+      await ensure();
+      await fs.writeFile(resolveWithin(cacheRoot, name), text, "utf8");
+    },
   };
+}
+
+/**
+ * The catalogue listing, as rows of `{name, path, download_url}`.
+ * Served from cache unless it is stale or a refresh was asked for; a
+ * failed fetch falls back to whatever is cached, however old, because
+ * a stale list beats no list.
+ */
+async function fetchListing(cache, { refresh }) {
+  const cached = await cache.read("targets.json");
+  if (cached && !refresh && cached.ageMs < LISTING_TTL_MS) {
+    return { text: cached.text, source: "cache" };
+  }
+
+  try {
+    const url = `https://api.github.com/repos/${TARGETS_REPO}/contents/${TARGETS_DIR}?ref=${TARGETS_BRANCH}`;
+    const res = await fetch(url, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+    const entries = await res.json();
+    if (!Array.isArray(entries)) throw new Error("Unexpected listing shape");
+    const text = JSON.stringify(
+      entries.map(({ name, path: filePath, download_url }) => ({
+        name,
+        path: filePath,
+        download_url,
+      })),
+    );
+    await cache.write("targets.json", text);
+    return { text, source: "github" };
+  } catch (error) {
+    if (cached) return { text: cached.text, source: "stale", error };
+    throw error;
+  }
+}
+
+/** One target's config text, cached by target id. */
+async function fetchConfig(cache, targetId, { refresh }) {
+  const name = `${targetId}.config`;
+  if (!refresh) {
+    const cached = await cache.read(name);
+    if (cached) return cached.text;
+  }
+
+  const url = `https://raw.githubusercontent.com/${TARGETS_REPO}/${TARGETS_BRANCH}/${TARGETS_DIR}/${name}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const cached = await cache.read(name);
+    if (cached) return cached.text;
+    throw new Error(`Could not fetch ${name}: ${res.status}`);
+  }
+  const text = await res.text();
+  await cache.write(name, text);
+  return text;
 }
 
 // --- the plugin -------------------------------------------------------
 
 /**
- * @param {{repoRoot: string}} options
+ * @param {{repoRoot: string, cacheRoot: string}} options
  * @returns {import("vite").Plugin}
  */
-export default function boardEditorApi({ repoRoot }) {
+export default function boardEditorApi({ repoRoot, cacheRoot }) {
   const profilePath = path.resolve(repoRoot, PROFILE_RELATIVE);
   const imagesRoot = path.resolve(repoRoot, IMAGES_RELATIVE);
   const boardsRoot = path.resolve(repoRoot, BOARDS_RELATIVE);
-  const targetRoot = path.resolve(repoRoot, FIRMWARE_RELATIVE);
+  const cache = makeCache(path.resolve(cacheRoot, "targets"));
 
   return {
     name: "board-editor-api",
@@ -207,13 +182,17 @@ export default function boardEditorApi({ repoRoot }) {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, "http://localhost");
         const route = decodeURIComponent(url.pathname);
+        const refresh = url.searchParams.get("refresh") === "1";
 
         try {
           // The app serves src/images at /images; the editor has to do
           // the same, because a profile's background path is stored the
           // way the configurator will ask for it.
           if (route.startsWith("/images/")) {
-            const file = resolveWithin(imagesRoot, route.slice("/images/".length));
+            const file = resolveWithin(
+              imagesRoot,
+              route.slice("/images/".length),
+            );
             const body = await fs.readFile(file).catch(() => null);
             if (!body) return next();
             const type = file.endsWith(".svg")
@@ -268,24 +247,24 @@ export default function boardEditorApi({ repoRoot }) {
           }
 
           if (route === "/api/targets" && req.method === "GET") {
-            const entries = await fs
-              .readdir(targetRoot, { withFileTypes: true })
-              .catch(() => []);
-            const names = entries
-              .filter((entry) => entry.isDirectory())
-              .map((entry) => entry.name)
-              .sort();
-            return send(res, 200, { targets: names });
+            const listing = await fetchListing(cache, { refresh });
+            return send(
+              res,
+              200,
+              JSON.stringify({
+                source: listing.source,
+                entries: JSON.parse(listing.text),
+              }),
+            );
           }
 
           if (route.startsWith("/api/targets/") && req.method === "GET") {
-            const name = route.slice("/api/targets/".length);
-            if (!/^[A-Za-z0-9_]+$/.test(name)) {
-              return send(res, 400, { error: "Bad target name." });
+            const id = route.slice("/api/targets/".length);
+            if (!/^[A-Za-z0-9_]{1,4}-[A-Za-z0-9_+-]+$/.test(id)) {
+              return send(res, 400, { error: "Bad target id." });
             }
-            const target = await readTarget(targetRoot, name);
-            if (!target) return send(res, 404, { error: "No such target." });
-            return send(res, 200, target);
+            const text = await fetchConfig(cache, id, { refresh });
+            return send(res, 200, text, "text/plain; charset=utf-8");
           }
         } catch (error) {
           return send(res, 500, { error: String(error.message ?? error) });
