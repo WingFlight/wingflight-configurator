@@ -347,14 +347,47 @@ class EditorState {
     this.viewId = id;
   }
 
+  /**
+   * Drops a side view and everything drawn on it.
+   *
+   * The top view stays: it is the one every profile has and the one
+   * the configurator falls back to. Everything else on the view goes
+   * with it -- connectors, loose pads, a receiver -- because a pad on
+   * a view that is not there is drawn nowhere and can never be found
+   * again. Undo puts it all back.
+   *
+   * @param {string} id "left" or "right"
+   */
   removeView(id) {
-    if (id === "top") return;
+    if (id === "top" || !this.board?.views?.[id]) return;
+    const gone = new Set(
+      (this.board.connectors ?? [])
+        .filter((connector) => connector.view === id)
+        .map((connector) => connector.id),
+    );
     this.edit((board) => {
       delete board.views[id];
       board.pads = board.pads.filter((pad) => pad.view !== id);
-      board.headers = board.headers.filter((header) => header.view !== id);
+      board.connectors = board.connectors.filter(
+        (connector) => connector.view !== id,
+      );
+      board.receivers = board.receivers.filter(
+        (receiver) => receiver.view !== id,
+      );
     });
-    this.viewId = "top";
+    if (this.viewId === id) this.viewId = "top";
+    if (gone.has(this.selectedConnectorId)) this.selectedConnectorId = null;
+    this.selectedPin = null;
+  }
+
+  /** What deleting a view would take with it, for the editor to say. */
+  viewContents(id) {
+    const on = (entry) => entry.view === id;
+    return {
+      connectors: (this.board?.connectors ?? []).filter(on).length,
+      pads: (this.board?.pads ?? []).filter(on).length,
+      receivers: (this.board?.receivers ?? []).filter(on).length,
+    };
   }
 
   setViewField(field, value) {

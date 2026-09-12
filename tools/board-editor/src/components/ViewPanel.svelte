@@ -144,6 +144,22 @@
       />
     </label>
 
+    {#if editor.viewId !== "top"}
+      {@const holds = editor.viewContents(editor.viewId)}
+      <button class="danger" onclick={() => editor.removeView(editor.viewId)}>
+        Delete the {editor.viewId} view
+      </button>
+      <p class="note holds">
+        {#if holds.connectors || holds.pads || holds.receivers}
+          Takes what is drawn on it with it: {holds.connectors} connector(s),
+          {holds.pads} loose pad(s), {holds.receivers} receiver(s). Undo puts
+          them back.
+        {:else}
+          Nothing is drawn on it yet.
+        {/if}
+      </p>
+    {/if}
+
     {#if editor.viewId === "top" && editor.view.title}
       <h3>Board name</h3>
       <label>
@@ -294,6 +310,11 @@
     font-size: 0.72rem;
     color: var(--color-text-disabled);
     word-break: break-all;
+
+    // Prose, not a file path: break it between words.
+    &.holds {
+      word-break: normal;
+    }
   }
 
   .warn {

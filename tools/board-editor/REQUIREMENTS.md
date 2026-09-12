@@ -466,3 +466,18 @@ exercised against the shape of hardware we actually ship for.
   grows to hold them. Both drawings build that text through one function, so
   the editor and the configurator cannot drift apart. A name that only repeats
   the protocol is left out rather than given a line of its own.
+
+- ~~give me the ability to delete views. I accidentally created a left view
+  for the 007 but cannot delete it now~~
+  **Fixed.** The view tabs could add a left or right view and never remove
+  one, so a mis-click was permanent. Each side view now has a *Delete the
+  … view* button that says first what is drawn on it, and undo puts it back.
+  The top view has no button: it is the one every profile has and the one the
+  configurator falls back to.
+
+  The removal itself was there but had rotted. It still filtered `headers`,
+  the name pads had before R1, so under the current schema it deleted the
+  view and left its connectors and its receiver behind: drawn nowhere, on a
+  view that no longer existed, and impossible to reach again. It clears
+  connectors, loose pads and receivers for that view, and drops the
+  selection if it pointed at something that went.
