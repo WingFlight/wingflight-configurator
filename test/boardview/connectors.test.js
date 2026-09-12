@@ -4,6 +4,7 @@ import {
   CONNECTOR_KINDS,
   DEFAULT_PITCH,
   connectorBounds,
+  connectorLabelAnchor,
   connectorPads,
   connectorPinPositions,
   emptyConnector,
@@ -111,10 +112,110 @@ describe("connectorPinPositions", () => {
 });
 
 describe("connectorBounds", () => {
-  it("covers every position with half a pitch of margin at each end", () => {
-    const box = connectorBounds(portA);
-    expect(box.x).toBeCloseTo(3, 5);
-    expect(box.width).toBeCloseTo(4 * portA.pitch + portA.pitch, 5);
+  const DEPTH = 3.4;
+
+  it("encloses every position, ends included", () => {
+    const box = connectorBounds(portA, DEPTH);
+    const places = connectorPinPositions(portA);
+    // Ends are as generous as the sides, so a pad on a fine pitch is
+    // not left half outside its own shell.
+    const radius = 1.4;
+    for (const place of places) {
+      expect(place.x - radius).toBeGreaterThanOrEqual(box.x - 0.001);
+      expect(place.x + radius).toBeLessThanOrEqual(box.x + box.width + 0.001);
+      expect(place.y - radius).toBeGreaterThanOrEqual(box.y - 0.001);
+      expect(place.y + radius).toBeLessThanOrEqual(box.y + box.height + 0.001);
+    }
+  });
+
+  // Turning a connector turns it about where it is anchored, which is
+  // position 1. Rotating the shell about its own centre instead put it
+  // beside its pins rather than around them.
+  it("rotates about position 1, not the rectangle's centre", () => {
+    for (const rotation of [0, 90, 180, 270]) {
+      const turned = normaliseConnector({
+        ...serialiseConnector(portA),
+        rotation,
+      });
+      const box = connectorBounds(turned, DEPTH);
+      expect(box.originX).toBe(turned.x);
+      expect(box.originY).toBe(turned.y);
+
+      // Apply the transform the drawing applies, and check the pins
+      // land inside the result.
+      const radians = (rotation * Math.PI) / 180;
+      const spin = (px, py) => {
+        const dx = px - box.originX;
+        const dy = py - box.originY;
+        return {
+          x: box.originX + dx * Math.cos(radians) - dy * Math.sin(radians),
+          y: box.originY + dx * Math.sin(radians) + dy * Math.cos(radians),
+        };
+      };
+      const corners = [
+        spin(box.x, box.y),
+        spin(box.x + box.width, box.y + box.height),
+      ];
+      const left = Math.min(corners[0].x, corners[1].x);
+      const right = Math.max(corners[0].x, corners[1].x);
+      const top = Math.min(corners[0].y, corners[1].y);
+      const bottom = Math.max(corners[0].y, corners[1].y);
+
+      for (const place of connectorPinPositions(turned)) {
+        expect(place.x, `x at ${rotation}`).toBeGreaterThanOrEqual(left - 0.001);
+        expect(place.x, `x at ${rotation}`).toBeLessThanOrEqual(right + 0.001);
+        expect(place.y, `y at ${rotation}`).toBeGreaterThanOrEqual(top - 0.001);
+        expect(place.y, `y at ${rotation}`).toBeLessThanOrEqual(bottom + 0.001);
+      }
+    }
+  });
+});
+
+describe("connectorLabelAnchor", () => {
+  it("sits clear of the run, on the side the run exposes", () => {
+    const across = connectorLabelAnchor(portA, 3);
+    // Running right, the label goes above.
+    expect(across.y).toBeCloseTo(portA.y - 3, 5);
+
+    const down = connectorLabelAnchor(
+      normaliseConnector({ ...serialiseConnector(portA), rotation: 90 }),
+      3,
+    );
+    // Running down, with no view to face away from, it takes the run's
+    // own left-hand side.
+    expect(down.x).toBeCloseTo(portA.x + 3, 5);
+  });
+
+  it("faces away from the middle of the board when it knows the view", () => {
+    const view = { width: 60, height: 38 };
+    // A column down the left edge labels outwards, to its left.
+    const left = connectorLabelAnchor(
+      normaliseConnector({ ...serialiseConnector(portA), x: 4, rotation: 90 }),
+      3,
+      view,
+    );
+    expect(left.x).toBeLessThan(4);
+    expect(left.anchor).toBe("end");
+
+    // The same column on the right edge labels to its right.
+    const right = connectorLabelAnchor(
+      normaliseConnector({ ...serialiseConnector(portA), x: 56, rotation: 90 }),
+      3,
+      view,
+    );
+    expect(right.x).toBeGreaterThan(56);
+    expect(right.anchor).toBe("start");
+  });
+
+  it("follows the middle of the run, however long it is", () => {
+    const long = normaliseConnector({
+      ...serialiseConnector(portA),
+      pins: Array.from({ length: 11 }, (_, i) => ({ position: i + 1 })),
+    });
+    expect(connectorLabelAnchor(long).x).toBeCloseTo(
+      long.x + (10 * long.pitch) / 2,
+      5,
+    );
   });
 });
 

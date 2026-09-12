@@ -16,6 +16,7 @@
    */
   import {
     connectorBounds,
+    connectorLabelAnchor,
     connectorPinPositions,
   } from "@/js/boardview/connectors.js";
 
@@ -56,6 +57,9 @@
       connector,
       box: connectorBounds(connector),
       places: connectorPinPositions(connector),
+      // The name follows the run of positions rather than the
+      // unrotated box, so turning a connector takes its label with it.
+      labelAt: connectorLabelAnchor(connector, 3, editor.view),
     })),
   );
 
@@ -279,7 +283,7 @@
             height={item.box.height}
             rx="0.5"
             transform={item.box.rotation
-              ? `rotate(${item.box.rotation} ${item.box.x + item.box.width / 2} ${item.box.y + item.box.height / 2})`
+              ? `rotate(${item.box.rotation} ${item.box.originX} ${item.box.originY})`
               : null}
           />
           {#each item.connector.pins as pin, index (pin.position)}
@@ -319,8 +323,9 @@
           />
           <text
             class="tag"
-            x={item.box.x + item.box.width / 2}
-            y={item.box.y - 0.9}
+            x={item.labelAt.x}
+            y={item.labelAt.y}
+            text-anchor={item.labelAt.anchor}
           >
             {item.connector.label ?? item.connector.id}
           </text>
@@ -483,7 +488,6 @@
       fill: var(--color-text);
       font-size: 1.5px;
       font-weight: 600;
-      text-anchor: middle;
       pointer-events: none;
     }
   }

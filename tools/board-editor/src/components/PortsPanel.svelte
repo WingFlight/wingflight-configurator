@@ -22,16 +22,29 @@
 
   // Every signal position on the board, named by where it is, so
   // choosing a port's TX is picking a physical place on a plug.
-  let pinOptions = $derived(
-    (editor.board?.allPads ?? [])
-      .filter((pad) => pad.pin)
-      .map((pad) => ({
+  //
+  // Listed once per pin, not once per position. A pin placed twice is
+  // a mistake the author may be halfway through making, and the
+  // validation list names it precisely; offering it twice here would
+  // only add noise, and a list keyed by pin cannot hold duplicates at
+  // all without throwing.
+  let pinOptions = $derived.by(() => {
+    // A plain lookup, not a Set: scratch state inside one derivation,
+    // never anything the UI reads back.
+    const seen = {};
+    const options = [];
+    for (const pad of editor.board?.allPads ?? []) {
+      if (!pad.pin || seen[pad.pin]) continue;
+      seen[pad.pin] = true;
+      options.push({
         pin: pad.pin,
         label: pad.connectorLabel
           ? `${pad.silkscreen ?? pad.pin} · ${pad.connectorLabel} pin ${pad.position}`
           : `${pad.silkscreen ?? pad.pin} (${pad.pin})`,
-      })),
-  );
+      });
+    }
+    return options;
+  });
 
   // The same computation the configurator runs, so "split" here means
   // split there.

@@ -149,3 +149,26 @@ exercised against the shape of hardware we actually ship for.
   holds two configs that are misnamed upstream (`FLAO-FLAOF405X8` has no
   extension, `TMTR-TMOTORVELOXF7SE.txt` is a `.txt`), which the `.config`-only
   file-name rule dropped. All 442 boards are offered and fetch correctly.
+
+- ~~I cant edit the values for the signal pads if entirely new ones are created~~
+  **Fixed.** A position's role is read back from what it carries, which is right
+  for the file and wrong for the form: choosing "signal" on a fresh position
+  wrote nothing, so the position was still empty, the dropdown snapped straight
+  back to "nothing" and no pin box ever appeared. The panel now remembers what
+  the author asked for until a value makes it real. Fixing it exposed a third
+  fault: a pin placed twice, which an author is halfway through doing while
+  typing, crashed the ports panel, because its pin chooser was keyed by pin and
+  a keyed list cannot hold duplicates. It lists each pin once now, and the
+  validation line already names a clash precisely.
+
+- ~~When changing the orientation of the ports, the labels and the pins are
+  misplaced~~
+  **Fixed.** The pins were right; the shell drawn behind them was not. It was
+  rotated about its own centre, but the positions turn about where the
+  connector is anchored, so at anything other than 0 degrees the shell ended up
+  beside its pins instead of around them. It turns about position 1 now, and
+  the shell's ends are as generous as its sides so a pad on a fine pitch is not
+  left half outside. The connector's name followed the unrotated box and so
+  stayed behind when the run turned; it follows the run now, and sits on
+  whichever side faces away from the middle of the board, which also stops it
+  landing on the board's own pads.

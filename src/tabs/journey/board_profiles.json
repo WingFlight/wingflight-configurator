@@ -1,4 +1,261 @@
 {
   "_note": "Hand-made board drawings, keyed by the unified identity a flashed board reports over MSP: manufacturer_id plus board_name, the same pair the catalogue at https://github.com/WingFlight/wingflight-targets names its config files after. A board with no entry here is not left blank -- the configurator synthesises a schematic from the pins the board itself reports, and says on the drawing that the positions are not real. An entry here is worth adding only once someone has the board in hand and can place the pads where they physically are. Use the board editor (tools/board-editor, `pnpm board-editor`) rather than editing this by hand; the schema is documented in docs/board-views.md and the procedure in docs/adding-a-board-profile.md.",
-  "boards": []
+  "boards": [
+    {
+      "schema": 3,
+      "id": "FRSK-VANTAC_RF007",
+      "match": {
+        "manufacturerId": [
+          "FRSK"
+        ],
+        "boardName": [
+          "VANTAC_RF007"
+        ]
+      },
+      "display": "VANTAC_RF007",
+      "mcu": "STM32F7X2",
+      "coordinatesSchematic": true,
+      "views": {
+        "top": {
+          "width": 44,
+          "height": 34,
+          "usb": {
+            "x": 17.5,
+            "y": -1.8,
+            "width": 9,
+            "height": 3.6,
+            "rotation": 0
+          }
+        }
+      },
+      "connectors": [
+        {
+          "id": "outputs",
+          "kind": "header",
+          "view": "top",
+          "x": 10,
+          "y": 29,
+          "pitch": 6,
+          "label": "Servo / motor outputs",
+          "labelSide": "below",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "A09",
+              "silkscreen": "M1",
+              "group": "outputs"
+            },
+            {
+              "position": 2,
+              "pin": "B04",
+              "silkscreen": "S1",
+              "group": "outputs"
+            },
+            {
+              "position": 3,
+              "pin": "B05",
+              "silkscreen": "S2",
+              "group": "outputs"
+            },
+            {
+              "position": 4,
+              "pin": "B00",
+              "silkscreen": "S3",
+              "group": "outputs"
+            },
+            {
+              "position": 5,
+              "pin": "A15",
+              "silkscreen": "S4",
+              "group": "outputs"
+            }
+          ]
+        },
+        {
+          "id": "top-row",
+          "kind": "solder",
+          "view": "top",
+          "x": 16.5,
+          "y": 5,
+          "pitch": 5.5,
+          "label": "Power and sensors",
+          "labelSide": "above",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "B09",
+              "silkscreen": "SDA1",
+              "group": "i2c"
+            },
+            {
+              "position": 2,
+              "pin": "B08",
+              "silkscreen": "SCL1",
+              "group": "i2c"
+            },
+            {
+              "position": 3,
+              "pin": "C00",
+              "silkscreen": "Vbat",
+              "group": "adc"
+            }
+          ]
+        },
+        {
+          "id": "port-0",
+          "kind": "port",
+          "view": "top",
+          "x": 5,
+          "y": 10,
+          "pitch": 2.6,
+          "label": "UART1",
+          "rotation": 90,
+          "labelSide": "left",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "B06",
+              "silkscreen": "TX1",
+              "group": "uart"
+            },
+            {
+              "position": 2,
+              "pin": "B07",
+              "silkscreen": "RX1",
+              "group": "uart"
+            }
+          ]
+        },
+        {
+          "id": "port-2",
+          "kind": "port",
+          "view": "top",
+          "x": 5,
+          "y": 16.8,
+          "pitch": 2.6,
+          "label": "UART3",
+          "rotation": 90,
+          "labelSide": "left",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "B10",
+              "silkscreen": "TX3",
+              "group": "uart"
+            },
+            {
+              "position": 2,
+              "pin": "B11",
+              "silkscreen": "RX3",
+              "group": "uart"
+            }
+          ]
+        },
+        {
+          "id": "port-4",
+          "kind": "port",
+          "view": "top",
+          "x": 5,
+          "y": 23.6,
+          "pitch": 2.6,
+          "label": "UART5",
+          "rotation": 90,
+          "labelSide": "left",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "C12",
+              "silkscreen": "TX5",
+              "group": "uart"
+            }
+          ]
+        },
+        {
+          "id": "port-1",
+          "kind": "port",
+          "view": "top",
+          "x": 39,
+          "y": 10,
+          "pitch": 2.6,
+          "label": "UART2",
+          "rotation": 90,
+          "labelSide": "right",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "A03",
+              "silkscreen": "RX2",
+              "group": "uart"
+            }
+          ]
+        },
+        {
+          "id": "port-3",
+          "kind": "port",
+          "view": "top",
+          "x": 39,
+          "y": 14.2,
+          "pitch": 2.6,
+          "label": "UART4",
+          "rotation": 90,
+          "labelSide": "right",
+          "pins": [
+            {
+              "position": 1,
+              "pin": "A00",
+              "silkscreen": "TX4",
+              "group": "uart"
+            },
+            {
+              "position": 2,
+              "pin": "A01",
+              "silkscreen": "RX4",
+              "group": "uart"
+            }
+          ]
+        }
+      ],
+      "pads": [],
+      "ports": [
+        {
+          "id": "port-0",
+          "identifier": 0,
+          "label": "UART1",
+          "tx": "B06",
+          "rx": "B07",
+          "split": false
+        },
+        {
+          "id": "port-2",
+          "identifier": 2,
+          "label": "UART3",
+          "tx": "B10",
+          "rx": "B11",
+          "split": false
+        },
+        {
+          "id": "port-4",
+          "identifier": 4,
+          "label": "UART5",
+          "tx": "C12",
+          "split": false
+        },
+        {
+          "id": "port-1",
+          "identifier": 1,
+          "label": "UART2",
+          "rx": "A03",
+          "split": false
+        },
+        {
+          "id": "port-3",
+          "identifier": 3,
+          "label": "UART4",
+          "tx": "A00",
+          "rx": "A01",
+          "split": false
+        }
+      ]
+    }
+  ]
 }

@@ -367,7 +367,7 @@
           height={shell.box.height}
           rx="0.5"
           transform={shell.box.rotation
-            ? `rotate(${shell.box.rotation} ${shell.box.x + shell.box.width / 2} ${shell.box.y + shell.box.height / 2})`
+            ? `rotate(${shell.box.rotation} ${shell.box.originX} ${shell.box.originY})`
             : null}
         />
       </g>

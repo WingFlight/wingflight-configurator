@@ -23,28 +23,38 @@
   let newKind = $state("port");
   let newCount = $state(4);
 
-  // Signals the catalogue gave this board, for the pin dropdown. Any
-  // pin already used by another position is still listed but marked,
-  // so an author can see a clash rather than create one silently.
-  let placedPins = $derived(
-    new Set(
-      (editor.board?.allPads ?? []).map((pad) => pad.pin).filter(Boolean),
-    ),
-  );
-
   let connector = $derived(editor.selectedConnector);
 
+  /**
+   * What the author said a position should carry, while they are still
+   * filling it in.
+   *
+   * The stored data has no "role": a position carries a pin, or a net,
+   * or nothing, and the role is read back from that. That is right for
+   * the file and wrong for the form. Choosing "signal" on a fresh
+   * position writes nothing, so the position was still empty, the
+   * dropdown snapped back to "nothing" and no pin box ever appeared.
+   * The intent is remembered here until a value makes it real.
+   */
+  let intended = $state({});
+
+  const intendKey = (position) => `${connector?.id}:${position}`;
+
   function roleOf(pin) {
-    return pinRole(pin);
+    const stored = pinRole(pin);
+    // A position that carries something has settled the question; an
+    // empty one falls back to whatever the author last asked for.
+    return stored === "empty" ? (intended[intendKey(pin.position)] ?? stored) : stored;
   }
 
   function setRole(position, role) {
     if (!connector) return;
-    if (role === "signal") {
-      editor.setConnectorPin(connector.id, position, "net", "");
-    } else if (role === "net") {
+    intended[intendKey(position)] = role;
+    if (role === "net") {
       editor.setConnectorPin(connector.id, position, "net", "GND");
     } else {
+      // Clearing both is what makes it empty; for "signal" the pin box
+      // then appears, waiting for a pin.
       editor.setConnectorPin(connector.id, position, "pin", "");
       editor.setConnectorPin(connector.id, position, "net", "");
     }
@@ -259,7 +269,6 @@
             <td>
               {#if role === "signal"}
                 <input
-                  class={placedPins.has(pin.pin) && "clash-free"}
                   value={pin.pin ?? ""}
                   placeholder="B06"
                   onchange={(event) =>

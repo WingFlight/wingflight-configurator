@@ -148,7 +148,10 @@ describe("the profiles shipped in this build", () => {
         validateProfile(profile).filter((p) => p.level === "error"),
         board.id,
       ).toEqual([]);
-      expect(profile.pads.length, board.id).toBeGreaterThan(0);
+      // Every drawn position, connectors included: a profile whose pins
+      // are all on connectors has no loose pads at all, which is the
+      // normal case rather than an empty board.
+      expect(profile.allPads.length, board.id).toBeGreaterThan(0);
       // Without a board name a profile can never be found, so shipping
       // one would be shipping dead data.
       expect(profile.match.boardName.length, board.id).toBeGreaterThan(0);

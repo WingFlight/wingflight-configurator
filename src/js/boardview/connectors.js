@@ -181,18 +181,73 @@ export function connectorPinPositions(connector) {
 /**
  * The rectangle a connector's shell occupies, for drawing it behind
  * its pins.
+ *
+ * The rectangle is given unrotated, running to the right from position
+ * 1, together with the point to rotate it about. That point is
+ * position 1 itself, not the rectangle's centre: the positions turn
+ * about where the connector is anchored, so a shell turned about its
+ * own centre ends up beside its pins rather than around them.
+ *
  * @param {Object} connector normalised
  * @param {number} [depth] across the run of positions, in millimetres
- * @returns {{x: number, y: number, width: number, height: number, rotation: number}}
+ * @returns {{x: number, y: number, width: number, height: number,
+ *            rotation: number, originX: number, originY: number}}
  */
 export function connectorBounds(connector, depth = 3.4) {
   const span = Math.max(0, connector.pins.length - 1) * connector.pitch;
+  // The ends are as generous as the sides, so a pad on a fine pitch is
+  // still enclosed rather than half outside the shell.
+  const end = Math.max(connector.pitch, depth) / 2;
   return {
-    x: connector.x - connector.pitch / 2,
+    x: connector.x - end,
     y: connector.y - depth / 2,
-    width: span + connector.pitch,
+    width: span + end * 2,
     height: depth,
     rotation: connector.rotation ?? 0,
+    originX: connector.x,
+    originY: connector.y,
+  };
+}
+
+/**
+ * Where a connector's label belongs: clear of its run of positions,
+ * on whichever side of the run faces away from the middle of the
+ * board. Given no view it simply takes the run's own left-hand side.
+ *
+ * A run has two sides and only one of them is empty. Choosing the one
+ * pointing outwards keeps the name off the board's own pads, which is
+ * what a label beside a column of pins otherwise lands on.
+ *
+ * @param {Object} connector normalised
+ * @param {number} [gap] from the run, in millimetres
+ * @param {?{width: number, height: number}} [view] to face away from
+ * @returns {{x: number, y: number, anchor: 'start'|'middle'|'end'}}
+ */
+export function connectorLabelAnchor(connector, gap = 3, view = null) {
+  const radians = ((connector.rotation ?? 0) * Math.PI) / 180;
+  const span = Math.max(0, connector.pins.length - 1) * connector.pitch;
+  const midX = connector.x + (Math.cos(radians) * span) / 2;
+  const midY = connector.y + (Math.sin(radians) * span) / 2;
+
+  // The run's perpendicular, and the same the other way round.
+  let awayX = Math.sin(radians);
+  let awayY = -Math.cos(radians);
+  if (view) {
+    // Flip it if it points inwards.
+    const towardsCentreX = view.width / 2 - midX;
+    const towardsCentreY = view.height / 2 - midY;
+    if (awayX * towardsCentreX + awayY * towardsCentreY > 0) {
+      awayX = -awayX;
+      awayY = -awayY;
+    }
+  }
+
+  return {
+    x: midX + awayX * gap,
+    y: midY + awayY * gap,
+    // Text running off the left of a connector should end at it, and
+    // off the right should start at it, so it never crosses the pins.
+    anchor: awayX < -0.5 ? "end" : awayX > 0.5 ? "start" : "middle",
   };
 }
 
