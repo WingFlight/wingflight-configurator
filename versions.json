@@ -83,11 +83,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-firmware-flash-backup-restore",
-      "path": "./feature-firmware-flash-backup-restore/"
-    },
-    {
-      "type": "branch",
       "name": "feature-oscillation-limiter-settings",
       "path": "./feature-oscillation-limiter-settings/"
     },
