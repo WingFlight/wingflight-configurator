@@ -65,39 +65,68 @@ const webSerialVendorNames = {
     14743: 'X-CORE LABS',
 };
 
-// Stable id per physical SerialPort object. Chrome reuses the same SerialPort
-// instance across an MCU-reboot USB re-enumeration, so keying the id off
-// object identity (rather than array index) yields an id that survives
-// device-list rebuilds -- unlike a bare counter that would reset every poll.
-const webSerialPortIds = new WeakMap();
-let webSerialNextPortId = 0;
+// Stable id per physical device. This used to key ids off SerialPort
+// *object* identity (a WeakMap), on the assumption that Chrome hands back
+// the same object for an already-authorized device on every getPorts() --
+// confirmed false in practice: after a real USB detach/reattach (e.g. an
+// FC's MCU resetting on `save`/`exit`, as happens on every restore), Chrome
+// returns a *new* SerialPort object for the same authorized physical
+// device. A WeakMap keyed on that object then never finds the id assigned
+// before the reset, so restoreOverSerial()'s reconnect permanently fails
+// with "WebSerial port not found" even though the browser still has (and
+// silently reuses) permission for the device -- this cost a lot of
+// debugging to pin down, since it looks identical to a real permission
+// loss from the caller's side.
+//
+// Web Serial's getInfo() only ever exposes usbVendorId/usbProductId -- no
+// serial number, no stable device path (deliberately, to limit
+// fingerprinting) -- so that's the only identity available to correlate a
+// device across a reconnect. Ids are built from VID/PID plus this device's
+// index among ports sharing that VID/PID in the *current* list, so two
+// simultaneously-connected boards that happen to share a VID/PID (e.g. two
+// of the same USB-serial chip) still get distinct ids, while a single
+// board's id survives its own reboot.
+const webSerialFallbackIds = new WeakMap();
+let webSerialNextFallbackId = 0;
 
-function getStableWebSerialId(port) {
-    let id = webSerialPortIds.get(port);
+function getStableWebSerialId(info, port, indexAmongSameVidPid) {
+    if (info.usbVendorId != null && info.usbProductId != null) {
+        return `webserial_${info.usbVendorId}_${info.usbProductId}_${indexAmongSameVidPid}`;
+    }
+    // Some backends may not expose a VID/PID at all -- fall back to a
+    // per-object id. It won't survive a reconnect, but that's no worse than
+    // the old behavior, and there's nothing else to key it on.
+    let id = webSerialFallbackIds.get(port);
     if (id === undefined) {
-        id = `webserial_${webSerialNextPortId++}`;
-        webSerialPortIds.set(port, id);
+        id = `webserial_obj_${webSerialNextFallbackId++}`;
+        webSerialFallbackIds.set(port, id);
     }
     return id;
 }
 
-function createWebSerialPortEntry(port) {
-    const info = port.getInfo?.() || {};
-    const vendorName = webSerialVendorNames[info.usbVendorId];
-    const displayName = vendorName
-        ? `${vendorName} (VID:${info.usbVendorId} PID:${info.usbProductId})`
-        : 'Web Serial device';
-    return {
-        path: getStableWebSerialId(port),
-        displayName,
-        port,
-    };
+function createWebSerialPortEntries(ports) {
+    const vidPidSeen = new Map();
+    return ports.map((port) => {
+        const info = port.getInfo?.() || {};
+        const vendorName = webSerialVendorNames[info.usbVendorId];
+        const displayName = vendorName
+            ? `${vendorName} (VID:${info.usbVendorId} PID:${info.usbProductId})`
+            : 'Web Serial device';
+        const vidPidKey = `${info.usbVendorId}_${info.usbProductId}`;
+        const index = vidPidSeen.get(vidPidKey) ?? 0;
+        vidPidSeen.set(vidPidKey, index + 1);
+        return {
+            path: getStableWebSerialId(info, port, index),
+            displayName,
+            port,
+        };
+    });
 }
 
 export async function loadWebSerialPorts(self) {
     const provider = getSerialProvider();
     const ports = provider ? await provider.getPorts() : [];
-    self.webSerialPorts = ports.map(createWebSerialPortEntry);
+    self.webSerialPorts = createWebSerialPortEntries(ports);
     return self.webSerialPorts;
 }
 
@@ -107,12 +136,11 @@ export async function requestWebSerialPort(self) {
         throw new Error('Neither Web Serial nor WebUSB is available in this browser');
     }
     const userPort = await provider.requestPort({ filters: webSerialDeviceFilters });
-    let entry = self.webSerialPorts.find((p) => p.port === userPort);
-    if (!entry) {
-        entry = createWebSerialPortEntry(userPort);
-        self.webSerialPorts.push(entry);
-    }
-    return entry;
+    // Re-derive the whole list (rather than just appending userPort) so its
+    // same-VID/PID index accounts for every port already tracked, instead
+    // of guessing 0 and risking a clash with one already present.
+    self.webSerialPorts = createWebSerialPortEntries(await provider.getPorts());
+    return self.webSerialPorts.find((p) => p.port === userPort);
 }
 
 // path is either the stable id of an already-authorized SerialPort (from

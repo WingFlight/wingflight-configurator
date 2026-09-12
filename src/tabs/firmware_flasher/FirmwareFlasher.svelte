@@ -88,15 +88,29 @@
 
   const BACKUP_MODE_NONE = "none";
 
+  // Web Serial's permission model (and thus the wizard's "Select Port"
+  // recovery button, see onWizardSelectPort()) only exists in the browser
+  // build -- the packaged app's native serial backend has no such prompt.
+  const isWebSerialBackend = __BACKEND__ === "web";
+
   // Folds the old "backup on/off" toggle + separate diff/dump select into
   // one dropdown: "none" | BACKUP_TYPES.DIFF | BACKUP_TYPES.DUMP. Falls back
   // to the previous two-setting config shape if that's what's stored, so an
   // existing preference isn't silently reset.
+  //
+  // Defaults to Dump rather than Diff: a `diff all` backup always opens with
+  // `defaults nosave`, and on this firmware that replays the target's
+  // embedded custom-defaults blob with a bug that can leave a bogus
+  // `###ERROR IN map: PARSING FAILED###` in the CLI output (see
+  // replayBackup() in cli_backup.js for the save-retry workaround this
+  // forces on restore). `dump all` never emits `defaults nosave`, so it
+  // never hits that bug at all -- Dump sidesteps it rather than papering
+  // over it.
   function initialBackupMode() {
     const stored = config.get("backupBeforeFlashingMode");
     if (stored) return stored;
     if (config.get("backupBeforeFlashing") === false) return BACKUP_MODE_NONE;
-    return config.get("backupBeforeFlashingType") ?? BACKUP_TYPES.DIFF;
+    return config.get("backupBeforeFlashingType") ?? BACKUP_TYPES.DUMP;
   }
 
   let backupMode = $state(initialBackupMode());
@@ -361,11 +375,55 @@
         chrome.storage.local.get("unifiedConfigLast", resolve),
       );
       const cacheAge = now - (unifiedConfigLast?.lastUpdate ?? 0);
+      const cacheCouldApply =
+        unifiedConfigLast?.targetId === targetSpec.target &&
+        cacheAge <= expirationPeriod;
 
-      if (
-        unifiedConfigLast?.targetId !== targetSpec.target ||
-        cacheAge > expirationPeriod
-      ) {
+      async function fetchLatestCommit() {
+        return targetSpec.supported
+          ? github.getFileLastCommitInfo(
+              "WingFlight/wingflight-targets",
+              "master",
+              targetSpec.path,
+            )
+          : github.getFileLastCommitInfo(
+              "rotorflight/rotorflight-targets",
+              "rotorflight",
+              targetSpec.path,
+            );
+      }
+
+      // A target config directly controls what gets flashed onto real
+      // hardware, so even inside the cache window, cheaply confirm the
+      // source file actually hasn't changed since we cached it rather than
+      // trusting age alone -- otherwise a config fix (e.g.
+      // WingFlight/wingflight-targets#1) can go completely unnoticed for up
+      // to expirationPeriod: every reflash keeps re-injecting the same
+      // stale, already-fixed-upstream blob, no matter how thoroughly the
+      // board itself is erased and reflashed, since chrome.storage.local
+      // here is entirely separate from the board's own flash. This is a
+      // metadata-only request (the latest commit touching this one file),
+      // much cheaper than refetching and reprocessing the full config.
+      let latestCommit = null;
+      let cacheIsFresh = false;
+      if (cacheCouldApply) {
+        try {
+          latestCommit = await fetchLatestCommit();
+          cacheIsFresh = latestCommit?.commitHash === unifiedConfigLast.commitHash;
+        } catch (err) {
+          console.log(
+            "Failed to check target config freshness, refetching",
+            err,
+          );
+        }
+      }
+
+      if (cacheIsFresh) {
+        const cached = unifiedConfigLast.unifiedTarget;
+        const bare = grabBuildNameFromConfig(cached?.config ?? "");
+        bareBoard = bare;
+        unifiedTarget = target === bare ? {} : cached;
+      } else {
         try {
           const res = await fetch(targetSpec.download_url);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -376,17 +434,7 @@
           const bare = grabBuildNameFromConfig(cfg);
           bareBoard = bare;
 
-          const commit = targetSpec.supported
-            ? await github.getFileLastCommitInfo(
-                "WingFlight/wingflight-targets",
-                "master",
-                targetSpec.path,
-              )
-            : await github.getFileLastCommitInfo(
-                "rotorflight/rotorflight-targets",
-                "rotorflight",
-                targetSpec.path,
-              );
+          const commit = latestCommit ?? (await fetchLatestCommit());
           cfg = injectDefaultDesign(cfg, "BTFL");
           cfg = injectTargetInfo(
             cfg,
@@ -411,6 +459,7 @@
                 unifiedConfigLast: {
                   unifiedTarget,
                   targetId: targetSpec.target,
+                  commitHash: commit?.commitHash,
                   lastUpdate: now,
                 },
               },
@@ -427,11 +476,6 @@
             }),
           );
         }
-      } else {
-        const cached = unifiedConfigLast.unifiedTarget;
-        const bare = grabBuildNameFromConfig(cached?.config ?? "");
-        bareBoard = bare;
-        unifiedTarget = target === bare ? {} : cached;
       }
 
       populateBuilds(builds, targetSpec.manufacturer, releases[bareBoard]);
@@ -745,6 +789,34 @@
 
   function onWizardRetryBackup() {
     runBackupStep();
+  }
+
+  // Recovery for the case runBackupStep()/runRestoreStep() can't retry their
+  // way out of: the browser never granted (or has since forgotten) Web
+  // Serial permission for wizardPort, so every reconnect attempt fails with
+  // "port not found" -- no amount of waiting fixes that, only the user
+  // re-picking the device through the browser's own chooser can. That
+  // chooser requires a real user gesture, which a wizard button click is and
+  // a background retry loop isn't, so this can't be done automatically.
+  // Only relevant to the browser build (Web Serial permissions don't exist
+  // for the packaged app's native serial backend) -- see isWebSerialBackend.
+  async function onWizardSelectPort() {
+    try {
+      const entry = await serial.requestWebSerialPort();
+      wizardPort = entry.path;
+    } catch (error) {
+      console.warn(
+        "Wizard: Web Serial permission request failed or was cancelled",
+        error,
+      );
+      return;
+    }
+
+    if (wizardState.phase === "backup") {
+      runBackupStep();
+    } else if (wizardState.phase === "restore") {
+      runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
+    }
   }
 
   async function runRestoreStep(backupText, port, baud) {
@@ -1360,6 +1432,8 @@
   onRetryRestore={onWizardRetryRestore}
   onSkipRestore={onWizardSkipRestore}
   onCloseRestore={onWizardCloseRestore}
+  onSelectPort={onWizardSelectPort}
+  showSelectPort={isWebSerialBackend}
 />
 
 <style lang="scss">
