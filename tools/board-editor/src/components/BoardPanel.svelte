@@ -42,9 +42,10 @@
     loadCatalogue();
   });
 
-  // 442 boards is too many for a plain list, so the picker is filtered
-  // rather than scrolled. A filter matching one board selects it, so
-  // typing a board name and pressing the button is the whole gesture.
+  // Four hundred-odd boards is a lot for one dropdown, so it is both
+  // filtered and grouped by manufacturer. A filter matching exactly one
+  // board selects it, which makes "type a board name, press the button"
+  // the whole gesture.
   let matching = $derived.by(() => {
     const needle = filter.trim().toUpperCase();
     if (!needle) return targets;
@@ -52,6 +53,16 @@
       (target) =>
         target.targetId.includes(needle) || target.boardName.includes(needle),
     );
+  });
+
+  let grouped = $derived.by(() => {
+    // A plain object, not a Map: this is scratch state inside one
+    // derivation, never anything the UI reads back.
+    const byManufacturer = {};
+    for (const target of matching) {
+      (byManufacturer[target.manufacturerId] ??= []).push(target);
+    }
+    return Object.entries(byManufacturer);
   });
 
   $effect(() => {
@@ -86,19 +97,21 @@
     bind:value={filter}
   />
 
-  <select
-    size={matching.length > 1 ? 8 : 2}
-    bind:value={chosen}
-    disabled={!matching.length}
-  >
-    {#each matching.slice(0, 400) as target (target.targetId)}
-      <option value={target.targetId}>
-        {target.manufacturerId} · {target.boardName}{alreadyDrawn.has(
-          target.targetId,
-        )
-          ? " ✓"
-          : ""}
-      </option>
+
+  <select bind:value={chosen} disabled={!matching.length}>
+    <option value="">
+      {matching.length
+        ? `Choose one of ${matching.length} boards…`
+        : "No board matches that filter"}
+    </option>
+    {#each grouped as [manufacturerId, boards] (manufacturerId)}
+      <optgroup label={manufacturerId}>
+        {#each boards as target (target.targetId)}
+          <option value={target.targetId}>
+            {target.boardName}{alreadyDrawn.has(target.targetId) ? " ✓" : ""}
+          </option>
+        {/each}
+      </optgroup>
     {/each}
   </select>
 
@@ -120,12 +133,19 @@
   </div>
 
   <p class="note">
+    {#if chosen}
+      <!-- The options are grouped by manufacturer, so the closed
+           dropdown shows only a board name; two manufacturers can use
+           the same one, so the full id is named here. -->
+      <strong>{chosen}</strong>.
+    {/if}
     {#if alreadyDrawn.has(chosen)}
-      Refreshing keeps every pad position, connector, view and background you
-      have already set, and only adds or removes pins the catalogue has changed.
+      Refreshing keeps every connector, position, view, receiver and background
+      you have already set, and only adds or clears the pins the catalogue has
+      changed.
     {:else}
       Creates a schematic with every pin the board reports, ready for you to
-      load its outline and drag the pads into place.
+      load its outline and drag the connectors into place.
     {/if}
   </p>
 

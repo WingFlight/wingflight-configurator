@@ -144,23 +144,48 @@ async function fetchListing(cache, { refresh }) {
   }
 }
 
+/**
+ * The catalogue file a target id came from.
+ *
+ * Nearly every entry is `<id>.config`, but the catalogue is not
+ * consistent: some entries carry a different extension or none at all.
+ * So the listing decides, and the guess is only a fallback for a
+ * listing that could not be fetched.
+ */
+async function fileForTarget(cache, targetId) {
+  const cached = await cache.read("targets.json");
+  if (cached) {
+    try {
+      const entry = JSON.parse(cached.text).find((row) => {
+        const stem = row.name.replace(/\.(config|txt)$/, "");
+        return stem.toUpperCase() === targetId.toUpperCase();
+      });
+      if (entry) return entry.name;
+    } catch {
+      /* a corrupt cache is no worse than no cache */
+    }
+  }
+  return `${targetId}.config`;
+}
+
 /** One target's config text, cached by target id. */
 async function fetchConfig(cache, targetId, { refresh }) {
-  const name = `${targetId}.config`;
+  const cacheName = `${targetId}.config`;
   if (!refresh) {
-    const cached = await cache.read(name);
+    const cached = await cache.read(cacheName);
     if (cached) return cached.text;
   }
 
-  const url = `https://raw.githubusercontent.com/${TARGETS_REPO}/${TARGETS_BRANCH}/${TARGETS_DIR}/${name}`;
+  const file = await fileForTarget(cache, targetId);
+  const url = `https://raw.githubusercontent.com/${TARGETS_REPO}/${TARGETS_BRANCH}/${TARGETS_DIR}/${encodeURIComponent(file)}`;
   const res = await fetch(url);
   if (!res.ok) {
-    const cached = await cache.read(name);
+    const cached = await cache.read(cacheName);
     if (cached) return cached.text;
-    throw new Error(`Could not fetch ${name}: ${res.status}`);
+    throw new Error(`Could not fetch ${file}: ${res.status}`);
   }
   const text = await res.text();
-  await cache.write(name, text);
+  await cache.write(cacheName, text);
   return text;
 }
 

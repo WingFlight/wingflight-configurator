@@ -24,8 +24,18 @@
 
 import { parseHardwareDump } from "@/js/remap_fc/hardware_parser.js";
 
-/** How the catalogue names its files. Manufacturer ids are four characters. */
-const FILE_NAME_RE = /^([^-]{1,4})-(.+)\.config$/;
+/**
+ * How the catalogue names its files: a manufacturer id of up to four
+ * characters, a hyphen, and the board name.
+ *
+ * The extension is optional because the catalogue is not consistent
+ * about it. Most entries are `.config`; at the time of writing
+ * `TMTR-TMOTORVELOXF7SE.txt` is a `.txt` and `FLAO-FLAOF405X8` has no
+ * extension at all. Those are real boards, and insisting on `.config`
+ * simply hid them.
+ */
+const FILE_NAME_RE = /^([^-.]{1,4})-([^.]+)$/;
+const CONFIG_EXTENSIONS = [".config", ".txt"];
 
 /** The build line the firmware prints first, e.g. "... / STM32H743 (SH74) ...". */
 const BUILD_LINE_RE = /^#.*\/\s+(STM32[A-Z0-9]+)/im;
@@ -50,14 +60,26 @@ export function targetId(identity) {
 /**
  * Splits a catalogue file name into its parts.
  * @param {string} fileName e.g. "MTKS-MATEKH743.config"
- * @returns {?{targetId: string, manufacturerId: string, boardName: string}}
+ * @returns {?{targetId: string, manufacturerId: string, boardName: string,
+ *             file: string}} `file` is the name as the catalogue stores
+ *   it, which is what has to be fetched.
  */
 export function parseTargetFileName(fileName) {
-  const match = String(fileName ?? "").match(FILE_NAME_RE);
+  const file = String(fileName ?? "");
+  const stem =
+    CONFIG_EXTENSIONS.find((extension) => file.endsWith(extension)) !== undefined
+      ? file.slice(0, file.lastIndexOf("."))
+      : file;
+  const match = stem.match(FILE_NAME_RE);
   if (!match) return null;
   const manufacturerId = match[1].toUpperCase();
   const boardName = match[2].toUpperCase();
-  return { targetId: `${manufacturerId}-${boardName}`, manufacturerId, boardName };
+  return {
+    targetId: `${manufacturerId}-${boardName}`,
+    manufacturerId,
+    boardName,
+    file,
+  };
 }
 
 /**

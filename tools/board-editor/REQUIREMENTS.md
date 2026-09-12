@@ -139,3 +139,13 @@ exercised against the shape of hardware we actually ship for.
 
 
 # Known Issues
+
+- ~~board editor target dropdown does not work~~
+  **Fixed.** It was a `<select size="8">` list box, but the app styles every
+  `select` to a fixed 24 px single-line control, so the `size` was ignored and
+  the list was crushed to a sliver with its second row clipped mid-glyph. It is
+  a real dropdown now, grouped by manufacturer. Two other faults went with it:
+  the options were capped at 400, silently hiding 42 boards, and the catalogue
+  holds two configs that are misnamed upstream (`FLAO-FLAOF405X8` has no
+  extension, `TMTR-TMOTORVELOXF7SE.txt` is a `.txt`), which the `.config`-only
+  file-name rule dropped. All 442 boards are offered and fetch correctly.

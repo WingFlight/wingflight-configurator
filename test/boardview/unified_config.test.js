@@ -49,6 +49,7 @@ describe("parseTargetFileName", () => {
       targetId: "MTKS-MATEKH743",
       manufacturerId: "MTKS",
       boardName: "MATEKH743",
+      file: "MTKS-MATEKH743.config",
     });
   });
 
@@ -58,8 +59,26 @@ describe("parseTargetFileName", () => {
     );
   });
 
-  it("ignores anything that is not a config", () => {
+  // The catalogue is not consistent about extensions, and the odd ones
+  // out are real boards: hiding them was a bug, not tidiness.
+  it("accepts the extensions the catalogue actually uses", () => {
+    expect(parseTargetFileName("TMTR-TMOTORVELOXF7SE.txt")).toMatchObject({
+      targetId: "TMTR-TMOTORVELOXF7SE",
+      file: "TMTR-TMOTORVELOXF7SE.txt",
+    });
+    expect(parseTargetFileName("FLAO-FLAOF405X8")).toMatchObject({
+      targetId: "FLAO-FLAOF405X8",
+      file: "FLAO-FLAOF405X8",
+    });
+  });
+
+  it("carries the name the catalogue stores, which is what gets fetched", () => {
+    expect(parseTargetFileName("FLAO-FLAOF405X8").file).toBe("FLAO-FLAOF405X8");
+  });
+
+  it("ignores anything that is not a board config", () => {
     expect(parseTargetFileName("README.md")).toBeNull();
+    expect(parseTargetFileName("LICENSE")).toBeNull();
     expect(parseTargetFileName("TOOLONG-BOARD.config")).toBeNull();
   });
 });
@@ -163,6 +182,20 @@ describe("listTargets", () => {
     expect(listTargets(entries).map((t) => t.targetId)).toEqual([
       "AIRB-NOX",
       "MTKS-MATEKH743",
+    ]);
+  });
+
+  it("offers every board in the listing, however it is named", () => {
+    const odd = [
+      ...entries,
+      { name: "FLAO-FLAOF405X8", path: "configs/FLAO-FLAOF405X8" },
+      { name: "TMTR-VELOX.txt", path: "configs/TMTR-VELOX.txt" },
+    ];
+    expect(listTargets(odd).map((t) => t.targetId)).toEqual([
+      "AIRB-NOX",
+      "FLAO-FLAOF405X8",
+      "MTKS-MATEKH743",
+      "TMTR-VELOX",
     ]);
   });
 
