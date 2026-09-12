@@ -340,6 +340,10 @@ export function connectorPads(connectors, views = null) {
         connectorLabel: connector.label,
         position: pin.position,
         labelSide: side,
+        // Whether that side is a default or the author's instruction:
+        // the label layout may move a default off an edge that cannot
+        // hold it, and must leave an instruction alone.
+        labelSideAuto: connector.labelSide === "auto",
         reserved: pin.reserved,
       });
     });

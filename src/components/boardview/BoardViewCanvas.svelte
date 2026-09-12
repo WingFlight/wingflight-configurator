@@ -20,7 +20,8 @@
     SUB_OFFSET,
     layoutLabels,
     marginsForLabels,
-    wrapText,
+    receiverFit,
+    titleLines,
   } from "@/js/boardview/label_layout.js";
   import { portName, portsByPin } from "@/js/boardview/port_map.js";
   import { receiverPlacement } from "@/js/boardview/schema.js";
@@ -102,12 +103,27 @@
   // makes the block read as a receiver rather than a chip.
   const AERIAL_LENGTH = 5;
   const AERIAL_SPREAD = 1.6;
+  const RECEIVER_FONT = 1.8;
+  // Clear of the type in the receiver block, ascenders and descenders
+  // included, so the two lines never touch.
+  const RECEIVER_LINE = 2.4;
 
   let receiversHere = $derived(
     (profile?.receivers ?? [])
       .filter((receiver) => receiver.view === viewId && view)
       .map((receiver) => {
-        const box = receiverPlacement(receiver, view);
+        // What the block says: the protocol, and the port it holds.
+        const lines = [
+          receiver.protocol ?? receiver.label ?? "RX",
+          receiver.portIdentifier === null
+            ? null
+            : portName(receiver.portIdentifier),
+        ].filter(Boolean);
+        const box = receiverPlacement(
+          receiver,
+          view,
+          receiverFit(lines, RECEIVER_FONT, RECEIVER_LINE),
+        );
         // Two aerials, from either end of the block's outer edge,
         // splayed a little so they read as a pair.
         const outX = box.x + box.width / 2 + (box.aerialX * box.width) / 2;
@@ -130,18 +146,7 @@
               acrossY * end * AERIAL_SPREAD,
           };
         });
-        return {
-          ...receiver,
-          box,
-          aerials,
-          // What the block says: the protocol, and the port it holds.
-          lines: [
-            receiver.protocol ?? receiver.label ?? "RX",
-            receiver.portIdentifier === null
-              ? null
-              : portName(receiver.portIdentifier),
-          ].filter(Boolean),
-        };
+        return { ...receiver, box, aerials, lines };
       }),
   );
 
@@ -157,7 +162,7 @@
     if (!spec || spec.show === "never") return null;
     if (spec.show === "auto" && view.background) return null;
 
-    const lines = wrapText(profile.display, view.width - 4, TITLE_FONT);
+    const lines = titleLines(profile.display, view.width - 4, TITLE_FONT);
     if (!lines.length) return null;
     return {
       ...spec,
@@ -276,9 +281,6 @@
   // The USB connector sticks out of one edge, so labels on that edge
   // have to clear it or they land on top of it.
   const USB_DEPTH = 3.6;
-  // Clear of the 1.8 px type in the receiver block, ascenders and
-  // descenders included, so the two lines never touch.
-  const RECEIVER_LINE = 2.4;
   let usbSide = $derived.by(() => {
     // A socket is placed at a coordinate, not named after an edge, so
     // which edge it is on is read off where it sits. Anything well
@@ -309,6 +311,10 @@
       text: pad.text,
       sub: pad.sub,
       side: pad.labelSide,
+      // One connector's labels move as one, and only when the side
+      // they are on is this drawing's own choice.
+      owner: pad.connector ?? padKey(pad),
+      movable: pad.labelSideAuto !== false,
     })),
   );
 

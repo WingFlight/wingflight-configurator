@@ -189,11 +189,16 @@
     </label>
     <label>
       Shown as
-      <input
+      <textarea
+        rows="2"
         value={editor.board.display}
         onchange={(event) =>
           editor.setBoardField("display", event.currentTarget.value)}
-      />
+      ></textarea>
+      <span class="hint">
+        Press Enter for a line break. The drawing keeps the breaks you type
+        and wraps anything still wider than the board.
+      </span>
     </label>
     <label>
       MCU
@@ -297,10 +302,21 @@
   }
 
   input,
+  textarea,
   select {
     padding: 3px 6px;
     font-size: 0.8rem;
     min-width: 0;
+  }
+
+  textarea {
+    font-family: inherit;
+    resize: vertical;
+  }
+
+  .hint {
+    font-size: 0.7rem;
+    color: var(--color-text-disabled);
   }
 
   select[size] {

@@ -205,9 +205,10 @@ exercised against the shape of hardware we actually ship for.
 | | Where |
 | --- | --- |
 | R1, R2, R4 | `connectors[]` in the schema, `src/js/boardview/schema.js` |
-| R3 | connector `label` plus `ports[].identifier` |
+| R3 | connector `label` plus `ports[].identifier`, named by `portName` wherever a port is listed |
+| Label placement | `layoutLabels` in `src/js/boardview/label_layout.js`: one block per connector, and an edge that cannot hold its labels sheds them sideways |
 | R5 | `views[].usb` as a placed rectangle, dragged on the canvas or typed |
-| R6 | `receivers[]` with `side`, `receiverPlacement` in `schema.js`, and `port.internal` in `port_map.js` |
+| R6 | `receivers[]` with `side`, `receiverPlacement` in `schema.js`, `port.internal` in `port_map.js`, and the protocol and port written in the block |
 | R7 | `seedFromConfig` in `tools/board-editor/src/lib/editor_state.svelte.js` |
 | R8 | `test/boardview/rf007_layout.test.js`, `FRSK-VANTAC_RF007` in `src/tabs/journey/board_profiles.json`; the bare-name role in `connectors.js` |
 | R9 | `src/js/virtual_fc.js` and `src/js/remap_fc/fixtures/` |
@@ -383,3 +384,48 @@ exercised against the shape of hardware we actually ship for.
     `ESC · A09` the way the silkscreen does. The test that was meant to catch
     this iterated the same empty list and so asserted nothing; it walks the
     connectors too, and fails if a board draws no positions at all.
+
+- ~~the labels are way off on the image~~
+  **Fixed.** Reported against a config with both lettered ports lying flat
+  near the top edge. Labels along a horizontal edge are spread by their
+  width, and a label is many times wider than it is tall: eight of them
+  carrying "Port A · UART4 · not in use" want about 150 mm along a 44 mm
+  edge. They ran off both ends, the drawing grew to 148 mm for a 44 mm board,
+  and leader lines crossed it from corner to corner.
+
+  Two rules now. An edge that cannot hold its labels sheds a whole connector
+  at a time, widest first, to the nearer side, where labels stack by line
+  height instead of by width. And a side the author stated outright is
+  honoured while it can be, but yields last of all when nothing else on that
+  edge can give: a side that physically cannot hold its labels is not an
+  instruction the drawing can follow, and obeying it would mean printing them
+  on top of each other. The same board now draws 112 mm wide with nothing
+  overlapping.
+
+- ~~keep the labels in the same groups as in the connector~~
+  **Done.** Each connector's labels are laid out as one block, in the order
+  its positions run along that edge, and the blocks are spread against each
+  other with a little extra air between them. Before, every label was placed
+  independently by its own pad's position, so a two-position header landed in
+  the middle of a nine-position header's column and the drawing read as one
+  long list of pads rather than as the plugs the board has. A connector whose
+  positions run upwards keeps its labels in the order they physically run, so
+  no leader line crosses its neighbour's.
+
+- ~~show which UART is occupied by the receiver~~
+  **Done, in the four places it was missing.** The block on the drawing says
+  the protocol and the port, in both the configurator's drawing and the
+  editor's, and it grows if it is declared too small to hold them rather than
+  spilling the text across the board. The editor's "occupies port" list named
+  ports by their internal id -- `port-4` -- so the one thing being chosen was
+  the one thing not shown; it names them the way the firmware does, adding
+  the board's letter where there is one ("UART3 · Port C"). The panel then
+  says in words which UART the receiver holds and that nothing can be plugged
+  into it, and the port being edited carries the same note.
+
+- ~~let me choose a multi-line label for the controller~~
+  **Done.** "Shown as" takes a line break, and the drawing keeps the breaks
+  typed into it, wrapping only what is still wider than the board. Where a
+  name breaks is a judgement about the board -- "VANTAC" over "RF007" reads
+  better on a 44 mm board than one long line -- so it is the author's to
+  make. A name with no breaks in it behaves exactly as it did.

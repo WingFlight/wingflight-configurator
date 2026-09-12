@@ -302,12 +302,20 @@ function normaliseReceiver(raw, index, view) {
  *
  * @param {Object} receiver normalised
  * @param {{width: number, height: number}} view
+ * @param {?{width?: number, height?: number}} [fit] smallest block the
+ *        drawing's own text will fit in
  * @returns {{x: number, y: number, width: number, height: number,
  *            aerialX: number, aerialY: number}} the block, plus a unit
  *   vector pointing out of the board along the side it is on
  */
-export function receiverPlacement(receiver, view) {
-  const { width, height, side, offset } = receiver;
+export function receiverPlacement(receiver, view, fit = null) {
+  // The block has to hold what is written in it -- the protocol and
+  // the port the receiver occupies -- so a block declared smaller than
+  // its own text grows rather than letting the text spill over the
+  // board. It grows about its centre and stays against its edge.
+  const width = Math.max(receiver.width, fit?.width ?? 0);
+  const height = Math.max(receiver.height, fit?.height ?? 0);
+  const { side, offset } = receiver;
   const along = (extent, size) =>
     Math.min(Math.max(extent * offset - size / 2, 0), Math.max(0, extent - size));
 

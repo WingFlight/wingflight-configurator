@@ -8,6 +8,7 @@
    * wire, which is why it has to be declared rather than merely drawn
    * (tools/board-editor/REQUIREMENTS.md, R5 and R6).
    */
+  import { portName } from "@/js/boardview/port_map.js";
   import { RECEIVER_SIDES } from "@/js/boardview/schema.js";
 
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
@@ -16,7 +17,19 @@
 
   const PROTOCOLS = ["CRSF", "ELRS", "FBUS", "SBUS", "FPORT", "GHST", "SRXL2"];
 
-  let ports = $derived(editor.board?.ports ?? []);
+  // A port is named by the firmware, and lettered by the board only
+  // when the board prints a letter on it. Offering the raw id here
+  // ("port-4") told the author nothing about which UART a receiver
+  // would take.
+  let ports = $derived(
+    (editor.board?.ports ?? []).map((port) => ({
+      ...port,
+      name:
+        port.identifier === null ? port.id : portName(port.identifier),
+    })),
+  );
+  const heldBy = (receiver) =>
+    ports.find((port) => port.identifier === receiver.portIdentifier) ?? null;
   let usb = $derived(editor.view?.usb ?? null);
 </script>
 
@@ -125,11 +138,25 @@
           <option value="">none</option>
           {#each ports as port (port.id)}
             <option value={String(port.identifier)}>
-              {port.label ?? port.id}
+              {port.label && port.label !== port.name
+                ? `${port.name} · ${port.label}`
+                : port.name}
             </option>
           {/each}
         </select>
       </label>
+      {#if heldBy(receiver)}
+        <p class="note held">
+          {receiver.protocol ?? "This receiver"} is wired to {heldBy(receiver)
+            .name} inside the board, so nothing can be plugged into it. The
+          drawing and the port list say so.
+        </p>
+      {:else}
+        <p class="note">
+          Say which serial port it is wired to. Without it the port list
+          reports that port as not broken out, which is wrong: it is in use.
+        </p>
+      {/if}
       <div class="pair">
         <label>
           Mounted on
@@ -279,5 +306,9 @@
     margin: 0;
     font-size: 0.72rem;
     color: var(--color-text-disabled);
+
+    &.held {
+      color: var(--color-text-muted);
+    }
   }
 </style>

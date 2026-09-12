@@ -33,8 +33,16 @@ export const SUB_OFFSET = 2.5;
 const CHAR_WIDTH = 0.66;
 /** Smallest gap between two labels' boxes. */
 const MIN_GAP = 0.6;
+/**
+ * Extra air between two connectors' blocks of labels, so the grouping
+ * is visible: one plug's labels read as a run, and the next plug's as
+ * another.
+ */
+const GROUP_GAP = 2.4;
 /** How far outside the board the label column sits. */
 const LABEL_OFFSET = 3.2;
+/** A line break typed into a board's name, in either convention. */
+const NEWLINE = /\r?\n/;
 
 /**
  * Estimated width of a line of text in millimetre units.
@@ -77,6 +85,48 @@ export function wrapText(text, maxWidth, font = LABEL_FONT) {
   }
   lines.push(line);
   return lines;
+}
+
+/**
+ * The smallest block a stack of centred lines fits in, with a little
+ * padding: what a receiver's block has to be so its protocol and the
+ * port it holds are written inside it rather than across the board.
+ *
+ * @param {string[]} lines
+ * @param {number} font
+ * @param {number} lineHeight
+ * @returns {{width: number, height: number}}
+ */
+export function receiverFit(lines, font, lineHeight) {
+  const widest = lines.reduce(
+    (most, line) => Math.max(most, textWidth(line, font)),
+    0,
+  );
+  return {
+    width: widest + 2.4,
+    height: (lines.length - 1) * lineHeight + font + 2.4,
+  };
+}
+
+/**
+ * The board's name as it is drawn: the author's own line breaks first,
+ * then wrapping for anything still wider than the board.
+ *
+ * Where the break falls is a judgement about the board -- "VANTAC" over
+ * "RF007" reads better on a 44 mm board than one long line or a break
+ * chosen by arithmetic -- so a newline typed into the name is kept as
+ * a break. Wrapping still applies to each piece, so a name with no
+ * breaks in it behaves exactly as it did.
+ *
+ * @param {string} text
+ * @param {number} maxWidth in millimetre units
+ * @param {number} [font]
+ * @returns {string[]}
+ */
+export function titleLines(text, maxWidth, font = LABEL_FONT) {
+  return String(text ?? "")
+    .split(NEWLINE)
+    .flatMap((part) => wrapText(part, maxWidth, font));
 }
 
 /**
@@ -145,6 +195,86 @@ export function nearestEdge(pad, view) {
   ];
   candidates.sort((a, b) => a[1] - b[1]);
   return candidates[0][0];
+}
+
+/**
+ * How much room along an edge one label needs, gap included.
+ * @param {{text: string, sub?: ?string}} item
+ * @returns {number}
+ */
+function widthAlong(item) {
+  return (
+    Math.max(
+      textWidth(item.text, LABEL_FONT),
+      textWidth(item.sub ?? "", SUB_FONT),
+    ) + MIN_GAP
+  );
+}
+
+/**
+ * Moves a crowded top or bottom edge's labels to a side that can hold
+ * them, in place.
+ *
+ * Along the top or bottom, labels are spread by their width, and a
+ * label is many times wider than it is tall: two four-position ports
+ * lying flat near the top edge want 150 mm of a 44 mm board, so they
+ * run off both ends and squeeze the board into a third of the picture
+ * with leader lines crossing it. Down a side each label needs only a
+ * line's height, which is why the relief is always sideways.
+ *
+ * Whole connectors move together, the widest first, because splitting
+ * one connector's labels across two edges is the fault that the
+ * connector-decides-the-side rule exists to prevent. A connector whose
+ * side the profile states outright moves last of all, once nothing
+ * else on that edge can give: an edge that cannot hold its labels is
+ * not an instruction the drawing can follow.
+ *
+ * @param {Object[]} resolved items with a concrete `side`
+ * @param {{width: number, height: number}} view
+ * @param {{x: number, y: number}} margin
+ */
+function relieveCrowding(resolved, view, margin) {
+  const span = view.width + 2 * margin.x;
+
+  for (const side of ["above", "below"]) {
+    // Bounded by the number of groups: each pass moves one away.
+    for (let pass = 0; pass < resolved.length; pass += 1) {
+      const here = resolved.filter((item) => item.side === side);
+      const load = here.reduce((total, item) => total + widthAlong(item), 0);
+      if (load <= span) break;
+
+      const groups = {};
+      for (const item of here) {
+        const key = item.owner ?? item.id;
+        groups[key] = groups[key] ?? {
+          width: 0,
+          x: 0,
+          items: [],
+          pinned: true,
+        };
+        groups[key].width += widthAlong(item);
+        groups[key].x += item.x;
+        groups[key].items.push(item);
+        if (item.movable !== false) groups[key].pinned = false;
+      }
+      // The author's own choice of side goes last, and only once
+      // nothing else can give: a side that physically cannot hold its
+      // labels is not an instruction the drawing can follow, and
+      // honouring it there would mean printing them on top of each
+      // other.
+      const order = Object.values(groups).sort(
+        (a, b) => a.pinned - b.pinned || b.width - a.width,
+      );
+      const widest = order[0];
+      if (!widest) break;
+
+      // Out through the nearer side, so a connector on the right of the
+      // board does not label across it.
+      const centre = widest.x / widest.items.length;
+      const to = centre < view.width / 2 ? "left" : "right";
+      for (const item of widest.items) item.side = to;
+    }
+  }
 }
 
 /**
@@ -223,7 +353,10 @@ export function measureMargins(args) {
  * @param {Object} args
  * @param {{width: number, height: number}} args.view
  * @param {{id: string, x: number, y: number, text: string, sub?: ?string,
- *          side?: 'left'|'right'|'above'|'below'|'auto'}[]} args.items
+ *          side?: 'left'|'right'|'above'|'below'|'auto', owner?: string,
+ *          movable?: boolean}[]} args.items `owner` groups the labels
+ *        that belong to one connector, so a crowded edge sheds them
+ *        together; `movable: false` pins a label to the side it names.
  * @param {{x: number, y: number}} [args.margin] room outside the view
  *        the labels may use
  * @param {{left?: number, right?: number, above?: number, below?: number}}
@@ -244,19 +377,21 @@ export function layoutLabels({
     side:
       !item.side || item.side === "auto" ? nearestEdge(item, view) : item.side,
   }));
+  relieveCrowding(resolved, view, margin);
 
   const out = [];
 
   for (const side of ["left", "right", "above", "below"]) {
-    const group = resolved.filter((item) => item.side === side);
-    if (!group.length) continue;
+    const here = resolved.filter((item) => item.side === side);
+    if (!here.length) continue;
 
     const vertical = side === "left" || side === "right";
+    const along = (item) => (vertical ? item.y : item.x);
     // Down a side, labels are spread by height, and a label reaches
     // further below its baseline than above it when it carries a
     // second line. Across the top or bottom they are spread by width,
     // which is symmetric because that text is centred.
-    const extents = group.map((item) => {
+    const extentOf = (item) => {
       if (!vertical) {
         const half =
           Math.max(
@@ -269,12 +404,67 @@ export function layoutLabels({
         before: LABEL_FONT * 0.8,
         after: (item.sub ? SUB_OFFSET : 0) + SUB_FONT * 0.5,
       };
-    });
+    };
 
-    const desired = group.map((item) => (vertical ? item.y : item.x));
+    // One connector's labels are laid out as one block, in the order
+    // its positions run, and the blocks are spread against each other.
+    // Placing every label independently let a two-position header land
+    // in the middle of a nine-position header's column, so the drawing
+    // read as one long list of pads rather than as the plugs the board
+    // actually has.
+    const bundles = [];
+    const byOwner = {};
+    for (const item of here) {
+      const key = item.owner ?? item.id;
+      if (!byOwner[key]) {
+        byOwner[key] = { items: [] };
+        bundles.push(byOwner[key]);
+      }
+      byOwner[key].items.push(item);
+    }
+
+    for (const bundle of bundles) {
+      // Along the edge, not by position number: a connector whose
+      // positions run upwards would otherwise have its labels in
+      // reverse and every leader line crossing its neighbour's.
+      bundle.items.sort((a, b) => along(a) - along(b));
+      bundle.extents = bundle.items.map(extentOf);
+      bundle.length = bundle.extents.reduce(
+        (total, extent, index) =>
+          total + extent.before + extent.after + (index ? MIN_GAP : 0),
+        0,
+      );
+      const positions = bundle.items.map(along);
+      bundle.desired =
+        (Math.min(...positions) + Math.max(...positions)) / 2;
+    }
+
     const min = vertical ? -margin.y : -margin.x;
     const max = vertical ? view.height + margin.y : view.width + margin.x;
-    const placed = spreadAlong(desired, extents, min, max);
+    const centres = spreadAlong(
+      bundles.map((bundle) => bundle.desired),
+      bundles.map((bundle) => ({
+        before: bundle.length / 2 + GROUP_GAP / 2,
+        after: bundle.length / 2 + GROUP_GAP / 2,
+      })),
+      min,
+      max,
+    );
+
+    // Then each block's own labels, back to back from where the block
+    // landed, so a connector reads as a run.
+    const group = [];
+    const placed = [];
+    bundles.forEach((bundle, index) => {
+      let cursor = centres[index] - bundle.length / 2;
+      bundle.items.forEach((item, at) => {
+        const extent = bundle.extents[at];
+        const anchor = cursor + extent.before;
+        cursor = anchor + extent.after + MIN_GAP;
+        group.push(item);
+        placed.push(anchor);
+      });
+    });
 
     group.forEach((item, index) => {
       const along = placed[index];

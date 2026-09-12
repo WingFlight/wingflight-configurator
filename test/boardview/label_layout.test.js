@@ -4,6 +4,7 @@ import {
   LABEL_FONT,
   layoutLabels,
   measureMargins,
+  titleLines,
   nearestEdge,
   spreadAlong,
   textWidth,
@@ -163,6 +164,163 @@ describe("measureMargins", () => {
       expect(label.y).toBeGreaterThanOrEqual(-margins.top);
       expect(label.y).toBeLessThanOrEqual(view.height + margins.bottom);
     }
+  });
+});
+
+// Reported against the RF007 as "the labels are way off". Both of its
+// lettered ports lie flat near the top edge, so every one of their
+// labels wanted to be above them: eight labels carrying "Port A ·
+// UART4 · not in use" need about 150 mm along a 44 mm edge, and they
+// ran off both ends of the drawing and squeezed the board into a third
+// of the picture.
+describe("an edge that cannot hold its labels", () => {
+  const view = { width: 44, height: 34 };
+  const flatPort = (id, x, y) =>
+    ["TX", "RX", "5V", "GND"].map((text, index) => ({
+      id: `${id}:${index}`,
+      owner: id,
+      x: x + index * 2.6,
+      y,
+      text,
+      sub: index < 2 ? `Port ${id} · UART4 · S.Port telemetry` : null,
+      side: "above",
+    }));
+
+  const items = [...flatPort("A", 31.75, 5.08), ...flatPort("C", 31.5, 12.19)];
+
+  it("sends the crowd out of the nearer side instead", () => {
+    const labels = layoutLabels({ view, items });
+    // Both connectors, whole: splitting one across two edges is the
+    // fault the connector-side rule exists to prevent.
+    expect(labels.map((label) => label.side)).toEqual(items.map(() => "right"));
+  });
+
+  it("keeps the drawing near the size of the board", () => {
+    const margins = measureMargins({ view, items });
+    expect(view.width + margins.left + margins.right).toBeLessThan(
+      view.width * 2,
+    );
+  });
+
+  it("leaves an edge that fits where it is", () => {
+    const twoShort = [
+      { id: "a", owner: "j", x: 16.5, y: 6.35, text: "AIN", side: "above" },
+      { id: "b", owner: "j", x: 19, y: 6.35, text: "GND", side: "above" },
+    ];
+    const labels = layoutLabels({ view, items: twoShort });
+    expect(labels.map((label) => label.side)).toEqual(["above", "above"]);
+  });
+
+  it("keeps a stated side while that edge can hold it", () => {
+    const pinned = [
+      { id: "a", owner: "j", x: 16.5, y: 6.35, text: "AIN", side: "above", movable: false },
+      { id: "b", owner: "j", x: 19, y: 6.35, text: "GND", side: "above", movable: false },
+    ];
+    const labels = layoutLabels({ view, items: pinned });
+    expect(labels.every((label) => label.side === "above")).toBe(true);
+  });
+
+  it("sheds what the author left free before what they stated", () => {
+    const mixed = [
+      // Two narrow labels the author pinned above, and a wide port
+      // left to the drawing: shedding the port is enough.
+      { id: "j:1", owner: "j", x: 16.5, y: 6.35, text: "AIN", side: "above", movable: false },
+      { id: "j:2", owner: "j", x: 19, y: 6.35, text: "GND", side: "above", movable: false },
+      ...items.filter((item) => item.owner === "C"),
+    ];
+    const labels = layoutLabels({ view, items: mixed });
+    const sideOf = (id) => labels.find((label) => label.id === id).side;
+    expect(sideOf("C:0")).toBe("right");
+    expect(sideOf("j:1")).toBe("above");
+    expect(sideOf("j:2")).toBe("above");
+  });
+
+  it("moves even a stated side when nothing else on the edge can give", () => {
+    // Both connectors stated, and either one alone is wider than the
+    // edge: honouring that would print them on top of each other.
+    const pinned = items.map((item) => ({ ...item, movable: false }));
+    const labels = layoutLabels({ view, items: pinned });
+    expect(labels.some((label) => label.side === "above")).toBe(false);
+  });
+});
+
+// "Keep them in the same groups as in the connector": a plug's labels
+// read as one run, not interleaved with the next plug's. A
+// two-position header used to land in the middle of a nine-position
+// header's column, which read as one long list of pads.
+describe("labels grouped by connector", () => {
+  const view = { width: 44, height: 34 };
+  const column = (owner, x, fromY, count) =>
+    Array.from({ length: count }, (unused, index) => ({
+      id: `${owner}:${index + 1}`,
+      owner,
+      x,
+      y: fromY + index * 2.54,
+      text: `${owner}${index + 1}`,
+      sub: "B00",
+      side: "left",
+    }));
+
+  // A long header and a short one, both labelling left, and the short
+  // one sits halfway down the long one's run.
+  const items = [...column("main", 4, 2.8, 9), ...column("aux", 6, 12, 2)];
+
+  it("keeps each connector's labels contiguous", () => {
+    const labels = layoutLabels({ view, items });
+    const order = labels
+      .map((label, index) => ({ owner: items[index].owner, y: label.y }))
+      .sort((a, b) => a.y - b.y)
+      .map((entry) => entry.owner);
+    // Every run of one owner appears once: no owner is re-entered.
+    const runs = order.filter((owner, index) => owner !== order[index - 1]);
+    expect(runs.length).toBe(new Set(runs).size);
+  });
+
+  it("keeps a connector's own labels in the order they run", () => {
+    const labels = layoutLabels({ view, items });
+    const mainY = items
+      .map((item, index) => ({ item, label: labels[index] }))
+      .filter((pair) => pair.item.owner === "main")
+      .map((pair) => pair.label.y);
+    const sorted = [...mainY].sort((a, b) => a - b);
+    expect(mainY).toEqual(sorted);
+  });
+
+  it("still leaves nothing overlapping", () => {
+    const labels = layoutLabels({ view, items });
+    const boxes = labels
+      .map((label) => ({ top: label.y - 1.7, bottom: label.y + 2.9 }))
+      .sort((a, b) => a.top - b.top);
+    for (let i = 1; i < boxes.length; i += 1) {
+      expect(boxes[i].top).toBeGreaterThanOrEqual(boxes[i - 1].bottom - 0.001);
+    }
+  });
+});
+
+describe("titleLines", () => {
+  it("keeps a line break the author typed", () => {
+    expect(titleLines("VANTAC\nRF007", 40, LABEL_FONT)).toEqual([
+      "VANTAC",
+      "RF007",
+    ]);
+  });
+
+  it("still wraps a piece wider than the board", () => {
+    const lines = titleLines("VANTAC\nRF007 airframe edition", 20, LABEL_FONT);
+    expect(lines[0]).toBe("VANTAC");
+    expect(lines.length).toBeGreaterThan(2);
+  });
+
+  it("treats a name with no breaks exactly as wrapping does", () => {
+    const text = "Example Wing FC (not a real board)";
+    expect(titleLines(text, 20, LABEL_FONT)).toEqual(
+      wrapText(text, 20, LABEL_FONT),
+    );
+  });
+
+  it("drops an empty line rather than drawing a gap", () => {
+    expect(titleLines("A\n\nB", 40, LABEL_FONT)).toEqual(["A", "B"]);
+    expect(titleLines("", 40)).toEqual([]);
   });
 });
 

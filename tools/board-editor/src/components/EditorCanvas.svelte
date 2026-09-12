@@ -19,7 +19,12 @@
     connectorLabelAnchor,
     connectorPinPositions,
   } from "@/js/boardview/connectors.js";
-  import { textWidth } from "@/js/boardview/label_layout.js";
+  import {
+    receiverFit,
+    textWidth,
+    titleLines,
+  } from "@/js/boardview/label_layout.js";
+  import { portName } from "@/js/boardview/port_map.js";
   import { receiverPlacement } from "@/js/boardview/schema.js";
 
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
@@ -65,6 +70,72 @@
   // the box grows to hold whatever the names actually need, instead of
   // cutting the first half of one off.
   const TAG_FONT = 1.5;
+  // The same type as the configurator draws the name in, so a break
+  // typed into it falls in the same place here as it does there.
+  const TITLE_FONT = 2.6;
+  const TITLE_LINE = 3.1;
+
+  let titleRows = $derived.by(() => {
+    if (!view?.title || view.title.show === "never") return [];
+    const lines = titleLines(
+      editor.board?.display,
+      view.width - 4,
+      TITLE_FONT,
+    );
+    const firstY = view.title.y - ((lines.length - 1) * TITLE_LINE) / 2;
+    return lines.map((text, index) => ({
+      text,
+      y: firstY + index * TITLE_LINE,
+    }));
+  });
+
+  // The two aerials, drawn the way the configurator draws them: the
+  // author is choosing which edge they leave the board from, and has
+  // to see where they end up.
+  const AERIAL_LENGTH = 5;
+  const AERIAL_SPREAD = 1.6;
+  const RECEIVER_FONT = 1.6;
+  const RECEIVER_LINE = 2.2;
+
+  function aerialsFor(box) {
+    const outX = box.x + box.width / 2 + (box.aerialX * box.width) / 2;
+    const outY = box.y + box.height / 2 + (box.aerialY * box.height) / 2;
+    const acrossX = box.aerialY === 0 ? 0 : 1;
+    const acrossY = box.aerialY === 0 ? 1 : 0;
+    return [-1, 1].map((end) => {
+      const x1 = outX + acrossX * end * (box.width / 3);
+      const y1 = outY + acrossY * end * (box.height / 3);
+      return {
+        x1,
+        y1,
+        x2: x1 + box.aerialX * AERIAL_LENGTH + acrossX * end * AERIAL_SPREAD,
+        y2: y1 + box.aerialY * AERIAL_LENGTH + acrossY * end * AERIAL_SPREAD,
+      };
+    });
+  }
+
+  let receiversHere = $derived(
+    (editor.board?.receivers ?? [])
+      .filter((receiver) => receiver.view === editor.viewId && view)
+      .map((receiver) => {
+        // Which serial port it holds, said on the block itself: it is
+        // the one thing about a built-in receiver the author cannot
+        // see anywhere else on the drawing.
+        const lines = [
+          receiver.protocol ?? receiver.label ?? "RX",
+          receiver.portIdentifier === null
+            ? "no port"
+            : portName(receiver.portIdentifier),
+        ];
+        const box = receiverPlacement(
+          receiver,
+          view,
+          receiverFit(lines, RECEIVER_FONT, RECEIVER_LINE),
+        );
+        return { ...receiver, box, lines, aerials: aerialsFor(box) };
+      }),
+  );
+
   let box = $derived.by(() => {
     const room = { left: MARGIN, right: MARGIN, top: MARGIN, bottom: MARGIN };
     if (!view) return room;
@@ -80,6 +151,16 @@
       room.top = Math.max(room.top, -(y - TAG_FONT) + 1);
       room.bottom = Math.max(room.bottom, y + TAG_FONT - view.height + 1);
     }
+    // A receiver's aerials leave the board, and they are the thing the
+    // author is placing, so they cannot be the thing that gets cut off.
+    for (const receiver of receiversHere) {
+      for (const aerial of receiver.aerials) {
+        room.left = Math.max(room.left, -aerial.x2 + 1);
+        room.right = Math.max(room.right, aerial.x2 - view.width + 1);
+        room.top = Math.max(room.top, -aerial.y2 + 1);
+        room.bottom = Math.max(room.bottom, aerial.y2 - view.height + 1);
+      }
+    }
     return room;
   });
 
@@ -87,15 +168,6 @@
     view
       ? `${-box.left} ${-box.top} ${view.width + box.left + box.right} ${view.height + box.top + box.bottom}`
       : "0 0 1 1",
-  );
-
-  let receiversHere = $derived(
-    (editor.board?.receivers ?? [])
-      .filter((receiver) => receiver.view === editor.viewId && view)
-      .map((receiver) => ({
-        ...receiver,
-        box: receiverPlacement(receiver, view),
-      })),
   );
 
   function toBoard(event) {
@@ -279,11 +351,8 @@
 
       <!-- The board's name, draggable like everything else placed. -->
       {#if view.title && view.title.show !== "never"}
-        <text
+        <g
           class="title"
-          x={view.title.x}
-          y={view.title.y}
-          text-anchor={view.title.anchor}
           role="button"
           tabindex="0"
           aria-label="Board name"
@@ -293,8 +362,12 @@
               y: view.title.y,
             })}
         >
-          {editor.board.display}
-        </text>
+          {#each titleRows as row, index (index)}
+            <text x={view.title.x} y={row.y} text-anchor={view.title.anchor}>
+              {row.text}
+            </text>
+          {/each}
+        </g>
       {/if}
 
       {#each receiversHere as receiver (receiver.id)}
@@ -309,6 +382,16 @@
               y: receiver.box.y,
             })}
         >
+          {#each receiver.aerials as aerial, index (index)}
+            <line
+              class="aerial"
+              x1={aerial.x1}
+              y1={aerial.y1}
+              x2={aerial.x2}
+              y2={aerial.y2}
+            />
+            <circle class="aerial" cx={aerial.x2} cy={aerial.y2} r="0.6" />
+          {/each}
           <rect
             x={receiver.box.x}
             y={receiver.box.y}
@@ -316,12 +399,18 @@
             height={receiver.box.height}
             rx="0.6"
           />
-          <text
-            x={receiver.box.x + receiver.box.width / 2}
-            y={receiver.box.y + receiver.box.height / 2 + 0.6}
-          >
-            {receiver.protocol ?? receiver.label ?? "RX"}
-          </text>
+          {#each receiver.lines as line, index (index)}
+            <text
+              x={receiver.box.x + receiver.box.width / 2}
+              y={receiver.box.y +
+                receiver.box.height / 2 +
+                0.4 -
+                ((receiver.lines.length - 1) * RECEIVER_LINE) / 2 +
+                index * RECEIVER_LINE}
+            >
+              {line}
+            </text>
+          {/each}
         </g>
       {/each}
 
@@ -476,10 +565,13 @@
   }
 
   .title {
-    fill: var(--color-text-disabled);
-    font-size: 2.6px;
-    font-weight: 600;
     cursor: grab;
+
+    text {
+      fill: var(--color-text-disabled);
+      font-size: 2.6px;
+      font-weight: 600;
+    }
   }
 
   .usb {
@@ -496,6 +588,13 @@
       fill: var(--color-neutral-300);
       stroke: var(--color-border);
       stroke-width: 0.25;
+    }
+
+    .aerial {
+      fill: var(--color-neutral-400);
+      stroke: var(--color-neutral-400);
+      stroke-width: 0.4;
+      stroke-linecap: round;
     }
 
     text {

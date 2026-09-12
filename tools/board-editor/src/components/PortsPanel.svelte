@@ -14,7 +14,7 @@
    * back here as it will appear in the configurator, so an author can
    * see straight away whether the drawing says what the board does.
    */
-  import { buildPortMap } from "@/js/boardview/port_map.js";
+  import { buildPortMap, portName } from "@/js/boardview/port_map.js";
 
   import { getEditorState } from "~editor/lib/editor_state.svelte.js";
 
@@ -62,6 +62,16 @@
     Object.fromEntries(derivedPorts.map((port) => [port.id, port])),
   );
 
+  // Which port a built-in receiver holds, so the one port nobody can
+  // wire is named as such where the ports are edited.
+  let receiverByIdentifier = $derived(
+    Object.fromEntries(
+      (editor.board?.receivers ?? [])
+        .filter((receiver) => receiver.portIdentifier !== null)
+        .map((receiver) => [receiver.portIdentifier, receiver]),
+    ),
+  );
+
   function whereLines(port) {
     const row = layoutById[port.id];
     if (!row) return "";
@@ -78,7 +88,16 @@
 
   {#each editor.board?.ports ?? [] as port (port.id)}
     {@const row = layoutById[port.id]}
+    {@const receiver = receiverByIdentifier[port.identifier]}
     <div class="port">
+      <h3>
+        {port.identifier === null ? port.id : portName(port.identifier)}
+        {#if receiver}
+          <span class="held">
+            {receiver.protocol ?? "receiver"} on board
+          </span>
+        {/if}
+      </h3>
       <div class="pair">
         <label>
           Label
@@ -136,6 +155,12 @@
         Drawn as: <strong>{row?.layout ?? "—"}</strong>
         {#if whereLines(port)}· {whereLines(port)}{/if}
       </p>
+      {#if receiver}
+        <p class="note">
+          The built-in receiver is wired to this port inside the board, so its
+          pins need not be broken out anywhere.
+        </p>
+      {/if}
       <button class="danger" onclick={() => editor.removePort(port.id)}>
         Delete port
       </button>
@@ -162,6 +187,22 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  .held {
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--color-text-muted);
   }
 
