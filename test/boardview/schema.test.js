@@ -179,3 +179,63 @@ describe("match", () => {
     expect(profile.match).toEqual({ manufacturerId: [], boardName: [] });
   });
 });
+
+// The board's name is drawn on the board, so where it goes is the
+// author's call, and a name longer than its board has to wrap.
+describe("the board's name on a view", () => {
+  const withView = (title) =>
+    normaliseProfile({
+      ...v1,
+      outline: undefined,
+      views: { top: { width: 40, height: 30, ...(title !== undefined && { title }) } },
+    }).views.top.title;
+
+  it("defaults to the middle of the board, shown only without a background", () => {
+    expect(withView(undefined)).toEqual({
+      x: 20,
+      y: 15,
+      anchor: "middle",
+      show: "auto",
+    });
+  });
+
+  it("takes an explicit place, and then shows either way", () => {
+    expect(withView({ x: 4, y: 26, anchor: "start" })).toEqual({
+      x: 4,
+      y: 26,
+      anchor: "start",
+      show: "always",
+    });
+  });
+
+  it("reads an explicit null as never drawn", () => {
+    expect(withView(null).show).toBe("never");
+  });
+
+  it("is left out of the file while it says nothing a default would not", () => {
+    const written = serialiseProfile(normaliseProfile(v1));
+    expect(written.views.top).not.toHaveProperty("title");
+  });
+
+  it("is written once it has been moved", () => {
+    const profile = normaliseProfile({
+      ...v1,
+      outline: undefined,
+      views: { top: { width: 40, height: 30, title: { x: 4, y: 26 } } },
+    });
+    expect(serialiseProfile(profile).views.top.title).toMatchObject({
+      x: 4,
+      y: 26,
+    });
+  });
+
+  it("round-trips a hidden name", () => {
+    const once = normaliseProfile({
+      ...v1,
+      outline: undefined,
+      views: { top: { width: 40, height: 30, title: null } },
+    });
+    const twice = normaliseProfile(serialiseProfile(once));
+    expect(twice.views.top.title.show).toBe("never");
+  });
+});

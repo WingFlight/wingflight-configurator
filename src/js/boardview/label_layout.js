@@ -47,6 +47,39 @@ export function textWidth(text, font = LABEL_FONT) {
 }
 
 /**
+ * Breaks a line of text into lines that each fit `maxWidth`.
+ *
+ * SVG text does not wrap, so a board name longer than its board runs
+ * off both edges unless it is split here. Breaks fall on spaces; a
+ * single word wider than the space is left long rather than chopped,
+ * because a chopped board name is harder to read than a wide one.
+ *
+ * @param {string} text
+ * @param {number} maxWidth in millimetre units
+ * @param {number} [font]
+ * @returns {string[]} one or more lines, never empty for non-empty text
+ */
+export function wrapText(text, maxWidth, font = LABEL_FONT) {
+  const words = String(text ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  if (maxWidth <= 0) return [words.join(" ")];
+
+  const lines = [];
+  let line = words[0];
+  for (const word of words.slice(1)) {
+    const candidate = `${line} ${word}`;
+    if (textWidth(candidate, font) <= maxWidth) {
+      line = candidate;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  lines.push(line);
+  return lines;
+}
+
+/**
  * Spreads positions along one axis so that consecutive items keep
  * their room, preserving the given order and staying inside
  * [min, max] when it can.

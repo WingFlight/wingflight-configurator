@@ -172,3 +172,29 @@ exercised against the shape of hardware we actually ship for.
   stayed behind when the run turned; it follows the run now, and sits on
   whichever side faces away from the middle of the board, which also stops it
   landing on the board's own pads.
+
+- ~~the pins on a port canot reordered~~
+  **Fixed.** A position is physical, which hole in the plug a wire goes into, so
+  transcribing a row in the wrong order should not mean retyping every value.
+  Each row has up and down buttons that carry its value with it, and a
+  *Reverse* button flips the whole connector, because plugs are numbered from
+  either end depending on who drew the board. The numbering stays 1..n.
+
+- ~~the label for the controller may need a line break~~
+  **Fixed.** SVG text does not wrap, so a name longer than its board simply ran
+  off both edges. It is broken onto as many lines as it needs to fit the board,
+  on spaces, and the block stays centred on its placement so adding a line
+  grows it both ways rather than pushing it off the bottom. A single word wider
+  than the board is left long rather than chopped, since a chopped board name
+  is harder to read than a wide one.
+
+- ~~the controller label position cannot be changed~~
+  **Fixed.** It was hard-coded to the middle of the view. It is now placed like
+  everything else: drag it on the canvas or type its position, with its
+  alignment and whether it is drawn at all. "Only without a background" stays
+  the default, which is what every profile did before, since a CAD export
+  usually has the board's name printed on it already.
+
+  Note the default placement is the middle of the board, where there are often
+  pads. The name is a watermark drawn behind them, so it reads as one; move it
+  if you would rather it were clear of them.

@@ -20,6 +20,7 @@
     SUB_OFFSET,
     layoutLabels,
     marginsForLabels,
+    wrapText,
   } from "@/js/boardview/label_layout.js";
   import { portsByPin } from "@/js/boardview/port_map.js";
   import { i18n } from "@/js/i18n.js";
@@ -97,6 +98,30 @@
   let receiversHere = $derived(
     (profile?.receivers ?? []).filter((receiver) => receiver.view === viewId),
   );
+
+  // The board's name, wrapped to fit the board and placed where the
+  // profile puts it. `auto` means "only when no background carries it
+  // already", which is what every profile did before it was placeable.
+  const TITLE_FONT = 2.6;
+  const TITLE_LINE = 3.1;
+
+  let title = $derived.by(() => {
+    if (!view || viewId !== "top") return null;
+    const spec = view.title;
+    if (!spec || spec.show === "never") return null;
+    if (spec.show === "auto" && view.background) return null;
+
+    const lines = wrapText(profile.display, view.width - 4, TITLE_FONT);
+    if (!lines.length) return null;
+    return {
+      ...spec,
+      lines,
+      // Centred on the placement, so adding a line grows it both ways
+      // rather than pushing it off the bottom.
+      firstY: spec.y - ((lines.length - 1) * TITLE_LINE) / 2,
+      lineHeight: TITLE_LINE,
+    };
+  });
 
   function padState(pad) {
     if (pad.role === "net") return "net";
@@ -307,14 +332,19 @@
       {#each view.mountHoles as [hx, hy] (`${hx},${hy}`)}
         <circle class="hole" cx={hx} cy={hy} r="1.5" />
       {/each}
-      <!-- The name belongs on the top view only: a side view is a
-           10 mm strip, and the name written across it lands on the
-           pads rather than behind them. -->
-      {#if viewId === "top"}
-        <text class="board-name" x={view.width / 2} y={view.height / 2}>
-          {profile.display}
-        </text>
-      {/if}
+    {/if}
+
+    <!-- The board's name. Only on the top view: a side view is a 10 mm
+         strip, and a name written across it lands on the pads rather
+         than behind them. -->
+    {#if title}
+      <text class="board-name" text-anchor={title.anchor}>
+        {#each title.lines as line, index (index)}
+          <tspan x={title.x} y={title.firstY + index * title.lineHeight}>
+            {line}
+          </tspan>
+        {/each}
+      </text>
     {/if}
 
     <!-- USB, wherever the board actually puts it (R5) -->
@@ -511,7 +541,6 @@
 
   .board-name {
     fill: var(--color-text-disabled);
-    text-anchor: middle;
     font-size: 2.6px;
     font-weight: 600;
     letter-spacing: 0.05em;

@@ -185,9 +185,65 @@
       {/if}
     </div>
 
+    {#if editor.viewId === "top" && editor.view.title}
+      <h3>Board name</h3>
+      <label>
+        Shown
+        <select
+          value={editor.view.title.show}
+          onchange={(event) =>
+            editor.setTitleField("show", event.currentTarget.value)}
+        >
+          <option value="auto">only without a background</option>
+          <option value="always">always</option>
+          <option value="never">never</option>
+        </select>
+      </label>
+      {#if editor.view.title.show !== "never"}
+        <div class="pair">
+          <label>
+            x (mm)
+            <input
+              type="number"
+              step="0.1"
+              value={editor.view.title.x}
+              onchange={(event) =>
+                editor.setTitleField("x", event.currentTarget.value)}
+            />
+          </label>
+          <label>
+            y (mm)
+            <input
+              type="number"
+              step="0.1"
+              value={editor.view.title.y}
+              onchange={(event) =>
+                editor.setTitleField("y", event.currentTarget.value)}
+            />
+          </label>
+        </div>
+        <label>
+          Aligned
+          <select
+            value={editor.view.title.anchor}
+            onchange={(event) =>
+              editor.setTitleField("anchor", event.currentTarget.value)}
+          >
+            <option value="middle">centred on that point</option>
+            <option value="start">starting at it</option>
+            <option value="end">ending at it</option>
+          </select>
+        </label>
+        <p class="note">
+          Drag it on the drawing, or type its position here. A name too long for
+          the board is wrapped onto more lines.
+        </p>
+      {/if}
+    {/if}
+
     {#if editor.viewId !== "top"}
       <button class="danger" onclick={() => editor.removeView(editor.viewId)}>
-        Delete this view and its pads
+        Delete this view and its connectors
       </button>
     {/if}
   {/if}
@@ -198,6 +254,12 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  h3 {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
   }
 
   h2 {

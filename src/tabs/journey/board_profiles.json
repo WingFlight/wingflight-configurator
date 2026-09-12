@@ -20,8 +20,8 @@
           "width": 44,
           "height": 34,
           "usb": {
-            "x": 17.5,
-            "y": -1.8,
+            "x": 32.766,
+            "y": 27.94,
             "width": 9,
             "height": 3.6,
             "rotation": 0
@@ -33,41 +33,54 @@
           "id": "outputs",
           "kind": "header",
           "view": "top",
-          "x": 10,
-          "y": 29,
-          "pitch": 6,
+          "x": 4.32,
+          "y": 2.79,
+          "pitch": 3.5,
           "label": "Servo / motor outputs",
+          "rotation": 90,
           "labelSide": "below",
           "pins": [
             {
               "position": 1,
-              "pin": "A09",
-              "silkscreen": "M1",
-              "group": "outputs"
+              "pin": "B04",
+              "silkscreen": "S1"
             },
             {
               "position": 2,
-              "pin": "B04",
-              "silkscreen": "S1",
-              "group": "outputs"
+              "pin": "B05",
+              "silkscreen": "S2"
             },
             {
               "position": 3,
-              "pin": "B05",
-              "silkscreen": "S2",
-              "group": "outputs"
+              "pin": "B00",
+              "silkscreen": "S3"
             },
             {
               "position": 4,
-              "pin": "B00",
-              "silkscreen": "S3",
-              "group": "outputs"
+              "pin": "A15",
+              "silkscreen": "Tail"
             },
             {
               "position": 5,
-              "pin": "A15",
-              "silkscreen": "S4",
-              "group": "outputs"
+              "pin": "A09",
+              "silkscreen": "ESC"
+            },
+            {
+              "position": 6,
+              "pin": "A02",
+              "silkscreen": "RPM"
+            },
+            {
+              "position": 7,
+              "silkscreen": "TLM"
+            },
+            {
+              "position": 8,
+              "silkscreen": "AUX"
+            },
+            {
+              "position": 9,
+              "silkscreen": "SBUS"
             }
           ]
         },
@@ -105,8 +118,8 @@
           "id": "port-0",
           "kind": "port",
           "view": "top",
-          "x": 5,
-          "y": 10,
+          "x": 19.05,
+          "y": 14.48,
           "pitch": 2.6,
           "label": "UART1",
           "rotation": 90,
@@ -130,8 +143,8 @@
           "id": "port-2",
           "kind": "port",
           "view": "top",
-          "x": 5,
-          "y": 16.8,
+          "x": 21.59,
+          "y": 26.92,
           "pitch": 2.6,
           "label": "UART3",
           "rotation": 90,
@@ -155,8 +168,8 @@
           "id": "port-4",
           "kind": "port",
           "view": "top",
-          "x": 5,
-          "y": 23.6,
+          "x": 26.67,
+          "y": 20.83,
           "pitch": 2.6,
           "label": "UART5",
           "rotation": 90,
@@ -174,8 +187,8 @@
           "id": "port-1",
           "kind": "port",
           "view": "top",
-          "x": 39,
-          "y": 10,
+          "x": 35.56,
+          "y": 7.37,
           "pitch": 2.6,
           "label": "UART2",
           "rotation": 90,

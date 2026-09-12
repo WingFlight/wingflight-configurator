@@ -247,7 +247,7 @@
           <th>Carries</th>
           <th>Value</th>
           <th>Label</th>
-          <th></th>
+          <th colspan="3"></th>
         </tr>
       </thead>
       <tbody>
@@ -311,6 +311,26 @@
             </td>
             <td>
               <button
+                class="tiny"
+                title="Move this position one earlier"
+                disabled={pin.position === 1}
+                onclick={() =>
+                  editor.moveConnectorPin(connector.id, pin.position, -1)}
+                >↑</button
+              >
+            </td>
+            <td>
+              <button
+                class="tiny"
+                title="Move this position one later"
+                disabled={pin.position === connector.pins.length}
+                onclick={() =>
+                  editor.moveConnectorPin(connector.id, pin.position, 1)}
+                >↓</button
+              >
+            </td>
+            <td>
+              <button
                 class="danger tiny"
                 title="Remove this position"
                 onclick={() =>
@@ -331,6 +351,12 @@
     <div class="row">
       <button onclick={() => editor.addConnectorPins(connector.id, 1)}>
         Add position
+      </button>
+      <button
+        title="Plugs are numbered from either end; this flips which is pin 1"
+        onclick={() => editor.reverseConnectorPins(connector.id)}
+      >
+        Reverse
       </button>
       <button class="danger" onclick={() => editor.removeConnector(connector.id)}>
         Delete connector
@@ -463,6 +489,11 @@
 
     td {
       padding: 1px 2px;
+    }
+
+    button.tiny {
+      padding: 0 4px;
+      line-height: 1.1;
     }
 
     .pos {

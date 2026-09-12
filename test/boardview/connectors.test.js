@@ -373,3 +373,58 @@ describe("a built-in receiver", () => {
     expect(map.find((entry) => entry.identifier === 0).internal).toBe(false);
   });
 });
+
+// Positions are physical: which hole in the plug a wire goes into. A
+// row transcribed in the wrong order has to be fixable without
+// retyping every value, so order is editable and stays 1..n.
+describe("reordering a connector's positions", () => {
+  const swap = (connector, position, delta) => {
+    const pins = [...connector.pins];
+    const from = pins.findIndex((pin) => pin.position === position);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= pins.length) return connector;
+    [pins[from], pins[to]] = [pins[to], pins[from]];
+    return normaliseConnector({
+      ...serialiseConnector(connector),
+      pins: pins.map((pin, index) => ({ ...pin, position: index + 1 })),
+    });
+  };
+
+  it("keeps the numbering contiguous after a move", () => {
+    const moved = swap(portA, 1, 1);
+    expect(moved.pins.map((pin) => pin.position)).toEqual([1, 2, 3, 4, 5]);
+    expect(moved.pins[0].net).toBe("5V");
+    expect(moved.pins[1].net).toBe("GND");
+  });
+
+  it("moves the positions with their values, not just their numbers", () => {
+    const moved = swap(portA, 3, 1);
+    expect(moved.pins[2].pin).toBe("B07");
+    expect(moved.pins[3].pin).toBe("B06");
+    expect(moved.pins[2].silkscreen).toBe("RX");
+  });
+
+  it("re-places the pins where the new order puts them", () => {
+    const moved = swap(portA, 1, 1);
+    const before = connectorPinPositions(portA);
+    const after = connectorPinPositions(moved);
+    // Geometry follows the order: position 1 is still at the anchor.
+    expect(after[0]).toEqual(before[0]);
+    // And the rail that moved is now where position 2 sits.
+    const padsAfter = connectorPads([moved]);
+    expect(padsAfter[0].net).toBe("5V");
+    expect(padsAfter[0].x).toBeCloseTo(before[0].x, 5);
+  });
+
+  it("reverses cleanly, because plugs are numbered from either end", () => {
+    const reversed = normaliseConnector({
+      ...serialiseConnector(portA),
+      pins: [...portA.pins]
+        .reverse()
+        .map((pin, index) => ({ ...pin, position: index + 1 })),
+    });
+    expect(reversed.pins.map((pin) => pin.position)).toEqual([1, 2, 3, 4, 5]);
+    expect(reversed.pins[4].net).toBe("GND");
+    expect(reversed.pins[2].pin).toBe("B06");
+  });
+});

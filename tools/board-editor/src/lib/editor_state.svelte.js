@@ -515,6 +515,45 @@ class EditorState {
     });
   }
 
+  /**
+   * Moves one position along its connector by `delta` places.
+   *
+   * Positions are physical: which end of the plug a wire goes into. A
+   * row transcribed in the wrong order has to be fixable without
+   * retyping every value, so the entries swap and the numbering is
+   * rebuilt to stay 1..n.
+   */
+  moveConnectorPin(id, position, delta) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      const from = connector.pins.findIndex((pin) => pin.position === position);
+      const to = from + delta;
+      if (from < 0 || to < 0 || to >= connector.pins.length) return;
+      const pins = [...connector.pins];
+      [pins[from], pins[to]] = [pins[to], pins[from]];
+      connector.pins = pins.map((pin, index) => ({
+        ...pin,
+        position: index + 1,
+      }));
+    });
+  }
+
+  /**
+   * Reverses a connector's positions. Plugs are numbered from either
+   * end depending on who drew the board, and discovering you read it
+   * backwards should not mean retyping the row.
+   */
+  reverseConnectorPins(id) {
+    this.edit((board) => {
+      const connector = board.connectors.find((entry) => entry.id === id);
+      if (!connector) return;
+      connector.pins = [...connector.pins]
+        .reverse()
+        .map((pin, index) => ({ ...pin, position: index + 1 }));
+    });
+  }
+
   removeConnectorPin(id, position) {
     this.edit((board) => {
       const connector = board.connectors.find((entry) => entry.id === id);
@@ -567,6 +606,26 @@ class EditorState {
     this.edit((board) => {
       board.receivers = board.receivers.filter((entry) => entry.id !== id);
     });
+  }
+
+  // --- the board's name -----------------------------------------------
+
+  /** Moves the board's name on the current view (R5's sibling). */
+  setTitleField(field, value) {
+    this.edit((board) => {
+      const view = board.views[this.viewId];
+      if (!view?.title) return;
+      view.title[field] = ["x", "y"].includes(field) ? Number(value) : value;
+    });
+  }
+
+  dragTitle(x, y) {
+    const view = this.board?.views?.[this.viewId];
+    if (!view?.title) return;
+    view.title.x = this.snapped(x);
+    view.title.y = this.snapped(y);
+    this.dirty = true;
+    this.message = null;
   }
 
   // --- the USB socket -------------------------------------------------

@@ -111,6 +111,12 @@ export function emptyView(id) {
     backgroundOpacity: 1,
     mountHoles: [],
     usb: null,
+    title: {
+      x: DEFAULT_EXTENT.width / 2,
+      y: (id === "top" ? DEFAULT_EXTENT.height : 12) / 2,
+      anchor: "middle",
+      show: "auto",
+    },
   };
 }
 
@@ -160,6 +166,35 @@ function normaliseUsb(raw, view) {
   };
 }
 
+/**
+ * Where the board's name is written on a view.
+ *
+ * `show` is three-way because there are three sensible answers. With a
+ * CAD background the board's name is usually printed on the artwork
+ * already, so `auto` draws it only when there is no background, which
+ * is what every profile did before this was placeable. An author who
+ * wants it either way says so.
+ *
+ * @param {?Object} raw
+ * @param {{width: number, height: number}} view
+ * @returns {{x: number, y: number, anchor: string, show: string}}
+ */
+function normaliseTitle(raw, view) {
+  const centre = { x: view.width / 2, y: view.height / 2, anchor: "middle" };
+  if (raw === null) return { ...centre, show: "never" };
+  if (raw === undefined) return { ...centre, show: "auto" };
+  return {
+    x: num(raw.x, centre.x),
+    y: num(raw.y, centre.y),
+    anchor: ["start", "middle", "end"].includes(str(raw.anchor))
+      ? str(raw.anchor)
+      : "middle",
+    show: ["auto", "always", "never"].includes(str(raw.show))
+      ? str(raw.show)
+      : "always",
+  };
+}
+
 function normaliseView(id, raw, fallback) {
   const source = raw ?? fallback ?? {};
   const blank = emptyView(id);
@@ -176,6 +211,10 @@ function normaliseView(id, raw, fallback) {
       .filter((hole) => Array.isArray(hole) && hole.length >= 2)
       .map((hole) => [num(hole[0]), num(hole[1])]),
     usb: normaliseUsb(source.usb, {
+      width: num(source.width, blank.width),
+      height: num(source.height, blank.height),
+    }),
+    title: normaliseTitle(source.title, {
       width: num(source.width, blank.width),
       height: num(source.height, blank.height),
     }),
@@ -436,6 +475,22 @@ export function serialiseProfile(profile) {
     if (view.mountHoles?.length) written.mountHoles = view.mountHoles;
     if (view.usb === null) written.usb = null;
     else if (view.usb) written.usb = view.usb;
+    // Only worth writing when it says something a default would not.
+    if (!view.title || view.title.show === "never") {
+      written.title = null;
+    } else if (
+      view.title.show !== "auto" ||
+      view.title.anchor !== "middle" ||
+      round(view.title.x) !== round(view.width / 2) ||
+      round(view.title.y) !== round(view.height / 2)
+    ) {
+      written.title = {
+        x: round(view.title.x),
+        y: round(view.title.y),
+        anchor: view.title.anchor,
+        show: view.title.show,
+      };
+    }
     out.views[id] = written;
   }
 

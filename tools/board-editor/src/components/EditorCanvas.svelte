@@ -105,6 +105,8 @@
       editor.dragConnector(dragging.id, x, y);
     } else if (dragging.kind === "usb") {
       editor.dragUsb(x, y);
+    } else if (dragging.kind === "title") {
+      editor.dragTitle(x, y);
     } else if (dragging.kind === "receiver") {
       editor.setReceiverField(dragging.id, "x", editor.snapped(x));
       editor.setReceiverField(dragging.id, "y", editor.snapped(y));
@@ -230,6 +232,26 @@
           onpointerdown={(event) =>
             startDrag(event, "usb", "usb", { x: view.usb.x, y: view.usb.y })}
         />
+      {/if}
+
+      <!-- The board's name, draggable like everything else placed. -->
+      {#if view.title && view.title.show !== "never"}
+        <text
+          class="title"
+          x={view.title.x}
+          y={view.title.y}
+          text-anchor={view.title.anchor}
+          role="button"
+          tabindex="0"
+          aria-label="Board name"
+          onpointerdown={(event) =>
+            startDrag(event, "title", "title", {
+              x: view.title.x,
+              y: view.title.y,
+            })}
+        >
+          {editor.board.display}
+        </text>
       {/if}
 
       {#each receiversHere as receiver (receiver.id)}
@@ -408,6 +430,13 @@
     fill: var(--color-bg);
     stroke: var(--color-border);
     stroke-width: 0.3;
+  }
+
+  .title {
+    fill: var(--color-text-disabled);
+    font-size: 2.6px;
+    font-weight: 600;
+    cursor: grab;
   }
 
   .usb {

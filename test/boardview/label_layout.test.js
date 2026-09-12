@@ -7,6 +7,7 @@ import {
   nearestEdge,
   spreadAlong,
   textWidth,
+  wrapText,
 } from "@/js/boardview/label_layout.js";
 
 const view = { width: 56, height: 36 };
@@ -162,5 +163,37 @@ describe("measureMargins", () => {
       expect(label.y).toBeGreaterThanOrEqual(-margins.top);
       expect(label.y).toBeLessThanOrEqual(view.height + margins.bottom);
     }
+  });
+});
+
+describe("wrapText", () => {
+  it("leaves text that fits on one line", () => {
+    expect(wrapText("Matek H743", 40, LABEL_FONT)).toEqual(["Matek H743"]);
+  });
+
+  it("breaks on spaces to fit the width", () => {
+    const lines = wrapText(
+      "Example Wing FC (not a real board)",
+      20,
+      LABEL_FONT,
+    );
+    expect(lines.length).toBeGreaterThan(1);
+    for (const line of lines) {
+      expect(textWidth(line, LABEL_FONT)).toBeLessThanOrEqual(20);
+    }
+    expect(lines.join(" ")).toBe("Example Wing FC (not a real board)");
+  });
+
+  it("leaves a single long word whole rather than chopping it", () => {
+    // A chopped board name is harder to read than a wide one.
+    expect(wrapText("VANTAC_RF007_VERY_LONG", 5, LABEL_FONT)).toEqual([
+      "VANTAC_RF007_VERY_LONG",
+    ]);
+  });
+
+  it("has nothing to say about nothing", () => {
+    expect(wrapText("", 40)).toEqual([]);
+    expect(wrapText(null, 40)).toEqual([]);
+    expect(wrapText("   ", 40)).toEqual([]);
   });
 });
