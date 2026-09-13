@@ -1526,7 +1526,21 @@
                   ? $i18n.t("firmwareFlasherOptionLoading")
                   : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
               },
-              ...firmwareVersionEntries,
+              // Cached entries load instantly (and, on selection, right
+              // away -- see onVersionChange()'s auto-load-if-cached
+              // branch) rather than needing "Load Firmware Online"
+              // clicked -- worth being visible about which is which,
+              // rather than that difference just looking inconsistent.
+              ...firmwareVersionEntries.map((entry) =>
+                entry.cached
+                  ? {
+                      ...entry,
+                      label: $i18n.t("firmwareFlasherVersionCachedLabel", {
+                        label: entry.label,
+                      }),
+                    }
+                  : entry,
+              ),
             ]}
             onchange={(e) => onVersionChange(e.target.value)}
           />

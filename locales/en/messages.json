@@ -5065,6 +5065,9 @@
     "firmwareFlasherOptionLabelSelectFirmwareVersion": {
         "message": "Choose a Firmware version"
     },
+    "firmwareFlasherVersionCachedLabel": {
+        "message": "{{label}} (cached)"
+    },
     "firmwareFlasherOptionLabelSelectFirmwareVersionFor": {
         "message": "Choose a Firmware version for"
     },
