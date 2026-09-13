@@ -4969,6 +4969,15 @@
     "firmwareFlasherSwitchToOnlineFirmware": {
         "message": "Choose an online firmware version instead"
     },
+    "firmwareFlasherLocalNoBoardSelected": {
+        "message": "No board selected — this will flash exactly as loaded, with no default config combined in."
+    },
+    "firmwareFlasherGoSelectBoard": {
+        "message": "Select a board"
+    },
+    "firmwareFlasherLocalWillCombineConfig": {
+        "message": "Will combine with {{target}}'s default config at flash time."
+    },
     "firmwareFlasherSourceOnlineTitle": {
         "message": "Online"
     },
