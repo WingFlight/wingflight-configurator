@@ -4904,7 +4904,7 @@
         "message": "Running {{command}}..."
     },
     "firmwareFlasherWizardBackupReady": {
-        "message": "Backup captured. Save it to a file, then continue to flash the new firmware -- you'll be asked whether to restore these settings once it boots."
+        "message": "Backup captured -- it's held in memory and will be offered for restore automatically once the new firmware boots. Saving a copy to a file below is optional, but recommended in case anything goes wrong."
     },
     "firmwareFlasherWizardBackupSaved": {
         "message": "Saved to a file."
