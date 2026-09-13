@@ -1551,23 +1551,17 @@
         {/if}
       </div>
 
-      <p class="step-link">
-        <button
-          class="details-toggle"
-          onclick={() => {
-            firmwareSource = "local";
-            goToStep(2);
-          }}
-        >
-          {$i18n.t("firmwareFlasherSkipToLocalFirmware")}
-        </button>
-      </p>
-
       <div class="step-nav">
         <span></span>
+        <!-- Board is optional, not gated on selectedBoard -- step 2 is
+             where online-vs-local is actually decided (with its own link
+             either way), so a separate "skip this for local" escape here
+             would just be the same choice offered twice. Only blocked
+             while a detect attempt is actually in flight, same reasoning
+             as flashInProgress/backupOrRestoreBusy in goToStep(). -->
         <button
           class="btn primary"
-          disabled={selectedBoard === "0"}
+          disabled={boardDetectionInProgress}
           onclick={onWizardNext}
         >
           {$i18n.t("firmwareFlasherWizardNext")}
