@@ -4954,6 +4954,81 @@
     "firmwareFlasherWizardRestoreFailed": {
         "message": "Could not reconnect to restore the configuration automatically. You can retry, or use the CLI tab's Load button to replay the saved backup_pre_flash file manually."
     },
+    "firmwareFlasherStepSourceTitle": {
+        "message": "Source"
+    },
+    "firmwareFlasherSourceOnlineTitle": {
+        "message": "Online"
+    },
+    "firmwareFlasherSourceOnlineDescription": {
+        "message": "Download an official release or development build for your board."
+    },
+    "firmwareFlasherSourceLocalTitle": {
+        "message": "Local File"
+    },
+    "firmwareFlasherSourceLocalDescription": {
+        "message": "Flash a .hex file (and optional .config) you already have."
+    },
+    "firmwareFlasherStepFirmwareTitle": {
+        "message": "Select Firmware"
+    },
+    "firmwareFlasherStepBackupTitle": {
+        "message": "Backup"
+    },
+    "firmwareFlasherStepReviewTitle": {
+        "message": "Flash"
+    },
+    "firmwareFlasherStepRestoreTitle": {
+        "message": "Restore"
+    },
+    "firmwareFlasherDetectUnavailableDfu": {
+        "message": "Board detection isn't available in DFU mode."
+    },
+    "firmwareFlasherDetectBoardCta": {
+        "message": "Detect My Board"
+    },
+    "firmwareFlasherSelectBoardManually": {
+        "message": "Select board manually instead"
+    },
+    "firmwareFlasherRunBackupCta": {
+        "message": "Back Up Now"
+    },
+    "firmwareFlasherFlashCompleteMessage": {
+        "message": "Firmware flashed successfully."
+    },
+    "firmwareFlasherStartOver": {
+        "message": "Flash Another Board"
+    },
+    "firmwareFlasherNoPortWeb": {
+        "message": "No serial port selected yet."
+    },
+    "firmwareFlasherNoPortNative": {
+        "message": "No serial port selected — choose one from the toolbar above."
+    },
+    "firmwareFlasherSelectPort": {
+        "message": "Select Serial Port"
+    },
+    "firmwareFlasherReadyToFlash": {
+        "message": "Ready to flash: {{target}} — {{version}}"
+    },
+    "firmwareFlasherShowDetails": {
+        "message": "Show details"
+    },
+    "firmwareFlasherHideDetails": {
+        "message": "Hide details"
+    },
+    "firmwareFlasherSaveFirmware": {
+        "message": "Save Firmware (.hex)"
+    },
+    "firmwareFlasherSaveConfig": {
+        "message": "Save Config (.config)"
+    },
+    "firmwareFlasherWizardBack": {
+        "message": "Back"
+    },
+    "firmwareFlasherWizardNext": {
+        "message": "Next"
+    },
     "firmwareFlasherManualPort": {
         "message": "Port"
     },

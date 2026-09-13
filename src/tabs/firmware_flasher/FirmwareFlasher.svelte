@@ -24,13 +24,13 @@
   import { STM32 } from "@/js/protocols/stm32.js";
   import { STM32DFU } from "@/js/protocols/stm32usbdfu.js";
   import { usbDevices } from "@/js/port_handler.js";
+  import { requestWebSerialDeviceFromPicker } from "@/js/serial_backend.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
+  import StepIndicator from "@/components/StepIndicator.svelte";
   import Switch from "@/components/Switch.svelte";
-  import BackupRestoreWizard from "./BackupRestoreWizard.svelte";
-  import { wizardState, resetWizard } from "./backup_wizard_state.svelte.js";
 
   import {
     buildTargetsByManufacturer,
@@ -88,9 +88,10 @@
 
   const BACKUP_MODE_NONE = "none";
 
-  // Web Serial's permission model (and thus the wizard's "Select Port"
-  // recovery button, see onWizardSelectPort()) only exists in the browser
-  // build -- the packaged app's native serial backend has no such prompt.
+  // Web Serial's permission model (and thus the "Select Port" recovery
+  // buttons, see selectPortForBackup()/selectPortForRestore()) only exists
+  // in the browser build -- the packaged app's native serial backend has no
+  // such prompt.
   const isWebSerialBackend = __BACKEND__ === "web";
 
   // Folds the old "backup on/off" toggle + separate diff/dump select into
@@ -124,12 +125,36 @@
   let boardDetectionInProgress = $state(false);
   let loadingRemote = $state(false);
 
+  // Detection's outcome, surfaced inline instead of only in GUI.log (which a
+  // first-time user has no reason to be watching). null/"detecting" keep the
+  // board field on its Detect call-to-action; any terminal outcome
+  // ("found"/"notFound"/"failed") reveals the manual board dropdown --
+  // pre-filled with the detected board on success, empty as a genuine
+  // fallback otherwise. manualSelectionShown is the separate, explicit
+  // "skip detection entirely" escape hatch.
+  let detectStatus = $state(null);
+  let detectedBoardName = $state("");
+  let manualSelectionShown = $state(false);
+  let showManualBoardSelect = $derived(
+    manualSelectionShown ||
+      detectStatus === "found" ||
+      detectStatus === "notFound" ||
+      detectStatus === "failed",
+  );
+
   let releaseInfoVisible = $state(false);
   let releaseInfo = $state(null);
   let releaseNotesHtml = $state("");
 
   let portIsDfu = $state(false);
   let portSelected = $state(false);
+
+  // Detect and Flash both silently do nothing without a real port (DFU
+  // aside) -- board detection just never starts, and worse, Flash looked
+  // enabled but flashFirmware() would just log "No valid port" and stop.
+  // Surfaced explicitly wherever that would otherwise happen, with a
+  // one-click fix on the web build (see requestWebSerialDeviceFromPicker).
+  let needsPortSelection = $derived(!portIsDfu && !portSelected);
 
   let detectDialogEl;
   let detectDialogTitle = $state("");
@@ -146,6 +171,147 @@
       selectedBoard,
     ),
   );
+
+  // Drives the setup wizard: 1 Source, 2 Select Firmware, 3 Backup,
+  // 4 Flash, 5 Restore. Backup and restore are each a real step now, not a
+  // popup layered on top of Flash -- see backupRun/restoreRun below, which
+  // each own their step the same way any other step owns its own state.
+  const WIZARD_STEPS = [
+    "firmwareFlasherStepSourceTitle",
+    "firmwareFlasherStepFirmwareTitle",
+    "firmwareFlasherStepBackupTitle",
+    "firmwareFlasherStepReviewTitle",
+    "firmwareFlasherStepRestoreTitle",
+  ];
+  let wizardStep = $state(1);
+
+  // Which of step 2's two mutually-exclusive flows (pick an online release
+  // vs. load a file already on disk) is showing. Chosen up front in step 1
+  // rather than juxtaposed with the online select fields, which used to
+  // read as if they were prerequisites for "Load local file" too.
+  let firmwareSource = $state("online");
+
+  // Step 4 defaults to a one-line summary rather than the full technical
+  // card (target/manufacturer/version/filenames/release notes, plus the
+  // Save Firmware/Config actions) -- that level of detail is noise for
+  // someone who just wants to hit Flash, so it's tucked behind this and
+  // opt-in rather than always on.
+  let showReleaseDetails = $state(false);
+
+  // True from the moment flashFirmware() actually hands off to
+  // STM32/STM32DFU until their callback fires (see flashFirmware() below) --
+  // GUI.connect_lock covers re-entrancy at the logic level already, but it
+  // isn't reactive, so the Flash button never visibly disabled during an
+  // active flash without this.
+  let flashInProgress = $state(false);
+
+  // --- Backup (step 3) / Restore (step 5) --------------------------------
+  //
+  // Each step owns its own little state machine and reads/writes it
+  // directly -- no more shared "phase" flag deciding which of two dialogs
+  // to show. port/baud/text are kept as plain (non-reactive) fields since
+  // they're only ever read imperatively (by runBackup()/runRestore()
+  // themselves), never rendered.
+  let backupRun = $state({ status: "idle", text: null, saved: false }); // idle | connecting | running | ready | failed
+  let backupPort = null;
+  let backupBaud = null;
+
+  let restoreRun = $state({ status: "idle" }); // idle | prompt | waiting | connecting | running | done | failed | skipped
+  let restorePort = null;
+  let restoreBaud = null;
+  let restoreText = null;
+
+  let backupCommand = $derived(
+    backupMode === BACKUP_TYPES.DUMP ? "dump all" : "diff all",
+  );
+
+  // Step 3's Next is gated on an actual backup existing *only* when one is
+  // both wanted and possible -- DFU and "no port" both make backing up
+  // impossible outright, so they fall through to letting Next proceed
+  // rather than trapping the user on a step that can never complete.
+  let canLeaveBackupStep = $derived(
+    backupMode === BACKUP_MODE_NONE ||
+      portIsDfu ||
+      needsPortSelection ||
+      backupRun.status === "ready",
+  );
+
+  // Whether step 3/5's operation is actively talking to hardware right now
+  // -- used to block navigating away mid-operation the same way
+  // flashInProgress does for step 4.
+  let backupOrRestoreBusy = $derived(
+    ["connecting", "running"].includes(backupRun.status) ||
+      ["waiting", "connecting", "running"].includes(restoreRun.status),
+  );
+
+  // Everything steps 2-5 built up around one firmware/board choice --
+  // loaded hex/config, detected board, version list, release summary,
+  // any backup taken/restore state. None of it means anything once you're
+  // back choosing a source again, so it's cleared rather than left to look
+  // like it still applies to whatever gets picked next. Deliberately leaves
+  // alone what are really persisted preferences rather than per-flash state
+  // -- backupMode, eraseChip, showLegacyTargets (all config.set() already)
+  // -- so those don't reset just because you went back a step.
+  function clearFirmwareSelection() {
+    // A detect attempt mid-flight is talking to real hardware over a serial
+    // connection this component opened -- leaving it running unseen in the
+    // background would be worse than the small chance of interrupting it
+    // right as it was about to finish.
+    if (boardDetectionInProgress) disconnectDetect();
+
+    showReleaseDetails = false;
+    detectStatus = null;
+    detectedBoardName = "";
+    manualSelectionShown = false;
+    clearBufferedFirmware();
+    selectedBoard = "0";
+    bareBoard = undefined;
+    selectedVersion = "0";
+    firmwareVersionEntries = [];
+    releaseInfoVisible = false;
+    releaseInfo = null;
+    releaseNotesHtml = "";
+    backupRun = { status: "idle", text: null, saved: false };
+    restoreRun = { status: "idle" };
+    backupPort = null;
+    backupBaud = null;
+    restorePort = null;
+    restoreBaud = null;
+    restoreText = null;
+    setFlashingEnabled(false);
+    setFlashProgress(0);
+    setFlashingMessage(
+      $i18n.t("firmwareFlasherLoadFirmwareFile"),
+      FLASH_MESSAGE_TYPES.NEUTRAL,
+    );
+  }
+
+  function goToStep(step) {
+    // An active flash or an active backup/restore isn't interruptible --
+    // block navigating away mid-operation, since it's talking to real
+    // hardware and abandoning it isn't something a step change can safely
+    // undo.
+    if (flashInProgress || backupOrRestoreBusy) return;
+    // StepIndicator already disables markers past `wizardStep`, but guard
+    // here too since this is also reachable from plain Back/Next clicks.
+    if (step < 1 || step > WIZARD_STEPS.length) return;
+    // Landing back on Source (whether via Back or jumping the indicator)
+    // always clears whatever steps 2-5 had cached -- see
+    // clearFirmwareSelection() -- rather than only on an explicit
+    // "Flash Another Board".
+    if (step === 1 && wizardStep !== 1) clearFirmwareSelection();
+    wizardStep = step;
+  }
+  const onWizardBack = () => goToStep(wizardStep - 1);
+  const onWizardNext = () => goToStep(wizardStep + 1);
+
+  // Puts the wizard back exactly where it starts on a fresh visit to the
+  // tab, so flashing a second board doesn't mean clicking Back four times.
+  function resetWizardToStart() {
+    wizardStep = 1;
+    firmwareSource = "online";
+    clearFirmwareSelection();
+  }
 
   onMount(() => {
     FirmwareCache.load();
@@ -195,7 +361,9 @@
   }
 
   function onKeypress(e) {
-    if (e.which === 13 || e.key === "Enter") {
+    // Flash is step 4, not necessarily the last step -- Restore (step 5)
+    // follows it, but Enter shouldn't trigger anything there.
+    if (wizardStep === 4 && (e.which === 13 || e.key === "Enter")) {
       onClickFlash();
     }
   }
@@ -409,7 +577,8 @@
       if (cacheCouldApply) {
         try {
           latestCommit = await fetchLatestCommit();
-          cacheIsFresh = latestCommit?.commitHash === unifiedConfigLast.commitHash;
+          cacheIsFresh =
+            latestCommit?.commitHash === unifiedConfigLast.commitHash;
         } catch (err) {
           console.log(
             "Failed to check target config freshness, refetching",
@@ -724,179 +893,163 @@
     }
   }
 
-  // --- Backup-before-flash / restore-after-flash wizard ---------------------
+  // --- Backup (step 3) ----------------------------------------------------
   //
-  // Driven step by step through wizardState (backup_wizard_state.svelte.js)
-  // and rendered by <BackupRestoreWizard>. Nothing here proceeds to the next
-  // step on its own -- every transition either comes from an async operation
-  // settling (connect/backup/restore) or from the user clicking a button in
-  // the dialog, so e.g. saving the backup to a file is always fully awaited
-  // before flashing can start, and a failed restore leaves a visible retry
-  // control rather than just giving up silently.
+  // startBackup() captures the currently-selected port once, at the moment
+  // the user actually asks to back up; runBackup() (the retryable part)
+  // always reuses whatever's in backupPort/backupBaud rather than re-reading
+  // the picker, so a retry keeps talking to the same device even if the
+  // global port selection has since changed underneath it.
+  function startBackup() {
+    const el = portPickerElement();
+    backupPort = el ? String(el.value) : "0";
+    backupBaud = getIntegerValue("select#baud") ?? 115200;
+    runBackup();
+  }
 
-  // kept outside wizardState (which is UI-only) since the wizard needs to
-  // resume backup/restore with these across a retry.
-  let wizardBackupText = null;
-  let wizardPort = null;
-  let wizardBaud = null;
-
-  async function runBackupStep() {
-    wizardState.phase = "backup";
-    wizardState.status = "connecting";
-    wizardState.backupType = backupMode;
-    wizardState.backupSaved = false;
+  async function runBackup() {
+    backupRun.status = "connecting";
+    backupRun.text = null;
+    backupRun.saved = false;
 
     GUI.connect_lock = true;
-    setFlashingEnabled(false);
 
     const text = await backupOverSerial(
-      wizardPort,
-      wizardBaud,
+      backupPort,
+      backupBaud,
       backupMode,
       (status) => {
-        wizardState.status = status === "running" ? "running" : "connecting";
+        backupRun.status = status === "running" ? "running" : "connecting";
       },
     );
 
     GUI.connect_lock = false;
 
     if (!text) {
-      wizardState.status = "failed";
+      backupRun.status = "failed";
       return;
     }
 
-    wizardBackupText = text;
-    wizardState.status = "ready";
+    backupRun.text = text;
+    backupRun.status = "ready";
   }
 
-  async function onWizardSaveBackup() {
-    const saved = await saveBackupToFile(wizardBackupText, "backup_pre_flash");
-    wizardState.backupSaved = !!saved;
+  async function saveBackupFile() {
+    const saved = await saveBackupToFile(backupRun.text, "backup_pre_flash");
+    backupRun.saved = !!saved;
   }
 
-  function onWizardContinue() {
-    const backupText = wizardBackupText;
-    const port = wizardPort;
-    resetWizard();
-    setFlashingEnabled(true);
-    proceedToFlash(backupText, port);
+  function cancelBackup() {
+    backupRun = { status: "idle", text: null, saved: false };
   }
 
-  function onWizardCancelBackup() {
-    resetWizard();
-    setFlashingEnabled(true);
-  }
-
-  function onWizardRetryBackup() {
-    runBackupStep();
-  }
-
-  // Recovery for the case runBackupStep()/runRestoreStep() can't retry their
-  // way out of: the browser never granted (or has since forgotten) Web
-  // Serial permission for wizardPort, so every reconnect attempt fails with
+  // Recovery for when runBackup()/runRestore() can't retry their way out of
+  // it: the browser never granted (or has since forgotten) Web Serial
+  // permission for this exact port, so every reconnect attempt fails with
   // "port not found" -- no amount of waiting fixes that, only the user
   // re-picking the device through the browser's own chooser can. That
-  // chooser requires a real user gesture, which a wizard button click is and
-  // a background retry loop isn't, so this can't be done automatically.
-  // Only relevant to the browser build (Web Serial permissions don't exist
-  // for the packaged app's native serial backend) -- see isWebSerialBackend.
-  async function onWizardSelectPort() {
+  // chooser requires a real user gesture, which a button click is and a
+  // background retry loop isn't. Only relevant to the browser build (Web
+  // Serial permissions don't exist for the packaged app's native serial
+  // backend) -- see isWebSerialBackend.
+  async function selectPortForBackup() {
     try {
       const entry = await serial.requestWebSerialPort();
-      wizardPort = entry.path;
+      backupPort = entry.path;
     } catch (error) {
       console.warn(
-        "Wizard: Web Serial permission request failed or was cancelled",
+        "Backup: Web Serial permission request failed or was cancelled",
         error,
       );
       return;
     }
-
-    if (wizardState.phase === "backup") {
-      runBackupStep();
-    } else if (wizardState.phase === "restore") {
-      runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
-    }
+    runBackup();
   }
 
-  async function runRestoreStep(backupText, port, baud) {
-    wizardBackupText = backupText;
-    wizardPort = port;
-    wizardBaud = baud;
+  // --- Restore (step 5) ----------------------------------------------------
+  //
+  // Runs after STM32/STM32DFU finish (successfully or not) -- see
+  // flashFirmware() below. Only reachable when a backup was actually taken
+  // in step 3 (a DFU flash never gets here at all, since a DFU-flashed board
+  // typically re-enumerates on a different serial port we have no reliable
+  // way to find). Asks before doing anything -- the user may want to try the
+  // new firmware on its own defaults first.
+  function offerRestore(text, port, baud) {
+    if (flashState.messageType !== FLASH_MESSAGE_TYPES.VALID) {
+      GUI.log($i18n.t("firmwareFlasherRestoreSkippedFlashFailed"));
+      return; // stay on step 4 -- flashing failed, nothing to restore
+    }
 
-    wizardState.phase = "restore";
-    wizardState.status = "waiting";
+    restoreText = text;
+    restorePort = port;
+    restoreBaud = baud;
+    restoreRun.status = "prompt";
+    wizardStep = 5;
+  }
 
+  async function runRestore() {
+    restoreRun.status = "waiting";
     GUI.connect_lock = true;
-    setFlashingEnabled(false);
 
     // give the freshly-flashed firmware a moment to boot before talking to
     // it again.
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const restored = await restoreOverSerial(
-      port,
-      baud,
-      backupText,
+      restorePort,
+      restoreBaud,
+      restoreText,
       (status) => {
-        wizardState.status = status === "running" ? "running" : "connecting";
+        restoreRun.status = status === "running" ? "running" : "connecting";
       },
     );
 
     GUI.connect_lock = false;
-    setFlashingEnabled(true);
-    wizardState.status = restored ? "done" : "failed";
+    restoreRun.status = restored ? "done" : "failed";
   }
 
-  function onWizardRetryRestore() {
-    runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
+  function skipRestore() {
+    restoreRun.status = "skipped";
   }
 
-  function onWizardStartRestore() {
-    runRestoreStep(wizardBackupText, wizardPort, wizardBaud);
-  }
-
-  function onWizardSkipRestore() {
-    resetWizard();
-  }
-
-  function onWizardCloseRestore() {
-    resetWizard();
-  }
-
-  // Runs after STM32/STM32DFU finish (successfully or not). Only offers a
-  // restore when we actually took a pre-flash backup -- see onClickFlash(),
-  // which never hands us `backupText`/`backupPort` for a DFU flash, since a
-  // DFU-flashed board typically re-enumerates on a different serial port we
-  // have no reliable way to find. Asks before doing anything -- the user may
-  // want to try the new firmware on its own defaults first.
-  function restoreAfterFlash(backupText, port, baud) {
-    if (flashState.messageType !== FLASH_MESSAGE_TYPES.VALID) {
-      GUI.log($i18n.t("firmwareFlasherRestoreSkippedFlashFailed"));
+  async function selectPortForRestore() {
+    try {
+      const entry = await serial.requestWebSerialPort();
+      restorePort = entry.path;
+    } catch (error) {
+      console.warn(
+        "Restore: Web Serial permission request failed or was cancelled",
+        error,
+      );
       return;
     }
-
-    wizardBackupText = backupText;
-    wizardPort = port;
-    wizardBaud = baud;
-    wizardState.phase = "restore";
-    wizardState.status = "prompt";
+    runRestore();
   }
 
-  function flashFirmware(firmware, backupText, backupPort) {
+  function flashFirmware(firmware, backupText, backupPortArg) {
     const options = {
       no_reboot: false,
       erase_chip: eraseChip,
       baud: getIntegerValue("select#baud") ?? 115200,
     };
 
-    const onFlashDone = backupText
-      ? () => restoreAfterFlash(backupText, backupPort, options.baud)
-      : undefined;
+    // STM32.js/STM32DFU.js call this exactly once, at the true end of the
+    // attempt (success or failure).
+    const onFlashDone = () => {
+      flashInProgress = false;
+      if (backupText) {
+        offerRestore(backupText, backupPortArg, options.baud);
+      } else if (flashState.messageType === FLASH_MESSAGE_TYPES.VALID) {
+        // Nothing to restore -- still move on to the wizard's terminal step
+        // rather than leaving the user sitting on Flash with no next action.
+        wizardStep = 5;
+      }
+    };
 
     if (!portIsDfu) {
       const el = portPickerElement();
       if (el && String(el.value) !== "0") {
+        flashInProgress = true;
         STM32.connect(
           String(el.value),
           options.baud,
@@ -908,6 +1061,7 @@
         GUI.log($i18n.t("firmwareFlasherNoValidPort"));
       }
     } else {
+      flashInProgress = true;
       GUI.connect_lock = true;
       STM32DFU.connect(usbDevices, firmware, options, onFlashDone);
     }
@@ -932,6 +1086,9 @@
     }
   }
 
+  // Whether a backup was actually captured back in step 3 -- if so, it and
+  // the port it came from ride along to flashFirmware(), which hands them
+  // to offerRestore() once flashing finishes.
   function onClickFlash() {
     if (GUI.connect_lock) return;
     if (!parsedHex) {
@@ -940,24 +1097,7 @@
       return;
     }
 
-    if (backupBeforeFlash) {
-      if (portIsDfu) {
-        GUI.log($i18n.t("firmwareFlasherBackupSkippedDfu"));
-      } else {
-        const el = portPickerElement();
-        const port = el ? String(el.value) : "0";
-        if (port === "0") {
-          GUI.log($i18n.t("firmwareFlasherBackupSkippedNoPort"));
-        } else {
-          wizardPort = port;
-          wizardBaud = getIntegerValue("select#baud") ?? 115200;
-          runBackupStep();
-          return;
-        }
-      }
-    }
-
-    proceedToFlash(null, null);
+    proceedToFlash(backupRun.text, backupRun.text ? backupPort : null);
   }
 
   async function onClickDetectBoard() {
@@ -971,16 +1111,19 @@
 
     if (serial.connected || serial.connectionId) {
       serial.disconnect();
+      detectStatus = null;
       return;
     }
 
     setFlashingEnabled(false);
     GUI.connect_lock = true;
     boardDetectionInProgress = true;
+    detectStatus = "detecting";
 
     GUI.log($i18n.t("firmwareFlasherBoardDetectionInProgress"));
     detectTimer = setTimeout(() => {
       GUI.log($i18n.t("firmwareFlasherBoardDetectionFail"));
+      detectStatus = "failed";
       disconnectDetect();
     }, 8000);
 
@@ -1019,6 +1162,7 @@
       GUI.log(
         `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${$i18n.t("serialPortOpenFail")}`,
       );
+      detectStatus = "failed";
       disconnectDetect();
     }
   }
@@ -1056,6 +1200,8 @@
 
     const target = `${FC.CONFIG.manufacturerId}-${board}`;
     const targetAvailable = !!unifiedConfigs[target];
+    detectedBoardName = board;
+    detectStatus = targetAvailable ? "found" : "notFound";
     selectedBoard = target;
     await onBoardChange(target);
 
@@ -1098,6 +1244,17 @@
     }).catch((err) => console.log("Error saving firmware file", err));
   }
 
+  // Only offered alongside onSaveFirmware -- both save a local copy of
+  // something that was fetched from the network rather than something the
+  // user already has a file for (see the `!isConfigLocal` gating where
+  // this is rendered).
+  function onSaveConfig() {
+    writeTextFile(unifiedTarget.config, {
+      suggestedName: `${unifiedTarget.fileName || bareBoard || "target"}.config`,
+      description: "Wingflight Target Config (.config)",
+    }).catch((err) => console.log("Error saving target config file", err));
+  }
+
   function onEraseChipChange(checked) {
     eraseChip = checked;
     config.set({ erase_chip: checked });
@@ -1124,277 +1281,660 @@
 
 {#snippet header()}
   <h1>{$i18n.t("tabFirmwareFlasher")}</h1>
-{/snippet}
-
-{#snippet toolbar()}
-  <div class="progress-info">
-    <progress class="progress" value={flashState.progress} min="0" max="100"
-    ></progress>
-    <span class="progress-label {messageClass}">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      {@html flashState.message}
-      {#if flashState.showSaveLink}
-        <button class="save-link" onclick={onSaveFirmware}>
-          {$i18n.t("firmwareFlasherButtonLoadOnline")}
-        </button>
-      {/if}
-    </span>
-  </div>
+  <!-- Exit DFU is a rescue action for a board stuck in DFU mode, unrelated
+       to wizard progress -- kept reachable regardless of which step is
+       showing, rather than gated behind step 3. -->
   <button
-    class="btn"
+    class="btn header-btn"
     disabled={portIsDfu === false && !parsedHex}
     onclick={onClickExitDfu}
   >
     <span class="label-full">{$i18n.t("firmwareFlasherExitDfu")}</span>
     <span class="label-short">{$i18n.t("firmwareFlasherExitDfuShort")}</span>
   </button>
-  <button
-    class="btn"
-    disabled={!flashState.flashingEnabled}
-    onclick={onClickFlash}
-  >
-    <span class="label-full">{$i18n.t("firmwareFlasherFlashFirmware")}</span>
-    <span class="label-short"
-      >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
-    >
-  </button>
-  <button
-    class="btn"
-    disabled={selectedVersion === "0" || loadingRemote}
-    onclick={onClickLoadRemote}
-  >
-    {#if loadingRemote}
-      {$i18n.t("firmwareFlasherButtonDownloading")}
-    {:else}
-      <span class="label-full"
-        >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
-      >
-      <span class="label-short"
-        >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
-      >
-    {/if}
-  </button>
-  <button class="btn" onclick={onClickLoadLocal}>
-    <span class="label-full">{$i18n.t("firmwareFlasherButtonLoadLocal")}</span>
-    <span class="label-short"
-      >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
-    >
-  </button>
 {/snippet}
 
-<Page {header} {toolbar}>
-  <div class="options">
-    <div class="field">
-      <div class="board-select-flex">
-        <Select
-          value={buildTypeIndex}
-          options={BUILD_TYPES.map((b, i) => ({
-            value: i,
-            label: $i18n.t(b.tag),
-          }))}
-          onchange={(e) => onBuildTypeChange(e.target.value)}
-        />
-        <span class="default_btn detect_btn">
-          <button
-            class="detect-board"
-            disabled={releasesLoading}
-            title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
-            onclick={onClickRefreshReleases}
-          >
-            <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}></em>
-          </button>
-        </span>
-      </div>
-      <span class="description"
-        >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
-      >
-    </div>
-
-    <div class="field">
-      <div class="board-select-flex">
-        {#if boardsLoading}
-          <Select
-            value="0"
-            options={[
-              { value: "0", label: $i18n.t("firmwareFlasherOptionLoading") },
-            ]}
-            disabled
-          />
-        {:else}
-          <select
-            class="board-select"
-            value={selectedBoard}
-            onchange={(e) => onBoardChange(e.target.value)}
-          >
-            <option value="0"
-              >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
-            >
-            {#each boardGroups as group (group.manufacturerId)}
-              <optgroup
-                label={manufacturers[group.manufacturerId]?.name ??
-                  group.manufacturerId}
-              >
-                {#each group.boards as board (board.target)}
-                  <option value={board.target}>{board.board}</option>
-                {/each}
-              </optgroup>
-            {/each}
-          </select>
-        {/if}
-        <span class="default_btn detect_btn">
-          <button
-            class="detect-board"
-            disabled={portIsDfu || !portSelected}
-            onclick={onClickDetectBoard}
-          >
-            <span>{$i18n.t("firmwareFlasherBoardDetectionButton")}</span>
-            <em class="fas fa-search"></em>
-          </button>
-        </span>
-      </div>
-      <div class="description-row">
-        <span class="description"
-          >{$i18n.t("firmwareFlasherOnlineSelectBoardDescription")}</span
-        >
-        <HelpIcon>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
-        </HelpIcon>
-      </div>
-    </div>
-
-    <div class="field">
-      <Select
-        value={selectedVersion}
-        options={[
-          {
-            value: "0",
-            label: versionsLoading
-              ? $i18n.t("firmwareFlasherOptionLoading")
-              : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
-          },
-          ...firmwareVersionEntries,
-        ]}
-        onchange={(e) => onVersionChange(e.target.value)}
-      />
-      <span class="description"
-        >{$i18n.t(
-          "firmwareFlasherOnlineSelectFirmwareVersionDescription",
-        )}</span
-      >
-    </div>
-
-    <div class="field">
-      <Select
-        value={backupMode}
-        options={[
-          {
-            value: BACKUP_MODE_NONE,
-            label: $i18n.t("firmwareFlasherBackupModeNone"),
-          },
-          {
-            value: BACKUP_TYPES.DIFF,
-            label: $i18n.t("firmwareFlasherBackupTypeDiff"),
-          },
-          {
-            value: BACKUP_TYPES.DUMP,
-            label: $i18n.t("firmwareFlasherBackupTypeDump"),
-          },
-        ]}
-        onchange={(e) => onBackupModeChange(e.target.value)}
-      />
-      <span class="description"
-        >{backupBeforeFlash
-          ? $i18n.t("firmwareFlasherBackupTypeDescription")
-          : $i18n.t("firmwareFlasherBackupBeforeFlashingDescription")}</span
-      >
-    </div>
-
-    {#if showAdvancedOpts}
-      <div class="field">
-        <label>
-          <Switch
-            checked={showLegacyTargets}
-            onchange={(e) => onShowLegacyChange(e.target.checked)}
-          />
-          <span>{$i18n.t("firmware_flasher.show_legacy_targets.label")}</span>
-        </label>
-        <span class="description"
-          >{$i18n.t("firmware_flasher.show_legacy_targets.description")}</span
-        >
-      </div>
-      <div class="field">
-        <label>
-          <Switch
-            checked={eraseChip}
-            onchange={(e) => onEraseChipChange(e.target.checked)}
-          />
-          <span>{$i18n.t("firmwareFlasherFullChipErase")}</span>
-        </label>
-        <span class="description"
-          >{$i18n.t("firmwareFlasherFullChipEraseDescription")}</span
-        >
-      </div>
+<!-- Reused wherever needsPortSelection would otherwise leave a control
+     (Detect, Flash) silently doing nothing. On the web build this is a
+     one-click fix -- requestWebSerialDeviceFromPicker() is the exact same
+     flow as choosing "Add serial device" from the port picker itself, just
+     triggered from here instead. The packaged app has no such prompt (its
+     serial backend just lists ports), so it points at the toolbar instead. -->
+{#snippet portPrompt()}
+  <p class="port-notice">
+    <em class="fas fa-plug"></em>
+    {#if isWebSerialBackend}
+      {$i18n.t("firmwareFlasherNoPortWeb")}
+      <button class="btn" onclick={requestWebSerialDeviceFromPicker}>
+        {$i18n.t("firmwareFlasherSelectPort")}
+      </button>
+    {:else}
+      {$i18n.t("firmwareFlasherNoPortNative")}
     {/if}
-  </div>
+  </p>
+{/snippet}
 
-  {#if releaseInfoVisible && releaseInfo}
-    <div class="release_info">
-      <div class="release-title">
-        {$i18n.t("firmwareFlasherReleaseSummaryHead")}
+<Page {header}>
+  <StepIndicator
+    steps={WIZARD_STEPS.map((tag) => ({ label: $i18n.t(tag) }))}
+    current={wizardStep}
+    onSelect={goToStep}
+  />
+
+  {#if wizardStep === 1}
+    <div class="step-body">
+      <div class="source-choice">
+        <label
+          class="source-option"
+          class:selected={firmwareSource === "online"}
+        >
+          <input type="radio" bind:group={firmwareSource} value="online" />
+          <em class="fas fa-cloud-download-alt"></em>
+          <span class="source-title"
+            >{$i18n.t("firmwareFlasherSourceOnlineTitle")}</span
+          >
+          <span class="source-description"
+            >{$i18n.t("firmwareFlasherSourceOnlineDescription")}</span
+          >
+        </label>
+        <label
+          class="source-option"
+          class:selected={firmwareSource === "local"}
+        >
+          <input type="radio" bind:group={firmwareSource} value="local" />
+          <em class="fas fa-folder-open"></em>
+          <span class="source-title"
+            >{$i18n.t("firmwareFlasherSourceLocalTitle")}</span
+          >
+          <span class="source-description"
+            >{$i18n.t("firmwareFlasherSourceLocalDescription")}</span
+          >
+        </label>
       </div>
-      <div class="release-body">
-        <p>
-          <strong>{$i18n.t("firmwareFlasherReleaseTarget")}</strong>
-          <span class="target">{releaseInfo.target}</span>
-        </p>
-        {#if releaseInfo.manufacturer}
-          <p>
-            <strong>{$i18n.t("firmwareFlasherReleaseManufacturer")}</strong>
-            {releaseInfo.manufacturer}
-          </p>
-        {/if}
-        <p>
-          <strong>{$i18n.t("firmwareFlasherReleaseVersion")}</strong>
-          <a
-            href={releaseInfo.versionUrl}
-            target="_blank"
-            rel="noopener noreferrer">{releaseInfo.version}</a
+
+      <div class="step-nav">
+        <span></span>
+        <button class="btn primary" onclick={onWizardNext}>
+          {$i18n.t("firmwareFlasherWizardNext")}
+        </button>
+      </div>
+    </div>
+  {:else if wizardStep === 2 && firmwareSource === "online"}
+    <div class="step-body">
+      <div class="options">
+        <div class="field">
+          <div class="board-select-flex">
+            <Select
+              value={buildTypeIndex}
+              options={BUILD_TYPES.map((b, i) => ({
+                value: i,
+                label: $i18n.t(b.tag),
+              }))}
+              onchange={(e) => onBuildTypeChange(e.target.value)}
+            />
+            <span class="default_btn detect_btn">
+              <button
+                class="detect-board"
+                disabled={releasesLoading}
+                title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
+                onclick={onClickRefreshReleases}
+              >
+                <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}
+                ></em>
+              </button>
+            </span>
+          </div>
+          <span class="description"
+            >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
           >
-        </p>
-        <p>
-          <strong>{$i18n.t("firmwareFlasherReleaseFile")}</strong>
-          <a
-            href={releaseInfo.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer">{releaseInfo.file}</a
+        </div>
+
+        <div class="field">
+          {#if !showManualBoardSelect}
+            <div class="detect-cta">
+              {#if detectStatus === "detecting"}
+                <p class="status">
+                  <span class="spinner"></span>
+                  {$i18n.t("firmwareFlasherBoardDetectionInProgress")}
+                </p>
+              {:else if portIsDfu}
+                <p class="detect-fallback-notice">
+                  {$i18n.t("firmwareFlasherDetectUnavailableDfu")}
+                </p>
+              {:else if needsPortSelection}
+                {@render portPrompt()}
+              {:else}
+                <button
+                  class="btn primary"
+                  disabled={boardsLoading}
+                  onclick={onClickDetectBoard}
+                >
+                  <em class="fas fa-search"></em>
+                  {$i18n.t("firmwareFlasherDetectBoardCta")}
+                </button>
+                <HelpIcon>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html $i18n.t(
+                    "firmwareFlasherBoardDetectionDescriptionHint",
+                  )}
+                </HelpIcon>
+              {/if}
+              <button
+                class="details-toggle"
+                onclick={() => (manualSelectionShown = true)}
+              >
+                {$i18n.t("firmwareFlasherSelectBoardManually")}
+              </button>
+            </div>
+          {:else}
+            {#if detectStatus === "found"}
+              <p class="detect-fallback-notice ok">
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("firmwareFlasherBoardDetectionSucceeded", {
+                  boardName: detectedBoardName,
+                })}
+              </p>
+            {:else if detectStatus === "notFound" || detectStatus === "failed"}
+              <p class="detect-fallback-notice">
+                {#if detectStatus === "notFound"}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html $i18n.t("firmwareFlasherBoardDetectionBoardNotFound", {
+                    boardName: detectedBoardName,
+                  })}
+                {:else}
+                  {$i18n.t("firmwareFlasherBoardDetectionFail")}
+                {/if}
+              </p>
+            {/if}
+            <div class="board-select-flex">
+              {#if boardsLoading}
+                <Select
+                  value="0"
+                  options={[
+                    {
+                      value: "0",
+                      label: $i18n.t("firmwareFlasherOptionLoading"),
+                    },
+                  ]}
+                  disabled
+                />
+              {:else}
+                <select
+                  class="board-select"
+                  value={selectedBoard}
+                  onchange={(e) => onBoardChange(e.target.value)}
+                >
+                  <option value="0"
+                    >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
+                  >
+                  {#each boardGroups as group (group.manufacturerId)}
+                    <optgroup
+                      label={manufacturers[group.manufacturerId]?.name ??
+                        group.manufacturerId}
+                    >
+                      {#each group.boards as board (board.target)}
+                        <option value={board.target}>{board.board}</option>
+                      {/each}
+                    </optgroup>
+                  {/each}
+                </select>
+              {/if}
+              <span class="default_btn detect_btn">
+                <button
+                  class="detect-board"
+                  disabled={portIsDfu || !portSelected}
+                  onclick={onClickDetectBoard}
+                >
+                  <span>{$i18n.t("firmwareFlasherBoardDetectionButton")}</span>
+                  <em class="fas fa-search"></em>
+                </button>
+              </span>
+            </div>
+            <div class="description-row">
+              <span class="description"
+                >{$i18n.t("firmwareFlasherOnlineSelectBoardDescription")}</span
+              >
+              <HelpIcon>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
+              </HelpIcon>
+            </div>
+            {#if needsPortSelection}
+              {@render portPrompt()}
+            {/if}
+          {/if}
+        </div>
+
+        <div class="field">
+          <Select
+            value={selectedVersion}
+            options={[
+              {
+                value: "0",
+                label: versionsLoading
+                  ? $i18n.t("firmwareFlasherOptionLoading")
+                  : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
+              },
+              ...firmwareVersionEntries,
+            ]}
+            onchange={(e) => onVersionChange(e.target.value)}
+          />
+          <span class="description"
+            >{$i18n.t(
+              "firmwareFlasherOnlineSelectFirmwareVersionDescription",
+            )}</span
           >
-        </p>
-        <p>
-          <strong>{$i18n.t("firmwareFlasherReleaseDate")}</strong>
-          {releaseInfo.date}
-        </p>
-        {#if releaseInfo.hasUnifiedTarget}
-          <p>
-            <strong>{$i18n.t("firmwareFlasherUnifiedTargetName")}</strong>
-            <a
-              href={releaseInfo.unifiedTargetFileUrl}
-              target="_blank"
-              rel="noopener noreferrer">{releaseInfo.unifiedTargetFile}</a
+        </div>
+
+        {#if showAdvancedOpts}
+          <div class="field">
+            <label>
+              <Switch
+                checked={showLegacyTargets}
+                onchange={(e) => onShowLegacyChange(e.target.checked)}
+              />
+              <span
+                >{$i18n.t("firmware_flasher.show_legacy_targets.label")}</span
+              >
+            </label>
+            <span class="description"
+              >{$i18n.t(
+                "firmware_flasher.show_legacy_targets.description",
+              )}</span
             >
-          </p>
-          <p>
-            <strong>{$i18n.t("firmwareFlasherUnifiedTargetDate")}</strong>
-            {releaseInfo.unifiedTargetDate}
-          </p>
+          </div>
         {/if}
-        <strong>{$i18n.t("firmwareFlasherReleaseNotes")}</strong>
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <div class="notes">{@html releaseNotesHtml}</div>
       </div>
+
+      <div class="load-row">
+        <button
+          class="btn"
+          disabled={selectedVersion === "0" || loadingRemote}
+          onclick={onClickLoadRemote}
+        >
+          {#if loadingRemote}
+            {$i18n.t("firmwareFlasherButtonDownloading")}
+          {:else}
+            <span class="label-full"
+              >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+            >
+            <span class="label-short"
+              >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+            >
+          {/if}
+        </button>
+        <span class="load-status {messageClass}">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html flashState.message}
+        </span>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn" onclick={onWizardBack}>
+          {$i18n.t("firmwareFlasherWizardBack")}
+        </button>
+        <button
+          class="btn primary"
+          disabled={!flashState.flashingEnabled}
+          onclick={onWizardNext}
+        >
+          {$i18n.t("firmwareFlasherWizardNext")}
+        </button>
+      </div>
+    </div>
+  {:else if wizardStep === 2}
+    <div class="step-body">
+      <div class="load-row">
+        <button class="btn" onclick={onClickLoadLocal}>
+          <span class="label-full"
+            >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
+          >
+          <span class="label-short"
+            >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+          >
+        </button>
+        <span class="load-status {messageClass}">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html flashState.message}
+        </span>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn" onclick={onWizardBack}>
+          {$i18n.t("firmwareFlasherWizardBack")}
+        </button>
+        <button
+          class="btn primary"
+          disabled={!flashState.flashingEnabled}
+          onclick={onWizardNext}
+        >
+          {$i18n.t("firmwareFlasherWizardNext")}
+        </button>
+      </div>
+    </div>
+  {:else if wizardStep === 3}
+    <div class="step-body">
+      <div class="options">
+        <div class="field">
+          <Select
+            value={backupMode}
+            disabled={backupRun.status === "connecting" ||
+              backupRun.status === "running"}
+            options={[
+              {
+                value: BACKUP_MODE_NONE,
+                label: $i18n.t("firmwareFlasherBackupModeNone"),
+              },
+              {
+                value: BACKUP_TYPES.DIFF,
+                label: $i18n.t("firmwareFlasherBackupTypeDiff"),
+              },
+              {
+                value: BACKUP_TYPES.DUMP,
+                label: $i18n.t("firmwareFlasherBackupTypeDump"),
+              },
+            ]}
+            onchange={(e) => onBackupModeChange(e.target.value)}
+          />
+          <span class="description"
+            >{backupBeforeFlash
+              ? $i18n.t("firmwareFlasherBackupTypeDescription")
+              : $i18n.t("firmwareFlasherBackupBeforeFlashingDescription")}</span
+          >
+        </div>
+      </div>
+
+      {#if backupMode !== BACKUP_MODE_NONE}
+        {#if portIsDfu}
+          <p class="detect-fallback-notice">
+            {$i18n.t("firmwareFlasherBackupSkippedDfu")}
+          </p>
+        {:else if needsPortSelection}
+          {@render portPrompt()}
+        {:else if backupRun.status === "idle"}
+          <div class="detect-cta">
+            <button class="btn primary" onclick={startBackup}>
+              {$i18n.t("firmwareFlasherRunBackupCta")}
+            </button>
+          </div>
+        {:else}
+          <div class="backup-panel">
+            {#if backupRun.status === "connecting"}
+              <p class="status">
+                <span class="spinner"></span>
+                {$i18n.t("firmwareFlasherWizardConnecting")}
+              </p>
+            {:else if backupRun.status === "running"}
+              <p class="status">
+                <span class="spinner"></span>
+                {$i18n.t("firmwareFlasherWizardBackupRunning", {
+                  command: backupCommand,
+                })}
+              </p>
+            {:else if backupRun.status === "ready"}
+              <p class="detect-fallback-notice ok">
+                {$i18n.t("firmwareFlasherWizardBackupReady")}
+              </p>
+              {#if backupRun.saved}
+                <p class="detect-fallback-notice ok">
+                  {$i18n.t("firmwareFlasherWizardBackupSaved")}
+                </p>
+              {/if}
+              <button class="btn" onclick={saveBackupFile}>
+                {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
+              </button>
+            {:else if backupRun.status === "failed"}
+              <p class="detect-fallback-notice">
+                {$i18n.t("firmwareFlasherWizardBackupFailed")}
+              </p>
+              <div class="buttons">
+                <button class="btn" onclick={cancelBackup}>
+                  {$i18n.t("firmwareFlasherWizardCancel")}
+                </button>
+                {#if isWebSerialBackend}
+                  <button class="btn" onclick={selectPortForBackup}>
+                    {$i18n.t("firmwareFlasherWizardSelectPort")}
+                  </button>
+                {/if}
+                <button class="btn primary" onclick={runBackup}>
+                  {$i18n.t("firmwareFlasherWizardRetry")}
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      {/if}
+
+      <div class="step-nav">
+        <button
+          class="btn"
+          disabled={backupRun.status === "connecting" ||
+            backupRun.status === "running"}
+          onclick={onWizardBack}
+        >
+          {$i18n.t("firmwareFlasherWizardBack")}
+        </button>
+        <button
+          class="btn primary"
+          disabled={!canLeaveBackupStep}
+          onclick={onWizardNext}
+        >
+          {$i18n.t("firmwareFlasherWizardNext")}
+        </button>
+      </div>
+    </div>
+  {:else if wizardStep === 4}
+    <div class="step-body">
+      {#if releaseInfoVisible && releaseInfo}
+        <p class="ready-summary">
+          {$i18n.t("firmwareFlasherReadyToFlash", {
+            target: releaseInfo.target,
+            version: releaseInfo.version,
+          })}
+          <button
+            class="details-toggle"
+            onclick={() => (showReleaseDetails = !showReleaseDetails)}
+          >
+            {showReleaseDetails
+              ? $i18n.t("firmwareFlasherHideDetails")
+              : $i18n.t("firmwareFlasherShowDetails")}
+          </button>
+        </p>
+      {/if}
+
+      {#if showReleaseDetails && releaseInfoVisible && releaseInfo}
+        <div class="release_info">
+          <div class="release-title">
+            {$i18n.t("firmwareFlasherReleaseSummaryHead")}
+          </div>
+          <div class="release-body">
+            <p>
+              <strong>{$i18n.t("firmwareFlasherReleaseTarget")}</strong>
+              <span class="target">{releaseInfo.target}</span>
+            </p>
+            {#if releaseInfo.manufacturer}
+              <p>
+                <strong>{$i18n.t("firmwareFlasherReleaseManufacturer")}</strong>
+                {releaseInfo.manufacturer}
+              </p>
+            {/if}
+            <p>
+              <strong>{$i18n.t("firmwareFlasherReleaseVersion")}</strong>
+              <a
+                href={releaseInfo.versionUrl}
+                target="_blank"
+                rel="noopener noreferrer">{releaseInfo.version}</a
+              >
+            </p>
+            <p>
+              <strong>{$i18n.t("firmwareFlasherReleaseFile")}</strong>
+              <a
+                href={releaseInfo.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer">{releaseInfo.file}</a
+              >
+            </p>
+            <p>
+              <strong>{$i18n.t("firmwareFlasherReleaseDate")}</strong>
+              {releaseInfo.date}
+            </p>
+            {#if releaseInfo.hasUnifiedTarget}
+              <p>
+                <strong>{$i18n.t("firmwareFlasherUnifiedTargetName")}</strong>
+                <a
+                  href={releaseInfo.unifiedTargetFileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer">{releaseInfo.unifiedTargetFile}</a
+                >
+              </p>
+              <p>
+                <strong>{$i18n.t("firmwareFlasherUnifiedTargetDate")}</strong>
+                {releaseInfo.unifiedTargetDate}
+              </p>
+            {/if}
+            <strong>{$i18n.t("firmwareFlasherReleaseNotes")}</strong>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <div class="notes">{@html releaseNotesHtml}</div>
+
+            {#if flashState.showSaveLink || (unifiedTarget.config && !isConfigLocal)}
+              <div class="save-row">
+                {#if flashState.showSaveLink}
+                  <button class="btn" onclick={onSaveFirmware}>
+                    {$i18n.t("firmwareFlasherSaveFirmware")}
+                  </button>
+                {/if}
+                {#if unifiedTarget.config && !isConfigLocal}
+                  <button class="btn" onclick={onSaveConfig}>
+                    {$i18n.t("firmwareFlasherSaveConfig")}
+                  </button>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      {#if showAdvancedOpts}
+        <div class="options">
+          <div class="field">
+            <label>
+              <Switch
+                checked={eraseChip}
+                onchange={(e) => onEraseChipChange(e.target.checked)}
+              />
+              <span>{$i18n.t("firmwareFlasherFullChipErase")}</span>
+            </label>
+            <span class="description"
+              >{$i18n.t("firmwareFlasherFullChipEraseDescription")}</span
+            >
+          </div>
+        </div>
+      {/if}
+
+      <div class="progress-info">
+        <progress class="progress" value={flashState.progress} min="0" max="100"
+        ></progress>
+        <span class="progress-label {messageClass}">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html flashState.message}
+        </span>
+      </div>
+
+      {#if needsPortSelection}
+        {@render portPrompt()}
+      {/if}
+
+      <div class="step-nav">
+        <button class="btn" disabled={flashInProgress} onclick={onWizardBack}>
+          {$i18n.t("firmwareFlasherWizardBack")}
+        </button>
+        <button
+          class="btn primary"
+          disabled={!flashState.flashingEnabled ||
+            flashInProgress ||
+            needsPortSelection}
+          onclick={onClickFlash}
+        >
+          <span class="label-full"
+            >{$i18n.t("firmwareFlasherFlashFirmware")}</span
+          >
+          <span class="label-short"
+            >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
+          >
+        </button>
+      </div>
+    </div>
+  {:else}
+    <div class="step-body">
+      {#if restoreRun.status === "prompt"}
+        <div class="backup-panel">
+          <p>{$i18n.t("firmwareFlasherWizardRestorePrompt")}</p>
+          <div class="buttons">
+            <button class="btn" onclick={skipRestore}>
+              {$i18n.t("firmwareFlasherWizardSkip")}
+            </button>
+            <button class="btn primary" onclick={runRestore}>
+              {$i18n.t("firmwareFlasherWizardRestoreNow")}
+            </button>
+          </div>
+        </div>
+      {:else if ["waiting", "connecting", "running"].includes(restoreRun.status)}
+        <div class="backup-panel">
+          <p class="status">
+            <span class="spinner"></span>
+            {#if restoreRun.status === "waiting"}
+              {$i18n.t("firmwareFlasherWizardRestoreWaiting")}
+            {:else if restoreRun.status === "connecting"}
+              {$i18n.t("firmwareFlasherWizardConnecting")}
+            {:else}
+              {$i18n.t("firmwareFlasherWizardRestoreRunning")}
+            {/if}
+          </p>
+        </div>
+      {:else if restoreRun.status === "failed"}
+        <div class="backup-panel">
+          <p class="detect-fallback-notice">
+            {$i18n.t("firmwareFlasherWizardRestoreFailed")}
+          </p>
+          <div class="buttons">
+            <button class="btn" onclick={skipRestore}>
+              {$i18n.t("firmwareFlasherWizardSkip")}
+            </button>
+            {#if isWebSerialBackend}
+              <button class="btn" onclick={selectPortForRestore}>
+                {$i18n.t("firmwareFlasherWizardSelectPort")}
+              </button>
+            {/if}
+            <button class="btn primary" onclick={runRestore}>
+              {$i18n.t("firmwareFlasherWizardRetry")}
+            </button>
+          </div>
+        </div>
+      {:else if restoreRun.status === "done"}
+        <p class="detect-fallback-notice ok">
+          {$i18n.t("firmwareFlasherWizardRestoreDone")}
+        </p>
+      {:else}
+        <!-- "idle" (no backup was taken this run) or "skipped" -->
+        <p class="ready-summary">
+          {$i18n.t("firmwareFlasherFlashCompleteMessage")}
+        </p>
+      {/if}
+
+      {#if !["prompt", "waiting", "connecting", "running"].includes(restoreRun.status)}
+        <div class="step-nav">
+          <span></span>
+          <button class="btn primary" onclick={resetWizardToStart}>
+            {$i18n.t("firmwareFlasherStartOver")}
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 
+  <!-- Shown on every step, not just Backup & Safety -- these are general
+       safety/recovery notes about the flasher itself, not something
+       specific to that one step's controls. -->
   <div class="note warning">
     <div class="note-title">{$i18n.t("warningTitle")}</div>
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -1403,12 +1943,12 @@
     <p>{@html $i18n.t("firmwareFlasherTargetWarning")}</p>
   </div>
 
+  <!-- eslint-disable svelte/no-at-html-tags -->
   <div class="note">
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <div class="note-title">{@html $i18n.t("firmwareFlasherRecoveryHead")}</div>
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <p>{@html $i18n.t("firmwareFlasherRecoveryText")}</p>
   </div>
+  <!-- eslint-enable svelte/no-at-html-tags -->
 </Page>
 
 <dialog bind:this={detectDialogEl}>
@@ -1423,19 +1963,6 @@
   </div>
 </dialog>
 
-<BackupRestoreWizard
-  onSaveBackup={onWizardSaveBackup}
-  onContinue={onWizardContinue}
-  onCancelBackup={onWizardCancelBackup}
-  onRetryBackup={onWizardRetryBackup}
-  onStartRestore={onWizardStartRestore}
-  onRetryRestore={onWizardRetryRestore}
-  onSkipRestore={onWizardSkipRestore}
-  onCloseRestore={onWizardCloseRestore}
-  onSelectPort={onWizardSelectPort}
-  showSelectPort={isWebSerialBackend}
-/>
-
 <style lang="scss">
   h1 {
     font-weight: 600;
@@ -1444,6 +1971,10 @@
   .btn {
     @extend %button;
     white-space: nowrap;
+
+    &.primary {
+      @extend %button-primary;
+    }
   }
 
   .options {
@@ -1495,6 +2026,27 @@
     gap: 6px;
   }
 
+  .port-notice {
+    // Spans the full field width rather than sitting in .field's subgrid
+    // column 1 only -- this isn't a second label+description pair, it's a
+    // one-off notice that happens to live inside a .field.
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 0;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-accent);
+    background-color: var(--color-surface);
+
+    em {
+      color: var(--color-accent-500);
+    }
+  }
+
   .board-select {
     flex-grow: 1;
   }
@@ -1517,6 +2069,149 @@
   .detect-board {
     @extend %button;
     white-space: nowrap;
+  }
+
+  .detect-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .spinner {
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-accent-500);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .detect-fallback-notice {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--color-text-soft);
+
+    &.ok {
+      color: var(--color-valid, #00d000);
+      font-style: normal;
+      font-weight: 600;
+    }
+  }
+
+  // Backup (step 3) and restore (step 5) both run as a small self-contained
+  // panel within their step, each just a status line/spinner plus whatever
+  // buttons that status calls for.
+  .backup-panel {
+    padding: 10px 0;
+
+    p {
+      margin: 0 0 8px;
+    }
+  }
+
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .source-choice {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .source-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 16px;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    cursor: pointer;
+
+    em {
+      font-size: 1.5rem;
+      color: var(--color-text-soft);
+    }
+
+    &.selected {
+      border-color: var(--color-accent-500);
+
+      em {
+        color: var(--color-accent-500);
+      }
+    }
+
+    // The actual radio is visually hidden -- the whole card is the hit
+    // target and .selected (driven by the same bind:group) carries the
+    // checked look, so there's nothing left for a visible dot to add.
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid var(--color-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .source-title {
+    font-weight: 600;
+  }
+
+  .source-description {
+    font-size: 0.75rem;
+    font-style: italic;
+    color: var(--color-text-soft);
+  }
+
+  @media only screen and (max-width: 480px) {
+    .source-choice {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .ready-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .details-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    color: var(--color-text-soft);
+    font-weight: normal;
+    font-size: 0.8rem;
+    cursor: pointer;
   }
 
   .release_info {
@@ -1562,27 +2257,63 @@
     margin-bottom: 6px;
   }
 
+  .header-btn {
+    // Pushes Exit DFU to the far end of the header, away from the title,
+    // rather than sitting right up against it.
+    margin-left: auto;
+  }
+
+  .step-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .load-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: var(--section-gap);
+  }
+
+  .load-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &.valid {
+      color: var(--color-valid, #00d000);
+    }
+
+    &.invalid {
+      color: var(--color-invalid, #a62e32);
+    }
+
+    &.actionRequired {
+      color: #0081ff;
+    }
+  }
+
+  .step-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: var(--section-gap);
+    padding-top: var(--section-gap);
+    border-top: 1px solid var(--color-border-soft);
+  }
+
   .progress-info {
     position: relative;
-    flex-grow: 1;
+    margin-top: var(--section-gap);
   }
 
   .label-short {
     display: none;
   }
 
-  // Once the toolbar (which wraps via Page.svelte) no longer has room for
-  // four full-length button labels alongside the progress bar, switch to
-  // shorter labels *and* give the progress bar its own full-width line.
-  // The progress bar shows a real, filling/scrolling indicator while
-  // flashing - it needs to stay legibly wide rather than get squeezed onto
-  // a shared row with whatever button happens to still fit - and shorter
-  // button labels mean less gets pushed onto extra wrapped lines below it.
+  // Narrow screens get shorter button labels so Load Online/Load Local
+  // (step 1) and Back/Flash (step 3) don't wrap awkwardly or overflow.
   @media only screen and (max-width: 700px) {
-    .progress-info {
-      flex-basis: 100%;
-    }
-
     .label-full {
       display: none;
     }
@@ -1642,14 +2373,13 @@
     }
   }
 
-  .save-link {
-    pointer-events: all;
-    background: none;
-    border: none;
-    text-decoration: underline;
-    color: inherit;
-    cursor: pointer;
-    font-weight: 600;
+  .save-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border);
   }
 
   dialog {

@@ -91,7 +91,14 @@ function selectRequestedPort(el, ports, entry, cachedPorts, fallbackValue) {
     el.trigger('change');
 }
 
-async function requestWebSerialDeviceFromPicker() {
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// Serial Port" button, offered when it finds no port chosen and isn't DFU --
+// can trigger the exact same flow as picking "Add serial device" from the
+// port-picker dropdown itself: real user gesture in, browser device chooser
+// out, then the global port list/selection are updated the same way either
+// route got there. Keeps there being exactly one place that knows how to
+// adopt a newly-granted Web Serial port app-wide.
+export async function requestWebSerialDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
