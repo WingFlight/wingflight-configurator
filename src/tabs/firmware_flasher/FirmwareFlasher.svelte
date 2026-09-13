@@ -707,6 +707,13 @@
     return firmwareVersionEntries.find((e) => e.value === selectedVersion);
   }
 
+  // Choosing "Online" back in step 1 already commits to fetching firmware
+  // from the network -- picking a version here is the one deliberate
+  // gesture needed, so it loads (from cache, or by downloading) right away
+  // rather than waiting on a separate "Load Firmware Online" click that
+  // would otherwise be the only reason this step still needed its own
+  // button. retryLoadRemote() (below) covers the one case this can't do
+  // silently: a download that failed and needs another attempt.
   function onVersionChange(value) {
     selectedVersion = value;
     releaseInfoVisible = false;
@@ -723,16 +730,8 @@
       }
     }
 
-    const entry = selectedVersionEntry();
-    const release = entry?.summary;
-    const isCached = release && FirmwareCache.has(release);
-    if (value === "0" || isCached) {
-      if (isCached) {
-        FirmwareCache.get(release, (cached) =>
-          onLoadSuccess(cached.hexdata, release),
-        );
-      }
-    }
+    if (value === "0") return;
+    loadRemoteFirmware(selectedVersionEntry()?.summary);
   }
 
   async function processHex(data, summary) {
@@ -854,16 +853,14 @@
     }
   }
 
-  async function onClickLoadRemote() {
+  // Shared by onVersionChange()'s auto-load and retryLoadRemote() (the
+  // template's Retry button, offered only once a download has actually
+  // failed) -- cache-hit or not, this is the whole "get this version's .hex
+  // into parsedHex" behavior either one needs.
+  async function loadRemoteFirmware(summary) {
     setFlashingEnabled(false);
     localFirmwareLoaded = false;
 
-    if (selectedVersion === "0") {
-      GUI.log($i18n.t("firmwareFlasherNoFirmwareSelected"));
-      return;
-    }
-
-    const summary = selectedVersionEntry()?.summary;
     if (!summary) {
       setFlashingMessage(
         $i18n.t("firmwareFlasherFailedToLoadOnlineFirmware"),
@@ -872,7 +869,7 @@
       return;
     }
 
-    if (isConfigLocal && FirmwareCache.has(summary)) {
+    if (FirmwareCache.has(summary)) {
       FirmwareCache.get(summary, (cached) =>
         onLoadSuccess(cached.hexdata, summary),
       );
@@ -880,6 +877,10 @@
     }
 
     loadingRemote = true;
+    setFlashingMessage(
+      $i18n.t("firmwareFlasherButtonDownloading"),
+      FLASH_MESSAGE_TYPES.NEUTRAL,
+    );
     try {
       const res = await fetch(summary.url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -893,6 +894,10 @@
         FLASH_MESSAGE_TYPES.INVALID,
       );
     }
+  }
+
+  function retryLoadRemote() {
+    loadRemoteFirmware(selectedVersionEntry()?.summary);
   }
 
   function onClickExitDfu() {
@@ -1578,26 +1583,19 @@
       </div>
 
       <div class="load-row">
-        <button
-          class="btn"
-          disabled={selectedVersion === "0" || loadingRemote}
-          onclick={onClickLoadRemote}
-        >
-          {#if loadingRemote}
-            {$i18n.t("firmwareFlasherButtonDownloading")}
-          {:else}
-            <span class="label-full"
-              >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
-            >
-            <span class="label-short"
-              >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
-            >
-          {/if}
-        </button>
         <span class="load-status {messageClass}">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html flashState.message}
         </span>
+        <!-- Picking a version already loads it (see onVersionChange()) --
+             the only time a manual action is still needed here is a failed
+             download, so Retry only shows up then rather than sitting
+             around as a button with nothing to do the rest of the time. -->
+        {#if flashState.messageType === FLASH_MESSAGE_TYPES.INVALID && selectedVersion !== "0" && !loadingRemote}
+          <button class="btn" onclick={retryLoadRemote}>
+            {$i18n.t("firmwareFlasherWizardRetry")}
+          </button>
+        {/if}
       </div>
 
       <div class="step-nav">
