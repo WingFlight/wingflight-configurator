@@ -172,12 +172,12 @@
     ),
   );
 
-  // Drives the setup wizard: 1 Source, 2 Select Firmware, 3 Backup,
-  // 4 Flash, 5 Restore. Backup and restore are each a real step now, not a
-  // popup layered on top of Flash -- see backupRun/restoreRun below, which
-  // each own their step the same way any other step owns its own state.
+  // Drives the setup wizard: 1 Board, 2 Firmware, 3 Backup, 4 Flash,
+  // 5 Restore. Backup and restore are each a real step now, not a popup
+  // layered on top of Flash -- see backupRun/restoreRun below, which each
+  // own their step the same way any other step owns its own state.
   const WIZARD_STEPS = [
-    "firmwareFlasherStepSourceTitle",
+    "firmwareFlasherStepBoardTitle",
     "firmwareFlasherStepFirmwareTitle",
     "firmwareFlasherStepBackupTitle",
     "firmwareFlasherStepReviewTitle",
@@ -185,10 +185,12 @@
   ];
   let wizardStep = $state(1);
 
-  // Which of step 2's two mutually-exclusive flows (pick an online release
-  // vs. load a file already on disk) is showing. Chosen up front in step 1
-  // rather than juxtaposed with the online select fields, which used to
-  // read as if they were prerequisites for "Load local file" too.
+  // Which of step 2's two flows -- pick an online release vs. load a file
+  // already on disk -- is showing. Not a separate step of its own: online
+  // is the default, "Load a local firmware file instead" (on step 2) or
+  // "Skip board selection" (on step 1) switch to local, and step 2 offers a
+  // link back the other way too, so it's just which half of step 2 is
+  // currently in view rather than a fork the user has to commit to upfront.
   let firmwareSource = $state("online");
 
   // Step 4 defaults to a one-line summary rather than the full technical
@@ -244,14 +246,13 @@
       ["waiting", "connecting", "running"].includes(restoreRun.status),
   );
 
-  // Everything steps 2-5 built up around one firmware/board choice --
-  // loaded hex/config, detected board, version list, release summary,
-  // any backup taken/restore state. None of it means anything once you're
-  // back choosing a source again, so it's cleared rather than left to look
-  // like it still applies to whatever gets picked next. Deliberately leaves
-  // alone what are really persisted preferences rather than per-flash state
-  // -- backupMode, eraseChip, showLegacyTargets (all config.set() already)
-  // -- so those don't reset just because you went back a step.
+  // Full reset of everything steps 1-5 built up around one firmware/board
+  // choice -- loaded hex/config, detected board, version list, release
+  // summary, any backup taken/restore state -- used only by
+  // resetWizardToStart() ("Flash Another Board"). Deliberately leaves alone
+  // what are really persisted preferences rather than per-flash state --
+  // backupMode, eraseChip, showLegacyTargets (all config.set() already) --
+  // so those don't reset just because you flashed something.
   function clearFirmwareSelection() {
     // A detect attempt mid-flight is talking to real hardware over a serial
     // connection this component opened -- leaving it running unseen in the
@@ -295,11 +296,12 @@
     // StepIndicator already disables markers past `wizardStep`, but guard
     // here too since this is also reachable from plain Back/Next clicks.
     if (step < 1 || step > WIZARD_STEPS.length) return;
-    // Landing back on Source (whether via Back or jumping the indicator)
-    // always clears whatever steps 2-5 had cached -- see
-    // clearFirmwareSelection() -- rather than only on an explicit
-    // "Flash Another Board".
-    if (step === 1 && wizardStep !== 1) clearFirmwareSelection();
+    // Revisiting Board (unlike the old "Source" step this replaced) isn't
+    // itself a reason to wipe steps 2-5's state -- onBoardChange() already
+    // clears exactly what a *changed* board invalidates, which is more
+    // correct than blanket-clearing on every visit and forcing a re-detect
+    // just for glancing back. Only an explicit "Flash Another Board" does
+    // the full reset now -- see clearFirmwareSelection().
     wizardStep = step;
   }
   const onWizardBack = () => goToStep(wizardStep - 1);
@@ -1373,44 +1375,6 @@
 
   {#if wizardStep === 1}
     <div class="step-body">
-      <div class="source-choice">
-        <label
-          class="source-option"
-          class:selected={firmwareSource === "online"}
-        >
-          <input type="radio" bind:group={firmwareSource} value="online" />
-          <em class="fas fa-cloud-download-alt"></em>
-          <span class="source-title"
-            >{$i18n.t("firmwareFlasherSourceOnlineTitle")}</span
-          >
-          <span class="source-description"
-            >{$i18n.t("firmwareFlasherSourceOnlineDescription")}</span
-          >
-        </label>
-        <label
-          class="source-option"
-          class:selected={firmwareSource === "local"}
-        >
-          <input type="radio" bind:group={firmwareSource} value="local" />
-          <em class="fas fa-folder-open"></em>
-          <span class="source-title"
-            >{$i18n.t("firmwareFlasherSourceLocalTitle")}</span
-          >
-          <span class="source-description"
-            >{$i18n.t("firmwareFlasherSourceLocalDescription")}</span
-          >
-        </label>
-      </div>
-
-      <div class="step-nav">
-        <span></span>
-        <button class="btn primary" onclick={onWizardNext}>
-          {$i18n.t("firmwareFlasherWizardNext")}
-        </button>
-      </div>
-    </div>
-  {:else if wizardStep === 2 && firmwareSource === "online"}
-    <div class="step-body">
       <div class="options">
         <div class="field">
           <div class="board-select-flex">
@@ -1555,41 +1519,6 @@
           {/if}
         </div>
 
-        <div class="field">
-          <Select
-            value={selectedVersion}
-            options={[
-              {
-                value: "0",
-                label: versionsLoading
-                  ? $i18n.t("firmwareFlasherOptionLoading")
-                  : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
-              },
-              // Cached entries load instantly (and, on selection, right
-              // away -- see onVersionChange()'s auto-load-if-cached
-              // branch) rather than needing "Load Firmware Online"
-              // clicked -- worth being visible about which is which,
-              // rather than that difference just looking inconsistent.
-              ...firmwareVersionEntries.map((entry) =>
-                entry.cached
-                  ? {
-                      ...entry,
-                      label: $i18n.t("firmwareFlasherVersionCachedLabel", {
-                        label: entry.label,
-                      }),
-                    }
-                  : entry,
-              ),
-            ]}
-            onchange={(e) => onVersionChange(e.target.value)}
-          />
-          <span class="description"
-            >{$i18n.t(
-              "firmwareFlasherOnlineSelectFirmwareVersionDescription",
-            )}</span
-          >
-        </div>
-
         {#if showAdvancedOpts}
           <div class="field">
             <label>
@@ -1610,36 +1539,23 @@
         {/if}
       </div>
 
-      <div class="load-row">
+      <p class="step-link">
         <button
-          class="btn"
-          disabled={selectedVersion === "0" || loadingRemote}
-          onclick={onClickLoadRemote}
+          class="details-toggle"
+          onclick={() => {
+            firmwareSource = "local";
+            goToStep(2);
+          }}
         >
-          {#if loadingRemote}
-            {$i18n.t("firmwareFlasherButtonDownloading")}
-          {:else}
-            <span class="label-full"
-              >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
-            >
-            <span class="label-short"
-              >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
-            >
-          {/if}
+          {$i18n.t("firmwareFlasherSkipToLocalFirmware")}
         </button>
-        <span class="load-status {messageClass}">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html flashState.message}
-        </span>
-      </div>
+      </p>
 
       <div class="step-nav">
-        <button class="btn" onclick={onWizardBack}>
-          {$i18n.t("firmwareFlasherWizardBack")}
-        </button>
+        <span></span>
         <button
           class="btn primary"
-          disabled={!flashState.flashingEnabled}
+          disabled={selectedBoard === "0"}
           onclick={onWizardNext}
         >
           {$i18n.t("firmwareFlasherWizardNext")}
@@ -1648,20 +1564,98 @@
     </div>
   {:else if wizardStep === 2}
     <div class="step-body">
-      <div class="load-row">
-        <button class="btn" onclick={onClickLoadLocal}>
-          <span class="label-full"
-            >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
+      {#if firmwareSource === "online"}
+        <div class="options">
+          <div class="field">
+            <Select
+              value={selectedVersion}
+              options={[
+                {
+                  value: "0",
+                  label: versionsLoading
+                    ? $i18n.t("firmwareFlasherOptionLoading")
+                    : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
+                },
+                // Cached entries load instantly once "Load Firmware
+                // Online" is clicked, rather than needing to download --
+                // worth being visible about which is which.
+                ...firmwareVersionEntries.map((entry) =>
+                  entry.cached
+                    ? {
+                        ...entry,
+                        label: $i18n.t("firmwareFlasherVersionCachedLabel", {
+                          label: entry.label,
+                        }),
+                      }
+                    : entry,
+                ),
+              ]}
+              onchange={(e) => onVersionChange(e.target.value)}
+            />
+            <span class="description"
+              >{$i18n.t(
+                "firmwareFlasherOnlineSelectFirmwareVersionDescription",
+              )}</span
+            >
+          </div>
+        </div>
+
+        <div class="load-row">
+          <button
+            class="btn"
+            disabled={selectedVersion === "0" || loadingRemote}
+            onclick={onClickLoadRemote}
           >
-          <span class="label-short"
-            >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+            {#if loadingRemote}
+              {$i18n.t("firmwareFlasherButtonDownloading")}
+            {:else}
+              <span class="label-full"
+                >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+              >
+              <span class="label-short"
+                >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+              >
+            {/if}
+          </button>
+          <span class="load-status {messageClass}">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html flashState.message}
+          </span>
+        </div>
+
+        <p class="step-link">
+          <button
+            class="details-toggle"
+            onclick={() => (firmwareSource = "local")}
           >
-        </button>
-        <span class="load-status {messageClass}">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html flashState.message}
-        </span>
-      </div>
+            {$i18n.t("firmwareFlasherSwitchToLocalFirmware")}
+          </button>
+        </p>
+      {:else}
+        <div class="load-row">
+          <button class="btn" onclick={onClickLoadLocal}>
+            <span class="label-full"
+              >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
+            >
+            <span class="label-short"
+              >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+            >
+          </button>
+          <span class="load-status {messageClass}">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html flashState.message}
+          </span>
+        </div>
+
+        <p class="step-link">
+          <button
+            class="details-toggle"
+            onclick={() => (firmwareSource = "online")}
+          >
+            {$i18n.t("firmwareFlasherSwitchToOnlineFirmware")}
+          </button>
+        </p>
+      {/if}
 
       <div class="step-nav">
         <button class="btn" onclick={onWizardBack}>
@@ -2208,69 +2202,6 @@
     gap: 8px;
   }
 
-  .source-choice {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .source-option {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 20px 16px;
-    text-align: center;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    cursor: pointer;
-
-    em {
-      font-size: 1.5rem;
-      color: var(--color-text-soft);
-    }
-
-    &.selected {
-      border-color: var(--color-accent-500);
-
-      em {
-        color: var(--color-accent-500);
-      }
-    }
-
-    // The actual radio is visually hidden -- the whole card is the hit
-    // target and .selected (driven by the same bind:group) carries the
-    // checked look, so there's nothing left for a visible dot to add.
-    input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    &:has(input:focus-visible) {
-      outline: 2px solid var(--color-focus-ring);
-      outline-offset: 2px;
-    }
-  }
-
-  .source-title {
-    font-weight: 600;
-  }
-
-  .source-description {
-    font-size: 0.75rem;
-    font-style: italic;
-    color: var(--color-text-soft);
-  }
-
-  @media only screen and (max-width: 480px) {
-    .source-choice {
-      grid-template-columns: 1fr;
-    }
-  }
-
   .ready-summary {
     display: flex;
     flex-wrap: wrap;
@@ -2288,6 +2219,14 @@
     font-weight: normal;
     font-size: 0.8rem;
     cursor: pointer;
+  }
+
+  // Wraps a single .details-toggle used as a step's own secondary
+  // navigation (switching between the online/local halves of Firmware,
+  // skipping Board entirely) -- distinct from .detect-fallback-notice,
+  // which is for status text, not an action.
+  .step-link {
+    margin: var(--section-gap) 0 0;
   }
 
   .release_info {
