@@ -127,17 +127,20 @@
 
   // Detection's outcome, surfaced inline instead of only in GUI.log (which a
   // first-time user has no reason to be watching). null/"detecting" keep the
-  // board field on its Detect call-to-action; any terminal outcome
-  // ("found"/"notFound"/"failed") reveals the manual board dropdown --
-  // pre-filled with the detected board on success, empty as a genuine
-  // fallback otherwise. manualSelectionShown is the separate, explicit
-  // "skip detection entirely" escape hatch.
+  // board field on its Detect call-to-action; "found" shows a lean
+  // confirmation only -- a successful detect has nothing left for the
+  // dropdown/legacy-targets/retry apparatus to do, so showing all of it
+  // anyway just because a target happened to match would be clutter, not
+  // information. "notFound"/"failed" fall through to that full manual
+  // apparatus instead, since there genuinely isn't a usable result to show.
+  // manualSelectionShown is the separate, explicit "skip detection
+  // entirely" escape hatch (including the one offered right on a "found"
+  // result, in case it matched the wrong thing).
   let detectStatus = $state(null);
   let detectedBoardName = $state("");
   let manualSelectionShown = $state(false);
   let showManualBoardSelect = $derived(
     manualSelectionShown ||
-      detectStatus === "found" ||
       detectStatus === "notFound" ||
       detectStatus === "failed",
   );
@@ -1428,7 +1431,28 @@
         </div>
 
         <div class="field">
-          {#if !showManualBoardSelect}
+          {#if detectStatus === "found" && !manualSelectionShown}
+            {#if selectedBoardValid}
+              <p class="detect-fallback-notice ok">
+                <em class="fas fa-check"></em>
+                {#if unifiedTarget.config}
+                  {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
+                    target: selectedBoard,
+                  })}
+                {:else}
+                  {$i18n.t("firmwareFlasherBoardSelectedPlain", {
+                    target: selectedBoard,
+                  })}
+                {/if}
+              </p>
+            {/if}
+            <button
+              class="details-toggle"
+              onclick={() => (manualSelectionShown = true)}
+            >
+              {$i18n.t("firmwareFlasherSelectBoardManually")}
+            </button>
+          {:else if !showManualBoardSelect}
             <div class="detect-cta">
               {#if detectStatus === "detecting"}
                 <p class="status">
@@ -1535,23 +1559,6 @@
                 {/if}
               </p>
             {/if}
-            <!-- Symmetric with the CTA panel's own "Select board manually
-                 instead" link -- one Detect action (the CTA panel's button),
-                 reached the same way from either side, rather than a second
-                 small Detect button living here too. -->
-            <button
-              class="details-toggle"
-              onclick={() => {
-                manualSelectionShown = false;
-                detectStatus = null;
-                detectedBoardName = "";
-              }}
-            >
-              {$i18n.t("firmwareFlasherTryDetectInstead")}
-            </button>
-            {#if needsPortSelection}
-              {@render portPrompt()}
-            {/if}
           {/if}
         </div>
 
@@ -1577,6 +1584,31 @@
           </div>
         {/if}
       </div>
+
+      {#if showManualBoardSelect}
+        <!-- Symmetric with the CTA panel's own "Select board manually
+             instead" link -- one Detect action (the CTA panel's button),
+             reached the same way from either side, rather than a second
+             small Detect button living here too. Kept below Show Legacy
+             Targets (and outside .options) rather than inside the board
+             field, so it doesn't get pushed above that field's own extra
+             rows. -->
+        <p class="step-link">
+          <button
+            class="details-toggle"
+            onclick={() => {
+              manualSelectionShown = false;
+              detectStatus = null;
+              detectedBoardName = "";
+            }}
+          >
+            {$i18n.t("firmwareFlasherTryDetectInstead")}
+          </button>
+        </p>
+        {#if needsPortSelection}
+          {@render portPrompt()}
+        {/if}
+      {/if}
 
       <div class="step-nav">
         <span></span>
