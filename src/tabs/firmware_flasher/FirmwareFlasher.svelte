@@ -1231,7 +1231,13 @@
     clearTimeout(detectConnectDelayTimer);
     serial.disconnect(onDetectClose);
     MSP.disconnect_cleanup();
-    setFlashingEnabled(true);
+    // onClickDetectBoard() disables flashing for the duration of the detect
+    // connection -- restore whatever's actually true now, rather than
+    // unconditionally re-enabling it. Detecting a board doesn't load
+    // firmware by itself (onVersionChange()'s cache auto-load is a separate,
+    // not-yet-settled async chain at this point), so hardcoding `true` here
+    // let Next on step 2 go through with nothing actually loaded.
+    setFlashingEnabled(!!parsedHex);
     boardDetectionInProgress = false;
     GUI.connect_lock = false;
   }
