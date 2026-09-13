@@ -362,6 +362,18 @@
     portSelected = !!el && String(el.value) !== "0";
   }
 
+  // The portPrompt snippet's own "Select Serial Port" button.
+  // requestWebSerialDeviceFromPicker() already dispatches a real 'change'
+  // on the port picker once it's done, which the addEventListener() in
+  // onMount() picks up on its own -- this direct re-check is just a
+  // belt-and-braces sync against whatever the picker ends up holding,
+  // rather than this step's whole prompt depending on that event actually
+  // arriving here.
+  async function onClickSelectPort() {
+    await requestWebSerialDeviceFromPicker();
+    onPortChange();
+  }
+
   function onKeypress(e) {
     // Flash is step 4, not necessarily the last step -- Restore (step 5)
     // follows it, but Enter shouldn't trigger anything there.
@@ -1357,7 +1369,7 @@
     <em class="fas fa-plug"></em>
     {#if isWebSerialBackend}
       {$i18n.t("firmwareFlasherNoPortWeb")}
-      <button class="btn" onclick={requestWebSerialDeviceFromPicker}>
+      <button class="btn" onclick={onClickSelectPort}>
         {$i18n.t("firmwareFlasherSelectPort")}
       </button>
     {:else}
@@ -1646,6 +1658,26 @@
             {@html flashState.message}
           </span>
         </div>
+
+        <!-- A board picked back on step 1 still matters here -- its default
+             config (if it has one; see setUnifiedConfig()) gets combined
+             with whatever local .hex is loaded, same as it would for an
+             online download. Flagged either way so it's not silently
+             skipped just because Local doesn't have its own board field. -->
+        {#if selectedBoard === "0"}
+          <p class="detect-fallback-notice">
+            {$i18n.t("firmwareFlasherLocalNoBoardSelected")}
+            <button class="details-toggle" onclick={onWizardBack}>
+              {$i18n.t("firmwareFlasherGoSelectBoard")}
+            </button>
+          </p>
+        {:else if unifiedTarget.config}
+          <p class="detect-fallback-notice ok">
+            {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
+              target: selectedBoard,
+            })}
+          </p>
+        {/if}
 
         <p class="step-link">
           <button

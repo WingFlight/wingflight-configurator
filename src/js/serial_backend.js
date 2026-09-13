@@ -105,9 +105,13 @@ export async function requestWebSerialDeviceFromPicker() {
     try {
         const entry = await serial.requestWebSerialPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
-        });
+        // Awaited (getDevices() itself is callback-only) so that this
+        // function's own promise doesn't resolve until the port list/
+        // selection have actually been updated -- a caller that awaits this
+        // (e.g. the Firmware Flasher wizard's Select Serial Port button)
+        // needs that to be true before it can safely re-check port state.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Serial permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
