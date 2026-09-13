@@ -142,6 +142,18 @@
       detectStatus === "failed",
   );
 
+  // Whether selectedBoard is an actually-selectable target -- true whether
+  // it got there via a successful Detect or a manual pick, false for the
+  // "0" placeholder and for a detected-but-unmatched board (notFound sets
+  // selectedBoard to a target string that isn't a real key in
+  // unifiedConfigs, so it wouldn't actually show as selected in the
+  // dropdown either). Drives one confirmation message shared by both
+  // paths, rather than Detect having its own and manual selection having
+  // none at all.
+  let selectedBoardValid = $derived(
+    selectedBoard !== "0" && !!unifiedConfigs[selectedBoard],
+  );
+
   let releaseInfoVisible = $state(false);
   let releaseInfo = $state(null);
   let releaseNotesHtml = $state("");
@@ -1453,14 +1465,7 @@
               </button>
             </div>
           {:else}
-            {#if detectStatus === "found"}
-              <p class="detect-fallback-notice ok">
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html $i18n.t("firmwareFlasherBoardDetectionSucceeded", {
-                  boardName: detectedBoardName,
-                })}
-              </p>
-            {:else if detectStatus === "notFound" || detectStatus === "failed"}
+            {#if detectStatus === "notFound" || detectStatus === "failed"}
               <p class="detect-fallback-notice">
                 {#if detectStatus === "notFound"}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -1513,6 +1518,23 @@
                 {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
               </HelpIcon>
             </div>
+            <!-- Same confirmation whether selectedBoard got here via a
+                 successful Detect or this dropdown -- previously only
+                 Detect showed anything at all. -->
+            {#if selectedBoardValid}
+              <p class="detect-fallback-notice ok">
+                <em class="fas fa-check"></em>
+                {#if unifiedTarget.config}
+                  {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
+                    target: selectedBoard,
+                  })}
+                {:else}
+                  {$i18n.t("firmwareFlasherBoardSelectedPlain", {
+                    target: selectedBoard,
+                  })}
+                {/if}
+              </p>
+            {/if}
             <!-- Symmetric with the CTA panel's own "Select board manually
                  instead" link -- one Detect action (the CTA panel's button),
                  reached the same way from either side, rather than a second
@@ -1533,7 +1555,10 @@
           {/if}
         </div>
 
-        {#if showAdvancedOpts}
+        <!-- Only meaningful once the manual dropdown it filters is actually
+             showing -- while the Detect CTA is up there's no board list on
+             screen for it to affect. -->
+        {#if showAdvancedOpts && showManualBoardSelect}
           <div class="field">
             <label>
               <Switch
@@ -2251,6 +2276,14 @@
     font-weight: normal;
     font-size: 0.8rem;
     cursor: pointer;
+    text-align: left;
+    // As a bare grid item (e.g. directly inside .field's subgrid, not
+    // wrapped in a flex row) a <button> stretches to fill its column by
+    // default -- harmless in itself, except a button's own UA stylesheet
+    // then centers its label text within that full-width box. Keeping it
+    // sized to its own content sidesteps that regardless of container.
+    justify-self: start;
+    width: fit-content;
   }
 
   // Wraps a single .details-toggle used as a step's own secondary
