@@ -4957,6 +4957,18 @@
     "firmwareFlasherStepSourceTitle": {
         "message": "Source"
     },
+    "firmwareFlasherStepBoardTitle": {
+        "message": "Board"
+    },
+    "firmwareFlasherSkipToLocalFirmware": {
+        "message": "Flashing from a local file instead? Skip board selection"
+    },
+    "firmwareFlasherSwitchToLocalFirmware": {
+        "message": "Load a local firmware file instead"
+    },
+    "firmwareFlasherSwitchToOnlineFirmware": {
+        "message": "Choose an online firmware version instead"
+    },
     "firmwareFlasherSourceOnlineTitle": {
         "message": "Online"
     },
@@ -4970,7 +4982,7 @@
         "message": "Flash a .hex file (and optional .config) you already have."
     },
     "firmwareFlasherStepFirmwareTitle": {
-        "message": "Select Firmware"
+        "message": "Firmware"
     },
     "firmwareFlasherStepBackupTitle": {
         "message": "Backup"
