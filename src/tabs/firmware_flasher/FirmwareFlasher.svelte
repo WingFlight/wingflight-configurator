@@ -480,6 +480,17 @@
     unifiedConfigs = parsed.unifiedConfigs;
     boardsLoading = false;
 
+    // This is two sequential GitHub API calls on a cache miss, kicked off
+    // from onMount() -- easily still in flight well after the user has
+    // already picked a board themselves (manually or via Detect), loaded
+    // firmware (online *or* local file), and moved on to Backup/Flash,
+    // especially on a cold cache or slower connection. Auto-selecting the
+    // remembered board unconditionally here would call onBoardChange() this
+    // late and stomp everything the user already did in the meantime -- see
+    // onBoardChange()'s own "please load firmware file" reset. Only worth
+    // doing if nothing has been loaded/picked yet.
+    if (parsedHex || selectedBoard !== "0") return;
+
     let initialBoard;
     if (config.get("rememberLastSelectedBoard")) {
       initialBoard = config.get("selected_board");
@@ -1675,14 +1686,17 @@
               <p class="detect-fallback-notice ok">
                 {$i18n.t("firmwareFlasherWizardBackupReady")}
               </p>
-              {#if backupRun.saved}
-                <p class="detect-fallback-notice ok">
-                  {$i18n.t("firmwareFlasherWizardBackupSaved")}
-                </p>
-              {/if}
-              <button class="btn" onclick={saveBackupFile}>
-                {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
-              </button>
+              <div class="save-row">
+                <button class="btn" onclick={saveBackupFile}>
+                  {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
+                </button>
+                {#if backupRun.saved}
+                  <span class="detect-fallback-notice ok inline">
+                    <em class="fas fa-check"></em>
+                    {$i18n.t("firmwareFlasherWizardBackupSaved")}
+                  </span>
+                {/if}
+              </div>
             {:else if backupRun.status === "failed"}
               <p class="detect-fallback-notice">
                 {$i18n.t("firmwareFlasherWizardBackupFailed")}
@@ -2113,6 +2127,15 @@
       font-style: normal;
       font-weight: 600;
     }
+
+    // Sits next to a button in a .save-row rather than stacked as its own
+    // paragraph above/below one.
+    &.inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0;
+    }
   }
 
   // Backup (step 3) and restore (step 5) both run as a small self-contained
@@ -2376,6 +2399,7 @@
   .save-row {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     margin-top: 10px;
     padding-top: 10px;
