@@ -7424,7 +7424,7 @@
         "message": "What this does"
     },
     "remapFcIntroDescription": {
-        "message": "Remap FC lets you change servos, motors, and other functions that can connect to your flight controller. Swap a tail servo to motorised tail, add a buffer pack or onboard glow, or move a function to a different pin -- all without touching a soldering iron."
+        "message": "Remap FC lets you change servos, motors, and other functions that can connect to your flight controller. Add another motor, extra Aileron servo, Flaps or onboard glow system -- all without touching a soldering iron."
     },
     "remapFcRunning": {
         "message": "Reading FC"
