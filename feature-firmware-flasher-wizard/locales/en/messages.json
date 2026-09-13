@@ -5011,6 +5011,9 @@
     "firmwareFlasherSelectBoardManually": {
         "message": "Select board manually instead"
     },
+    "firmwareFlasherTryDetectInstead": {
+        "message": "Try auto-detect instead"
+    },
     "firmwareFlasherRunBackupCta": {
         "message": "Back Up Now"
     },
