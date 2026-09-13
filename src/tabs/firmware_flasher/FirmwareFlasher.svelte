@@ -1472,50 +1472,38 @@
                 {/if}
               </p>
             {/if}
-            <div class="board-select-flex">
-              {#if boardsLoading}
-                <Select
-                  value="0"
-                  options={[
-                    {
-                      value: "0",
-                      label: $i18n.t("firmwareFlasherOptionLoading"),
-                    },
-                  ]}
-                  disabled
-                />
-              {:else}
-                <select
-                  class="board-select"
-                  value={selectedBoard}
-                  onchange={(e) => onBoardChange(e.target.value)}
+            {#if boardsLoading}
+              <Select
+                value="0"
+                options={[
+                  {
+                    value: "0",
+                    label: $i18n.t("firmwareFlasherOptionLoading"),
+                  },
+                ]}
+                disabled
+              />
+            {:else}
+              <select
+                class="board-select"
+                value={selectedBoard}
+                onchange={(e) => onBoardChange(e.target.value)}
+              >
+                <option value="0"
+                  >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
                 >
-                  <option value="0"
-                    >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
+                {#each boardGroups as group (group.manufacturerId)}
+                  <optgroup
+                    label={manufacturers[group.manufacturerId]?.name ??
+                      group.manufacturerId}
                   >
-                  {#each boardGroups as group (group.manufacturerId)}
-                    <optgroup
-                      label={manufacturers[group.manufacturerId]?.name ??
-                        group.manufacturerId}
-                    >
-                      {#each group.boards as board (board.target)}
-                        <option value={board.target}>{board.board}</option>
-                      {/each}
-                    </optgroup>
-                  {/each}
-                </select>
-              {/if}
-              <span class="default_btn detect_btn">
-                <button
-                  class="detect-board"
-                  disabled={portIsDfu || !portSelected}
-                  onclick={onClickDetectBoard}
-                >
-                  <span>{$i18n.t("firmwareFlasherBoardDetectionButton")}</span>
-                  <em class="fas fa-search"></em>
-                </button>
-              </span>
-            </div>
+                    {#each group.boards as board (board.target)}
+                      <option value={board.target}>{board.board}</option>
+                    {/each}
+                  </optgroup>
+                {/each}
+              </select>
+            {/if}
             <div class="description-row">
               <span class="description"
                 >{$i18n.t("firmwareFlasherOnlineSelectBoardDescription")}</span
@@ -1525,6 +1513,20 @@
                 {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
               </HelpIcon>
             </div>
+            <!-- Symmetric with the CTA panel's own "Select board manually
+                 instead" link -- one Detect action (the CTA panel's button),
+                 reached the same way from either side, rather than a second
+                 small Detect button living here too. -->
+            <button
+              class="details-toggle"
+              onclick={() => {
+                manualSelectionShown = false;
+                detectStatus = null;
+                detectedBoardName = "";
+              }}
+            >
+              {$i18n.t("firmwareFlasherTryDetectInstead")}
+            </button>
             {#if needsPortSelection}
               {@render portPrompt()}
             {/if}
@@ -1667,6 +1669,7 @@
           </p>
         {:else if unifiedTarget.config}
           <p class="detect-fallback-notice ok">
+            <em class="fas fa-check"></em>
             {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
               target: selectedBoard,
             })}
@@ -2190,12 +2193,15 @@
   }
 
   .detect-fallback-notice {
-    margin: 0 0 8px;
+    margin: 10px 0;
     font-size: 0.8rem;
     font-style: italic;
     color: var(--color-text-soft);
 
     &.ok {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: var(--color-valid, #00d000);
       font-style: normal;
       font-weight: 600;
