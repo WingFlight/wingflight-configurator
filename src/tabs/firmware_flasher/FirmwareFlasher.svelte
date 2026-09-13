@@ -707,13 +707,14 @@
     return firmwareVersionEntries.find((e) => e.value === selectedVersion);
   }
 
-  // Choosing "Online" back in step 1 already commits to fetching firmware
-  // from the network -- picking a version here is the one deliberate
-  // gesture needed, so it loads (from cache, or by downloading) right away
-  // rather than waiting on a separate "Load Firmware Online" click that
-  // would otherwise be the only reason this step still needed its own
-  // button. retryLoadRemote() (below) covers the one case this can't do
-  // silently: a download that failed and needs another attempt.
+  // Deliberately doesn't auto-load, cache hit or not -- picking a version
+  // (including the one auto-picked right after a successful Detect) and
+  // actually fetching it are kept as two separate, explicit steps, the
+  // second one only ever happening from a real "Load Firmware Online"
+  // click. See loadRemoteFirmware() below for why: a background load
+  // chained straight off Detect's own async completion turned a slow/stuck
+  // cache read into a load that silently never finished, with no click to
+  // point at and retry.
   function onVersionChange(value) {
     selectedVersion = value;
     releaseInfoVisible = false;
@@ -729,9 +730,6 @@
         parsedHex = null;
       }
     }
-
-    if (value === "0") return;
-    loadRemoteFirmware(selectedVersionEntry()?.summary);
   }
 
   async function processHex(data, summary) {
@@ -853,10 +851,32 @@
     }
   }
 
-  // Shared by onVersionChange()'s auto-load and retryLoadRemote() (the
-  // template's Retry button, offered only once a download has actually
-  // failed) -- cache-hit or not, this is the whole "get this version's .hex
-  // into parsedHex" behavior either one needs.
+  // FirmwareCache.get() reads via chrome.storage.local, which always calls
+  // its callback asynchronously -- if that callback never actually fires
+  // (seen in the web build; a storage quirk, not something under this
+  // app's control), awaiting it with no time limit means Load Firmware
+  // Online just spins forever with no way out except reloading the whole
+  // page. Falls back to treating it as a cache miss (i.e. downloads fresh)
+  // rather than hanging indefinitely.
+  function getCachedFirmware(summary, timeoutMs = 4000) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        console.log("Cached firmware lookup timed out, downloading instead");
+        resolve(null);
+      }, timeoutMs);
+
+      FirmwareCache.get(summary, (cached) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(cached);
+      });
+    });
+  }
+
   async function loadRemoteFirmware(summary) {
     setFlashingEnabled(false);
     localFirmwareLoaded = false;
@@ -870,10 +890,14 @@
     }
 
     if (FirmwareCache.has(summary)) {
-      FirmwareCache.get(summary, (cached) =>
-        onLoadSuccess(cached.hexdata, summary),
-      );
-      return;
+      const cached = await getCachedFirmware(summary);
+      if (cached) {
+        onLoadSuccess(cached.hexdata, summary);
+        return;
+      }
+      // Timed out -- fall through to downloading fresh below rather than
+      // leaving flashingEnabled/the message at whatever loadRemoteFirmware()
+      // set them to at the top of this function.
     }
 
     loadingRemote = true;
@@ -896,7 +920,11 @@
     }
   }
 
-  function retryLoadRemote() {
+  // The template's "Load Firmware Online" button -- select-a-version and
+  // fetch-it are deliberately kept as two separate, explicit steps; see
+  // onVersionChange() for why.
+  function onClickLoadRemote() {
+    if (selectedVersion === "0") return;
     loadRemoteFirmware(selectedVersionEntry()?.summary);
   }
 
@@ -1583,19 +1611,26 @@
       </div>
 
       <div class="load-row">
+        <button
+          class="btn"
+          disabled={selectedVersion === "0" || loadingRemote}
+          onclick={onClickLoadRemote}
+        >
+          {#if loadingRemote}
+            {$i18n.t("firmwareFlasherButtonDownloading")}
+          {:else}
+            <span class="label-full"
+              >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+            >
+            <span class="label-short"
+              >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+            >
+          {/if}
+        </button>
         <span class="load-status {messageClass}">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html flashState.message}
         </span>
-        <!-- Picking a version already loads it (see onVersionChange()) --
-             the only time a manual action is still needed here is a failed
-             download, so Retry only shows up then rather than sitting
-             around as a button with nothing to do the rest of the time. -->
-        {#if flashState.messageType === FLASH_MESSAGE_TYPES.INVALID && selectedVersion !== "0" && !loadingRemote}
-          <button class="btn" onclick={retryLoadRemote}>
-            {$i18n.t("firmwareFlasherWizardRetry")}
-          </button>
-        {/if}
       </div>
 
       <div class="step-nav">
