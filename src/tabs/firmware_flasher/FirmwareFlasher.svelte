@@ -1283,12 +1283,12 @@
   <h1>{$i18n.t("tabFirmwareFlasher")}</h1>
   <!-- Exit DFU is a rescue action for a board stuck in DFU mode, unrelated
        to wizard progress -- kept reachable regardless of which step is
-       showing, rather than gated behind step 3. -->
-  <button
-    class="btn header-btn"
-    disabled={portIsDfu === false && !parsedHex}
-    onclick={onClickExitDfu}
-  >
+       showing, rather than gated behind step 3. It doesn't touch parsedHex
+       at all (STM32DFU's exitDfu path skips straight to leave(), no flash
+       data needed) -- gating on "or firmware is loaded" as well as DFU (as
+       this used to) left it enabled through most of a normal, non-DFU
+       flash, where clicking it can't do anything. -->
+  <button class="btn header-btn" disabled={!portIsDfu} onclick={onClickExitDfu}>
     <span class="label-full">{$i18n.t("firmwareFlasherExitDfu")}</span>
     <span class="label-short">{$i18n.t("firmwareFlasherExitDfuShort")}</span>
   </button>
