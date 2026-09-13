@@ -88,6 +88,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-firmware-flasher-wizard",
+      "path": "./feature-firmware-flasher-wizard/"
+    },
+    {
+      "type": "branch",
       "name": "feature-oscillation-limiter-settings",
       "path": "./feature-oscillation-limiter-settings/"
     },
