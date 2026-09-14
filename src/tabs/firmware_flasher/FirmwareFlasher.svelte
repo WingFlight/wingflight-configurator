@@ -1550,7 +1550,7 @@
             {$i18n.t("firmwareFlasherAddSerialDevice")}
           </button>
           <button class="btn" onclick={onClickSelectDfu}>
-            {$i18n.t("firmwareFlasherSelectDfu")}
+            {$i18n.t("firmwareFlasherAddDfuDevice")}
           </button>
           {#if "bluetooth" in navigator}
             <button class="btn" onclick={onClickAddBluetoothDevice}>
