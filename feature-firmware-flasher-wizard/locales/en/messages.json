@@ -4972,6 +4972,9 @@
     "firmwareFlasherAddBluetoothDevice": {
         "message": "Add Bluetooth Device"
     },
+    "firmwareFlasherAddDfuDevice": {
+        "message": "Add DFU Device"
+    },
     "firmwareFlasherConnectNativeHint": {
         "message": "New devices appear automatically when connected -- plug in your board and select it above."
     },
