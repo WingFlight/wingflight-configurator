@@ -37,6 +37,8 @@
   import StepIndicator from "@/components/StepIndicator.svelte";
   import Switch from "@/components/Switch.svelte";
 
+  import LegacyFirmwareFlasher from "./LegacyFirmwareFlasher.svelte";
+
   import {
     buildTargetsByManufacturer,
     cleanUnifiedConfigFile,
@@ -299,6 +301,12 @@
     "firmwareFlasherStepRestoreTitle",
   ];
   let wizardStep = $state(1);
+
+  // Swaps the whole wizard for LegacyFirmwareFlasher.svelte -- the flasher
+  // exactly as it stood before this rework (and before auto backup/restore
+  // existed at all), for anyone who wants that flow back. Reached via a
+  // link on step 1 (Connect); the legacy view carries its own link back.
+  let legacyMode = $state(false);
 
   // Which of step 3's two flows -- pick an online release vs. load a file
   // already on disk -- is showing. Not a separate step of its own: online
@@ -1610,295 +1618,313 @@
   </p>
 {/snippet}
 
-<Page {header}>
-  <StepIndicator
-    steps={WIZARD_STEPS.map((tag) => ({ label: $i18n.t(tag) }))}
-    current={wizardStep}
-    onSelect={goToStep}
-  />
+{#if legacyMode}
+  <LegacyFirmwareFlasher onBackToWizard={() => (legacyMode = false)} />
+{:else}
+  <Page {header}>
+    <StepIndicator
+      steps={WIZARD_STEPS.map((tag) => ({ label: $i18n.t(tag) }))}
+      current={wizardStep}
+      onSelect={goToStep}
+    />
 
-  {#if wizardStep === 1}
-    <div class="step-body">
-      <div class="options">
-        <div class="field">
-          <select
-            class="board-select"
-            value={selectedPortValue}
-            onchange={(e) => onSelectPort(e.target.value)}
-          >
-            <option value="0">{$i18n.t("firmwareFlasherConnectChoose")}</option>
-            {#each portOptions as opt (opt.value)}
-              <option value={opt.value} disabled={opt.disabled}
-                >{opt.label}</option
-              >
-            {/each}
-          </select>
-          <span class="description"
-            >{$i18n.t("firmwareFlasherConnectDescription")}</span
-          >
-        </div>
-      </div>
-
-      {#if isWebSerialBackend}
-        <div class="load-row">
-          <button class="btn" onclick={onClickSelectPort}>
-            {$i18n.t("firmwareFlasherAddSerialDevice")}
-          </button>
-          <button class="btn" onclick={onClickSelectDfu}>
-            {$i18n.t("firmwareFlasherAddDfuDevice")}
-          </button>
-          {#if "bluetooth" in navigator}
-            <button class="btn" onclick={onClickAddBluetoothDevice}>
-              {$i18n.t("firmwareFlasherAddBluetoothDevice")}
-            </button>
-          {/if}
-        </div>
-      {:else}
-        <p class="detect-fallback-notice">
-          {$i18n.t("firmwareFlasherConnectNativeHint")}
-        </p>
-      {/if}
-
-      <div class="step-nav">
-        <span></span>
-        <button
-          class="btn primary"
-          disabled={!portSelected}
-          onclick={onWizardNext}
-        >
-          {$i18n.t("firmwareFlasherWizardNext")}
-        </button>
-      </div>
-    </div>
-  {:else if wizardStep === 2}
-    <div class="step-body">
-      <div class="options">
-        <div class="field">
-          <div class="board-select-flex">
-            <Select
-              value={buildTypeIndex}
-              options={BUILD_TYPES.map((b, i) => ({
-                value: i,
-                label: $i18n.t(b.tag),
-              })).filter(
-                (_, i) =>
-                  showAdvancedOpts ||
-                  BUILD_TYPES[i].level < FEATURE_BRANCH_LEVEL,
-              )}
-              onchange={(e) => onBuildTypeChange(e.target.value)}
-            />
-            <span class="default_btn detect_btn">
-              <button
-                class="detect-board"
-                disabled={releasesLoading}
-                title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
-                onclick={onClickRefreshReleases}
-              >
-                <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}
-                ></em>
-              </button>
-            </span>
-          </div>
-          <span class="description"
-            >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
-          >
-        </div>
-
-        <div class="field">
-          {#if detectStatus === "found" && !manualSelectionShown}
-            {#if selectedBoardValid}
-              <p class="detect-fallback-notice ok">
-                <em class="fas fa-check"></em>
-                {#if unifiedTarget.config}
-                  {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
-                    target: selectedBoard,
-                  })}
-                {:else}
-                  {$i18n.t("firmwareFlasherBoardSelectedPlain", {
-                    target: selectedBoard,
-                  })}
-                {/if}
-              </p>
-            {/if}
-            <button
-              class="details-toggle"
-              onclick={() => {
-                manualSelectionShown = true;
-                // Otherwise this stale "found" (and the board name that
-                // came with it) would just sit there unused once manual
-                // selection has taken over.
-                detectStatus = null;
-                detectedBoardName = "";
-              }}
+    {#if wizardStep === 1}
+      <div class="step-body">
+        <div class="options">
+          <div class="field">
+            <select
+              class="board-select"
+              value={selectedPortValue}
+              onchange={(e) => onSelectPort(e.target.value)}
             >
-              {$i18n.t("firmwareFlasherSelectBoardManually")}
-            </button>
-          {:else if !showManualBoardSelect}
-            <div class="detect-cta">
-              {#if detectStatus === "detecting"}
-                <p class="status">
-                  <span class="spinner"></span>
-                  {$i18n.t("firmwareFlasherBoardDetectionInProgress")}
-                </p>
-              {:else if portIsDfu}
-                <p class="port-notice info">
-                  <em class="fas fa-info-circle"></em>
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html $i18n.t("firmwareFlasherDetectUnavailableDfu", {
-                    device: selectedPortLabel,
-                  })}
-                </p>
-              {:else if needsPortSelection}
-                {@render portPrompt()}
-              {:else}
-                <button
-                  class="btn primary"
-                  disabled={boardsLoading}
-                  onclick={onClickDetectBoard}
+              <option value="0"
+                >{$i18n.t("firmwareFlasherConnectChoose")}</option
+              >
+              {#each portOptions as opt (opt.value)}
+                <option value={opt.value} disabled={opt.disabled}
+                  >{opt.label}</option
                 >
-                  <em class="fas fa-search"></em>
-                  {$i18n.t("firmwareFlasherDetectBoardCta")}
+              {/each}
+            </select>
+            <span class="description"
+              >{$i18n.t("firmwareFlasherConnectDescription")}</span
+            >
+          </div>
+        </div>
+
+        {#if isWebSerialBackend}
+          <div class="load-row">
+            <button class="btn" onclick={onClickSelectPort}>
+              {$i18n.t("firmwareFlasherAddSerialDevice")}
+            </button>
+            <button class="btn" onclick={onClickSelectDfu}>
+              {$i18n.t("firmwareFlasherAddDfuDevice")}
+            </button>
+            {#if "bluetooth" in navigator}
+              <button class="btn" onclick={onClickAddBluetoothDevice}>
+                {$i18n.t("firmwareFlasherAddBluetoothDevice")}
+              </button>
+            {/if}
+          </div>
+        {:else}
+          <p class="detect-fallback-notice">
+            {$i18n.t("firmwareFlasherConnectNativeHint")}
+          </p>
+        {/if}
+
+        <!-- Only reachable from Connect, the wizard's own first step -- rather
+           than a link every step would need to carry. -->
+        <p class="step-link">
+          <button class="details-toggle" onclick={() => (legacyMode = true)}>
+            {$i18n.t("firmwareFlasherUseLegacyFlasher")}
+          </button>
+        </p>
+
+        <div class="step-nav">
+          <span></span>
+          <button
+            class="btn primary"
+            disabled={!portSelected}
+            onclick={onWizardNext}
+          >
+            {$i18n.t("firmwareFlasherWizardNext")}
+          </button>
+        </div>
+      </div>
+    {:else if wizardStep === 2}
+      <div class="step-body">
+        <div class="options">
+          <div class="field">
+            <div class="board-select-flex">
+              <Select
+                value={buildTypeIndex}
+                options={BUILD_TYPES.map((b, i) => ({
+                  value: i,
+                  label: $i18n.t(b.tag),
+                })).filter(
+                  (_, i) =>
+                    showAdvancedOpts ||
+                    BUILD_TYPES[i].level < FEATURE_BRANCH_LEVEL,
+                )}
+                onchange={(e) => onBuildTypeChange(e.target.value)}
+              />
+              <span class="default_btn detect_btn">
+                <button
+                  class="detect-board"
+                  disabled={releasesLoading}
+                  title={$i18n.t("firmwareFlasherRefreshReleasesButton")}
+                  onclick={onClickRefreshReleases}
+                >
+                  <em class="fas fa-sync-alt" class:fa-spin={releasesLoading}
+                  ></em>
                 </button>
-                <HelpIcon>
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html $i18n.t(
-                    "firmwareFlasherBoardDetectionDescriptionHint",
-                  )}
-                </HelpIcon>
+              </span>
+            </div>
+            <span class="description"
+              >{$i18n.t("firmwareFlasherOnlineSelectBuildType")}</span
+            >
+          </div>
+
+          <div class="field">
+            {#if detectStatus === "found" && !manualSelectionShown}
+              {#if selectedBoardValid}
+                <p class="detect-fallback-notice ok">
+                  <em class="fas fa-check"></em>
+                  {#if unifiedTarget.config}
+                    {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
+                      target: selectedBoard,
+                    })}
+                  {:else}
+                    {$i18n.t("firmwareFlasherBoardSelectedPlain", {
+                      target: selectedBoard,
+                    })}
+                  {/if}
+                </p>
               {/if}
               <button
                 class="details-toggle"
-                onclick={() => (manualSelectionShown = true)}
+                onclick={() => {
+                  manualSelectionShown = true;
+                  // Otherwise this stale "found" (and the board name that
+                  // came with it) would just sit there unused once manual
+                  // selection has taken over.
+                  detectStatus = null;
+                  detectedBoardName = "";
+                }}
               >
                 {$i18n.t("firmwareFlasherSelectBoardManually")}
               </button>
-            </div>
-          {:else}
-            {#if detectStatus === "notFound" || detectStatus === "failed"}
-              <p class="detect-fallback-notice">
-                {#if detectStatus === "notFound"}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html $i18n.t("firmwareFlasherBoardDetectionBoardNotFound", {
-                    boardName: detectedBoardName,
-                  })}
+            {:else if !showManualBoardSelect}
+              <div class="detect-cta">
+                {#if detectStatus === "detecting"}
+                  <p class="status">
+                    <span class="spinner"></span>
+                    {$i18n.t("firmwareFlasherBoardDetectionInProgress")}
+                  </p>
+                {:else if portIsDfu}
+                  <p class="port-notice info">
+                    <em class="fas fa-info-circle"></em>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html $i18n.t("firmwareFlasherDetectUnavailableDfu", {
+                      device: selectedPortLabel,
+                    })}
+                  </p>
+                {:else if needsPortSelection}
+                  {@render portPrompt()}
                 {:else}
-                  {$i18n.t("firmwareFlasherBoardDetectionFail")}
-                {/if}
-              </p>
-            {/if}
-            {#if boardsLoading}
-              <Select
-                value="0"
-                options={[
-                  {
-                    value: "0",
-                    label: $i18n.t("firmwareFlasherOptionLoading"),
-                  },
-                ]}
-                disabled
-              />
-            {:else}
-              <select
-                class="board-select"
-                value={selectedBoard}
-                onchange={(e) => onBoardChange(e.target.value)}
-              >
-                <option value="0"
-                  >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
-                >
-                {#each boardGroups as group (group.manufacturerId)}
-                  <optgroup
-                    label={manufacturers[group.manufacturerId]?.name ??
-                      group.manufacturerId}
+                  <button
+                    class="btn primary"
+                    disabled={boardsLoading}
+                    onclick={onClickDetectBoard}
                   >
-                    {#each group.boards as board (board.target)}
-                      <option value={board.target}>{board.board}</option>
-                    {/each}
-                  </optgroup>
-                {/each}
-              </select>
+                    <em class="fas fa-search"></em>
+                    {$i18n.t("firmwareFlasherDetectBoardCta")}
+                  </button>
+                  <HelpIcon>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html $i18n.t(
+                      "firmwareFlasherBoardDetectionDescriptionHint",
+                    )}
+                  </HelpIcon>
+                {/if}
+                <button
+                  class="details-toggle"
+                  onclick={() => (manualSelectionShown = true)}
+                >
+                  {$i18n.t("firmwareFlasherSelectBoardManually")}
+                </button>
+              </div>
+            {:else}
+              {#if detectStatus === "notFound" || detectStatus === "failed"}
+                <p class="detect-fallback-notice">
+                  {#if detectStatus === "notFound"}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html $i18n.t(
+                      "firmwareFlasherBoardDetectionBoardNotFound",
+                      {
+                        boardName: detectedBoardName,
+                      },
+                    )}
+                  {:else}
+                    {$i18n.t("firmwareFlasherBoardDetectionFail")}
+                  {/if}
+                </p>
+              {/if}
+              {#if boardsLoading}
+                <Select
+                  value="0"
+                  options={[
+                    {
+                      value: "0",
+                      label: $i18n.t("firmwareFlasherOptionLoading"),
+                    },
+                  ]}
+                  disabled
+                />
+              {:else}
+                <select
+                  class="board-select"
+                  value={selectedBoard}
+                  onchange={(e) => onBoardChange(e.target.value)}
+                >
+                  <option value="0"
+                    >{$i18n.t("firmwareFlasherOptionLabelSelectBoard")}</option
+                  >
+                  {#each boardGroups as group (group.manufacturerId)}
+                    <optgroup
+                      label={manufacturers[group.manufacturerId]?.name ??
+                        group.manufacturerId}
+                    >
+                      {#each group.boards as board (board.target)}
+                        <option value={board.target}>{board.board}</option>
+                      {/each}
+                    </optgroup>
+                  {/each}
+                </select>
+              {/if}
+              <div class="description-row">
+                <span class="description"
+                  >{$i18n.t(
+                    "firmwareFlasherOnlineSelectBoardDescription",
+                  )}</span
+                >
+                <HelpIcon>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
+                </HelpIcon>
+              </div>
             {/if}
-            <div class="description-row">
-              <span class="description"
-                >{$i18n.t("firmwareFlasherOnlineSelectBoardDescription")}</span
-              >
-              <HelpIcon>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
-              </HelpIcon>
-            </div>
-          {/if}
-        </div>
+          </div>
 
-        <!-- Only meaningful once the manual dropdown it filters is actually
+          <!-- Only meaningful once the manual dropdown it filters is actually
              showing -- while the Detect CTA is up there's no board list on
              screen for it to affect. Kept as its own field right after the
              board one (both are input controls), rather than after the
              confirmation/nav content below, which is about the outcome,
              not a further input. -->
-        {#if showAdvancedOpts && showManualBoardSelect}
-          <div class="field">
-            <label>
-              <Switch
-                checked={showLegacyTargets}
-                onchange={(e) => onShowLegacyChange(e.target.checked)}
-              />
-              <span
-                >{$i18n.t("firmware_flasher.show_legacy_targets.label")}</span
+          {#if showAdvancedOpts && showManualBoardSelect}
+            <div class="field">
+              <label>
+                <Switch
+                  checked={showLegacyTargets}
+                  onchange={(e) => onShowLegacyChange(e.target.checked)}
+                />
+                <span
+                  >{$i18n.t("firmware_flasher.show_legacy_targets.label")}</span
+                >
+              </label>
+              <span class="description"
+                >{$i18n.t(
+                  "firmware_flasher.show_legacy_targets.description",
+                )}</span
               >
-            </label>
-            <span class="description"
-              >{$i18n.t(
-                "firmware_flasher.show_legacy_targets.description",
-              )}</span
-            >
-          </div>
-        {/if}
-      </div>
+            </div>
+          {/if}
+        </div>
 
-      <!-- Same confirmation whether selectedBoard got here via a successful
+        <!-- Same confirmation whether selectedBoard got here via a successful
            Detect or the manual dropdown -- previously only Detect showed
            anything at all. -->
-      {#if showManualBoardSelect && selectedBoardValid}
-        <p class="detect-fallback-notice ok">
-          <em class="fas fa-check"></em>
-          {#if unifiedTarget.config}
-            {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
-              target: selectedBoard,
-            })}
-          {:else}
-            {$i18n.t("firmwareFlasherBoardSelectedPlain", {
-              target: selectedBoard,
-            })}
-          {/if}
-        </p>
-      {/if}
+        {#if showManualBoardSelect && selectedBoardValid}
+          <p class="detect-fallback-notice ok">
+            <em class="fas fa-check"></em>
+            {#if unifiedTarget.config}
+              {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
+                target: selectedBoard,
+              })}
+            {:else}
+              {$i18n.t("firmwareFlasherBoardSelectedPlain", {
+                target: selectedBoard,
+              })}
+            {/if}
+          </p>
+        {/if}
 
-      {#if showManualBoardSelect}
-        <!-- Symmetric with the CTA panel's own "Select board manually
+        {#if showManualBoardSelect}
+          <!-- Symmetric with the CTA panel's own "Select board manually
              instead" link -- one Detect action (the CTA panel's button),
              reached the same way from either side, rather than a second
              small Detect button living here too. -->
-        <p class="step-link">
-          <button
-            class="details-toggle"
-            onclick={() => {
-              manualSelectionShown = false;
-              detectStatus = null;
-              detectedBoardName = "";
-            }}
-          >
-            {$i18n.t("firmwareFlasherTryDetectInstead")}
-          </button>
-        </p>
-        {#if needsPortSelection}
-          {@render portPrompt()}
+          <p class="step-link">
+            <button
+              class="details-toggle"
+              onclick={() => {
+                manualSelectionShown = false;
+                detectStatus = null;
+                detectedBoardName = "";
+              }}
+            >
+              {$i18n.t("firmwareFlasherTryDetectInstead")}
+            </button>
+          </p>
+          {#if needsPortSelection}
+            {@render portPrompt()}
+          {/if}
         {/if}
-      {/if}
 
-      <div class="step-nav">
-        <span></span>
-        <!-- Board is optional, not gated on selectedBoard -- step 3 is
+        <div class="step-nav">
+          <span></span>
+          <!-- Board is optional, not gated on selectedBoard -- step 3 is
              where online-vs-local is actually decided (with its own link
              either way), so a separate "skip this for local" escape here
              would just be the same choice offered twice. Blocked while a
@@ -1908,503 +1934,514 @@
              first paint, before Detect or manual selection has been
              touched at all, which read as the step being skippable by
              accident rather than by choice. -->
-        <button
-          class="btn primary"
-          disabled={boardDetectionInProgress || !boardStepEngaged}
-          onclick={onWizardNext}
-        >
-          {$i18n.t("firmwareFlasherWizardNext")}
-        </button>
-      </div>
-    </div>
-  {:else if wizardStep === 3}
-    <div class="step-body">
-      {#if firmwareSource === "online"}
-        <div class="options">
-          <div class="field">
-            <Select
-              value={selectedVersion}
-              options={[
-                {
-                  value: "0",
-                  label: versionsLoading
-                    ? $i18n.t("firmwareFlasherOptionLoading")
-                    : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
-                },
-                // Cached entries load instantly once "Load Firmware
-                // Online" is clicked, rather than needing to download --
-                // worth being visible about which is which.
-                ...firmwareVersionEntries.map((entry) =>
-                  entry.cached
-                    ? {
-                        ...entry,
-                        label: $i18n.t("firmwareFlasherVersionCachedLabel", {
-                          label: entry.label,
-                        }),
-                      }
-                    : entry,
-                ),
-              ]}
-              onchange={(e) => onVersionChange(e.target.value)}
-            />
-            <span class="description"
-              >{$i18n.t(
-                "firmwareFlasherOnlineSelectFirmwareVersionDescription",
-              )}</span
-            >
-          </div>
-        </div>
-
-        <div class="load-row">
           <button
-            class="btn"
-            disabled={selectedVersion === "0" || loadingRemote}
-            onclick={onClickLoadRemote}
+            class="btn primary"
+            disabled={boardDetectionInProgress || !boardStepEngaged}
+            onclick={onWizardNext}
           >
-            {#if loadingRemote}
-              {$i18n.t("firmwareFlasherButtonDownloading")}
-            {:else}
+            {$i18n.t("firmwareFlasherWizardNext")}
+          </button>
+        </div>
+      </div>
+    {:else if wizardStep === 3}
+      <div class="step-body">
+        {#if firmwareSource === "online"}
+          <div class="options">
+            <div class="field">
+              <Select
+                value={selectedVersion}
+                options={[
+                  {
+                    value: "0",
+                    label: versionsLoading
+                      ? $i18n.t("firmwareFlasherOptionLoading")
+                      : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
+                  },
+                  // Cached entries load instantly once "Load Firmware
+                  // Online" is clicked, rather than needing to download --
+                  // worth being visible about which is which.
+                  ...firmwareVersionEntries.map((entry) =>
+                    entry.cached
+                      ? {
+                          ...entry,
+                          label: $i18n.t("firmwareFlasherVersionCachedLabel", {
+                            label: entry.label,
+                          }),
+                        }
+                      : entry,
+                  ),
+                ]}
+                onchange={(e) => onVersionChange(e.target.value)}
+              />
+              <span class="description"
+                >{$i18n.t(
+                  "firmwareFlasherOnlineSelectFirmwareVersionDescription",
+                )}</span
+              >
+            </div>
+          </div>
+
+          <div class="load-row">
+            <button
+              class="btn"
+              disabled={selectedVersion === "0" || loadingRemote}
+              onclick={onClickLoadRemote}
+            >
+              {#if loadingRemote}
+                {$i18n.t("firmwareFlasherButtonDownloading")}
+              {:else}
+                <span class="label-full"
+                  >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+                >
+                <span class="label-short"
+                  >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+                >
+              {/if}
+            </button>
+            <span class="load-status {messageClass}">
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html flashState.message}
+            </span>
+          </div>
+
+          <p class="step-link">
+            <button
+              class="details-toggle"
+              onclick={() => (firmwareSource = "local")}
+            >
+              {$i18n.t("firmwareFlasherSwitchToLocalFirmware")}
+            </button>
+          </p>
+        {:else}
+          <div class="load-row">
+            <button class="btn" onclick={onClickLoadLocal}>
               <span class="label-full"
-                >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
+                >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
               >
               <span class="label-short"
-                >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
+                >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
               >
-            {/if}
-          </button>
-          <span class="load-status {messageClass}">
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html flashState.message}
-          </span>
-        </div>
+            </button>
+            <span class="load-status {messageClass}">
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html flashState.message}
+            </span>
+          </div>
 
-        <p class="step-link">
-          <button
-            class="details-toggle"
-            onclick={() => (firmwareSource = "local")}
-          >
-            {$i18n.t("firmwareFlasherSwitchToLocalFirmware")}
-          </button>
-        </p>
-      {:else}
-        <div class="load-row">
-          <button class="btn" onclick={onClickLoadLocal}>
-            <span class="label-full"
-              >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
-            >
-            <span class="label-short"
-              >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
-            >
-          </button>
-          <span class="load-status {messageClass}">
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html flashState.message}
-          </span>
-        </div>
-
-        <!-- A board picked back on step 2 still matters here -- its default
+          <!-- A board picked back on step 2 still matters here -- its default
              config (if it has one; see setUnifiedConfig()) gets combined
              with whatever local .hex is loaded, same as it would for an
              online download. Flagged either way so it's not silently
              skipped just because Local doesn't have its own board field. -->
-        {#if selectedBoard === "0"}
-          <p class="detect-fallback-notice">
-            {$i18n.t("firmwareFlasherLocalNoBoardSelected")}
-            <button class="details-toggle" onclick={onWizardBack}>
-              {$i18n.t("firmwareFlasherGoSelectBoard")}
+          {#if selectedBoard === "0"}
+            <p class="detect-fallback-notice">
+              {$i18n.t("firmwareFlasherLocalNoBoardSelected")}
+              <button class="details-toggle" onclick={onWizardBack}>
+                {$i18n.t("firmwareFlasherGoSelectBoard")}
+              </button>
+            </p>
+          {:else if unifiedTarget.config}
+            <p class="detect-fallback-notice ok">
+              <em class="fas fa-check"></em>
+              {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
+                target: selectedBoard,
+              })}
+            </p>
+          {/if}
+
+          <p class="step-link">
+            <button
+              class="details-toggle"
+              onclick={() => (firmwareSource = "online")}
+            >
+              {$i18n.t("firmwareFlasherSwitchToOnlineFirmware")}
             </button>
-          </p>
-        {:else if unifiedTarget.config}
-          <p class="detect-fallback-notice ok">
-            <em class="fas fa-check"></em>
-            {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
-              target: selectedBoard,
-            })}
           </p>
         {/if}
 
-        <p class="step-link">
-          <button
-            class="details-toggle"
-            onclick={() => (firmwareSource = "online")}
-          >
-            {$i18n.t("firmwareFlasherSwitchToOnlineFirmware")}
+        <div class="step-nav">
+          <button class="btn" onclick={onWizardBack}>
+            {$i18n.t("firmwareFlasherWizardBack")}
           </button>
-        </p>
-      {/if}
-
-      <div class="step-nav">
-        <button class="btn" onclick={onWizardBack}>
-          {$i18n.t("firmwareFlasherWizardBack")}
-        </button>
-        <button
-          class="btn primary"
-          disabled={!flashState.flashingEnabled}
-          onclick={onWizardNext}
-        >
-          {$i18n.t("firmwareFlasherWizardNext")}
-        </button>
-      </div>
-    </div>
-  {:else if wizardStep === 4}
-    <div class="step-body">
-      <div class="options">
-        <div class="field">
-          <Select
-            value={backupMode}
-            disabled={backupRun.status === "connecting" ||
-              backupRun.status === "running"}
-            options={[
-              {
-                value: BACKUP_MODE_NONE,
-                label: $i18n.t("firmwareFlasherBackupModeNone"),
-              },
-              {
-                value: BACKUP_TYPES.DIFF,
-                label: $i18n.t("firmwareFlasherBackupTypeDiff"),
-              },
-              {
-                value: BACKUP_TYPES.DUMP,
-                label: $i18n.t("firmwareFlasherBackupTypeDump"),
-              },
-            ]}
-            onchange={(e) => onBackupModeChange(e.target.value)}
-          />
-          <span class="description"
-            >{backupBeforeFlash
-              ? $i18n.t("firmwareFlasherBackupTypeDescription")
-              : $i18n.t("firmwareFlasherBackupBeforeFlashingDescription")}</span
+          <button
+            class="btn primary"
+            disabled={!flashState.flashingEnabled}
+            onclick={onWizardNext}
           >
+            {$i18n.t("firmwareFlasherWizardNext")}
+          </button>
         </div>
       </div>
-
-      {#if backupMode !== BACKUP_MODE_NONE}
-        {#if portIsDfu}
-          <p class="detect-fallback-notice">
-            {$i18n.t("firmwareFlasherBackupSkippedDfu")}
-          </p>
-        {:else if needsPortSelection}
-          {@render portPrompt()}
-        {:else if backupRun.status === "idle"}
-          <div class="detect-cta">
-            <button class="btn primary" onclick={startBackup}>
-              {$i18n.t("firmwareFlasherRunBackupCta")}
-            </button>
-          </div>
-        {:else}
-          <div class="backup-panel">
-            {#if backupRun.status === "connecting"}
-              <p class="status">
-                <span class="spinner"></span>
-                {$i18n.t("firmwareFlasherWizardConnecting")}
-              </p>
-            {:else if backupRun.status === "running"}
-              <p class="status">
-                <span class="spinner"></span>
-                {$i18n.t("firmwareFlasherWizardBackupRunning", {
-                  command: backupCommand,
-                })}
-              </p>
-            {:else if backupRun.status === "ready"}
-              {#if backupRun.foreignFirmware}
-                <p class="detect-fallback-notice">
-                  {$i18n.t("firmwareFlasherWizardBackupForeignFirmware")}
-                </p>
-              {:else}
-                <p class="detect-fallback-notice ok">
-                  {$i18n.t("firmwareFlasherWizardBackupReady")}
-                </p>
-              {/if}
-              <div class="save-row">
-                <button class="btn" onclick={saveBackupFile}>
-                  {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
-                </button>
-                {#if backupRun.saved}
-                  <span class="detect-fallback-notice ok inline">
-                    <em class="fas fa-check"></em>
-                    {$i18n.t("firmwareFlasherWizardBackupSaved")}
-                  </span>
-                {/if}
-              </div>
-            {:else if backupRun.status === "failed"}
-              <p class="detect-fallback-notice">
-                {$i18n.t("firmwareFlasherWizardBackupFailed")}
-              </p>
-              <div class="buttons">
-                <button class="btn" onclick={cancelBackup}>
-                  {$i18n.t("firmwareFlasherWizardCancel")}
-                </button>
-                {#if isWebSerialBackend}
-                  <button class="btn" onclick={selectPortForBackup}>
-                    {$i18n.t("firmwareFlasherWizardSelectPort")}
-                  </button>
-                {/if}
-                <button class="btn primary" onclick={runBackup}>
-                  {$i18n.t("firmwareFlasherWizardRetry")}
-                </button>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      {/if}
-
-      <div class="step-nav">
-        <button
-          class="btn"
-          disabled={backupRun.status === "connecting" ||
-            backupRun.status === "running"}
-          onclick={onWizardBack}
-        >
-          {$i18n.t("firmwareFlasherWizardBack")}
-        </button>
-        <button
-          class="btn primary"
-          disabled={!canLeaveBackupStep}
-          onclick={onWizardNext}
-        >
-          {$i18n.t("firmwareFlasherWizardNext")}
-        </button>
-      </div>
-    </div>
-  {:else if wizardStep === 5}
-    <div class="step-body">
-      {#if releaseInfoVisible && releaseInfo}
-        <p class="ready-summary">
-          {$i18n.t("firmwareFlasherReadyToFlash", {
-            target: releaseInfo.target,
-            version: releaseInfo.version,
-          })}
-          <button
-            class="details-toggle"
-            onclick={() => (showReleaseDetails = !showReleaseDetails)}
-          >
-            {showReleaseDetails
-              ? $i18n.t("firmwareFlasherHideDetails")
-              : $i18n.t("firmwareFlasherShowDetails")}
-          </button>
-        </p>
-      {/if}
-
-      {#if showReleaseDetails && releaseInfoVisible && releaseInfo}
-        <div class="release_info">
-          <div class="release-title">
-            {$i18n.t("firmwareFlasherReleaseSummaryHead")}
-          </div>
-          <div class="release-body">
-            <p>
-              <strong>{$i18n.t("firmwareFlasherReleaseTarget")}</strong>
-              <span class="target">{releaseInfo.target}</span>
-            </p>
-            {#if releaseInfo.manufacturer}
-              <p>
-                <strong>{$i18n.t("firmwareFlasherReleaseManufacturer")}</strong>
-                {releaseInfo.manufacturer}
-              </p>
-            {/if}
-            <p>
-              <strong>{$i18n.t("firmwareFlasherReleaseVersion")}</strong>
-              <a
-                href={releaseInfo.versionUrl}
-                target="_blank"
-                rel="noopener noreferrer">{releaseInfo.version}</a
-              >
-            </p>
-            <p>
-              <strong>{$i18n.t("firmwareFlasherReleaseFile")}</strong>
-              <a
-                href={releaseInfo.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer">{releaseInfo.file}</a
-              >
-            </p>
-            <p>
-              <strong>{$i18n.t("firmwareFlasherReleaseDate")}</strong>
-              {releaseInfo.date}
-            </p>
-            {#if releaseInfo.hasUnifiedTarget}
-              <p>
-                <strong>{$i18n.t("firmwareFlasherUnifiedTargetName")}</strong>
-                <a
-                  href={releaseInfo.unifiedTargetFileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer">{releaseInfo.unifiedTargetFile}</a
-                >
-              </p>
-              <p>
-                <strong>{$i18n.t("firmwareFlasherUnifiedTargetDate")}</strong>
-                {releaseInfo.unifiedTargetDate}
-              </p>
-            {/if}
-            <strong>{$i18n.t("firmwareFlasherReleaseNotes")}</strong>
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            <div class="notes">{@html releaseNotesHtml}</div>
-
-            {#if flashState.showSaveLink || (unifiedTarget.config && !isConfigLocal)}
-              <div class="save-row">
-                {#if flashState.showSaveLink}
-                  <button class="btn" onclick={onSaveFirmware}>
-                    {$i18n.t("firmwareFlasherSaveFirmware")}
-                  </button>
-                {/if}
-                {#if unifiedTarget.config && !isConfigLocal}
-                  <button class="btn" onclick={onSaveConfig}>
-                    {$i18n.t("firmwareFlasherSaveConfig")}
-                  </button>
-                {/if}
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/if}
-
-      {#if showAdvancedOpts}
+    {:else if wizardStep === 4}
+      <div class="step-body">
         <div class="options">
           <div class="field">
-            <label>
-              <Switch
-                checked={eraseChip}
-                onchange={(e) => onEraseChipChange(e.target.checked)}
-              />
-              <span>{$i18n.t("firmwareFlasherFullChipErase")}</span>
-            </label>
+            <Select
+              value={backupMode}
+              disabled={backupRun.status === "connecting" ||
+                backupRun.status === "running"}
+              options={[
+                {
+                  value: BACKUP_MODE_NONE,
+                  label: $i18n.t("firmwareFlasherBackupModeNone"),
+                },
+                {
+                  value: BACKUP_TYPES.DIFF,
+                  label: $i18n.t("firmwareFlasherBackupTypeDiff"),
+                },
+                {
+                  value: BACKUP_TYPES.DUMP,
+                  label: $i18n.t("firmwareFlasherBackupTypeDump"),
+                },
+              ]}
+              onchange={(e) => onBackupModeChange(e.target.value)}
+            />
             <span class="description"
-              >{$i18n.t("firmwareFlasherFullChipEraseDescription")}</span
+              >{backupBeforeFlash
+                ? $i18n.t("firmwareFlasherBackupTypeDescription")
+                : $i18n.t(
+                    "firmwareFlasherBackupBeforeFlashingDescription",
+                  )}</span
             >
           </div>
         </div>
-      {/if}
 
-      <div class="progress-info">
-        <progress class="progress" value={flashState.progress} min="0" max="100"
-        ></progress>
-        <span class="progress-label {messageClass}">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html flashState.message}
-        </span>
-      </div>
-
-      {#if needsPortSelection}
-        {@render portPrompt()}
-      {/if}
-
-      <div class="step-nav">
-        <button class="btn" disabled={flashInProgress} onclick={onWizardBack}>
-          {$i18n.t("firmwareFlasherWizardBack")}
-        </button>
-        <button
-          class="btn primary"
-          disabled={!flashState.flashingEnabled ||
-            flashInProgress ||
-            needsPortSelection}
-          onclick={onClickFlash}
-        >
-          <span class="label-full"
-            >{$i18n.t("firmwareFlasherFlashFirmware")}</span
-          >
-          <span class="label-short"
-            >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
-          >
-        </button>
-      </div>
-    </div>
-  {:else}
-    <div class="step-body">
-      {#if restoreRun.status === "prompt"}
-        <div class="backup-panel">
-          <p>{$i18n.t("firmwareFlasherWizardRestorePrompt")}</p>
-          <div class="buttons">
-            <button class="btn" onclick={skipRestore}>
-              {$i18n.t("firmwareFlasherWizardSkip")}
-            </button>
-            <button class="btn primary" onclick={runRestore}>
-              {$i18n.t("firmwareFlasherWizardRestoreNow")}
-            </button>
-          </div>
-        </div>
-      {:else if ["waiting", "connecting", "running"].includes(restoreRun.status)}
-        <div class="backup-panel">
-          <p class="status">
-            <span class="spinner"></span>
-            {#if restoreRun.status === "waiting"}
-              {$i18n.t("firmwareFlasherWizardRestoreWaiting")}
-            {:else if restoreRun.status === "connecting"}
-              {$i18n.t("firmwareFlasherWizardConnecting")}
-            {:else}
-              {$i18n.t("firmwareFlasherWizardRestoreRunning")}
-            {/if}
-          </p>
-        </div>
-      {:else if restoreRun.status === "failed"}
-        <div class="backup-panel">
-          <p class="detect-fallback-notice">
-            {$i18n.t("firmwareFlasherWizardRestoreFailed")}
-          </p>
-          <div class="buttons">
-            <button class="btn" onclick={skipRestore}>
-              {$i18n.t("firmwareFlasherWizardSkip")}
-            </button>
-            {#if isWebSerialBackend}
-              <button class="btn" onclick={selectPortForRestore}>
-                {$i18n.t("firmwareFlasherWizardSelectPort")}
+        {#if backupMode !== BACKUP_MODE_NONE}
+          {#if portIsDfu}
+            <p class="detect-fallback-notice">
+              {$i18n.t("firmwareFlasherBackupSkippedDfu")}
+            </p>
+          {:else if needsPortSelection}
+            {@render portPrompt()}
+          {:else if backupRun.status === "idle"}
+            <div class="detect-cta">
+              <button class="btn primary" onclick={startBackup}>
+                {$i18n.t("firmwareFlasherRunBackupCta")}
               </button>
-            {/if}
-            <button class="btn primary" onclick={runRestore}>
-              {$i18n.t("firmwareFlasherWizardRetry")}
-            </button>
-          </div>
-        </div>
-      {:else if restoreRun.status === "done"}
-        <p class="detect-fallback-notice ok">
-          {$i18n.t("firmwareFlasherWizardRestoreDone")}
-        </p>
-      {:else}
-        <!-- "idle" (no backup was taken this run) or "skipped" -->
-        <p class="ready-summary">
-          {$i18n.t("firmwareFlasherFlashCompleteMessage")}
-        </p>
-      {/if}
+            </div>
+          {:else}
+            <div class="backup-panel">
+              {#if backupRun.status === "connecting"}
+                <p class="status">
+                  <span class="spinner"></span>
+                  {$i18n.t("firmwareFlasherWizardConnecting")}
+                </p>
+              {:else if backupRun.status === "running"}
+                <p class="status">
+                  <span class="spinner"></span>
+                  {$i18n.t("firmwareFlasherWizardBackupRunning", {
+                    command: backupCommand,
+                  })}
+                </p>
+              {:else if backupRun.status === "ready"}
+                {#if backupRun.foreignFirmware}
+                  <p class="detect-fallback-notice">
+                    {$i18n.t("firmwareFlasherWizardBackupForeignFirmware")}
+                  </p>
+                {:else}
+                  <p class="detect-fallback-notice ok">
+                    {$i18n.t("firmwareFlasherWizardBackupReady")}
+                  </p>
+                {/if}
+                <div class="save-row">
+                  <button class="btn" onclick={saveBackupFile}>
+                    {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
+                  </button>
+                  {#if backupRun.saved}
+                    <span class="detect-fallback-notice ok inline">
+                      <em class="fas fa-check"></em>
+                      {$i18n.t("firmwareFlasherWizardBackupSaved")}
+                    </span>
+                  {/if}
+                </div>
+              {:else if backupRun.status === "failed"}
+                <p class="detect-fallback-notice">
+                  {$i18n.t("firmwareFlasherWizardBackupFailed")}
+                </p>
+                <div class="buttons">
+                  <button class="btn" onclick={cancelBackup}>
+                    {$i18n.t("firmwareFlasherWizardCancel")}
+                  </button>
+                  {#if isWebSerialBackend}
+                    <button class="btn" onclick={selectPortForBackup}>
+                      {$i18n.t("firmwareFlasherWizardSelectPort")}
+                    </button>
+                  {/if}
+                  <button class="btn primary" onclick={runBackup}>
+                    {$i18n.t("firmwareFlasherWizardRetry")}
+                  </button>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        {/if}
 
-      {#if !["prompt", "waiting", "connecting", "running"].includes(restoreRun.status)}
         <div class="step-nav">
-          <span></span>
-          <button class="btn primary" onclick={resetWizardToStart}>
-            {$i18n.t("firmwareFlasherStartOver")}
+          <button
+            class="btn"
+            disabled={backupRun.status === "connecting" ||
+              backupRun.status === "running"}
+            onclick={onWizardBack}
+          >
+            {$i18n.t("firmwareFlasherWizardBack")}
+          </button>
+          <button
+            class="btn primary"
+            disabled={!canLeaveBackupStep}
+            onclick={onWizardNext}
+          >
+            {$i18n.t("firmwareFlasherWizardNext")}
           </button>
         </div>
-      {/if}
-    </div>
-  {/if}
+      </div>
+    {:else if wizardStep === 5}
+      <div class="step-body">
+        {#if releaseInfoVisible && releaseInfo}
+          <p class="ready-summary">
+            {$i18n.t("firmwareFlasherReadyToFlash", {
+              target: releaseInfo.target,
+              version: releaseInfo.version,
+            })}
+            <button
+              class="details-toggle"
+              onclick={() => (showReleaseDetails = !showReleaseDetails)}
+            >
+              {showReleaseDetails
+                ? $i18n.t("firmwareFlasherHideDetails")
+                : $i18n.t("firmwareFlasherShowDetails")}
+            </button>
+          </p>
+        {/if}
 
-  <!-- Shown on every step, not just Backup & Safety -- these are general
+        {#if showReleaseDetails && releaseInfoVisible && releaseInfo}
+          <div class="release_info">
+            <div class="release-title">
+              {$i18n.t("firmwareFlasherReleaseSummaryHead")}
+            </div>
+            <div class="release-body">
+              <p>
+                <strong>{$i18n.t("firmwareFlasherReleaseTarget")}</strong>
+                <span class="target">{releaseInfo.target}</span>
+              </p>
+              {#if releaseInfo.manufacturer}
+                <p>
+                  <strong
+                    >{$i18n.t("firmwareFlasherReleaseManufacturer")}</strong
+                  >
+                  {releaseInfo.manufacturer}
+                </p>
+              {/if}
+              <p>
+                <strong>{$i18n.t("firmwareFlasherReleaseVersion")}</strong>
+                <a
+                  href={releaseInfo.versionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer">{releaseInfo.version}</a
+                >
+              </p>
+              <p>
+                <strong>{$i18n.t("firmwareFlasherReleaseFile")}</strong>
+                <a
+                  href={releaseInfo.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer">{releaseInfo.file}</a
+                >
+              </p>
+              <p>
+                <strong>{$i18n.t("firmwareFlasherReleaseDate")}</strong>
+                {releaseInfo.date}
+              </p>
+              {#if releaseInfo.hasUnifiedTarget}
+                <p>
+                  <strong>{$i18n.t("firmwareFlasherUnifiedTargetName")}</strong>
+                  <a
+                    href={releaseInfo.unifiedTargetFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer">{releaseInfo.unifiedTargetFile}</a
+                  >
+                </p>
+                <p>
+                  <strong>{$i18n.t("firmwareFlasherUnifiedTargetDate")}</strong>
+                  {releaseInfo.unifiedTargetDate}
+                </p>
+              {/if}
+              <strong>{$i18n.t("firmwareFlasherReleaseNotes")}</strong>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <div class="notes">{@html releaseNotesHtml}</div>
+
+              {#if flashState.showSaveLink || (unifiedTarget.config && !isConfigLocal)}
+                <div class="save-row">
+                  {#if flashState.showSaveLink}
+                    <button class="btn" onclick={onSaveFirmware}>
+                      {$i18n.t("firmwareFlasherSaveFirmware")}
+                    </button>
+                  {/if}
+                  {#if unifiedTarget.config && !isConfigLocal}
+                    <button class="btn" onclick={onSaveConfig}>
+                      {$i18n.t("firmwareFlasherSaveConfig")}
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          </div>
+        {/if}
+
+        {#if showAdvancedOpts}
+          <div class="options">
+            <div class="field">
+              <label>
+                <Switch
+                  checked={eraseChip}
+                  onchange={(e) => onEraseChipChange(e.target.checked)}
+                />
+                <span>{$i18n.t("firmwareFlasherFullChipErase")}</span>
+              </label>
+              <span class="description"
+                >{$i18n.t("firmwareFlasherFullChipEraseDescription")}</span
+              >
+            </div>
+          </div>
+        {/if}
+
+        <div class="progress-info">
+          <progress
+            class="progress"
+            value={flashState.progress}
+            min="0"
+            max="100"
+          ></progress>
+          <span class="progress-label {messageClass}">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html flashState.message}
+          </span>
+        </div>
+
+        {#if needsPortSelection}
+          {@render portPrompt()}
+        {/if}
+
+        <div class="step-nav">
+          <button class="btn" disabled={flashInProgress} onclick={onWizardBack}>
+            {$i18n.t("firmwareFlasherWizardBack")}
+          </button>
+          <button
+            class="btn primary"
+            disabled={!flashState.flashingEnabled ||
+              flashInProgress ||
+              needsPortSelection}
+            onclick={onClickFlash}
+          >
+            <span class="label-full"
+              >{$i18n.t("firmwareFlasherFlashFirmware")}</span
+            >
+            <span class="label-short"
+              >{$i18n.t("firmwareFlasherFlashFirmwareShort")}</span
+            >
+          </button>
+        </div>
+      </div>
+    {:else}
+      <div class="step-body">
+        {#if restoreRun.status === "prompt"}
+          <div class="backup-panel">
+            <p>{$i18n.t("firmwareFlasherWizardRestorePrompt")}</p>
+            <div class="buttons">
+              <button class="btn" onclick={skipRestore}>
+                {$i18n.t("firmwareFlasherWizardSkip")}
+              </button>
+              <button class="btn primary" onclick={runRestore}>
+                {$i18n.t("firmwareFlasherWizardRestoreNow")}
+              </button>
+            </div>
+          </div>
+        {:else if ["waiting", "connecting", "running"].includes(restoreRun.status)}
+          <div class="backup-panel">
+            <p class="status">
+              <span class="spinner"></span>
+              {#if restoreRun.status === "waiting"}
+                {$i18n.t("firmwareFlasherWizardRestoreWaiting")}
+              {:else if restoreRun.status === "connecting"}
+                {$i18n.t("firmwareFlasherWizardConnecting")}
+              {:else}
+                {$i18n.t("firmwareFlasherWizardRestoreRunning")}
+              {/if}
+            </p>
+          </div>
+        {:else if restoreRun.status === "failed"}
+          <div class="backup-panel">
+            <p class="detect-fallback-notice">
+              {$i18n.t("firmwareFlasherWizardRestoreFailed")}
+            </p>
+            <div class="buttons">
+              <button class="btn" onclick={skipRestore}>
+                {$i18n.t("firmwareFlasherWizardSkip")}
+              </button>
+              {#if isWebSerialBackend}
+                <button class="btn" onclick={selectPortForRestore}>
+                  {$i18n.t("firmwareFlasherWizardSelectPort")}
+                </button>
+              {/if}
+              <button class="btn primary" onclick={runRestore}>
+                {$i18n.t("firmwareFlasherWizardRetry")}
+              </button>
+            </div>
+          </div>
+        {:else if restoreRun.status === "done"}
+          <p class="detect-fallback-notice ok">
+            {$i18n.t("firmwareFlasherWizardRestoreDone")}
+          </p>
+        {:else}
+          <!-- "idle" (no backup was taken this run) or "skipped" -->
+          <p class="ready-summary">
+            {$i18n.t("firmwareFlasherFlashCompleteMessage")}
+          </p>
+        {/if}
+
+        {#if !["prompt", "waiting", "connecting", "running"].includes(restoreRun.status)}
+          <div class="step-nav">
+            <span></span>
+            <button class="btn primary" onclick={resetWizardToStart}>
+              {$i18n.t("firmwareFlasherStartOver")}
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Shown on every step, not just Backup & Safety -- these are general
        safety/recovery notes about the flasher itself, not something
        specific to that one step's controls. -->
-  <div class="note warning">
-    <div class="note-title">{$i18n.t("warningTitle")}</div>
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    <p>{@html $i18n.t("firmwareFlasherWarningText")}</p>
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    <p>{@html $i18n.t("firmwareFlasherTargetWarning")}</p>
-  </div>
+    <div class="note warning">
+      <div class="note-title">{$i18n.t("warningTitle")}</div>
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <p>{@html $i18n.t("firmwareFlasherWarningText")}</p>
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <p>{@html $i18n.t("firmwareFlasherTargetWarning")}</p>
+    </div>
 
-  <!-- eslint-disable svelte/no-at-html-tags -->
-  <div class="note">
-    <div class="note-title">{@html $i18n.t("firmwareFlasherRecoveryHead")}</div>
-    <p>{@html $i18n.t("firmwareFlasherRecoveryText")}</p>
-  </div>
-  <!-- eslint-enable svelte/no-at-html-tags -->
-</Page>
+    <!-- eslint-disable svelte/no-at-html-tags -->
+    <div class="note">
+      <div class="note-title">
+        {@html $i18n.t("firmwareFlasherRecoveryHead")}
+      </div>
+      <p>{@html $i18n.t("firmwareFlasherRecoveryText")}</p>
+    </div>
+    <!-- eslint-enable svelte/no-at-html-tags -->
+  </Page>
 
-<dialog bind:this={detectDialogEl}>
-  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  <h3>{@html detectDialogTitle}</h3>
-  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  <div class="content">{@html detectDialogContent}</div>
-  <div class="buttons">
-    <button class="btn" onclick={() => detectDialogEl.close()}>
-      {$i18n.t("dialogBoardDetectionMessageAcknowledge")}
-    </button>
-  </div>
-</dialog>
+  <dialog bind:this={detectDialogEl}>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <h3>{@html detectDialogTitle}</h3>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <div class="content">{@html detectDialogContent}</div>
+    <div class="buttons">
+      <button class="btn" onclick={() => detectDialogEl.close()}>
+        {$i18n.t("dialogBoardDetectionMessageAcknowledge")}
+      </button>
+    </div>
+  </dialog>
+{/if}
 
 <style lang="scss">
   h1 {
