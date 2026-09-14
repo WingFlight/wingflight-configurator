@@ -4906,6 +4906,9 @@
     "firmwareFlasherWizardBackupReady": {
         "message": "Backup captured -- it's held in memory and will be offered for restore automatically once the new firmware boots. Saving a copy to a file below is optional, but recommended in case anything goes wrong."
     },
+    "firmwareFlasherWizardBackupForeignFirmware": {
+        "message": "This board isn't currently running Wingflight, so this backup won't be offered for restore automatically after flashing -- its settings aren't guaranteed to carry over. Save a copy below if you want it for reference."
+    },
     "firmwareFlasherWizardBackupSaved": {
         "message": "Saved"
     },
