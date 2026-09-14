@@ -18,6 +18,7 @@
     backupOverSerial,
     restoreOverSerial,
     saveBackupToFile,
+    isWingflightBackup,
     BACKUP_TYPES,
   } from "@/js/cli_backup.js";
   import { ReleaseChecker } from "@/js/release_checker.js";
@@ -328,7 +329,18 @@
   // to show. port/baud/text are kept as plain (non-reactive) fields since
   // they're only ever read imperatively (by runBackup()/runRestore()
   // themselves), never rendered.
-  let backupRun = $state({ status: "idle", text: null, saved: false }); // idle | connecting | running | ready | failed
+  // foreignFirmware: set once the capture is in and text doesn't carry
+  // Wingflight's own version banner (see isWingflightBackup()) -- the diff
+  // still gets shown/saveable, just never handed to the post-flash
+  // auto-restore, since there's no guarantee another firmware's settings
+  // dump means the same thing (or even parses) once replayed into
+  // Wingflight's CLI.
+  let backupRun = $state({
+    status: "idle",
+    text: null,
+    saved: false,
+    foreignFirmware: false,
+  }); // idle | connecting | running | ready | failed
   let backupPort = null;
   let backupBaud = null;
 
@@ -387,7 +399,12 @@
     releaseInfoVisible = false;
     releaseInfo = null;
     releaseNotesHtml = "";
-    backupRun = { status: "idle", text: null, saved: false };
+    backupRun = {
+      status: "idle",
+      text: null,
+      saved: false,
+      foreignFirmware: false,
+    };
     restoreRun = { status: "idle" };
     backupPort = null;
     backupBaud = null;
@@ -1157,6 +1174,7 @@
     backupRun.status = "connecting";
     backupRun.text = null;
     backupRun.saved = false;
+    backupRun.foreignFirmware = false;
 
     GUI.connect_lock = true;
 
@@ -1177,6 +1195,10 @@
     }
 
     backupRun.text = text;
+    // Still captured and saveable either way -- just not trustworthy as an
+    // automatic restore target once it's not Wingflight's own dump/diff on
+    // the other end. See onClickFlash()'s use of this.
+    backupRun.foreignFirmware = !isWingflightBackup(text);
     backupRun.status = "ready";
   }
 
@@ -1186,7 +1208,12 @@
   }
 
   function cancelBackup() {
-    backupRun = { status: "idle", text: null, saved: false };
+    backupRun = {
+      status: "idle",
+      text: null,
+      saved: false,
+      foreignFirmware: false,
+    };
   }
 
   // Recovery for when runBackup()/runRestore() can't retry their way out of
@@ -1334,7 +1361,10 @@
 
   // Whether a backup was actually captured back in step 4 -- if so, it and
   // the port it came from ride along to flashFirmware(), which hands them
-  // to offerRestore() once flashing finishes.
+  // to offerRestore() once flashing finishes. A foreign-firmware capture
+  // (see runBackup()) is excluded here -- it stays visible/saveable back on
+  // step 4, it just never becomes an auto-restore target -- so this is
+  // treated exactly like no backup having been taken at all.
   function onClickFlash() {
     if (GUI.connect_lock) return;
     if (!parsedHex) {
@@ -1343,7 +1373,13 @@
       return;
     }
 
-    proceedToFlash(backupRun.text, backupRun.text ? backupPort : null);
+    const restorableBackupText = backupRun.foreignFirmware
+      ? null
+      : backupRun.text;
+    proceedToFlash(
+      restorableBackupText,
+      restorableBackupText ? backupPort : null,
+    );
   }
 
   async function onClickDetectBoard() {
@@ -2070,9 +2106,15 @@
                 })}
               </p>
             {:else if backupRun.status === "ready"}
-              <p class="detect-fallback-notice ok">
-                {$i18n.t("firmwareFlasherWizardBackupReady")}
-              </p>
+              {#if backupRun.foreignFirmware}
+                <p class="detect-fallback-notice">
+                  {$i18n.t("firmwareFlasherWizardBackupForeignFirmware")}
+                </p>
+              {:else}
+                <p class="detect-fallback-notice ok">
+                  {$i18n.t("firmwareFlasherWizardBackupReady")}
+                </p>
+              {/if}
               <div class="save-row">
                 <button class="btn" onclick={saveBackupFile}>
                   {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
