@@ -20,6 +20,20 @@ const BACKUP_COMMANDS = {
   [BACKUP_TYPES.DUMP]: "dump all",
 };
 
+// Both `dump all` and `diff all` open with cli.c's printVersion() banner --
+// "# Wingflight / <target> (...) <version> ...". A board still running
+// Rotorflight, Betaflight, or anything else prints its own firmware name
+// there instead, which is what this checks for: the settings a `dump`/`diff`
+// captures aren't guaranteed to mean the same thing (or even parse) once
+// replayed into Wingflight's CLI after the flash, so a backup that doesn't
+// match shouldn't be trusted for an automatic restore -- see its one caller
+// in FirmwareFlasher.svelte.
+const WINGFLIGHT_VERSION_BANNER = /^#\s*Wingflight\s*\//m;
+
+export function isWingflightBackup(text) {
+  return !!text && WINGFLIGHT_VERSION_BANNER.test(text);
+}
+
 const CLI_ENTER_TIMEOUT_MS = 8000;
 const CLI_IDLE_MS = 750;
 // A freshly-flashed wing FC has a lot more to bring up on boot (servo mixer,

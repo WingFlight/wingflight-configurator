@@ -10,7 +10,8 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 // device chooser immediately on selecting its DFU picker option, rather than
 // waiting for the user to click Flash. Silent (no popup) if a matching device
 // is already authorized, so it's safe to run on every DFU selection.
-async function requestWebUsbDeviceFromPicker() {
+// Exported for selectDfuFromPicker() below.
+export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
         return;
     }
@@ -29,9 +30,12 @@ async function requestWebUsbDeviceFromPicker() {
         // nwjs/chrome.usb picker's behavior of relabeling the option with the
         // device name so there's a visible sign the board was actually found.
         GUI.log(i18n.getMessage('usbDeviceOpened', [device.productName || device.serialNumber || 'DFU']));
-        $('div#port-picker #port option[value="DFU"]').text(
-            device.productName ? `DFU - ${device.productName}` : 'DFU',
-        );
+        $('div#port-picker #port option[value="DFU"]')
+            .text(device.productName ? `DFU - ${device.productName}` : 'DFU')
+            // No longer just the "click to request permission" trigger --
+            // see the matching comment in port_handler.js's
+            // updatePortSelect().
+            .removeAttr('data-dfu-pending');
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
     }
@@ -91,32 +95,60 @@ function selectRequestedPort(el, ports, entry, cachedPorts, fallbackValue) {
     el.trigger('change');
 }
 
-async function requestWebSerialDeviceFromPicker() {
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// Serial Port" button, offered when it finds no port chosen and isn't DFU --
+// can trigger the exact same flow as picking "Add serial device" from the
+// port-picker dropdown itself: real user gesture in, browser device chooser
+// out, then the global port list/selection are updated the same way either
+// route got there. Keeps there being exactly one place that knows how to
+// adopt a newly-granted Web Serial port app-wide.
+export async function requestWebSerialDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestWebSerialPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
-        });
+        // Awaited (getDevices() itself is callback-only) so that this
+        // function's own promise doesn't resolve until the port list/
+        // selection have actually been updated -- a caller that awaits this
+        // (e.g. the Firmware Flasher wizard's Select Serial Port button)
+        // needs that to be true before it can safely re-check port state.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Serial permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
     }
 }
 
-async function requestWebBluetoothDeviceFromPicker() {
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// DFU Device" button, offered alongside "Select Serial Port" when it finds
+// no port chosen at all -- can pick DFU the same way the picker's own
+// dropdown does: select the (always-present, web-only) "DFU" option, then
+// run the same WebUSB permission grant/refresh selecting it there would
+// have triggered. The picker's own change handler skips that step for a
+// programmatic .trigger('change') (it checks event.originalEvent, which a
+// synthetic trigger never has), so it has to happen here instead.
+export async function selectDfuFromPicker() {
+    $('div#port-picker #port').val('DFU').trigger('change');
+    await requestWebUsbDeviceFromPicker();
+}
+
+// Exported alongside requestWebSerialDeviceFromPicker/selectDfuFromPicker so
+// the Firmware Flasher wizard's Connect step can offer all three "add a
+// device" actions uniformly.
+export async function requestWebBluetoothDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestBluetoothPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
-        });
+        // See requestWebSerialDeviceFromPicker() -- same reasoning for
+        // awaiting getDevices() here.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Bluetooth permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
