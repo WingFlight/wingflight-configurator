@@ -30,9 +30,12 @@ export async function requestWebUsbDeviceFromPicker() {
         // nwjs/chrome.usb picker's behavior of relabeling the option with the
         // device name so there's a visible sign the board was actually found.
         GUI.log(i18n.getMessage('usbDeviceOpened', [device.productName || device.serialNumber || 'DFU']));
-        $('div#port-picker #port option[value="DFU"]').text(
-            device.productName ? `DFU - ${device.productName}` : 'DFU',
-        );
+        $('div#port-picker #port option[value="DFU"]')
+            .text(device.productName ? `DFU - ${device.productName}` : 'DFU')
+            // No longer just the "click to request permission" trigger --
+            // see the matching comment in port_handler.js's
+            // updatePortSelect().
+            .removeAttr('data-dfu-pending');
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
     }

@@ -212,7 +212,17 @@
     const el = portPickerElement();
     portOptions = el
       ? Array.from(el.options)
-          .filter((opt) => !PORT_LIST_EXCLUDED_VALUES.includes(opt.value))
+          .filter(
+            (opt) =>
+              !PORT_LIST_EXCLUDED_VALUES.includes(opt.value) &&
+              // Still just the "click to request permission" trigger, i.e.
+              // exactly what the Select DFU Device button above already
+              // does -- listing it too would just be the same action twice.
+              // Once a real device is authorized this is cleared and the
+              // option is relabeled with the device's name, so it's worth
+              // showing (and selecting) as an entry in its own right.
+              opt.dataset?.dfuPending !== "true",
+          )
           .map((opt) => ({
             value: opt.value,
             label: opt.text,
