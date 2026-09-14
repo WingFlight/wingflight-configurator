@@ -69,6 +69,12 @@
     { tag: "firmwareFlasherOptionLabelBuildTypeDevelopment", level: 2 },
     { tag: "firmwareFlasherOptionLabelBuildTypeFeatureBranch", level: 3 },
   ];
+  // Feature branches are unreviewed, in-progress work -- offering them to
+  // everyone by default invites someone to flash one without realizing
+  // what it is. Gated behind the same "advanced firmware flashing options"
+  // toggle (Options page) that already guards showLegacyTargets/eraseChip
+  // below, rather than a new preference of its own.
+  const FEATURE_BRANCH_LEVEL = 3;
 
   let buildTypeIndex = $state(0);
   let releases = $state({});
@@ -159,6 +165,17 @@
   // none at all.
   let selectedBoardValid = $derived(
     selectedBoard !== "0" && !!unifiedConfigs[selectedBoard],
+  );
+
+  // Whether the user has actually done something on this step, rather than
+  // just landing on it -- a completed Detect (found, not-found, or failed
+  // all count; see the step-nav button below for why a *result* isn't
+  // required) or having opened manual selection at all. Doesn't require
+  // selectedBoardValid: Board stays intentionally skippable for someone
+  // headed to a local .hex, this just stops Next from being clickable
+  // before they've touched the step in any way.
+  let boardStepEngaged = $derived(
+    detectStatus !== null || manualSelectionShown,
   );
 
   let releaseInfoVisible = $state(false);
@@ -447,7 +464,17 @@
     document.addEventListener("keypress", onKeypress);
 
     chrome.storage.local.get("selected_build_type", (result) => {
-      buildTypeIndex = result.selected_build_type ?? 0;
+      let index = result.selected_build_type ?? 0;
+      // Advanced opts may have been turned off since this was last saved
+      // (or never turned on at all) -- don't silently keep loading feature
+      // branches from underneath a toggle that now says otherwise.
+      if (
+        !showAdvancedOpts &&
+        BUILD_TYPES[index]?.level >= FEATURE_BRANCH_LEVEL
+      ) {
+        index = 0;
+      }
+      buildTypeIndex = index;
       loadBuildType(buildTypeIndex);
     });
   });
@@ -1001,7 +1028,15 @@
   // Online just spins forever with no way out except reloading the whole
   // page. Falls back to treating it as a cache miss (i.e. downloads fresh)
   // rather than hanging indefinitely.
-  function getCachedFirmware(summary, timeoutMs = 4000) {
+  //
+  // 4000ms was too tight in practice: a merely-slow-but-fine read (a large
+  // cached hex blob, a busy main thread) could lose the race, discard a
+  // result that was about to arrive, and fall through to a cold network
+  // download that itself needed a retry -- surfacing as "the first press
+  // fails, the second works" even though nothing was actually stuck. This
+  // is meant to catch a genuinely hung callback, not merely a slow one, so
+  // give it a lot more room before giving up.
+  function getCachedFirmware(summary, timeoutMs = 15000) {
     return new Promise((resolve) => {
       let settled = false;
       const timer = setTimeout(() => {
@@ -1018,6 +1053,31 @@
         resolve(cached);
       });
     });
+  }
+
+  // A cold connection (first request to the CDN/GitHub in a while) can
+  // fail transiently where a retry moments later succeeds -- observed as
+  // "Load Firmware Online" failing on the first press and working on the
+  // second. Rather than making the user do that second press manually,
+  // retry once in place before surfacing a failure.
+  async function fetchFirmwareWithRetry(url, attempts = 2) {
+    let lastErr;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < attempts) {
+          console.log(
+            `Firmware download attempt ${attempt} failed, retrying`,
+            err,
+          );
+        }
+      }
+    }
+    throw lastErr;
   }
 
   async function loadRemoteFirmware(summary) {
@@ -1049,8 +1109,7 @@
       FLASH_MESSAGE_TYPES.NEUTRAL,
     );
     try {
-      const res = await fetch(summary.url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetchFirmwareWithRetry(summary.url);
       const data = await res.text();
       await onLoadSuccess(data, summary);
     } catch (err) {
@@ -1585,7 +1644,11 @@
               options={BUILD_TYPES.map((b, i) => ({
                 value: i,
                 label: $i18n.t(b.tag),
-              }))}
+              })).filter(
+                (_, i) =>
+                  showAdvancedOpts ||
+                  BUILD_TYPES[i].level < FEATURE_BRANCH_LEVEL,
+              )}
               onchange={(e) => onBuildTypeChange(e.target.value)}
             />
             <span class="default_btn detect_btn">
@@ -1802,12 +1865,16 @@
         <!-- Board is optional, not gated on selectedBoard -- step 3 is
              where online-vs-local is actually decided (with its own link
              either way), so a separate "skip this for local" escape here
-             would just be the same choice offered twice. Only blocked
-             while a detect attempt is actually in flight, same reasoning
-             as flashInProgress/backupOrRestoreBusy in goToStep(). -->
+             would just be the same choice offered twice. Blocked while a
+             detect attempt is actually in flight (same reasoning as
+             flashInProgress/backupOrRestoreBusy in goToStep()), and until
+             boardStepEngaged -- otherwise Next sits enabled on the very
+             first paint, before Detect or manual selection has been
+             touched at all, which read as the step being skippable by
+             accident rather than by choice. -->
         <button
           class="btn primary"
-          disabled={boardDetectionInProgress}
+          disabled={boardDetectionInProgress || !boardStepEngaged}
           onclick={onWizardNext}
         >
           {$i18n.t("firmwareFlasherWizardNext")}
