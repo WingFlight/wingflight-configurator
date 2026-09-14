@@ -4957,6 +4957,24 @@
     "firmwareFlasherStepSourceTitle": {
         "message": "Source"
     },
+    "firmwareFlasherStepConnectTitle": {
+        "message": "Connect"
+    },
+    "firmwareFlasherConnectChoose": {
+        "message": "Choose a port"
+    },
+    "firmwareFlasherConnectDescription": {
+        "message": "Select the port your board is connected on -- or add a new serial, DFU, or Bluetooth device below if you don't see it listed."
+    },
+    "firmwareFlasherAddSerialDevice": {
+        "message": "Add Serial Device"
+    },
+    "firmwareFlasherAddBluetoothDevice": {
+        "message": "Add Bluetooth Device"
+    },
+    "firmwareFlasherConnectNativeHint": {
+        "message": "New devices appear automatically when connected -- plug in your board and select it above."
+    },
     "firmwareFlasherStepBoardTitle": {
         "message": "Board"
     },

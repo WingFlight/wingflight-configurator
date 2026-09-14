@@ -132,16 +132,20 @@ export async function selectDfuFromPicker() {
     await requestWebUsbDeviceFromPicker();
 }
 
-async function requestWebBluetoothDeviceFromPicker() {
+// Exported alongside requestWebSerialDeviceFromPicker/selectDfuFromPicker so
+// the Firmware Flasher wizard's Connect step can offer all three "add a
+// device" actions uniformly.
+export async function requestWebBluetoothDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestBluetoothPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
-        });
+        // See requestWebSerialDeviceFromPicker() -- same reasoning for
+        // awaiting getDevices() here.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Bluetooth permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);

@@ -25,6 +25,7 @@
   import { STM32DFU } from "@/js/protocols/stm32usbdfu.js";
   import { usbDevices } from "@/js/port_handler.js";
   import {
+    requestWebBluetoothDeviceFromPicker,
     requestWebSerialDeviceFromPicker,
     selectDfuFromPicker,
   } from "@/js/serial_backend.js";
@@ -174,6 +175,72 @@
   // one-click fix on the web build (see requestWebSerialDeviceFromPicker).
   let needsPortSelection = $derived(!portIsDfu && !portSelected);
 
+  // --- Connect (step 1) ---------------------------------------------------
+  //
+  // Mirrors the global port-picker's own <select> -- same list, same
+  // selection -- into a first-class wizard step, rather than requiring the
+  // user to notice/operate a completely separate control in the app's top
+  // toolbar to do the one thing every later step depends on. PortHandler has
+  // no reactive/event-based API of its own to subscribe to, so a
+  // MutationObserver (set up in onMount) keeps portOptions in sync with
+  // whatever it does to that <select>'s DOM -- new devices appearing, DFU's
+  // label picking up a product name once authorized, etc.
+  let portOptions = $state([]);
+  let selectedPortValue = $state("0");
+  let portListObserver;
+
+  // Sentinels port_handler.js adds to that <select> beyond real ports.
+  // "manual" (type a raw device path, native-only) and "virtual" (dev-only
+  // simulated FC) aren't offered here -- both are advanced/edge-case
+  // escapes still reachable from the global picker if truly needed.
+  // "requestserial"/"requestbluetooth" become their own buttons below
+  // instead of dropdown entries (see the template). "DFU" IS kept in the
+  // dropdown -- it's a first-class destination once granted, not just a
+  // one-shot trigger -- but still routed through selectDfuFromPicker() in
+  // onSelectPort() below so picking it (re-)confirms WebUSB permission
+  // every time, the same as the picker's own dropdown would.
+  const PORT_LIST_EXCLUDED_VALUES = [
+    "0",
+    "requestserial",
+    "requestbluetooth",
+    "manual",
+    "virtual",
+  ];
+
+  function syncPortOptions() {
+    const el = portPickerElement();
+    portOptions = el
+      ? Array.from(el.options)
+          .filter((opt) => !PORT_LIST_EXCLUDED_VALUES.includes(opt.value))
+          .map((opt) => ({
+            value: opt.value,
+            label: opt.text,
+            disabled: opt.disabled,
+          }))
+      : [];
+  }
+
+  async function onSelectPort(value) {
+    if (value === "DFU") {
+      await selectDfuFromPicker();
+    } else {
+      const el = portPickerElement();
+      if (el) {
+        el.value = value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+    onPortChange();
+  }
+
+  // "Add Serial Device"/"Select DFU Device" below reuse onClickSelectPort()/
+  // onClickSelectDfu() (further down, alongside the portPrompt snippet they
+  // were originally built for) -- same actions either way.
+  async function onClickAddBluetoothDevice() {
+    await requestWebBluetoothDeviceFromPicker();
+    onPortChange();
+  }
+
   let detectDialogEl;
   let detectDialogTitle = $state("");
   let detectDialogContent = $state("");
@@ -190,11 +257,12 @@
     ),
   );
 
-  // Drives the setup wizard: 1 Board, 2 Firmware, 3 Backup, 4 Flash,
-  // 5 Restore. Backup and restore are each a real step now, not a popup
-  // layered on top of Flash -- see backupRun/restoreRun below, which each
-  // own their step the same way any other step owns its own state.
+  // Drives the setup wizard: 1 Connect, 2 Board, 3 Firmware, 4 Backup,
+  // 5 Flash, 6 Restore. Backup and restore are each a real step now, not a
+  // popup layered on top of Flash -- see backupRun/restoreRun below, which
+  // each own their step the same way any other step owns its own state.
   const WIZARD_STEPS = [
+    "firmwareFlasherStepConnectTitle",
     "firmwareFlasherStepBoardTitle",
     "firmwareFlasherStepFirmwareTitle",
     "firmwareFlasherStepBackupTitle",
@@ -203,15 +271,15 @@
   ];
   let wizardStep = $state(1);
 
-  // Which of step 2's two flows -- pick an online release vs. load a file
+  // Which of step 3's two flows -- pick an online release vs. load a file
   // already on disk -- is showing. Not a separate step of its own: online
-  // is the default, "Load a local firmware file instead" (on step 2) or
-  // "Skip board selection" (on step 1) switch to local, and step 2 offers a
-  // link back the other way too, so it's just which half of step 2 is
-  // currently in view rather than a fork the user has to commit to upfront.
+  // is the default, and step 3's own "Load a local firmware file instead"/
+  // "Choose an online firmware version instead" links switch between them,
+  // so it's just which half of step 3 is currently in view rather than a
+  // fork the user has to commit to upfront.
   let firmwareSource = $state("online");
 
-  // Step 4 defaults to a one-line summary rather than the full technical
+  // Step 5 defaults to a one-line summary rather than the full technical
   // card (target/manufacturer/version/filenames/release notes, plus the
   // Save Firmware/Config actions) -- that level of detail is noise for
   // someone who just wants to hit Flash, so it's tucked behind this and
@@ -225,7 +293,7 @@
   // active flash without this.
   let flashInProgress = $state(false);
 
-  // --- Backup (step 3) / Restore (step 5) --------------------------------
+  // --- Backup (step 4) / Restore (step 6) --------------------------------
   //
   // Each step owns its own little state machine and reads/writes it
   // directly -- no more shared "phase" flag deciding which of two dialogs
@@ -245,7 +313,7 @@
     backupMode === BACKUP_TYPES.DUMP ? "dump all" : "diff all",
   );
 
-  // Step 3's Next is gated on an actual backup existing *only* when one is
+  // Step 4's Next is gated on an actual backup existing *only* when one is
   // both wanted and possible -- DFU and "no port" both make backing up
   // impossible outright, so they fall through to letting Next proceed
   // rather than trapping the user on a step that can never complete.
@@ -256,18 +324,19 @@
       backupRun.status === "ready",
   );
 
-  // Whether step 3/5's operation is actively talking to hardware right now
+  // Whether step 4/6's operation is actively talking to hardware right now
   // -- used to block navigating away mid-operation the same way
-  // flashInProgress does for step 4.
+  // flashInProgress does for step 5.
   let backupOrRestoreBusy = $derived(
     ["connecting", "running"].includes(backupRun.status) ||
       ["waiting", "connecting", "running"].includes(restoreRun.status),
   );
 
-  // Full reset of everything steps 1-5 built up around one firmware/board
+  // Full reset of everything steps 2-6 built up around one firmware/board
   // choice -- loaded hex/config, detected board, version list, release
-  // summary, any backup taken/restore state -- used only by
-  // resetWizardToStart() ("Flash Another Board"). Deliberately leaves alone
+  // summary, any backup taken/restore state -- used both when landing back
+  // on Connect (goToStep()) and by resetWizardToStart() ("Flash Another
+  // Board"). Deliberately leaves alone
   // what are really persisted preferences rather than per-flash state --
   // backupMode, eraseChip, showLegacyTargets (all config.set() already) --
   // so those don't reset just because you flashed something.
@@ -314,19 +383,22 @@
     // StepIndicator already disables markers past `wizardStep`, but guard
     // here too since this is also reachable from plain Back/Next clicks.
     if (step < 1 || step > WIZARD_STEPS.length) return;
-    // Revisiting Board (unlike the old "Source" step this replaced) isn't
-    // itself a reason to wipe steps 2-5's state -- onBoardChange() already
-    // clears exactly what a *changed* board invalidates, which is more
-    // correct than blanket-clearing on every visit and forcing a re-detect
-    // just for glancing back. Only an explicit "Flash Another Board" does
-    // the full reset now -- see clearFirmwareSelection().
+    // Landing back on Connect always clears whatever steps 2-6 had cached --
+    // a different port plausibly means a different board/session entirely,
+    // same reasoning the old "Source" step (choosing online vs local) used
+    // to apply here before Connect took over as step 1. Board (step 2),
+    // further in, is milder: revisiting it isn't itself a reason to wipe
+    // anything -- onBoardChange() already clears exactly what a *changed*
+    // board invalidates, which is more correct than blanket-clearing on
+    // every visit and forcing a re-detect just for glancing back.
+    if (step === 1 && wizardStep !== 1) clearFirmwareSelection();
     wizardStep = step;
   }
   const onWizardBack = () => goToStep(wizardStep - 1);
   const onWizardNext = () => goToStep(wizardStep + 1);
 
   // Puts the wizard back exactly where it starts on a fresh visit to the
-  // tab, so flashing a second board doesn't mean clicking Back four times.
+  // tab, so flashing a second board doesn't mean clicking Back five times.
   function resetWizardToStart() {
     wizardStep = 1;
     firmwareSource = "online";
@@ -346,6 +418,21 @@
     portPickerElement().addEventListener("change", onPortChange);
     onPortChange();
 
+    // Keeps portOptions in step with the picker's own <select> for changes
+    // onPortChange()'s 'change' listener wouldn't see on its own -- new
+    // devices appearing from PortHandler's periodic poll, or DFU's label
+    // picking up a product name once requestWebUsbDeviceFromPicker()
+    // authorizes it (see syncPortOptions() above).
+    const portEl = portPickerElement();
+    if (portEl) {
+      portListObserver = new MutationObserver(syncPortOptions);
+      portListObserver.observe(portEl, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    }
+
     document.addEventListener("keypress", onKeypress);
 
     chrome.storage.local.get("selected_build_type", (result) => {
@@ -356,6 +443,7 @@
 
   onDestroy(() => {
     portPickerElement()?.removeEventListener("change", onPortChange);
+    portListObserver?.disconnect();
     document.removeEventListener("keypress", onKeypress);
     clearTimeout(detectTimer);
     clearTimeout(detectConnectDelayTimer);
@@ -378,6 +466,8 @@
     const selected = el?.options?.[el.selectedIndex];
     portIsDfu = !!selected?.dataset?.isDfu || !!selected?.isDFU;
     portSelected = !!el && String(el.value) !== "0";
+    selectedPortValue = el ? String(el.value) : "0";
+    syncPortOptions();
   }
 
   // The portPrompt snippet's own "Select Serial Port" button.
@@ -402,9 +492,9 @@
   }
 
   function onKeypress(e) {
-    // Flash is step 4, not necessarily the last step -- Restore (step 5)
+    // Flash is step 5, not necessarily the last step -- Restore (step 6)
     // follows it, but Enter shouldn't trigger anything there.
-    if (wizardStep === 4 && (e.which === 13 || e.key === "Enter")) {
+    if (wizardStep === 5 && (e.which === 13 || e.key === "Enter")) {
       onClickFlash();
     }
   }
@@ -978,7 +1068,7 @@
     }
   }
 
-  // --- Backup (step 3) ----------------------------------------------------
+  // --- Backup (step 4) ----------------------------------------------------
   //
   // startBackup() captures the currently-selected port once, at the moment
   // the user actually asks to back up; runBackup() (the retryable part)
@@ -1051,18 +1141,18 @@
     runBackup();
   }
 
-  // --- Restore (step 5) ----------------------------------------------------
+  // --- Restore (step 6) ----------------------------------------------------
   //
   // Runs after STM32/STM32DFU finish (successfully or not) -- see
   // flashFirmware() below. Only reachable when a backup was actually taken
-  // in step 3 (a DFU flash never gets here at all, since a DFU-flashed board
+  // in step 4 (a DFU flash never gets here at all, since a DFU-flashed board
   // typically re-enumerates on a different serial port we have no reliable
   // way to find). Asks before doing anything -- the user may want to try the
   // new firmware on its own defaults first.
   function offerRestore(text, port, baud) {
     if (flashState.messageType !== FLASH_MESSAGE_TYPES.VALID) {
       GUI.log($i18n.t("firmwareFlasherRestoreSkippedFlashFailed"));
-      return; // stay on step 4 -- flashing failed, nothing to restore
+      return; // stay on step 5 -- flashing failed, nothing to restore
     }
 
     restoreText = text;
@@ -1171,7 +1261,7 @@
     }
   }
 
-  // Whether a backup was actually captured back in step 3 -- if so, it and
+  // Whether a backup was actually captured back in step 4 -- if so, it and
   // the port it came from ride along to flashFirmware(), which hands them
   // to offerRestore() once flashing finishes.
   function onClickFlash() {
@@ -1310,7 +1400,7 @@
     // unconditionally re-enabling it. Detecting a board doesn't load
     // firmware by itself (onVersionChange()'s cache auto-load is a separate,
     // not-yet-settled async chain at this point), so hardcoding `true` here
-    // let Next on step 2 go through with nothing actually loaded.
+    // let Next on step 3 go through with nothing actually loaded.
     setFlashingEnabled(!!parsedHex);
     boardDetectionInProgress = false;
     GUI.connect_lock = false;
@@ -1374,7 +1464,8 @@
   <h1>{$i18n.t("tabFirmwareFlasher")}</h1>
   <!-- Exit DFU is a rescue action for a board stuck in DFU mode, unrelated
        to wizard progress -- kept reachable regardless of which step is
-       showing, rather than gated behind step 3. It doesn't touch parsedHex
+       showing, rather than gated behind Backup (step 4). It doesn't touch
+       parsedHex
        at all (STM32DFU's exitDfu path skips straight to leave(), no flash
        data needed) -- gating on "or firmware is loaded" as well as DFU (as
        this used to) left it enabled through most of a normal, non-DFU
@@ -1420,6 +1511,59 @@
   />
 
   {#if wizardStep === 1}
+    <div class="step-body">
+      <div class="options">
+        <div class="field">
+          <select
+            class="board-select"
+            value={selectedPortValue}
+            onchange={(e) => onSelectPort(e.target.value)}
+          >
+            <option value="0">{$i18n.t("firmwareFlasherConnectChoose")}</option>
+            {#each portOptions as opt (opt.value)}
+              <option value={opt.value} disabled={opt.disabled}
+                >{opt.label}</option
+              >
+            {/each}
+          </select>
+          <span class="description"
+            >{$i18n.t("firmwareFlasherConnectDescription")}</span
+          >
+        </div>
+      </div>
+
+      {#if isWebSerialBackend}
+        <div class="load-row">
+          <button class="btn" onclick={onClickSelectPort}>
+            {$i18n.t("firmwareFlasherAddSerialDevice")}
+          </button>
+          <button class="btn" onclick={onClickSelectDfu}>
+            {$i18n.t("firmwareFlasherSelectDfu")}
+          </button>
+          {#if "bluetooth" in navigator}
+            <button class="btn" onclick={onClickAddBluetoothDevice}>
+              {$i18n.t("firmwareFlasherAddBluetoothDevice")}
+            </button>
+          {/if}
+        </div>
+      {:else}
+        <p class="detect-fallback-notice">
+          {$i18n.t("firmwareFlasherConnectNativeHint")}
+        </p>
+      {/if}
+
+      <div class="step-nav">
+        <span></span>
+        <button
+          class="btn primary"
+          disabled={!portSelected}
+          onclick={onWizardNext}
+        >
+          {$i18n.t("firmwareFlasherWizardNext")}
+        </button>
+      </div>
+    </div>
+  {:else if wizardStep === 2}
     <div class="step-body">
       <div class="options">
         <div class="field">
@@ -1640,7 +1784,7 @@
 
       <div class="step-nav">
         <span></span>
-        <!-- Board is optional, not gated on selectedBoard -- step 2 is
+        <!-- Board is optional, not gated on selectedBoard -- step 3 is
              where online-vs-local is actually decided (with its own link
              either way), so a separate "skip this for local" escape here
              would just be the same choice offered twice. Only blocked
@@ -1655,7 +1799,7 @@
         </button>
       </div>
     </div>
-  {:else if wizardStep === 2}
+  {:else if wizardStep === 3}
     <div class="step-body">
       {#if firmwareSource === "online"}
         <div class="options">
@@ -1740,7 +1884,7 @@
           </span>
         </div>
 
-        <!-- A board picked back on step 1 still matters here -- its default
+        <!-- A board picked back on step 2 still matters here -- its default
              config (if it has one; see setUnifiedConfig()) gets combined
              with whatever local .hex is loaded, same as it would for an
              online download. Flagged either way so it's not silently
@@ -1784,7 +1928,7 @@
         </button>
       </div>
     </div>
-  {:else if wizardStep === 3}
+  {:else if wizardStep === 4}
     <div class="step-body">
       <div class="options">
         <div class="field">
@@ -1898,7 +2042,7 @@
         </button>
       </div>
     </div>
-  {:else if wizardStep === 4}
+  {:else if wizardStep === 5}
     <div class="step-body">
       {#if releaseInfoVisible && releaseInfo}
         <p class="ready-summary">
@@ -2302,7 +2446,7 @@
     }
   }
 
-  // Backup (step 3) and restore (step 5) both run as a small self-contained
+  // Backup (step 4) and restore (step 6) both run as a small self-contained
   // panel within their step, each just a status line/spinner plus whatever
   // buttons that status calls for.
   .backup-panel {
@@ -2452,7 +2596,7 @@
   }
 
   // Narrow screens get shorter button labels so Load Online/Load Local
-  // (step 1) and Back/Flash (step 3) don't wrap awkwardly or overflow.
+  // (step 3) and Back/Flash (step 5) don't wrap awkwardly or overflow.
   @media only screen and (max-width: 700px) {
     .label-full {
       display: none;
