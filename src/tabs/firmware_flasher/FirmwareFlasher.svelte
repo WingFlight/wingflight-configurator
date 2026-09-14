@@ -1230,7 +1230,7 @@
     restorePort = port;
     restoreBaud = baud;
     restoreRun.status = "prompt";
-    wizardStep = 5;
+    wizardStep = 6;
   }
 
   async function runRestore() {
@@ -1288,7 +1288,7 @@
       } else if (flashState.messageType === FLASH_MESSAGE_TYPES.VALID) {
         // Nothing to restore -- still move on to the wizard's terminal step
         // rather than leaving the user sitting on Flash with no next action.
-        wizardStep = 5;
+        wizardStep = 6;
       }
     };
 
