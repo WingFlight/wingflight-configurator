@@ -1448,7 +1448,14 @@
             {/if}
             <button
               class="details-toggle"
-              onclick={() => (manualSelectionShown = true)}
+              onclick={() => {
+                manualSelectionShown = true;
+                // Otherwise this stale "found" (and the board name that
+                // came with it) would just sit there unused once manual
+                // selection has taken over.
+                detectStatus = null;
+                detectedBoardName = "";
+              }}
             >
               {$i18n.t("firmwareFlasherSelectBoardManually")}
             </button>
@@ -1542,29 +1549,15 @@
                 {@html $i18n.t("firmwareFlasherOnlineSelectBoardHint")}
               </HelpIcon>
             </div>
-            <!-- Same confirmation whether selectedBoard got here via a
-                 successful Detect or this dropdown -- previously only
-                 Detect showed anything at all. -->
-            {#if selectedBoardValid}
-              <p class="detect-fallback-notice ok">
-                <em class="fas fa-check"></em>
-                {#if unifiedTarget.config}
-                  {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
-                    target: selectedBoard,
-                  })}
-                {:else}
-                  {$i18n.t("firmwareFlasherBoardSelectedPlain", {
-                    target: selectedBoard,
-                  })}
-                {/if}
-              </p>
-            {/if}
           {/if}
         </div>
 
         <!-- Only meaningful once the manual dropdown it filters is actually
              showing -- while the Detect CTA is up there's no board list on
-             screen for it to affect. -->
+             screen for it to affect. Kept as its own field right after the
+             board one (both are input controls), rather than after the
+             confirmation/nav content below, which is about the outcome,
+             not a further input. -->
         {#if showAdvancedOpts && showManualBoardSelect}
           <div class="field">
             <label>
@@ -1585,14 +1578,29 @@
         {/if}
       </div>
 
+      <!-- Same confirmation whether selectedBoard got here via a successful
+           Detect or the manual dropdown -- previously only Detect showed
+           anything at all. -->
+      {#if showManualBoardSelect && selectedBoardValid}
+        <p class="detect-fallback-notice ok">
+          <em class="fas fa-check"></em>
+          {#if unifiedTarget.config}
+            {$i18n.t("firmwareFlasherBoardWillCombineConfig", {
+              target: selectedBoard,
+            })}
+          {:else}
+            {$i18n.t("firmwareFlasherBoardSelectedPlain", {
+              target: selectedBoard,
+            })}
+          {/if}
+        </p>
+      {/if}
+
       {#if showManualBoardSelect}
         <!-- Symmetric with the CTA panel's own "Select board manually
              instead" link -- one Detect action (the CTA panel's button),
              reached the same way from either side, rather than a second
-             small Detect button living here too. Kept below Show Legacy
-             Targets (and outside .options) rather than inside the board
-             field, so it doesn't get pushed above that field's own extra
-             rows. -->
+             small Detect button living here too. -->
         <p class="step-link">
           <button
             class="details-toggle"
