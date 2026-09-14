@@ -187,6 +187,7 @@
   // label picking up a product name once authorized, etc.
   let portOptions = $state([]);
   let selectedPortValue = $state("0");
+  let selectedPortLabel = $state("");
   let portListObserver;
 
   // Sentinels port_handler.js adds to that <select> beyond real ports.
@@ -467,6 +468,7 @@
     portIsDfu = !!selected?.dataset?.isDfu || !!selected?.isDFU;
     portSelected = !!el && String(el.value) !== "0";
     selectedPortValue = el ? String(el.value) : "0";
+    selectedPortLabel = selected?.text ?? "";
     syncPortOptions();
   }
 
@@ -1630,9 +1632,12 @@
                   {$i18n.t("firmwareFlasherBoardDetectionInProgress")}
                 </p>
               {:else if portIsDfu}
-                <p class="port-notice">
+                <p class="port-notice info">
                   <em class="fas fa-info-circle"></em>
-                  {$i18n.t("firmwareFlasherDetectUnavailableDfu")}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html $i18n.t("firmwareFlasherDetectUnavailableDfu", {
+                    device: selectedPortLabel,
+                  })}
                 </p>
               {:else if needsPortSelection}
                 {@render portPrompt()}
@@ -2363,6 +2368,22 @@
 
     em {
       color: var(--color-accent-500);
+    }
+
+    // Reserved for genuinely informational notices (e.g. "DFU device
+    // connected, here's what that does and doesn't unlock") as opposed to
+    // the default styling above, which reads as a call to action/warning
+    // and fits the "no port selected yet" prompt this class started as.
+    &.info {
+      border-color: #0081ff;
+
+      em {
+        color: #0081ff;
+      }
+
+      strong {
+        color: var(--color-text);
+      }
     }
   }
 
