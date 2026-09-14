@@ -5009,7 +5009,7 @@
         "message": "Restore"
     },
     "firmwareFlasherDetectUnavailableDfu": {
-        "message": "Board detection isn't available in DFU mode."
+        "message": "Can't detect your board over DFU -- that needs a normal serial connection, which also means backup and restore won't be available this session. A DFU connection is enough to flash new firmware though: continue to Firmware below, or select your board manually if you'd like its default config combined at flash time."
     },
     "firmwareFlasherDetectBoardCta": {
         "message": "Detect My Board"

@@ -1467,7 +1467,8 @@
                   {$i18n.t("firmwareFlasherBoardDetectionInProgress")}
                 </p>
               {:else if portIsDfu}
-                <p class="detect-fallback-notice">
+                <p class="port-notice">
+                  <em class="fas fa-info-circle"></em>
                   {$i18n.t("firmwareFlasherDetectUnavailableDfu")}
                 </p>
               {:else if needsPortSelection}
