@@ -96,6 +96,7 @@ export function getSmartPortSensors() {
         { name: "FLIGHT_MODE" },
         { name: "ARMING_FLAGS" },
         { name: "ARMING_DISABLE_FLAGS" },
+        { name: "OSC_LIMITER" },
         { name: "ADJFUNC" },
       ],
     },

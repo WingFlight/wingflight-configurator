@@ -127,10 +127,10 @@ export function getDebugModes() {
     "HS_OFFSET",
     "HS_BLEED",
     "GOV_MOTOR",
-    "USER1",
-    "USER2",
-    "USER3",
-    "USER4",
+    "GYRO_CALIBRATION",
+    "AUTOHOVER",
+    "ATTHOLD",
+    "OSC_LIMITER",
   ];
 }
 

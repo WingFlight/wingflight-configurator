@@ -126,6 +126,7 @@ export const TELEMETRY_SENSORS = {
 
   RPM: 108,
   TEMP: 109,
+  OSC_LIMITER: 118,
 };
 
 // create reverse mapping
