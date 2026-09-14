@@ -24,7 +24,10 @@
   import { STM32 } from "@/js/protocols/stm32.js";
   import { STM32DFU } from "@/js/protocols/stm32usbdfu.js";
   import { usbDevices } from "@/js/port_handler.js";
-  import { requestWebSerialDeviceFromPicker } from "@/js/serial_backend.js";
+  import {
+    requestWebSerialDeviceFromPicker,
+    selectDfuFromPicker,
+  } from "@/js/serial_backend.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import Page from "@/components/Page.svelte";
@@ -386,6 +389,15 @@
   // arriving here.
   async function onClickSelectPort() {
     await requestWebSerialDeviceFromPicker();
+    onPortChange();
+  }
+
+  // The portPrompt snippet's "Select DFU Device" button -- lets someone
+  // whose board is already sitting in DFU pick that from right here,
+  // rather than needing to notice/reach the same option in the global
+  // top-right picker, disconnected from the wizard they're actually in.
+  async function onClickSelectDfu() {
+    await selectDfuFromPicker();
     onPortChange();
   }
 
@@ -1386,6 +1398,13 @@
       {$i18n.t("firmwareFlasherNoPortWeb")}
       <button class="btn" onclick={onClickSelectPort}>
         {$i18n.t("firmwareFlasherSelectPort")}
+      </button>
+      <!-- Already sitting in DFU (e.g. a board that boots straight to its
+           bootloader) is a real, common starting point, not just "no port
+           yet" -- offered right alongside Select Serial Port so it's never
+           only reachable via the global top-right picker. -->
+      <button class="btn" onclick={onClickSelectDfu}>
+        {$i18n.t("firmwareFlasherSelectDfu")}
       </button>
     {:else}
       {$i18n.t("firmwareFlasherNoPortNative")}

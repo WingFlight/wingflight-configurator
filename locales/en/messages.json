@@ -5038,6 +5038,9 @@
     "firmwareFlasherSelectPort": {
         "message": "Select Serial Port"
     },
+    "firmwareFlasherSelectDfu": {
+        "message": "Select DFU Device"
+    },
     "firmwareFlasherReadyToFlash": {
         "message": "Ready to flash: {{target}} — {{version}}"
     },

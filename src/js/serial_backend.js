@@ -10,7 +10,8 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 // device chooser immediately on selecting its DFU picker option, rather than
 // waiting for the user to click Flash. Silent (no popup) if a matching device
 // is already authorized, so it's safe to run on every DFU selection.
-async function requestWebUsbDeviceFromPicker() {
+// Exported for selectDfuFromPicker() below.
+export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
         return;
     }
@@ -116,6 +117,19 @@ export async function requestWebSerialDeviceFromPicker() {
         console.warn('Web Serial permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
     }
+}
+
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// DFU Device" button, offered alongside "Select Serial Port" when it finds
+// no port chosen at all -- can pick DFU the same way the picker's own
+// dropdown does: select the (always-present, web-only) "DFU" option, then
+// run the same WebUSB permission grant/refresh selecting it there would
+// have triggered. The picker's own change handler skips that step for a
+// programmatic .trigger('change') (it checks event.originalEvent, which a
+// synthetic trigger never has), so it has to happen here instead.
+export async function selectDfuFromPicker() {
+    $('div#port-picker #port').val('DFU').trigger('change');
+    await requestWebUsbDeviceFromPicker();
 }
 
 async function requestWebBluetoothDeviceFromPicker() {
