@@ -4981,6 +4981,12 @@
     "firmwareFlasherConnectNativeHint": {
         "message": "New devices appear automatically when connected -- plug in your board and select it above."
     },
+    "firmwareFlasherUseLegacyFlasher": {
+        "message": "Prefer the previous flasher? Use the legacy version instead."
+    },
+    "firmwareFlasherLegacyBackToWizard": {
+        "message": "Back to wizard"
+    },
     "firmwareFlasherStepBoardTitle": {
         "message": "Board"
     },
