@@ -13,13 +13,14 @@
 
   let dialogRef;
 
-  // MIXER_IN_STABILIZED_PITCH / MIXER_IN_RC_CHANNEL_AUX1 (pg/mixer.h) --
-  // same indices buildWizardRules() uses to generate these rules in the
-  // first place. Identified structurally (Add, flap input, onto whatever
-  // output(s) Pitch feeds) rather than tied to any single wizard run, so
-  // this keeps working after Save/reload and regardless of layout (single
-  // elevator, both V-tail halves, or both elevons).
-  const PITCH = 2, RC_AUX1 = 13;
+  // Identified structurally (Add, flap input, onto whatever output(s) Pitch
+  // feeds) rather than tied to any single wizard run, so this keeps working
+  // after Save/reload and regardless of layout (single elevator, both
+  // V-tail halves, or both elevons). Mirrors Mixer.detectFlapState(), which
+  // ModelSetupDialog uses the same way when reopening Edit Configuration --
+  // duplicated rather than shared because this needs the actual rule
+  // references to mutate in place, not just the derived percentage.
+  const PITCH = Mixer.INPUT_STABILIZED_PITCH, RC_AUX1 = Mixer.INPUT_RC_CHANNEL_AUX1;
 
   let flapCompensationRules = $derived.by(() => {
     const pitchOutputs = new Set(

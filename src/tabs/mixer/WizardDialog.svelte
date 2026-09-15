@@ -18,6 +18,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  let flapServos = $state("single");
   let flapPitchCompensation = $state(0);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
@@ -34,6 +35,7 @@
     tailControl = "elevatorRudder";
     wingYaw = "rudder";
     flaps = false;
+    flapServos = "single";
     flapPitchCompensation = 0;
     motors = 1;
     diffThrustYaw = false;
@@ -86,6 +88,7 @@
       tailControl,
       wingYaw,
       flaps,
+      flapServos,
       flapPitchCompensation,
       motors,
       diffThrustYaw,
@@ -181,6 +184,14 @@
           <span>{$i18n.t("mixerWizardFlapsEnable")}</span>
         </label>
         {#if flaps}
+          <label class="wizardOption">
+            <input type="radio" bind:group={flapServos} value="single" />
+            <span>{$i18n.t("mixerWizardFlapServosSingle")}</span>
+          </label>
+          <label class="wizardOption">
+            <input type="radio" bind:group={flapServos} value="dual" />
+            <span>{$i18n.t("mixerWizardFlapServosDual")}</span>
+          </label>
           <div class="wizardCompensation">
             <span>{$i18n.t("mixerWizardFlapsCompensationLabel")}</span>
             <NumberInput

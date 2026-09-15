@@ -78,6 +78,14 @@ export const Mixer = {
     OP_ADD: 2,
     OP_MUL: 3,
 
+    // MIXER_IN_STABILIZED_PITCH / MIXER_IN_RC_CHANNEL_AUX1 (pg/mixer.h) --
+    // shared so buildWizardRules() and anything reading its output back out
+    // of FC.MIXER_RULES (e.g. detectFlapState, the summary page's live
+    // compensation control) agree on what a "pitch output" or "the flap
+    // input" is without duplicating the indices.
+    INPUT_STABILIZED_PITCH: 2,
+    INPUT_RC_CHANNEL_AUX1: 13,
+
     UNINIT: -1,
 
     RULE_COUNT: 32,
@@ -269,7 +277,8 @@ export const Mixer = {
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
-        const ROLL = 1, PITCH = 2, YAW = 3, THROTTLE = 4, RC_AUX1 = 13;
+        const ROLL = 1, PITCH = Mixer.INPUT_STABILIZED_PITCH, YAW = 3, THROTTLE = 4;
+        const RC_AUX1 = Mixer.INPUT_RC_CHANNEL_AUX1;
         // MIXER_IN_STABILIZED_TV_ROLL/PITCH/YAW -- appended at the tail of
         // firmware's MIXER_IN_* enum (pg/mixer.h), after RC_CHANNEL_18.
         const TV_ROLL = 27, TV_PITCH = 28, TV_YAW = 29;
@@ -314,6 +323,13 @@ export const Mixer = {
 
         if (options.flaps) {
             rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            // A second flap servo (e.g. independently wired left/right
+            // panels) moves the same direction as the first for a flap --
+            // unlike ailerons, there's no roll authority to split, so no
+            // Reverse on this one.
+            if (options.flapServos === 'dual') {
+                rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            }
 
             // Flaps commonly change pitch trim ("ballooning" or diving) by an
             // amount and direction that's airframe-specific and can't be
@@ -360,6 +376,43 @@ export const Mixer = {
         }
 
         return rules;
+    },
+
+    // Reads flap-related choices back out of an existing rule set rather
+    // than trusting a dialog's own remembered state -- Edit Configuration
+    // resets every field to this model type's defaults on open (see
+    // ModelSetupDialog.svelte), so without this, reopening it for any
+    // reason (e.g. to add a motor) and hitting Apply would silently
+    // regenerate the rule set with flaps back off, discarding a flap servo
+    // and any tuned compensation that were actually saved on the FC.
+    // Identifies rules structurally (Set from the flap input; Add from the
+    // flap input onto whatever output(s) Pitch feeds), the same approach
+    // the summary page's live compensation control uses, so both agree
+    // regardless of which wizard run originally produced the rules.
+    detectFlapState : function (rules) {
+        const PITCH = Mixer.INPUT_STABILIZED_PITCH, RC_AUX1 = Mixer.INPUT_RC_CHANNEL_AUX1;
+
+        const pitchOutputs = new Set(
+            rules.filter((r) => !Mixer.isNullRule(r) && r.src === PITCH).map((r) => r.dst),
+        );
+
+        const flapServoCount = rules.filter(
+            (r) => !Mixer.isNullRule(r) && r.oper === Mixer.OP_SET && r.src === RC_AUX1,
+        ).length;
+
+        const compensationRule = rules.find(
+            (r) =>
+                !Mixer.isNullRule(r) &&
+                r.oper === Mixer.OP_ADD &&
+                r.src === RC_AUX1 &&
+                pitchOutputs.has(r.dst),
+        );
+
+        return {
+            flaps: flapServoCount > 0,
+            flapServos: flapServoCount >= 2 ? 'dual' : 'single',
+            flapPitchCompensation: compensationRule ? Math.round(compensationRule.weight / 10) : 0,
+        };
     },
 
     isNullRule : function (a) {

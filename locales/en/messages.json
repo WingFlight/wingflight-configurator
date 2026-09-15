@@ -4040,7 +4040,13 @@
         "message": "Flaps"
     },
     "mixerWizardFlapsEnable": {
-        "message": "Add a flap servo (driven by an aux channel)"
+        "message": "Add flap servo(s) (driven by an aux channel)"
+    },
+    "mixerWizardFlapServosSingle": {
+        "message": "Single servo"
+    },
+    "mixerWizardFlapServosDual": {
+        "message": "Two servos (independent left/right)"
     },
     "mixerWizardFlapsCompensationLabel": {
         "message": "Flap Pitch Compensation"

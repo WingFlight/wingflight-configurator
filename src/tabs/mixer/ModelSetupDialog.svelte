@@ -30,6 +30,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  let flapServos = $state("single");
   let flapPitchCompensation = $state(0);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
@@ -44,8 +45,14 @@
     activeType = modelType;
     applied = false;
 
-    // Always reset to this type's defaults on open -- never tries to infer
-    // the choices back out of whatever rules happen to be loaded already.
+    // Most fields reset to this type's defaults on open -- never tries to
+    // infer the choices back out of whatever rules happen to be loaded
+    // already. Flaps are the exception: reopening this dialog for any
+    // unrelated reason (e.g. to add a motor) and hitting Apply regenerates
+    // the whole rule set, so resetting flaps to off here would silently
+    // discard a flap servo -- and any tuned Flap Pitch Compensation -- that
+    // was actually saved on the FC. detectFlapState reads those back from
+    // the rules themselves instead.
     ailerons =
       activeType.ailerons?.default ?? activeType.ailerons?.fixed ?? "none";
     tailControl =
@@ -53,8 +60,10 @@
       activeType.tailControl?.fixed ??
       "elevatorRudder";
     wingYaw = activeType.wingYaw?.default ?? "none";
-    flaps = false;
-    flapPitchCompensation = 0;
+    const flapState = Mixer.detectFlapState(FC.MIXER_RULES);
+    flaps = flapState.flaps;
+    flapServos = flapState.flapServos;
+    flapPitchCompensation = flapState.flapPitchCompensation;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -71,6 +80,7 @@
       tailControl: activeType.tailControl?.fixed ?? tailControl,
       wingYaw,
       flaps,
+      flapServos,
       flapPitchCompensation,
       motors,
       diffThrustYaw,
@@ -191,6 +201,14 @@
         <span>{$i18n.t("mixerWizardFlapsEnable")}</span>
       </label>
       {#if flaps}
+        <label class="wizardOption">
+          <input type="radio" bind:group={flapServos} value="single" />
+          <span>{$i18n.t("mixerWizardFlapServosSingle")}</span>
+        </label>
+        <label class="wizardOption">
+          <input type="radio" bind:group={flapServos} value="dual" />
+          <span>{$i18n.t("mixerWizardFlapServosDual")}</span>
+        </label>
         <div class="wizardCompensation">
           <span>{$i18n.t("mixerWizardFlapsCompensationLabel")}</span>
           <NumberInput
