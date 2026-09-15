@@ -93,6 +93,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-flap-pitch-compensation",
+      "path": "./feature-flap-pitch-compensation/"
+    },
+    {
+      "type": "branch",
       "name": "feature-oscillation-limiter-settings",
       "path": "./feature-oscillation-limiter-settings/"
     },
