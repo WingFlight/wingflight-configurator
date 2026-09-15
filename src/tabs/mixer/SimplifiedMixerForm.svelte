@@ -3,11 +3,53 @@
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
 
+  import NumberInput from "@/components/NumberInput.svelte";
+
+  import { FLAP_COMPENSATION_MIN, FLAP_COMPENSATION_MAX } from "./util.js";
+
   import ModelSetupDialog from "./ModelSetupDialog.svelte";
 
   let modelType = $derived(Mixer.modelTypeInfo(FC.MIXER_CONFIG.model_type));
 
   let dialogRef;
+
+  // MIXER_IN_STABILIZED_PITCH / MIXER_IN_RC_CHANNEL_AUX1 (pg/mixer.h) --
+  // same indices buildWizardRules() uses to generate these rules in the
+  // first place. Identified structurally (Add, flap input, onto whatever
+  // output(s) Pitch feeds) rather than tied to any single wizard run, so
+  // this keeps working after Save/reload and regardless of layout (single
+  // elevator, both V-tail halves, or both elevons).
+  const PITCH = 2, RC_AUX1 = 13;
+
+  let flapCompensationRules = $derived.by(() => {
+    const pitchOutputs = new Set(
+      FC.MIXER_RULES.filter(
+        (rule) => !Mixer.isNullRule(rule) && rule.src === PITCH,
+      ).map((rule) => rule.dst),
+    );
+
+    return FC.MIXER_RULES.filter(
+      (rule) =>
+        !Mixer.isNullRule(rule) &&
+        rule.oper === Mixer.OP_ADD &&
+        rule.src === RC_AUX1 &&
+        pitchOutputs.has(rule.dst),
+    );
+  });
+
+  function flapCompensationPercent() {
+    return flapCompensationRules.length
+      ? Math.round(flapCompensationRules[0].weight / 10)
+      : 0;
+  }
+
+  function setFlapCompensationPercent(percent) {
+    const raw = percent * 10;
+    flapCompensationRules.forEach((rule) => {
+      rule.weight = raw;
+      rule.weightNeg = raw;
+    });
+  }
 
   // Read-only summary of what's actually in FC.MIXER_RULES right now -- not
   // the wizard options that produced it, so it stays accurate even if rules
@@ -55,6 +97,26 @@
         <span class="input">{row.inputsText}</span>
       </div>
     {/each}
+  </div>
+{/if}
+
+{#if flapCompensationRules.length > 0}
+  <div class="compensationRow">
+    <span class="label">
+      {$i18n.t("mixerWizardFlapsCompensationLabel")}
+    </span>
+    <NumberInput
+      min={FLAP_COMPENSATION_MIN}
+      max={FLAP_COMPENSATION_MAX}
+      step="5"
+      bind:value={
+        () => flapCompensationPercent(), (v) => setFlapCompensationPercent(v)
+      }
+    />
+    <span class="unit">%</span>
+  </div>
+  <div class="compensationHint">
+    {$i18n.t("mixerWizardFlapsCompensationHint")}
   </div>
 {/if}
 
@@ -106,6 +168,28 @@
 
   .output {
     font-weight: 500;
+  }
+
+  .compensationRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 0 8px;
+  }
+
+  .compensationRow .label {
+    font-size: 0.85rem;
+  }
+
+  .compensationRow .unit {
+    color: var(--color-text-soft);
+  }
+
+  .compensationHint {
+    padding: 4px 8px 0;
+    color: var(--color-text-soft);
+    font-size: 0.7rem;
   }
 
   .editRow {
