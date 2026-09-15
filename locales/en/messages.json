@@ -1338,10 +1338,6 @@
     "statusArmingDisableFlagsTooltipOVERRIDE": {
         "message": "Servo Override or Mixer Override is active"
     },
-    "statusArmingDisableFlagsTooltipBACKUP_RX": {
-        "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
-        "description": "Message that pops up to describe the BACKUP_RX arming disable flag"
-    },
     "statusArmingDisableFlagsTooltipARM_SWITCH": {
         "message": "Arm switch is activated while other arming disable conditions are active",
         "description": "Message that pops up to describe the ARM_SWITCH arming disable flag"
@@ -4046,6 +4042,12 @@
     "mixerWizardFlapsEnable": {
         "message": "Add a flap servo (driven by an aux channel)"
     },
+    "mixerWizardFlapsCompensationLabel": {
+        "message": "Flap Pitch Compensation"
+    },
+    "mixerWizardFlapsCompensationHint": {
+        "message": "Many airframes balloon (or dive) when flaps go down. After a test flight, raise this until deploying flaps causes no pitch change with the stick centered -- try a negative value if it moves the wrong way. Leave at 0% if flaps don't affect pitch on your airframe."
+    },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
     },
@@ -4908,10 +4910,10 @@
         "message": "Running {{command}}..."
     },
     "firmwareFlasherWizardBackupReady": {
-        "message": "Backup captured. Save it to a file, then continue to flash the new firmware -- you'll be asked whether to restore these settings once it boots."
+        "message": "Backup captured -- it's held in memory and will be offered for restore automatically once the new firmware boots. Saving a copy to a file below is optional, but recommended in case anything goes wrong."
     },
     "firmwareFlasherWizardBackupSaved": {
-        "message": "Saved to a file."
+        "message": "Saved"
     },
     "firmwareFlasherWizardBackupFailed": {
         "message": "Could not connect to the flight controller to run the backup."
@@ -4958,6 +4960,135 @@
     "firmwareFlasherWizardRestoreFailed": {
         "message": "Could not reconnect to restore the configuration automatically. You can retry, or use the CLI tab's Load button to replay the saved backup_pre_flash file manually."
     },
+    "firmwareFlasherStepSourceTitle": {
+        "message": "Source"
+    },
+    "firmwareFlasherStepConnectTitle": {
+        "message": "Connect"
+    },
+    "firmwareFlasherConnectChoose": {
+        "message": "Choose a port"
+    },
+    "firmwareFlasherConnectDescription": {
+        "message": "Select the port your board is connected on -- or add a new serial, DFU, or Bluetooth device below if you don't see it listed."
+    },
+    "firmwareFlasherAddSerialDevice": {
+        "message": "Add Serial Device"
+    },
+    "firmwareFlasherAddBluetoothDevice": {
+        "message": "Add Bluetooth Device"
+    },
+    "firmwareFlasherAddDfuDevice": {
+        "message": "Add DFU Device"
+    },
+    "firmwareFlasherConnectNativeHint": {
+        "message": "New devices appear automatically when connected -- plug in your board and select it above."
+    },
+    "firmwareFlasherStepBoardTitle": {
+        "message": "Board"
+    },
+    "firmwareFlasherSkipToLocalFirmware": {
+        "message": "Flashing from a local file instead? Skip board selection"
+    },
+    "firmwareFlasherSwitchToLocalFirmware": {
+        "message": "Load a local firmware file instead"
+    },
+    "firmwareFlasherSwitchToOnlineFirmware": {
+        "message": "Choose an online firmware version instead"
+    },
+    "firmwareFlasherLocalNoBoardSelected": {
+        "message": "No board selected — this will flash exactly as loaded, with no default config combined in."
+    },
+    "firmwareFlasherGoSelectBoard": {
+        "message": "Select a board"
+    },
+    "firmwareFlasherLocalWillCombineConfig": {
+        "message": "Will combine with {{target}}'s default config at flash time."
+    },
+    "firmwareFlasherBoardWillCombineConfig": {
+        "message": "{{target}} selected -- its default config will be combined at flash time."
+    },
+    "firmwareFlasherBoardSelectedPlain": {
+        "message": "{{target}} selected."
+    },
+    "firmwareFlasherSourceOnlineTitle": {
+        "message": "Online"
+    },
+    "firmwareFlasherSourceOnlineDescription": {
+        "message": "Download an official release or development build for your board."
+    },
+    "firmwareFlasherSourceLocalTitle": {
+        "message": "Local File"
+    },
+    "firmwareFlasherSourceLocalDescription": {
+        "message": "Flash a .hex file (and optional .config) you already have."
+    },
+    "firmwareFlasherStepFirmwareTitle": {
+        "message": "Firmware"
+    },
+    "firmwareFlasherStepBackupTitle": {
+        "message": "Backup"
+    },
+    "firmwareFlasherStepReviewTitle": {
+        "message": "Flash"
+    },
+    "firmwareFlasherStepRestoreTitle": {
+        "message": "Restore"
+    },
+    "firmwareFlasherDetectUnavailableDfu": {
+        "message": "<strong>{{device}}</strong> connected. Automatic board detection needs a normal serial connection though, so it (along with backup and restore) won't be available this session. A DFU connection is enough to flash new firmware: continue to Firmware below, or select your board manually if you'd like its default config combined at flash time."
+    },
+    "firmwareFlasherDetectBoardCta": {
+        "message": "Detect My Board"
+    },
+    "firmwareFlasherSelectBoardManually": {
+        "message": "Select board manually instead"
+    },
+    "firmwareFlasherTryDetectInstead": {
+        "message": "Try auto-detect instead"
+    },
+    "firmwareFlasherRunBackupCta": {
+        "message": "Back Up Now"
+    },
+    "firmwareFlasherFlashCompleteMessage": {
+        "message": "Firmware flashed successfully."
+    },
+    "firmwareFlasherStartOver": {
+        "message": "Flash Another Board"
+    },
+    "firmwareFlasherNoPortWeb": {
+        "message": "No serial port selected yet."
+    },
+    "firmwareFlasherNoPortNative": {
+        "message": "No serial port selected — choose one from the toolbar above."
+    },
+    "firmwareFlasherSelectPort": {
+        "message": "Select Serial Port"
+    },
+    "firmwareFlasherSelectDfu": {
+        "message": "Select DFU Device"
+    },
+    "firmwareFlasherReadyToFlash": {
+        "message": "Ready to flash: {{target}} — {{version}}"
+    },
+    "firmwareFlasherShowDetails": {
+        "message": "Show details"
+    },
+    "firmwareFlasherHideDetails": {
+        "message": "Hide details"
+    },
+    "firmwareFlasherSaveFirmware": {
+        "message": "Save Firmware (.hex)"
+    },
+    "firmwareFlasherSaveConfig": {
+        "message": "Save Config (.config)"
+    },
+    "firmwareFlasherWizardBack": {
+        "message": "Back"
+    },
+    "firmwareFlasherWizardNext": {
+        "message": "Next"
+    },
     "firmwareFlasherManualPort": {
         "message": "Port"
     },
@@ -4993,6 +5124,9 @@
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersion": {
         "message": "Choose a Firmware version"
+    },
+    "firmwareFlasherVersionCachedLabel": {
+        "message": "{{label}} (cached)"
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersionFor": {
         "message": "Choose a Firmware version for"
@@ -5049,7 +5183,7 @@
         "message": "<strong>Recovery / Lost communication</strong>"
     },
     "firmwareFlasherRecoveryText": {
-        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
+        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
     },
     "firmwareFlasherFirmwareNotLoaded": {
         "message": "Firmware not loaded"

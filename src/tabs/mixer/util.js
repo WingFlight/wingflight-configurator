@@ -79,6 +79,9 @@ export function percentToRate(percent, invert) {
 export const OVERRIDE_PERCENT_MIN = -100;
 export const OVERRIDE_PERCENT_MAX = 100;
 
+export const FLAP_COMPENSATION_MIN = -100;
+export const FLAP_COMPENSATION_MAX = 100;
+
 // FC.MIXER_OVERRIDE shares the mixer input's own raw scale (1000 = 100%,
 // see mixerSetInput() dividing by 1000.0f in flight/mixer.c) -- the same
 // x10 convention rateToPercent/percentToRate already use for axis gain.

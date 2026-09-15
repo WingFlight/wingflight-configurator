@@ -258,6 +258,7 @@ export const Mixer = {
     buildWizardRules : function (options)
     {
         const rules = [];
+        const pitchOutputs = [];
         let nextServo = 1;
         let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
 
@@ -282,9 +283,13 @@ export const Mixer = {
             }
 
             if (options.tailControl === 'elevatorOnly') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
             } else if (options.tailControl === 'elevatorRudder') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
                 rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
             } else if (options.tailControl === 'vtail') {
                 const rightTail = nextServo++, leftTail = nextServo++;
@@ -292,6 +297,7 @@ export const Mixer = {
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
                 rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
                 rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
+                pitchOutputs.push(rightTail, leftTail);
             }
         } else if (options.layout === 'flyingWing') {
             const leftElevon = nextServo++, rightElevon = nextServo++;
@@ -299,6 +305,7 @@ export const Mixer = {
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  rightElevon, 1000, true));
+            pitchOutputs.push(leftElevon, rightElevon);
 
             if (options.wingYaw === 'rudder') {
                 rules.push(rule(OP_SET, YAW, nextServo++, 1000));
@@ -307,6 +314,22 @@ export const Mixer = {
 
         if (options.flaps) {
             rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+
+            // Flaps commonly change pitch trim ("ballooning" or diving) by an
+            // amount and direction that's airframe-specific and can't be
+            // guessed here, so this is driven by the wizard's own Flap Pitch
+            // Compensation field (percent, signed) rather than a fixed value
+            // -- defaults to 0 (no rule contribution) until the user dials
+            // it in after seeing how their airframe actually behaves with
+            // flaps out. Surfaced directly in the simplified form because
+            // named model types never show the raw rule table, so a rule
+            // seeded at zero weight here would otherwise be permanently
+            // unreachable outside Custom mode. See docs: Mixer ->
+            // Flap-to-Elevator Compensation.
+            const compPercent = options.flapPitchCompensation || 0;
+            pitchOutputs.forEach((dst) => {
+                rules.push(rule(OP_ADD, RC_AUX1, dst, Math.abs(compPercent) * 10, compPercent < 0));
+            });
         }
 
         if (options.motors >= 1) {

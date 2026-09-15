@@ -5,6 +5,13 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { updateTabList } from "@/js/main.js";
 
+  import NumberInput from "@/components/NumberInput.svelte";
+
+  import {
+    FLAP_COMPENSATION_MIN,
+    FLAP_COMPENSATION_MAX,
+  } from "./util.js";
+
   // modelType is passed to open() rather than taken as a prop -- callers
   // that let the user pick *which* type to configure (ModelTypePicker,
   // switching between named types) need it fixed for the lifetime of one
@@ -23,6 +30,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  let flapPitchCompensation = $state(0);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
   // Independent per-axis, since a vectored mount might drive any combination
@@ -46,6 +54,7 @@
       "elevatorRudder";
     wingYaw = activeType.wingYaw?.default ?? "none";
     flaps = false;
+    flapPitchCompensation = 0;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -62,6 +71,7 @@
       tailControl: activeType.tailControl?.fixed ?? tailControl,
       wingYaw,
       flaps,
+      flapPitchCompensation,
       motors,
       diffThrustYaw,
       thrustVectorRoll,
@@ -180,6 +190,21 @@
         <input type="checkbox" bind:checked={flaps} />
         <span>{$i18n.t("mixerWizardFlapsEnable")}</span>
       </label>
+      {#if flaps}
+        <div class="wizardCompensation">
+          <span>{$i18n.t("mixerWizardFlapsCompensationLabel")}</span>
+          <NumberInput
+            min={FLAP_COMPENSATION_MIN}
+            max={FLAP_COMPENSATION_MAX}
+            step="5"
+            bind:value={flapPitchCompensation}
+          />
+          <span class="unit">%</span>
+        </div>
+        <div class="wizardHint">
+          {$i18n.t("mixerWizardFlapsCompensationHint")}
+        </div>
+      {/if}
     </div>
 
     <div class="wizardSection">
@@ -285,6 +310,17 @@
     color: var(--color-text-soft);
     font-size: 0.7rem;
     margin-top: 4px;
+  }
+
+  .wizardCompensation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .wizardCompensation .unit {
+    color: var(--color-text-soft);
   }
 
   .buttons {
