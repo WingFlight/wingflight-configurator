@@ -4,10 +4,42 @@
   import { Mixer } from "@/js/Mixer.js";
 
   import ModelSetupDialog from "./ModelSetupDialog.svelte";
+  import { clampInt } from "./util.js";
 
   let modelType = $derived(Mixer.modelTypeInfo(FC.MIXER_CONFIG.model_type));
 
   let dialogRef;
+
+  // Purpose-tagged rules (e.g. the wizard's Flap Compensation rule) have no
+  // other way to be tuned outside the raw rule table, which only exists in
+  // Custom mode (Mixer.svelte gates RuleTable on model_type) -- surface just
+  // their weight here so a named model type never needs a detour through
+  // Custom mode to dial one in. Signed and shown directly (no Reverse/
+  // Differential decomposition like RuleRow's -- a compensation rule is a
+  // single symmetric ADD, there's nothing to decompose).
+  const COMPENSATION_WEIGHT_MIN = -Mixer.WEIGHT_MAX;
+  const COMPENSATION_WEIGHT_MAX = Mixer.WEIGHT_MAX;
+
+  let compensationRules = $derived.by(() => {
+    const i18nShim = { getMessage: (key) => $i18n.t(key) };
+    return FC.MIXER_RULES.map((rule, idx) => ({ rule, idx }))
+      .filter(({ rule }) => !Mixer.isNullRule(rule) && rule.purpose)
+      .map(({ rule, idx }) => ({
+        idx,
+        rule,
+        purposeLabel: $i18n.t(Mixer.purposeNames[rule.purpose]),
+        outputLabel: Mixer.outputLabel(rule.dst, i18nShim),
+      }));
+  });
+
+  function setCompensationWeight(idx, rule, rawValue) {
+    const weight = clampInt(
+      rawValue,
+      COMPENSATION_WEIGHT_MIN,
+      COMPENSATION_WEIGHT_MAX,
+    );
+    FC.MIXER_RULES[idx] = { ...rule, weight, weightNeg: weight };
+  }
 
   // Read-only summary of what's actually in FC.MIXER_RULES right now -- not
   // the wizard options that produced it, so it stays accurate even if rules
@@ -58,6 +90,32 @@
   </div>
 {/if}
 
+{#if compensationRules.length > 0}
+  <div class="compensationTable">
+    <div class="header-row">
+      <span>{$i18n.t("mixerCompensationPurpose")}</span>
+      <span>{$i18n.t("mixerChannelSummaryOutput")}</span>
+      <span>{$i18n.t("mixerRuleWeight")}</span>
+    </div>
+    {#each compensationRules as { idx, rule, purposeLabel, outputLabel } (idx)}
+      <div class="row">
+        <span class="purpose">{purposeLabel}</span>
+        <span class="output">{outputLabel}</span>
+        <span class="weight">
+          <input
+            type="number"
+            min={COMPENSATION_WEIGHT_MIN}
+            max={COMPENSATION_WEIGHT_MAX}
+            step="10"
+            value={rule.weight}
+            onchange={(e) => setCompensationWeight(idx, rule, e.target.value)}
+          />
+        </span>
+      </div>
+    {/each}
+  </div>
+{/if}
+
 <div class="editRow">
   <button class="editBtn" onclick={() => dialogRef.open(modelType)}>
     {$i18n.t("mixerEditConfiguration")}
@@ -73,14 +131,18 @@
     font-size: 0.85rem;
   }
 
-  .channelTable {
+  .channelTable,
+  .compensationTable {
     display: flex;
     flex-direction: column;
   }
 
+  .compensationTable {
+    margin-top: var(--section-gap, 16px);
+  }
+
   .header-row {
     display: grid;
-    grid-template-columns: minmax(120px, 1fr) 2fr;
     column-gap: 12px;
     padding: 4px 8px;
     font-weight: 600;
@@ -93,7 +155,6 @@
 
   .row {
     display: grid;
-    grid-template-columns: minmax(120px, 1fr) 2fr;
     column-gap: 12px;
     padding: 6px 8px;
     font-size: 0.85rem;
@@ -104,8 +165,24 @@
     }
   }
 
-  .output {
+  .channelTable .header-row,
+  .channelTable .row {
+    grid-template-columns: minmax(120px, 1fr) 2fr;
+  }
+
+  .compensationTable .header-row,
+  .compensationTable .row {
+    grid-template-columns: minmax(120px, 1fr) minmax(100px, 1fr) 100px;
+    align-items: center;
+  }
+
+  .output,
+  .purpose {
     font-weight: 500;
+  }
+
+  .weight input {
+    width: 100%;
   }
 
   .editRow {

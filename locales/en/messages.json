@@ -3992,6 +3992,9 @@
     "mixerChannelSummaryInput": {
         "message": "Input"
     },
+    "mixerCompensationPurpose": {
+        "message": "Compensation"
+    },
     "mixerRuleMoveUp": {
         "message": "Move up"
     },
