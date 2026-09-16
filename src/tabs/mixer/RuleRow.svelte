@@ -26,6 +26,7 @@
     inputOptions,
     curveOptions,
     conditionOptions,
+    purposeOptions,
     onCommit,
     onMoveUp,
     onMoveDown,
@@ -43,6 +44,7 @@
   let offset = $state();
   let speed = $state();
   let condition = $state();
+  let purpose = $state();
   let weight = $state(0);
   let differential = $state(0);
   let reverse = $state(false);
@@ -55,6 +57,7 @@
     offset = rule.offset;
     speed = rule.speed;
     condition = rule.condition;
+    purpose = rule.purpose || 0;
 
     const display = ruleToDisplay(rule);
     weight = display.weight;
@@ -81,6 +84,7 @@
       offset: clampInt(offset, Mixer.OFFSET_MIN, Mixer.OFFSET_MAX),
       speed: clampInt(speed, Mixer.SPEED_MIN, Mixer.SPEED_MAX),
       condition: condition || 0,
+      purpose: purpose || 0,
     });
   }
 </script>
@@ -160,6 +164,10 @@
     />
   </span>
 
+  <span class="col-purpose">
+    <Select bind:value={purpose} options={purposeOptions} onchange={commit} />
+  </span>
+
   <span class="col-actions">
     {#if !isBlank}
       <button
@@ -191,11 +199,11 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      minmax(80px, 1fr);
+      110px minmax(80px, 1fr);
     align-items: center;
     column-gap: 6px;
     padding: 4px 8px;
-    min-width: 900px;
+    min-width: 1010px;
     border-bottom: 1px solid var(--color-border);
 
     &.highlighted {
@@ -221,7 +229,8 @@
   .col-oper,
   .col-input,
   .col-curve,
-  .col-condition {
+  .col-condition,
+  .col-purpose {
     min-width: 0;
 
     :global(select) {

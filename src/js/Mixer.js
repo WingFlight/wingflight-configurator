@@ -78,6 +78,19 @@ export const Mixer = {
     OP_ADD: 2,
     OP_MUL: 3,
 
+    // Descriptive tag only -- the firmware mixer evaluator never reads it.
+    // Lets tooling (this UI, RC adjustment ranges, LUA scripts) find "the"
+    // rule serving a given role regardless of its array position.
+    purposeNames: [
+        'mixerPurposeNone',
+        'mixerPurposeFlapCompensation',
+        'mixerPurposeDifferentialThrustYaw',
+    ],
+
+    PURPOSE_NONE: 0,
+    PURPOSE_FLAP_COMPENSATION: 1,
+    PURPOSE_DIFFERENTIAL_THRUST_YAW: 2,
+
     UNINIT: -1,
 
     RULE_COUNT: 32,
@@ -115,7 +128,7 @@ export const Mixer = {
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0, purpose: 0 };
     },
 
     cloneRule: function (a)
@@ -133,7 +146,8 @@ export const Mixer = {
                 a.offset    === b.offset &&
                 a.speed     === b.speed &&
                 a.curve     === b.curve &&
-                a.condition === b.condition );
+                a.condition === b.condition &&
+                a.purpose   === b.purpose );
     },
 
     cloneRules : function (a)
@@ -264,7 +278,7 @@ export const Mixer = {
         function rule(oper, src, dst, weight, reverse)
         {
             const w = reverse ? -weight : weight;
-            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0 };
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, purpose: 0 };
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
@@ -348,7 +362,8 @@ export const Mixer = {
                 a.offset    == 0 &&
                 a.speed     == 0 &&
                 a.curve     == 0 &&
-                a.condition == 0 );
+                a.condition == 0 &&
+                a.purpose   == 0 );
     },
 
     isNullMixer : function (a) {

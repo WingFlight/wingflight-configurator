@@ -85,6 +85,10 @@
     })),
   ]);
 
+  let purposeOptions = $derived(
+    Mixer.purposeNames.map((key, i) => ({ value: i, label: $i18n.t(key) })),
+  );
+
   // Dims any rule row whose assigned condition is currently false, so it's
   // obvious at a glance which rules are actually contributing right now
   // versus just configured but gated off.
@@ -121,6 +125,7 @@
       offset: 0,
       speed: 0,
       condition: 0,
+      purpose: 0,
     };
   }
 </script>
@@ -138,6 +143,7 @@
     <span>{$i18n.t("mixerRuleSpeed")}</span>
     <span>{$i18n.t("mixerRuleReverse")}</span>
     <span>{$i18n.t("mixerRuleCondition")}</span>
+    <span>{$i18n.t("mixerRulePurpose")}</span>
     <span>{$i18n.t("mixerRuleActionsHeader")}</span>
     <span></span>
   </div>
@@ -158,6 +164,7 @@
       {inputOptions}
       {curveOptions}
       {conditionOptions}
+      {purposeOptions}
       onCommit={(newRule) => {
         FC.MIXER_RULES[index] = newRule;
       }}
@@ -188,12 +195,12 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      minmax(80px, 1fr);
+      110px minmax(80px, 1fr);
     column-gap: 6px;
     padding: 4px 8px;
     font-weight: 600;
     font-size: 0.75rem;
-    min-width: 900px;
+    min-width: 1010px;
 
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));

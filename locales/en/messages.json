@@ -3932,6 +3932,18 @@
     "mixerRuleCondition": {
         "message": "Condition"
     },
+    "mixerRulePurpose": {
+        "message": "Purpose"
+    },
+    "mixerPurposeNone": {
+        "message": "-"
+    },
+    "mixerPurposeFlapCompensation": {
+        "message": "Flap Compensation"
+    },
+    "mixerPurposeDifferentialThrustYaw": {
+        "message": "Differential Thrust Yaw"
+    },
     "mixerRuleActionsHeader": {
         "message": ""
     },
