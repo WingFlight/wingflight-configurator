@@ -157,6 +157,7 @@
     <span>{$i18n.t("mixerRuleReverse")}</span>
     <span>{$i18n.t("mixerRuleCondition")}</span>
     <span>{$i18n.t("mixerRuleRole")}</span>
+    <span></span>
     <span>{$i18n.t("mixerRuleActionsHeader")}</span>
     <span></span>
   </div>
@@ -209,12 +210,12 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      110px minmax(80px, 1fr);
+      110px 54px minmax(80px, 1fr);
     column-gap: 6px;
     padding: 4px 8px;
     font-weight: 600;
     font-size: 0.75rem;
-    min-width: 1010px;
+    min-width: 1064px;
 
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));

@@ -124,17 +124,6 @@
       disabled={adjustment?.active}
       onchange={commit}
     />
-    {#if adjustment}
-      <span
-        class="adjustment-badge"
-        class:runtime-active={adjustment.active}
-        title={adjustmentTitle(adjustment)}
-      >
-        {adjustment.active
-          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-          : "ADJ"}
-      </span>
-    {/if}
   </span>
 
   <span class="col-differential">
@@ -172,11 +161,7 @@
   </span>
 
   <span class="col-reverse">
-    <Switch
-      bind:checked={reverse}
-      disabled={adjustment?.active}
-      onchange={commit}
-    />
+    <Switch bind:checked={reverse} onchange={commit} />
   </span>
 
   <span class="col-condition">
@@ -189,6 +174,20 @@
 
   <span class="col-role">
     <Select bind:value={role} options={roleOptions} onchange={commit} />
+  </span>
+
+  <span class="col-adjustment">
+    {#if adjustment}
+      <span
+        class="adjustment-badge"
+        class:runtime-active={adjustment.active}
+        title={adjustmentTitle(adjustment)}
+      >
+        {adjustment.active
+          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/if}
   </span>
 
   <span class="col-actions">
@@ -222,11 +221,11 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      110px minmax(80px, 1fr);
+      110px 54px minmax(80px, 1fr);
     align-items: center;
     column-gap: 6px;
     padding: 4px 8px;
-    min-width: 1010px;
+    min-width: 1064px;
     border-bottom: 1px solid var(--color-border);
 
     &.highlighted {
@@ -271,32 +270,38 @@
     }
   }
 
-  // Weight is the one field a role-adjustment actually drives (Differential/
-  // Reverse are disabled alongside it above since they still feed into the
-  // same raw weight/weightNeg the adjustment writes) -- the badge stacks
-  // below the input rather than beside it, since this column is too narrow
-  // (64-90px) to fit both on one line.
-  .col-weight {
+  // Weight/Differential are disabled while a role-adjustment is active,
+  // since applyRoleWeight() (flight/mixer.c) overwrites both to the same
+  // live-driven magnitude on every tick regardless of what's typed here.
+  // Reverse stays editable even while active -- the adjustment only ever
+  // scales magnitude, never sign, so flipping Reverse (and saving) takes
+  // effect immediately and durably. The badge itself lives in its own slim
+  // column at the end of the row rather than inside col-weight -- there's
+  // no room there to show it without forcing the row onto two lines.
+  .col-adjustment {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
+    justify-content: center;
   }
 
   // Matches SimplifiedMixerForm.svelte/ServoConfigTable.svelte's own
-  // adjustment-badge treatment, so a rule under live RC-adjustment control
-  // reads the same way everywhere in the app.
+  // adjustment-badge treatment (just smaller, to fit this column), so a rule
+  // under live RC-adjustment control reads the same way everywhere in the
+  // app.
   .adjustment-badge {
-    padding: 1px 4px;
+    max-width: 100%;
+    padding: 1px 3px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
     border-radius: var(--radius-xs);
     background-color: transparent;
     color: var(--color-text-soft);
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 700;
-    line-height: 1rem;
+    line-height: 0.9rem;
     text-align: center;
     letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .adjustment-badge.runtime-active {
