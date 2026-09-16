@@ -10,7 +10,7 @@
 
   let dialogRef;
 
-  // Purpose-tagged rules (e.g. the wizard's Flap Compensation rule) have no
+  // Role-tagged rules (e.g. the wizard's Flap Compensation rule) have no
   // other way to be tuned outside the raw rule table, which only exists in
   // Custom mode (Mixer.svelte gates RuleTable on model_type) -- surface just
   // their weight here so a named model type never needs a detour through
@@ -23,11 +23,11 @@
   let compensationRules = $derived.by(() => {
     const i18nShim = { getMessage: (key) => $i18n.t(key) };
     return FC.MIXER_RULES.map((rule, idx) => ({ rule, idx }))
-      .filter(({ rule }) => !Mixer.isNullRule(rule) && rule.purpose)
+      .filter(({ rule }) => !Mixer.isNullRule(rule) && rule.role)
       .map(({ rule, idx }) => ({
         idx,
         rule,
-        purposeLabel: $i18n.t(Mixer.purposeNames[rule.purpose]),
+        roleLabel: $i18n.t(Mixer.roleNames[rule.role]),
         outputLabel: Mixer.outputLabel(rule.dst, i18nShim),
       }));
   });
@@ -93,13 +93,13 @@
 {#if compensationRules.length > 0}
   <div class="compensationTable">
     <div class="header-row">
-      <span>{$i18n.t("mixerCompensationPurpose")}</span>
+      <span>{$i18n.t("mixerCompensationRole")}</span>
       <span>{$i18n.t("mixerChannelSummaryOutput")}</span>
       <span>{$i18n.t("mixerRuleWeight")}</span>
     </div>
-    {#each compensationRules as { idx, rule, purposeLabel, outputLabel } (idx)}
+    {#each compensationRules as { idx, rule, roleLabel, outputLabel } (idx)}
       <div class="row">
-        <span class="purpose">{purposeLabel}</span>
+        <span class="role">{roleLabel}</span>
         <span class="output">{outputLabel}</span>
         <span class="weight">
           <input
@@ -177,7 +177,7 @@
   }
 
   .output,
-  .purpose {
+  .role {
     font-weight: 500;
   }
 

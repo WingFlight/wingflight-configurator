@@ -1400,7 +1400,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         speed:     data.readU16(),
                         curve:     data.readU8(),
                         condition: data.readU8(),
-                        purpose:   data.readU8(),
+                        role:      data.readU8(),
                     });
                 }
                 break;
@@ -2765,7 +2765,7 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push16(rule.speed)
           .push8(rule.curve)
           .push8(rule.condition)
-          .push8(rule.purpose ?? 0);
+          .push8(rule.role ?? 0);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };

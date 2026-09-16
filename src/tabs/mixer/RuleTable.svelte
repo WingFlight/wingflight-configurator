@@ -85,8 +85,8 @@
     })),
   ]);
 
-  let purposeOptions = $derived(
-    Mixer.purposeNames.map((key, i) => ({ value: i, label: $i18n.t(key) })),
+  let roleOptions = $derived(
+    Mixer.roleNames.map((key, i) => ({ value: i, label: $i18n.t(key) })),
   );
 
   // Dims any rule row whose assigned condition is currently false, so it's
@@ -125,7 +125,7 @@
       offset: 0,
       speed: 0,
       condition: 0,
-      purpose: 0,
+      role: 0,
     };
   }
 </script>
@@ -143,7 +143,7 @@
     <span>{$i18n.t("mixerRuleSpeed")}</span>
     <span>{$i18n.t("mixerRuleReverse")}</span>
     <span>{$i18n.t("mixerRuleCondition")}</span>
-    <span>{$i18n.t("mixerRulePurpose")}</span>
+    <span>{$i18n.t("mixerRuleRole")}</span>
     <span>{$i18n.t("mixerRuleActionsHeader")}</span>
     <span></span>
   </div>
@@ -164,7 +164,7 @@
       {inputOptions}
       {curveOptions}
       {conditionOptions}
-      {purposeOptions}
+      {roleOptions}
       onCommit={(newRule) => {
         FC.MIXER_RULES[index] = newRule;
       }}

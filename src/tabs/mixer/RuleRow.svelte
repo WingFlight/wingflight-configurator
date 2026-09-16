@@ -26,7 +26,7 @@
     inputOptions,
     curveOptions,
     conditionOptions,
-    purposeOptions,
+    roleOptions,
     onCommit,
     onMoveUp,
     onMoveDown,
@@ -44,7 +44,7 @@
   let offset = $state();
   let speed = $state();
   let condition = $state();
-  let purpose = $state();
+  let role = $state();
   let weight = $state(0);
   let differential = $state(0);
   let reverse = $state(false);
@@ -57,7 +57,7 @@
     offset = rule.offset;
     speed = rule.speed;
     condition = rule.condition;
-    purpose = rule.purpose || 0;
+    role = rule.role || 0;
 
     const display = ruleToDisplay(rule);
     weight = display.weight;
@@ -84,7 +84,7 @@
       offset: clampInt(offset, Mixer.OFFSET_MIN, Mixer.OFFSET_MAX),
       speed: clampInt(speed, Mixer.SPEED_MIN, Mixer.SPEED_MAX),
       condition: condition || 0,
-      purpose: purpose || 0,
+      role: role || 0,
     });
   }
 </script>
@@ -164,8 +164,8 @@
     />
   </span>
 
-  <span class="col-purpose">
-    <Select bind:value={purpose} options={purposeOptions} onchange={commit} />
+  <span class="col-role">
+    <Select bind:value={role} options={roleOptions} onchange={commit} />
   </span>
 
   <span class="col-actions">
@@ -230,7 +230,7 @@
   .col-input,
   .col-curve,
   .col-condition,
-  .col-purpose {
+  .col-role {
     min-width: 0;
 
     :global(select) {

@@ -81,15 +81,15 @@ export const Mixer = {
     // Descriptive tag only -- the firmware mixer evaluator never reads it.
     // Lets tooling (this UI, RC adjustment ranges, LUA scripts) find "the"
     // rule serving a given role regardless of its array position.
-    purposeNames: [
-        'mixerPurposeNone',
-        'mixerPurposeFlapCompensation',
-        'mixerPurposeDifferentialThrustYaw',
+    roleNames: [
+        'mixerRoleNone',
+        'mixerRoleFlapCompensation',
+        'mixerRoleDifferentialThrustYaw',
     ],
 
-    PURPOSE_NONE: 0,
-    PURPOSE_FLAP_COMPENSATION: 1,
-    PURPOSE_DIFFERENTIAL_THRUST_YAW: 2,
+    ROLE_NONE: 0,
+    ROLE_FLAP_COMPENSATION: 1,
+    ROLE_DIFFERENTIAL_THRUST_YAW: 2,
 
     UNINIT: -1,
 
@@ -128,7 +128,7 @@ export const Mixer = {
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0, purpose: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0, role: 0 };
     },
 
     cloneRule: function (a)
@@ -147,7 +147,7 @@ export const Mixer = {
                 a.speed     === b.speed &&
                 a.curve     === b.curve &&
                 a.condition === b.condition &&
-                a.purpose   === b.purpose );
+                a.role      === b.role );
     },
 
     cloneRules : function (a)
@@ -281,10 +281,10 @@ export const Mixer = {
         // elevons, ...), not just a single named "elevator" servo.
         const pitchOutputs = [];
 
-        function rule(oper, src, dst, weight, reverse, purpose)
+        function rule(oper, src, dst, weight, reverse, role)
         {
             const w = reverse ? -weight : weight;
-            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, purpose: purpose || 0 };
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, role: role || 0 };
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
@@ -344,7 +344,7 @@ export const Mixer = {
             // default) and is tagged so it stays findable regardless of
             // where it ends up in the table.
             pitchOutputs.forEach((output) => {
-                rules.push(rule(OP_ADD, RC_AUX1, output, 0, false, Mixer.PURPOSE_FLAP_COMPENSATION));
+                rules.push(rule(OP_ADD, RC_AUX1, output, 0, false, Mixer.ROLE_FLAP_COMPENSATION));
             });
         }
 
@@ -358,8 +358,8 @@ export const Mixer = {
             rules.push(rule(OP_SET, THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
-                rules.push(rule(OP_ADD, YAW, motor1, 500, false, Mixer.PURPOSE_DIFFERENTIAL_THRUST_YAW));
-                rules.push(rule(OP_ADD, YAW, motor2, 500, true,  Mixer.PURPOSE_DIFFERENTIAL_THRUST_YAW));
+                rules.push(rule(OP_ADD, YAW, motor1, 500, false, Mixer.ROLE_DIFFERENTIAL_THRUST_YAW));
+                rules.push(rule(OP_ADD, YAW, motor2, 500, true,  Mixer.ROLE_DIFFERENTIAL_THRUST_YAW));
             }
         }
 
@@ -390,7 +390,7 @@ export const Mixer = {
                 a.speed     == 0 &&
                 a.curve     == 0 &&
                 a.condition == 0 &&
-                a.purpose   == 0 );
+                a.role      == 0 );
     },
 
     isNullMixer : function (a) {

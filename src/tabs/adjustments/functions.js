@@ -122,12 +122,12 @@ export function getFunctions() {
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         // Scales the weight of every mixer rule tagged with a given
-        // mixerRulePurpose_e (pg/mixer.h) -- found by tag at runtime
-        // (flight/mixer.c's applyPurposeWeight()), not a fixed rule index, so
+        // mixerRuleRole_e (pg/mixer.h) -- found by tag at runtime
+        // (flight/mixer.c's applyRoleWeight()), not a fixed rule index, so
         // it keeps working regardless of where those rules end up in the
         // 32-slot table. DiffThrustYawGain drives both motors' rules from one
         // scalar, each keeping its own sign relative to the other (so it's a
-        // differential, not a common-mode push) -- see applyPurposeWeight()'s
+        // differential, not a common-mode push) -- see applyRoleWeight()'s
         // own comment. Range matches rc_adjustments.c's ADJ_ENTRY, well
         // inside the field's own +-10000 (MIXER_WEIGHT_MIN/MAX).
         { id: 112,  name: 'FlapCompensationGain',        min: -1000, max: 1000,   ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
