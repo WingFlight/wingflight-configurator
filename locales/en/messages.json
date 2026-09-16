@@ -7115,6 +7115,12 @@
     "modeHelp MANUAL": {
         "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
     },
+    "mode TRADITIONAL": {
+        "message": "TRADITIONAL"
+    },
+    "modeHelp TRADITIONAL": {
+        "message": "Stabilizes rate like normal flight, but holds the I-term at zero - the servo snaps back immediately on stick release instead of holding position."
+    },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
     },
