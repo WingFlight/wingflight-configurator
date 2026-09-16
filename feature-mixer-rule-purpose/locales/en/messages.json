@@ -3941,16 +3941,16 @@
     "mixerRuleCondition": {
         "message": "Condition"
     },
-    "mixerRulePurpose": {
-        "message": "Purpose"
+    "mixerRuleRole": {
+        "message": "Role"
     },
-    "mixerPurposeNone": {
+    "mixerRoleNone": {
         "message": "-"
     },
-    "mixerPurposeFlapCompensation": {
+    "mixerRoleFlapCompensation": {
         "message": "Flap Compensation"
     },
-    "mixerPurposeDifferentialThrustYaw": {
+    "mixerRoleDifferentialThrustYaw": {
         "message": "Differential Thrust Yaw"
     },
     "mixerRuleActionsHeader": {
@@ -4001,7 +4001,7 @@
     "mixerChannelSummaryInput": {
         "message": "Input"
     },
-    "mixerCompensationPurpose": {
+    "mixerCompensationRole": {
         "message": "Compensation"
     },
     "mixerRuleMoveUp": {
