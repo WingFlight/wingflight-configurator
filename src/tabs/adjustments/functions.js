@@ -121,13 +121,17 @@ export function getFunctions() {
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
-        // Scales the weight of whichever mixer rule is tagged with a given
+        // Scales the weight of every mixer rule tagged with a given
         // mixerRulePurpose_e (pg/mixer.h) -- found by tag at runtime
-        // (flight/mixer.c's findRuleByPurpose()), not a fixed rule index, so
-        // it keeps working regardless of where that rule ends up in the
-        // 32-slot table. Range matches rc_adjustments.c's ADJ_ENTRY, well
+        // (flight/mixer.c's applyPurposeWeight()), not a fixed rule index, so
+        // it keeps working regardless of where those rules end up in the
+        // 32-slot table. DiffThrustYawGain drives both motors' rules from one
+        // scalar, each keeping its own sign relative to the other (so it's a
+        // differential, not a common-mode push) -- see applyPurposeWeight()'s
+        // own comment. Range matches rc_adjustments.c's ADJ_ENTRY, well
         // inside the field's own +-10000 (MIXER_WEIGHT_MIN/MAX).
         { id: 112,  name: 'FlapCompensationGain',        min: -1000, max: 1000,   ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
+        { id: 113,  name: 'DiffThrustYawGain',           min: -1000, max: 1000,   ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
     ];
 }
 
@@ -161,5 +165,5 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
     { label: 'adjustmentsGroupRescue', ids: [44, 43, 42, 39, 41, 40] },
     { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
-    { label: 'adjustmentsGroupMixer', ids: [112] },
+    { label: 'adjustmentsGroupMixer', ids: [112, 113] },
 ];
