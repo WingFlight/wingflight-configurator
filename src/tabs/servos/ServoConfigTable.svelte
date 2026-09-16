@@ -16,7 +16,6 @@
   let { servos, onFieldChange, onRateChange } = $props();
 
   const FLAG_REVERSE = 1;
-  const FLAG_GEOCOR = 2;
 
   const scaleMin = 50;
 
@@ -126,7 +125,6 @@
       cols.push(VALUE_COL); // Speed
     }
     cols.push(CHECKBOX_COL); // Reverse
-    if (CONFIGURATOR.expertMode) cols.push(CHECKBOX_COL); // Geo cor
     return cols;
   });
 
@@ -249,19 +247,10 @@
             <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
           </span>
         {/if}
-        <span class="header-label-flex">
+        <span class="header-label-flex header-label-narrow">
           <span>{$i18n.t("servoReverse")}</span>
           <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
         </span>
-        {#if CONFIGURATOR.expertMode}
-          <span class="header-label-flex">
-            <span>{$i18n.t("servoGeometryCorrection")}</span>
-            <HelpIcon>
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("servoGeometryCorrectionHelp")}
-            </HelpIcon>
-          </span>
-        {/if}
         <span>{$i18n.t("servoSignal")}</span>
       </div>
 
@@ -352,17 +341,6 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          {#if CONFIGURATOR.expertMode}
-            <span class="servo-checkbox">
-              <Switch
-                bind:checked={
-                  () => flag(servo.index, FLAG_GEOCOR),
-                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
-                }
-                onchange={() => onFieldChange(servo.index)}
-              />
-            </span>
-          {/if}
           <span class="servo-signal">
             <span class="meter">
               <span class="meter-fill" style="width: {meterPercent(servo)}%"
@@ -495,22 +473,6 @@
             />
           </div>
 
-          {#if CONFIGURATOR.expertMode}
-            <div class="mobile-field">
-              {@render fieldLabel(
-                "servoGeometryCorrection",
-                "servoGeometryCorrectionHelp",
-              )}
-              <Switch
-                bind:checked={
-                  () => flag(servo.index, FLAG_GEOCOR),
-                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
-                }
-                onchange={() => onFieldChange(servo.index)}
-              />
-            </div>
-          {/if}
-
           <div class="mobile-field">
             {@render fieldLabel("servoSignal", null)}
             <span class="servo-signal">
@@ -629,6 +591,23 @@
 
   .header-label-flex :global(.container) {
     margin-left: 2px;
+  }
+
+  // Reverse sits in the narrow checkbox column (sized for a 44px switch,
+  // not a label) -- translated text can easily outrun that width (e.g.
+  // German "Umkehr" plus the help icon), and with nowrap the overflow
+  // doesn't respect the grid cell, so it visually bleeds into the
+  // neighboring header column instead of the switch below. Wrapping the
+  // icon onto its own line keeps the label centered over its actual column
+  // at any text length.
+  .header-label-narrow {
+    flex-wrap: wrap;
+    row-gap: 1px;
+    white-space: normal;
+  }
+
+  .header-label-narrow :global(.container) {
+    margin-left: 0;
   }
 
   .servo-row {

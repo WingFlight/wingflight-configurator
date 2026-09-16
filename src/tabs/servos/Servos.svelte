@@ -117,10 +117,8 @@
     let unusualScale = false;
     let unusualRate = false;
     let unusualLimit = false;
-    let unusualGeoCor = false;
 
     const SERVOS = FC.SERVO_CONFIG;
-    const FLAG_GEOCOR = 2;
 
     for (let index = 0; index < pwmServoCount; index++) {
       const servo = SERVOS[index];
@@ -163,16 +161,8 @@
     }
 
     if (pwmServoCount === 2 && SERVOS[0] && SERVOS[1]) {
-      if ((SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[1].flags & FLAG_GEOCOR))
-        unusualGeoCor = true;
       if (SERVOS[0].rate !== SERVOS[1].rate) unusualRate = true;
     } else if (pwmServoCount >= 3 && SERVOS[0] && SERVOS[1] && SERVOS[2]) {
-      if (
-        (SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[1].flags & FLAG_GEOCOR) ||
-        (SERVOS[1].flags & FLAG_GEOCOR) !== (SERVOS[2].flags & FLAG_GEOCOR) ||
-        (SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[2].flags & FLAG_GEOCOR)
-      )
-        unusualGeoCor = true;
       if (
         SERVOS[0].rate !== SERVOS[1].rate ||
         SERVOS[1].rate !== SERVOS[2].rate ||
@@ -181,7 +171,7 @@
         unusualRate = true;
     }
 
-    return { unusualScale, unusualRate, unusualLimit, unusualGeoCor };
+    return { unusualScale, unusualRate, unusualLimit };
   });
 
   let showToolbar = $derived(!loading && dirty);
@@ -305,7 +295,7 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <Section label="servoConfigurationPwm">
-    {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate || warnings.unusualGeoCor}
+    {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate}
       <div class="note">
         {#if warnings.unusualLimit}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -318,10 +308,6 @@
         {#if warnings.unusualRate}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <p>{@html $i18n.t("servoUnusualRatesWarning")}</p>
-        {/if}
-        {#if warnings.unusualGeoCor}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualGeometryCorrection")}</p>
         {/if}
       </div>
     {/if}
