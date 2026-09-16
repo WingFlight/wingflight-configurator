@@ -5,6 +5,12 @@
 
   import ModelSetupDialog from "./ModelSetupDialog.svelte";
   import { clampInt } from "./util.js";
+  import {
+    MIXER_ROLE_ADJUSTMENT_FUNCTIONS,
+    adjustmentChannelLabel,
+    adjustmentTitle,
+    getAdjustmentState,
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   let modelType = $derived(Mixer.modelTypeInfo(FC.MIXER_CONFIG.model_type));
 
@@ -29,6 +35,9 @@
         rule,
         roleLabel: $i18n.t(Mixer.roleNames[rule.role]),
         outputLabel: Mixer.outputLabel(rule.dst, i18nShim),
+        adjustment: getAdjustmentState(
+          MIXER_ROLE_ADJUSTMENT_FUNCTIONS[rule.role],
+        ),
       }));
   });
 
@@ -96,8 +105,9 @@
       <span>{$i18n.t("mixerCompensationRole")}</span>
       <span>{$i18n.t("mixerChannelSummaryOutput")}</span>
       <span>{$i18n.t("mixerRuleWeight")}</span>
+      <span></span>
     </div>
-    {#each compensationRules as { idx, rule, roleLabel, outputLabel } (idx)}
+    {#each compensationRules as { idx, rule, roleLabel, outputLabel, adjustment } (idx)}
       <div class="row">
         <span class="role">{roleLabel}</span>
         <span class="output">{outputLabel}</span>
@@ -108,8 +118,22 @@
             max={COMPENSATION_WEIGHT_MAX}
             step="10"
             value={rule.weight}
+            disabled={adjustment?.active}
             onchange={(e) => setCompensationWeight(idx, rule, e.target.value)}
           />
+        </span>
+        <span class="adjustment">
+          {#if adjustment}
+            <span
+              class="adjustment-badge"
+              class:runtime-active={adjustment.active}
+              title={adjustmentTitle(adjustment)}
+            >
+              {adjustment.active
+                ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                : "ADJ"}
+            </span>
+          {/if}
         </span>
       </div>
     {/each}
@@ -172,7 +196,7 @@
 
   .compensationTable .header-row,
   .compensationTable .row {
-    grid-template-columns: minmax(120px, 1fr) minmax(100px, 1fr) 100px;
+    grid-template-columns: minmax(120px, 1fr) minmax(90px, 1fr) 100px 70px;
     align-items: center;
   }
 
@@ -183,6 +207,34 @@
 
   .weight input {
     width: 100%;
+  }
+
+  .adjustment {
+    display: flex;
+    justify-content: center;
+  }
+
+  // Matches ServoConfigTable.svelte's own adjustment-badge treatment, so a
+  // rule under live RC-adjustment control reads the same way everywhere in
+  // the app: outlined/muted when merely assigned, filled solid when the
+  // assigned range is actively driving the value right now.
+  .adjustment-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    background-color: transparent;
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  .adjustment-badge.runtime-active {
+    background-color: var(--color-accent, var(--accent));
+    color: var(--color-text-inverse, #fff);
   }
 
   .editRow {
