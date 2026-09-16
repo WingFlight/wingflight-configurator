@@ -3197,6 +3197,9 @@
     "adjustmentsFunctionFlapCompensationGain": {
         "message": "Flap Compensation Gain"
     },
+    "adjustmentsFunctionDiffThrustYawGain": {
+        "message": "Differential Thrust Yaw Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
