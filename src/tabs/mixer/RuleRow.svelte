@@ -5,6 +5,11 @@
   import Switch from "@/components/Switch.svelte";
 
   import {
+    adjustmentChannelLabel,
+    adjustmentTitle,
+  } from "@/tabs/adjustments/adjustmentState.js";
+
+  import {
     ruleToDisplay,
     displayToRule,
     clampInt,
@@ -27,6 +32,7 @@
     curveOptions,
     conditionOptions,
     roleOptions,
+    adjustment,
     onCommit,
     onMoveUp,
     onMoveDown,
@@ -115,8 +121,20 @@
       max={Mixer.WEIGHT_MAX}
       step="10"
       bind:value={weight}
+      disabled={adjustment?.active}
       onchange={commit}
     />
+    {#if adjustment}
+      <span
+        class="adjustment-badge"
+        class:runtime-active={adjustment.active}
+        title={adjustmentTitle(adjustment)}
+      >
+        {adjustment.active
+          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/if}
   </span>
 
   <span class="col-differential">
@@ -126,6 +144,7 @@
       max={DIFFERENTIAL_MAX}
       step="1"
       bind:value={differential}
+      disabled={adjustment?.active}
       onchange={commit}
     />
   </span>
@@ -153,7 +172,11 @@
   </span>
 
   <span class="col-reverse">
-    <Switch bind:checked={reverse} onchange={commit} />
+    <Switch
+      bind:checked={reverse}
+      disabled={adjustment?.active}
+      onchange={commit}
+    />
   </span>
 
   <span class="col-condition">
@@ -246,6 +269,39 @@
     input {
       width: 100%;
     }
+  }
+
+  // Weight is the one field a role-adjustment actually drives (Differential/
+  // Reverse are disabled alongside it above since they still feed into the
+  // same raw weight/weightNeg the adjustment writes) -- the badge stacks
+  // below the input rather than beside it, since this column is too narrow
+  // (64-90px) to fit both on one line.
+  .col-weight {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  // Matches SimplifiedMixerForm.svelte/ServoConfigTable.svelte's own
+  // adjustment-badge treatment, so a rule under live RC-adjustment control
+  // reads the same way everywhere in the app.
+  .adjustment-badge {
+    padding: 1px 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    background-color: transparent;
+    color: var(--color-text-soft);
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  .adjustment-badge.runtime-active {
+    background-color: var(--color-accent, var(--accent));
+    color: var(--color-text-inverse, #fff);
   }
 
   .col-reverse {

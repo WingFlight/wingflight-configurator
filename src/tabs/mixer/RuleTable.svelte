@@ -4,6 +4,10 @@
   import { Mixer } from "@/js/Mixer.js";
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { LogicCondition } from "@/js/LogicCondition.js";
+  import {
+    MIXER_ROLE_ADJUSTMENT_FUNCTIONS,
+    getAdjustmentState,
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   import RuleRow from "./RuleRow.svelte";
 
@@ -100,6 +104,15 @@
     );
   }
 
+  // If this rule's role has a live-adjustment function (flap compensation,
+  // differential thrust yaw), returns that adjustment's current state so the
+  // row can show the same ADJ/LIVE badge SimplifiedMixerForm.svelte does, and
+  // disable manual editing while it's actively driving the weight.
+  function ruleAdjustment(rule) {
+    const adjFunction = MIXER_ROLE_ADJUSTMENT_FUNCTIONS[rule.role];
+    return adjFunction ? getAdjustmentState(adjFunction) : null;
+  }
+
   function move(index, targetPos) {
     const target = displayIndexes[targetPos];
     Mixer.swapRules(FC.MIXER_RULES, index, target);
@@ -165,6 +178,7 @@
       {curveOptions}
       {conditionOptions}
       {roleOptions}
+      adjustment={!isBlank ? ruleAdjustment(FC.MIXER_RULES[index]) : null}
       onCommit={(newRule) => {
         FC.MIXER_RULES[index] = newRule;
       }}
