@@ -274,11 +274,17 @@ export const Mixer = {
         const rules = [];
         let nextServo = 1;
         let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
+        // Every output that ends up carrying pitch, across whichever layout
+        // ran below -- the flap compensation rule(s) further down ADD onto
+        // all of these, since a flap-induced pitching moment shows up on
+        // every pitch-controlling surface (both v-tail halves, both
+        // elevons, ...), not just a single named "elevator" servo.
+        const pitchOutputs = [];
 
-        function rule(oper, src, dst, weight, reverse)
+        function rule(oper, src, dst, weight, reverse, purpose)
         {
             const w = reverse ? -weight : weight;
-            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, purpose: 0 };
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, purpose: purpose || 0 };
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
@@ -296,9 +302,13 @@ export const Mixer = {
             }
 
             if (options.tailControl === 'elevatorOnly') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
             } else if (options.tailControl === 'elevatorRudder') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
                 rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
             } else if (options.tailControl === 'vtail') {
                 const rightTail = nextServo++, leftTail = nextServo++;
@@ -306,6 +316,7 @@ export const Mixer = {
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
                 rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
                 rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
+                pitchOutputs.push(rightTail, leftTail);
             }
         } else if (options.layout === 'flyingWing') {
             const leftElevon = nextServo++, rightElevon = nextServo++;
@@ -313,6 +324,7 @@ export const Mixer = {
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  rightElevon, 1000, true));
+            pitchOutputs.push(leftElevon, rightElevon);
 
             if (options.wingYaw === 'rudder') {
                 rules.push(rule(OP_SET, YAW, nextServo++, 1000));
@@ -321,18 +333,33 @@ export const Mixer = {
 
         if (options.flaps) {
             rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            if (options.flapServos >= 2) {
+                rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            }
+
+            // Flap-induced pitching moment otherwise gets silently absorbed
+            // by the rate loop's I-term until it saturates at low airspeed
+            // during the flare -- see the flap-compensation writeup. Starts
+            // at zero weight (a placeholder to tune in, not a guessed
+            // default) and is tagged so it stays findable regardless of
+            // where it ends up in the table.
+            pitchOutputs.forEach((output) => {
+                rules.push(rule(OP_ADD, RC_AUX1, output, 0, false, Mixer.PURPOSE_FLAP_COMPENSATION));
+            });
         }
 
+        let motor1;
         if (options.motors >= 1) {
-            rules.push(rule(OP_SET, THROTTLE, nextMotor++, 1000));
+            motor1 = nextMotor++;
+            rules.push(rule(OP_SET, THROTTLE, motor1, 1000));
         }
         if (options.motors >= 2) {
             const motor2 = nextMotor;
             rules.push(rule(OP_SET, THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
-                rules.push(rule(OP_ADD, YAW, 9,      500));
-                rules.push(rule(OP_ADD, YAW, motor2, 500, true));
+                rules.push(rule(OP_ADD, YAW, motor1, 500, false, Mixer.PURPOSE_DIFFERENTIAL_THRUST_YAW));
+                rules.push(rule(OP_ADD, YAW, motor2, 500, true,  Mixer.PURPOSE_DIFFERENTIAL_THRUST_YAW));
             }
         }
 

@@ -4056,7 +4056,16 @@
         "message": "Flaps"
     },
     "mixerWizardFlapsEnable": {
-        "message": "Add a flap servo (driven by an aux channel)"
+        "message": "Add flaps (driven by an aux channel)"
+    },
+    "mixerWizardFlapServos1": {
+        "message": "1 servo (shared Y-cable channel)"
+    },
+    "mixerWizardFlapServos2": {
+        "message": "2 independent servos"
+    },
+    "mixerWizardFlapsCompensationHint": {
+        "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
