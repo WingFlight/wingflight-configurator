@@ -88,11 +88,16 @@
     padding-right: 8px;
 
     &.on {
+      color: var(--color-text-alt);
       background-color: var(--color-accent-500);
-      color: #000;
     }
 
     &.off {
+      // surface-alt is a dark band in both themes -- text-alt is the token
+      // for text on it, giving near-white text here instead of the default
+      // header-fg color, which is tuned for the light header band and reads
+      // low-contrast on this darker one.
+      color: var(--color-text-alt);
       background-color: var(--color-surface-alt);
     }
   }
