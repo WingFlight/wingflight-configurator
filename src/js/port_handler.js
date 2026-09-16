@@ -402,9 +402,17 @@ PortHandler.updatePortSelect = function (ports) {
             value: "DFU",
             text: i18n.getMessage('portsSelectAddDfuDevice'),
             data: {isDFU: true},
-            // also expose as a real HTML attribute so non-jQuery consumers
-            // (e.g. the Svelte firmware flasher) can read it via .dataset
+            // also expose as real HTML attributes so non-jQuery consumers
+            // (e.g. the Svelte firmware flasher) can read them via .dataset
             'data-is-dfu': 'true',
+            // Still just the "click to request permission" trigger, not yet
+            // a real, selectable device -- cleared by
+            // requestWebUsbDeviceFromPicker() (serial_backend.js) once a
+            // device is actually authorized, so consumers that already offer
+            // their own explicit "select DFU" action can tell the two states
+            // apart and skip listing this option again while it's only a
+            // duplicate of that action.
+            'data-dfu-pending': 'true',
         }));
     }
 
