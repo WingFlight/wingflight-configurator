@@ -2963,6 +2963,9 @@
     "adjustmentsGroupGovernor": {
         "message": "Governor (Heli)"
     },
+    "adjustmentsGroupMixer": {
+        "message": "Mixer"
+    },
     "adjustmentsFunctionRateProfile": {
         "message": "Rate Profile Selection"
     },
@@ -3190,6 +3193,9 @@
     },
     "adjustmentsFunctionTVProfile": {
         "message": "TV Profile Selection"
+    },
+    "adjustmentsFunctionFlapCompensationGain": {
+        "message": "Flap Compensation Gain"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
