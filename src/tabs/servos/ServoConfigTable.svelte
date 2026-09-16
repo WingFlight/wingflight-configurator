@@ -109,7 +109,11 @@
   const INDEX_COL = 44;
   const VALUE_COL = 100;
   const TRIM_COL = 64;
-  const CHECKBOX_COL = 60;
+  // Wide enough for the Reverse label + help icon on one line for most
+  // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
+  // below still wraps the icon as a fallback for longer translations (e.g.
+  // Bulgarian "Реверсиране") rather than relying on this width alone.
+  const REVERSE_COL = 90;
   // No fixed column for the trailing Signal meter (it's the 1fr track), but
   // it still needs *some* room to be legible -- this is roughly its
   // meter-label plus a usable sliver of the meter bar itself.
@@ -124,7 +128,7 @@
       if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
       cols.push(VALUE_COL); // Speed
     }
-    cols.push(CHECKBOX_COL); // Reverse
+    cols.push(REVERSE_COL); // Reverse
     return cols;
   });
 
@@ -593,13 +597,12 @@
     margin-left: 2px;
   }
 
-  // Reverse sits in the narrow checkbox column (sized for a 44px switch,
-  // not a label) -- translated text can easily outrun that width (e.g.
-  // German "Umkehr" plus the help icon), and with nowrap the overflow
-  // doesn't respect the grid cell, so it visually bleeds into the
-  // neighboring header column instead of the switch below. Wrapping the
-  // icon onto its own line keeps the label centered over its actual column
-  // at any text length.
+  // REVERSE_COL is sized for the label in most locales, but a long enough
+  // translation (e.g. Bulgarian "Реверсиране") can still outrun it, and with
+  // nowrap the overflow wouldn't respect the grid cell -- it'd bleed into
+  // the Signal column instead of staying above the switch. Wrapping the
+  // icon onto its own line as a fallback keeps the label centered over its
+  // actual column at any text length.
   .header-label-narrow {
     flex-wrap: wrap;
     row-gap: 1px;
