@@ -2963,6 +2963,9 @@
     "adjustmentsGroupGovernor": {
         "message": "Governor (Heli)"
     },
+    "adjustmentsGroupMixer": {
+        "message": "Mixer"
+    },
     "adjustmentsFunctionRateProfile": {
         "message": "Rate Profile Selection"
     },
@@ -3190,6 +3193,12 @@
     },
     "adjustmentsFunctionTVProfile": {
         "message": "TV Profile Selection"
+    },
+    "adjustmentsFunctionFlapCompensationGain": {
+        "message": "Flap Compensation Gain"
+    },
+    "adjustmentsFunctionDiffThrustYawGain": {
+        "message": "Differential Thrust Yaw Gain"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -3932,6 +3941,18 @@
     "mixerRuleCondition": {
         "message": "Condition"
     },
+    "mixerRuleRole": {
+        "message": "Role"
+    },
+    "mixerRoleNone": {
+        "message": "-"
+    },
+    "mixerRoleFlapCompensation": {
+        "message": "Flap Compensation"
+    },
+    "mixerRoleDifferentialThrustYaw": {
+        "message": "Differential Thrust Yaw"
+    },
     "mixerRuleActionsHeader": {
         "message": ""
     },
@@ -3979,6 +4000,9 @@
     },
     "mixerChannelSummaryInput": {
         "message": "Input"
+    },
+    "mixerCompensationRole": {
+        "message": "Compensation"
     },
     "mixerRuleMoveUp": {
         "message": "Move up"
@@ -4044,7 +4068,16 @@
         "message": "Flaps"
     },
     "mixerWizardFlapsEnable": {
-        "message": "Add a flap servo (driven by an aux channel)"
+        "message": "Add flaps (driven by an aux channel)"
+    },
+    "mixerWizardFlapServos1": {
+        "message": "1 servo (shared Y-cable channel)"
+    },
+    "mixerWizardFlapServos2": {
+        "message": "2 independent servos"
+    },
+    "mixerWizardFlapsCompensationHint": {
+        "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
