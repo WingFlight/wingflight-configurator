@@ -5987,6 +5987,12 @@
     "profilesAutoHoverMaxRateHelp": {
         "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
     },
+    "profilesAutoHoverRollDeadband": {
+        "message": "Auto Hover roll deadband"
+    },
+    "profilesAutoHoverRollDeadbandHelp": {
+        "message": "Percent roll stick deflection above which roll is a free pass-through (pirouette control), same as before; below this, the roll stick is considered centred and Auto Hover captures and holds the current roll, correcting disturbance-driven drift (e.g. torque roll) back to it. Unlike pitch/yaw, roll has no fixed target -- it holds whatever roll the aircraft was in the instant the stick last centred."
+    },
     "profilesAttHoldGain": {
         "message": "Attitude Hold gain"
     },
