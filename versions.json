@@ -83,11 +83,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-mixer-rule-purpose",
-      "path": "./feature-mixer-rule-purpose/"
-    },
-    {
-      "type": "branch",
       "name": "feature-oscillation-limiter-settings",
       "path": "./feature-oscillation-limiter-settings/"
     },
