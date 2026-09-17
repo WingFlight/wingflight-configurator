@@ -612,6 +612,7 @@ class FlightController {
       autoHoverGain:              0,
       autoHoverMaxAngle:          0,
       autoHoverMaxRate:           0,
+      autoHoverRollDeadband:      0,
       attHoldGain:                0,
       attHoldDeadband:            0,
       attHoldMaxRate:             0,
