@@ -104,6 +104,17 @@
         bind:value={FC.PID_PROFILE.autoHoverMaxRate}
       />
     </Field>
+    <Field id="auto-hover-roll-deadband" label="profilesAutoHoverRollDeadband">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverRollDeadbandHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-roll-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.PID_PROFILE.autoHoverRollDeadband}
+      />
+    </Field>
   </SubSection>
 
   <SubSection label="profilesAttHoldGroup">
