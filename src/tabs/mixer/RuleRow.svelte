@@ -5,6 +5,11 @@
   import Switch from "@/components/Switch.svelte";
 
   import {
+    adjustmentChannelLabel,
+    adjustmentTitle,
+  } from "@/tabs/adjustments/adjustmentState.js";
+
+  import {
     ruleToDisplay,
     displayToRule,
     clampInt,
@@ -26,6 +31,8 @@
     inputOptions,
     curveOptions,
     conditionOptions,
+    roleOptions,
+    adjustment,
     onCommit,
     onMoveUp,
     onMoveDown,
@@ -43,6 +50,7 @@
   let offset = $state();
   let speed = $state();
   let condition = $state();
+  let role = $state();
   let weight = $state(0);
   let differential = $state(0);
   let reverse = $state(false);
@@ -55,6 +63,7 @@
     offset = rule.offset;
     speed = rule.speed;
     condition = rule.condition;
+    role = rule.role || 0;
 
     const display = ruleToDisplay(rule);
     weight = display.weight;
@@ -81,6 +90,7 @@
       offset: clampInt(offset, Mixer.OFFSET_MIN, Mixer.OFFSET_MAX),
       speed: clampInt(speed, Mixer.SPEED_MIN, Mixer.SPEED_MAX),
       condition: condition || 0,
+      role: role || 0,
     });
   }
 </script>
@@ -111,6 +121,7 @@
       max={Mixer.WEIGHT_MAX}
       step="10"
       bind:value={weight}
+      disabled={adjustment?.active}
       onchange={commit}
     />
   </span>
@@ -122,6 +133,7 @@
       max={DIFFERENTIAL_MAX}
       step="1"
       bind:value={differential}
+      disabled={adjustment?.active}
       onchange={commit}
     />
   </span>
@@ -160,6 +172,24 @@
     />
   </span>
 
+  <span class="col-role">
+    <Select bind:value={role} options={roleOptions} onchange={commit} />
+  </span>
+
+  <span class="col-adjustment">
+    {#if adjustment}
+      <span
+        class="adjustment-badge"
+        class:runtime-active={adjustment.active}
+        title={adjustmentTitle(adjustment)}
+      >
+        {adjustment.active
+          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/if}
+  </span>
+
   <span class="col-actions">
     {#if !isBlank}
       <button
@@ -191,11 +221,11 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      minmax(80px, 1fr);
+      110px 54px minmax(80px, 1fr);
     align-items: center;
     column-gap: 6px;
     padding: 4px 8px;
-    min-width: 900px;
+    min-width: 1064px;
     border-bottom: 1px solid var(--color-border);
 
     &.highlighted {
@@ -221,7 +251,8 @@
   .col-oper,
   .col-input,
   .col-curve,
-  .col-condition {
+  .col-condition,
+  .col-role {
     min-width: 0;
 
     :global(select) {
@@ -237,6 +268,45 @@
     input {
       width: 100%;
     }
+  }
+
+  // Weight/Differential are disabled while a role-adjustment is active,
+  // since applyRoleWeight() (flight/mixer.c) overwrites both to the same
+  // live-driven magnitude on every tick regardless of what's typed here.
+  // Reverse stays editable even while active -- the adjustment only ever
+  // scales magnitude, never sign, so flipping Reverse (and saving) takes
+  // effect immediately and durably. The badge itself lives in its own slim
+  // column at the end of the row rather than inside col-weight -- there's
+  // no room there to show it without forcing the row onto two lines.
+  .col-adjustment {
+    display: flex;
+    justify-content: center;
+  }
+
+  // Matches SimplifiedMixerForm.svelte/ServoConfigTable.svelte's own
+  // adjustment-badge treatment (just smaller, to fit this column), so a rule
+  // under live RC-adjustment control reads the same way everywhere in the
+  // app.
+  .adjustment-badge {
+    max-width: 100%;
+    padding: 1px 3px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    background-color: transparent;
+    color: var(--color-text-soft);
+    font-size: 0.55rem;
+    font-weight: 700;
+    line-height: 0.9rem;
+    text-align: center;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .adjustment-badge.runtime-active {
+    background-color: var(--color-accent, var(--accent));
+    color: var(--color-text-inverse, #fff);
   }
 
   .col-reverse {

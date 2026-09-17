@@ -4,6 +4,10 @@
   import { Mixer } from "@/js/Mixer.js";
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { LogicCondition } from "@/js/LogicCondition.js";
+  import {
+    MIXER_ROLE_ADJUSTMENT_FUNCTIONS,
+    getAdjustmentState,
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   import RuleRow from "./RuleRow.svelte";
 
@@ -85,6 +89,10 @@
     })),
   ]);
 
+  let roleOptions = $derived(
+    Mixer.roleNames.map((key, i) => ({ value: i, label: $i18n.t(key) })),
+  );
+
   // Dims any rule row whose assigned condition is currently false, so it's
   // obvious at a glance which rules are actually contributing right now
   // versus just configured but gated off.
@@ -94,6 +102,15 @@
       !!FC.LOGIC_CONDITIONS_STATUS &&
       !FC.LOGIC_CONDITIONS_STATUS[rule.condition - 1]
     );
+  }
+
+  // If this rule's role has a live-adjustment function (flap compensation,
+  // differential thrust yaw), returns that adjustment's current state so the
+  // row can show the same ADJ/LIVE badge SimplifiedMixerForm.svelte does, and
+  // disable manual editing while it's actively driving the weight.
+  function ruleAdjustment(rule) {
+    const adjFunction = MIXER_ROLE_ADJUSTMENT_FUNCTIONS[rule.role];
+    return adjFunction ? getAdjustmentState(adjFunction) : null;
   }
 
   function move(index, targetPos) {
@@ -121,6 +138,7 @@
       offset: 0,
       speed: 0,
       condition: 0,
+      role: 0,
     };
   }
 </script>
@@ -138,6 +156,8 @@
     <span>{$i18n.t("mixerRuleSpeed")}</span>
     <span>{$i18n.t("mixerRuleReverse")}</span>
     <span>{$i18n.t("mixerRuleCondition")}</span>
+    <span>{$i18n.t("mixerRuleRole")}</span>
+    <span></span>
     <span>{$i18n.t("mixerRuleActionsHeader")}</span>
     <span></span>
   </div>
@@ -158,6 +178,8 @@
       {inputOptions}
       {curveOptions}
       {conditionOptions}
+      {roleOptions}
+      adjustment={!isBlank ? ruleAdjustment(FC.MIXER_RULES[index]) : null}
       onCommit={(newRule) => {
         FC.MIXER_RULES[index] = newRule;
       }}
@@ -188,12 +210,12 @@
         90px
       )
       minmax(64px, 90px) minmax(64px, 90px) minmax(64px, 90px) 44px 90px 70px
-      minmax(80px, 1fr);
+      110px 54px minmax(80px, 1fr);
     column-gap: 6px;
     padding: 4px 8px;
     font-weight: 600;
     font-size: 0.75rem;
-    min-width: 900px;
+    min-width: 1064px;
 
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));
