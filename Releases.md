@@ -1,3 +1,13 @@
+# 0.0.22
+
+Add mixer rule roles to the Mixer tab, along with flap-servo support and live-adjustment badges.
+Rework the Firmware Flasher into a guided step wizard.
+Surface the new BACKUP_RX arming disable flag on the Status tab.
+Add a label/tooltip for the TRADITIONAL flight mode.
+Add an Auto Hover roll deadband field to the Leveling Settings tab.
+Hide the servo geometry correction field where it doesn't apply.
+Fix colour styling on the Modes page.
+
 # 0.0.21
 
 Make the backup-before-flash / restore-after-flash wizard reliable across a full flash cycle: pace CLI defaults/save handling correctly, retry post-flash reconnects longer, add a "Select Port" recovery option, and default backups to Dump instead of Diff.
