@@ -1,3 +1,9 @@
+# 0.0.23
+
+Add AUTOHOVER throttle assist fields to the Auto Hover section of the profile UI.
+Add servo balance curves to the Curves tab (new Servo category), plus a compare-curve viewer, and a curve indicator on the Servos tab that jumps straight to a servo's curve.
+Unify RC channel naming to CH #N across the Mixer, Adjustments, Logic, and Auxiliary channel pickers, and resolve the Mixer's Roll/Pitch/Yaw/Throttle bypass inputs to the pilot's actual mapped channel instead of a fixed order.
+
 # 0.0.22
 
 Add mixer rule roles to the Mixer tab, along with flap-servo support and live-adjustment badges.
