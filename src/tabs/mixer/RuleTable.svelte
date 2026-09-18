@@ -68,9 +68,10 @@
   );
 
   let inputOptions = $derived(
-    Mixer.inputNames
-      .map((key, i) => ({ value: i, label: $i18n.t(key) }))
-      .filter((_option, i) => !Mixer.heliOnlyInputs.includes(i)),
+    Mixer.buildInputOptions(
+      { getMessage: (key) => $i18n.t(key) },
+      FC.RC_MAP,
+    ).filter((option) => !Mixer.heliOnlyInputs.includes(option.value)),
   );
 
   let curveOptions = $derived([

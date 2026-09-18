@@ -72,7 +72,7 @@
         outputLabel: Mixer.outputLabel(dst, i18nShim),
         inputsText: byOutput[dst]
           .map((rule) => {
-            const label = $i18n.t(Mixer.inputNames[rule.src]);
+            const label = Mixer.inputLabel(rule.src, i18nShim, FC.RC_MAP);
             return rule.weight < 0
               ? `${label} (${$i18n.t("mixerRuleReverse")})`
               : label;

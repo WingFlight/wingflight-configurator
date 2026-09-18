@@ -52,6 +52,11 @@
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
+    // Needed so the RC Roll/Pitch/Yaw/Throttle (bypass) input options can
+    // show the pilot's actual physical channel (RuleTable/SimplifiedMixerForm
+    // via Mixer.inputLabel) -- nothing fetches this globally on connect,
+    // only Receiver.svelte does, for its own channel map UI.
+    await MSP.promise(MSPCodes.MSP_RX_MAP);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);

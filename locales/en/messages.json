@@ -2826,10 +2826,10 @@
         "message": "Examples:"
     },
     "adjustmentsExample1": {
-        "message": "Use a three position switch on AUX1 to select between Pitch/Roll P, I and D and another three position switch on AUX2 to increase or decrease the value when held up or down."
+        "message": "Use a three position switch on CH #5 to select between Pitch/Roll P, I and D and another three position switch on CH #6 to increase or decrease the value when held up or down."
     },
     "adjustmentsExample2": {
-        "message": "Use a three position switch on AUX4 to select enable Rate Profile Selection via the same three position switch on the same channel."
+        "message": "Use a three position switch on CH #8 to select enable Rate Profile Selection via the same three position switch on the same channel."
     },
     "adjustmentsColumnMode": {
         "message": "Mode"
@@ -3519,46 +3519,46 @@
         "message": "RC Throttle (bypass)"
     },
     "mixerInputRCChannelAux1": {
-        "message": "RC Channel AUX1"
+        "message": "CH #5"
     },
     "mixerInputRCChannelAux2": {
-        "message": "RC Channel AUX2"
+        "message": "CH #6"
     },
     "mixerInputRCChannelAux3": {
-        "message": "RC Channel AUX3"
+        "message": "CH #7"
     },
     "mixerInputRCChannel8": {
-        "message": "RC Channel #8"
+        "message": "CH #8"
     },
     "mixerInputRCChannel9": {
-        "message": "RC Channel #9"
+        "message": "CH #9"
     },
     "mixerInputRCChannel10": {
-        "message": "RC Channel #10"
+        "message": "CH #10"
     },
     "mixerInputRCChannel11": {
-        "message": "RC Channel #11"
+        "message": "CH #11"
     },
     "mixerInputRCChannel12": {
-        "message": "RC Channel #12"
+        "message": "CH #12"
     },
     "mixerInputRCChannel13": {
-        "message": "RC Channel #13"
+        "message": "CH #13"
     },
     "mixerInputRCChannel14": {
-        "message": "RC Channel #14"
+        "message": "CH #14"
     },
     "mixerInputRCChannel15": {
-        "message": "RC Channel #15"
+        "message": "CH #15"
     },
     "mixerInputRCChannel16": {
-        "message": "RC Channel #16"
+        "message": "CH #16"
     },
     "mixerInputRCChannel17": {
-        "message": "RC Channel #17"
+        "message": "CH #17"
     },
     "mixerInputRCChannel18": {
-        "message": "RC Channel #18"
+        "message": "CH #18"
     },
     "mixerOutputNone": {
         "message": "-"
@@ -5610,85 +5610,85 @@
         "message": "Throttle"
     },
     "controlAxisAux1": {
-        "message": "AUX 1"
+        "message": "CH #5"
     },
     "controlAxisAux2": {
-        "message": "AUX 2"
+        "message": "CH #6"
     },
     "controlAxisAux3": {
-        "message": "AUX 3"
+        "message": "CH #7"
     },
     "controlAxisAux4": {
-        "message": "AUX 4"
+        "message": "CH #8"
     },
     "controlAxisAux5": {
-        "message": "AUX 5"
+        "message": "CH #9"
     },
     "controlAxisAux6": {
-        "message": "AUX 6"
+        "message": "CH #10"
     },
     "controlAxisAux7": {
-        "message": "AUX 7"
+        "message": "CH #11"
     },
     "controlAxisAux8": {
-        "message": "AUX 8"
+        "message": "CH #12"
     },
     "controlAxisAux9": {
-        "message": "AUX 9"
+        "message": "CH #13"
     },
     "controlAxisAux10": {
-        "message": "AUX 10"
+        "message": "CH #14"
     },
     "controlAxisAux11": {
-        "message": "AUX 11"
+        "message": "CH #15"
     },
     "controlAxisAux12": {
-        "message": "AUX 12"
+        "message": "CH #16"
     },
     "controlAxisAux13": {
-        "message": "AUX 13"
+        "message": "CH #17"
     },
     "controlAxisAux14": {
-        "message": "AUX 14"
+        "message": "CH #18"
     },
     "controlAxisAux15": {
-        "message": "AUX 15"
+        "message": "CH #19"
     },
     "controlAxisAux16": {
-        "message": "AUX 16"
+        "message": "CH #20"
     },
     "controlAxisAux17": {
-        "message": "AUX 17"
+        "message": "CH #21"
     },
     "controlAxisAux18": {
-        "message": "AUX 18"
+        "message": "CH #22"
     },
     "controlAxisAux19": {
-        "message": "AUX 19"
+        "message": "CH #23"
     },
     "controlAxisAux20": {
-        "message": "AUX 20"
+        "message": "CH #24"
     },
     "controlAxisAux21": {
-        "message": "AUX 21"
+        "message": "CH #25"
     },
     "controlAxisAux22": {
-        "message": "AUX 22"
+        "message": "CH #26"
     },
     "controlAxisAux23": {
-        "message": "AUX 23"
+        "message": "CH #27"
     },
     "controlAxisAux24": {
-        "message": "AUX 24"
+        "message": "CH #28"
     },
     "controlAxisAux25": {
-        "message": "AUX 25"
+        "message": "CH #29"
     },
     "controlAxisAux26": {
-        "message": "AUX 26"
+        "message": "CH #30"
     },
     "controlAxisAux27": {
-        "message": "AUX 27"
+        "message": "CH #31"
     },
     "rssiOptionAUTO": {
         "message": "AUTO"

@@ -83,7 +83,7 @@ export function getAdjustmentState(adjFunction) {
   return states.find((state) => state.active) ?? states[0];
 }
 
-// Mirrors the `AUX${n+1}` convention used by the channel dropdowns in the
+// Mirrors the `CH #${n+5}` convention used by the channel dropdowns in the
 // Adjustments tab (see adjChannelOptions in Adjustments.svelte) so the label
 // shown here matches what the user picked there.
 export function adjustmentChannelLabel(adjustment) {
@@ -91,7 +91,7 @@ export function adjustmentChannelLabel(adjustment) {
     return undefined;
   }
 
-  return adjustment.channel === -1 ? "AUTO" : `AUX${adjustment.channel + 1}`;
+  return adjustment.channel === -1 ? "AUTO" : `CH #${adjustment.channel + 5}`;
 }
 
 export function adjustmentTitle(adjustment) {

@@ -38,6 +38,88 @@ export const Mixer = {
 
     heliOnlyInputs: [],
 
+    // mixerInputRCChannelRoll is inputNames[9] -- Pitch/Yaw/Throttle follow
+    // at 10-12. These "bypass" inputs read the RC input for that logical
+    // axis *after* the firmware's rcmap indirection (rx.c's rcChannel[]),
+    // so "Roll" is whatever physical channel the pilot's radio has mapped to
+    // it -- there's no fixed "Roll = CH1" answer (AETR vs TAER vs custom
+    // maps all differ). MSP_RX_MAP (FC.RC_MAP) reports that mapping in the
+    // same Roll/Pitch/Yaw/Throttle order, so resolving the real channel just
+    // means indexing it with inputIndex - RC_CHANNEL_BYPASS_FIRST.
+    RC_CHANNEL_BYPASS_FIRST: 9,
+    RC_CHANNEL_BYPASS_ROLES: [
+        'controlAxisRoll',
+        'controlAxisPitch',
+        'controlAxisYaw',
+        'controlAxisThrottle',
+    ],
+
+    // Label for an inputNames[] entry, resolving the RC Roll/Pitch/Yaw/
+    // Throttle bypass inputs to the pilot's actual physical channel (e.g.
+    // "CH #3 (Roll)") when rcMap (FC.RC_MAP, from MSP_RX_MAP) is available.
+    // Falls back to the plain function name otherwise.
+    inputLabel: function (index, i18n, rcMap) {
+        const roleIndex = index - this.RC_CHANNEL_BYPASS_FIRST;
+        if (roleIndex >= 0 && roleIndex < this.RC_CHANNEL_BYPASS_ROLES.length &&
+            rcMap && rcMap.length > roleIndex) {
+            const channel = rcMap[roleIndex] + 1;
+            const role = i18n.getMessage(this.RC_CHANNEL_BYPASS_ROLES[roleIndex]);
+            return `CH #${channel} (${role})`;
+        }
+
+        return i18n.getMessage(this.inputNames[index]);
+    },
+
+    // Last index of the "raw numbered channel" run -- inputNames[13..26]
+    // are CH #5..#18 (channel = index - 8), immediately after the bypass
+    // Roll/Pitch/Yaw/Throttle run (9-12) resolved above.
+    RC_CHANNEL_RANGE_LAST: 26,
+
+    // Physical channel number (1-based) for an inputNames[] index in the
+    // combined bypass-Roll/Pitch/Yaw/Throttle + raw-CH#5-18 run, or
+    // undefined if it can't be determined (a bypass index without a loaded
+    // rcMap, or an index outside that run entirely).
+    rcChannelNumber: function (index, rcMap) {
+        const roleIndex = index - this.RC_CHANNEL_BYPASS_FIRST;
+        if (roleIndex >= 0 && roleIndex < this.RC_CHANNEL_BYPASS_ROLES.length) {
+            return rcMap && rcMap.length > roleIndex ? rcMap[roleIndex] + 1 : undefined;
+        }
+        if (index > this.RC_CHANNEL_BYPASS_FIRST + this.RC_CHANNEL_BYPASS_ROLES.length - 1 &&
+            index <= this.RC_CHANNEL_RANGE_LAST) {
+            return index - 8;
+        }
+        return undefined;
+    },
+
+    // Full {value,label} input-option list, in *display* order. Same wire
+    // values as inputNames, but once rcMap resolves the bypass Roll/Pitch/
+    // Yaw/Throttle channels, the whole bypass+CH#5-18 run (9-26) is
+    // re-sorted into ascending physical-channel order -- otherwise a
+    // non-AETR radio would show e.g. "CH #2 (Roll)" ahead of "CH #1
+    // (Throttle)", then jump straight to "CH #5" right after, which reads
+    // as out of order even though every value is correct. Falls back to
+    // plain wire-value order (bypass group by function, then CH#5-18) when
+    // rcMap hasn't loaded yet, since there's nothing to sort by then.
+    buildInputOptions: function (i18n, rcMap) {
+        const options = this.inputNames.map((_key, i) => ({
+            value: i,
+            label: this.inputLabel(i, i18n, rcMap),
+        }));
+
+        const first = this.RC_CHANNEL_BYPASS_FIRST;
+        const last = this.RC_CHANNEL_RANGE_LAST;
+        const slice = options.slice(first, last + 1);
+        const channels = slice.map((_opt, i) => this.rcChannelNumber(first + i, rcMap));
+        if (channels.every((c) => c != null)) {
+            slice
+                .map((opt, i) => [channels[i], opt])
+                .sort((a, b) => a[0] - b[0])
+                .forEach(([, opt], pos) => { options[first + pos] = opt; });
+        }
+
+        return options;
+    },
+
     SERVO_OUTPUT_COUNT: 26,
     MOTOR_OUTPUT_COUNT: 4,
     MOTOR_OUTPUT_OFFSET: 27,
