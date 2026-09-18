@@ -3389,6 +3389,15 @@
     "servoSignal": {
         "message": "PWM Signal"
     },
+    "servoCurveActive": {
+        "message": "Balance curve active - edit on the Curves tab"
+    },
+    "servoCurveActiveCloned": {
+        "message": "Cloned from PWM $1's balance curve - edit on the Curves tab"
+    },
+    "servoCurveEdit": {
+        "message": "Edit balance curve on the Curves tab"
+    },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
     },

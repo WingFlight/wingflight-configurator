@@ -184,6 +184,10 @@
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    // Read-only here (edited on the Curves tab) - just for the balance
+    // curve indicator badge in ServoConfigTable. Not guaranteed populated
+    // otherwise if this tab is visited before Curves.
+    await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
@@ -320,7 +324,12 @@
     {/if}
 
     <div class="table-scroll">
-      <ServoConfigTable servos={pwmServos} {onFieldChange} {onRateChange} />
+      <ServoConfigTable
+        servos={pwmServos}
+        {onFieldChange}
+        {onRateChange}
+        {pwmServoCount}
+      />
     </div>
   </Section>
 
@@ -342,7 +351,12 @@
       </div>
 
       <div class="table-scroll">
-        <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
+        <ServoConfigTable
+          servos={busServos}
+          {onFieldChange}
+          {onRateChange}
+          {pwmServoCount}
+        />
       </div>
     </Section>
   {/if}

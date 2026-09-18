@@ -8,6 +8,7 @@
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { GainCurve } from "@/js/GainCurve.js";
   import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { CURVE_NAV } from "@/js/curveNav.svelte.js";
 
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
@@ -194,6 +195,20 @@
     }
 
     initialCurves = cloneInitialCurves();
+
+    // Consumed once - a link over from e.g. the Servos tab's curve badge
+    // (see curveNav.svelte.js). Validated against the now-loaded data
+    // rather than trusted blindly, since the servo count (and so the valid
+    // index range) can only be known after the fetches above.
+    const nav = CURVE_NAV.pending;
+    CURVE_NAV.pending = null;
+    if (nav && CATEGORIES[nav.category]) {
+      selectedCategory = nav.category;
+      if (nav.index >= 0 && nav.index < CATEGORIES[nav.category].curveCount()) {
+        selectedCurveIndex = nav.index;
+      }
+    }
+
     loading = false;
   });
 
