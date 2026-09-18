@@ -78,6 +78,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-autohover-throttle-assist",
+      "path": "./feature-autohover-throttle-assist/"
+    },
+    {
+      "type": "branch",
       "name": "feature-crsf-sensors",
       "path": "./feature-crsf-sensors/"
     },
