@@ -3737,11 +3737,17 @@
     "curvesTitleGain": {
         "message": "Gain Curves"
     },
+    "curvesTitleServo": {
+        "message": "Servo Balance Curves"
+    },
     "curveCategoryMixer": {
         "message": "Mixer"
     },
     "curveCategoryGain": {
         "message": "Gain"
+    },
+    "curveCategoryServo": {
+        "message": "Servo"
     },
     "curveCategoryHelpMixer": {
         "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
@@ -3749,11 +3755,32 @@
     "curveCategoryHelpGain": {
         "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
     },
+    "curveCategoryHelpServo": {
+        "message": "Servo curves add a small corrective delta to a single servo's own output after mixing (and after geometry correction, if enabled) - use this to match the physical travel of two or more servos driving the same control surface (e.g. dual ailerons) so they don't fight each other at the extremes."
+    },
     "curveExplainMixer": {
         "message": "X axis: this rule's input value.\nY axis: the value used in its place once weighted onto the output.\n\nBoth axes share the rule's own -1000..1000 scale. The default diagonal line passes the input straight through - reshape it for a non-linear response, e.g. more resolution near center or a dead zone."
     },
     "curveExplainGain": {
         "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per-axis on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+    },
+    "curveExplainServo": {
+        "message": "X axis: this servo's own output, -100% to +100%.\nY axis: a correction added on top of it at that point, -10% to +10%.\n\nThe default flat line at 0 adds no correction. Nudge it up or down to trim one servo's travel relative to its paired servo, especially near full deflection."
+    },
+    "servoCurveLabel": {
+        "message": "Servo $1"
+    },
+    "curveNoServosConfigured": {
+        "message": "No servos configured - connect and configure servos on the Servos tab first."
+    },
+    "curveEditLabel": {
+        "message": "Editing:"
+    },
+    "curveCompareLabel": {
+        "message": "Compare with:"
+    },
+    "curveCompareNone": {
+        "message": "None"
     },
     "curveReset": {
         "message": "Reset Curve"
