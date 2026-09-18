@@ -1371,6 +1371,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.attHoldMaxRate                = data.remaining() >= 2 ? data.readU16() : 300;
                 // Auto Hover roll deadband //
                 FC.PID_PROFILE.autoHoverRollDeadband         = data.remaining() >= 1 ? data.readU8() : 5;
+                // Auto Hover throttle assist //
+                FC.PID_PROFILE.autoHoverThrottleAssistGain       = data.remaining() >= 4 ? data.readU8() : 0;
+                FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
+                FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
                 break;
             }
 
@@ -2410,7 +2414,11 @@ MspHelper.prototype.crunch = function(code) {
                 // Att Hold max rate //
                 .push16(FC.PID_PROFILE.attHoldMaxRate)
                 // Auto Hover roll deadband //
-                .push8(FC.PID_PROFILE.autoHoverRollDeadband);
+                .push8(FC.PID_PROFILE.autoHoverRollDeadband)
+                // Auto Hover throttle assist //
+                .push8(FC.PID_PROFILE.autoHoverThrottleAssistGain)
+                .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
+                .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs);
             break;
         }
 
