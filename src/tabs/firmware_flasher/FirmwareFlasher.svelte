@@ -308,14 +308,6 @@
   // link on step 1 (Connect); the legacy view carries its own link back.
   let legacyMode = $state(false);
 
-  // Which of step 3's two flows -- pick an online release vs. load a file
-  // already on disk -- is showing. Not a separate step of its own: online
-  // is the default, and step 3's own "Load a local firmware file instead"/
-  // "Choose an online firmware version instead" links switch between them,
-  // so it's just which half of step 3 is currently in view rather than a
-  // fork the user has to commit to upfront.
-  let firmwareSource = $state("online");
-
   // Step 5 defaults to a one-line summary rather than the full technical
   // card (target/manufacturer/version/filenames/release notes, plus the
   // Save Firmware/Config actions) -- that level of detail is noise for
@@ -454,7 +446,6 @@
   // tab, so flashing a second board doesn't mean clicking Back five times.
   function resetWizardToStart() {
     wizardStep = 1;
-    firmwareSource = "online";
     clearFirmwareSelection();
   }
 
@@ -1945,117 +1936,100 @@
       </div>
     {:else if wizardStep === 3}
       <div class="step-body">
-        {#if firmwareSource === "online"}
-          <div class="options">
-            <div class="field">
-              <Select
-                value={selectedVersion}
-                options={[
-                  {
-                    value: "0",
-                    label: versionsLoading
-                      ? $i18n.t("firmwareFlasherOptionLoading")
-                      : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
-                  },
-                  // Cached entries load instantly once "Load Firmware
-                  // Online" is clicked, rather than needing to download --
-                  // worth being visible about which is which.
-                  ...firmwareVersionEntries.map((entry) =>
-                    entry.cached
-                      ? {
-                          ...entry,
-                          label: $i18n.t("firmwareFlasherVersionCachedLabel", {
-                            label: entry.label,
-                          }),
-                        }
-                      : entry,
-                  ),
-                ]}
-                onchange={(e) => onVersionChange(e.target.value)}
-              />
-              <span class="description"
-                >{$i18n.t(
-                  "firmwareFlasherOnlineSelectFirmwareVersionDescription",
-                )}</span
-              >
-            </div>
-          </div>
-
-          <div class="load-row">
-            <button
-              class="btn"
-              disabled={selectedVersion === "0" || loadingRemote}
-              onclick={onClickLoadRemote}
+        <div class="options">
+          <div class="field">
+            <Select
+              value={selectedVersion}
+              options={[
+                {
+                  value: "0",
+                  label: versionsLoading
+                    ? $i18n.t("firmwareFlasherOptionLoading")
+                    : `${$i18n.t("firmwareFlasherOptionLabelSelectFirmwareVersionFor")} ${bareBoard ?? ""}`,
+                },
+                // Cached entries load instantly once "Load Firmware
+                // Online" is clicked, rather than needing to download --
+                // worth being visible about which is which.
+                ...firmwareVersionEntries.map((entry) =>
+                  entry.cached
+                    ? {
+                        ...entry,
+                        label: $i18n.t("firmwareFlasherVersionCachedLabel", {
+                          label: entry.label,
+                        }),
+                      }
+                    : entry,
+                ),
+              ]}
+              onchange={(e) => onVersionChange(e.target.value)}
+            />
+            <span class="description"
+              >{$i18n.t(
+                "firmwareFlasherOnlineSelectFirmwareVersionDescription",
+              )}</span
             >
-              {#if loadingRemote}
-                {$i18n.t("firmwareFlasherButtonDownloading")}
-              {:else}
-                <span class="label-full"
-                  >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
-                >
-                <span class="label-short"
-                  >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
-                >
-              {/if}
-            </button>
-            <span class="load-status {messageClass}">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html flashState.message}
-            </span>
           </div>
+        </div>
 
-          <p class="step-link">
-            <button
-              class="details-toggle"
-              onclick={() => (firmwareSource = "local")}
-            >
-              {$i18n.t("firmwareFlasherSwitchToLocalFirmware")}
-            </button>
-          </p>
-        {:else}
-          <div class="load-row">
-            <button class="btn" onclick={onClickLoadLocal}>
+        <!-- Online and local are two side-by-side ways of doing the same
+             thing -- getting firmware loaded -- rather than a mode to switch
+             between. The version dropdown above only feeds the online button. -->
+        <div class="load-row">
+          <button
+            class="btn"
+            disabled={selectedVersion === "0" || loadingRemote}
+            onclick={onClickLoadRemote}
+          >
+            {#if loadingRemote}
+              {$i18n.t("firmwareFlasherButtonDownloading")}
+            {:else}
               <span class="label-full"
-                >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
+                >{$i18n.t("firmwareFlasherButtonLoadOnline")}</span
               >
               <span class="label-short"
-                >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+                >{$i18n.t("firmwareFlasherButtonLoadOnlineShort")}</span
               >
-            </button>
-            <span class="load-status {messageClass}">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html flashState.message}
-            </span>
-          </div>
-
-          <!-- A board picked back on step 2 still matters here -- its default
-             config (if it has one; see setUnifiedConfig()) gets combined
-             with whatever local .hex is loaded, same as it would for an
-             online download. Flagged either way so it's not silently
-             skipped just because Local doesn't have its own board field. -->
-          {#if selectedBoard === "0"}
-            <p class="detect-fallback-notice">
-              {$i18n.t("firmwareFlasherLocalNoBoardSelected")}
-              <button class="details-toggle" onclick={onWizardBack}>
-                {$i18n.t("firmwareFlasherGoSelectBoard")}
-              </button>
-            </p>
-          {:else if unifiedTarget.config}
-            <p class="detect-fallback-notice ok">
-              <em class="fas fa-check"></em>
-              {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
-                target: selectedBoard,
-              })}
-            </p>
-          {/if}
-
-          <p class="step-link">
-            <button
-              class="details-toggle"
-              onclick={() => (firmwareSource = "online")}
+            {/if}
+          </button>
+          <button
+            class="btn"
+            disabled={loadingRemote}
+            onclick={onClickLoadLocal}
+          >
+            <span class="label-full"
+              >{$i18n.t("firmwareFlasherButtonLoadLocal")}</span
             >
-              {$i18n.t("firmwareFlasherSwitchToOnlineFirmware")}
+            <span class="label-short"
+              >{$i18n.t("firmwareFlasherButtonLoadLocalShort")}</span
+            >
+          </button>
+        </div>
+
+        <!-- On its own line under the buttons rather than inline with them,
+             so it reads as the outcome of the load, not a third button label. -->
+        <p class="load-status {messageClass}">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html flashState.message}
+        </p>
+
+        <!-- A board picked back on step 2 still matters here -- its default
+             config (if it has one; see setUnifiedConfig()) gets combined
+             with whatever firmware is loaded, online or a local .hex.
+             Flagged either way so it's not silently skipped just because a
+             local file doesn't have its own board field. -->
+        {#if selectedBoard === "0"}
+          <p class="detect-fallback-notice">
+            {$i18n.t("firmwareFlasherLocalNoBoardSelected")}
+            <button class="details-toggle" onclick={onWizardBack}>
+              {$i18n.t("firmwareFlasherGoSelectBoard")}
             </button>
+          </p>
+        {:else if localFirmwareLoaded && unifiedTarget.config}
+          <p class="detect-fallback-notice ok">
+            <em class="fas fa-check"></em>
+            {$i18n.t("firmwareFlasherLocalWillCombineConfig", {
+              target: selectedBoard,
+            })}
           </p>
         {/if}
 
@@ -2668,8 +2642,7 @@
   }
 
   // Wraps a single .details-toggle used as a step's own secondary
-  // navigation (switching between the online/local halves of Firmware,
-  // skipping Board entirely) -- distinct from .detect-fallback-notice,
+  // navigation (e.g. skipping Board entirely) -- distinct from .detect-fallback-notice,
   // which is for status text, not an action.
   .step-link {
     margin: var(--section-gap) 0 0;
@@ -2737,19 +2710,31 @@
     margin-top: var(--section-gap);
   }
 
+  // A quiet status panel under the load buttons: neutral by default, with
+  // the accent bar (and text) picking up the state colour once there's an
+  // outcome to report.
   .load-status {
-    font-size: 0.8rem;
-    font-weight: 600;
+    margin: 16px 0 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--color-border-accent, var(--color-border));
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-muted, var(--color-text));
 
     &.valid {
+      border-left-color: var(--color-valid, #00d000);
       color: var(--color-valid, #00d000);
     }
 
     &.invalid {
+      border-left-color: var(--color-invalid, #a62e32);
       color: var(--color-invalid, #a62e32);
     }
 
     &.actionRequired {
+      border-left-color: #0081ff;
       color: #0081ff;
     }
   }
