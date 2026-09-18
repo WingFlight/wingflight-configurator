@@ -78,6 +78,7 @@ class FlightController {
   SENSOR_DATA = $state();
   SERIAL_CONFIG = $state();
   SERVO_CONFIG = $state();
+  SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
@@ -318,6 +319,7 @@ class FlightController {
     this.ADJUSTMENT_RANGES =        [];
 
     this.SERVO_CONFIG =             [];
+    this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
       ports:                      [],

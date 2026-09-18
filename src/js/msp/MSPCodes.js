@@ -196,6 +196,8 @@ export const MSPCodes = {
 //  MSP_SET_VTXTABLE_POWERLEVEL:    228,
 
     MSP_MULTIPLE_MSP:               230,
+    MSP_SERVO_CURVES:               231,
+    MSP_SET_SERVO_CURVE:            232,
 
     MSP_MODE_RANGES_EXTRA:          238,
     MSP_SET_ACC_TRIM:               239,

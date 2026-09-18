@@ -1438,6 +1438,22 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP_SERVO_CURVES: {
+                // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
+                // physical servo, not a fixed pool like mixer/gain curves).
+                FC.SERVO_CURVES = [];
+                const pointsPerCurve = 9; // SERVO_CURVE_POINTS
+                const curveCount = data.readU8();
+                for (let i = 0; i < curveCount; i++) {
+                    const curve = { count: data.readU8(), points: [] };
+                    for (let p = 0; p < pointsPerCurve; p++) {
+                        curve.points.push({ x: data.read16(), y: data.read16() });
+                    }
+                    FC.SERVO_CURVES.push(curve);
+                }
+                break;
+            }
+
             case MSPCodes.MSP_LOGIC_CONDITIONS: {
                 FC.LOGIC_CONDITIONS = [];
                 const conditionBytes = 8; // enabled:u8 + operation:u8 + typeA:u8 + valueA:i16 + typeB:u8 + valueB:i16
@@ -2842,6 +2858,36 @@ MspHelper.prototype.sendGainCurves = function(onCompleteCallback)
     function send_next() {
         if (index < FC.GAIN_CURVES.length)
             self.sendGainCurve(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendServoCurve = function(curveIndex, onCompleteCallback)
+{
+    const curve = FC.SERVO_CURVES[curveIndex];
+    const buffer = [];
+
+    buffer.push8(curveIndex)
+          .push8(curve.count);
+
+    curve.points.forEach(function (point) {
+        buffer.push16(point.x).push16(point.y);
+    });
+
+    MSP.send_message(MSPCodes.MSP_SET_SERVO_CURVE, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendServoCurves = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.SERVO_CURVES.length)
+            self.sendServoCurve(index++, send_next);
         else
             onCompleteCallback();
     }
