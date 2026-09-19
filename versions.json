@@ -93,6 +93,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-servo-trim-field",
+      "path": "./feature-servo-trim-field/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
