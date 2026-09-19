@@ -93,11 +93,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-oscillation-limiter-settings",
-      "path": "./feature-oscillation-limiter-settings/"
-    },
-    {
-      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
