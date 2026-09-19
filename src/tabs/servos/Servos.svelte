@@ -1,9 +1,7 @@
 <script>
   import diff from "microdiff";
-  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
 
-  import { API_VERSION_22_3 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -222,11 +220,18 @@
   });
 
   // Live trim from Mapped ServoTrim adjustments: runtime-only on the FC, so it
-  // isn't in the servo config -- only FCs with API 22.3+ report it.
+  // isn't in the servo config. The API version isn't bumped for this message, so
+  // support is found by asking once: firmware without it answers "unsupported",
+  // which leaves FC.SERVO_RUNTIME_TRIM null, and then it isn't asked again.
+  let runtimeTrimSupported;
+
   async function pollRuntimeTrim() {
-    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_3)) {
-      await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
+    if (runtimeTrimSupported === false) {
+      return;
     }
+
+    await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
+    runtimeTrimSupported = Array.isArray(FC.SERVO_RUNTIME_TRIM);
   }
 
   function onFieldChange(index) {
