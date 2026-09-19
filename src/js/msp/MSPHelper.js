@@ -660,7 +660,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_SERVO_CONFIGURATIONS: {
                 FC.SERVO_CONFIG = []; // empty the array as new data is coming in
-                FC.SERVO_RUNTIME_TRIM = [];
                 const servoConfigurationCount = data.readU8();
                 // API 22.3+ appends one S16 trim per servo after the records.
                 const hasTrim = data.byteLength >= 1 + servoConfigurationCount * 18;
@@ -681,12 +680,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     for (const servo of FC.SERVO_CONFIG) {
                         // undefined (not 0) when the FC has no trims, so it is never sent back.
                         servo.trim = hasTrim ? data.read16() : undefined;
-                    }
-                    // Then the live runtime trims (read-only), on newer firmware.
-                    if (hasTrim && data.byteLength >= 1 + servoConfigurationCount * 20) {
-                        for (let n = 0; n < servoConfigurationCount; n++) {
-                            FC.SERVO_RUNTIME_TRIM.push(data.read16());
-                        }
                     }
                 }
                 break;

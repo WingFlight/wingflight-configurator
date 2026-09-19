@@ -3326,9 +3326,6 @@
     "servoClearTrimsText": {
         "message": "Set every servo's Trim back to 0. Saved with the Save button."
     },
-    "servoLiveTrimHelp": {
-        "message": "Live trim in µs from a Mapped ServoTrim adjustment. It is not saved and starts from zero after a reboot."
-    },
     "servoTrimColumn": {
         "message": "Adjust"
     },
