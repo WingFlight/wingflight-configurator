@@ -289,9 +289,13 @@
   );
 
   // Drives the setup wizard: 1 Connect, 2 Board, 3 Firmware, 4 Backup,
-  // 5 Flash, 6 Restore. Backup and restore are each a real step now, not a
-  // popup layered on top of Flash -- see backupRun/restoreRun below, which
-  // each own their step the same way any other step owns its own state.
+  // 5 Flash, 6 Restore, 7 Finished. Backup and restore are each a real step
+  // now, not a popup layered on top of Flash -- see backupRun/restoreRun
+  // below, which each own their step the same way any other step owns its
+  // own state. Finished exists so the user gets an unmistakable "the job is
+  // done" screen -- Restore's own progress/result text is easy to mistake for
+  // an intermediate state, and closing the window mid-restore would corrupt
+  // the board's config.
   const WIZARD_STEPS = [
     "firmwareFlasherStepConnectTitle",
     "firmwareFlasherStepBoardTitle",
@@ -299,6 +303,7 @@
     "firmwareFlasherStepBackupTitle",
     "firmwareFlasherStepReviewTitle",
     "firmwareFlasherStepRestoreTitle",
+    "firmwareFlasherStepFinishedTitle",
   ];
   let wizardStep = $state(1);
 
@@ -1278,10 +1283,14 @@
 
     GUI.connect_lock = false;
     restoreRun.status = restored ? "done" : "failed";
+    // A successful restore is the end of the job -- hand off to Finished
+    // (step 7) rather than leaving the result sitting on Restore.
+    if (restored) wizardStep = 7;
   }
 
   function skipRestore() {
     restoreRun.status = "skipped";
+    wizardStep = 7;
   }
 
   async function selectPortForRestore() {
@@ -1312,9 +1321,9 @@
       if (backupText) {
         offerRestore(backupText, backupPortArg, options.baud);
       } else if (flashState.messageType === FLASH_MESSAGE_TYPES.VALID) {
-        // Nothing to restore -- still move on to the wizard's terminal step
+        // Nothing to restore -- skip straight to the wizard's terminal step
         // rather than leaving the user sitting on Flash with no next action.
-        wizardStep = 6;
+        wizardStep = 7;
       }
     };
 
@@ -2315,7 +2324,7 @@
           </button>
         </div>
       </div>
-    {:else}
+    {:else if wizardStep === 6}
       <div class="step-body">
         {#if restoreRun.status === "prompt"}
           <div class="backup-panel">
@@ -2361,25 +2370,34 @@
               </button>
             </div>
           </div>
-        {:else if restoreRun.status === "done"}
-          <p class="detect-fallback-notice ok">
-            {$i18n.t("firmwareFlasherWizardRestoreDone")}
-          </p>
-        {:else}
-          <!-- "idle" (no backup was taken this run) or "skipped" -->
-          <p class="ready-summary">
-            {$i18n.t("firmwareFlasherFlashCompleteMessage")}
-          </p>
         {/if}
+      </div>
+    {:else}
+      <!-- Finished (step 7): only ever reached once flashing and any restore
+         are completely over, so it's safe to state plainly that nothing is
+         still running. -->
+      <div class="step-body">
+        <div class="finished-panel">
+          <p class="finished-title">
+            {$i18n.t("firmwareFlasherFinishedTitle")}
+          </p>
+          <ul class="finished-summary">
+            <li>{$i18n.t("firmwareFlasherFlashCompleteMessage")}</li>
+            {#if restoreRun.status === "done"}
+              <li>{$i18n.t("firmwareFlasherWizardRestoreDone")}</li>
+            {:else if restoreRun.status === "skipped"}
+              <li>{$i18n.t("firmwareFlasherFinishedRestoreSkipped")}</li>
+            {/if}
+          </ul>
+          <p>{$i18n.t("firmwareFlasherFinishedInstructions")}</p>
+        </div>
 
-        {#if !["prompt", "waiting", "connecting", "running"].includes(restoreRun.status)}
-          <div class="step-nav">
-            <span></span>
-            <button class="btn primary" onclick={resetWizardToStart}>
-              {$i18n.t("firmwareFlasherStartOver")}
-            </button>
-          </div>
-        {/if}
+        <div class="step-nav">
+          <span></span>
+          <button class="btn primary" onclick={resetWizardToStart}>
+            {$i18n.t("firmwareFlasherStartOver")}
+          </button>
+        </div>
       </div>
     {/if}
 
@@ -2619,6 +2637,25 @@
     flex-wrap: wrap;
     align-items: baseline;
     gap: 8px;
+    font-weight: 600;
+  }
+
+  .finished-panel {
+    padding: 16px;
+    border: 1px solid var(--color-valid, #00d000);
+    border-radius: var(--radius-sm);
+  }
+
+  .finished-title {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-valid, #00d000);
+  }
+
+  .finished-summary {
+    margin: 0 0 12px;
+    padding-left: 20px;
     font-weight: 600;
   }
 

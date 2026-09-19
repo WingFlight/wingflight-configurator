@@ -5099,6 +5099,18 @@
     "firmwareFlasherStepRestoreTitle": {
         "message": "Restore"
     },
+    "firmwareFlasherStepFinishedTitle": {
+        "message": "Finished"
+    },
+    "firmwareFlasherFinishedTitle": {
+        "message": "All done -- the update is complete"
+    },
+    "firmwareFlasherFinishedRestoreSkipped": {
+        "message": "Configuration restore was skipped."
+    },
+    "firmwareFlasherFinishedInstructions": {
+        "message": "Nothing is running any more. You can now close this window or disconnect your board, or click Flash Another Board to update a different one."
+    },
     "firmwareFlasherDetectUnavailableDfu": {
         "message": "<strong>{{device}}</strong> connected. Automatic board detection needs a normal serial connection though, so it (along with backup and restore) won't be available this session. A DFU connection is enough to flash new firmware: continue to Firmware below, or select your board manually if you'd like its default config combined at flash time."
     },
