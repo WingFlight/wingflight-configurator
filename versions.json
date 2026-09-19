@@ -98,6 +98,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-servo-trim-runtime",
+      "path": "./feature-servo-trim-runtime/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
