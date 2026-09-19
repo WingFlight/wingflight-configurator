@@ -83,15 +83,15 @@ export function getAdjustmentState(adjFunction) {
   return states.find((state) => state.active) ?? states[0];
 }
 
-// Mirrors the `CH #${n+5}` convention used by the channel dropdowns in the
-// Adjustments tab (see adjChannelOptions in Adjustments.svelte) so the label
-// shown here matches what the user picked there.
+// Same channel numbering (n+5) as the channel dropdowns in the Adjustments tab
+// (see adjChannelOptions in Adjustments.svelte), but written without the "#" and
+// space ("CH9" not "CH #9") so it takes less room in the small badges.
 export function adjustmentChannelLabel(adjustment) {
   if (!adjustment || adjustment.channel == null) {
     return undefined;
   }
 
-  return adjustment.channel === -1 ? "AUTO" : `CH #${adjustment.channel + 5}`;
+  return adjustment.channel === -1 ? "AUTO" : `CH${adjustment.channel + 5}`;
 }
 
 export function adjustmentTitle(adjustment) {
