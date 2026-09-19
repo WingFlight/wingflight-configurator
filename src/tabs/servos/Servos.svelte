@@ -174,6 +174,10 @@
     return { unusualScale, unusualRate, unusualLimit };
   });
 
+  let hasTrims = $derived(
+    !loading && FC.SERVO_CONFIG.some((servo) => servo.trim),
+  );
+
   let showToolbar = $derived(!loading && dirty);
 
   onMount(async () => {
@@ -224,6 +228,19 @@
   function onRateChange(index) {
     needReboot = true;
     onFieldChange(index);
+  }
+
+  // Zero every saved trim and push it live, same as editing each field to 0 --
+  // it lands on the toolbar as a dirty change and is only written to EEPROM
+  // by Save.
+  function onClearTrims() {
+    for (const servo of allServos) {
+      const config = FC.SERVO_CONFIG[servo.index];
+      if (config.trim) {
+        config.trim = 0;
+        mspHelper.sendServoConfig(servo.index);
+      }
+    }
   }
 
   function onToggleOverrideEnabled(checked) {
@@ -320,6 +337,15 @@
       <div class="note">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <p>{@html $i18n.t("servoRateRebootNote")}</p>
+      </div>
+    {/if}
+
+    {#if hasTrims}
+      <div class="override-toggle">
+        <button class="btn" onclick={onClearTrims}>
+          {$i18n.t("servoClearTrims")}
+        </button>
+        <span class="description">{$i18n.t("servoClearTrimsText")}</span>
       </div>
     {/if}
 

@@ -661,8 +661,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_SERVO_CONFIGURATIONS: {
                 FC.SERVO_CONFIG = []; // empty the array as new data is coming in
                 const servoConfigurationCount = data.readU8();
-                if (data.byteLength == 1 + servoConfigurationCount * 16) {
-                    for (let i = 1; i < data.byteLength; i += 16) {
+                // API 22.3+ appends one S16 trim per servo after the records.
+                const hasTrim = data.byteLength >= 1 + servoConfigurationCount * 18;
+                if (data.byteLength >= 1 + servoConfigurationCount * 16) {
+                    for (let n = 0; n < servoConfigurationCount; n++) {
                         const arr = {
                             'mid':       data.readU16(),
                             'min':       data.read16(),
@@ -674,6 +676,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                             'flags':     data.read16()
                         };
                         FC.SERVO_CONFIG.push(arr);
+                    }
+                    for (const servo of FC.SERVO_CONFIG) {
+                        // undefined (not 0) when the FC has no trims, so it is never sent back.
+                        servo.trim = hasTrim ? data.read16() : undefined;
                     }
                 }
                 break;
@@ -2726,6 +2732,11 @@ MspHelper.prototype.sendServoConfig = function(servoIndex, onCompleteCallback)
           .push16(CONFIG.rate)
           .push16(CONFIG.speed)
           .push16(CONFIG.flags);
+
+    // Only FCs with servo trim (API 22.3+) accept, or report, the trailing trim.
+    if (CONFIG.trim !== undefined) {
+        buffer.push16(CONFIG.trim);
+    }
 
     MSP.send_message(MSPCodes.MSP_SET_SERVO_CONFIGURATION, buffer, false, onCompleteCallback);
 };

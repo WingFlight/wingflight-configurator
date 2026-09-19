@@ -56,17 +56,34 @@
     }).filter(Boolean);
   }
 
-  // While a Stepped ServoTrim adjustment is actively incrementing/
-  // decrementing, the FC persists the change and the polled
-  // MSP_SERVO_CONFIGURATIONS response overwrites Mid with it -- disable
+  // Servos have their own saved trim, added at the output on top of Center
+  // (FC API 22.3+; older FCs report none). While a Stepped ServoTrim
+  // adjustment is actively incrementing/decrementing, the FC changes it and
+  // the polled MSP_SERVO_CONFIGURATIONS response overwrites it -- disable
   // editing to avoid the field fighting with the live value. Mapped
-  // adjustments only bias the runtime servo output and never rewrite the
-  // stored Mid value, so they don't need to block editing.
-  function midDisabled(servo) {
+  // adjustments are runtime-only and never touch the saved trim, so they
+  // don't need to block editing.
+  function trimDisabled(servo) {
     return servoTrimAdjustments(servo).some(
       (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
     );
   }
+
+  // The FC limits trim to this share of the servo's scale (larger of
+  // Scale -/+), see SERVO_TRIM_LIMIT_PERCENT in the firmware.
+  const TRIM_LIMIT_PERCENT = 20;
+
+  function trimBounds(servo) {
+    const config = FC.SERVO_CONFIG[servo.index];
+    const limit = Math.floor(
+      (Math.max(config.rneg, config.rpos) * TRIM_LIMIT_PERCENT) / 100,
+    );
+    return { min: -limit, max: limit };
+  }
+
+  let hasTrimField = $derived(
+    servos.some((servo) => FC.SERVO_CONFIG[servo.index]?.trim !== undefined),
+  );
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
   // table instance is homogeneous (all PWM or all bus), so hide the whole
@@ -115,6 +132,7 @@
   const INDEX_COL = 44;
   const VALUE_COL = 100;
   const TRIM_COL = 64;
+  const TRIM_VALUE_COL = 80;
   // Wide enough for the Reverse label + help icon on one line for most
   // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
   // below still wraps the icon as a fallback for longer translations (e.g.
@@ -128,6 +146,7 @@
 
   let columnWidths = $derived.by(() => {
     const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
+    if (hasTrimField) cols.push(TRIM_VALUE_COL); // Trim
     if (hasTrimAdjustments) cols.push(TRIM_COL);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
@@ -294,6 +313,12 @@
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
         </span>
+        {#if hasTrimField}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoTrim")}</span>
+            <HelpIcon>{$i18n.t("servoTrimHelp")}</HelpIcon>
+          </span>
+        {/if}
         {#if hasTrimAdjustments}
           <span class="header-label-flex">
             <span>{$i18n.t("servoTrimColumn")}</span>
@@ -352,10 +377,19 @@
             <NumberInput
               {...bounds(servo, "mid")}
               bind:value={config.mid}
-              disabled={midDisabled(servo)}
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
+          {#if hasTrimField}
+            <span>
+              <NumberInput
+                {...trimBounds(servo)}
+                bind:value={config.trim}
+                disabled={trimDisabled(servo)}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
+          {/if}
           {#if hasTrimAdjustments}
             <span class="servo-trim-badges">
               {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
@@ -472,10 +506,20 @@
             <NumberInput
               {...bounds(servo, "mid")}
               bind:value={config.mid}
-              disabled={midDisabled(servo)}
               onchange={() => onFieldChange(servo.index)}
             />
           </div>
+          {#if config.trim !== undefined}
+            <div class="mobile-field">
+              {@render fieldLabel("servoTrim", "servoTrimHelp")}
+              <NumberInput
+                {...trimBounds(servo)}
+                bind:value={config.trim}
+                disabled={trimDisabled(servo)}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </div>
+          {/if}
 
           {#if servoTrimAdjustments(servo).length > 0}
             <div class="mobile-field">

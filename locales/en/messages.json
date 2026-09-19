@@ -3314,8 +3314,20 @@
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
     },
-    "servoTrimColumn": {
+    "servoTrim": {
         "message": "Trim"
+    },
+    "servoTrimHelp": {
+        "message": "Saved offset in µs added to the output on top of Center, limited to 20% of the servo's Scale. Used by the ServoTrim adjustments and Auto Trim; Center is never changed by them."
+    },
+    "servoClearTrims": {
+        "message": "Clear trims"
+    },
+    "servoClearTrimsText": {
+        "message": "Set every servo's Trim back to 0. Saved with the Save button."
+    },
+    "servoTrimColumn": {
+        "message": "Adjust"
     },
     "servoTrimColumnHelp": {
         "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
