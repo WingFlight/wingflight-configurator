@@ -1,3 +1,10 @@
+# 0.0.24
+
+Show the live runtime servo trim (+N/-N) next to the adjustment badge on the Servos tab, read via the new MSP_SERVO_TRIM.
+Add a Finished step to the Firmware Flasher wizard so it's clear when the update (and restore) is complete.
+Show online and local firmware loading side by side on the Firmware step.
+Fix Documentation page links to point at doc.wingflight.org, and drop the Betaflight and RC Groups entries from the Support panel.
+
 # 0.0.23
 
 Add AUTOHOVER throttle assist fields to the Auto Hover section of the profile UI.
