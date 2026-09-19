@@ -48,7 +48,7 @@
   let channelOptions = $derived(
     Array.from({ length: auxChannelCount }, (_, i) => ({
       value: i,
-      label: `AUX${i + 1}`,
+      label: `CH #${i + 5}`,
     })),
   );
   let enaChannelOptions = $derived([

@@ -1,3 +1,35 @@
+# 0.0.23
+
+Add AUTOHOVER throttle assist fields to the Auto Hover section of the profile UI.
+Add servo balance curves to the Curves tab (new Servo category), plus a compare-curve viewer, and a curve indicator on the Servos tab that jumps straight to a servo's curve.
+Unify RC channel naming to CH #N across the Mixer, Adjustments, Logic, and Auxiliary channel pickers, and resolve the Mixer's Roll/Pitch/Yaw/Throttle bypass inputs to the pilot's actual mapped channel instead of a fixed order.
+
+# 0.0.22
+
+Add mixer rule roles to the Mixer tab, along with flap-servo support and live-adjustment badges.
+Rework the Firmware Flasher into a guided step wizard.
+Surface the new BACKUP_RX arming disable flag on the Status tab.
+Add a label/tooltip for the TRADITIONAL flight mode.
+Add an Auto Hover roll deadband field to the Leveling Settings tab.
+Hide the servo geometry correction field where it doesn't apply.
+Fix colour styling on the Modes page.
+
+# 0.0.21
+
+Make the backup-before-flash / restore-after-flash wizard reliable across a full flash cycle: pace CLI defaults/save handling correctly, retry post-flash reconnects longer, add a "Select Port" recovery option, and default backups to Dump instead of Diff.
+Fix Web Serial losing track of the flight controller's port after it reboots mid-restore, which made restoring fail every time on the web build (desktop was unaffected).
+Fix a cached target config being reused even after its source was corrected, so a fixed board config could keep getting (re)flashed stale for up to two hours.
+
+# 0.0.20
+
+Add a CLI-based backup/restore wizard to the CLI tab and Firmware Flasher (Backup/Diff/Dump before flashing, with restore after).
+Fix the flashing-completion callback being dropped when a serial flash falls back to DFU, so post-flash steps like restore never ran.
+
+# 0.0.19
+
+Add RX and ESC telemetry wiring auto-detect ("Detect Wiring") to the Receiver and Motors tabs, to help diagnose signal-inversion and pin-swap mismatches.
+Refresh UI styling with CSS-variable-based border-radius and color theming for a more consistent look.
+
 # 0.0.18
 
 Add Thrust Vector profile tabs and TV Profile adjustment function.

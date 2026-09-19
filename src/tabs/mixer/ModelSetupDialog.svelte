@@ -23,6 +23,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  let flapServos = $state(1);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
   // Independent per-axis, since a vectored mount might drive any combination
@@ -46,6 +47,7 @@
       "elevatorRudder";
     wingYaw = activeType.wingYaw?.default ?? "none";
     flaps = false;
+    flapServos = 1;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -62,6 +64,7 @@
       tailControl: activeType.tailControl?.fixed ?? tailControl,
       wingYaw,
       flaps,
+      flapServos,
       motors,
       diffThrustYaw,
       thrustVectorRoll,
@@ -180,6 +183,19 @@
         <input type="checkbox" bind:checked={flaps} />
         <span>{$i18n.t("mixerWizardFlapsEnable")}</span>
       </label>
+      {#if flaps}
+        <label class="wizardOption">
+          <input type="radio" bind:group={flapServos} value={1} />
+          <span>{$i18n.t("mixerWizardFlapServos1")}</span>
+        </label>
+        <label class="wizardOption">
+          <input type="radio" bind:group={flapServos} value={2} />
+          <span>{$i18n.t("mixerWizardFlapServos2")}</span>
+        </label>
+        <div class="wizardHint">
+          {$i18n.t("mixerWizardFlapsCompensationHint")}
+        </div>
+      {/if}
     </div>
 
     <div class="wizardSection">

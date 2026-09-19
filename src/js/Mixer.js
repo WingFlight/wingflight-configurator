@@ -38,6 +38,88 @@ export const Mixer = {
 
     heliOnlyInputs: [],
 
+    // mixerInputRCChannelRoll is inputNames[9] -- Pitch/Yaw/Throttle follow
+    // at 10-12. These "bypass" inputs read the RC input for that logical
+    // axis *after* the firmware's rcmap indirection (rx.c's rcChannel[]),
+    // so "Roll" is whatever physical channel the pilot's radio has mapped to
+    // it -- there's no fixed "Roll = CH1" answer (AETR vs TAER vs custom
+    // maps all differ). MSP_RX_MAP (FC.RC_MAP) reports that mapping in the
+    // same Roll/Pitch/Yaw/Throttle order, so resolving the real channel just
+    // means indexing it with inputIndex - RC_CHANNEL_BYPASS_FIRST.
+    RC_CHANNEL_BYPASS_FIRST: 9,
+    RC_CHANNEL_BYPASS_ROLES: [
+        'controlAxisRoll',
+        'controlAxisPitch',
+        'controlAxisYaw',
+        'controlAxisThrottle',
+    ],
+
+    // Label for an inputNames[] entry, resolving the RC Roll/Pitch/Yaw/
+    // Throttle bypass inputs to the pilot's actual physical channel (e.g.
+    // "CH #3 (Roll)") when rcMap (FC.RC_MAP, from MSP_RX_MAP) is available.
+    // Falls back to the plain function name otherwise.
+    inputLabel: function (index, i18n, rcMap) {
+        const roleIndex = index - this.RC_CHANNEL_BYPASS_FIRST;
+        if (roleIndex >= 0 && roleIndex < this.RC_CHANNEL_BYPASS_ROLES.length &&
+            rcMap && rcMap.length > roleIndex) {
+            const channel = rcMap[roleIndex] + 1;
+            const role = i18n.getMessage(this.RC_CHANNEL_BYPASS_ROLES[roleIndex]);
+            return `CH #${channel} (${role})`;
+        }
+
+        return i18n.getMessage(this.inputNames[index]);
+    },
+
+    // Last index of the "raw numbered channel" run -- inputNames[13..26]
+    // are CH #5..#18 (channel = index - 8), immediately after the bypass
+    // Roll/Pitch/Yaw/Throttle run (9-12) resolved above.
+    RC_CHANNEL_RANGE_LAST: 26,
+
+    // Physical channel number (1-based) for an inputNames[] index in the
+    // combined bypass-Roll/Pitch/Yaw/Throttle + raw-CH#5-18 run, or
+    // undefined if it can't be determined (a bypass index without a loaded
+    // rcMap, or an index outside that run entirely).
+    rcChannelNumber: function (index, rcMap) {
+        const roleIndex = index - this.RC_CHANNEL_BYPASS_FIRST;
+        if (roleIndex >= 0 && roleIndex < this.RC_CHANNEL_BYPASS_ROLES.length) {
+            return rcMap && rcMap.length > roleIndex ? rcMap[roleIndex] + 1 : undefined;
+        }
+        if (index > this.RC_CHANNEL_BYPASS_FIRST + this.RC_CHANNEL_BYPASS_ROLES.length - 1 &&
+            index <= this.RC_CHANNEL_RANGE_LAST) {
+            return index - 8;
+        }
+        return undefined;
+    },
+
+    // Full {value,label} input-option list, in *display* order. Same wire
+    // values as inputNames, but once rcMap resolves the bypass Roll/Pitch/
+    // Yaw/Throttle channels, the whole bypass+CH#5-18 run (9-26) is
+    // re-sorted into ascending physical-channel order -- otherwise a
+    // non-AETR radio would show e.g. "CH #2 (Roll)" ahead of "CH #1
+    // (Throttle)", then jump straight to "CH #5" right after, which reads
+    // as out of order even though every value is correct. Falls back to
+    // plain wire-value order (bypass group by function, then CH#5-18) when
+    // rcMap hasn't loaded yet, since there's nothing to sort by then.
+    buildInputOptions: function (i18n, rcMap) {
+        const options = this.inputNames.map((_key, i) => ({
+            value: i,
+            label: this.inputLabel(i, i18n, rcMap),
+        }));
+
+        const first = this.RC_CHANNEL_BYPASS_FIRST;
+        const last = this.RC_CHANNEL_RANGE_LAST;
+        const slice = options.slice(first, last + 1);
+        const channels = slice.map((_opt, i) => this.rcChannelNumber(first + i, rcMap));
+        if (channels.every((c) => c != null)) {
+            slice
+                .map((opt, i) => [channels[i], opt])
+                .sort((a, b) => a[0] - b[0])
+                .forEach(([, opt], pos) => { options[first + pos] = opt; });
+        }
+
+        return options;
+    },
+
     SERVO_OUTPUT_COUNT: 26,
     MOTOR_OUTPUT_COUNT: 4,
     MOTOR_OUTPUT_OFFSET: 27,
@@ -78,6 +160,19 @@ export const Mixer = {
     OP_ADD: 2,
     OP_MUL: 3,
 
+    // Descriptive tag only -- the firmware mixer evaluator never reads it.
+    // Lets tooling (this UI, RC adjustment ranges, LUA scripts) find "the"
+    // rule serving a given role regardless of its array position.
+    roleNames: [
+        'mixerRoleNone',
+        'mixerRoleFlapCompensation',
+        'mixerRoleDifferentialThrustYaw',
+    ],
+
+    ROLE_NONE: 0,
+    ROLE_FLAP_COMPENSATION: 1,
+    ROLE_DIFFERENTIAL_THRUST_YAW: 2,
+
     UNINIT: -1,
 
     RULE_COUNT: 32,
@@ -115,7 +210,7 @@ export const Mixer = {
 
     nullRule: function ()
     {
-        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0 };
+        return { oper: 0, src: 0, dst: 0, weight: 0, weightNeg: 0, offset: 0, speed: 0, curve: 0, condition: 0, role: 0 };
     },
 
     cloneRule: function (a)
@@ -133,7 +228,8 @@ export const Mixer = {
                 a.offset    === b.offset &&
                 a.speed     === b.speed &&
                 a.curve     === b.curve &&
-                a.condition === b.condition );
+                a.condition === b.condition &&
+                a.role      === b.role );
     },
 
     cloneRules : function (a)
@@ -260,11 +356,17 @@ export const Mixer = {
         const rules = [];
         let nextServo = 1;
         let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
+        // Every output that ends up carrying pitch, across whichever layout
+        // ran below -- the flap compensation rule(s) further down ADD onto
+        // all of these, since a flap-induced pitching moment shows up on
+        // every pitch-controlling surface (both v-tail halves, both
+        // elevons, ...), not just a single named "elevator" servo.
+        const pitchOutputs = [];
 
-        function rule(oper, src, dst, weight, reverse)
+        function rule(oper, src, dst, weight, reverse, role)
         {
             const w = reverse ? -weight : weight;
-            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0 };
+            return { oper, src, dst, offset: 0, weight: w, weightNeg: w, speed: 0, curve: 0, condition: 0, role: role || 0 };
         }
 
         const OP_SET = Mixer.OP_SET, OP_ADD = Mixer.OP_ADD;
@@ -282,9 +384,13 @@ export const Mixer = {
             }
 
             if (options.tailControl === 'elevatorOnly') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
             } else if (options.tailControl === 'elevatorRudder') {
-                rules.push(rule(OP_SET, PITCH, nextServo++, 1000));
+                const elevator = nextServo++;
+                rules.push(rule(OP_SET, PITCH, elevator, 1000));
+                pitchOutputs.push(elevator);
                 rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
             } else if (options.tailControl === 'vtail') {
                 const rightTail = nextServo++, leftTail = nextServo++;
@@ -292,6 +398,7 @@ export const Mixer = {
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
                 rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
                 rules.push(rule(OP_ADD, PITCH, leftTail, 1000));
+                pitchOutputs.push(rightTail, leftTail);
             }
         } else if (options.layout === 'flyingWing') {
             const leftElevon = nextServo++, rightElevon = nextServo++;
@@ -299,6 +406,7 @@ export const Mixer = {
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  rightElevon, 1000, true));
+            pitchOutputs.push(leftElevon, rightElevon);
 
             if (options.wingYaw === 'rudder') {
                 rules.push(rule(OP_SET, YAW, nextServo++, 1000));
@@ -307,18 +415,33 @@ export const Mixer = {
 
         if (options.flaps) {
             rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            if (options.flapServos >= 2) {
+                rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+            }
+
+            // Flap-induced pitching moment otherwise gets silently absorbed
+            // by the rate loop's I-term until it saturates at low airspeed
+            // during the flare -- see the flap-compensation writeup. Starts
+            // at zero weight (a placeholder to tune in, not a guessed
+            // default) and is tagged so it stays findable regardless of
+            // where it ends up in the table.
+            pitchOutputs.forEach((output) => {
+                rules.push(rule(OP_ADD, RC_AUX1, output, 0, false, Mixer.ROLE_FLAP_COMPENSATION));
+            });
         }
 
+        let motor1;
         if (options.motors >= 1) {
-            rules.push(rule(OP_SET, THROTTLE, nextMotor++, 1000));
+            motor1 = nextMotor++;
+            rules.push(rule(OP_SET, THROTTLE, motor1, 1000));
         }
         if (options.motors >= 2) {
             const motor2 = nextMotor;
             rules.push(rule(OP_SET, THROTTLE, motor2, 1000));
 
             if (options.diffThrustYaw) {
-                rules.push(rule(OP_ADD, YAW, 9,      500));
-                rules.push(rule(OP_ADD, YAW, motor2, 500, true));
+                rules.push(rule(OP_ADD, YAW, motor1, 500, false, Mixer.ROLE_DIFFERENTIAL_THRUST_YAW));
+                rules.push(rule(OP_ADD, YAW, motor2, 500, true,  Mixer.ROLE_DIFFERENTIAL_THRUST_YAW));
             }
         }
 
@@ -348,7 +471,8 @@ export const Mixer = {
                 a.offset    == 0 &&
                 a.speed     == 0 &&
                 a.curve     == 0 &&
-                a.condition == 0 );
+                a.condition == 0 &&
+                a.role      == 0 );
     },
 
     isNullMixer : function (a) {

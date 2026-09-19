@@ -80,6 +80,7 @@
       "ACC_CALIB",
       "MOTOR_PROTO",
       "OVERRIDE",
+      "BACKUP_RX",
       "ARM_SWITCH",
     ];
   }

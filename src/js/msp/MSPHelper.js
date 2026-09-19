@@ -1369,6 +1369,12 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.gainCurveYaw                  = data.remaining() >= 1 ? data.readU8() : 0;
                 // Att Hold max rate //
                 FC.PID_PROFILE.attHoldMaxRate                = data.remaining() >= 2 ? data.readU16() : 300;
+                // Auto Hover roll deadband //
+                FC.PID_PROFILE.autoHoverRollDeadband         = data.remaining() >= 1 ? data.readU8() : 5;
+                // Auto Hover throttle assist //
+                FC.PID_PROFILE.autoHoverThrottleAssistGain       = data.remaining() >= 4 ? data.readU8() : 0;
+                FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
+                FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
                 // Oscillation limiter //
                 FC.PID_PROFILE.oscLimiter                    = data.remaining() >= 7 ? data.readU8() : 0;
                 FC.PID_PROFILE.oscLimiterMinHz                = data.remaining() >= 6 ? data.readU8() : 4;
@@ -1395,7 +1401,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_RULES: {
                 FC.MIXER_RULES = [];
-                const ruleCount = data.byteLength / 13;
+                const ruleCount = data.byteLength / 14;
                 for (let i = 0; i < ruleCount; i++) {
                     FC.MIXER_RULES.push({
                         oper:      data.readU8(),
@@ -1407,6 +1413,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         speed:     data.readU16(),
                         curve:     data.readU8(),
                         condition: data.readU8(),
+                        role:      data.readU8(),
                     });
                 }
                 break;
@@ -1438,6 +1445,22 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         curve.points.push({ x: data.readU16(), y: data.readU16() });
                     }
                     FC.GAIN_CURVES.push(curve);
+                }
+                break;
+            }
+
+            case MSPCodes.MSP_SERVO_CURVES: {
+                // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
+                // physical servo, not a fixed pool like mixer/gain curves).
+                FC.SERVO_CURVES = [];
+                const pointsPerCurve = 9; // SERVO_CURVE_POINTS
+                const curveCount = data.readU8();
+                for (let i = 0; i < curveCount; i++) {
+                    const curve = { count: data.readU8(), points: [] };
+                    for (let p = 0; p < pointsPerCurve; p++) {
+                        curve.points.push({ x: data.read16(), y: data.read16() });
+                    }
+                    FC.SERVO_CURVES.push(curve);
                 }
                 break;
             }
@@ -2397,6 +2420,12 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.gainCurveYaw)
                 // Att Hold max rate //
                 .push16(FC.PID_PROFILE.attHoldMaxRate)
+                // Auto Hover roll deadband //
+                .push8(FC.PID_PROFILE.autoHoverRollDeadband)
+                // Auto Hover throttle assist //
+                .push8(FC.PID_PROFILE.autoHoverThrottleAssistGain)
+                .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
+                .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs)
                 // Oscillation limiter //
                 .push8(FC.PID_PROFILE.oscLimiter)
                 .push8(FC.PID_PROFILE.oscLimiterMinHz)
@@ -2777,7 +2806,8 @@ MspHelper.prototype.sendMixerRule = function(ruleIndex, onCompleteCallback)
           .push16(rule.weightNeg)
           .push16(rule.speed)
           .push8(rule.curve)
-          .push8(rule.condition);
+          .push8(rule.condition)
+          .push8(rule.role ?? 0);
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_RULE, buffer, false, onCompleteCallback);
 };
@@ -2850,6 +2880,36 @@ MspHelper.prototype.sendGainCurves = function(onCompleteCallback)
     function send_next() {
         if (index < FC.GAIN_CURVES.length)
             self.sendGainCurve(index++, send_next);
+        else
+            onCompleteCallback();
+    }
+
+    send_next();
+};
+
+MspHelper.prototype.sendServoCurve = function(curveIndex, onCompleteCallback)
+{
+    const curve = FC.SERVO_CURVES[curveIndex];
+    const buffer = [];
+
+    buffer.push8(curveIndex)
+          .push8(curve.count);
+
+    curve.points.forEach(function (point) {
+        buffer.push16(point.x).push16(point.y);
+    });
+
+    MSP.send_message(MSPCodes.MSP_SET_SERVO_CURVE, buffer, false, onCompleteCallback);
+};
+
+MspHelper.prototype.sendServoCurves = function(onCompleteCallback)
+{
+    const self = this;
+    var index = 0;
+
+    function send_next() {
+        if (index < FC.SERVO_CURVES.length)
+            self.sendServoCurve(index++, send_next);
         else
             onCompleteCallback();
     }

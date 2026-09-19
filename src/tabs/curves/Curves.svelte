@@ -7,6 +7,8 @@
   import { getTabHelpURL } from "@/js/help";
   import { MixerCurve } from "@/js/MixerCurve.js";
   import { GainCurve } from "@/js/GainCurve.js";
+  import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { CURVE_NAV } from "@/js/curveNav.svelte.js";
 
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
@@ -17,9 +19,18 @@
   // One entry per curve pool this tab can edit. Each category owns its own
   // model (point/range semantics) and its FC-backed storage array - the
   // rendering/interaction code is otherwise category-agnostic.
+  //
+  // "servo" has no fixed pool (unlike mixer/gain): there's one curve per
+  // physical servo, so curveCount() reads the live array length instead of
+  // a model.CURVE_COUNT constant, and ServoBalanceCurve.js intentionally
+  // doesn't define one - see onMount()'s padding loop below.
   const CATEGORIES = {
     mixer: {
       model: MixerCurve,
+      fcKey: "MIXER_CURVES",
+      fetchCode: MSPCodes.MSP_MIXER_CURVES,
+      send: (cb) => mspHelper.sendMixerCurves(cb),
+      curveCount: () => MixerCurve.CURVE_COUNT,
       titleKey: "curvesTitle",
       helpKey: "curveCategoryHelpMixer",
       explainKey: "curveExplainMixer",
@@ -33,6 +44,10 @@
     },
     gain: {
       model: GainCurve,
+      fcKey: "GAIN_CURVES",
+      fetchCode: MSPCodes.MSP_GAIN_CURVES,
+      send: (cb) => mspHelper.sendGainCurves(cb),
+      curveCount: () => GainCurve.CURVE_COUNT,
       titleKey: "curvesTitleGain",
       helpKey: "curveCategoryHelpGain",
       explainKey: "curveExplainGain",
@@ -44,33 +59,67 @@
       xAxisValue: 0,
       yAxisValue: GainCurve.NEUTRAL,
     },
+    servo: {
+      model: ServoBalanceCurve,
+      fcKey: "SERVO_CURVES",
+      fetchCode: MSPCodes.MSP_SERVO_CURVES,
+      send: (cb) => mspHelper.sendServoCurves(cb),
+      curveCount: () => FC.SERVO_CURVES.length,
+      curveLabelKey: "servoCurveLabel",
+      titleKey: "curvesTitleServo",
+      helpKey: "curveCategoryHelpServo",
+      explainKey: "curveExplainServo",
+      tabKey: "curveCategoryServo",
+      xMin: ServoBalanceCurve.X_MIN,
+      xMax: ServoBalanceCurve.X_MAX,
+      yMin: ServoBalanceCurve.Y_MIN,
+      yMax: ServoBalanceCurve.Y_MAX,
+      xAxisValue: 0,
+      yAxisValue: ServoBalanceCurve.NEUTRAL,
+    },
   };
 
   function getArray(key) {
-    return key === "mixer" ? FC.MIXER_CURVES : FC.GAIN_CURVES;
+    return FC[CATEGORIES[key].fcKey];
   }
 
   function sendAll(key, callback) {
-    if (key === "mixer") mspHelper.sendMixerCurves(callback);
-    else mspHelper.sendGainCurves(callback);
+    CATEGORIES[key].send(callback);
   }
 
   let loading = $state(true);
   let selectedCategory = $state("mixer");
   let selectedCurveIndex = $state(0);
-  let dirty = $state({ mixer: false, gain: false });
+  let dirty = $state(
+    Object.fromEntries(Object.keys(CATEGORIES).map((k) => [k, false])),
+  );
   let initialCurves;
 
   let category = $derived(CATEGORIES[selectedCategory]);
   let curve = $derived(getArray(selectedCategory)[selectedCurveIndex]);
-  let anyDirty = $derived(dirty.mixer || dirty.gain);
+  let anyDirty = $derived(Object.values(dirty).some(Boolean));
   let showToolbar = $derived(!loading && anyDirty);
 
   let curveOptions = $derived(
-    Array.from({ length: category.model.CURVE_COUNT }, (_, i) => ({
+    Array.from({ length: category.curveCount() }, (_, i) => ({
       value: i,
-      label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
+      label: $i18n.t(category.curveLabelKey ?? "mixerCurveLabel", { 1: i + 1 }),
     })),
+  );
+
+  // View-only reference curve shown alongside the one being edited (e.g.
+  // pull up a paired servo's curve to compare while trimming this one) -
+  // "None" plus the same options as the main selector. Never itself
+  // editable - see CurvePlot's compareCurve prop.
+  let compareCurveIndex = $state(null);
+  let compareOptions = $derived([
+    { value: null, label: $i18n.t("curveCompareNone") },
+    ...curveOptions,
+  ]);
+  let compareCurve = $derived(
+    compareCurveIndex !== null
+      ? getArray(selectedCategory)[compareCurveIndex]
+      : null,
   );
 
   let pointCountOptions = $derived(
@@ -83,6 +132,7 @@
     if (selectedCategory === key) return;
     selectedCategory = key;
     selectedCurveIndex = 0;
+    compareCurveIndex = null;
   }
 
   function markDirty() {
@@ -113,22 +163,52 @@
     markDirty();
   }
 
+  function cloneInitialCurves() {
+    return Object.fromEntries(
+      Object.keys(CATEGORIES).map((key) => [
+        key,
+        CATEGORIES[key].model.cloneCurves($state.snapshot(getArray(key))),
+      ]),
+    );
+  }
+
+  function resetDirty() {
+    return Object.fromEntries(Object.keys(CATEGORIES).map((k) => [k, false]));
+  }
+
   onMount(async () => {
-    await MSP.promise(MSPCodes.MSP_MIXER_CURVES);
-    await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
+    for (const key of Object.keys(CATEGORIES)) {
+      await MSP.promise(CATEGORIES[key].fetchCode);
+    }
 
     for (const key of Object.keys(CATEGORIES)) {
       const arr = getArray(key);
       const model = CATEGORIES[key].model;
-      while (arr.length < model.CURVE_COUNT) {
-        arr.push(model.nullCurve());
+      // Fixed-pool categories (mixer/gain) are padded up to their
+      // CURVE_COUNT. "servo" has no such constant - its array length IS its
+      // curve count (one per live servo) and must never be padded/truncated.
+      if (model.CURVE_COUNT !== undefined) {
+        while (arr.length < model.CURVE_COUNT) {
+          arr.push(model.nullCurve());
+        }
       }
     }
 
-    initialCurves = {
-      mixer: MixerCurve.cloneCurves($state.snapshot(FC.MIXER_CURVES)),
-      gain: GainCurve.cloneCurves($state.snapshot(FC.GAIN_CURVES)),
-    };
+    initialCurves = cloneInitialCurves();
+
+    // Consumed once - a link over from e.g. the Servos tab's curve badge
+    // (see curveNav.svelte.js). Validated against the now-loaded data
+    // rather than trusted blindly, since the servo count (and so the valid
+    // index range) can only be known after the fetches above.
+    const nav = CURVE_NAV.pending;
+    CURVE_NAV.pending = null;
+    if (nav && CATEGORIES[nav.category]) {
+      selectedCategory = nav.category;
+      if (nav.index >= 0 && nav.index < CATEGORIES[nav.category].curveCount()) {
+        selectedCurveIndex = nav.index;
+      }
+    }
+
     loading = false;
   });
 
@@ -141,17 +221,17 @@
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
-    initialCurves = {
-      mixer: MixerCurve.cloneCurves($state.snapshot(FC.MIXER_CURVES)),
-      gain: GainCurve.cloneCurves($state.snapshot(FC.GAIN_CURVES)),
-    };
-    dirty = { mixer: false, gain: false };
+    initialCurves = cloneInitialCurves();
+    dirty = resetDirty();
   }
 
   export async function onRevert() {
-    FC.MIXER_CURVES = MixerCurve.cloneCurves(initialCurves.mixer);
-    FC.GAIN_CURVES = GainCurve.cloneCurves(initialCurves.gain);
-    dirty = { mixer: false, gain: false };
+    for (const key of Object.keys(CATEGORIES)) {
+      FC[CATEGORIES[key].fcKey] = CATEGORIES[key].model.cloneCurves(
+        initialCurves[key],
+      );
+    }
+    dirty = resetDirty();
   }
 
   export function isDirty() {
@@ -196,105 +276,118 @@
       </div>
     {/snippet}
 
-    <div class="toolbar-row">
-      <Select bind:value={selectedCurveIndex} options={curveOptions} />
-      <button class="btn" onclick={onReset}>{$i18n.t("curveReset")}</button>
-    </div>
-    <p class="hint">{$i18n.t("curveEditorHint")}</p>
-
-    <div class="editor-row">
-      <div class="plot-wrapper">
-        <CurvePlot
-          {curve}
-          model={category.model}
-          xMin={category.xMin}
-          xMax={category.xMax}
-          yMin={category.yMin}
-          yMax={category.yMax}
-          xAxisValue={category.xAxisValue}
-          yAxisValue={category.yAxisValue}
-          onEdit={markDirty}
-        />
+    {#if curve}
+      <div class="toolbar-row">
+        <span class="compare-group">
+          <span class="compare-label">{$i18n.t("curveEditLabel")}</span>
+          <Select bind:value={selectedCurveIndex} options={curveOptions} />
+        </span>
+        <button class="btn" onclick={onReset}>{$i18n.t("curveReset")}</button>
+        <span class="compare-group">
+          <span class="compare-label">{$i18n.t("curveCompareLabel")}</span>
+          <Select bind:value={compareCurveIndex} options={compareOptions} />
+        </span>
       </div>
+      <p class="hint">{$i18n.t("curveEditorHint")}</p>
 
-      <p class="explain">{$i18n.t(category.explainKey)}</p>
+      <div class="editor-row">
+        <div class="plot-wrapper">
+          <CurvePlot
+            {curve}
+            {compareCurve}
+            model={category.model}
+            xMin={category.xMin}
+            xMax={category.xMax}
+            yMin={category.yMin}
+            yMax={category.yMax}
+            xAxisValue={category.xAxisValue}
+            yAxisValue={category.yAxisValue}
+            onEdit={markDirty}
+          />
+        </div>
 
-      <div class="point-list">
-        <table class="point-table">
-          <thead>
-            <tr>
-              <th>{$i18n.t("curvePointIndex")}</th>
-              <th>{$i18n.t("curvePointX")}</th>
-              <th>{$i18n.t("curvePointY")}</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each curve.points.slice(0, curve.count) as point, index (index)}
-              {@const isEndpoint = index === 0 || index === curve.count - 1}
+        <p class="explain">{$i18n.t(category.explainKey)}</p>
+
+        <div class="point-list">
+          <table class="point-table">
+            <thead>
               <tr>
-                <td class="point-index">{index + 1}</td>
-                <td>
-                  <input
-                    type="number"
-                    min={category.xMin}
-                    max={category.xMax}
-                    step="10"
-                    disabled={isEndpoint}
-                    title={isEndpoint
-                      ? $i18n.t("curveEndpointXLocked")
-                      : undefined}
-                    bind:value={
-                      () => point.x,
-                      (v) => onPointFieldChange(index, v, point.y)
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min={category.yMin}
-                    max={category.yMax}
-                    step="10"
-                    bind:value={
-                      () => point.y,
-                      (v) => onPointFieldChange(index, point.x, v)
-                    }
-                  />
-                </td>
-                <td>
-                  <button
-                    class="delete"
-                    onclick={() => onDeletePoint(index)}
-                    disabled={isEndpoint}
-                    title={isEndpoint
-                      ? $i18n.t("curveEndpointNoDelete")
-                      : undefined}
-                    aria-label="Delete point"
-                  >
-                    <span class="fas fa-times"></span>
-                  </button>
-                </td>
+                <th>{$i18n.t("curvePointIndex")}</th>
+                <th>{$i18n.t("curvePointX")}</th>
+                <th>{$i18n.t("curvePointY")}</th>
+                <th></th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {#each curve.points.slice(0, curve.count) as point, index (index)}
+                {@const isEndpoint = index === 0 || index === curve.count - 1}
+                <tr>
+                  <td class="point-index">{index + 1}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={category.xMin}
+                      max={category.xMax}
+                      step="10"
+                      disabled={isEndpoint}
+                      title={isEndpoint
+                        ? $i18n.t("curveEndpointXLocked")
+                        : undefined}
+                      bind:value={
+                        () => point.x,
+                        (v) => onPointFieldChange(index, v, point.y)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={category.yMin}
+                      max={category.yMax}
+                      step="10"
+                      bind:value={
+                        () => point.y,
+                        (v) => onPointFieldChange(index, point.x, v)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      class="delete"
+                      onclick={() => onDeletePoint(index)}
+                      disabled={isEndpoint}
+                      title={isEndpoint
+                        ? $i18n.t("curveEndpointNoDelete")
+                        : undefined}
+                      aria-label="Delete point"
+                    >
+                      <span class="fas fa-times"></span>
+                    </button>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
 
-        <div class="point-list-toolbar">
-          <button class="btn" onclick={onAddPoint}>
-            {$i18n.t("curveAddPoint")}
-          </button>
-          <span class="point-count-group">
-            <span class="point-count-label">{$i18n.t("curvePointCount")}</span>
-            <Select
-              value={curve.count}
-              options={pointCountOptions}
-              onchange={(e) => onPointCountChange(Number(e.target.value))}
-            />
-          </span>
+          <div class="point-list-toolbar">
+            <button class="btn" onclick={onAddPoint}>
+              {$i18n.t("curveAddPoint")}
+            </button>
+            <span class="point-count-group">
+              <span class="point-count-label">{$i18n.t("curvePointCount")}</span
+              >
+              <Select
+                value={curve.count}
+                options={pointCountOptions}
+                onchange={(e) => onPointCountChange(Number(e.target.value))}
+              />
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    {:else}
+      <p class="hint">{$i18n.t("curveNoServosConfigured")}</p>
+    {/if}
   </Section>
 </Page>
 
@@ -353,7 +446,19 @@
   .toolbar-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
+  }
+
+  .compare-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .compare-label {
+    font-size: 0.7rem;
+    color: var(--color-text-soft);
   }
 
   .hint {

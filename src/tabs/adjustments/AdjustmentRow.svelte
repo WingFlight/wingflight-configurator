@@ -542,7 +542,7 @@
 
     // Fixed width so the Enable/Value Channel rows' dropdowns line up
     // regardless of the selected option's text length (e.g. "ALWAYS" vs
-    // "AUX1").
+    // "CH #5").
     :global(select) {
       width: 100px;
     }

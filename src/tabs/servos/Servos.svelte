@@ -117,10 +117,8 @@
     let unusualScale = false;
     let unusualRate = false;
     let unusualLimit = false;
-    let unusualGeoCor = false;
 
     const SERVOS = FC.SERVO_CONFIG;
-    const FLAG_GEOCOR = 2;
 
     for (let index = 0; index < pwmServoCount; index++) {
       const servo = SERVOS[index];
@@ -163,16 +161,8 @@
     }
 
     if (pwmServoCount === 2 && SERVOS[0] && SERVOS[1]) {
-      if ((SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[1].flags & FLAG_GEOCOR))
-        unusualGeoCor = true;
       if (SERVOS[0].rate !== SERVOS[1].rate) unusualRate = true;
     } else if (pwmServoCount >= 3 && SERVOS[0] && SERVOS[1] && SERVOS[2]) {
-      if (
-        (SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[1].flags & FLAG_GEOCOR) ||
-        (SERVOS[1].flags & FLAG_GEOCOR) !== (SERVOS[2].flags & FLAG_GEOCOR) ||
-        (SERVOS[0].flags & FLAG_GEOCOR) !== (SERVOS[2].flags & FLAG_GEOCOR)
-      )
-        unusualGeoCor = true;
       if (
         SERVOS[0].rate !== SERVOS[1].rate ||
         SERVOS[1].rate !== SERVOS[2].rate ||
@@ -181,7 +171,7 @@
         unusualRate = true;
     }
 
-    return { unusualScale, unusualRate, unusualLimit, unusualGeoCor };
+    return { unusualScale, unusualRate, unusualLimit };
   });
 
   let showToolbar = $derived(!loading && dirty);
@@ -194,6 +184,10 @@
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    // Read-only here (edited on the Curves tab) - just for the balance
+    // curve indicator badge in ServoConfigTable. Not guaranteed populated
+    // otherwise if this tab is visited before Curves.
+    await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
@@ -305,7 +299,7 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <Section label="servoConfigurationPwm">
-    {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate || warnings.unusualGeoCor}
+    {#if warnings.unusualLimit || warnings.unusualScale || warnings.unusualRate}
       <div class="note">
         {#if warnings.unusualLimit}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -319,10 +313,6 @@
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <p>{@html $i18n.t("servoUnusualRatesWarning")}</p>
         {/if}
-        {#if warnings.unusualGeoCor}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualGeometryCorrection")}</p>
-        {/if}
       </div>
     {/if}
 
@@ -334,7 +324,12 @@
     {/if}
 
     <div class="table-scroll">
-      <ServoConfigTable servos={pwmServos} {onFieldChange} {onRateChange} />
+      <ServoConfigTable
+        servos={pwmServos}
+        {onFieldChange}
+        {onRateChange}
+        {pwmServoCount}
+      />
     </div>
   </Section>
 
@@ -356,7 +351,12 @@
       </div>
 
       <div class="table-scroll">
-        <ServoConfigTable servos={busServos} {onFieldChange} {onRateChange} />
+        <ServoConfigTable
+          servos={busServos}
+          {onFieldChange}
+          {onRateChange}
+          {pwmServoCount}
+        />
       </div>
     </Section>
   {/if}

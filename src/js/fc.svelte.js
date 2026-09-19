@@ -78,6 +78,7 @@ class FlightController {
   SENSOR_DATA = $state();
   SERIAL_CONFIG = $state();
   SERVO_CONFIG = $state();
+  SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
@@ -318,6 +319,7 @@ class FlightController {
     this.ADJUSTMENT_RANGES =        [];
 
     this.SERVO_CONFIG =             [];
+    this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
       ports:                      [],
@@ -612,6 +614,10 @@ class FlightController {
       autoHoverGain:              0,
       autoHoverMaxAngle:          0,
       autoHoverMaxRate:           0,
+      autoHoverRollDeadband:      0,
+      autoHoverThrottleAssistGain:      0,
+      autoHoverThrottleAssistMax:       0,
+      autoHoverThrottleAssistTriggerMs: 0,
       attHoldGain:                0,
       attHoldDeadband:            0,
       attHoldMaxRate:             0,
