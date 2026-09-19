@@ -1,7 +1,9 @@
 <script>
   import diff from "microdiff";
+  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
 
+  import { API_VERSION_22_3 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -184,6 +186,7 @@
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    await pollRuntimeTrim();
     // Read-only here (edited on the Curves tab) - just for the balance
     // curve indicator badge in ServoConfigTable. Not guaranteed populated
     // otherwise if this tab is visited before Curves.
@@ -209,6 +212,7 @@
     adjustmentPoller = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_RC);
       await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+      await pollRuntimeTrim();
     }, 250);
   });
 
@@ -216,6 +220,14 @@
     clearInterval(poller);
     clearInterval(adjustmentPoller);
   });
+
+  // Live trim from Mapped ServoTrim adjustments: runtime-only on the FC, so it
+  // isn't in the servo config -- only FCs with API 22.3+ report it.
+  async function pollRuntimeTrim() {
+    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_3)) {
+      await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
+    }
+  }
 
   function onFieldChange(index) {
     mspHelper.sendServoConfig(index);

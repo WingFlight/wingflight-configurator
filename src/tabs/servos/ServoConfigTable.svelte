@@ -73,6 +73,17 @@
   // column rather than leaving an empty cell in every row.
   let isBusTable = $derived(servos.length > 0 && servos[0].isBusServo);
 
+  // Live trim from a Mapped ServoTrim adjustment: runtime-only on the FC, so the
+  // servo's Center doesn't change, but it does move the output. Shown beside the
+  // badge so it's clear a trim is in effect.
+  function liveTrim(servo) {
+    return FC.SERVO_RUNTIME_TRIM?.[servo.index] ?? 0;
+  }
+
+  function signed(value) {
+    return value > 0 ? `+${value}` : `${value}`;
+  }
+
   // Only show the Trim column if at least one servo in this table actually
   // has a ServoTrim adjustment configured for it -- otherwise it's just an
   // empty column taking up space.
@@ -114,7 +125,7 @@
   // independently-hand-typed guess that could drift out of sync with it.
   const INDEX_COL = 44;
   const VALUE_COL = 100;
-  const TRIM_COL = 64;
+  const TRIM_COL = 100;
   // Wide enough for the Reverse label + help icon on one line for most
   // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
   // below still wraps the icon as a fallback for longer translations (e.g.
@@ -370,6 +381,11 @@
                     : "ADJ"}
                 </span>
               {/each}
+              {#if liveTrim(servo) !== 0}
+                <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+                  >{signed(liveTrim(servo))}</span
+                >
+              {/if}
             </span>
           {/if}
           <span>
@@ -493,6 +509,11 @@
                       : "ADJ"}
                   </span>
                 {/each}
+                {#if liveTrim(servo) !== 0}
+                  <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+                    >{signed(liveTrim(servo))}</span
+                  >
+                {/if}
               </span>
             </div>
           {/if}
@@ -651,6 +672,12 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+  }
+
+  .live-trim {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-soft);
   }
 
   .adjustment-badge {

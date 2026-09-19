@@ -3314,6 +3314,9 @@
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
     },
+    "servoLiveTrimHelp": {
+        "message": "Live trim in µs from a Mapped ServoTrim adjustment. The servo Center is unchanged; this is not saved and starts from zero after a reboot."
+    },
     "servoTrimColumn": {
         "message": "Trim"
     },

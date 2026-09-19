@@ -1442,6 +1442,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP_SERVO_TRIM: {
+                // Count-prefixed, one S16 per servo, same order as MSP_SERVO_CONFIGURATIONS.
+                FC.SERVO_RUNTIME_TRIM = [];
+                const trimCount = data.readU8();
+                for (let i = 0; i < trimCount; i++) {
+                    FC.SERVO_RUNTIME_TRIM.push(data.read16());
+                }
+                break;
+            }
+
             case MSPCodes.MSP_SERVO_CURVES: {
                 // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
                 // physical servo, not a fixed pool like mixer/gain curves).
