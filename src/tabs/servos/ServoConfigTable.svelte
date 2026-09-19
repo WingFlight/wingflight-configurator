@@ -61,17 +61,6 @@
   // changes it and the polled MSP_SERVO_CONFIGURATIONS response shows the
   // new value; Mapped adjustments are runtime-only and never touch the saved
   // trim, so they don't show up here (the badge shows they're live).
-  //
-  // The field is only shown where it can be used: for a servo that has a
-  // ServoTrim adjustment set up for its axis, or that already has a non-zero
-  // trim (e.g. from Auto Trim), so it can still be seen and cleared.
-  function showTrimFor(servo) {
-    const trim = FC.SERVO_CONFIG[servo.index]?.trim;
-    return (
-      trim !== undefined &&
-      (trim !== 0 || servoTrimAdjustments(servo).length > 0)
-    );
-  }
 
   // The FC limits trim to this share of the servo's scale (larger of
   // Scale -/+), see SERVO_TRIM_LIMIT_PERCENT in the firmware.
@@ -85,7 +74,9 @@
     return { min: -limit, max: limit };
   }
 
-  let hasTrimField = $derived(servos.some(showTrimFor));
+  let hasTrimField = $derived(
+    servos.some((servo) => FC.SERVO_CONFIG[servo.index]?.trim !== undefined),
+  );
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
   // table instance is homogeneous (all PWM or all bus), so hide the whole
@@ -384,13 +375,11 @@
           </span>
           {#if hasTrimField}
             <span>
-              {#if showTrimFor(servo)}
-                <NumberInput
-                  {...trimBounds(servo)}
-                  bind:value={config.trim}
-                  onchange={() => onFieldChange(servo.index)}
-                />
-              {/if}
+              <NumberInput
+                {...trimBounds(servo)}
+                bind:value={config.trim}
+                onchange={() => onFieldChange(servo.index)}
+              />
             </span>
           {/if}
           {#if hasTrimAdjustments}
@@ -512,7 +501,7 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </div>
-          {#if showTrimFor(servo)}
+          {#if config.trim !== undefined}
             <div class="mobile-field">
               {@render fieldLabel("servoTrim", "servoTrimHelp")}
               <NumberInput
