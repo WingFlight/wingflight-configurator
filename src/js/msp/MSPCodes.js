@@ -197,6 +197,7 @@ export const MSPCodes = {
 
     MSP_MULTIPLE_MSP:               230,
     MSP_SERVO_CURVES:               231,
+    MSP_SERVO_TRIM:                 233,
     MSP_SET_SERVO_CURVE:            232,
 
     MSP_MODE_RANGES_EXTRA:          238,
