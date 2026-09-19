@@ -78,6 +78,9 @@ class FlightController {
   SENSOR_DATA = $state();
   SERIAL_CONFIG = $state();
   SERVO_CONFIG = $state();
+  // Live, unsaved per-servo trim from continuous adjustments (read-only; kept apart from
+  // SERVO_CONFIG so it never counts as a change to save).
+  SERVO_RUNTIME_TRIM = $state();
   SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
@@ -319,6 +322,7 @@ class FlightController {
     this.ADJUSTMENT_RANGES =        [];
 
     this.SERVO_CONFIG =             [];
+    this.SERVO_RUNTIME_TRIM =       [];
     this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
