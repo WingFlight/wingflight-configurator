@@ -7,7 +7,7 @@
  */
 
 import { MSP } from "@/js/msp.svelte.js";
-import MSPCodes from "@/js/msp/MSPCodes.js";
+import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import {
     readBuildId,
     readRegistry,
