@@ -14,7 +14,7 @@
 
 import { readFileSync } from "node:fs";
 import { Manifest, settingSpan } from "./manifest.js";
-import { ParamCli, CliError, formatValue, parseValue, formatPin, resourceLines, timerLines } from "./cli.js";
+import { ParamCli, CliError, formatValue, parseValue, formatPin, resourceLines, timerLines, dmaLines } from "./cli.js";
 
 let checks = 0;
 let failures = 0;
@@ -308,5 +308,41 @@ if (timerGroup && timers.length) {
     }
 }
 
-console.log(`\n${checks - failures}/${checks} checks passed (resources and timers included)`);
+// --- dma -------------------------------------------------------------------
+
+const dmaopts = manifest.raw.dmaopts ?? [];
+check("manifest carries the dmaopt table", dmaopts.length > 0, `${dmaopts.length} entries`);
+
+const adc = dmaopts.find((d) => d.device === "ADC");
+if (adc && timerGroup) {
+    // The real config has `dma ADC 1 0` and `dma pin A02 0`.
+    const adcBytes = board.groups.get(adc.pgn);
+    adcBytes[adc.off] = 0; // option 0 on the first ADC
+
+    const timerBytes = board.groups.get(timerGroup.pgn);
+    const tagA02 = ((0 + 1) << 4) | 2;
+    timerBytes[timerGroup.elem_size] = tagA02; // second slot's ioTag
+    timerBytes[timerGroup.elem_size + 2] = 0; // its dmaopt
+
+    const lines = await dmaLines(manifest, board);
+    check("dma line for a peripheral matches the board config", lines.includes("dma ADC 1 0"),
+        lines.filter((l) => l.includes("ADC")).join(" | "));
+    check("dma line for a pin matches the board config", lines.includes("dma pin A02 0"),
+        lines.filter((l) => l.includes("pin")).join(" | "));
+
+    // -1 means unset and must be omitted, not printed.
+    adcBytes[adc.off] = 0xff; // -1 as int8
+    const without = await dmaLines(manifest, board);
+    check("an unset dmaopt is omitted", !without.some((l) => l.startsWith("dma ADC 1")),
+        without.filter((l) => l.includes("ADC")).join(" | "));
+
+    adcBytes[adc.off] = 0;
+    const dumped = await cli.dump("all");
+    check("dump includes the dma block", dumped.includes("# dma"));
+    check("dump includes the dma lines", dumped.includes("dma ADC 1 0") && dumped.includes("dma pin A02 0"));
+} else {
+    console.warn("WARN  no ADC dmaopt entry; dma formatting not exercised");
+}
+
+console.log(`\n${checks - failures}/${checks} checks passed (resources, timers and dma included)`);
 process.exit(failures ? 1 : 0);
