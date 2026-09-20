@@ -41,6 +41,24 @@ export function formatPin(tag) {
     return `${String.fromCharCode("A".charCodeAt(0) + port)}${String(pin).padStart(2, "0")}`;
 }
 
+/** The inverse of formatPin: "A09" -> 0x19, "NONE" -> 0. */
+export function parsePin(text) {
+    const raw = text.trim().toUpperCase();
+    if (raw === "NONE" || raw === "") {
+        return 0;
+    }
+    const match = /^([A-H])(\d{1,2})$/.exec(raw);
+    if (!match) {
+        throw new CliError(`'${text}' is not a pin name such as A09`);
+    }
+    const port = match[1].charCodeAt(0) - "A".charCodeAt(0);
+    const pin = Number(match[2]);
+    if (pin > 15) {
+        throw new CliError(`'${text}' has no pin ${pin}`);
+    }
+    return ((port + 1) << 4) | pin;
+}
+
 /**
  * The `resource` block of a dump.
  *
@@ -478,6 +496,141 @@ export class ParamCli {
         return "Saving";
     }
 
+    /**
+     * `resource <OWNER> <index> <pin|NONE>`.
+     *
+     * The write side of the resource block. Without this a backup is
+     * write-only: the dump lists the pins and nothing can put them back.
+     */
+    async resource(argument) {
+        const [owner, indexText, pinText] = argument.trim().split(/\s+/);
+        if (!owner || !indexText || pinText === undefined) {
+            throw new CliError("Expected `resource <OWNER> <index> <pin|NONE>`");
+        }
+
+        const entry = (this.manifest.raw.resources ?? []).find(
+            (r) => r.name?.toUpperCase() === owner.toUpperCase(),
+        );
+        if (!entry) {
+            throw new CliError(`Unknown resource: ${owner}`);
+        }
+
+        const index = Number(indexText);
+        if (!Number.isInteger(index) || index < 1 || index > entry.count) {
+            throw new CliError(`${owner} has indices 1..${entry.count}`);
+        }
+
+        const tag = parsePin(pinText);
+        await this.io.writeRange(entry.pgn, entry.off + entry.stride * (index - 1), [tag]);
+        return `resource ${entry.name} ${index} ${formatPin(tag)}`;
+    }
+
+    /** `timer <pin> AF<n>|NONE` -- assigns a pin to one of its timers. */
+    async timer(argument) {
+        const [pinText, functionText] = argument.trim().split(/\s+/);
+        if (!pinText || functionText === undefined) {
+            throw new CliError("Expected `timer <pin> AF<n>|NONE`");
+        }
+
+        const tag = parsePin(pinText);
+        const group = [...this.manifest.groups.values()].find(
+            (pg) => pg.symbol === "timerIOConfig_SystemArray",
+        );
+        if (!group) {
+            throw new CliError("This firmware has no timer configuration");
+        }
+
+        let index = 0;
+        if (!/^NONE$/i.test(functionText)) {
+            const wanted = /^AF(\d+)$/i.exec(functionText);
+            if (!wanted) {
+                throw new CliError(`Expected AF<n> or NONE, got '${functionText}'`);
+            }
+            // Which of this pin's timer entries carries that alternate
+            // function -- the inverse of how the line was produced.
+            const matches = (this.manifest.raw.timers ?? []).filter((t) => t.tag === tag);
+            const found = matches.findIndex((t) => t.af === Number(wanted[1]));
+            if (found < 0) {
+                throw new CliError(`${pinText} has no timer with AF${wanted[1]}`);
+            }
+            index = found + 1;
+        }
+
+        const slot = await this.#timerSlotFor(tag, group);
+        await this.io.writeRange(group.pgn, slot * group.elem_size, [tag, index]);
+        return `timer ${formatPin(tag)} ${index ? functionText.toUpperCase() : "NONE"}`;
+    }
+
+    /** The slot already holding this pin, or the first free one. */
+    async #timerSlotFor(tag, group) {
+        let free = -1;
+        for (let slot = 0; slot < group.length; slot++) {
+            const view = await this.io.readRange(group.pgn, slot * group.elem_size, 1);
+            const existing = view.getUint8(0);
+            if (existing === tag) {
+                return slot;
+            }
+            if (!existing && free < 0) {
+                free = slot;
+            }
+        }
+        if (free < 0) {
+            throw new CliError("No free timer slots");
+        }
+        return free;
+    }
+
+    /** `dma <device> <index> <opt>` or `dma pin <pin> <opt>`. */
+    async dma(argument) {
+        const parts = argument.trim().split(/\s+/);
+        if (parts.length < 3) {
+            throw new CliError("Expected `dma <device> <index> <opt>` or `dma pin <pin> <opt>`");
+        }
+        const option = Number(parts[2]);
+        if (!Number.isInteger(option)) {
+            throw new CliError(`'${parts[2]}' is not a DMA option`);
+        }
+        const asByte = option < 0 ? option + 256 : option;
+
+        if (parts[0].toLowerCase() === "pin") {
+            const tag = parsePin(parts[1]);
+            const group = [...this.manifest.groups.values()].find(
+                (pg) => pg.symbol === "timerIOConfig_SystemArray",
+            );
+            if (!group) {
+                throw new CliError("This firmware has no timer configuration");
+            }
+            const slot = await this.#timerSlotFor(tag, group);
+            await this.io.writeRange(group.pgn, slot * group.elem_size + 2, [asByte]);
+            return `dma pin ${formatPin(tag)} ${option}`;
+        }
+
+        const entry = (this.manifest.raw.dmaopts ?? []).find(
+            (d) => d.device.toUpperCase() === parts[0].toUpperCase(),
+        );
+        if (!entry) {
+            throw new CliError(`Unknown DMA device: ${parts[0]}`);
+        }
+        const index = Number(parts[1]);
+        if (!Number.isInteger(index) || index < 1 || index > entry.count) {
+            throw new CliError(`${entry.device} has indices 1..${entry.count}`);
+        }
+        await this.io.writeRange(entry.pgn, entry.off + entry.stride * (index - 1), [asByte]);
+        return `dma ${entry.device} ${index} ${option}`;
+    }
+
+    /**
+     * `defaults [nosave|nosave bare]`.
+     *
+     * A dump opens with this, so replaying one starts from a known state
+     * rather than merging onto whatever was there.
+     */
+    async defaults(argument) {
+        const save = !/\bnosave\b/i.test(argument);
+        await this.io.resetConfig();
+        return save ? "Resetting to defaults and saving" : "Resetting to defaults";
+    }
+
     async execute(line) {
         const text = line.trim();
         if (!text || text.startsWith("#")) {
@@ -498,6 +651,19 @@ export class ParamCli {
                 return this.diff(argument);
             case "save":
                 return this.save();
+            case "resource":
+                return this.resource(argument);
+            case "timer":
+                return this.timer(argument);
+            case "dma":
+                return this.dma(argument);
+            case "defaults":
+                return this.defaults(argument);
+            case "batch":
+                // The firmware used a batch to defer errors across a replay.
+                // Nothing here needs deferring, but a dump emits these lines,
+                // so they must be accepted rather than rejected.
+                return "";
             case "help":
                 return [
                     "get      show a setting's value",
