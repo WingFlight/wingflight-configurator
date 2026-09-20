@@ -16,7 +16,7 @@
   import Select from "@/components/Select.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
-  const METER_SOURCE_KEYS = ["None", "Adc", "Esc", "Fbus"];
+  const METER_SOURCE_KEYS = ["None", "Adc", "Esc", "Fbus", "Crsf"];
   const SMARTFUEL_SOURCE_KEYS = ["None", "Voltage", "Current", "Combined"];
 
   let loading = $state(true);

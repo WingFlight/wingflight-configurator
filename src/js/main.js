@@ -461,6 +461,11 @@ export function updateTabList(features) {
         (port) => port.functions.includes('FBUS_OUT') || port.functions.includes('SPORT_MASTER'),
     );
     $('#tabs ul.mode-connected li.tab_fbus_sensors').toggle(fbusMasterActive);
+
+    const hasCrsfSensorsPort = (FC.SERIAL_CONFIG?.ports ?? []).some(
+        (port) => port.functions.includes('CRSF_SENSORS'),
+    );
+    $('#tabs ul.mode-connected li.tab_crsf_sensors').toggle(hasCrsfSensorsPort);
 }
 
 function zeroPad(value, width) {

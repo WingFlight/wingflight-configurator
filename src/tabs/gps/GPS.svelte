@@ -14,7 +14,7 @@
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS"];
+  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
 
   // GPS_DATA.chn is a fixed-size channel-tracking array padded with unused
   // zero-filled slots past the actual satellite count - cap how many rows
@@ -95,17 +95,24 @@
   let fbusSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("FBUS"),
   );
+  let crsfSelected = $derived(
+    FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("CRSF"),
+  );
+  // FBUS and CRSF both receive GPS as pushed sensor telemetry instead of
+  // driving a GPS receiver over a serial port of their own.
+  let pushedDataSelected = $derived(fbusSelected || crsfSelected);
   let ubloxSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("UBLOX"),
   );
   let autoConfigEnabled = $derived(
-    !fbusSelected && FC.GPS_CONFIG?.auto_config > 0,
+    !pushedDataSelected && FC.GPS_CONFIG?.auto_config > 0,
   );
 
-  // FBUS carries its own GPS link - the auto baud/config knobs and the
-  // sat-signal panel don't apply, matching legacy's refreshGpsProviderUi().
+  // The pushed-data transports carry their own GPS link - the auto
+  // baud/config knobs and the sat-signal panel don't apply, matching
+  // legacy's refreshGpsProviderUi().
   $effect(() => {
-    if (fbusSelected && FC.GPS_CONFIG) {
+    if (pushedDataSelected && FC.GPS_CONFIG) {
       FC.GPS_CONFIG.auto_baud = 0;
       FC.GPS_CONFIG.auto_config = 0;
     }
@@ -234,7 +241,7 @@
         />
       </Field>
 
-      {#if !fbusSelected}
+      {#if !pushedDataSelected}
         {#if autoConfigEnabled && ubloxSelected}
           <Field id="gps-ubx-sbas" label="configurationGPSubxSbas">
             <Select
@@ -329,7 +336,7 @@
             <td>{$i18n.t("gpsSpeed")}</td>
             <td>{FC.GPS_DATA.speed} cm/s</td>
           </tr>
-          {#if !fbusSelected}
+          {#if !pushedDataSelected}
             <tr>
               <td>{$i18n.t("gpsSats")}</td>
               <td>{FC.GPS_DATA.numSat}</td>
@@ -343,7 +350,7 @@
       </table>
     </Section>
 
-    {#if !fbusSelected}
+    {#if !pushedDataSelected}
       <Section label="gpsSignalStrHead">
         <table class="cf_table">
           <thead>

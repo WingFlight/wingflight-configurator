@@ -4,6 +4,7 @@ import "./beepers.js";
 import "./blackbox.js";
 import "./cli.js";
 import "./configuration.js";
+import "./crsf_sensors.js";
 import "./curves.js";
 import "./esc_programming.js";
 import "./failsafe.js";

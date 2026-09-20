@@ -239,6 +239,8 @@ export const MSPCodes = {
     // 0x5F14, not 0x5F12/0x5F13 - those are claimed by
     // MSP2_WING_RX_SERIAL_TRIAL/MSP2_WING_RX_INPUT_BACKUP_TRIAL above.
     MSP2_WING_ESC_SENSOR_TRIAL:       0x5F14,
+    // 0x5F15: 0x5F10-0x5F14 are taken by the entries above.
+    MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
