@@ -124,6 +124,14 @@
     FC.SMARTFUEL_CONFIG.chargeDropRate = Math.round(v * 100);
   }
 
+  // Stored as hundredths of a volt per cell at full power; shown in volts.
+  function getSagGain() {
+    return FC.SMARTFUEL_CONFIG.sagGain / 100;
+  }
+  function setSagGain(v) {
+    FC.SMARTFUEL_CONFIG.sagGain = Math.round(v * 100);
+  }
+
   function activateBatteryProfile(index) {
     if (index === FC.BATTERY_STATE.batteryProfile) {
       return;
@@ -481,17 +489,17 @@
           <Field
             id="power-smartfuel-sag"
             label="powerSmartFuelSagGain"
-            unit="%"
+            unit="V"
           >
             {#snippet tooltip()}
               <Tooltip help="powerSmartFuelSagGainHelp" />
             {/snippet}
             <NumberInput
               id="power-smartfuel-sag"
-              bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+              bind:value={getSagGain, setSagGain}
               min={0}
-              max={100}
-              step={1}
+              max={1}
+              step={0.01}
             />
           </Field>
         {/if}
