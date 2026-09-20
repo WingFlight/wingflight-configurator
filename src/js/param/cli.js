@@ -49,7 +49,7 @@ export function formatPin(tag) {
  * pins, and the pins themselves are ordinary group bytes. `io.readRange` is
  * the same addressed read everything else uses.
  */
-export async function resourceLines(manifest, io, { onlyAssigned = true } = {}) {
+export async function resourceLines(manifest, io) {
     const entries = manifest.raw.resources ?? [];
     const lines = [];
 
@@ -70,9 +70,27 @@ export async function resourceLines(manifest, io, { onlyAssigned = true } = {}) 
             } catch {
                 continue;
             }
-            if (!tag && onlyAssigned) {
-                continue;
+
+            // An unassigned pin is usually just noise, but one that the
+            // defaults *did* assign has been deliberately cleared, and saying
+            // so is the whole point of the line: a restore that omits
+            // `resource ADC_EXT 1 NONE` leaves the pin assigned. The firmware
+            // printed these for the same reason.
+            if (!tag) {
+                let defaultTag = 0;
+                if (io.readDefaultRange) {
+                    try {
+                        const view = await io.readDefaultRange(entry.pgn, offset, 1);
+                        defaultTag = view.getUint8(0);
+                    } catch {
+                        defaultTag = 0;
+                    }
+                }
+                if (!defaultTag) {
+                    continue;
+                }
             }
+
             lines.push(`resource ${entry.name} ${index + 1} ${formatPin(tag)}`);
         }
     }
