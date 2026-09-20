@@ -1239,7 +1239,7 @@
         "message": "Contributing"
     },
     "defaultContributingText": {
-        "message": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
+        "message": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
     },
     "defaultDonateHead": {
         "message": "Supporting Rotorflight"
@@ -1260,10 +1260,10 @@
         "message": "Wingflight documentation is available in release notes and website.<br /><br />"
     },
     "defaultDocumentation1": {
-        "message": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "The Wingflight documentation is a great resource for information, it can be found <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation2": {
-        "message": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "The latest news can be read on the Wingflight website, <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation3": {
         "message": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/WingFlight/wingflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
@@ -1274,26 +1274,14 @@
     "defaultSupportSubline1": {
         "message": "Support Sources"
     },
-    "defaultSupportSubline2": {
-        "message": "Betaflight Information"
-    },
     "defaultSupport": {
         "message": "For support please search the forums and website first or contact your vendor.<br /><br />"
     },
     "defaultSupport1": {
         "message": "<a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Website</a>"
     },
-    "defaultSupport2": {
-        "message": "<a href=\"http://www.rcgroups.com/forums/showthread.php?t=4000345\" target=\"_blank\" rel=\"noopener noreferrer\">RC Groups Rotorflight thread</a>"
-    },
     "defaultSupport3": {
         "message": "<a href=\"https://discord.com/invite/aEyyAJTXRw\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight discussion on Discord</a>"
-    },
-    "defaultSupport4": {
-        "message": "<a href=\"https://betaflight.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Betaflight Website</a>"
-    },
-    "defaultSupport5": {
-        "message": "<a href=\"https://github.com/betaflight/betaflight/wiki\" target=\"_blank\" rel=\"noopener noreferrer\">Betaflight Wiki</a>"
     },
     "statusButtonResetZaxis": {
         "message": "Reset Z axis, offset: 0 deg"
@@ -1344,7 +1332,7 @@
         "message": "Arming Allowed"
     },
     "statusArmingDisableFlagsTooltip": {
-        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
+        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
     },
     "statusArmingDisableFlagsTooltipNO_GYRO": {
         "message": "A gyro was not detected",
@@ -1451,6 +1439,10 @@
     },
     "statusArmingDisableFlagsTooltipOVERRIDE": {
         "message": "Servo Override or Mixer Override is active"
+    },
+    "statusArmingDisableFlagsTooltipBACKUP_RX": {
+        "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
+        "description": "Message that pops up to describe the BACKUP_RX arming disable flag"
     },
     "statusArmingDisableFlagsTooltipARM_SWITCH": {
         "message": "Arm switch is activated while other arming disable conditions are active",
@@ -2198,6 +2190,9 @@
     "dialogCopyRateProfileText": {
         "message": "Copy values from the current rateprofile to"
     },
+    "dialogCopyTvProfileText": {
+        "message": "Copy values from the current TV profile to"
+    },
     "dialogCopyProfileTitle": {
         "message": "Copy Profile Values"
     },
@@ -2345,6 +2340,51 @@
     },
     "receiverSerialPinSwapHelp": {
         "message": "<p>Swaps the Rx and Tx pins.</p><p><strong>Note:</strong> This option is NOT supported on F4 MCUs, see help.</p>"
+    },
+    "receiverWiringDetectButton": {
+        "message": "Detect Wiring"
+    },
+    "receiverWiringDetectHelp": {
+        "message": "<p>Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab.</p><p><strong>Note:</strong> requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection.</p><p>Your transmitter must be powered on and bound to the receiver - detection can't find a wiring combination if the receiver has no signal to give it in the first place.</p><p>Only available while disarmed - it cycles the receiver wiring live and could interrupt control input.</p>"
+    },
+    "receiverWiringDetectSaveFirst": {
+        "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
+    },
+    "receiverWiringDetectArmedFirst": {
+        "message": "Disarm first - wiring detection cycles the receiver connection live and can't run while armed."
+    },
+    "receiverWiringDetectWizardTitle": {
+        "message": "Detect RX Wiring"
+    },
+    "receiverBackupWiringDetectWizardTitle": {
+        "message": "Detect Backup RX Wiring"
+    },
+    "receiverWiringDetectWizardStep1": {
+        "message": "Step 1 of 2: Scanning"
+    },
+    "receiverWiringDetectWizardStep2": {
+        "message": "Step 2 of 2: Result"
+    },
+    "receiverWiringDetectScanning": {
+        "message": "Trying combination $1 of $2…"
+    },
+    "receiverWiringDetectSuccess": {
+        "message": "Signal found — Inverted: $1, Half-Duplex: $2, Pin Swap: $3. Save and reboot to keep it, or Close to discard and restore the previous setting."
+    },
+    "receiverWiringDetectFailed": {
+        "message": "No signal found on any wiring combination for this protocol. Make sure the transmitter is powered on and bound to the receiver, check the protocol selection and connections, then try again."
+    },
+    "receiverWiringDetectRejected": {
+        "message": "Wiring detection was rejected - it needs a serial receiver protocol with an assigned UART, and the aircraft must be disarmed."
+    },
+    "receiverWiringDetectUnsupported": {
+        "message": "Wiring detection is not supported by this firmware build."
+    },
+    "receiverWiringDetectWizardRetry": {
+        "message": "Retry"
+    },
+    "receiverWiringDetectWizardClose": {
+        "message": "Close"
     },
     "receiverStickCenter": {
         "message": "Stick Center"
@@ -2891,10 +2931,10 @@
         "message": "Examples:"
     },
     "adjustmentsExample1": {
-        "message": "Use a three position switch on AUX1 to select between Pitch/Roll P, I and D and another three position switch on AUX2 to increase or decrease the value when held up or down."
+        "message": "Use a three position switch on CH #5 to select between Pitch/Roll P, I and D and another three position switch on CH #6 to increase or decrease the value when held up or down."
     },
     "adjustmentsExample2": {
-        "message": "Use a three position switch on AUX4 to select enable Rate Profile Selection via the same three position switch on the same channel."
+        "message": "Use a three position switch on CH #8 to select enable Rate Profile Selection via the same three position switch on the same channel."
     },
     "adjustmentsColumnMode": {
         "message": "Mode"
@@ -3027,6 +3067,9 @@
     },
     "adjustmentsGroupGovernor": {
         "message": "Governor (Heli)"
+    },
+    "adjustmentsGroupMixer": {
+        "message": "Mixer"
     },
     "adjustmentsFunctionRateProfile": {
         "message": "Rate Profile Selection"
@@ -3253,6 +3296,15 @@
     "adjustmentsFunctionTVHoldGain": {
         "message": "TV Attitude Hold Gain"
     },
+    "adjustmentsFunctionTVProfile": {
+        "message": "TV Profile Selection"
+    },
+    "adjustmentsFunctionFlapCompensationGain": {
+        "message": "Flap Compensation Gain"
+    },
+    "adjustmentsFunctionDiffThrustYawGain": {
+        "message": "Differential Thrust Yaw Gain"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -3379,6 +3431,9 @@
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
     },
+    "servoLiveTrimHelp": {
+        "message": "Live trim in µs from a Mapped ServoTrim adjustment. The servo Center is unchanged; this is not saved and starts from zero after a reboot."
+    },
     "servoTrimColumn": {
         "message": "Trim"
     },
@@ -3441,6 +3496,15 @@
     },
     "servoSignal": {
         "message": "PWM Signal"
+    },
+    "servoCurveActive": {
+        "message": "Balance curve active - edit on the Curves tab"
+    },
+    "servoCurveActiveCloned": {
+        "message": "Cloned from PWM $1's balance curve - edit on the Curves tab"
+    },
+    "servoCurveEdit": {
+        "message": "Edit balance curve on the Curves tab"
     },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
@@ -3572,46 +3636,46 @@
         "message": "RC Throttle (bypass)"
     },
     "mixerInputRCChannelAux1": {
-        "message": "RC Channel AUX1"
+        "message": "CH #5"
     },
     "mixerInputRCChannelAux2": {
-        "message": "RC Channel AUX2"
+        "message": "CH #6"
     },
     "mixerInputRCChannelAux3": {
-        "message": "RC Channel AUX3"
+        "message": "CH #7"
     },
     "mixerInputRCChannel8": {
-        "message": "RC Channel #8"
+        "message": "CH #8"
     },
     "mixerInputRCChannel9": {
-        "message": "RC Channel #9"
+        "message": "CH #9"
     },
     "mixerInputRCChannel10": {
-        "message": "RC Channel #10"
+        "message": "CH #10"
     },
     "mixerInputRCChannel11": {
-        "message": "RC Channel #11"
+        "message": "CH #11"
     },
     "mixerInputRCChannel12": {
-        "message": "RC Channel #12"
+        "message": "CH #12"
     },
     "mixerInputRCChannel13": {
-        "message": "RC Channel #13"
+        "message": "CH #13"
     },
     "mixerInputRCChannel14": {
-        "message": "RC Channel #14"
+        "message": "CH #14"
     },
     "mixerInputRCChannel15": {
-        "message": "RC Channel #15"
+        "message": "CH #15"
     },
     "mixerInputRCChannel16": {
-        "message": "RC Channel #16"
+        "message": "CH #16"
     },
     "mixerInputRCChannel17": {
-        "message": "RC Channel #17"
+        "message": "CH #17"
     },
     "mixerInputRCChannel18": {
-        "message": "RC Channel #18"
+        "message": "CH #18"
     },
     "mixerOutputNone": {
         "message": "-"
@@ -3790,11 +3854,17 @@
     "curvesTitleGain": {
         "message": "Gain Curves"
     },
+    "curvesTitleServo": {
+        "message": "Servo Balance Curves"
+    },
     "curveCategoryMixer": {
         "message": "Mixer"
     },
     "curveCategoryGain": {
         "message": "Gain"
+    },
+    "curveCategoryServo": {
+        "message": "Servo"
     },
     "curveCategoryHelpMixer": {
         "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
@@ -3802,11 +3872,32 @@
     "curveCategoryHelpGain": {
         "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
     },
+    "curveCategoryHelpServo": {
+        "message": "Servo curves add a small corrective delta to a single servo's own output after mixing (and after geometry correction, if enabled) - use this to match the physical travel of two or more servos driving the same control surface (e.g. dual ailerons) so they don't fight each other at the extremes."
+    },
     "curveExplainMixer": {
         "message": "X axis: this rule's input value.\nY axis: the value used in its place once weighted onto the output.\n\nBoth axes share the rule's own -1000..1000 scale. The default diagonal line passes the input straight through - reshape it for a non-linear response, e.g. more resolution near center or a dead zone."
     },
     "curveExplainGain": {
         "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per-axis on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+    },
+    "curveExplainServo": {
+        "message": "X axis: this servo's own output, -100% to +100%.\nY axis: a correction added on top of it at that point, -10% to +10%.\n\nThe default flat line at 0 adds no correction. Nudge it up or down to trim one servo's travel relative to its paired servo, especially near full deflection."
+    },
+    "servoCurveLabel": {
+        "message": "Servo $1"
+    },
+    "curveNoServosConfigured": {
+        "message": "No servos configured - connect and configure servos on the Servos tab first."
+    },
+    "curveEditLabel": {
+        "message": "Editing:"
+    },
+    "curveCompareLabel": {
+        "message": "Compare with:"
+    },
+    "curveCompareNone": {
+        "message": "None"
     },
     "curveReset": {
         "message": "Reset Curve"
@@ -3994,6 +4085,18 @@
     "mixerRuleCondition": {
         "message": "Condition"
     },
+    "mixerRuleRole": {
+        "message": "Role"
+    },
+    "mixerRoleNone": {
+        "message": "-"
+    },
+    "mixerRoleFlapCompensation": {
+        "message": "Flap Compensation"
+    },
+    "mixerRoleDifferentialThrustYaw": {
+        "message": "Differential Thrust Yaw"
+    },
     "mixerRuleActionsHeader": {
         "message": ""
     },
@@ -4041,6 +4144,9 @@
     },
     "mixerChannelSummaryInput": {
         "message": "Input"
+    },
+    "mixerCompensationRole": {
+        "message": "Compensation"
     },
     "mixerRuleMoveUp": {
         "message": "Move up"
@@ -4106,7 +4212,16 @@
         "message": "Flaps"
     },
     "mixerWizardFlapsEnable": {
-        "message": "Add a flap servo (driven by an aux channel)"
+        "message": "Add flaps (driven by an aux channel)"
+    },
+    "mixerWizardFlapServos1": {
+        "message": "1 servo (shared Y-cable channel)"
+    },
+    "mixerWizardFlapServos2": {
+        "message": "2 independent servos"
+    },
+    "mixerWizardFlapsCompensationHint": {
+        "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
@@ -4255,6 +4370,9 @@
     "motorsEscTelemetryProtocolSrxl2LockedHelp": {
         "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs report telemetry automatically over that same bus, so no separate telemetry protocol needs to be chosen."
     },
+    "motorsEscTelemetryProtocolFbusHelp": {
+        "message": "FrSky F.BUS reads telemetry over its own dedicated port, not this module's ESC Telemetry one. Assign a UART the <i>FBUS Out</i> or <i>S.PORT Master</i> function on the <i>Configuration</i> tab -- see the <i>FBUS/S.Port Sensors</i> tab to confirm it's actually receiving."
+    },
     "motorsEscTelemetryHalfDuplex": {
         "message": "Half-Duplex"
     },
@@ -4269,6 +4387,48 @@
     },
     "motorsEscTelemetryPinswapHelp": {
         "message": "<p>Swaps the Rx and Tx pins.</p><p><strong>Note:</strong> This option is NOT supported on F4 MCUs, see help.</p>"
+    },
+    "motorsEscWiringDetectButton": {
+        "message": "Detect Wiring"
+    },
+    "motorsEscWiringDetectHelp": {
+        "message": "<p>Tries every combination of Half-Duplex / Pin Swap for the selected telemetry protocol and stops as soon as one produces a valid frame. Nothing is saved until you press Save on this tab.</p><p><strong>Note:</strong> requires no unsaved changes first - it tests whatever protocol is currently saved on the flight controller, not a pending selection.</p><p>The ESC(s) must be powered and outputting telemetry - detection can't find a wiring combination if nothing is being sent in the first place.</p><p>Only available while disarmed - it cycles the ESC telemetry wiring live while motors could be spinning.</p>"
+    },
+    "motorsEscWiringDetectSaveFirst": {
+        "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
+    },
+    "motorsEscWiringDetectArmedFirst": {
+        "message": "Disarm first - wiring detection cycles the ESC telemetry connection live and can't run while armed."
+    },
+    "motorsEscWiringDetectWizardTitle": {
+        "message": "Detect ESC Telemetry Wiring"
+    },
+    "motorsEscWiringDetectWizardStep1": {
+        "message": "Step 1 of 2: Scanning"
+    },
+    "motorsEscWiringDetectWizardStep2": {
+        "message": "Step 2 of 2: Result"
+    },
+    "motorsEscWiringDetectScanning": {
+        "message": "Trying combination $1 of $2…"
+    },
+    "motorsEscWiringDetectSuccess": {
+        "message": "Signal found — Half-Duplex: $1, Pin Swap: $2. Save and reboot to keep it, or Close to discard and restore the previous setting."
+    },
+    "motorsEscWiringDetectFailed": {
+        "message": "No valid frame found on any wiring combination for this protocol. Make sure the ESC(s) are powered and outputting telemetry, check the protocol selection and connections, then try again."
+    },
+    "motorsEscWiringDetectRejected": {
+        "message": "Wiring detection was rejected - either it isn't available for this telemetry protocol (Castle Link, F.BUS and SRXL2 ESC telemetry each use their own dedicated connection, not a generic UART), no port is assigned, or the aircraft became armed."
+    },
+    "motorsEscWiringDetectUnsupported": {
+        "message": "Wiring detection is not supported by this firmware build."
+    },
+    "motorsEscWiringDetectWizardRetry": {
+        "message": "Retry"
+    },
+    "motorsEscWiringDetectWizardClose": {
+        "message": "Close"
     },
     "motorsUnsyncedPwm": {
         "message": "Unsyncronised ESC update"
@@ -4563,6 +4723,24 @@
     },
     "cliLoadFromFileBtn": {
         "message": "Load from file"
+    },
+    "cliBackupToFileBtn": {
+        "message": "Backup"
+    },
+    "cliBackupInProgress": {
+        "message": "Running backup..."
+    },
+    "dialogCliBackupChoiceTitle": {
+        "message": "Backup Configuration"
+    },
+    "dialogCliBackupChoiceNote": {
+        "message": "Choose which backup to run. The result is captured from the CLI and saved to a file."
+    },
+    "dialogCliBackupChoiceDiffButton": {
+        "message": "Backup (diff all)"
+    },
+    "dialogCliBackupChoiceDumpButton": {
+        "message": "Backup (dump all)"
     },
     "cliConfirmSnippetDialogTitle": {
         "message": "Loaded file <strong>{{fileName}}</strong>. Review the loaded commands"
@@ -4873,6 +5051,240 @@
     "firmwareFlasherFullChipEraseDescription": {
         "message": "Wipes all configuration data currently stored on the board."
     },
+    "firmwareFlasherBackupModeNone": {
+        "message": "Don't back up"
+    },
+    "firmwareFlasherBackupBeforeFlashingDescription": {
+        "message": "Walks through backing up your current settings before flashing, then restoring them once the new firmware boots. Only available when flashing over a serial port (not DFU)."
+    },
+    "firmwareFlasherBackupTypeDiff": {
+        "message": "Diff (changed settings only)"
+    },
+    "firmwareFlasherBackupTypeDump": {
+        "message": "Dump (full configuration)"
+    },
+    "firmwareFlasherBackupTypeDescription": {
+        "message": "Diff is smaller and faster to capture/restore; Dump records every setting explicitly."
+    },
+    "firmwareFlasherBackupSkippedNoPort": {
+        "message": "No serial port selected, skipping pre-flash backup."
+    },
+    "firmwareFlasherBackupSkippedDfu": {
+        "message": "Board is in DFU mode, skipping pre-flash backup and restore."
+    },
+    "firmwareFlasherRestoreSkippedFlashFailed": {
+        "message": "Flashing did not complete successfully, skipping restore."
+    },
+    "firmwareFlasherWizardBackupTitle": {
+        "message": "Back Up Configuration"
+    },
+    "firmwareFlasherWizardConnecting": {
+        "message": "Connecting to flight controller..."
+    },
+    "firmwareFlasherWizardBackupRunning": {
+        "message": "Running {{command}}..."
+    },
+    "firmwareFlasherWizardBackupReady": {
+        "message": "Backup captured -- it's held in memory and will be offered for restore automatically once the new firmware boots. Saving a copy to a file below is optional, but recommended in case anything goes wrong."
+    },
+    "firmwareFlasherWizardBackupForeignFirmware": {
+        "message": "This board isn't currently running Wingflight, so this backup won't be offered for restore automatically after flashing -- its settings aren't guaranteed to carry over. Save a copy below if you want it for reference."
+    },
+    "firmwareFlasherWizardBackupSaved": {
+        "message": "Saved"
+    },
+    "firmwareFlasherWizardBackupFailed": {
+        "message": "Could not connect to the flight controller to run the backup."
+    },
+    "firmwareFlasherWizardSaveBackupFile": {
+        "message": "Save Backup File..."
+    },
+    "firmwareFlasherWizardContinueToFlash": {
+        "message": "Continue to Flash"
+    },
+    "firmwareFlasherWizardCancel": {
+        "message": "Cancel"
+    },
+    "firmwareFlasherWizardRetry": {
+        "message": "Retry"
+    },
+    "firmwareFlasherWizardSelectPort": {
+        "message": "Select Port..."
+    },
+    "firmwareFlasherWizardSkip": {
+        "message": "Skip"
+    },
+    "firmwareFlasherWizardClose": {
+        "message": "Close"
+    },
+    "firmwareFlasherWizardRestoreTitle": {
+        "message": "Restore Configuration"
+    },
+    "firmwareFlasherWizardRestorePrompt": {
+        "message": "Flashing complete. Restore your saved configuration onto the new firmware now?"
+    },
+    "firmwareFlasherWizardRestoreNow": {
+        "message": "Restore Now"
+    },
+    "firmwareFlasherWizardRestoreWaiting": {
+        "message": "Waiting for the new firmware to finish booting..."
+    },
+    "firmwareFlasherWizardRestoreRunning": {
+        "message": "Restoring your configuration..."
+    },
+    "firmwareFlasherWizardRestoreDone": {
+        "message": "Configuration restored successfully."
+    },
+    "firmwareFlasherWizardRestoreFailed": {
+        "message": "Could not reconnect to restore the configuration automatically. You can retry, or use the CLI tab's Load button to replay the saved backup_pre_flash file manually."
+    },
+    "firmwareFlasherStepSourceTitle": {
+        "message": "Source"
+    },
+    "firmwareFlasherStepConnectTitle": {
+        "message": "Connect"
+    },
+    "firmwareFlasherConnectChoose": {
+        "message": "Choose a port"
+    },
+    "firmwareFlasherConnectDescription": {
+        "message": "Select the port your board is connected on -- or add a new serial, DFU, or Bluetooth device below if you don't see it listed."
+    },
+    "firmwareFlasherAddSerialDevice": {
+        "message": "Add Serial Device"
+    },
+    "firmwareFlasherAddBluetoothDevice": {
+        "message": "Add Bluetooth Device"
+    },
+    "firmwareFlasherAddDfuDevice": {
+        "message": "Add DFU Device"
+    },
+    "firmwareFlasherConnectNativeHint": {
+        "message": "New devices appear automatically when connected -- plug in your board and select it above."
+    },
+    "firmwareFlasherUseLegacyFlasher": {
+        "message": "Prefer the previous flasher? Use the legacy version instead."
+    },
+    "firmwareFlasherLegacyBackToWizard": {
+        "message": "Back to wizard"
+    },
+    "firmwareFlasherStepBoardTitle": {
+        "message": "Board"
+    },
+    "firmwareFlasherSkipToLocalFirmware": {
+        "message": "Flashing from a local file instead? Skip board selection"
+    },
+    "firmwareFlasherSwitchToLocalFirmware": {
+        "message": "Load a local firmware file instead"
+    },
+    "firmwareFlasherSwitchToOnlineFirmware": {
+        "message": "Choose an online firmware version instead"
+    },
+    "firmwareFlasherLocalNoBoardSelected": {
+        "message": "No board selected — this will flash exactly as loaded, with no default config combined in."
+    },
+    "firmwareFlasherGoSelectBoard": {
+        "message": "Select a board"
+    },
+    "firmwareFlasherLocalWillCombineConfig": {
+        "message": "Will combine with {{target}}'s default config at flash time."
+    },
+    "firmwareFlasherBoardWillCombineConfig": {
+        "message": "{{target}} selected -- its default config will be combined at flash time."
+    },
+    "firmwareFlasherBoardSelectedPlain": {
+        "message": "{{target}} selected."
+    },
+    "firmwareFlasherSourceOnlineTitle": {
+        "message": "Online"
+    },
+    "firmwareFlasherSourceOnlineDescription": {
+        "message": "Download an official release or development build for your board."
+    },
+    "firmwareFlasherSourceLocalTitle": {
+        "message": "Local File"
+    },
+    "firmwareFlasherSourceLocalDescription": {
+        "message": "Flash a .hex file (and optional .config) you already have."
+    },
+    "firmwareFlasherStepFirmwareTitle": {
+        "message": "Firmware"
+    },
+    "firmwareFlasherStepBackupTitle": {
+        "message": "Backup"
+    },
+    "firmwareFlasherStepReviewTitle": {
+        "message": "Flash"
+    },
+    "firmwareFlasherStepRestoreTitle": {
+        "message": "Restore"
+    },
+    "firmwareFlasherStepFinishedTitle": {
+        "message": "Finished"
+    },
+    "firmwareFlasherFinishedTitle": {
+        "message": "All done -- the update is complete"
+    },
+    "firmwareFlasherFinishedRestoreSkipped": {
+        "message": "Configuration restore was skipped."
+    },
+    "firmwareFlasherFinishedInstructions": {
+        "message": "Nothing is running any more. You can now close this window or disconnect your board, or click Flash Another Board to update a different one."
+    },
+    "firmwareFlasherDetectUnavailableDfu": {
+        "message": "<strong>{{device}}</strong> connected. Automatic board detection needs a normal serial connection though, so it (along with backup and restore) won't be available this session. A DFU connection is enough to flash new firmware: continue to Firmware below, or select your board manually if you'd like its default config combined at flash time."
+    },
+    "firmwareFlasherDetectBoardCta": {
+        "message": "Detect My Board"
+    },
+    "firmwareFlasherSelectBoardManually": {
+        "message": "Select board manually instead"
+    },
+    "firmwareFlasherTryDetectInstead": {
+        "message": "Try auto-detect instead"
+    },
+    "firmwareFlasherRunBackupCta": {
+        "message": "Back Up Now"
+    },
+    "firmwareFlasherFlashCompleteMessage": {
+        "message": "Firmware flashed successfully."
+    },
+    "firmwareFlasherStartOver": {
+        "message": "Flash Another Board"
+    },
+    "firmwareFlasherNoPortWeb": {
+        "message": "No serial port selected yet."
+    },
+    "firmwareFlasherNoPortNative": {
+        "message": "No serial port selected — choose one from the toolbar above."
+    },
+    "firmwareFlasherSelectPort": {
+        "message": "Select Serial Port"
+    },
+    "firmwareFlasherSelectDfu": {
+        "message": "Select DFU Device"
+    },
+    "firmwareFlasherReadyToFlash": {
+        "message": "Ready to flash: {{target}} — {{version}}"
+    },
+    "firmwareFlasherShowDetails": {
+        "message": "Show details"
+    },
+    "firmwareFlasherHideDetails": {
+        "message": "Hide details"
+    },
+    "firmwareFlasherSaveFirmware": {
+        "message": "Save Firmware (.hex)"
+    },
+    "firmwareFlasherSaveConfig": {
+        "message": "Save Config (.config)"
+    },
+    "firmwareFlasherWizardBack": {
+        "message": "Back"
+    },
+    "firmwareFlasherWizardNext": {
+        "message": "Next"
+    },
     "firmwareFlasherManualPort": {
         "message": "Port"
     },
@@ -4908,6 +5320,9 @@
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersion": {
         "message": "Choose a Firmware version"
+    },
+    "firmwareFlasherVersionCachedLabel": {
+        "message": "{{label}} (cached)"
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersionFor": {
         "message": "Choose a Firmware version for"
@@ -4964,7 +5379,7 @@
         "message": "<strong>Recovery / Lost communication</strong>"
     },
     "firmwareFlasherRecoveryText": {
-        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
+        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
     },
     "firmwareFlasherFirmwareNotLoaded": {
         "message": "Firmware not loaded"
@@ -5351,85 +5766,85 @@
         "message": "Throttle"
     },
     "controlAxisAux1": {
-        "message": "AUX 1"
+        "message": "CH #5"
     },
     "controlAxisAux2": {
-        "message": "AUX 2"
+        "message": "CH #6"
     },
     "controlAxisAux3": {
-        "message": "AUX 3"
+        "message": "CH #7"
     },
     "controlAxisAux4": {
-        "message": "AUX 4"
+        "message": "CH #8"
     },
     "controlAxisAux5": {
-        "message": "AUX 5"
+        "message": "CH #9"
     },
     "controlAxisAux6": {
-        "message": "AUX 6"
+        "message": "CH #10"
     },
     "controlAxisAux7": {
-        "message": "AUX 7"
+        "message": "CH #11"
     },
     "controlAxisAux8": {
-        "message": "AUX 8"
+        "message": "CH #12"
     },
     "controlAxisAux9": {
-        "message": "AUX 9"
+        "message": "CH #13"
     },
     "controlAxisAux10": {
-        "message": "AUX 10"
+        "message": "CH #14"
     },
     "controlAxisAux11": {
-        "message": "AUX 11"
+        "message": "CH #15"
     },
     "controlAxisAux12": {
-        "message": "AUX 12"
+        "message": "CH #16"
     },
     "controlAxisAux13": {
-        "message": "AUX 13"
+        "message": "CH #17"
     },
     "controlAxisAux14": {
-        "message": "AUX 14"
+        "message": "CH #18"
     },
     "controlAxisAux15": {
-        "message": "AUX 15"
+        "message": "CH #19"
     },
     "controlAxisAux16": {
-        "message": "AUX 16"
+        "message": "CH #20"
     },
     "controlAxisAux17": {
-        "message": "AUX 17"
+        "message": "CH #21"
     },
     "controlAxisAux18": {
-        "message": "AUX 18"
+        "message": "CH #22"
     },
     "controlAxisAux19": {
-        "message": "AUX 19"
+        "message": "CH #23"
     },
     "controlAxisAux20": {
-        "message": "AUX 20"
+        "message": "CH #24"
     },
     "controlAxisAux21": {
-        "message": "AUX 21"
+        "message": "CH #25"
     },
     "controlAxisAux22": {
-        "message": "AUX 22"
+        "message": "CH #26"
     },
     "controlAxisAux23": {
-        "message": "AUX 23"
+        "message": "CH #27"
     },
     "controlAxisAux24": {
-        "message": "AUX 24"
+        "message": "CH #28"
     },
     "controlAxisAux25": {
-        "message": "AUX 25"
+        "message": "CH #29"
     },
     "controlAxisAux26": {
-        "message": "AUX 26"
+        "message": "CH #30"
     },
     "controlAxisAux27": {
-        "message": "AUX 27"
+        "message": "CH #31"
     },
     "rssiOptionAUTO": {
         "message": "AUTO"
@@ -5727,6 +6142,30 @@
     },
     "profilesAutoHoverMaxRateHelp": {
         "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
+    },
+    "profilesAutoHoverRollDeadband": {
+        "message": "Auto Hover roll deadband"
+    },
+    "profilesAutoHoverRollDeadbandHelp": {
+        "message": "Percent roll stick deflection above which roll is a free pass-through (pirouette control), same as before; below this, the roll stick is considered centred and Auto Hover captures and holds the current roll, correcting disturbance-driven drift (e.g. torque roll) back to it. Unlike pitch/yaw, roll has no fixed target -- it holds whatever roll the aircraft was in the instant the stick last centred."
+    },
+    "profilesAutoHoverThrottleAssistGain": {
+        "message": "Auto Hover throttle assist gain"
+    },
+    "profilesAutoHoverThrottleAssistGainHelp": {
+        "message": "Percent of throttle range added per second while Auto Hover's pitch correction stays pinned at its max rate, suggesting the aircraft doesn't have enough thrust to hold the hover on the current throttle. 0 disables throttle assist entirely (default) -- throttle stays fully manual. The added throttle is always on top of your own stick, never a replacement for it, and is capped by the throttle assist ceiling below."
+    },
+    "profilesAutoHoverThrottleAssistMax": {
+        "message": "Auto Hover throttle assist ceiling"
+    },
+    "profilesAutoHoverThrottleAssistMaxHelp": {
+        "message": "Hard cap, percent of throttle range, on how much throttle assist can ever add -- it will never exceed this no matter how long the trigger condition lasts. Firmware also enforces an absolute 50% backstop on top of this setting."
+    },
+    "profilesAutoHoverThrottleAssistTriggerMs": {
+        "message": "Auto Hover throttle assist trigger time"
+    },
+    "profilesAutoHoverThrottleAssistTriggerMsHelp": {
+        "message": "Milliseconds the pitch correction must stay pinned at its max rate before throttle assist starts ramping in. Filters brief gusts so a single moment of turbulence doesn't add throttle -- only a sustained shortfall does."
     },
     "profilesAttHoldGain": {
         "message": "Attitude Hold gain"
@@ -6344,7 +6783,7 @@
         "message": "Smart Fuel Sag Gain"
     },
     "powerSmartFuelSagGainHelp": {
-        "message": "Compensates for voltage sag under load. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
+        "message": "Compensates for voltage sag under load. The value is the sag, in volts per cell, expected at full motor power; the compensation scales with the motor output, so a model without a motor gets none. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
     },
     "powerBatteryMinimumCellVoltage": {
         "message": "Minimum Cell Voltage"
@@ -7035,6 +7474,12 @@
     },
     "modeHelp MANUAL": {
         "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
+    },
+    "mode TRADITIONAL": {
+        "message": "TRADITIONAL"
+    },
+    "modeHelp TRADITIONAL": {
+        "message": "Stabilizes rate like normal flight, but feels more like a traditional gyro - the servo snaps back immediately on stick release instead of holding position."
     },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
