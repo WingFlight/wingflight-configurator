@@ -6660,7 +6660,7 @@
         "message": "Smart Fuel Sag Gain"
     },
     "powerSmartFuelSagGainHelp": {
-        "message": "Compensates for voltage sag under load. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
+        "message": "Compensates for voltage sag under load. The value is the sag, in volts per cell, expected at full motor power; the compensation scales with the motor output, so a model without a motor gets none. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
     },
     "powerBatteryMinimumCellVoltage": {
         "message": "Minimum Cell Voltage"
