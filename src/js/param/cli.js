@@ -124,6 +124,61 @@ export async function timerLines(manifest, io) {
 }
 
 /**
+ * The `dma` block of a dump.
+ *
+ * Two kinds of line, from two places. Peripheral options (`dma ADC 1 0`) come
+ * from the table the manifest carries; per-pin options (`dma pin A02 0`) are
+ * the third byte of each timerIOConfig entry. Both are parameter group bytes
+ * underneath.
+ *
+ * A dmaopt is signed: -1 means "unset" and is left out, as the firmware did.
+ */
+export async function dmaLines(manifest, io) {
+    const lines = [];
+
+    for (const entry of manifest.raw.dmaopts ?? []) {
+        const group = manifest.group(entry.pgn);
+        if (!group) {
+            continue;
+        }
+        for (let index = 0; index < entry.count; index++) {
+            const offset = entry.off + entry.stride * index;
+            if (offset + 1 > group.size) {
+                continue;
+            }
+            try {
+                const view = await io.readRange(entry.pgn, offset, 1);
+                const opt = view.getInt8(0);
+                if (opt >= 0) {
+                    lines.push(`dma ${entry.device} ${index + 1} ${opt}`);
+                }
+            } catch {
+                continue;
+            }
+        }
+    }
+
+    // Per-pin options live alongside the timer assignment they belong to.
+    const timerGroup = [...manifest.groups.values()].find((pg) => pg.symbol === "timerIOConfig_SystemArray");
+    if (timerGroup && timerGroup.elem_size >= 3) {
+        for (let slot = 0; slot < timerGroup.length; slot++) {
+            try {
+                const view = await io.readRange(timerGroup.pgn, slot * timerGroup.elem_size, 3);
+                const tag = view.getUint8(0);
+                const opt = view.getInt8(2);
+                if (tag && opt >= 0) {
+                    lines.push(`dma pin ${formatPin(tag)} ${opt}`);
+                }
+            } catch {
+                continue;
+            }
+        }
+    }
+
+    return lines;
+}
+
+/**
  * Render a value the way the firmware's CLI printed it.
  *
  * Lookup settings show their label rather than the number, arrays are
@@ -351,9 +406,11 @@ export class ParamCli {
         }
         const lines = await resourceLines(this.manifest, this.io);
         const timers = await timerLines(this.manifest, this.io);
+        const dma = await dmaLines(this.manifest, this.io);
         return [
             ...(lines.length ? ["", "# resources", ...lines] : []),
             ...(timers.length ? ["", "# timer", ...timers] : []),
+            ...(dma.length ? ["", "# dma", ...dma] : []),
         ];
     }
 
