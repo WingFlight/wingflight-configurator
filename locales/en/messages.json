@@ -6983,6 +6983,9 @@
     "powerBatteryProfile": {
         "message": "Battery $1"
     },
+    "powerBatteryProfileCellCountHelp": {
+        "message": "Number of cells in the battery. Set to 0 to detect the cell count automatically when the battery is connected."
+    },
     "options.show_advanced_firmware_opts.label": {
         "message": "Show advanced firmware flashing options"
     },
