@@ -27,6 +27,59 @@ const SECTION_HEADING = {
 export class CliError extends Error {}
 
 /**
+ * Decode an ioTag into the pin name the CLI printed, e.g. 0x19 -> "A09".
+ *
+ * DEFIO_TAG_MAKE packs the port index (1-based, so that 0 can mean "none")
+ * into the high nibble and the pin into the low one.
+ */
+export function formatPin(tag) {
+    if (!tag) {
+        return "NONE";
+    }
+    const port = (tag >> 4) - 1;
+    const pin = tag & 0x0f;
+    return `${String.fromCharCode("A".charCodeAt(0) + port)}${String(pin).padStart(2, "0")}`;
+}
+
+/**
+ * The `resource` block of a dump.
+ *
+ * These are not runtime state, which is what makes them reproducible here: the
+ * manifest carries the table saying which parameter group holds which owner's
+ * pins, and the pins themselves are ordinary group bytes. `io.readRange` is
+ * the same addressed read everything else uses.
+ */
+export async function resourceLines(manifest, io, { onlyAssigned = true } = {}) {
+    const entries = manifest.raw.resources ?? [];
+    const lines = [];
+
+    for (const entry of entries) {
+        const group = manifest.group(entry.pgn);
+        if (!group || !entry.name) {
+            continue;
+        }
+        for (let index = 0; index < entry.count; index++) {
+            const offset = entry.off + entry.stride * index;
+            if (offset + 1 > group.size) {
+                continue;
+            }
+            let tag;
+            try {
+                const view = await io.readRange(entry.pgn, offset, 1);
+                tag = view.getUint8(0);
+            } catch {
+                continue;
+            }
+            if (!tag && onlyAssigned) {
+                continue;
+            }
+            lines.push(`resource ${entry.name} ${index + 1} ${formatPin(tag)}`);
+        }
+    }
+    return lines;
+}
+
+/**
  * Render a value the way the firmware's CLI printed it.
  *
  * Lookup settings show their label rather than the number, arrays are
@@ -247,12 +300,23 @@ export class ParamCli {
         ];
     }
 
+    /** The resource block, when the board and manifest can supply it. */
+    async #resources() {
+        if (!this.io.readRange || !(this.manifest.raw.resources ?? []).length) {
+            return [];
+        }
+        const lines = await resourceLines(this.manifest, this.io);
+        return lines.length ? ["", "# resources", ...lines] : [];
+    }
+
     async dump(argument = "") {
-        return this.#wrap(await this.#emit({ onlyChanged: false, sections: this.#sectionsFor(argument) }));
+        const body = await this.#emit({ onlyChanged: false, sections: this.#sectionsFor(argument) });
+        return this.#wrap([...(await this.#resources()), ...body]);
     }
 
     async diff(argument = "") {
-        return this.#wrap(await this.#emit({ onlyChanged: true, sections: this.#sectionsFor(argument) }));
+        const body = await this.#emit({ onlyChanged: true, sections: this.#sectionsFor(argument) });
+        return this.#wrap([...(await this.#resources()), ...body]);
     }
 
     #sectionsFor(argument) {
