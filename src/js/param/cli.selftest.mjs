@@ -99,8 +99,18 @@ function fakeBoard(manifest) {
         async write(name, value) {
             live.set(name, value);
         },
+        async writeRange(pgn, offset, bytes) {
+            const target = groups.get(pgn);
+            if (!target || offset + bytes.length > target.length) {
+                throw new Error(`out of range: pgn ${pgn}+${offset}`);
+            }
+            target.set(bytes, offset);
+        },
         async save() {
             this.saved++;
+        },
+        async resetConfig() {
+            this.reset = (this.reset ?? 0) + 1;
         },
         _live: live,
         _defaults: defaults,
@@ -205,13 +215,26 @@ check("diff emits only what changed", diffSets.length < dumpSets.length,
     `diff=${diffSets.length} dump=${dumpSets.length}`);
 check("diff includes the settings just changed", diffSets.some((l) => l.includes(numeric.name)));
 
-// Every emitted line must be re-executable -- that is what makes it a backup.
-let replayed = 0;
-for (const line of diffSets) {
-    await cli.execute(line);
-    replayed++;
+// Every emitted line must be re-executable, not just the `set` ones. An
+// earlier version of this check only replayed lines starting with "set ",
+// which is why it passed while `resource`, `timer`, `dma`, `batch` and
+// `defaults` were all being rejected -- a backup that cannot be restored.
+const replayable = diff
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+
+const rejected = [];
+for (const line of replayable) {
+    try {
+        await cli.execute(line);
+    } catch (error) {
+        rejected.push(`${line} -> ${error.message}`);
+    }
 }
-check("every diff line replays through execute()", replayed === diffSets.length);
+check("every line of a diff replays through execute()", rejected.length === 0,
+    `${rejected.length} rejected: ${rejected.slice(0, 4).join(" | ")}`);
+console.log(`replayed ${replayable.length} lines of a diff (${rejected.length} rejected)`);
 
 // And replaying a dump must reproduce the same dump.
 const before = await cli.dump("all");
@@ -234,8 +257,11 @@ check("execute ignores comments", (await cli.execute("# a comment")) === "");
 check("execute ignores blank lines", (await cli.execute("   ")) === "");
 await throwsAsync("execute rejects an unknown command", () => cli.execute("frobnicate"));
 
+const savesBefore = board.saved;
 await cli.execute("save");
-check("save reaches the board", board.saved === 1);
+check("save reaches the board", board.saved === savesBefore + 1,
+    `${savesBefore} -> ${board.saved}`);
+check("replaying a diff reset to defaults first", (board.reset ?? 0) > 0);
 
 
 // --- resources -------------------------------------------------------------

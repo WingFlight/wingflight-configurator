@@ -16,6 +16,7 @@ import {
     readSetting,
     readSettingDefault,
     writeSetting,
+    writeRange,
     readEmbeddedManifest,
 } from "./access.js";
 import { resolveManifest, explainMissingManifest, ResolveError } from "./resolve.js";
@@ -127,7 +128,9 @@ export async function openParamSession({ sources, storage, fetchRelease, askForF
         write: (name, value, profileIndex) => writeSetting(manifest, name, value, profileIndex),
         readRange: (pgn, offset, length) => readRange(pgn, offset, length),
         readDefaultRange: (pgn, offset, length) => readDefaultRange(pgn, offset, length),
+        writeRange: (pgn, offset, bytes) => writeRange(pgn, offset, bytes),
         save: () => MSP.promise(MSPCodes.MSP_EEPROM_WRITE),
+        resetConfig: () => MSP.promise(MSPCodes.MSP_RESET_CONF),
     };
 
     return { identity, manifest, registry, source, io, cli: new ParamCli(manifest, io) };
