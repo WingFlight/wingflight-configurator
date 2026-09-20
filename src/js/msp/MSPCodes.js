@@ -242,6 +242,23 @@ export const MSPCodes = {
     // 0x5F15: 0x5F10-0x5F14 are taken by the entries above.
     MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
 
+    // Generic parameter addressing. These reach configuration by
+    // (pgn, offset, length) against the firmware's parameter group registry
+    // instead of one opcode per field, which is what lets the firmware stop
+    // carrying setting names and per-field marshalling. A build manifest,
+    // generated from the firmware ELF and keyed to it by BUILD_ID, says what
+    // the offsets mean. See the firmware's
+    // docs/parameter-addressing-design.md.
+    //
+    // Deliberately started at 0x5F20 rather than 0x5F16: the block above grows
+    // one opcode at a time as features land, and this group stays contiguous.
+    MSP2_WING_BUILD_ID:               0x5F20,
+    MSP2_WING_PG_LIST:                0x5F21,
+    MSP2_WING_PARAM_READ:             0x5F22,
+    MSP2_WING_PARAM_WRITE:            0x5F23,
+    MSP2_WING_PG_DEFAULT:             0x5F24,
+    MSP2_WING_MANIFEST_READ:          0x5F25,
+
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
     MSP2_MOTOR_OUTPUT_REORDERING:       0x3001,
