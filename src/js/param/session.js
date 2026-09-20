@@ -20,6 +20,7 @@ import {
 } from "./access.js";
 import { resolveManifest, explainMissingManifest, ResolveError } from "./resolve.js";
 import { ParamCli } from "./cli.js";
+import { readTextFile } from "@/js/filesystem.js";
 
 /** Where a cached manifest lives, keyed by build ID rather than version. */
 const CACHE_PREFIX = "wf-manifest-";
@@ -30,7 +31,7 @@ const CACHE_PREFIX = "wf-manifest-";
  * Each is lazy: nothing is fetched until the previous one has missed, so a
  * cache hit costs no network and no serial traffic.
  */
-export function defaultSources(identity, { storage = globalThis.localStorage, fetchRelease } = {}) {
+export function defaultSources(identity, { storage = globalThis.localStorage, fetchRelease, askForFile = true } = {}) {
     const sources = [];
 
     if (identity.buildId && storage) {
@@ -59,6 +60,23 @@ export function defaultSources(identity, { storage = globalThis.localStorage, fe
         });
     }
 
+    // Last resort, and the only one that needs the user: pick the file. It is
+    // worth having even so -- a locally built board has no published manifest
+    // to fetch, and the result is cached by build ID, so this is asked once
+    // per firmware rather than once per connection.
+    if (askForFile) {
+        sources.push({
+            name: "a file you choose",
+            fetch: async () => {
+                const text = await readTextFile({
+                    description: "Wingflight parameter manifest",
+                    extensions: [".json"],
+                });
+                return text ? JSON.parse(text) : null;
+            },
+        });
+    }
+
     return sources;
 }
 
@@ -76,14 +94,14 @@ function cacheManifest(raw, storage = globalThis.localStorage) {
  * Everything the configuration side of the app needs, or a clear reason why
  * it cannot be had.
  */
-export async function openParamSession({ sources, storage, fetchRelease, onProgress } = {}) {
+export async function openParamSession({ sources, storage, fetchRelease, askForFile, onProgress } = {}) {
     onProgress?.("identifying firmware");
     const identity = await readBuildId();
 
     onProgress?.("reading parameter groups");
     const registry = await readRegistry();
 
-    const candidates = sources ?? defaultSources(identity, { storage, fetchRelease });
+    const candidates = sources ?? defaultSources(identity, { storage, fetchRelease, askForFile });
     if (!candidates.length) {
         throw new ResolveError(explainMissingManifest(identity));
     }
