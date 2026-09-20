@@ -40,22 +40,18 @@
     roll_setpoint_boost_gain: 0,
     pitch_setpoint_boost_gain: 0,
     yaw_setpoint_boost_gain: 0,
-    collective_setpoint_boost_gain: 0,
     roll_setpoint_boost_cutoff: 15,
     pitch_setpoint_boost_cutoff: 15,
     yaw_setpoint_boost_cutoff: 90,
-    collective_setpoint_boost_cutoff: 15,
     yaw_dynamic_ceiling_gain: 0,
     yaw_dynamic_deadband_gain: 10,
     yaw_dynamic_deadband_filter: 60,
     roll_response_time: 0,
     pitch_response_time: 0,
     yaw_response_time: 0,
-    collective_response_time: 0,
     roll_accel_limit: 0,
     pitch_accel_limit: 0,
     yaw_accel_limit: 0,
-    collective_accel_limit: 0,
   };
 
   let loading = $state(true);
