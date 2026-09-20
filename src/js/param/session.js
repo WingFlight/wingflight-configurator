@@ -12,6 +12,7 @@ import {
     readBuildId,
     readRegistry,
     readRange,
+    readDefaultRange,
     readSetting,
     readSettingDefault,
     writeSetting,
@@ -107,6 +108,7 @@ export async function openParamSession({ sources, storage, fetchRelease, onProgr
         readDefault: (name, profileIndex) => readSettingDefault(manifest, name, profileIndex),
         write: (name, value, profileIndex) => writeSetting(manifest, name, value, profileIndex),
         readRange: (pgn, offset, length) => readRange(pgn, offset, length),
+        readDefaultRange: (pgn, offset, length) => readDefaultRange(pgn, offset, length),
         save: () => MSP.promise(MSPCodes.MSP_EEPROM_WRITE),
     };
 
