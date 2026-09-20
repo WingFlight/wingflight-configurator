@@ -162,10 +162,6 @@ export function isWarningActive(func) {
   return true;
 }
 
-export function isVtxActive(func) {
-  return ["v", "c", "a", "f"].includes(func);
-}
-
 export function hsvToColor(hsv) {
   if (!hsv) return "";
 
