@@ -14,7 +14,7 @@
 
 import { readFileSync } from "node:fs";
 import { Manifest, settingSpan } from "./manifest.js";
-import { ParamCli, CliError, formatValue, parseValue, formatPin, resourceLines } from "./cli.js";
+import { ParamCli, CliError, formatValue, parseValue, formatPin, resourceLines, timerLines } from "./cli.js";
 
 let checks = 0;
 let failures = 0;
@@ -270,5 +270,43 @@ if (motor && servo) {
     console.warn("WARN  no MOTOR/SERVO resource entries; resource formatting not exercised");
 }
 
-console.log(`\n${checks - failures}/${checks} checks passed (resources included)`);
+// --- timers ----------------------------------------------------------------
+
+const timers = manifest.raw.timers ?? [];
+check("manifest carries the timer hardware table", timers.length > 0, `${timers.length} entries`);
+
+const timerGroup = [...manifest.groups.values()].find((pg) => pg.symbol === "timerIOConfig_SystemArray");
+check("timerIOConfig group is present", Boolean(timerGroup));
+
+if (timerGroup && timers.length) {
+    // The real config has `timer A09 AF1`. A09 is tag 0x19; pick whichever
+    // hardware index actually carries AF1 for that pin, as the firmware would.
+    const tagA09 = ((0 + 1) << 4) | 9;
+    const forA09 = timers.filter((t) => t.tag === tagA09);
+    check("the timer table has entries for A09", forA09.length > 0, `${forA09.length}`);
+
+    const wanted = forA09.findIndex((t) => t.af === 1);
+    if (wanted >= 0) {
+        const bytes = board.groups.get(timerGroup.pgn);
+        bytes[0] = tagA09; // ioTag
+        bytes[1] = wanted + 1; // index is 1-based
+
+        const lines = await timerLines(manifest, board);
+        check("timer line matches the board config", lines.includes("timer A09 AF1"), lines.slice(0, 3).join(" | "));
+
+        // An unmapped index must read as NONE rather than inventing a function.
+        bytes[1] = 0;
+        const none = await timerLines(manifest, board);
+        check("an unassigned timer reads as NONE", none.includes("timer A09 NONE"));
+
+        bytes[1] = wanted + 1;
+        const dumped = await cli.dump("all");
+        check("dump includes the timer block", dumped.includes("# timer"));
+        check("dump includes the timer line", dumped.includes("timer A09 AF1"));
+    } else {
+        console.warn("WARN  no AF1 entry for A09 in this build; timer formatting not fully exercised");
+    }
+}
+
+console.log(`\n${checks - failures}/${checks} checks passed (resources and timers included)`);
 process.exit(failures ? 1 : 0);

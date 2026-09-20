@@ -80,6 +80,50 @@ export async function resourceLines(manifest, io, { onlyAssigned = true } = {}) 
 }
 
 /**
+ * The `timer` block of a dump.
+ *
+ * timerIOConfig is an ordinary parameter group of {ioTag, index, dmaopt}, so
+ * the assignments themselves are just bytes. The alternate function is not:
+ * that comes from the target's timer hardware table, which the manifest
+ * carries because it is a const table in the image. `index` selects among the
+ * entries sharing a pin, exactly as timerGetByTagAndIndex() did.
+ */
+export async function timerLines(manifest, io) {
+    const timers = manifest.raw.timers ?? [];
+    const group = [...manifest.groups.values()].find((pg) => pg.symbol === "timerIOConfig_SystemArray");
+    if (!timers.length || !group) {
+        return [];
+    }
+
+    const stride = group.elem_size;
+    const lines = [];
+
+    for (let slot = 0; slot < group.length; slot++) {
+        let view;
+        try {
+            view = await io.readRange(group.pgn, slot * stride, Math.min(stride, 2));
+        } catch {
+            continue;
+        }
+        const tag = view.getUint8(0);
+        if (!tag) {
+            continue;
+        }
+        const index = view.getUint8(1);
+
+        if (index === 0) {
+            lines.push(`timer ${formatPin(tag)} NONE`);
+            continue;
+        }
+        // The Nth entry for this pin, 1-based, as the firmware counted them.
+        const matches = timers.filter((entry) => entry.tag === tag);
+        const chosen = matches[index - 1];
+        lines.push(chosen ? `timer ${formatPin(tag)} AF${chosen.af}` : `timer ${formatPin(tag)} NONE`);
+    }
+    return lines;
+}
+
+/**
  * Render a value the way the firmware's CLI printed it.
  *
  * Lookup settings show their label rather than the number, arrays are
@@ -306,7 +350,11 @@ export class ParamCli {
             return [];
         }
         const lines = await resourceLines(this.manifest, this.io);
-        return lines.length ? ["", "# resources", ...lines] : [];
+        const timers = await timerLines(this.manifest, this.io);
+        return [
+            ...(lines.length ? ["", "# resources", ...lines] : []),
+            ...(timers.length ? ["", "# timer", ...timers] : []),
+        ];
     }
 
     async dump(argument = "") {
