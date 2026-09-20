@@ -163,6 +163,12 @@ export function applyVirtualConfig() {
     capacity: 10000,
     voltageMeterSource: 1,
     currentMeterSource: 1,
+    hasProfileCells: true,
+    cellCounts: [3, 4, 0, 0, 0, 0],
+    vbatmincellvoltages: [1, 1, 1, 1, 1, 1],
+    vbatmaxcellvoltages: [4, 4, 4, 4, 4, 4],
+    vbatfullcellvoltages: [3.9, 3.9, 3.9, 3.9, 3.9, 3.9],
+    vbatwarningcellvoltages: [3, 3, 3, 3, 3, 3],
   });
 
   Object.assign(FC.SMARTFUEL_CONFIG, {
