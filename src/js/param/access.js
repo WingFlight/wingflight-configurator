@@ -8,7 +8,7 @@
  */
 
 import { MSP } from "@/js/msp.svelte.js";
-import MSPCodes from "@/js/msp/MSPCodes.js";
+import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { decodeValues, encodeValues, settingSpan, ManifestError } from "./manifest.js";
 
 /** Matches MSP_PARAM_PROTOCOL_VERSION in the firmware's msp_param.h. */
