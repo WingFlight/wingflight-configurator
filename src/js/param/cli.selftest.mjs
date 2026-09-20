@@ -14,7 +14,7 @@
 
 import { readFileSync } from "node:fs";
 import { Manifest, settingSpan } from "./manifest.js";
-import { ParamCli, CliError, formatValue, parseValue } from "./cli.js";
+import { ParamCli, CliError, formatValue, parseValue, formatPin, resourceLines } from "./cli.js";
 
 let checks = 0;
 let failures = 0;
@@ -70,9 +70,23 @@ function fakeBoard(manifest) {
         live.set(name, JSON.parse(JSON.stringify(value)));
     }
 
+    // Raw group bytes, so resource pins can be served the way a board would.
+    const groups = new Map();
+    for (const pg of manifest.raw.pgs) {
+        groups.set(pg.pgn, new Uint8Array(pg.size));
+    }
+
     return {
         identity: { target: "STM32F7X2", version: "4.6.0", revision: "abc1234" },
         saved: 0,
+        groups,
+        async readRange(pgn, offset, length) {
+            const bytes = groups.get(pgn);
+            if (!bytes || offset + length > bytes.length) {
+                throw new Error(`out of range: pgn ${pgn} +${offset}`);
+            }
+            return new DataView(bytes.buffer, offset, length);
+        },
         async read(name) {
             if (!live.has(name)) {
                 throw new Error(`unknown ${name}`);
@@ -223,5 +237,38 @@ await throwsAsync("execute rejects an unknown command", () => cli.execute("frobn
 await cli.execute("save");
 check("save reaches the board", board.saved === 1);
 
-console.log(`\n${checks - failures}/${checks} checks passed`);
+
+// --- resources -------------------------------------------------------------
+
+// ioTag packing: (portIdx + 1) << 4 | pin. A09 is port A, pin 9.
+check("formatPin decodes A09", formatPin((0 + 1) << 4 | 9) === "A09", formatPin(0x19));
+check("formatPin decodes B04", formatPin((1 + 1) << 4 | 4) === "B04", formatPin(0x24));
+check("formatPin reports an unassigned pin", formatPin(0) === "NONE");
+
+const resources = manifest.raw.resources ?? [];
+check("manifest carries the resource table", resources.length > 0, `${resources.length} entries`);
+
+// Plant the pins the real Vantac config assigns, then read them back the way
+// a dump would: MOTOR 1 on A09, SERVO 1 on B04.
+const motor = resources.find((r) => r.name === "MOTOR");
+const servo = resources.find((r) => r.name === "SERVO");
+if (motor && servo) {
+    board.groups.get(motor.pgn)[motor.off] = 0x19; // A09
+    board.groups.get(servo.pgn)[servo.off] = 0x24; // B04
+
+    const lines = await resourceLines(manifest, board);
+    check("resource line for MOTOR 1 matches the board config",
+        lines.includes("resource MOTOR 1 A09"), lines.filter((l) => l.includes("MOTOR")).join(" | "));
+    check("resource line for SERVO 1 matches the board config",
+        lines.includes("resource SERVO 1 B04"), lines.filter((l) => l.includes("SERVO")).join(" | "));
+    check("unassigned pins are omitted", !lines.some((l) => l.endsWith("NONE")));
+
+    const withResources = await cli.dump("all");
+    check("dump includes the resource block", withResources.includes("# resources"));
+    check("dump includes the MOTOR resource line", withResources.includes("resource MOTOR 1 A09"));
+} else {
+    console.warn("WARN  no MOTOR/SERVO resource entries; resource formatting not exercised");
+}
+
+console.log(`\n${checks - failures}/${checks} checks passed (resources included)`);
 process.exit(failures ? 1 : 0);
