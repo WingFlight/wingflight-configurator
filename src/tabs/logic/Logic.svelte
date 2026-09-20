@@ -61,7 +61,7 @@
       },
       (_, i) => ({
         value: PRIMARY_CHANNEL_COUNT + i,
-        label: `AUX${i + 1}`,
+        label: `CH #${i + 5}`,
       }),
     ),
   ]);
@@ -293,6 +293,6 @@
     color: var(--color-text-soft);
 
     border: 1px dashed var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
   }
 </style>

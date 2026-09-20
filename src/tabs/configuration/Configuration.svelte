@@ -559,7 +559,7 @@
     height: 1.5rem;
     min-width: 120px;
     padding: 0 4px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--color-border-soft);
     background-color: var(--color-input-bg);
     color: var(--color-text);
@@ -596,7 +596,7 @@
     align-items: center;
     gap: 8px;
     padding: 4px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     @media (hover: hover) {
       &:hover {
@@ -626,7 +626,7 @@
     position: relative;
     height: 350px;
     margin-top: var(--section-gap);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     border: 1px solid var(--color-border);
   }

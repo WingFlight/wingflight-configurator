@@ -104,6 +104,59 @@
         bind:value={FC.PID_PROFILE.autoHoverMaxRate}
       />
     </Field>
+    <Field id="auto-hover-roll-deadband" label="profilesAutoHoverRollDeadband">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverRollDeadbandHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-roll-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.PID_PROFILE.autoHoverRollDeadband}
+      />
+    </Field>
+    <Field
+      id="auto-hover-throttle-assist-gain"
+      label="profilesAutoHoverThrottleAssistGain"
+    >
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverThrottleAssistGainHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-throttle-assist-gain"
+        min="0"
+        max="100"
+        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistGain}
+      />
+    </Field>
+    <Field
+      id="auto-hover-throttle-assist-max"
+      label="profilesAutoHoverThrottleAssistMax"
+    >
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverThrottleAssistMaxHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-throttle-assist-max"
+        min="0"
+        max="50"
+        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistMax}
+      />
+    </Field>
+    <Field
+      id="auto-hover-throttle-assist-trigger-ms"
+      label="profilesAutoHoverThrottleAssistTriggerMs"
+    >
+      {#snippet tooltip()}
+        {$i18n.t("profilesAutoHoverThrottleAssistTriggerMsHelp")}
+      {/snippet}
+      <NumberInput
+        id="auto-hover-throttle-assist-trigger-ms"
+        min="0"
+        max="2000"
+        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs}
+      />
+    </Field>
   </SubSection>
 
   <SubSection label="profilesAttHoldGroup">

@@ -124,6 +124,14 @@
     FC.SMARTFUEL_CONFIG.chargeDropRate = Math.round(v * 100);
   }
 
+  // Stored as hundredths of a volt per cell at full power; shown in volts.
+  function getSagGain() {
+    return FC.SMARTFUEL_CONFIG.sagGain / 100;
+  }
+  function setSagGain(v) {
+    FC.SMARTFUEL_CONFIG.sagGain = Math.round(v * 100);
+  }
+
   function activateBatteryProfile(index) {
     if (index === FC.BATTERY_STATE.batteryProfile) {
       return;
@@ -481,17 +489,17 @@
           <Field
             id="power-smartfuel-sag"
             label="powerSmartFuelSagGain"
-            unit="%"
+            unit="V"
           >
             {#snippet tooltip()}
               <Tooltip help="powerSmartFuelSagGainHelp" />
             {/snippet}
             <NumberInput
               id="power-smartfuel-sag"
-              bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+              bind:value={getSagGain, setSagGain}
               min={0}
-              max={100}
-              step={1}
+              max={1}
+              step={0.01}
             />
           </Field>
         {/if}
@@ -737,7 +745,7 @@
     flex-direction: column;
     gap: 4px;
     padding: 8px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -771,7 +779,7 @@
   }
 
   .meter-card {
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 4px;
 
     background-color: var(--color-surface);
@@ -805,7 +813,7 @@
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .content {

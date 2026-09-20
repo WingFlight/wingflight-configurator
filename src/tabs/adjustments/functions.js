@@ -120,6 +120,21 @@ export function getFunctions() {
         { id: 108,  name: 'TVYawF',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
+        // Scales the weight *magnitude* of every mixer rule tagged with a
+        // given mixerRuleRole_e (pg/mixer.h) -- found by tag at runtime
+        // (flight/mixer.c's applyRoleWeight()), not a fixed rule index, so
+        // it keeps working regardless of where those rules end up in the
+        // 32-slot table. Magnitude only, 0..1000 -- each tagged rule keeps
+        // whatever sign it was configured with (the Mixer tab's Reverse
+        // checkbox, or a negative weight via CLI); this adjustment never
+        // touches it, which is what lets DiffThrustYawGain scale both
+        // motors' rules from one scalar while keeping them opposite signs
+        // (a differential, not a common-mode push) -- see
+        // applyRoleWeight()'s own comment. Range matches rc_adjustments.c's
+        // ADJ_ENTRY.
+        { id: 112,  name: 'FlapCompensationGain',        min: 0, max: 1000,   ticks: 50,   pips: [ 0, 250, 500, 750, 1000 ] },
+        { id: 113,  name: 'DiffThrustYawGain',           min: 0, max: 1000,   ticks: 50,   pips: [ 0, 250, 500, 750, 1000 ] },
     ];
 }
 
@@ -136,7 +151,7 @@ export function getFunctions() {
 // permanently hidden, so they disappear entirely rather than showing an
 // empty heading.
 export const FUNCTION_GROUPS = [
-    { label: 'adjustmentsGroupProfiles', ids: [82, 3, 4, 2, 1] },
+    { label: 'adjustmentsGroupProfiles', ids: [82, 3, 4, 2, 1, 111] },
     { label: 'adjustmentsGroupRates', ids: [5, 6, 7] },
     { label: 'adjustmentsGroupRcRates', ids: [8, 9, 10] },
     { label: 'adjustmentsGroupRcExpo', ids: [11, 12, 13] },
@@ -153,4 +168,5 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
     { label: 'adjustmentsGroupRescue', ids: [44, 43, 42, 39, 41, 40] },
     { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
+    { label: 'adjustmentsGroupMixer', ids: [112, 113] },
 ];

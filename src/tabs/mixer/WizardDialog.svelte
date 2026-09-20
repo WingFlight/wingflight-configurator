@@ -11,6 +11,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  let flapServos = $state(1);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
   // Independent per-axis, since a vectored mount might drive any combination
@@ -26,6 +27,7 @@
     tailControl = "elevatorRudder";
     wingYaw = "rudder";
     flaps = false;
+    flapServos = 1;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -77,6 +79,7 @@
       tailControl,
       wingYaw,
       flaps,
+      flapServos,
       motors,
       diffThrustYaw,
       thrustVectorRoll,
@@ -170,6 +173,19 @@
           <input type="checkbox" bind:checked={flaps} />
           <span>{$i18n.t("mixerWizardFlapsEnable")}</span>
         </label>
+        {#if flaps}
+          <label class="wizardOption">
+            <input type="radio" bind:group={flapServos} value={1} />
+            <span>{$i18n.t("mixerWizardFlapServos1")}</span>
+          </label>
+          <label class="wizardOption">
+            <input type="radio" bind:group={flapServos} value={2} />
+            <span>{$i18n.t("mixerWizardFlapServos2")}</span>
+          </label>
+          <div class="wizardHint">
+            {$i18n.t("mixerWizardFlapsCompensationHint")}
+          </div>
+        {/if}
       </div>
 
       <div class="wizardSection">
@@ -253,7 +269,7 @@
   dialog {
     width: 54em;
     max-width: calc(100vw - 2em);
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   h3 {
@@ -275,7 +291,7 @@
     margin-bottom: 12px;
     padding: 10px 12px;
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: var(--color-surface-float, var(--color-surface));
   }
 
@@ -314,7 +330,7 @@
     width: 100%;
     aspect-ratio: 103.58047 / 48.517796;
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     padding: 10px;
     box-sizing: border-box;

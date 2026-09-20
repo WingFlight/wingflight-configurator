@@ -60,21 +60,23 @@
   </div>
 
   <div class="language-switcher">
-    <span>{$i18n.t("language_choice_message")}</span>
-    <button
-      class:selected={selectedLanguage === "DEFAULT"}
-      onclick={() => selectLanguage("DEFAULT")}
-    >
-      {$i18n.t("language_default_pretty")}
-    </button>
-    {#each languages as lang (lang)}
+    <span class="language-label">{$i18n.t("language_choice_message")}</span>
+    <div class="languages">
       <button
-        class:selected={selectedLanguage === lang}
-        onclick={() => selectLanguage(lang)}
+        class:selected={selectedLanguage === "DEFAULT"}
+        onclick={() => selectLanguage("DEFAULT")}
       >
-        {$i18n.t(`language_${lang}`)}
+        {$i18n.t("language_default_pretty")}
       </button>
-    {/each}
+      {#each languages as lang (lang)}
+        <button
+          class:selected={selectedLanguage === lang}
+          onclick={() => selectLanguage(lang)}
+        >
+          {$i18n.t(`language_${lang}`)}
+        </button>
+      {/each}
+    </div>
   </div>
 </div>
 
@@ -82,37 +84,72 @@
   .landing {
     height: 100%;
     overflow-y: auto;
-    background-color: #2e2e2e;
+    padding: var(--section-gap);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+  }
+
+  // Hero, columns and the language row are all the same card: the same
+  // surface, border, radius and elevation the rest of the app uses for a
+  // Section. The page used to invent its own palette instead - a paper
+  // texture behind the logo and a full-bleed --accent band behind the
+  // link columns - which is why it read as a different product.
+  %card {
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+
+    :global(html[data-theme="light"]) & {
+      box-shadow: var(--shadow-sm);
+    }
+
+    :global(html[data-theme="dark"]) & {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .hero {
-    padding: 20px;
+    @extend %card;
+
+    position: relative;
+    overflow: hidden;
+    padding: 32px 24px 28px;
     text-align: center;
-    background: #fff url(/images/pattern.png);
-    background-size: 300px;
-    color: #000;
 
     p {
-      max-width: 1100px;
-      margin: 5px auto 0;
-      font-size: 0.95rem;
-      font-weight: 300;
+      max-width: 900px;
+      margin: 12px auto 0;
+      font-size: 0.9rem;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--color-text-muted);
     }
+  }
+
+  // Same accent hairline the tab header carries, so the welcome page is
+  // visibly part of the same chrome.
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-500),
+      transparent 55%
+    );
   }
 
   .logo {
     width: 100%;
-    max-width: 600px;
-    margin: 5px;
+    max-width: 420px;
+    margin: 0 auto;
   }
 
   .logo-dark {
     display: none;
-  }
-
-  :global(html[data-theme="dark"]) .hero {
-    background-color: #2e2e2e;
-    color: #fff;
   }
 
   :global(html[data-theme="dark"]) .logo-light {
@@ -126,68 +163,110 @@
   .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-    padding: 0 15px;
-    background-color: var(--accent);
-    color: #fff;
+    align-items: start;
+    gap: var(--section-gap);
+    margin-top: var(--section-gap);
+  }
 
-    :global(html[data-theme="dark"]) & {
-      background-color: #3e3e3e;
-    }
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
   }
 
   section {
-    padding: 10px;
+    @extend %card;
+
+    padding: 16px 18px;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--color-text-soft);
   }
 
   h2 {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
     font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-soft);
   }
 
   .columns :global(a) {
-    color: #fff;
+    color: var(--color-accent-500);
     font-weight: 600;
+    text-decoration: none;
+    transition: color var(--animation-speed);
+  }
+
+  .columns :global(a:hover) {
+    color: var(--color-accent-hover);
     text-decoration: underline;
   }
 
   .columns :global(ul) {
-    margin: 10px 0 10px 15px;
+    margin: 10px 0 0 18px;
   }
 
   .columns :global(li) {
-    padding: 2px 0;
-    list-style: circle;
+    padding: 3px 0;
+    list-style: disc;
   }
 
   .social {
-    margin-top: 5px;
-    font-size: 0.8rem;
+    margin-top: 8px;
   }
 
   .language-switcher {
-    padding: 20px 20px 5px;
+    @extend %card;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: var(--section-gap);
+    padding: 14px 18px;
     text-align: center;
-    color: silver;
+  }
 
-    button {
-      background: none;
-      border: none;
-      padding: 0;
-      color: silver;
-      font-weight: normal;
-      font-size: 0.85rem;
-      cursor: pointer;
-      white-space: nowrap;
+  .language-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
 
-      &:not(:last-child)::after {
-        content: ", ";
-      }
+  .languages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
 
-      &.selected {
-        font-weight: bold;
-      }
-    }
+  .language-switcher button {
+    padding: 3px 10px;
+    line-height: 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text-muted);
+    font-weight: 500;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--animation-speed),
+      color var(--animation-speed);
+  }
+
+  .language-switcher button:hover {
+    background-color: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  .language-switcher button.selected {
+    background-color: var(--color-accent-500);
+    color: var(--color-accent-fg);
+    font-weight: 600;
   }
 
   @media only screen and (max-width: 575px) {

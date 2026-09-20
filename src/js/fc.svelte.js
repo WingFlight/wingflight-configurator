@@ -79,6 +79,11 @@ class FlightController {
   SENSOR_DATA = $state();
   SERIAL_CONFIG = $state();
   SERVO_CONFIG = $state();
+  // Live, unsaved per-servo trim from Mapped ServoTrim adjustments (MSP_SERVO_TRIM;
+  // null when the FC does not have it). Read-only, and kept apart from SERVO_CONFIG so it never counts as a
+  // change to save.
+  SERVO_RUNTIME_TRIM = $state();
+  SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
@@ -117,6 +122,7 @@ class FlightController {
       profile:                    0,
       numRateProfile:             6,
       rateProfile:                0,
+      tvProfile:                  0, // populated from MSP2_WING_TV_PID_CONFIG's leading byte, not MSP_STATUS -- see TV_PID_PROFILE below
       uid:                        [0, 0, 0],
       accelerometerTrims:         [0, 0],
       name:                       '',
@@ -318,6 +324,8 @@ class FlightController {
     this.ADJUSTMENT_RANGES =        [];
 
     this.SERVO_CONFIG =             [];
+    this.SERVO_RUNTIME_TRIM =       null;
+    this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
       ports:                      [],
@@ -627,6 +635,10 @@ class FlightController {
       autoHoverGain:              0,
       autoHoverMaxAngle:          0,
       autoHoverMaxRate:           0,
+      autoHoverRollDeadband:      0,
+      autoHoverThrottleAssistGain:      0,
+      autoHoverThrottleAssistMax:       0,
+      autoHoverThrottleAssistTriggerMs: 0,
       attHoldGain:                0,
       attHoldDeadband:            0,
       attHoldMaxRate:             0,
@@ -639,8 +651,10 @@ class FlightController {
       gainCurveYaw:               0,
     };
 
-    // Independent Thrust Vector PID loop (FEATURE_THRUST_VECTOR). Single
-    // config, not a per-profile array -- see MSP2_WING_TV_PID_CONFIG.
+    // Independent Thrust Vector PID loop (FEATURE_THRUST_VECTOR). One of
+    // numProfiles independently-switchable profiles (mirrors FC.PID_PROFILE) --
+    // see MSP2_WING_TV_PID_CONFIG / MSP2_WING_SELECT_TV_PROFILE. TV_PIDS/
+    // TV_PID_PROFILE always reflect whichever profile is currently active.
     this.TV_PIDS = Array.from({length: 3}, () => Array.from({length: 5}).fill(0));
 
     this.TV_PID_PROFILE = {

@@ -8,8 +8,18 @@
     ticks,
   } from "./util.js";
 
-  let { curve, model, xMin, xMax, yMin, yMax, xAxisValue, yAxisValue, onEdit } =
-    $props();
+  let {
+    curve,
+    model,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    xAxisValue,
+    yAxisValue,
+    onEdit,
+    compareCurve = null,
+  } = $props();
 
   let svgEl;
   let dragIndex = $state(null);
@@ -42,6 +52,16 @@
 
   let polylinePoints = $derived(
     activePoints.map((p) => `${toSvgX(p.x)},${toSvgY(p.y)}`).join(" "),
+  );
+
+  // Reference-only overlay of another curve from the same category (e.g.
+  // another servo's curve), for visually comparing two curves while editing
+  // just one. Not interactive - no drag/click/delete handlers.
+  let compareActivePoints = $derived(
+    compareCurve ? compareCurve.points.slice(0, compareCurve.count) : [],
+  );
+  let comparePolylinePoints = $derived(
+    compareActivePoints.map((p) => `${toSvgX(p.x)},${toSvgY(p.y)}`).join(" "),
   );
 
   function onCirclePointerDown(index, event) {
@@ -142,6 +162,18 @@
     </text>
   {/each}
 
+  {#if compareCurve}
+    <polyline class="compareCurveLine" points={comparePolylinePoints} />
+    {#each compareActivePoints as point, index (index)}
+      <circle
+        class="compareCurvePoint"
+        r="4"
+        cx={toSvgX(point.x)}
+        cy={toSvgY(point.y)}
+      />
+    {/each}
+  {/if}
+
   <polyline class="curveLine" points={polylinePoints} />
 
   {#each activePoints as point, index (index)}
@@ -212,6 +244,20 @@
     fill: none;
     stroke: var(--color-accent-500);
     stroke-width: 2;
+  }
+
+  :global(.compareCurveLine) {
+    fill: none;
+    stroke: var(--color-text-soft);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    pointer-events: none;
+  }
+
+  :global(.compareCurvePoint) {
+    fill: var(--color-text-soft);
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   :global(.curvePoint) {

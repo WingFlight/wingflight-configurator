@@ -254,7 +254,7 @@
     margin-top: var(--section-gap);
     margin-bottom: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text-soft);
     background-color: var(--color-surface);
@@ -274,7 +274,7 @@
     margin-top: var(--section-gap);
     margin-bottom: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);
@@ -285,7 +285,7 @@
     @extend %section-shadow;
 
     overflow-x: auto;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background-color: var(--color-surface);
   }
 

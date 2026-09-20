@@ -60,7 +60,7 @@
     height: 12px;
     width: 6px;
     margin-left: -3px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     z-index: 10;
     pointer-events: none;
 

@@ -447,7 +447,7 @@
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .gps-fix :global(.gpsFixFalse) {
@@ -455,7 +455,7 @@
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   table.cf_table {
@@ -474,7 +474,7 @@
 
   progress {
     width: 100%;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .gps-map {

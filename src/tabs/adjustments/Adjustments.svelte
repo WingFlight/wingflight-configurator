@@ -48,7 +48,7 @@
   let channelOptions = $derived(
     Array.from({ length: auxChannelCount }, (_, i) => ({
       value: i,
-      label: `AUX${i + 1}`,
+      label: `CH #${i + 5}`,
     })),
   );
   let enaChannelOptions = $derived([
@@ -254,7 +254,7 @@
   .note {
     margin: var(--section-gap) 0 0;
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);
@@ -286,7 +286,7 @@
     color: var(--color-text-soft);
 
     border: 1px dashed var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
   }
 
   .rows {

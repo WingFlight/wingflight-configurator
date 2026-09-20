@@ -68,7 +68,7 @@
     { value: -1, label: $i18n.t("auxiliaryAutoChannelSelect") },
     ...Array.from({ length: auxChannelCount }, (_, i) => ({
       value: i,
-      label: `AUX ${i + 1}`,
+      label: `CH #${i + 5}`,
     })),
   ]);
 

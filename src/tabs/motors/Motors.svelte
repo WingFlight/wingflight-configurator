@@ -20,8 +20,18 @@
   import motorState from "./state.svelte.js";
 
   let loading = $state(true);
-  let initialState;
-  let pollerInterval;
+  // $state, not a plain let: `changes` below reads this inside an early
+  // return (`if (!initialState) return [];`) that touches nothing else
+  // reactive. A plain variable's reassignment isn't a tracked dependency in
+  // runes mode, so if `changes` were ever first evaluated before onMount
+  // sets this, its $derived.by would memoize at [] permanently regardless of
+  // later edits - see wingflight-configurator commit cdce9cddc for the
+  // full writeup of this exact bug in the Receiver tab.
+  let initialState = $state();
+  let pollerTimer;
+  let armedPollerTimer;
+  let pollerStopped = false;
+  let telemetryRef;
 
   let isEnabled = $derived(
     motorState.throttleEnabled && FC.CONFIG.motorCount > 0,
@@ -32,6 +42,13 @@
       FC.FEATURE_CONFIG.features.ESC_SENSOR ||
       (motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry),
   );
+
+  // Same pattern as esc_programming/state.svelte.js's own `armed` - the ESC
+  // wiring trial cycles live UART config while motors could be spinning, so
+  // Telemetry.svelte needs this to refuse to even open its Detect Wiring
+  // wizard while armed, on top of the firmware's own ARMING_FLAG(ARMED)
+  // rejection.
+  let armed = $derived(bit_check(FC.CONFIG.mode, FC.AUX_CONFIG.indexOf("ARM")));
 
   function snapshotState() {
     return $state.snapshot({
@@ -67,15 +84,51 @@
     initialState = snapshotState();
     loading = false;
 
-    pollerInterval = setInterval(async () => {
+    // Self-rescheduling (setTimeout that re-arms only after the previous
+    // round finishes), not setInterval with an async body. The latter fires
+    // on a fixed 50ms wall-clock schedule regardless of whether the prior
+    // callback's awaits have resolved - on a real (non-instant) serial link,
+    // 3 sequential MSP round-trips easily exceed 50ms, so ticks start
+    // overlapping and pile up: each overlap opens a fresh in-flight request
+    // for a *different* code (MSP.send_message only dedupes same-code
+    // requests already queued), so the backlog of concurrently outstanding
+    // requests only grows over time. That was flooding the link badly enough
+    // to starve the ESC wiring wizard's own 200ms poll of ever getting a
+    // timely response - the trial kept running fine on the FC the whole
+    // time, the configurator just stopped hearing about it. Moving the
+    // armed-check out to its own interval (see below) didn't fix this: the
+    // pileup was already happening inside this loop by itself, independent
+    // of what else got called from it.
+    async function pollMotors() {
+      if (pollerStopped) return;
       await MSP.promise(MSPCodes.MSP_MOTOR);
       await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
       await MSP.promise(MSPCodes.MSP_BATTERY_STATE);
-    }, 50);
+      if (!pollerStopped) {
+        pollerTimer = setTimeout(pollMotors, 50);
+      }
+    }
+    pollMotors();
+
+    // Same self-rescheduling shape, much slower cadence - not folded into
+    // the loop above. `armed` doesn't need anywhere near 50ms freshness for
+    // a UI gate, so it gets its own light cadence instead of riding along on
+    // the hot one.
+    async function pollArmed() {
+      if (pollerStopped) return;
+      await MSP.promise(MSPCodes.MSP_STATUS);
+      if (!pollerStopped) {
+        armedPollerTimer = setTimeout(pollArmed, 1000);
+      }
+    }
+    pollArmed();
   });
 
   onDestroy(() => {
-    clearInterval(pollerInterval);
+    pollerStopped = true;
+    clearTimeout(pollerTimer);
+    clearTimeout(armedPollerTimer);
+    telemetryRef?.cleanup();
   });
 
   $effect(() => {
@@ -110,6 +163,7 @@
     Object.assign(FC.ESC_SENSOR_CONFIG, initialState.ESC_SENSOR_CONFIG);
     Object.assign(FC.GOVERNOR_CONFIG, initialState.GOVERNOR_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
+    telemetryRef?.cleanup();
   }
 
   function onClickHelp() {
@@ -145,7 +199,12 @@
       <Throttle />
       {#if isEnabled}
         <div transition:slide>
-          <Telemetry />
+          <Telemetry
+            bind:this={telemetryRef}
+            onSaveRequested={onSave}
+            hasUnsavedChanges={changes.length > 0}
+            {armed}
+          />
         </div>
         <div transition:slide>
           <RPM />

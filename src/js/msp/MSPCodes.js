@@ -196,6 +196,9 @@ export const MSPCodes = {
 //  MSP_SET_VTXTABLE_POWERLEVEL:    228,
 
     MSP_MULTIPLE_MSP:               230,
+    MSP_SERVO_CURVES:               231,
+    MSP_SERVO_TRIM:                 233,
+    MSP_SET_SERVO_CURVE:            232,
 
     MSP_MODE_RANGES_EXTRA:          238,
     MSP_SET_ACC_TRIM:               239,
@@ -229,7 +232,15 @@ export const MSPCodes = {
     MSP2_WING_RX_INPUT_BACKUP_STATUS: 0x5F0D,
     MSP2_WING_RX_INPUT_BACKUP_CONFIG: 0x5F0E,
     MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG: 0x5F0F,
-    MSP2_WING_CRSF_SENSORS_STATUS:    0x5F10,
+    MSP2_WING_SELECT_TV_PROFILE:      0x5F10,
+    MSP2_WING_COPY_TV_PID_PROFILE:    0x5F11,
+    MSP2_WING_RX_SERIAL_TRIAL:        0x5F12,
+    MSP2_WING_RX_INPUT_BACKUP_TRIAL:  0x5F13,
+    // 0x5F14, not 0x5F12/0x5F13 - those are claimed by
+    // MSP2_WING_RX_SERIAL_TRIAL/MSP2_WING_RX_INPUT_BACKUP_TRIAL above.
+    MSP2_WING_ESC_SENSOR_TRIAL:       0x5F14,
+    // 0x5F15: 0x5F10-0x5F14 are taken by the entries above.
+    MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

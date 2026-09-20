@@ -1,13 +1,17 @@
 <script>
+  import { mount, unmount } from "svelte";
   import { slide } from "svelte/transition";
 
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
+  import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import Switch from "@/components/Switch.svelte";
   import Field from "@/components/Field.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Section from "@/components/Section.svelte";
+  import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
   import { RX_PROTOCOLS } from "./protocols.js";
 
   let {
@@ -17,8 +21,104 @@
     mainLinkUp,
     hasBackupRxPort,
     backupActive,
+    onSaveRequested,
+    hasUnsavedChanges,
+    armed,
   } = $props();
+
+  let wizardDisabled = $state(false);
+  let wizardInstance = null;
+
+  function closeWizard() {
+    if (!wizardInstance) return;
+    const instance = wizardInstance;
+    wizardInstance = null;
+    unmount(instance);
+  }
+
+  function onClickDetectWiring() {
+    closeWizard();
+
+    // Snapshotted so a detection the user doesn't actually keep (closes the
+    // wizard instead of using its Save & Reboot) can be discarded rather than
+    // leaving the tab permanently dirty - see onClose below.
+    const before = {
+      inverted: FC.RX_CONFIG.serialrx_inverted,
+      halfDuplex: FC.RX_CONFIG.serialrx_halfduplex,
+      pinSwap: FC.RX_CONFIG.serialrx_pinswap,
+    };
+    let applied = false;
+    let saved = false;
+
+    // Mounted to <body>, not nested here, for the same reason as
+    // BoardAlignment.svelte's wizards: a native <dialog>'s built-in
+    // centering resolves against the nearest ancestor with a transform, and
+    // #content has a (no-op) transform applied as a long-standing Mac
+    // freeze fix.
+    wizardInstance = mount(RxWiringDetectWizard, {
+      target: document.body,
+      props: {
+        mspCode: MSPCodes.MSP2_WING_RX_SERIAL_TRIAL,
+        onDetected: (inverted, halfDuplex, pinSwap) => {
+          applied = true;
+          FC.RX_CONFIG.serialrx_inverted = inverted;
+          FC.RX_CONFIG.serialrx_halfduplex = halfDuplex;
+          FC.RX_CONFIG.serialrx_pinswap = pinSwap;
+        },
+        onButtonDisabled: (v) => (wizardDisabled = v),
+        onClose: () => {
+          // Closed (or auto-closed) without committing via Save & Reboot -
+          // undo the detected values rather than leaving the tab stuck
+          // dirty (and Detect Wiring stuck disabled by hasUnsavedChanges)
+          // from a result the user never actually asked to keep.
+          if (applied && !saved) {
+            FC.RX_CONFIG.serialrx_inverted = before.inverted;
+            FC.RX_CONFIG.serialrx_halfduplex = before.halfDuplex;
+            FC.RX_CONFIG.serialrx_pinswap = before.pinSwap;
+          }
+          closeWizard();
+        },
+        onSaveRequested: () => {
+          saved = true;
+          onSaveRequested?.();
+        },
+      },
+    });
+  }
+
+  // Called by Receiver.svelte on unmount/revert, same as
+  // BoardAlignment.svelte's cleanup() - the wizard lives outside this
+  // component's own tree (mounted to <body>), so it isn't torn down
+  // automatically when this component is.
+  export function cleanup() {
+    wizardInstance?.stop();
+    closeWizard();
+  }
 </script>
+
+{#snippet wiringDetectActions()}
+  <div class="wiring-detect">
+    <button
+      class="btn"
+      disabled={wizardDisabled ||
+        !hasSerialRxPort ||
+        hasUnsavedChanges ||
+        armed}
+      title={armed
+        ? $i18n.t("receiverWiringDetectArmedFirst")
+        : hasUnsavedChanges
+          ? $i18n.t("receiverWiringDetectSaveFirst")
+          : undefined}
+      onclick={onClickDetectWiring}
+    >
+      {$i18n.t("receiverWiringDetectButton")}
+    </button>
+    <HelpIcon>
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html $i18n.t("receiverWiringDetectHelp")}
+    </HelpIcon>
+  </div>
+{/snippet}
 
 {#snippet header()}
   <div class="section-header">
@@ -64,7 +164,10 @@
   </SubSection>
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>
-      <SubSection label="receiverSelectionSectionSignaling">
+      <SubSection
+        label="receiverSelectionSectionSignaling"
+        actions={wiringDetectActions}
+      >
         <Field id="receiver-serialrx-inverted" label="receiverSerialInverted">
           {#snippet tooltip()}
             <Tooltip help="receiverSerialInvertedHelp" />
@@ -103,6 +206,18 @@
 <style lang="scss">
   select {
     min-width: 180px;
+  }
+
+  .wiring-detect {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn {
+    @extend %button;
+
+    padding: 4px 8px;
   }
 
   // Custom Section header (badges live here, not in the body) - replicates

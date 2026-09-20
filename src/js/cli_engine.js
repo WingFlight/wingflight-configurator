@@ -10,6 +10,19 @@ export default class CliEngine {
   #lineDelayMs = 15;
   #profileSwitchDelayMs = 100;
   #rateProfileSwitchDelayMs = 100;
+  // `defaults`/`defaults nosave` makes the FC reset every PG back to its
+  // default value in place -- on a target with a lot of them (servo mixer
+  // rules, gyro RPM notches, etc., as on this wing platform) that can block
+  // the firmware's UART processing long enough that the very next replayed
+  // line arrives, and gets parsed, mid-reset. The line itself usually looks
+  // fine in the backup file -- what actually fails to parse is whatever
+  // partial/garbled bytes the FC's RX buffer was holding when it came back
+  // up, which is why the reported failure (e.g. "###ERROR IN map: PARSING
+  // FAILED###") doesn't have to match any line actually being sent. A
+  // generous fixed delay here, mirroring the profile/rateprofile switch
+  // delays below, gives the reset time to finish before we send anything
+  // else.
+  #defaultsDelayMs = 2000;
 
   #outputHistory = ""; // output history holds the human-readable history from the flight controller
   #cliBuffer = ""; // cliBuffer holds the current data received from the flight controller
@@ -218,7 +231,9 @@ export default class CliEngine {
 
       this.#reportSendCommandsProgress((100.0 * i) / commandsArray.length);
 
-      if (line.toLowerCase().startsWith("profile")) {
+      if (line.toLowerCase().startsWith("defaults")) {
+        delay = this.#defaultsDelayMs;
+      } else if (line.toLowerCase().startsWith("profile")) {
         delay = this.#profileSwitchDelayMs;
       } else if (line.toLowerCase().startsWith("rateprofile")) {
         delay = this.#rateProfileSwitchDelayMs;

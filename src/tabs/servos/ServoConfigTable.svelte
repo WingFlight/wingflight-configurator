@@ -2,6 +2,9 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { requestCurveView } from "@/js/curveNav.svelte.js";
+  import { Mixer } from "@/js/Mixer.js";
   import {
     SERVO_TRIM_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
@@ -13,10 +16,12 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  let { servos, onFieldChange, onRateChange } = $props();
+  // pwmServoCount is only meaningful (and only passed) for the bus table -
+  // needed to work out whether a given bus channel is actually being
+  // cloned from a PWM servo right now (see effectiveCurveIndex() below).
+  let { servos, onFieldChange, onRateChange, pwmServoCount = 0 } = $props();
 
   const FLAG_REVERSE = 1;
-  const FLAG_GEOCOR = 2;
 
   const scaleMin = 50;
 
@@ -68,6 +73,17 @@
   // column rather than leaving an empty cell in every row.
   let isBusTable = $derived(servos.length > 0 && servos[0].isBusServo);
 
+  // Live trim from a Mapped ServoTrim adjustment: runtime-only on the FC, so the
+  // servo's Center doesn't change, but it does move the output. Shown beside the
+  // badge so it's clear a trim is in effect.
+  function liveTrim(servo) {
+    return FC.SERVO_RUNTIME_TRIM?.[servo.index] ?? 0;
+  }
+
+  function signed(value) {
+    return value > 0 ? `+${value}` : `${value}`;
+  }
+
   // Only show the Trim column if at least one servo in this table actually
   // has a ServoTrim adjustment configured for it -- otherwise it's just an
   // empty column taking up space.
@@ -109,8 +125,12 @@
   // independently-hand-typed guess that could drift out of sync with it.
   const INDEX_COL = 44;
   const VALUE_COL = 100;
-  const TRIM_COL = 64;
-  const CHECKBOX_COL = 60;
+  const TRIM_COL = 100;
+  // Wide enough for the Reverse label + help icon on one line for most
+  // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
+  // below still wraps the icon as a fallback for longer translations (e.g.
+  // Bulgarian "Реверсиране") rather than relying on this width alone.
+  const REVERSE_COL = 90;
   // No fixed column for the trailing Signal meter (it's the 1fr track), but
   // it still needs *some* room to be legible -- this is roughly its
   // meter-label plus a usable sliver of the meter bar itself.
@@ -125,8 +145,7 @@
       if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
       cols.push(VALUE_COL); // Speed
     }
-    cols.push(CHECKBOX_COL); // Reverse
-    if (CONFIGURATOR.expertMode) cols.push(CHECKBOX_COL); // Geo cor
+    cols.push(REVERSE_COL); // Reverse
     return cols;
   });
 
@@ -189,6 +208,51 @@
     return (FC.SERVO_CONFIG[index].flags & mask) !== 0;
   }
 
+  // Balance curves are edited on the Curves tab, not here - this is just a
+  // read-only "something's set" indicator so it's not invisible from the
+  // Servos tab.
+  //
+  // In clone mode (bus_servo_clone_pwm), a bus channel's actual
+  // transmitted signal mirrors its paired PWM servo's already
+  // curve-shaped output verbatim - the firmware never even reads that bus
+  // channel's own curve slot in that case (sbusOutGetValueMixer(),
+  // drivers/sbus_output.c). So the curve that's actually meaningful for a
+  // cloned bus row is the source PWM servo's, not the bus channel's own
+  // (functionally inert while cloned) slot. Only channels that actually
+  // have a PWM counterpart (channel < pwmServoCount) are cloned - beyond
+  // that, a bus channel always runs its own independent mixer/curve
+  // regardless of the clone toggle.
+  function effectiveCurveIndex(servo) {
+    if (servo.isBusServo) {
+      const channel = servo.mspIndex - Mixer.BUS_SERVO_OFFSET;
+      if (
+        FC.MIXER_CONFIG?.bus_servo_clone_pwm === 1 &&
+        channel < pwmServoCount
+      ) {
+        return channel; // PWM servos occupy FC.SERVO_CURVES[0..pwmServoCount-1] directly
+      }
+    }
+    return servo.index;
+  }
+
+  function hasActiveCurve(servo) {
+    const curve = FC.SERVO_CURVES?.[effectiveCurveIndex(servo)];
+    return (
+      !!curve &&
+      !ServoBalanceCurve.compareCurve(curve, ServoBalanceCurve.nullCurve())
+    );
+  }
+
+  function isClonedCurve(servo) {
+    return servo.isBusServo && effectiveCurveIndex(servo) !== servo.index;
+  }
+
+  function curveTooltip(servo) {
+    return isClonedCurve(servo)
+      ? $i18n.t("servoCurveActiveCloned", { 1: effectiveCurveIndex(servo) + 1 })
+      : $i18n.t("servoCurveActive");
+  }
+
   function setFlag(index, mask, enabled) {
     FC.SERVO_CONFIG[index].flags = enabled
       ? FC.SERVO_CONFIG[index].flags | mask
@@ -201,6 +265,35 @@
     {$i18n.t(labelKey)}
     {#if helpKey}<HelpIcon>{$i18n.t(helpKey)}</HelpIcon>{/if}
   </span>
+{/snippet}
+
+{#snippet curveIconSvg()}
+  <svg
+    class="curve-icon"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3 18 C 7 18, 7 6, 12 6 C 17 6, 17 18, 21 18" />
+  </svg>
+{/snippet}
+
+{#snippet curveIcon(servo)}
+  <button
+    type="button"
+    class="curve-icon-btn"
+    onclick={() => requestCurveView("servo", effectiveCurveIndex(servo))}
+    title={$i18n.t("servoCurveEdit")}
+    aria-label={$i18n.t("servoCurveEdit")}
+  >
+    {@render curveIconSvg()}
+  </button>
 {/snippet}
 
 <div class="responsive-table" bind:clientWidth={containerWidth}>
@@ -249,26 +342,23 @@
             <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
           </span>
         {/if}
-        <span class="header-label-flex">
+        <span class="header-label-flex header-label-narrow">
           <span>{$i18n.t("servoReverse")}</span>
           <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
         </span>
-        {#if CONFIGURATOR.expertMode}
-          <span class="header-label-flex">
-            <span>{$i18n.t("servoGeometryCorrection")}</span>
-            <HelpIcon>
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("servoGeometryCorrectionHelp")}
-            </HelpIcon>
-          </span>
-        {/if}
         <span>{$i18n.t("servoSignal")}</span>
       </div>
 
       {#each servos as servo (servo.index)}
         {@const config = FC.SERVO_CONFIG[servo.index]}
         <div class="servo-row" style="grid-template-columns: {gridColumns}">
-          <span class="servo-index">{servo.label}</span>
+          <span
+            class="servo-index"
+            title={hasActiveCurve(servo) ? curveTooltip(servo) : undefined}
+          >
+            {servo.label}
+            {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
+          </span>
           <span>
             <NumberInput
               {...bounds(servo, "mid")}
@@ -291,6 +381,11 @@
                     : "ADJ"}
                 </span>
               {/each}
+              {#if liveTrim(servo) !== 0}
+                <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+                  >{signed(liveTrim(servo))}</span
+                >
+              {/if}
             </span>
           {/if}
           <span>
@@ -352,17 +447,6 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          {#if CONFIGURATOR.expertMode}
-            <span class="servo-checkbox">
-              <Switch
-                bind:checked={
-                  () => flag(servo.index, FLAG_GEOCOR),
-                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
-                }
-                onchange={() => onFieldChange(servo.index)}
-              />
-            </span>
-          {/if}
           <span class="servo-signal">
             <span class="meter">
               <span class="meter-fill" style="width: {meterPercent(servo)}%"
@@ -390,7 +474,13 @@
 
           <div class="mobile-detail-title">
             {$i18n.t("servoNumber")}
-            {servo.label}
+            <span
+              class="mobile-detail-index"
+              title={hasActiveCurve(servo) ? curveTooltip(servo) : undefined}
+            >
+              {servo.label}
+              {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
+            </span>
           </div>
 
           <div class="mobile-field">
@@ -419,6 +509,11 @@
                       : "ADJ"}
                   </span>
                 {/each}
+                {#if liveTrim(servo) !== 0}
+                  <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+                    >{signed(liveTrim(servo))}</span
+                  >
+                {/if}
               </span>
             </div>
           {/if}
@@ -495,22 +590,6 @@
             />
           </div>
 
-          {#if CONFIGURATOR.expertMode}
-            <div class="mobile-field">
-              {@render fieldLabel(
-                "servoGeometryCorrection",
-                "servoGeometryCorrectionHelp",
-              )}
-              <Switch
-                bind:checked={
-                  () => flag(servo.index, FLAG_GEOCOR),
-                  (v) => setFlag(servo.index, FLAG_GEOCOR, v)
-                }
-                onchange={() => onFieldChange(servo.index)}
-              />
-            </div>
-          {/if}
-
           <div class="mobile-field">
             {@render fieldLabel("servoSignal", null)}
             <span class="servo-signal">
@@ -531,7 +610,13 @@
               class="mobile-list-row"
               onclick={() => (selectedIndex = servo.index)}
             >
-              <span class="mobile-row-index">{servo.label}</span>
+              <span
+                class="mobile-row-index"
+                title={hasActiveCurve(servo) ? curveTooltip(servo) : undefined}
+              >
+                {servo.label}
+                {#if hasActiveCurve(servo)}{@render curveIconSvg()}{/if}
+              </span>
               <span class="servo-signal mobile-row-signal">
                 <span class="meter">
                   <span class="meter-fill" style="width: {meterPercent(servo)}%"
@@ -589,11 +674,17 @@
     gap: 4px;
   }
 
+  .live-trim {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-soft);
+  }
+
   .adjustment-badge {
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: transparent;
     color: var(--color-text-soft);
     font-size: 0.62rem;
@@ -631,6 +722,22 @@
     margin-left: 2px;
   }
 
+  // REVERSE_COL is sized for the label in most locales, but a long enough
+  // translation (e.g. Bulgarian "Реверсиране") can still outrun it, and with
+  // nowrap the overflow wouldn't respect the grid cell -- it'd bleed into
+  // the Signal column instead of staying above the switch. Wrapping the
+  // icon onto its own line as a fallback keeps the label centered over its
+  // actual column at any text length.
+  .header-label-narrow {
+    flex-wrap: wrap;
+    row-gap: 1px;
+    white-space: normal;
+  }
+
+  .header-label-narrow :global(.container) {
+    margin-left: 0;
+  }
+
   .servo-row {
     padding: 4px;
     text-align: center;
@@ -638,7 +745,54 @@
   }
 
   .servo-index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
     font-weight: 600;
+  }
+
+  // Shown below/beside a servo's number when it has a non-default balance
+  // curve set on the Curves tab - not editable from here, just a "something's
+  // set" flag so it isn't invisible from this tab. Reused on the desktop
+  // index cell, the mobile detail title, and the mobile list row; stacked
+  // under the number where the column is narrow (desktop), inline where
+  // there's more room (mobile).
+  // Sized in em (matched on the element itself too, as a belt-and-braces
+  // fallback - see width/height="1em" on the <svg>) so it tracks whatever
+  // font-size/line-height applies at each of its three call sites, instead
+  // of a fixed px size that's right in one place and wrong in the others.
+  .curve-icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    color: var(--color-accent, var(--accent));
+  }
+
+  // Clickable variant (desktop index cell, mobile detail title) - jumps to
+  // this servo's curve on the Curves tab, see curveNav.svelte.js. Not used
+  // in the mobile list row, which is itself already a <button> and can't
+  // nest another one - that spot renders the plain curveIconSvg instead.
+  .curve-icon-btn {
+    display: inline-flex;
+    padding: 2px;
+    border: none;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-accent, var(--accent));
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-surface-float, var(--color-surface));
+      }
+    }
+  }
+
+  .mobile-detail-index {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
 
   .servo-checkbox {
@@ -657,7 +811,7 @@
     display: block;
     flex: 1;
     height: 10px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
 
     background-color: var(--color-surface-float, var(--color-surface));
@@ -670,7 +824,7 @@
     left: 0;
     display: block;
     height: 100%;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     background-color: var(--color-accent, var(--accent));
   }
 
@@ -725,6 +879,7 @@
   }
 
   .mobile-row-index {
+    position: relative;
     min-width: 1.8rem;
     font-weight: 700;
     text-align: center;
@@ -752,7 +907,7 @@
   .mobile-row-rev {
     flex-shrink: 0;
     padding: 1px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     font-size: 0.65rem;
     font-weight: 700;
 

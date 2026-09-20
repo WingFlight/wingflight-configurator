@@ -87,7 +87,7 @@
     height: 32px;
     max-width: 300px;
 
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     :global(html[data-theme="light"]) & {
       background-color: var(--color-neutral-200);

@@ -5,6 +5,7 @@ import {
 } from "@/tabs/adjustments/util.js";
 
 import { FC } from "@/js/fc.svelte.js";
+import { Mixer } from "@/js/Mixer.js";
 
 export const PID_ADJUSTMENT_FUNCTIONS = [
   [18, 19, 20, 21, 57], // Roll P/I/D/F/B
@@ -36,6 +37,15 @@ export const TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [92, 93, 94]; // Roll/Pitch/Y
 // TV Hold's gain (flight/tv_hold.c) -- a single scalar, not per-axis like the
 // tables above (the hold engine itself is a single 3-axis instance).
 export const TV_HOLD_GAIN_ADJUSTMENT_FUNCTION = 110;
+
+// Mixer rule role (Mixer.ROLE_*, pg/mixer.h) -> the adjustment function that
+// live-tunes every rule tagged with that role (flight/mixer.c's
+// applyRoleWeight()). A plain map, not an array like the tables above --
+// roles aren't axis-ordered, and not every role has a matching adjustment.
+export const MIXER_ROLE_ADJUSTMENT_FUNCTIONS = {
+  [Mixer.ROLE_FLAP_COMPENSATION]: 112,
+  [Mixer.ROLE_DIFFERENTIAL_THRUST_YAW]: 113,
+};
 
 function auxChannelValue(channel) {
   return channel >= 0 && channel < ALWAYS_ON_CH
@@ -73,7 +83,7 @@ export function getAdjustmentState(adjFunction) {
   return states.find((state) => state.active) ?? states[0];
 }
 
-// Mirrors the `AUX${n+1}` convention used by the channel dropdowns in the
+// Mirrors the `CH #${n+5}` convention used by the channel dropdowns in the
 // Adjustments tab (see adjChannelOptions in Adjustments.svelte) so the label
 // shown here matches what the user picked there.
 export function adjustmentChannelLabel(adjustment) {
@@ -81,7 +91,7 @@ export function adjustmentChannelLabel(adjustment) {
     return undefined;
   }
 
-  return adjustment.channel === -1 ? "AUTO" : `AUX${adjustment.channel + 1}`;
+  return adjustment.channel === -1 ? "AUTO" : `CH #${adjustment.channel + 5}`;
 }
 
 export function adjustmentTitle(adjustment) {

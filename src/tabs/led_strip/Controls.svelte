@@ -288,7 +288,7 @@
 
   .label.swatch {
     padding: 2px 8px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     font-size: 0.75rem;
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));

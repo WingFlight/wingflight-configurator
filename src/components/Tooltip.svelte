@@ -70,7 +70,7 @@
     }
 
     :global(code) {
-      border-radius: 2px;
+      border-radius: var(--radius-xs);
       padding: 1px 4px;
       margin: 0;
     }
