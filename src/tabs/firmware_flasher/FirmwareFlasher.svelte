@@ -8,6 +8,7 @@
   import { i18n } from "@/js/i18n.js";
   import { ConfigInserter } from "@/js/ConfigInserter.js";
   import { FirmwareCache } from "@/js/FirmwareCache.js";
+  import { downloadFirmware } from "@/js/FirmwareDownload.js";
   import * as github from "@/js/GitHubApi.js";
   import { getIntegerValue } from "@/js/main.js";
   import { manufacturers } from "@/js/manufacturers.js";
@@ -1076,31 +1077,6 @@
     });
   }
 
-  // A cold connection (first request to the CDN/GitHub in a while) can
-  // fail transiently where a retry moments later succeeds -- observed as
-  // "Load Firmware Online" failing on the first press and working on the
-  // second. Rather than making the user do that second press manually,
-  // retry once in place before surfacing a failure.
-  async function fetchFirmwareWithRetry(url, attempts = 2) {
-    let lastErr;
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res;
-      } catch (err) {
-        lastErr = err;
-        if (attempt < attempts) {
-          console.log(
-            `Firmware download attempt ${attempt} failed, retrying`,
-            err,
-          );
-        }
-      }
-    }
-    throw lastErr;
-  }
-
   async function loadRemoteFirmware(summary) {
     setFlashingEnabled(false);
     localFirmwareLoaded = false;
@@ -1130,8 +1106,7 @@
       FLASH_MESSAGE_TYPES.NEUTRAL,
     );
     try {
-      const res = await fetchFirmwareWithRetry(summary.url);
-      const data = await res.text();
+      const data = await downloadFirmware(summary.url);
       await onLoadSuccess(data, summary);
     } catch (err) {
       console.log("Failed to download firmware", err);
