@@ -6076,6 +6076,12 @@
     "profilesAcroTrainerLimitHelp": {
         "message": "The same angle limit applies to positive and negative pitch and roll. Inside the limit, Trainer uses normal rate control without self-leveling. Actual attitude can overshoot; this is not stall protection."
     },
+    "profilesAngleGroup": {
+        "message": "Angle"
+    },
+    "profilesHorizonGroup": {
+        "message": "Horizon"
+    },
     "profilesAngleHorizonGroup": {
         "message": "Angle / Horizon Mode"
     },

@@ -59,6 +59,21 @@
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
   let showSettingsColumn = $derived(showPidBoxes && CONFIGURATOR.expertMode);
 
+  // Use configured assignments, not the live switch state.
+  let configuredModes = $derived.by(() => {
+    const ids = [];
+    FC.MODE_RANGES.forEach((entry, index) => {
+      const extra = FC.MODE_RANGES_EXTRA[index];
+      const linked = extra?.id === entry.id && extra.linkedTo > 0;
+      if (entry.range.start < entry.range.end || linked) ids.push(entry.id);
+    });
+    return new Set(
+      FC.AUX_CONFIG.filter((_, index) =>
+        ids.includes(FC.AUX_CONFIG_IDS[index]),
+      ),
+    );
+  });
+
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
   );
@@ -87,6 +102,10 @@
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_PID_TUNING);
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
+    await MSP.promise(MSPCodes.MSP_BOXIDS);
+    await MSP.promise(MSPCodes.MSP_BOXNAMES);
+    await MSP.promise(MSPCodes.MSP_MODE_RANGES);
+    await MSP.promise(MSPCodes.MSP_MODE_RANGES_EXTRA);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
     await updateRuntimeGains();
@@ -255,10 +274,10 @@
         <PidGains />
         <MasterGains />
       {/if}
-      <TrainerSettings />
-      {#if CONFIGURATOR.expertMode}
-        <LevelingSettings />
+      {#if configuredModes.has("TRAINER")}
+        <TrainerSettings />
       {/if}
+      <LevelingSettings {configuredModes} />
     </div>
     {#if showSettingsColumn}
       <div>
