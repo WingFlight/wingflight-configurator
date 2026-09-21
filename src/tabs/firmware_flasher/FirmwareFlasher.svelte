@@ -354,6 +354,77 @@
   let restorePort = null;
   let restoreBaud = null;
   let restoreText = null;
+  let exitDialogEl;
+  let pendingExit = null;
+  let savingExitBackup = $state(false);
+  let exitSaveFailed = $state(false);
+
+  function hasPendingRestore() {
+    return !!restoreText && restoreRun.status !== "done" &&
+      restoreRun.status !== "idle";
+  }
+
+  // Shared by tab changes, wizard navigation and the desktop window close.
+  export function requestExit(callback) {
+    if (flashInProgress || backupOrRestoreBusy || savingExitBackup) return;
+    if (!hasPendingRestore()) {
+      callback?.();
+      return;
+    }
+    if (exitDialogEl.open) return;
+    pendingExit = callback;
+    exitSaveFailed = false;
+    exitDialogEl.showModal();
+  }
+
+  function cancelExit(event) {
+    if (savingExitBackup) {
+      event?.preventDefault();
+      return;
+    }
+    pendingExit = null;
+    exitDialogEl.close();
+  }
+
+  function confirmExit() {
+    const callback = pendingExit;
+    pendingExit = null;
+    exitDialogEl.close();
+    callback?.();
+  }
+
+  async function saveBeforeExit() {
+    savingExitBackup = true;
+    exitSaveFailed = false;
+    try {
+      const saved = await saveBackupToFile(restoreText, "backup_pre_flash");
+      if (saved) {
+        backupRun.saved = true;
+        confirmExit();
+      } else {
+        exitSaveFailed = true;
+      }
+    } catch (error) {
+      console.warn("Failed to save restore backup", error);
+      exitSaveFailed = true;
+    } finally {
+      savingExitBackup = false;
+    }
+  }
+
+  function restoreBeforeExit() {
+    cancelExit();
+    wizardStep = 6;
+    runRestore();
+  }
+
+  function warnBeforeUnload(event) {
+    if (hasPendingRestore() || flashInProgress || backupOrRestoreBusy) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  }
+
 
   let backupCommand = $derived(
     backupMode === BACKUP_TYPES.DUMP ? "dump all" : "diff all",
@@ -442,8 +513,11 @@
     // anything -- onBoardChange() already clears exactly what a *changed*
     // board invalidates, which is more correct than blanket-clearing on
     // every visit and forcing a re-detect just for glancing back.
-    if (step === 1 && wizardStep !== 1) clearFirmwareSelection();
-    wizardStep = step;
+    const navigate = () => {
+      if (step === 1 && wizardStep !== 1) clearFirmwareSelection();
+      wizardStep = step;
+    };
+    if (step !== wizardStep) requestExit(navigate);
   }
   const onWizardBack = () => goToStep(wizardStep - 1);
   const onWizardNext = () => goToStep(wizardStep + 1);
@@ -451,11 +525,14 @@
   // Puts the wizard back exactly where it starts on a fresh visit to the
   // tab, so flashing a second board doesn't mean clicking Back five times.
   function resetWizardToStart() {
-    wizardStep = 1;
-    clearFirmwareSelection();
+    requestExit(() => {
+      wizardStep = 1;
+      clearFirmwareSelection();
+    });
   }
 
   onMount(() => {
+    window.addEventListener("beforeunload", warnBeforeUnload);
     FirmwareCache.load();
     FirmwareCache.onPutToCache(onCacheUpdate);
     FirmwareCache.onRemoveFromCache(onCacheUpdate);
@@ -502,6 +579,8 @@
   });
 
   onDestroy(() => {
+    window.removeEventListener("beforeunload", warnBeforeUnload);
+    pendingExit = null;
     portPickerElement()?.removeEventListener("change", onPortChange);
     portListObserver?.disconnect();
     document.removeEventListener("keypress", onKeypress);
@@ -1183,7 +1262,7 @@
 
   async function saveBackupFile() {
     const saved = await saveBackupToFile(backupRun.text, "backup_pre_flash");
-    backupRun.saved = !!saved;
+    if (saved) backupRun.saved = true;
   }
 
   function cancelBackup() {
@@ -1247,25 +1326,37 @@
     // it again.
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const restored = await restoreOverSerial(
-      restorePort,
-      restoreBaud,
-      restoreText,
-      (status) => {
-        restoreRun.status = status === "running" ? "running" : "connecting";
-      },
-    );
-
-    GUI.connect_lock = false;
-    restoreRun.status = restored ? "done" : "failed";
-    // A successful restore is the end of the job -- hand off to Finished
-    // (step 7) rather than leaving the result sitting on Restore.
-    if (restored) wizardStep = 7;
+    let restored = false;
+    try {
+      restored = await restoreOverSerial(
+        restorePort,
+        restoreBaud,
+        restoreText,
+        (status) => {
+          restoreRun.status = status === "running" ? "running" : "connecting";
+        },
+      );
+    } catch (error) {
+      console.warn("Configuration restore failed", error);
+    } finally {
+      GUI.connect_lock = false;
+      restoreRun.status = restored ? "done" : "failed";
+    }
+    if (restored) {
+      wizardStep = 7;
+    } else if (!backupRun.saved) {
+      requestExit(() => {
+        restoreRun.status = "skipped";
+        wizardStep = 7;
+      });
+    }
   }
 
   function skipRestore() {
-    restoreRun.status = "skipped";
-    wizardStep = 7;
+    requestExit(() => {
+      restoreRun.status = "skipped";
+      wizardStep = 7;
+    });
   }
 
   async function selectPortForRestore() {
@@ -2301,6 +2392,9 @@
       </div>
     {:else if wizardStep === 6}
       <div class="step-body">
+        <button class="btn" disabled={backupOrRestoreBusy} onclick={saveBackupFile}>
+          {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
+        </button>
         {#if restoreRun.status === "prompt"}
           <div class="backup-panel">
             <p>{$i18n.t("firmwareFlasherWizardRestorePrompt")}</p>
@@ -2396,6 +2490,20 @@
     </div>
     <!-- eslint-enable svelte/no-at-html-tags -->
   </Page>
+
+  <dialog bind:this={exitDialogEl} oncancel={cancelExit}>
+    <h3>{$i18n.t("firmwareFlasherRestoreExitTitle")}</h3>
+    <p>{$i18n.t(backupRun.saved ? "firmwareFlasherRestoreExitSaved" : "firmwareFlasherRestoreExitUnsaved")}</p>
+    {#if exitSaveFailed}
+      <p role="alert">{$i18n.t("firmwareFlasherRestoreExitSaveFailed")}</p>
+    {/if}
+    <div class="buttons">
+      <button class="btn" disabled={savingExitBackup} onclick={cancelExit}>{$i18n.t("firmwareFlasherRestoreExitStay")}</button>
+      <button class="btn" disabled={savingExitBackup} onclick={confirmExit}>{$i18n.t("firmwareFlasherRestoreExitLeave")}</button>
+      <button class="btn" disabled={savingExitBackup} onclick={saveBeforeExit}>{$i18n.t("firmwareFlasherWizardSaveBackupFile")}</button>
+      <button class="btn primary" disabled={savingExitBackup} onclick={restoreBeforeExit}>{$i18n.t("firmwareFlasherWizardRestoreNow")}</button>
+    </div>
+  </dialog>
 
   <dialog bind:this={detectDialogEl}>
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -2848,6 +2956,8 @@
 
   dialog .buttons {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: flex-end;
     margin-top: 1.5em;
   }

@@ -105,6 +105,14 @@ function closeSerial() {
 }
 
 function closeHandler() {
+    if (GUI.isNWJS() && GUI.current_tab?.requestClose) {
+        GUI.current_tab.requestClose(() => closeWindow.call(this));
+        return;
+    }
+    closeWindow.call(this);
+}
+
+function closeWindow() {
     if (!GUI.isCordova()) {
         this.hide();
     }

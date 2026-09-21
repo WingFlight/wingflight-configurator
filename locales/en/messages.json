@@ -5086,6 +5086,24 @@
     "firmwareFlasherWizardClose": {
         "message": "Close"
     },
+    "firmwareFlasherRestoreExitTitle": {
+        "message": "Configuration has not been restored"
+    },
+    "firmwareFlasherRestoreExitUnsaved": {
+        "message": "Your previous settings have not been restored to the flight controller. Leaving will discard the backup held in this page. Restore them now or save a backup file before leaving."
+    },
+    "firmwareFlasherRestoreExitSaved": {
+        "message": "Your previous settings have not been restored to the flight controller. You have saved a backup file, so you can restore them later. Leave without restoring?"
+    },
+    "firmwareFlasherRestoreExitSaveFailed": {
+        "message": "The backup was not saved. Stay here to retry or restore it to the flight controller."
+    },
+    "firmwareFlasherRestoreExitStay": {
+        "message": "Stay on this page"
+    },
+    "firmwareFlasherRestoreExitLeave": {
+        "message": "Leave Without Restoring"
+    },
     "firmwareFlasherWizardRestoreTitle": {
         "message": "Restore Configuration"
     },
