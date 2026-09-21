@@ -1,3 +1,4 @@
+import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
 import semver from "semver";
 import { API_VERSION_22_3 } from "@/js/configurator.svelte.js";
 
@@ -1473,6 +1474,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.autoHoverThrottleAssistGain       = data.remaining() >= 4 ? data.readU8() : 0;
                 FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
                 FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
+                readAttitudeLimits(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -2557,6 +2559,7 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.autoHoverThrottleAssistGain)
                 .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
                 .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs);
+            writeAttitudeLimits(buffer, FC.PID_PROFILE);
             break;
         }
 

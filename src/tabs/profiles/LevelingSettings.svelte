@@ -6,46 +6,28 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
+  let { configuredModes } = $props();
 </script>
 
-<Section label="profilesLevelingSettings">
-  <SubSection label="profilesAcroTrainerGroup">
-    <Field id="acro-trainer-gain" label="profilesAcroTrainerGain">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAcroTrainerGainHelp")}
-      {/snippet}
+{#snippet angleLimits()}
+  {#if FC.PID_PROFILE.hasAxisLimits}
+    <Field id="angle-roll-limit" label="profilesRollAngleLimit">
       <NumberInput
-        id="acro-trainer-gain"
-        min="25"
-        max="255"
-        bind:value={FC.PID_PROFILE.acroTrainerGain}
-      />
-    </Field>
-    <Field id="acro-trainer-limit" label="profilesAcroTrainerLimit">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAcroTrainerLimitHelp")}
-      {/snippet}
-      <NumberInput
-        id="acro-trainer-limit"
+        id="angle-roll-limit"
         min="10"
-        max="80"
-        bind:value={FC.PID_PROFILE.acroTrainerLimit}
+        max="90"
+        bind:value={FC.PID_PROFILE.angleRollLimit}
       />
     </Field>
-  </SubSection>
-
-  <SubSection label="profilesAngleHorizonGroup">
-    <Field id="angle-mode-gain" label="profilesAngleModeGain">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAngleModeGainHelp")}
-      {/snippet}
+    <Field id="angle-pitch-limit" label="profilesPitchAngleLimit">
       <NumberInput
-        id="angle-mode-gain"
-        min="0"
-        max="200"
-        bind:value={FC.PID_PROFILE.levelAngleStrength}
+        id="angle-pitch-limit"
+        min="10"
+        max="75"
+        bind:value={FC.PID_PROFILE.anglePitchLimit}
       />
     </Field>
+  {:else}
     <Field id="angle-mode-limit" label="profilesAngleModeLimit">
       {#snippet tooltip()}
         {$i18n.t("profilesAngleModeLimitHelp")}
@@ -57,141 +39,181 @@
         bind:value={FC.PID_PROFILE.levelAngleLimit}
       />
     </Field>
-    <Field id="horizon-mode-gain" label="profilesHorizonModeGain">
-      {#snippet tooltip()}
-        {$i18n.t("profilesHorizonModeGainHelp")}
-      {/snippet}
-      <NumberInput
-        id="horizon-mode-gain"
-        min="0"
-        max="200"
-        bind:value={FC.PID_PROFILE.horizonLevelStrength}
-      />
-    </Field>
-  </SubSection>
+  {/if}
+{/snippet}
 
-  <SubSection label="profilesAutoHoverGroup">
-    <Field id="auto-hover-gain" label="profilesAutoHoverGain">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverGainHelp")}
-      {/snippet}
-      <NumberInput
-        id="auto-hover-gain"
-        min="0"
-        max="250"
-        bind:value={FC.PID_PROFILE.autoHoverGain}
-      />
-    </Field>
-    <Field id="auto-hover-max-angle" label="profilesAutoHoverMaxAngle">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverMaxAngleHelp")}
-      {/snippet}
-      <NumberInput
-        id="auto-hover-max-angle"
-        min="0"
-        max="90"
-        bind:value={FC.PID_PROFILE.autoHoverMaxAngle}
-      />
-    </Field>
-    <Field id="auto-hover-max-rate" label="profilesAutoHoverMaxRate">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverMaxRateHelp")}
-      {/snippet}
-      <NumberInput
-        id="auto-hover-max-rate"
-        min="0"
-        max="1800"
-        bind:value={FC.PID_PROFILE.autoHoverMaxRate}
-      />
-    </Field>
-    <Field id="auto-hover-roll-deadband" label="profilesAutoHoverRollDeadband">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverRollDeadbandHelp")}
-      {/snippet}
-      <NumberInput
+{#if configuredModes.has("ANGLE")}
+  <Section label="profilesAngleGroup">
+    <SubSection>
+      <Field id="angle-mode-gain" label="profilesAngleModeGain">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAngleModeGainHelp")}
+        {/snippet}
+        <NumberInput
+          id="angle-mode-gain"
+          min="0"
+          max="200"
+          bind:value={FC.PID_PROFILE.levelAngleStrength}
+        />
+      </Field>
+      {@render angleLimits()}
+    </SubSection>
+  </Section>
+{/if}
+
+{#if configuredModes.has("HORIZON")}
+  <Section label="profilesHorizonGroup">
+    <SubSection>
+      <Field id="horizon-mode-gain" label="profilesHorizonModeGain">
+        {#snippet tooltip()}
+          {$i18n.t("profilesHorizonModeGainHelp")}
+        {/snippet}
+        <NumberInput
+          id="horizon-mode-gain"
+          min="0"
+          max="200"
+          bind:value={FC.PID_PROFILE.horizonLevelStrength}
+        />
+      </Field>
+      {#if !configuredModes.has("ANGLE")}
+        {@render angleLimits()}
+      {/if}
+    </SubSection>
+  </Section>
+{/if}
+
+{#if configuredModes.has("AUTO HOVER")}
+  <Section label="profilesAutoHoverGroup">
+    <SubSection>
+      <Field id="auto-hover-gain" label="profilesAutoHoverGain">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverGainHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-gain"
+          min="0"
+          max="250"
+          bind:value={FC.PID_PROFILE.autoHoverGain}
+        />
+      </Field>
+      <Field id="auto-hover-max-angle" label="profilesAutoHoverMaxAngle">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverMaxAngleHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-max-angle"
+          min="0"
+          max="90"
+          bind:value={FC.PID_PROFILE.autoHoverMaxAngle}
+        />
+      </Field>
+      <Field id="auto-hover-max-rate" label="profilesAutoHoverMaxRate">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverMaxRateHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-max-rate"
+          min="0"
+          max="1800"
+          bind:value={FC.PID_PROFILE.autoHoverMaxRate}
+        />
+      </Field>
+      <Field
         id="auto-hover-roll-deadband"
-        min="0"
-        max="100"
-        bind:value={FC.PID_PROFILE.autoHoverRollDeadband}
-      />
-    </Field>
-    <Field
-      id="auto-hover-throttle-assist-gain"
-      label="profilesAutoHoverThrottleAssistGain"
-    >
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverThrottleAssistGainHelp")}
-      {/snippet}
-      <NumberInput
+        label="profilesAutoHoverRollDeadband"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverRollDeadbandHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-roll-deadband"
+          min="0"
+          max="100"
+          bind:value={FC.PID_PROFILE.autoHoverRollDeadband}
+        />
+      </Field>
+      <Field
         id="auto-hover-throttle-assist-gain"
-        min="0"
-        max="100"
-        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistGain}
-      />
-    </Field>
-    <Field
-      id="auto-hover-throttle-assist-max"
-      label="profilesAutoHoverThrottleAssistMax"
-    >
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverThrottleAssistMaxHelp")}
-      {/snippet}
-      <NumberInput
+        label="profilesAutoHoverThrottleAssistGain"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverThrottleAssistGainHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-throttle-assist-gain"
+          min="0"
+          max="100"
+          bind:value={FC.PID_PROFILE.autoHoverThrottleAssistGain}
+        />
+      </Field>
+      <Field
         id="auto-hover-throttle-assist-max"
-        min="0"
-        max="50"
-        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistMax}
-      />
-    </Field>
-    <Field
-      id="auto-hover-throttle-assist-trigger-ms"
-      label="profilesAutoHoverThrottleAssistTriggerMs"
-    >
-      {#snippet tooltip()}
-        {$i18n.t("profilesAutoHoverThrottleAssistTriggerMsHelp")}
-      {/snippet}
-      <NumberInput
+        label="profilesAutoHoverThrottleAssistMax"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverThrottleAssistMaxHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-throttle-assist-max"
+          min="0"
+          max="50"
+          bind:value={FC.PID_PROFILE.autoHoverThrottleAssistMax}
+        />
+      </Field>
+      <Field
         id="auto-hover-throttle-assist-trigger-ms"
-        min="0"
-        max="2000"
-        bind:value={FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs}
-      />
-    </Field>
-  </SubSection>
+        label="profilesAutoHoverThrottleAssistTriggerMs"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesAutoHoverThrottleAssistTriggerMsHelp")}
+        {/snippet}
+        <NumberInput
+          id="auto-hover-throttle-assist-trigger-ms"
+          min="0"
+          max="2000"
+          bind:value={FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs}
+        />
+      </Field>
+    </SubSection>
+  </Section>
+{/if}
 
-  <SubSection label="profilesAttHoldGroup">
-    <Field id="att-hold-gain" label="profilesAttHoldGain">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAttHoldGainHelp")}
-      {/snippet}
-      <NumberInput
-        id="att-hold-gain"
-        min="0"
-        max="250"
-        bind:value={FC.PID_PROFILE.attHoldGain}
-      />
-    </Field>
-    <Field id="att-hold-deadband" label="profilesAttHoldDeadband">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAttHoldDeadbandHelp")}
-      {/snippet}
-      <NumberInput
-        id="att-hold-deadband"
-        min="0"
-        max="100"
-        bind:value={FC.PID_PROFILE.attHoldDeadband}
-      />
-    </Field>
-    <Field id="att-hold-max-rate" label="profilesAttHoldMaxRate">
-      {#snippet tooltip()}
-        {$i18n.t("profilesAttHoldMaxRateHelp")}
-      {/snippet}
-      <NumberInput
-        id="att-hold-max-rate"
-        min="0"
-        max="1800"
-        bind:value={FC.PID_PROFILE.attHoldMaxRate}
-      />
-    </Field>
-  </SubSection>
-</Section>
+{#if configuredModes.has("ATT HOLD")}
+  <Section label="profilesAttHoldGroup">
+    <SubSection>
+      <Field id="att-hold-gain" label="profilesAttHoldGain">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAttHoldGainHelp")}
+        {/snippet}
+        <NumberInput
+          id="att-hold-gain"
+          min="0"
+          max="250"
+          bind:value={FC.PID_PROFILE.attHoldGain}
+        />
+      </Field>
+      <Field id="att-hold-deadband" label="profilesAttHoldDeadband">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAttHoldDeadbandHelp")}
+        {/snippet}
+        <NumberInput
+          id="att-hold-deadband"
+          min="0"
+          max="100"
+          bind:value={FC.PID_PROFILE.attHoldDeadband}
+        />
+      </Field>
+      <Field id="att-hold-max-rate" label="profilesAttHoldMaxRate">
+        {#snippet tooltip()}
+          {$i18n.t("profilesAttHoldMaxRateHelp")}
+        {/snippet}
+        <NumberInput
+          id="att-hold-max-rate"
+          min="0"
+          max="1800"
+          bind:value={FC.PID_PROFILE.attHoldMaxRate}
+        />
+      </Field>
+    </SubSection>
+  </Section>
+{/if}
