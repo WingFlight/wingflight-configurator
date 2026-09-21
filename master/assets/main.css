@@ -653,7 +653,7 @@ input[type="number"]::-webkit-inner-spin-button {
     padding-right: 5px;
 }
 
-.gyroicon, .accicon, .magicon, .gpsicon, .baroicon, .sonaricon {
+.gyroicon, .accicon, .magicon, .gpsicon, .baroicon {
     background-repeat: no-repeat;
     height: 30px;
     margin-top: 3px;
@@ -667,7 +667,7 @@ input[type="number"]::-webkit-inner-spin-button {
     transition: color var(--animation-speed);
 }
 
-.gyroicon.active, .accicon.active, .magicon.active, .gpsicon.active, .baroicon.active, .sonaricon.active {
+.gyroicon.active, .accicon.active, .magicon.active, .gpsicon.active, .baroicon.active {
     color: var(--chrome-fg);
 }
 
@@ -726,15 +726,7 @@ input[type="number"]::-webkit-inner-spin-button {
     background-image: url(/master/images/icons/sensor_baro_on.png);
 }
 
-.sonaricon {
-    background-image: url(/master/images/icons/sensor_sonar_off.png);
-    background-size: 41px;
-    background-position: -4px 1px;
-}
 
-.sonaricon.active {
-    background-image: url(/master/images/icons/sensor_sonar_on.png);
-}
 
 #sensor-status li:first-child {
     border-left: 0;
