@@ -1,3 +1,12 @@
+# 0.0.25
+
+Support the MSP API 22.3 layout, which removes the heli placeholder bytes from eight MSP messages.
+Add a CRSF Sensors diagnostic tab.
+Add cell count and cell voltages to battery profiles.
+Allow negative flap compensation and diff thrust yaw adjustments.
+Show SmartFuel Sag Gain in volts instead of percent.
+Remove the VTX and sonar/rangefinder leftovers.
+
 # 0.0.24
 
 Show the live runtime servo trim (+N/-N) next to the adjustment badge on the Servos tab, read via the new MSP_SERVO_TRIM.
