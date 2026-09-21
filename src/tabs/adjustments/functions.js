@@ -121,20 +121,19 @@ export function getFunctions() {
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
-        // Scales the weight *magnitude* of every mixer rule tagged with a
-        // given mixerRuleRole_e (pg/mixer.h) -- found by tag at runtime
+        // Scales the weight of every mixer rule tagged with a given
+        // mixerRuleRole_e (pg/mixer.h) -- found by tag at runtime
         // (flight/mixer.c's applyRoleWeight()), not a fixed rule index, so
         // it keeps working regardless of where those rules end up in the
-        // 32-slot table. Magnitude only, 0..1000 -- each tagged rule keeps
-        // whatever sign it was configured with (the Mixer tab's Reverse
-        // checkbox, or a negative weight via CLI); this adjustment never
-        // touches it, which is what lets DiffThrustYawGain scale both
-        // motors' rules from one scalar while keeping them opposite signs
-        // (a differential, not a common-mode push) -- see
-        // applyRoleWeight()'s own comment. Range matches rc_adjustments.c's
-        // ADJ_ENTRY.
-        { id: 112,  name: 'FlapCompensationGain',        min: 0, max: 1000,   ticks: 50,   pips: [ 0, 250, 500, 750, 1000 ] },
-        { id: 113,  name: 'DiffThrustYawGain',           min: 0, max: 1000,   ticks: 50,   pips: [ 0, 250, 500, 750, 1000 ] },
+        // 32-slot table. The value is applied on top of each tagged rule's
+        // configured sign (the Mixer tab's Reverse checkbox, or a negative
+        // weight via CLI). Both are signed, -1000..1000, so a negative value
+        // flips every tagged rule together -- for DiffThrustYawGain that
+        // keeps both motors' rules opposite signs (a differential, not a
+        // common-mode push) -- see applyRoleWeight()'s own comment. Ranges
+        // match rc_adjustments.c's ADJ_ENTRY.
+        { id: 112,  name: 'FlapCompensationGain',        min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
+        { id: 113,  name: 'DiffThrustYawGain',           min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
     ];
 }
 
