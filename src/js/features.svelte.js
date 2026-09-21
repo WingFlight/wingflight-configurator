@@ -4,7 +4,6 @@ export class Features {
     RX_SERIAL: 3,
     SOFTSERIAL: 6,
     GPS: 7,
-    SONAR: 9,
     TELEMETRY: 10,
     RX_PARALLEL_PWM: 13,
     RX_MSP: 14,

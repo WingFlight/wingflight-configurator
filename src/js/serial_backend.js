@@ -893,8 +893,6 @@ export function have_sensor(sensors_detected, sensor_code) {
             return bit_check(sensors_detected, 2);
         case 'gps':
             return bit_check(sensors_detected, 3);
-        case 'sonar':
-            return bit_check(sensors_detected, 4);
         case 'gyro':
             return bit_check(sensors_detected, 5);
     }

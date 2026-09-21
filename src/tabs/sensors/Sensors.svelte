@@ -49,7 +49,6 @@
     accel: false,
     mag: false,
     altitude: false,
-    sonar: false,
   });
 
   let enabled = $state({
@@ -57,7 +56,6 @@
     accel: false,
     mag: false,
     altitude: false,
-    sonar: false,
     debug: false,
   });
 
@@ -66,7 +64,6 @@
     accel: 50,
     mag: 50,
     altitude: 100,
-    sonar: 100,
     debug: 500,
   });
   let scales = $state({ gyro: 2000, accel: 2, mag: 1 });
@@ -76,7 +73,6 @@
     accel: 0,
     mag: 0,
     altitude: 0,
-    sonar: 0,
     debug: 0,
   });
   let buffers = $state({
@@ -84,15 +80,10 @@
     accel: makeBuffer(3),
     mag: makeBuffer(3),
     altitude: makeBuffer(1),
-    sonar: makeBuffer(1),
     debug: [makeBuffer(1), makeBuffer(1), makeBuffer(1), makeBuffer(1)],
   });
 
-  let imuInterval,
-    altitudeInterval,
-    sonarInterval,
-    debugInterval,
-    statusInterval;
+  let imuInterval, altitudeInterval, debugInterval, statusInterval;
 
   function xDomain(index) {
     return [index - (WINDOW - 1), index];
@@ -115,9 +106,6 @@
   ]);
   let altitudeSeries = $derived([
     { points: buffers.altitude[0].points, color: "#00a8f0" },
-  ]);
-  let sonarSeries = $derived([
-    { points: buffers.sonar[0].points, color: "#00a8f0" },
   ]);
   let debugSeries = $derived(
     buffers.debug.map((b, i) => [
@@ -144,7 +132,6 @@
       FC.SENSOR_DATA.magnetometer[i] = 0;
       FC.SENSOR_DATA.debug[i] = 0;
     }
-    FC.SENSOR_DATA.sonar = 0;
     FC.SENSOR_DATA.altitude = 0;
 
     simpleBoard = !(FC.CONFIG.boardType === 0 || FC.CONFIG.boardType === 2);
@@ -158,7 +145,6 @@
           have_sensor(FC.CONFIG.activeSensors, "baro") ||
           have_sensor(FC.CONFIG.activeSensors, "gps")
         ),
-      sonar: simpleBoard || !have_sensor(FC.CONFIG.activeSensors, "sonar"),
     };
 
     const savedSettings = config.get("sensor_settings");
@@ -174,8 +160,8 @@
         accel: !!savedEnabled[1] && !disabled.accel,
         mag: !!savedEnabled[2] && !disabled.mag,
         altitude: !!savedEnabled[3] && !disabled.altitude,
-        sonar: !!savedEnabled[4] && !disabled.sonar,
-        debug: !!savedEnabled[5],
+        // debug is the last entry; older saved arrays had a sonar slot before it
+        debug: !!savedEnabled[savedEnabled.length - 1],
       };
     } else {
       enabled = {
@@ -183,7 +169,6 @@
         accel: !disabled.accel,
         mag: !disabled.mag,
         altitude: !disabled.altitude,
-        sonar: false,
         debug: false,
       };
     }
@@ -200,7 +185,6 @@
   onDestroy(() => {
     clearInterval(imuInterval);
     clearInterval(altitudeInterval);
-    clearInterval(sonarInterval);
     clearInterval(debugInterval);
     clearInterval(statusInterval);
   });
@@ -208,9 +192,8 @@
   function restartIntervals() {
     clearInterval(imuInterval);
     clearInterval(altitudeInterval);
-    clearInterval(sonarInterval);
     clearInterval(debugInterval);
-    imuInterval = altitudeInterval = sonarInterval = debugInterval = undefined;
+    imuInterval = altitudeInterval = debugInterval = undefined;
 
     if (enabled.gyro || enabled.accel || enabled.mag) {
       const fastest = Math.min(
@@ -260,16 +243,6 @@
       }, rates.altitude);
     }
 
-    if (enabled.sonar) {
-      sonarInterval = setInterval(async () => {
-        await MSP.promise(MSPCodes.MSP_SONAR);
-        buffers.sonar = pushSample(buffers.sonar, sampleIndex.sonar, [
-          FC.SENSOR_DATA.sonar,
-        ]);
-        sampleIndex.sonar++;
-      }, rates.sonar);
-    }
-
     if (enabled.debug) {
       debugInterval = setInterval(async () => {
         await MSP.promise(MSPCodes.MSP_DEBUG);
@@ -286,13 +259,11 @@
     void enabled.accel;
     void enabled.mag;
     void enabled.altitude;
-    void enabled.sonar;
     void enabled.debug;
     void rates.gyro;
     void rates.accel;
     void rates.mag;
     void rates.altitude;
-    void rates.sonar;
     void rates.debug;
 
     if (!loading) restartIntervals();
@@ -306,7 +277,6 @@
         enabled.accel,
         enabled.mag,
         enabled.altitude,
-        enabled.sonar,
         enabled.debug,
       ],
     });
@@ -357,10 +327,6 @@
       <label class="toggle">
         <Switch bind:checked={enabled.altitude} disabled={disabled.altitude} />
         {$i18n.t("sensorsAltitudeSelect")}
-      </label>
-      <label class="toggle">
-        <Switch bind:checked={enabled.sonar} disabled={disabled.sonar} />
-        {$i18n.t("sensorsSonarSelect")}
       </label>
       <label class="toggle">
         <Switch bind:checked={enabled.debug} />
@@ -475,21 +441,6 @@
         series={altitudeSeries}
         xDomain={xDomain(sampleIndex.altitude)}
         yDomain={dynamicDomain(buffers.altitude)}
-      />
-    </Section>
-  {/if}
-
-  {#if enabled.sonar}
-    <Section label="sensorsSonarTitle">
-      <SensorPanel
-        rateOptions={RATE_OPTIONS}
-        bind:rate={rates.sonar}
-        readouts={[
-          { label: "X:", value: FC.SENSOR_DATA.sonar.toFixed(2), cls: "x" },
-        ]}
-        series={sonarSeries}
-        xDomain={xDomain(sampleIndex.sonar)}
-        yDomain={dynamicDomain(buffers.sonar)}
       />
     </Section>
   {/if}

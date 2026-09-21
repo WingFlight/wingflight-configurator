@@ -233,10 +233,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP_SONAR: {
-                FC.SENSOR_DATA.sonar = data.read32();
-                break;
-            }
 
             case MSPCodes.MSP_ANALOG: {
                 FC.ANALOG.voltage = data.readU8() / 10.0;
