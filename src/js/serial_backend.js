@@ -308,8 +308,7 @@ export function initializeSerialBackend() {
 
     $('div.open_firmware_flasher a.flash').on("click", function() {
         if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
-            $('div#flashbutton a.flash_state').removeClass('active');
-            $('div#flashbutton a.flash').removeClass('active');
+            // The tab switch clears these indicators after its exit guard allows it.
             $('#tabs ul.mode-disconnected .tab_landing a').trigger("click");
         } else {
             $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");

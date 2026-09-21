@@ -1,5 +1,9 @@
 # Unreleased
 
+Warn before leaving a pending firmware restore. Offer restore, backup-file save, stay or explicit leave actions; protect tab/wizard navigation and desktop close, with a browser unload warning. Failed restores automatically offer to save the buffered settings unless a backup file was already saved.
+
+Retry complete online firmware downloads, including interrupted or empty response bodies, in both flashers. Abort stalled transfers after 60 seconds and retry once before reporting failure.
+
 Support independent bank (10–90°) and pitch (10–75°) limits for ANGLE and TRAINER with MSP API 22.4 firmware; retain shared-limit controls for older firmware.
 Show TRAINER in Modes and Conditions without Expert Mode. Make Trainer gain and angle limit available in Profiles without Expert Mode, and clarify how ANGLE, HORIZON and TRAINER differ.
 

@@ -15,6 +15,7 @@
   import { i18n } from "@/js/i18n.js";
   import { ConfigInserter } from "@/js/ConfigInserter.js";
   import { FirmwareCache } from "@/js/FirmwareCache.js";
+  import { downloadFirmware } from "@/js/FirmwareDownload.js";
   import * as github from "@/js/GitHubApi.js";
   import { getIntegerValue } from "@/js/main.js";
   import { manufacturers } from "@/js/manufacturers.js";
@@ -642,9 +643,7 @@
 
     loadingRemote = true;
     try {
-      const res = await fetch(summary.url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.text();
+      const data = await downloadFirmware(summary.url);
       await onLoadSuccess(data, summary);
     } catch (err) {
       console.log("Failed to download firmware", err);

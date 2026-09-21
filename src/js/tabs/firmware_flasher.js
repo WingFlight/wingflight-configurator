@@ -41,6 +41,15 @@ const tab = {
     GUI.content_ready(callback);
   },
 
+  exit(callback) {
+    if (this.svelteComponent?.requestExit) this.svelteComponent.requestExit(callback);
+    else callback?.();
+  },
+
+  requestClose(callback) {
+    this.exit(callback);
+  },
+
   cleanup(callback) {
     if (this.svelteComponent) {
       unmount(this.svelteComponent);
