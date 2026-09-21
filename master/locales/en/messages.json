@@ -6049,8 +6049,14 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
+    "profilesRollAngleLimit": {
+        "message": "Bank angle limit (°)"
+    },
+    "profilesPitchAngleLimit": {
+        "message": "Pitch angle limit (°)"
+    },
     "profilesAcroTrainerGroup": {
-        "message": "Acro Trainer"
+        "message": "Trainer (angle limits)"
     },
     "profilesAutoHoverGroup": {
         "message": "Auto Hover"
@@ -6062,13 +6068,19 @@
         "message": "Acro Trainer gain"
     },
     "profilesAcroTrainerGainHelp": {
-        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the aircraft tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
+        "message": "Trainer does not self-level. Gain controls how strongly it corrects back toward the pitch/bank limit when that limit is exceeded."
     },
     "profilesAcroTrainerLimit": {
         "message": "Acro Trainer angle limit"
     },
     "profilesAcroTrainerLimitHelp": {
-        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the aircraft will pitch/roll to"
+        "message": "The same angle limit applies to positive and negative pitch and roll. Inside the limit, Trainer uses normal rate control without self-leveling. Actual attitude can overshoot; this is not stall protection."
+    },
+    "profilesAngleGroup": {
+        "message": "Angle"
+    },
+    "profilesHorizonGroup": {
+        "message": "Horizon"
     },
     "profilesAngleHorizonGroup": {
         "message": "Angle / Horizon Mode"
@@ -7151,13 +7163,13 @@
         "message": "ANGLE"
     },
     "modeHelp ANGLE": {
-        "message": "Self-levels the aircraft to match your stick input to a bank/pitch angle, and limits how far it can tilt. The easiest mode for beginners."
+        "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
     },
     "mode HORIZON": {
         "message": "HORIZON"
     },
     "modeHelp HORIZON": {
-        "message": "Self-levels near center stick like Angle mode, but hands off to full manual rate control as you move the sticks further, allowing flips and rolls."
+        "message": "Rate control with added self-leveling near center stick. Leveling fades as the sticks move outward. Unlike Trainer, this mode does not enforce a pitch/bank envelope."
     },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
@@ -7253,7 +7265,7 @@
         "message": "TRAINER"
     },
     "modeHelp TRAINER": {
-        "message": "Acro Trainer: flies in rate mode but automatically limits how far the aircraft can bank or pitch, without full self-leveling."
+        "message": "Rate control with pitch and bank limits. Centering the sticks does not command level flight. Opposite stick rolls out of a turn; outward commands are limited near the configured angle limit."
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
