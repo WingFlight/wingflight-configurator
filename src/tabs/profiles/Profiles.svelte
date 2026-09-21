@@ -16,6 +16,7 @@
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
+  import TrainerSettings from "./TrainerSettings.svelte";
   import MasterGains from "./MasterGains.svelte";
 
   let loading = $state(true);
@@ -254,6 +255,7 @@
         <PidGains />
         <MasterGains />
       {/if}
+      <TrainerSettings />
       {#if CONFIGURATOR.expertMode}
         <LevelingSettings />
       {/if}

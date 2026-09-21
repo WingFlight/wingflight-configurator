@@ -1,3 +1,8 @@
+# Unreleased
+
+Support independent bank (10–90°) and pitch (10–75°) limits for ANGLE and TRAINER with MSP API 22.4 firmware; retain shared-limit controls for older firmware.
+Show TRAINER in Modes and Conditions without Expert Mode. Make Trainer gain and angle limit available in Profiles without Expert Mode, and clarify how ANGLE, HORIZON and TRAINER differ.
+
 # 0.0.25
 
 Support the MSP API 22.3 layout, which removes the heli placeholder bytes from eight MSP messages.
