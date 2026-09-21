@@ -8,6 +8,11 @@
     },
     {
       "type": "snapshot",
+      "name": "0.0.25",
+      "path": "./snapshot/0.0.25/"
+    },
+    {
+      "type": "snapshot",
       "name": "0.0.24",
       "path": "./snapshot/0.0.24/"
     },
