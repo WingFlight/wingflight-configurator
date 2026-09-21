@@ -39,7 +39,6 @@ export const MSPCodes = {
     MSP_SET_SERIAL_CONFIG:          55,
     MSP_VOLTAGE_METER_CONFIG:       56,
     MSP_SET_VOLTAGE_METER_CONFIG:   57,
-    MSP_SONAR:                      58,
     MSP_DEBUG_CONFIG:               59,
     MSP_SET_DEBUG_CONFIG:           60,
     MSP_ARMING_CONFIG:              61,
