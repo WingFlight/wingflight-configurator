@@ -1314,6 +1314,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.FAILSAFE_CONFIG.failsafe_switch_mode = data.readU8();
                 FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay = data.readU16();
                 FC.FAILSAFE_CONFIG.failsafe_procedure = data.readU8();
+                // Appended field; older firmware only sends the six above.
+                if (data.remaining() >= 2) {
+                    FC.FAILSAFE_CONFIG.failsafe_recovery_delay = data.readU16();
+                }
                 break;
             }
 
@@ -2390,7 +2394,8 @@ MspHelper.prototype.crunch = function(code) {
                 .push16(FC.FAILSAFE_CONFIG.failsafe_throttle)
                 .push8(FC.FAILSAFE_CONFIG.failsafe_switch_mode)
                 .push16(FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay)
-                .push8(FC.FAILSAFE_CONFIG.failsafe_procedure);
+                .push8(FC.FAILSAFE_CONFIG.failsafe_procedure)
+                .push16(FC.FAILSAFE_CONFIG.failsafe_recovery_delay);
             break;
         }
 
