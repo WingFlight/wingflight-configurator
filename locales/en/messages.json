@@ -6598,8 +6598,14 @@
     "failsafeOffDelayHelp": {
         "message": "Time to stay in landing mode until the motors are turned off and the craft is disarmed"
     },
+    "failsafeRecoveryDelayItem": {
+        "message": "Failsafe Recovery Delay [s]"
+    },
     "failsafeSubTitle1": {
         "message": "Stage 2 - Failsafe Procedure"
+    },
+    "failsafeProcedureItem": {
+        "message": "Procedure"
     },
     "failsafeProcedureItemSelect1": {
         "message": "Land"
@@ -6609,6 +6615,9 @@
     },
     "failsafeProcedureItemSelect4": {
         "message": "GPS Rescue"
+    },
+    "failsafeGpsRescueCliOnlyNote": {
+        "message": "GPS Rescue flies home and orbits using the aircraft's GPS RTH settings (nav_rth_altitude, nav_loiter_radius, nav_max_bank_angle, nav_max_pitch_angle, nav_min_sats, and related nav_* CLI settings). These are not yet exposed here and must be set via the CLI."
     },
     "failsafeGpsRescueItemAngle": {
         "message": "Angle"
