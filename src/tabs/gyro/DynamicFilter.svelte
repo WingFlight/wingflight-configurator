@@ -1,10 +1,7 @@
 <script>
   import { slide } from "svelte/transition";
 
-  import { i18n } from "@/js/i18n.js";
-
   import Field from "@/components/Field.svelte";
-  import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
@@ -14,15 +11,7 @@
   let { FC = $bindable() } = $props();
 </script>
 
-{#snippet header()}
-  <div class="header">
-    <span class="title">{$i18n.t("gyroDynamicFilterHeading")}</span>
-    <div class="grow"></div>
-    <HelpIcon>{$i18n.t("gyroDynamicFilterHelp")}</HelpIcon>
-  </div>
-{/snippet}
-
-<Section {header}>
+<Section label="gyroDynamicFilterHeading" summary="gyroDynamicFilterHelp">
   <SubSection>
     <Field id="dyn-notch-enable" label="genericEnable">
       <Switch
@@ -88,16 +77,4 @@
 </Section>
 
 <style lang="scss">
-  .header {
-    @extend %section-header;
-    padding-right: 8px;
-  }
-
-  .title {
-    padding-left: 8px;
-  }
-
-  .grow {
-    flex-grow: 1;
-  }
 </style>

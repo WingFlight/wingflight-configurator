@@ -3,14 +3,15 @@
 
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import motorState from "../motors/state.svelte.js";
 
   import Field from "@/components/Field.svelte";
-  import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
 
   const filterStrengths = [
     "gyroRpmFilterPresetCustom",
@@ -22,17 +23,20 @@
   let { FC = $bindable() } = $props();
 
   let enabled = $derived(FC.FEATURE_CONFIG.features.RPM_FILTER);
+
+  let fastRpm = $derived(
+    FC.FEATURE_CONFIG.features.FREQ_SENSOR ||
+      (motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry),
+  );
 </script>
 
-{#snippet header()}
-  <div class="header">
-    <span class="title">{$i18n.t("gyroRpmFilterSettings")}</span>
-    <div class="grow"></div>
-    <HelpIcon>{$i18n.t("gyroRpmFilterHelp")}</HelpIcon>
-  </div>
-{/snippet}
+<Section label="gyroRpmFilterSettings" summary="gyroRpmFilterHelp">
+  {#if !fastRpm}
+    <div class="warning-container">
+      <WarningNote message="gyroRpmFilterConfigNote" />
+    </div>
+  {/if}
 
-<Section {header}>
   <SubSection>
     <Field id="rpm-filter-enable" label="genericEnable">
       <Switch
@@ -95,16 +99,21 @@
 
 <style lang="scss">
   .header {
-    @extend %section-header;
-    padding-right: 8px;
-  }
+    font-size: 1rem;
+    font-weight: 600;
+    font-weight: 600;
+    border-bottom-width: 2px;
+    border-style: solid;
 
-  .title {
-    padding-left: 8px;
-  }
+    :global(html[data-theme="light"]) & {
+      color: var(--color-neutral-900);
+      border-bottom-color: var(--color-neutral-300);
+    }
 
-  .grow {
-    flex-grow: 1;
+    :global(html[data-theme="dark"]) & {
+      color: var(--color-neutral-100);
+      border-bottom-color: var(--color-neutral-600);
+    }
   }
 
   .row {
@@ -129,6 +138,10 @@
     font-weight: 600;
     grid-column: 1 / -1;
     margin-top: 8px;
+  }
+
+  .warning-container {
+    margin-top: 4px;
   }
 
   @media only screen and (max-width: 480px) {

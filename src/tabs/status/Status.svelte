@@ -81,7 +81,6 @@
       "MOTOR_PROTO",
       "OVERRIDE",
       "BACKUP_RX",
-      "NO_NOTCH_FILTER",
       "ARM_SWITCH",
     ];
   }

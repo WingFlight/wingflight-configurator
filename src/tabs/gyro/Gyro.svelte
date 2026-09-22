@@ -15,12 +15,9 @@
   import RpmFilter from "./RpmFilter.svelte";
   import NotchFilter from "./NotchFilter.svelte";
 
-  import motorState from "../motors/state.svelte.js";
-
   import {
     parseRpmFilterConfig2,
     generateRpmFilterConfig2,
-    hasFastRpmSource,
     NOTCH_COUNT,
   } from "./filter_config.js";
 
@@ -60,10 +57,7 @@
 
   let notches = $state(null);
   let enabled = $derived(FC.FEATURE_CONFIG.features.RPM_FILTER);
-  let fastRpm = $derived(hasFastRpmSource(FC, motorState));
-  let custom = $derived(
-    fastRpm && enabled && FC.FILTER_CONFIG.rpm_preset === 0,
-  );
+  let custom = $derived(enabled && FC.FILTER_CONFIG.rpm_preset === 0);
 
   function parseNotches() {
     notches = parseRpmFilterConfig2($state.snapshot(FC.RPM_FILTER_CONFIG_V2));
@@ -161,9 +155,7 @@
       <DynamicFilter {FC} />
     </div>
     <div>
-      {#if fastRpm}
-        <RpmFilter {FC} />
-      {/if}
+      <RpmFilter {FC} />
       {#if custom}
         <div transition:slide>
           <CustomNotches {FC} {notches} {onResetNotches} />
