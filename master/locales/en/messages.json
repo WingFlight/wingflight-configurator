@@ -2475,12 +2475,6 @@
     "receiverTelemetrySensor_BEC_VOLTAGE": {
         "message": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "FC Temperature"
     },
@@ -7526,7 +7520,7 @@
     "presetsButtonReview": {
         "message": "Review Selected Presets"
     },
-    "presetsButtonReviewCLI":{
+    "presetsButtonReviewCLI": {
         "message": "Review CLI"
     },
     "presetsButtonApply": {
@@ -7707,5 +7701,11 @@
     },
     "presetsDontShowAgain": {
         "message": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Motor 2 RPM"
     }
 }
