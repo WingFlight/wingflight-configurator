@@ -2213,14 +2213,6 @@
         "message": "Voltaje del BEC",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Velocidad del cabezal",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Velocidad de la Cola",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "Temperatura del FC",
         "english": "FC Temperature"
@@ -8442,5 +8434,13 @@
     "presetsDontShowAgain": {
         "message": "No mostrar de nuevo",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Velocidad del cabezal",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Velocidad de la Cola",
+        "english": "Motor 2 RPM"
     }
 }

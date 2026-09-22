@@ -2213,14 +2213,6 @@
         "message": "Courant du BEC",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Tours du Rotor",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tours de l'Anticouple",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "Température contröleur de vol",
         "english": "FC Temperature"
@@ -8442,5 +8434,13 @@
     "presetsDontShowAgain": {
         "message": "Ne plus afficher",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Tours du Rotor",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Tours de l'Anticouple",
+        "english": "Motor 2 RPM"
     }
 }

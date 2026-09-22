@@ -2213,14 +2213,6 @@
         "message": "BEC-Spannung",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Rotordrehzahl",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Heckrotor-Drehzahl",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "Flight-Controller Temperatur",
         "english": "FC Temperature"
@@ -8442,5 +8434,13 @@
     "presetsDontShowAgain": {
         "message": "Nicht wieder anzeigen",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Rotordrehzahl",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Heckrotor-Drehzahl",
+        "english": "Motor 2 RPM"
     }
 }
