@@ -15,6 +15,17 @@ const NOTCH_TYPE = {
   TRIPLE: 3,
 };
 
+/**
+ * The RPM filter needs a real-time RPM source: either a frequency sensor or
+ * bidirectional DShot telemetry. ESC telemetry is too slow to be usable.
+ */
+export function hasFastRpmSource(FC, motorState) {
+  return (
+    FC.FEATURE_CONFIG.features.FREQ_SENSOR ||
+    (motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry)
+  );
+}
+
 function getDoubleCenter(q) {
   return Math.trunc((100 * DOUBLE_NOTCH_OFFSET) / q);
 }
