@@ -63,7 +63,7 @@ export function getSmartPortSensors() {
     },
     {
       title: "RPM",
-      sensors: [{ name: "HEADSPEED" }, { name: "TAILSPEED" }],
+      sensors: [{ name: "MOTOR1SPEED" }, { name: "MOTOR2SPEED" }],
     },
     {
       title: "BARO",

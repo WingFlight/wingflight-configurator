@@ -2213,14 +2213,6 @@
         "message": "BEC Voltage（BEC 電壓）",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed（主旋翼轉速）",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tailspeed（尾旋翼轉速）",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "飛控溫度",
         "english": "FC Temperature"
@@ -8442,5 +8434,13 @@
     "presetsDontShowAgain": {
         "message": "不再顯示",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Headspeed（主旋翼轉速）",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Tailspeed（尾旋翼轉速）",
+        "english": "Motor 2 RPM"
     }
 }

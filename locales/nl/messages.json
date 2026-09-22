@@ -2213,14 +2213,6 @@
         "message": "BEC-spanning",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Staartrotortoerental",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "FC temperatuur",
         "english": "FC Temperature"
@@ -8442,5 +8434,13 @@
     "presetsDontShowAgain": {
         "message": "Niet meer tonen",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Headspeed",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Staartrotortoerental",
+        "english": "Motor 2 RPM"
     }
 }
