@@ -89,7 +89,7 @@ export function getFunctions() {
         { id: 77,   name: 'GovAutoThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 78,   name: 'GovMaxThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
         { id: 79,   name: 'GovMinThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
-        { id: 80,   name: 'GovHeadspeed',               min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
+        { id: 80,   name: 'GovRPM',                     min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 83,   name: 'Reserved',                   min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },

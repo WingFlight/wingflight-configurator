@@ -3370,9 +3370,6 @@
     "adjustmentsFunctionGovMaxThrottle": {
         "message": "Governor Max Throttle"
     },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Governor Headspeed"
-    },
     "adjustmentsFunctionGovYawFF": {
         "message": "Governor Yaw F-gain"
     },
@@ -7707,5 +7704,8 @@
     },
     "receiverTelemetrySensor_MOTOR2SPEED": {
         "message": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Governor RPM"
     }
 }

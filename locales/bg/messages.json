@@ -3290,10 +3290,6 @@
         "message": "Говерньор Максимална газ",
         "english": "Governor Max Throttle"
     },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Говерньор обороти на ротора",
-        "english": "Governor Headspeed"
-    },
     "adjustmentsFunctionGovYawFF": {
         "message": "Говерньор FF-коеф. на опашка",
         "english": "Governor Yaw F-gain"
@@ -8850,5 +8846,9 @@
     "receiverTelemetrySensor_MOTOR2SPEED": {
         "message": "Обороти на опашката",
         "english": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Говерньор обороти на ротора",
+        "english": "Governor RPM"
     }
 }
