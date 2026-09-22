@@ -1321,6 +1321,18 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_GPS_NAV_CONFIG: {
+                FC.GPS_NAV_CONFIG.nav_loiter_radius = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_loiter_direction = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_rth_altitude = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_min_sats = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_max_bank_angle = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_max_pitch_angle = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_bearing_kp = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_altitude_kp = data.readU16();
+                break;
+            }
+
             case MSPCodes.MSP_RXFAIL_CONFIG: {
                 FC.RXFAIL_CONFIG = []; // empty the array as new data is coming in
 
@@ -1925,6 +1937,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Failsafe config saved');
                 break;
             }
+            case MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG: {
+                console.log('GPS nav config saved');
+                break;
+            }
             case MSPCodes.MSP_SET_TELEMETRY_CONFIG: {
                 console.log('Telemetry config saved');
                 break;
@@ -2396,6 +2412,18 @@ MspHelper.prototype.crunch = function(code) {
                 .push16(FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay)
                 .push8(FC.FAILSAFE_CONFIG.failsafe_procedure)
                 .push16(FC.FAILSAFE_CONFIG.failsafe_recovery_delay);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG: {
+            buffer.push16(FC.GPS_NAV_CONFIG.nav_loiter_radius)
+                .push8(FC.GPS_NAV_CONFIG.nav_loiter_direction)
+                .push16(FC.GPS_NAV_CONFIG.nav_rth_altitude)
+                .push8(FC.GPS_NAV_CONFIG.nav_min_sats)
+                .push8(FC.GPS_NAV_CONFIG.nav_max_bank_angle)
+                .push8(FC.GPS_NAV_CONFIG.nav_max_pitch_angle)
+                .push16(FC.GPS_NAV_CONFIG.nav_bearing_kp)
+                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kp);
             break;
         }
 

@@ -240,6 +240,8 @@ export const MSPCodes = {
     MSP2_WING_ESC_SENSOR_TRIAL:       0x5F14,
     // 0x5F15: 0x5F10-0x5F14 are taken by the entries above.
     MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
+    MSP2_WING_GPS_NAV_CONFIG:         0x5F16,
+    MSP2_WING_SET_GPS_NAV_CONFIG:     0x5F17,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
