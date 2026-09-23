@@ -31,6 +31,7 @@ class FlightController {
   GAIN_CURVES = $state();
   GOVERNOR_CONFIG = $state();
   GPS_CONFIG = $state();
+  GPS_NAV_CONFIG = $state();
   GPS_DATA = $state();
   GPS_RESCUE = $state();
   LED_COLORS = $state();
@@ -726,6 +727,21 @@ class FlightController {
       failsafe_switch_mode:           0,
       failsafe_throttle_low_delay:    0,
       failsafe_procedure:             0,
+      // Appended MSP field (wingflight-firmware#146); defaulted here so a save
+      // against firmware that predates it (data.remaining() < 2 on read, so
+      // this is never overwritten) still crunches a real number, not undefined.
+      failsafe_recovery_delay:        0,
+    };
+
+    this.GPS_NAV_CONFIG = {
+      nav_loiter_radius:              75,
+      nav_loiter_direction:           0,
+      nav_rth_altitude:               50,
+      nav_min_sats:                   8,
+      nav_max_bank_angle:             25,
+      nav_max_pitch_angle:            15,
+      nav_bearing_kp:                 200,
+      nav_altitude_kp:                100,
     };
 
     this.TELEMETRY_CONFIG = {

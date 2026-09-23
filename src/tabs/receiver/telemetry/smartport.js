@@ -87,6 +87,7 @@ export function getSmartPortSensors() {
         { name: "GPS_ALTITUDE" },
         { name: "GPS_HEADING" },
         { name: "GPS_GROUNDSPEED" },
+        { name: "GPS_FIX_TYPE" },
       ],
     },
     {

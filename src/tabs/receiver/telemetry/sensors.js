@@ -126,6 +126,11 @@ export const TELEMETRY_SENSORS = {
 
   RPM: 108,
   TEMP: 109,
+
+  // 110-117 (FBUS_SENSOR_1..8) and 118 (TV_PROFILE) not added here yet --
+  // predate this entry, not part of this change.
+
+  GPS_FIX_TYPE: 119,
 };
 
 // create reverse mapping
