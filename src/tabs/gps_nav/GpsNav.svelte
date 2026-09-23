@@ -148,6 +148,17 @@
               bind:value={FC.GPS_NAV_CONFIG.nav_max_bank_angle}
             />
           </Field>
+          <Field id="gps-nav-throttle" label="gpsNavThrottleItem" unit="%">
+            {#snippet tooltip()}
+              <Tooltip help="gpsNavThrottleHelp" />
+            {/snippet}
+            <NumberInput
+              id="gps-nav-throttle"
+              min="0"
+              max="100"
+              bind:value={FC.GPS_NAV_CONFIG.nav_throttle}
+            />
+          </Field>
           <Field
             id="gps-nav-max-pitch-angle"
             label="gpsNavMaxPitchAngleItem"
@@ -184,6 +195,32 @@
                   min="0"
                   max="1000"
                   bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kp}
+                />
+              </Field>
+              <Field id="gps-nav-altitude-kd" label="gpsNavAltitudeKdItem">
+                {#snippet tooltip()}
+                  <Tooltip help="gpsNavAltitudeKdHelp" />
+                {/snippet}
+                <NumberInput
+                  id="gps-nav-altitude-kd"
+                  min="0"
+                  max="1000"
+                  bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kd}
+                />
+              </Field>
+              <Field
+                id="gps-nav-turn-coordination"
+                label="gpsNavTurnCoordinationItem"
+                unit="%"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="gpsNavTurnCoordinationHelp" />
+                {/snippet}
+                <NumberInput
+                  id="gps-nav-turn-coordination"
+                  min="0"
+                  max="200"
+                  bind:value={FC.GPS_NAV_CONFIG.nav_turn_coordination}
                 />
               </Field>
             </SubSection>

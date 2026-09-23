@@ -734,7 +734,7 @@ class FlightController {
     };
 
     this.GPS_NAV_CONFIG = {
-      nav_loiter_radius:              75,
+      nav_loiter_radius:              100,
       nav_loiter_direction:           0,
       nav_rth_altitude:               50,
       nav_min_sats:                   8,
@@ -742,6 +742,11 @@ class FlightController {
       nav_max_pitch_angle:            15,
       nav_bearing_kp:                 200,
       nav_altitude_kp:                100,
+      // Appended MSP fields; defaulted here so a save against firmware that
+      // predates them still crunches real numbers (older firmware ignores them).
+      nav_altitude_kd:                200,
+      nav_throttle:                   60,
+      nav_turn_coordination:          100,
     };
 
     this.TELEMETRY_CONFIG = {

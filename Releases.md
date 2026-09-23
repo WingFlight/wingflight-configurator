@@ -1,5 +1,7 @@
 # 0.0.26
 
+Add Nav Throttle, Altitude Damping and Turn Coordination to the GPS Navigation tab, and default Loiter Radius to 100 m, matching the reworked 0.0.26 firmware GPS Loiter/RTH. Note that the GPS Rescue failsafe now flies home at Nav Throttle; the Failsafe tab's throttle is used only while landing.
+
 Add Failsafe Stage 2 settings (procedure, delay/off delay/throttle low delay/throttle/recovery delay, test switch mode) to the Failsafe tab, and a new GPS Navigation tab (RTH altitude, loiter radius/direction, min satellites, max bank/pitch angle, bearing/altitude gain), both requiring MSP API 22.4 firmware.
 Remove the redundant GPS RESCUE switch; rewire to GPS RTH, which now drives the same return-to-home behavior. Relabel the RESC arming-disable flag and its tooltip to GPS_RTH.
 Add GPS Fix to the CRSF/S.Port telemetry sensor picker.

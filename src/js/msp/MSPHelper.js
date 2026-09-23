@@ -1330,6 +1330,12 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.GPS_NAV_CONFIG.nav_max_pitch_angle = data.readU8();
                 FC.GPS_NAV_CONFIG.nav_bearing_kp = data.readU16();
                 FC.GPS_NAV_CONFIG.nav_altitude_kp = data.readU16();
+                // Appended fields; older firmware only sends the eight above.
+                if (data.remaining() >= 4) {
+                    FC.GPS_NAV_CONFIG.nav_altitude_kd = data.readU16();
+                    FC.GPS_NAV_CONFIG.nav_throttle = data.readU8();
+                    FC.GPS_NAV_CONFIG.nav_turn_coordination = data.readU8();
+                }
                 break;
             }
 
@@ -2423,7 +2429,10 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.GPS_NAV_CONFIG.nav_max_bank_angle)
                 .push8(FC.GPS_NAV_CONFIG.nav_max_pitch_angle)
                 .push16(FC.GPS_NAV_CONFIG.nav_bearing_kp)
-                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kp);
+                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kp)
+                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kd)
+                .push8(FC.GPS_NAV_CONFIG.nav_throttle)
+                .push8(FC.GPS_NAV_CONFIG.nav_turn_coordination);
             break;
         }
 
