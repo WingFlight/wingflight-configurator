@@ -60,6 +60,8 @@ export const BAUD_RATE_OPTIONS = {
   [PORT_TYPES.AUTO]: ["AUTO"],
 };
 
+// hide: not compiled into Wingflight firmware. Listed only for a port that is
+// still set to it, so it shows its real name instead of "Custom".
 export const PORT_FUNCTIONS = [
   { id: 0, excl: 0, name: "DISABLED", type: PORT_TYPES.DISABLED },
   { id: 1, excl: 1, name: "MSP", type: PORT_TYPES.MSP },
@@ -73,12 +75,12 @@ export const PORT_FUNCTIONS = [
   { id: 2097152, excl: 2097152, name: "SRXL2_ESC", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
   { id: 4194304, excl: 4194304, name: "CRSF_SENSORS", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
   { id: 8388608, excl: 8388608, name: "RX_INPUT_BACKUP", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
-  { id: 4, excl: 4668, name: "TELEMETRY_FRSKY", type: PORT_TYPES.TELEM },
+  { id: 4, excl: 4668, name: "TELEMETRY_FRSKY", type: PORT_TYPES.TELEM, hide: true },
   { id: 32, excl: 4668, name: "TELEMETRY_SMARTPORT", type: PORT_TYPES.TELEM },
   { id: 4096, excl: 4668, name: "TELEMETRY_IBUS", type: PORT_TYPES.TELEM },
   { id: 8, excl: 4668, name: "TELEMETRY_HOTT", type: PORT_TYPES.TELEM },
-  { id: 512, excl: 4668, name: "TELEMETRY_MAVLINK", type: PORT_TYPES.MAVLINK },
-  { id: 16, excl: 4668, name: "TELEMETRY_LTM", type: PORT_TYPES.TELEM },
+  { id: 512, excl: 4668, name: "TELEMETRY_MAVLINK", type: PORT_TYPES.MAVLINK, hide: true },
+  { id: 16, excl: 4668, name: "TELEMETRY_LTM", type: PORT_TYPES.TELEM, hide: true },
 ];
 
 export const VCP_PORT_IDENTIFIER = 20;
