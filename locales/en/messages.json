@@ -1403,11 +1403,11 @@
         "description": "Message that pops up to describe the PARALYZE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipGPS": {
-        "message": "GPS rescue mode is configured but required number of satellites has not been fixed",
+        "message": "GPS RTH or GPS Rescue is configured but a GPS fix has not been acquired",
         "description": "Message that pops up to describe the GPS arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRESC": {
-        "message": "The 'GPS Rescue' switch was activated",
+        "message": "The 'GPS RTH' or 'GPS Rescue' switch was activated",
         "description": "Message that pops up to describe the RESC arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRPMFILTER": {
