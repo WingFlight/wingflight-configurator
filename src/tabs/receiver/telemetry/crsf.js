@@ -117,6 +117,7 @@ export function getCustomCrsfSensors() {
         { name: "GPS_GROUNDSPEED" },
         { name: "GPS_HOME_DISTANCE" },
         { name: "GPS_HOME_DIRECTION" },
+        { name: "GPS_FIX_TYPE" },
       ],
     },
     {

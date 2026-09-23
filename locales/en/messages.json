@@ -2769,6 +2769,9 @@
     "receiverTelemetrySensor_GPS_DATE_TIME": {
         "message": "GPS Date Time"
     },
+    "receiverTelemetrySensor_GPS_FIX_TYPE": {
+        "message": "GPS Fix"
+    },
     "receiverTelemetrySensor_LOAD": {
         "message": "Load"
     },
