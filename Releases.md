@@ -1,4 +1,8 @@
-# Unreleased
+# 0.0.26
+
+Add Failsafe Stage 2 settings (procedure, delay/off delay/throttle low delay/throttle/recovery delay, test switch mode) to the Failsafe tab, and a new GPS Navigation tab (RTH altitude, loiter radius/direction, min satellites, max bank/pitch angle, bearing/altitude gain), both requiring MSP API 22.4 firmware.
+Remove the redundant GPS RESCUE switch; rewire to GPS RTH, which now drives the same return-to-home behavior. Relabel the RESC arming-disable flag and its tooltip to GPS_RTH.
+Add GPS Fix to the CRSF/S.Port telemetry sensor picker.
 
 Warn before leaving a pending firmware restore. Offer restore, backup-file save, stay or explicit leave actions; protect tab/wizard navigation and desktop close, with a browser unload warning. Failed restores automatically offer to save the buffered settings unless a backup file was already saved.
 
@@ -6,6 +10,9 @@ Retry complete online firmware downloads, including interrupted or empty respons
 
 Support independent bank (10–90°) and pitch (10–75°) limits for ANGLE and TRAINER with MSP API 22.4 firmware; retain shared-limit controls for older firmware.
 Show TRAINER in Modes and Conditions without Expert Mode. Make Trainer gain and angle limit available in Profiles without Expert Mode, and clarify how ANGLE, HORIZON and TRAINER differ.
+
+Rename the HEADSPEED/TAILSPEED telemetry sensors to MOTOR1SPEED/MOTOR2SPEED ("Motor 1 RPM"/"Motor 2 RPM").
+Rename the (currently hidden) Governor Headspeed adjustment function to Governor RPM.
 
 # 0.0.25
 
