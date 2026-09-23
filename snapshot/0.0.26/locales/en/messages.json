@@ -6623,7 +6623,7 @@
         "message": "GPS Rescue"
     },
     "failsafeGpsRescueNavNote": {
-        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, on the GPS Navigation tab."
+        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, including Nav Throttle, on the GPS Navigation tab. The throttle value below is used only while landing."
     },
     "gpsNavSectionTitle": {
         "message": "GPS Navigation (RTH / Loiter)"
@@ -6666,6 +6666,24 @@
     },
     "gpsNavAltitudeKpHelp": {
         "message": "Pitch angle commanded per meter of altitude error, in hundredths of a degree of pitch per meter of error (100 = 1.0° pitch per meter of error)."
+    },
+    "gpsNavAltitudeKdItem": {
+        "message": "Altitude Damping"
+    },
+    "gpsNavAltitudeKdHelp": {
+        "message": "Reduces the altitude correction while the aircraft is already climbing or descending toward the target, so it doesn't overshoot. In hundredths of a degree of pitch per m/s of climb rate (200 = 2.0° pitch per m/s)."
+    },
+    "gpsNavThrottleItem": {
+        "message": "Nav Throttle"
+    },
+    "gpsNavThrottleHelp": {
+        "message": "Throttle used while GPS Loiter or GPS RTH is on, and while the GPS Rescue failsafe flies home. It takes over from the throttle stick once the aircraft is flying."
+    },
+    "gpsNavTurnCoordinationItem": {
+        "message": "Turn Coordination"
+    },
+    "gpsNavTurnCoordinationHelp": {
+        "message": "Adds rudder into navigation turns so the aircraft turns without skidding. 100% is a fully coordinated turn, 0% turns it off."
     },
     "failsafeGpsRescueItemAngle": {
         "message": "Angle"
