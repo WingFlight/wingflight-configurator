@@ -5,8 +5,6 @@ import {
   getNativeCrsfSensors,
 } from "./telemetry/crsf.js";
 import { getSmartPortSensors } from "./telemetry/smartport.js";
-import { GHOST_SENSORS } from "./telemetry/ghost.js";
-import { HUB_SENSORS } from "./telemetry/frsky_hub.js";
 
 export const TelemetryType = createEnum(
   "TOGGLE",
@@ -119,16 +117,9 @@ export const RX_PROTOCOLS = [
     feature: "RX_SERIAL",
     telemetry: { type: TelemetryType.TOGGLE },
   },
-  {
-    name: "ImmersionRC GHOST",
-    id: 14,
-    feature: "RX_SERIAL",
-    telemetry: {
-      proto: "ghst",
-      type: TelemetryType.UNORDERED_LIST,
-      sensors: GHOST_SENSORS,
-    },
-  },
+  // Not compiled into Wingflight firmware. Kept hidden so a stale config
+  // still shows its real name instead of mapping to another entry.
+  { name: "ImmersionRC GHOST", id: 14, feature: "RX_SERIAL", hide: true },
   {
     name: "Graupner SUMD",
     id: 3,
@@ -172,8 +163,9 @@ export const RX_PROTOCOLS = [
     feature: "RX_SERIAL",
     telemetry: { type: TelemetryType.TOGGLE },
   },
-  { name: "CPPM", id: 0, feature: "RX_PPM" },
-  { name: "MSP", id: 0, feature: "RX_MSP" },
+  // Not compiled into Wingflight firmware, see GHOST above.
+  { name: "CPPM", id: 0, feature: "RX_PPM", hide: true },
+  { name: "MSP", id: 0, feature: "RX_MSP", hide: true },
 
   { name: "SPI/CX10", id: 4, feature: "RX_SPI", hide: true },
   { name: "SPI/CX10A", id: 5, feature: "RX_SPI", hide: true },
@@ -247,14 +239,6 @@ export const RX_PROTOCOLS = [
 
 export const EXTERNAL_TELEMETRY_PROTOCOLS = [
   {
-    name: "FrSky Hub",
-    id: 4,
-    telemetry: {
-      type: TelemetryType.UNORDERED_LIST,
-      sensors: HUB_SENSORS,
-    },
-  },
-  {
     name: "FrSky S.Port",
     id: 32,
     get telemetry() {
@@ -269,16 +253,6 @@ export const EXTERNAL_TELEMETRY_PROTOCOLS = [
   {
     name: "Graupner HoTT",
     id: 8,
-    telemetry: { type: TelemetryType.TOGGLE, external: true },
-  },
-  {
-    name: "MAVLink",
-    id: 512,
-    telemetry: { type: TelemetryType.TOGGLE, external: true },
-  },
-  {
-    name: "LTM",
-    id: 16,
     telemetry: { type: TelemetryType.TOGGLE, external: true },
   },
 ];
