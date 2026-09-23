@@ -1403,12 +1403,12 @@
         "description": "Message that pops up to describe the PARALYZE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipGPS": {
-        "message": "GPS RTH or GPS Rescue is configured but a GPS fix has not been acquired",
+        "message": "GPS RTH is configured but a GPS fix has not been acquired",
         "description": "Message that pops up to describe the GPS arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipRESC": {
-        "message": "The 'GPS RTH' or 'GPS Rescue' switch was activated",
-        "description": "Message that pops up to describe the RESC arming disable flag"
+    "statusArmingDisableFlagsTooltipGPS_RTH": {
+        "message": "The 'GPS RTH' switch was activated",
+        "description": "Message that pops up to describe the GPS_RTH arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRPMFILTER": {
         "message": "RPM based filtering is enabled, but the RPM signal is unconfigured or otherwise unavailable",
@@ -7327,17 +7327,11 @@
     "modeHelp GPS LOITER": {
         "message": "Holds position and altitude in a circle around the point where the switch was activated, using GPS. Does not fly toward home."
     },
-    "mode GPS RESCUE": {
-        "message": "GPS RESCUE"
-    },
-    "modeHelp GPS RESCUE": {
-        "message": "Automatically flies the aircraft back toward, and loiters above, its recorded home position using GPS. Drives the same return-to-home behavior as GPS RTH below -- assigning either switch has the same effect."
-    },
     "mode GPS RTH": {
         "message": "GPS RTH"
     },
     "modeHelp GPS RTH": {
-        "message": "Automatically flies the aircraft back toward, and loiters above, its recorded home position using GPS. Drives the same return-to-home behavior as GPS RESCUE above -- assigning either switch has the same effect."
+        "message": "Automatically flies the aircraft back toward, and loiters above, its recorded home position using GPS."
     },
     "mode TRAINER": {
         "message": "TRAINER"

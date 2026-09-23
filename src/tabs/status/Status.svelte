@@ -73,7 +73,7 @@
       "MSP",
       "PARALYZE",
       "GPS",
-      "RESC",
+      "GPS_RTH",
       "RPMFILTER",
       "REBOOT_REQ",
       "DSHOT_BITBANG",

@@ -340,7 +340,6 @@ export function applyVirtualConfig() {
     "TRAINER",
     "ALTHOLD",
     "RESCUE",
-    "GPSRESCUE",
     "FAILSAFE",
 
     // RC modes
