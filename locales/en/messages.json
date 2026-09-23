@@ -711,6 +711,9 @@
     "tabAuxiliary": {
         "message": "Modes"
     },
+    "tabGpsNav": {
+        "message": "GPS Navigation"
+    },
     "tabGroupSetup": {
         "message": "Setup"
     },
@@ -6616,8 +6619,8 @@
     "failsafeProcedureItemSelect4": {
         "message": "GPS Rescue"
     },
-    "failsafeGpsRescueCliOnlyNote": {
-        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings below."
+    "failsafeGpsRescueNavNote": {
+        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, on the GPS Navigation tab."
     },
     "gpsNavSectionTitle": {
         "message": "GPS Navigation (RTH / Loiter)"
@@ -6632,10 +6635,10 @@
         "message": "Loiter Direction"
     },
     "gpsNavLoiterDirectionCw": {
-        "message": "Clockwise"
+        "message": "CW"
     },
     "gpsNavLoiterDirectionCcw": {
-        "message": "Counter-Clockwise"
+        "message": "CCW"
     },
     "gpsNavRthAltitudeItem": {
         "message": "RTH Altitude"

@@ -25,7 +25,6 @@
       RX_CONFIG: FC.RX_CONFIG,
       RXFAIL_CONFIG: FC.RXFAIL_CONFIG,
       FAILSAFE_CONFIG: FC.FAILSAFE_CONFIG,
-      GPS_NAV_CONFIG: FC.GPS_NAV_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
   }
@@ -62,18 +61,11 @@
     { value: 2, label: $i18n.t("failsafeSwitchOptionStage2") },
   ]);
 
-  // nav_loiter_direction values match TABLE_NAV_LOITER_DIRECTION (CW, CCW).
-  let loiterDirectionOptions = $derived([
-    { value: 0, label: $i18n.t("gpsNavLoiterDirectionCw") },
-    { value: 1, label: $i18n.t("gpsNavLoiterDirectionCcw") },
-  ]);
-
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_RXFAIL_CONFIG);
     await MSP.promise(MSPCodes.MSP_RX_CONFIG);
     await MSP.promise(MSPCodes.MSP_FAILSAFE_CONFIG);
-    await MSP.promise(MSPCodes.MSP2_WING_GPS_NAV_CONFIG);
 
     initialState = snapshotState();
     loading = false;
@@ -87,7 +79,6 @@
     await mspHelper.sendRxFailConfig();
     await save(MSPCodes.MSP_SET_RX_CONFIG);
     await save(MSPCodes.MSP_SET_FAILSAFE_CONFIG);
-    await save(MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -100,7 +91,6 @@
     Object.assign(FC.RX_CONFIG, initialState.RX_CONFIG);
     Object.assign(FC.RXFAIL_CONFIG, initialState.RXFAIL_CONFIG);
     Object.assign(FC.FAILSAFE_CONFIG, initialState.FAILSAFE_CONFIG);
-    Object.assign(FC.GPS_NAV_CONFIG, initialState.GPS_NAV_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
   }
 
@@ -230,7 +220,7 @@
           </Field>
           {#if FC.FAILSAFE_CONFIG.failsafe_procedure === 2}
             <div class="note" transition:slide>
-              {$i18n.t("failsafeGpsRescueCliOnlyNote")}
+              {$i18n.t("failsafeGpsRescueNavNote")}
             </div>
           {/if}
         </SubSection>
@@ -316,104 +306,6 @@
             />
           </Field>
         </SubSection>
-      </Section>
-      <Section label="gpsNavSectionTitle" summary="gpsNavSectionHelp">
-        <SubSection>
-          <Field
-            id="gps-nav-rth-altitude"
-            label="gpsNavRthAltitudeItem"
-            unit="m"
-          >
-            <NumberInput
-              id="gps-nav-rth-altitude"
-              min="10"
-              max="500"
-              bind:value={FC.GPS_NAV_CONFIG.nav_rth_altitude}
-            />
-          </Field>
-          <Field
-            id="gps-nav-loiter-radius"
-            label="gpsNavLoiterRadiusItem"
-            unit="m"
-          >
-            <NumberInput
-              id="gps-nav-loiter-radius"
-              min="20"
-              max="500"
-              bind:value={FC.GPS_NAV_CONFIG.nav_loiter_radius}
-            />
-          </Field>
-          <Field
-            id="gps-nav-loiter-direction"
-            label="gpsNavLoiterDirectionItem"
-          >
-            <Select
-              id="gps-nav-loiter-direction"
-              bind:value={FC.GPS_NAV_CONFIG.nav_loiter_direction}
-              options={loiterDirectionOptions}
-            />
-          </Field>
-          <Field id="gps-nav-min-sats" label="gpsNavMinSatsItem">
-            <NumberInput
-              id="gps-nav-min-sats"
-              min="5"
-              max="50"
-              bind:value={FC.GPS_NAV_CONFIG.nav_min_sats}
-            />
-          </Field>
-          <Field
-            id="gps-nav-max-bank-angle"
-            label="gpsNavMaxBankAngleItem"
-            unit="°"
-          >
-            <NumberInput
-              id="gps-nav-max-bank-angle"
-              min="5"
-              max="45"
-              bind:value={FC.GPS_NAV_CONFIG.nav_max_bank_angle}
-            />
-          </Field>
-          <Field
-            id="gps-nav-max-pitch-angle"
-            label="gpsNavMaxPitchAngleItem"
-            unit="°"
-          >
-            <NumberInput
-              id="gps-nav-max-pitch-angle"
-              min="5"
-              max="45"
-              bind:value={FC.GPS_NAV_CONFIG.nav_max_pitch_angle}
-            />
-          </Field>
-        </SubSection>
-        <Expert>
-          <div transition:slide>
-            <SubSection>
-              <Field id="gps-nav-bearing-kp" label="gpsNavBearingKpItem">
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavBearingKpHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-bearing-kp"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_bearing_kp}
-                />
-              </Field>
-              <Field id="gps-nav-altitude-kp" label="gpsNavAltitudeKpItem">
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavAltitudeKpHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-altitude-kp"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kp}
-                />
-              </Field>
-            </SubSection>
-          </div>
-        </Expert>
       </Section>
     </div>
   </div>

@@ -456,6 +456,7 @@ function notifyOutdatedVersion(releaseData) {
 
 export function updateTabList(features) {
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
+    $('#tabs ul.mode-connected li.tab_gps_nav').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
     $('#tabs ul.mode-connected li.tab_thrust_vector').toggle(features.isEnabled('THRUST_VECTOR'));
 
