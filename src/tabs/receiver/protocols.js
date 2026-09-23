@@ -165,7 +165,7 @@ export const RX_PROTOCOLS = [
   },
   // Not compiled into Wingflight firmware, see GHOST above.
   { name: "CPPM", id: 0, feature: "RX_PPM", hide: true },
-  { name: "MSP", id: 0, feature: "RX_MSP", hide: true },
+  { name: "MSP", id: 0, feature: "RX_MSP" },
 
   { name: "SPI/CX10", id: 4, feature: "RX_SPI", hide: true },
   { name: "SPI/CX10A", id: 5, feature: "RX_SPI", hide: true },
