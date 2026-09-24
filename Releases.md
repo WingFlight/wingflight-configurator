@@ -1,3 +1,7 @@
+# Unreleased
+
+Split the Receiver tab's Roll/Pitch Deadband into separate Roll Deadband and Pitch Deadband. Requires matching firmware (MSP_RC_CONFIG layout change); the firmware update resets the Channel Range settings to defaults.
+
 # 0.0.26
 
 Add Nav Throttle, Altitude Damping and Turn Coordination to the GPS Navigation tab, and default Loiter Radius to 100 m, matching the reworked 0.0.26 firmware GPS Loiter/RTH. Note that the GPS Rescue failsafe now flies home at Nav Throttle; the Failsafe tab's throttle is used only while landing.

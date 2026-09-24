@@ -956,7 +956,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 if (self.hasLegacyPlaceholders()) self.skipBytes(data, 2); // was rc_arm_throttle
                 FC.RC_CONFIG.rc_min_throttle = data.readU16();
                 FC.RC_CONFIG.rc_max_throttle = data.readU16();
-                FC.RC_CONFIG.rc_deadband = data.readU8();
+                FC.RC_CONFIG.rc_roll_deadband = data.readU8();
+                FC.RC_CONFIG.rc_pitch_deadband = data.readU8();
                 FC.RC_CONFIG.rc_yaw_deadband = data.readU8();
                 break;
             }
@@ -2485,7 +2486,8 @@ MspHelper.prototype.crunch = function(code) {
             }
             buffer.push16(FC.RC_CONFIG.rc_min_throttle)
                   .push16(FC.RC_CONFIG.rc_max_throttle)
-                  .push8(FC.RC_CONFIG.rc_deadband)
+                  .push8(FC.RC_CONFIG.rc_roll_deadband)
+                  .push8(FC.RC_CONFIG.rc_pitch_deadband)
                   .push8(FC.RC_CONFIG.rc_yaw_deadband);
             break;
         }

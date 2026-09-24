@@ -716,7 +716,8 @@ class FlightController {
       rc_deflection:                0,
       rc_min_throttle:              0,
       rc_max_throttle:              0,
-      rc_deadband:                  0,
+      rc_roll_deadband:             0,
+      rc_pitch_deadband:            0,
       rc_yaw_deadband:              0,
     };
 
