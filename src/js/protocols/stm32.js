@@ -99,6 +99,21 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
                     serial.connect(self.port, {bitrate: self.baud, parityBit: 'even', stopBits: 'one'}, function (openInfo) {
                         if (openInfo) {
                             self.initialize();
+                        } else if (__BACKEND__ === "web" && 'usb' in navigator && TABS.firmware_flasher.requestDfuPermission) {
+                            // The serial port vanished, i.e. a USB-VCP board
+                            // rebooted into DFU -- but one this browser has
+                            // never been granted WebUSB access to, so
+                            // check_usb_devices couldn't see it. Needs a
+                            // click to grant; see requestDfuPermission() in
+                            // firmware_flasher/state.svelte.js.
+                            TABS.firmware_flasher.flashingMessage(i18n.getMessage('firmwareFlasherDfuPermissionNeeded'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.ACTION);
+                            TABS.firmware_flasher.requestDfuPermission(function () {
+                                STM32DFU.connect(usbDevices, hex, options, self.callback);
+                            }, function () {
+                                GUI.connect_lock = false;
+                                TABS.firmware_flasher.flashingMessage(i18n.getMessage('stm32UsbDfuNotFound'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+                                self.callback?.();
+                            });
                         } else {
                             GUI.connect_lock = false;
                             GUI.log(i18n.getMessage('serialPortOpenFail'));

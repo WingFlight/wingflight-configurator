@@ -38,6 +38,7 @@
   import StepIndicator from "@/components/StepIndicator.svelte";
   import Switch from "@/components/Switch.svelte";
 
+  import DfuPermissionPrompt from "./DfuPermissionPrompt.svelte";
   import LegacyFirmwareFlasher from "./LegacyFirmwareFlasher.svelte";
 
   import {
@@ -360,8 +361,11 @@
   let exitSaveFailed = $state(false);
 
   function hasPendingRestore() {
-    return !!restoreText && restoreRun.status !== "done" &&
-      restoreRun.status !== "idle";
+    return (
+      !!restoreText &&
+      restoreRun.status !== "done" &&
+      restoreRun.status !== "idle"
+    );
   }
 
   // Shared by tab changes, wizard navigation and the desktop window close.
@@ -424,7 +428,6 @@
       event.returnValue = "";
     }
   }
-
 
   let backupCommand = $derived(
     backupMode === BACKUP_TYPES.DUMP ? "dump all" : "diff all",
@@ -2366,6 +2369,8 @@
           </span>
         </div>
 
+        <DfuPermissionPrompt />
+
         {#if needsPortSelection}
           {@render portPrompt()}
         {/if}
@@ -2392,7 +2397,11 @@
       </div>
     {:else if wizardStep === 6}
       <div class="step-body">
-        <button class="btn" disabled={backupOrRestoreBusy} onclick={saveBackupFile}>
+        <button
+          class="btn"
+          disabled={backupOrRestoreBusy}
+          onclick={saveBackupFile}
+        >
           {$i18n.t("firmwareFlasherWizardSaveBackupFile")}
         </button>
         {#if restoreRun.status === "prompt"}
@@ -2493,15 +2502,32 @@
 
   <dialog bind:this={exitDialogEl} oncancel={cancelExit}>
     <h3>{$i18n.t("firmwareFlasherRestoreExitTitle")}</h3>
-    <p>{$i18n.t(backupRun.saved ? "firmwareFlasherRestoreExitSaved" : "firmwareFlasherRestoreExitUnsaved")}</p>
+    <p>
+      {$i18n.t(
+        backupRun.saved
+          ? "firmwareFlasherRestoreExitSaved"
+          : "firmwareFlasherRestoreExitUnsaved",
+      )}
+    </p>
     {#if exitSaveFailed}
       <p role="alert">{$i18n.t("firmwareFlasherRestoreExitSaveFailed")}</p>
     {/if}
     <div class="buttons">
-      <button class="btn" disabled={savingExitBackup} onclick={cancelExit}>{$i18n.t("firmwareFlasherRestoreExitStay")}</button>
-      <button class="btn" disabled={savingExitBackup} onclick={confirmExit}>{$i18n.t("firmwareFlasherRestoreExitLeave")}</button>
-      <button class="btn" disabled={savingExitBackup} onclick={saveBeforeExit}>{$i18n.t("firmwareFlasherWizardSaveBackupFile")}</button>
-      <button class="btn primary" disabled={savingExitBackup} onclick={restoreBeforeExit}>{$i18n.t("firmwareFlasherWizardRestoreNow")}</button>
+      <button class="btn" disabled={savingExitBackup} onclick={cancelExit}
+        >{$i18n.t("firmwareFlasherRestoreExitStay")}</button
+      >
+      <button class="btn" disabled={savingExitBackup} onclick={confirmExit}
+        >{$i18n.t("firmwareFlasherRestoreExitLeave")}</button
+      >
+      <button class="btn" disabled={savingExitBackup} onclick={saveBeforeExit}
+        >{$i18n.t("firmwareFlasherWizardSaveBackupFile")}</button
+      >
+      <button
+        class="btn primary"
+        disabled={savingExitBackup}
+        onclick={restoreBeforeExit}
+        >{$i18n.t("firmwareFlasherWizardRestoreNow")}</button
+      >
     </div>
   </dialog>
 
