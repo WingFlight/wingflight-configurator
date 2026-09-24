@@ -404,7 +404,7 @@
 
   {#if busActive}
     <Section label="servoConfigurationBus">
-      <div class="override-toggle">
+      <div class="bus-options">
         <Switch
           id="servo-bus-clone-enable"
           bind:checked={
@@ -413,17 +413,12 @@
         />
         <label for="servo-bus-clone-enable">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <span>{@html $i18n.t("servoBusCloneLabel")}</span>
+          {@html $i18n.t("servoBusCloneLabel")}
         </label>
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
-      </div>
 
-      {#if hasBusOutChannels && hasFbusOut}
-        <div class="bus-channels">
-          <label for="servo-fbus-out-channels">
-            {$i18n.t("servoFbusOutChannels")}
-          </label>
+        {#if hasBusOutChannels && hasFbusOut}
           <select
             id="servo-fbus-out-channels"
             bind:value={FC.MIXER_CONFIG.fbus_master_channels}
@@ -433,14 +428,12 @@
               <option value={count}>{count}</option>
             {/each}
           </select>
-          <span class="description">{$i18n.t("servoFbusOutChannelsHelp")}</span>
-        </div>
-      {/if}
-      {#if hasBusOutChannels && hasSbusOut}
-        <div class="bus-channels">
-          <label for="servo-sbus-out-channels">
-            {$i18n.t("servoSbusOutChannels")}
+          <label for="servo-fbus-out-channels">
+            <strong>{$i18n.t("servoFbusOutChannels")}</strong>
           </label>
+          <span class="description">{$i18n.t("servoFbusOutChannelsHelp")}</span>
+        {/if}
+        {#if hasBusOutChannels && hasSbusOut}
           <select
             id="servo-sbus-out-channels"
             bind:value={FC.MIXER_CONFIG.sbus_out_channels}
@@ -450,9 +443,12 @@
               <option value={count}>{count}</option>
             {/each}
           </select>
+          <label for="servo-sbus-out-channels">
+            <strong>{$i18n.t("servoSbusOutChannels")}</strong>
+          </label>
           <span class="description">{$i18n.t("servoSbusOutChannelsHelp")}</span>
-        </div>
-      {/if}
+        {/if}
+      </div>
 
       <div class="table-scroll">
         <ServoConfigTable
@@ -542,15 +538,23 @@
     padding: 8px;
   }
 
-  .bus-channels {
-    display: flex;
+  // Control | label | description, one row per bus option, so the switch and
+  // the channel selectors line up and every description starts in the same
+  // column.
+  .bus-options {
+    display: grid;
+    grid-template-columns: 4.5rem max-content 1fr;
     align-items: center;
-    gap: 8px;
+    column-gap: 12px;
+    row-gap: 12px;
     padding: 8px;
 
     label {
-      font-weight: 600;
       white-space: nowrap;
+    }
+
+    select {
+      width: 100%;
     }
   }
 

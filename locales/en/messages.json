@@ -3549,13 +3549,13 @@
         "message": "F.Bus output channels"
     },
     "servoFbusOutChannelsHelp": {
-        "message": "8 uses the 8-channel F.Bus frame, 12 and 16 the 16-channel frame, 24 the 24-channel frame. Channels past the count are sent at center. Use 16 or less if anything on the bus only accepts the 16-channel frame."
+        "message": "Bus servos sent over F.Bus. Unused channels are sent at center. Use 16 or less if a servo or receiver on the bus only takes the 16-channel frame."
     },
     "servoSbusOutChannels": {
         "message": "SBUS output channels"
     },
     "servoSbusOutChannelsHelp": {
-        "message": "SBUS always sends its 16-channel frame; channels past the count are sent at center."
+        "message": "Bus servos sent over SBUS. Unused channels are sent at center."
     },
     "servoOverrideEnable": {
         "message": "Enable"
