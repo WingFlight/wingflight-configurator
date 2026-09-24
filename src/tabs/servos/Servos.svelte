@@ -1,7 +1,9 @@
 <script>
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
+  import semver from "semver";
 
+  import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
@@ -23,6 +25,12 @@
   const MAX_SERVOS = PWM_SERVO_SLOTS + BUS_SERVO_CHANNELS;
   const OVERRIDE_OFF = 2001;
 
+  // Bus output channel counts (API 22.5): wingflight-firmware's
+  // sbus_out_channels / fbus_master_channels, carried in MSP_MIXER_CONFIG.
+  const hasBusOutChannels = semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
+  const SBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16];
+  const FBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16, 24];
+
   let loading = $state(true);
   let needReboot = $state(false);
   let initialConfig = $state(null);
@@ -31,6 +39,8 @@
   // the same dirty/Save/Revert cycle as everything else on this tab instead
   // of silently self-committing with no toolbar feedback.
   let initialBusClonePwm = $state(null);
+  // Same idea for the bus output channel counts (also on FC.MIXER_CONFIG).
+  let initialBusOutChannels = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -52,15 +62,36 @@
       FC.MIXER_CONFIG.bus_servo_clone_pwm !== initialBusClonePwm,
   );
 
-  let dirty = $derived(changes.length > 0 || busCloneDirty);
-
-  let hasFbusOrSbus = $derived(
-    FC.SERIAL_CONFIG.ports.some(
-      (port) =>
-        port.functions.includes("FBUS_OUT") ||
-        port.functions.includes("SBUS_OUT"),
-    ),
+  let busOutChannelsDirty = $derived(
+    initialBusOutChannels !== null &&
+      (FC.MIXER_CONFIG.sbus_out_channels !== initialBusOutChannels.sbus ||
+        FC.MIXER_CONFIG.fbus_master_channels !== initialBusOutChannels.fbus),
   );
+
+  let dirty = $derived(
+    changes.length > 0 || busCloneDirty || busOutChannelsDirty,
+  );
+
+  let hasSbusOut = $derived(
+    FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("SBUS_OUT")),
+  );
+  let hasFbusOut = $derived(
+    FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("FBUS_OUT")),
+  );
+  let hasFbusOrSbus = $derived(hasSbusOut || hasFbusOut);
+
+  // Bus servos the configured output drives - F.Bus if both are set up, as
+  // in the firmware's getBusServoOutputCount(). Follows the selectors below
+  // straight away; 16 on firmware without the setting.
+  let busOutputCount = $derived.by(() => {
+    if (!hasBusOutChannels) {
+      return 16;
+    }
+    if (hasFbusOut) {
+      return FC.MIXER_CONFIG.fbus_master_channels;
+    }
+    return Math.min(FC.MIXER_CONFIG.sbus_out_channels, 16);
+  });
   let maxServos = MAX_SERVOS;
   let busActive = $derived(hasFbusOrSbus);
 
@@ -92,12 +123,7 @@
       return [];
     }
 
-    // As many as the bus output drives (sbus_out_channels /
-    // fbus_master_channels, from MSP_MIXER_CONFIG on API 22.5), else 16.
-    const displayCount = Math.min(
-      FC.MIXER_CONFIG.bus_servo_output_count || 16,
-      BUS_SERVO_CHANNELS,
-    );
+    const displayCount = Math.min(busOutputCount, BUS_SERVO_CHANNELS);
     const list = [];
     for (let i = 0; i < displayCount; i++) {
       const index = pwmServoCount + i;
@@ -202,6 +228,7 @@
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
+    initialBusOutChannels = snapshotBusOutChannels();
     overrideEnabled = allServos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -268,14 +295,28 @@
     mspHelper.sendMixerConfig();
   }
 
+  // Same live-push as onToggleBusClone; the firmware uses the new count from
+  // its next frame.
+  function onBusOutChannelsChange() {
+    mspHelper.sendMixerConfig();
+  }
+
+  function snapshotBusOutChannels() {
+    return {
+      sbus: FC.MIXER_CONFIG.sbus_out_channels,
+      fbus: FC.MIXER_CONFIG.fbus_master_channels,
+    };
+  }
+
   function onClickHelp() {
     window.open(getTabHelpURL("tabServos"), "_system");
   }
 
   export async function onSave() {
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
-    // Already pushed live by onToggleBusClone when changed -- EEPROM_WRITE
-    // below persists it along with everything else, no need to resend.
+    // Already pushed live by onToggleBusClone / onBusOutChannelsChange when
+    // changed -- EEPROM_WRITE below persists them along with everything else,
+    // no need to resend.
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
@@ -288,14 +329,17 @@
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
+    initialBusOutChannels = snapshotBusOutChannels();
   }
 
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
 
-    if (busCloneDirty) {
+    if (busCloneDirty || busOutChannelsDirty) {
       FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
+      FC.MIXER_CONFIG.sbus_out_channels = initialBusOutChannels.sbus;
+      FC.MIXER_CONFIG.fbus_master_channels = initialBusOutChannels.fbus;
       await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     }
 
@@ -374,6 +418,41 @@
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
       </div>
+
+      {#if hasBusOutChannels && hasFbusOut}
+        <div class="bus-channels">
+          <label for="servo-fbus-out-channels">
+            {$i18n.t("servoFbusOutChannels")}
+          </label>
+          <select
+            id="servo-fbus-out-channels"
+            bind:value={FC.MIXER_CONFIG.fbus_master_channels}
+            onchange={onBusOutChannelsChange}
+          >
+            {#each FBUS_OUT_CHANNEL_OPTIONS as count (count)}
+              <option value={count}>{count}</option>
+            {/each}
+          </select>
+          <span class="description">{$i18n.t("servoFbusOutChannelsHelp")}</span>
+        </div>
+      {/if}
+      {#if hasBusOutChannels && hasSbusOut}
+        <div class="bus-channels">
+          <label for="servo-sbus-out-channels">
+            {$i18n.t("servoSbusOutChannels")}
+          </label>
+          <select
+            id="servo-sbus-out-channels"
+            bind:value={FC.MIXER_CONFIG.sbus_out_channels}
+            onchange={onBusOutChannelsChange}
+          >
+            {#each SBUS_OUT_CHANNEL_OPTIONS as count (count)}
+              <option value={count}>{count}</option>
+            {/each}
+          </select>
+          <span class="description">{$i18n.t("servoSbusOutChannelsHelp")}</span>
+        </div>
+      {/if}
 
       <div class="table-scroll">
         <ServoConfigTable
@@ -461,6 +540,18 @@
     align-items: center;
     gap: 8px;
     padding: 8px;
+  }
+
+  .bus-channels {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+
+    label {
+      font-weight: 600;
+      white-space: nowrap;
+    }
   }
 
   .description {
