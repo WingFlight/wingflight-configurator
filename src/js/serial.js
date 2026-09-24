@@ -30,8 +30,28 @@ export const serial = {
     transmitting:   false,
     outputBuffer:   [],
 
+    // Why the most recent connect() failed to open its port: 'notFound' (the
+    // device isn't there any more) or 'openFailed' (it's there but the OS
+    // refused to open it -- in practice almost always because another
+    // program or browser tab already holds it). Null after a successful
+    // open. See openFailureMessage().
+    lastOpenError:  null,
+
+    // The message to show for the last failed open -- every caller used to
+    // log the same generic "Failed to open serial port" (or worse, only its
+    // own downstream symptom, like "board detection failed"), which never
+    // hinted that the fix is just closing whatever else has the port.
+    openFailureMessage: function () {
+        switch (this.lastOpenError) {
+            case 'openFailed': return i18n.getMessage('serialPortOpenFailBusy');
+            case 'notFound': return i18n.getMessage('serialPortOpenFailNotFound');
+            default: return i18n.getMessage('serialPortOpenFail');
+        }
+    },
+
     connect: function (path, options, callback) {
         const self = this;
+        self.lastOpenError = null;
 
         // "requestserial"/"requestbluetooth"/"DFU" are the port picker's
         // permission-request trigger options, not real, connectable devices --
@@ -176,6 +196,7 @@ export const serial = {
                     self.openCanceled = false;
                 } else {
                     console.log(`${self.connectionType}: failed to open serial port`);
+                    self.lastOpenError = 'openFailed';
                 }
                 if (callback) {
                     callback(false);

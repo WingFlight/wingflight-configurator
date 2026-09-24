@@ -769,7 +769,7 @@
     } else {
       clearTimeout(detectTimer);
       GUI.log(
-        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${$i18n.t("serialPortOpenFail")}`,
+        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${serial.openFailureMessage()}`,
       );
       disconnectDetect();
     }

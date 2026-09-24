@@ -85,7 +85,7 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
 
                 self.initialize();
             } else {
-                GUI.log(i18n.getMessage('serialPortOpenFail'));
+                GUI.log(serial.openFailureMessage());
             }
         });
     } else {
@@ -169,8 +169,13 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
             TABS.firmware_flasher.flashingMessage(i18n.getMessage('stm32RebootingToBootloaderFailed'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
         };
 
+        // The port couldn't even be opened (e.g. another program has it) --
+        // say so on the flash status, and finish the attempt so the UI
+        // doesn't sit on "Rebooting to bootloader" forever.
         var onFailureHandler = function() {
             GUI.connect_lock = false;
+            TABS.firmware_flasher.flashingMessage(serial.openFailureMessage(), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+            self.callback?.();
         };
 
         GUI.connect_lock = true;

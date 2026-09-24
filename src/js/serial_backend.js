@@ -537,7 +537,7 @@ async function onOpen(openInfo) {
         }
     }
     else {
-        GUI.log(i18n.getMessage('serialPortOpenFail'));
+        GUI.log(serial.openFailureMessage());
         console.log('Failed to open serial port');
         abortConnect();
     }

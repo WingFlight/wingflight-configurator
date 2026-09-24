@@ -22,6 +22,7 @@ function setup(overrides = {}) {
         setTimeout(callback) { callback(); },
         saveBackupToFile: async () => true,
         restoreOverSerial: async () => true,
+        portFailDetail: () => '',
         ...overrides,
     };
     vm.createContext(context);

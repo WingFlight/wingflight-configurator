@@ -152,6 +152,9 @@
   // entirely" escape hatch (including the one offered right on a "found"
   // result, in case it matched the wrong thing).
   let detectStatus = $state(null);
+  // Why a "failed" detect failed, when it's something the user can fix
+  // (e.g. the port is held by another program) -- see onDetectConnect().
+  let detectFailDetail = $state("");
   let detectedBoardName = $state("");
   let manualSelectionShown = $state(false);
   let showManualBoardSelect = $derived(
@@ -1231,6 +1234,13 @@
     runBackup();
   }
 
+  // The user-fixable reason a backup/restore failed, if it failed because the
+  // port wouldn't open at all (e.g. another program holds it) -- empty when
+  // the port opened fine and something later failed instead.
+  function portFailDetail() {
+    return serial.lastOpenError ? serial.openFailureMessage() : "";
+  }
+
   async function runBackup() {
     backupRun.status = "connecting";
     backupRun.text = null;
@@ -1251,6 +1261,7 @@
     GUI.connect_lock = false;
 
     if (!text) {
+      backupRun.failDetail = portFailDetail();
       backupRun.status = "failed";
       return;
     }
@@ -1343,6 +1354,7 @@
       console.warn("Configuration restore failed", error);
     } finally {
       GUI.connect_lock = false;
+      restoreRun.failDetail = restored ? "" : portFailDetail();
       restoreRun.status = restored ? "done" : "failed";
     }
     if (restored) {
@@ -1478,6 +1490,7 @@
     GUI.connect_lock = true;
     boardDetectionInProgress = true;
     detectStatus = "detecting";
+    detectFailDetail = "";
 
     GUI.log($i18n.t("firmwareFlasherBoardDetectionInProgress"));
     detectTimer = setTimeout(() => {
@@ -1518,8 +1531,9 @@
       getBoardInfo();
     } else {
       clearTimeout(detectTimer);
+      detectFailDetail = serial.openFailureMessage();
       GUI.log(
-        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${$i18n.t("serialPortOpenFail")}`,
+        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${detectFailDetail}`,
       );
       detectStatus = "failed";
       disconnectDetect();
@@ -1876,6 +1890,11 @@
                     )}
                   {:else}
                     {$i18n.t("firmwareFlasherBoardDetectionFail")}
+                    {#if detectFailDetail}
+                      <br />
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      {@html detectFailDetail}
+                    {/if}
                   {/if}
                 </p>
               {/if}
@@ -2209,6 +2228,11 @@
               {:else if backupRun.status === "failed"}
                 <p class="detect-fallback-notice">
                   {$i18n.t("firmwareFlasherWizardBackupFailed")}
+                  {#if backupRun.failDetail}
+                    <br />
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html backupRun.failDetail}
+                  {/if}
                 </p>
                 <div class="buttons">
                   <button class="btn" onclick={cancelBackup}>
@@ -2433,6 +2457,11 @@
           <div class="backup-panel">
             <p class="detect-fallback-notice">
               {$i18n.t("firmwareFlasherWizardRestoreFailed")}
+              {#if restoreRun.failDetail}
+                <br />
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html restoreRun.failDetail}
+              {/if}
             </p>
             <div class="buttons">
               <button class="btn" onclick={skipRestore}>

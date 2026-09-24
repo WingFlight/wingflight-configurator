@@ -954,6 +954,12 @@
     "serialPortOpenFail": {
         "message": "<span class=\"message-negative\">Failed</span> to open serial port"
     },
+    "serialPortOpenFailBusy": {
+        "message": "<span class=\"message-negative\">Could not open the serial port</span> - it is most likely in use by another program or browser tab (another configurator, a serial monitor, etc.). Close it, then try again."
+    },
+    "serialPortOpenFailNotFound": {
+        "message": "<span class=\"message-negative\">Serial port not found</span> - check the flight controller is still plugged in, then try again."
+    },
     "serialPortClosedOk": {
         "message": "Serial port <span class=\"message-positive\">successfully</span> closed"
     },
