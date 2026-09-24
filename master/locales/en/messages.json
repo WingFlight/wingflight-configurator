@@ -3543,7 +3543,19 @@
         "message": "<strong>Clone PWM outputs to bus servos</strong>"
     },
     "servoBusCloneText": {
-        "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
+        "message": "Bus servo 1 copies PWM servo 1, bus servo 2 copies PWM servo 2, and so on. Turn off to give bus servos their own mixer rules."
+    },
+    "servoFbusOutChannels": {
+        "message": "F.Bus output channels"
+    },
+    "servoFbusOutChannelsHelp": {
+        "message": "How many servo channels F.Bus sends. Use 16 or fewer if a device on the bus can't take 24."
+    },
+    "servoSbusOutChannels": {
+        "message": "SBUS output channels"
+    },
+    "servoSbusOutChannelsHelp": {
+        "message": "How many servo channels SBUS sends."
     },
     "servoOverrideEnable": {
         "message": "Enable"
@@ -3676,6 +3688,24 @@
     },
     "mixerInputRCChannel18": {
         "message": "CH #18"
+    },
+    "mixerInputRCChannel19": {
+        "message": "CH #19"
+    },
+    "mixerInputRCChannel20": {
+        "message": "CH #20"
+    },
+    "mixerInputRCChannel21": {
+        "message": "CH #21"
+    },
+    "mixerInputRCChannel22": {
+        "message": "CH #22"
+    },
+    "mixerInputRCChannel23": {
+        "message": "CH #23"
+    },
+    "mixerInputRCChannel24": {
+        "message": "CH #24"
     },
     "mixerOutputNone": {
         "message": "-"
