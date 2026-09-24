@@ -1,4 +1,5 @@
 import * as config from '@/js/config.js';
+import { RemoteSupport, REMOTE_PORT_PREFIX } from '@/js/protocols/RemoteSupport.js';
 
 const TIMEOUT_CHECK = 500 ; // With 250 it seems that it produces a memory leak and slowdown in some versions, reason unknown
 
@@ -23,6 +24,9 @@ PortHandler.initialize = function (showAllPorts) {
     this.selectList = document.querySelector(portPickerElementSelector);
     this.initialWidth = this.selectList.offsetWidth + 12;
     this.showingAllPorts = showAllPorts;
+
+    // Start looking for the remote support tool (nwjs only, no-op elsewhere).
+    RemoteSupport.start();
 
     // fill dropdown with version numbers
     generateVirtualApiVersions();
@@ -74,7 +78,8 @@ PortHandler.check_serial_devices = function () {
 
     serial.getDevices(function(currentPorts) {
         if (__BACKEND__ !== "web" && !self.showingAllPorts) {
-            currentPorts = currentPorts.filter((p) => portRecognized(p.displayName, p.path));
+            // Remote ports are already limited to USB/Bluetooth ones by the tool.
+            currentPorts = currentPorts.filter((p) => p.path.startsWith(REMOTE_PORT_PREFIX) || portRecognized(p.displayName, p.path));
         }
         // on initialization of the port selector (i.e. app startup or toggling whether to show all ports), only select a detected port, don't auto-connect
         if (!self.initialPorts) {
@@ -96,12 +101,23 @@ PortHandler.check_usb_devices = function (callback) {
         return;
     }
 
-    chrome.usb.getDevices(usbDevices, function (result) {
+    // An explicit check (with a callback, e.g. STM32.js looking for the board
+    // it just rebooted into DFU) can't make do with the remote device list
+    // the tool last pushed, so fetch a fresh one first.
+    const remoteRefresh = (callback && RemoteSupport.available)
+        ? RemoteSupport.refreshDevices().catch(() => {})
+        : Promise.resolve();
+
+    remoteRefresh.then(() => chrome.usb.getDevices(usbDevices, function (result) {
+        // STM32DFU.connect() prefers a remote DFU device over a local one, so
+        // label the option after the one it would use.
+        const remoteDfu = RemoteSupport.findDfuDevice(usbDevices.filters);
 
         const dfuElement = self.portPickerElement.children("[value='DFU']");
-        if (result?.length) {
+        if (remoteDfu || result?.length) {
             if (!dfuElement.length) {
-                self.rebuildPortPickerOptions(result[0].productName ? `DFU - ${result[0].productName}` : "DFU");
+                const productName = remoteDfu ? i18n.getMessage('portsRemoteDevice', [remoteDfu.productName || remoteDfu.id]) : result[0].productName;
+                self.rebuildPortPickerOptions(productName ? `DFU - ${productName}` : "DFU");
             }
             self.dfu_available = true;
         } else {
@@ -112,7 +128,7 @@ PortHandler.check_usb_devices = function (callback) {
             self.dfu_available = false;
         }
         self.finishUsbDeviceCheck(callback);
-    });
+    }));
 };
 
 // WebUSB has no chrome.usb-style declarative permissions: navigator.usb.getDevices()

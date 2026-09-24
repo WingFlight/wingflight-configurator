@@ -67,7 +67,10 @@ function closeSerial() {
         bufView[3] = 0x74; // t
         bufView[4] = 0x0D; // enter
 
-        const sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        let sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        if (serial.connectionType === 'remote') {
+            sendFn = (_connectionId, data, callback) => serial.send(data, callback);
+        }
         sendFn(connectionId, bufferOut, function () {
             console.log('Send exit');
         });

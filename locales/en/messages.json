@@ -126,6 +126,10 @@
     "portsSelectManual": {
         "message": "Manual Selection"
     },
+    "portsRemoteDevice": {
+        "message": "Remote - $1",
+        "description": "A serial port or DFU device on the other computer of a remote support session; $1 is the device name"
+    },
     "portsSelectVirtual": {
         "message": "Virtual Mode (Experimental)",
         "description": "Configure a Virtual Flight Controller without the need of a physical FC."
