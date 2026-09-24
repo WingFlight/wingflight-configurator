@@ -1,5 +1,6 @@
 import { MSPConnectorImpl } from '@/js/msp/MSPConnector.js';
 import { portUsage } from "@/js/port_usage.svelte.js";
+import { RemoteSupport, REMOTE_PORT_PREFIX } from '@/js/protocols/RemoteSupport.js';
 
 /*
     STM32 F103 serial bus seems to properly initialize with quite a huge auto-baud range
@@ -90,11 +91,19 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
         });
     } else {
 
-        var startFlashing = function() {
+        var startFlashing = function(attempt = 0) {
             // refresh device list
             PortHandler.check_usb_devices(function(dfu_available) {
+                const remotePortGone = self.port.startsWith(REMOTE_PORT_PREFIX)
+                    && !RemoteSupport.getSerialPorts().some((p) => p.path === self.port);
                 if(dfu_available) {
                     STM32DFU.connect(usbDevices, hex, options, self.callback);
+                } else if (remotePortGone && attempt < 10) {
+                    // Over remote support the DFU device shows up later: the
+                    // tool's device polling and the network round trip come on
+                    // top of the reboot. The serial port is gone, so the board
+                    // is on its way into DFU -- keep looking for a bit.
+                    setTimeout(() => startFlashing(attempt + 1), 500);
                 } else {
                     serial.connect(self.port, {bitrate: self.baud, parityBit: 'even', stopBits: 'one'}, function (openInfo) {
                         if (openInfo) {
