@@ -213,6 +213,11 @@ class FlightController {
     this.MIXER_CONFIG = {
       model_type:                 0,
       bus_servo_clone_pwm:        1,
+      // API 22.5: bus output channel counts (sbus_out_channels,
+      // fbus_master_channels) and the count the configured bus output drives
+      sbus_out_channels:          16,
+      fbus_master_channels:       24,
+      bus_servo_output_count:     0,
     };
 
     this.MIXER_INPUTS =             [];
@@ -264,7 +269,6 @@ class FlightController {
     this.FBUS_SENSORS = [];
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
-      channels:                    0,
     };
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});

@@ -556,15 +556,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG: {
-                const version = data.readU8();
+                data.readU8(); // payload version, unused for now
                 const forwardedSensors = [];
                 // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
                 for (let i = 0; i < 8; i++) {
                     forwardedSensors.push(data.readU8());
                 }
                 FC.FBUS_MASTER_CONFIG.forwardedSensors = forwardedSensors;
-                // Version 2 (API 22.5) adds the channel setting: 0 = 16, 1 = 24
-                FC.FBUS_MASTER_CONFIG.channels = version >= 2 ? data.readU8() : 0;
                 break;
             }
 
@@ -981,6 +979,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
                 FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
+                // API 22.5: SBUS and F.Bus output channel counts, then the
+                // count the configured bus output drives
+                if (data.byteLength >= 5) {
+                    FC.MIXER_CONFIG.sbus_out_channels = data.readU8();
+                    FC.MIXER_CONFIG.fbus_master_channels = data.readU8();
+                    FC.MIXER_CONFIG.bus_servo_output_count = data.readU8();
+                }
                 break;
             }
 
@@ -2104,6 +2109,10 @@ MspHelper.prototype.crunch = function(code) {
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
             buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
+            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
+                buffer.push8(FC.MIXER_CONFIG.sbus_out_channels);
+                buffer.push8(FC.MIXER_CONFIG.fbus_master_channels);
+            }
             break;
         }
 
@@ -2276,9 +2285,6 @@ MspHelper.prototype.crunch = function(code) {
             // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
-            }
-            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
-                buffer.push8(FC.FBUS_MASTER_CONFIG.channels ?? 0);
             }
             break;
         }

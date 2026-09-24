@@ -922,6 +922,21 @@
     "receiverBackupRxSignaling": {
         "message": "Signaling"
     },
+    "receiverBusOutput": {
+        "message": "Bus Servo Output"
+    },
+    "receiverFbusOutChannels": {
+        "message": "F.Bus output channels"
+    },
+    "receiverFbusOutChannelsHelp": {
+        "message": "How many bus servo channels F.Bus output sends. 8 uses the 8-channel F.Bus frame, 12 and 16 the 16-channel frame, and 24 the 24-channel frame. Channels past the count are sent at center. Use 16 or less if anything on the bus only accepts the 16-channel frame."
+    },
+    "receiverSbusOutChannels": {
+        "message": "SBUS output channels"
+    },
+    "receiverSbusOutChannelsHelp": {
+        "message": "How many bus servo channels SBUS output sends. SBUS always uses its 16-channel frame; channels past the count are sent at center."
+    },
     "receiverBackupRxInverted": {
         "message": "Inverted"
     },
@@ -3544,12 +3559,6 @@
     },
     "servoBusCloneText": {
         "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
-    },
-    "servoFbus24Label": {
-        "message": "<strong>24-channel F.Bus output</strong>"
-    },
-    "servoFbus24Text": {
-        "message": " Sends the 24-channel F.Bus frame, adding bus servos 17-24. Channels 25 and 26 are on/off only. Leave this off for receivers and servos that only take the 16-channel frame."
     },
     "servoOverrideEnable": {
         "message": "Enable"

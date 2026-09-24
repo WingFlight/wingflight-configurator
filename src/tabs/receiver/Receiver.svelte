@@ -4,7 +4,10 @@
   import { SvelteURL } from "svelte/reactivity";
   import { slide } from "svelte/transition";
 
+  import semver from "semver";
+
   import { i18n } from "@/js/i18n.js";
+  import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { Features } from "@/js/features.svelte";
   import { DarkTheme } from "@/js/DarkTheme.js";
@@ -106,6 +109,10 @@
       TELEMETRY_CONFIG: FC.TELEMETRY_CONFIG,
       RX_INPUT_BACKUP_CONFIG: FC.RX_INPUT_BACKUP_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
+      busOutChannels: {
+        sbus: FC.MIXER_CONFIG.sbus_out_channels,
+        fbus: FC.MIXER_CONFIG.fbus_master_channels,
+      },
     });
   }
 
@@ -128,6 +135,9 @@
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
     await MSP.promise(MSPCodes.MSP_TELEMETRY_CONFIG);
     await MSP.promise(MSPCodes.MSP_RC);
+    if (hasBusOutChannels) {
+      await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
+    }
 
     initialState = snapshotState();
     loading = false;
@@ -225,6 +235,9 @@
     if (hasBackupRxPort) {
       await save(MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG);
     }
+    if (showBusOutput) {
+      await save(MSPCodes.MSP_SET_MIXER_CONFIG);
+    }
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -244,6 +257,8 @@
       initialState.RX_INPUT_BACKUP_CONFIG,
     );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
+    FC.MIXER_CONFIG.sbus_out_channels = initialState.busOutChannels.sbus;
+    FC.MIXER_CONFIG.fbus_master_channels = initialState.busOutChannels.fbus;
     receiverTypeRef?.cleanup();
     backupWizardInstance?.stop();
     closeBackupWizard();
@@ -293,6 +308,28 @@
       (port) => port.functionMask & RX_INPUT_BACKUP_FUNCTION,
     ),
   );
+  // Bus servo output channel counts (API 22.5) - wingflight-firmware's
+  // sbus_out_channels / fbus_master_channels, carried in MSP_MIXER_CONFIG.
+  // Shown only when a port has SBUS or F.Bus output assigned.
+  const SBUS_OUT_FUNCTION = 262144;
+  const FBUS_OUT_FUNCTION = 524288;
+  const SBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16];
+  const FBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16, 24];
+  const hasBusOutChannels = semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
+  let hasSbusOutPort = $derived(
+    FC.SERIAL_CONFIG.ports.some(
+      (port) => port.functionMask & SBUS_OUT_FUNCTION,
+    ),
+  );
+  let hasFbusOutPort = $derived(
+    FC.SERIAL_CONFIG.ports.some(
+      (port) => port.functionMask & FBUS_OUT_FUNCTION,
+    ),
+  );
+  let showBusOutput = $derived(
+    hasBusOutChannels && (hasSbusOutPort || hasFbusOutPort),
+  );
+
   let backupRxStatus = $derived(
     FC.RX_INPUT_BACKUP_STATUS ?? {
       enabled: false,
@@ -604,6 +641,42 @@
                 bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
               />
             </Field>
+          </SubSection>
+        </Section>
+      {/if}
+      {#if showBusOutput}
+        <Section label="receiverBusOutput">
+          <SubSection>
+            {#if hasFbusOutPort}
+              <Field id="fbus-out-channels" label="receiverFbusOutChannels">
+                {#snippet tooltip()}
+                  <Tooltip help="receiverFbusOutChannelsHelp" />
+                {/snippet}
+                <select
+                  id="fbus-out-channels"
+                  bind:value={FC.MIXER_CONFIG.fbus_master_channels}
+                >
+                  {#each FBUS_OUT_CHANNEL_OPTIONS as count (count)}
+                    <option value={count}>{count}</option>
+                  {/each}
+                </select>
+              </Field>
+            {/if}
+            {#if hasSbusOutPort}
+              <Field id="sbus-out-channels" label="receiverSbusOutChannels">
+                {#snippet tooltip()}
+                  <Tooltip help="receiverSbusOutChannelsHelp" />
+                {/snippet}
+                <select
+                  id="sbus-out-channels"
+                  bind:value={FC.MIXER_CONFIG.sbus_out_channels}
+                >
+                  {#each SBUS_OUT_CHANNEL_OPTIONS as count (count)}
+                    <option value={count}>{count}</option>
+                  {/each}
+                </select>
+              </Field>
+            {/if}
           </SubSection>
         </Section>
       {/if}
