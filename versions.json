@@ -115,11 +115,6 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-webusb-dfu-permission-prompt",
-      "path": "./feature-webusb-dfu-permission-prompt/"
     }
   ]
 }
