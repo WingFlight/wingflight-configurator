@@ -111,8 +111,8 @@
       return [];
     }
 
-    // Analog channels only -- the two digital channels at the end of the
-    // frame (17-18, or 25-26 in 24-channel F.Bus) aren't listed.
+    // Analog channels only -- the 16-channel frame's two digital channels
+    // (17-18) aren't listed; the 24-channel F.Bus frame has none.
     const displayCount = fbus24Active ? 24 : 16;
     const list = [];
     for (let i = 0; i < displayCount; i++) {

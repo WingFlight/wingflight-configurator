@@ -3683,6 +3683,24 @@
     "mixerInputRCChannel18": {
         "message": "CH #18"
     },
+    "mixerInputRCChannel19": {
+        "message": "CH #19"
+    },
+    "mixerInputRCChannel20": {
+        "message": "CH #20"
+    },
+    "mixerInputRCChannel21": {
+        "message": "CH #21"
+    },
+    "mixerInputRCChannel22": {
+        "message": "CH #22"
+    },
+    "mixerInputRCChannel23": {
+        "message": "CH #23"
+    },
+    "mixerInputRCChannel24": {
+        "message": "CH #24"
+    },
     "mixerOutputNone": {
         "message": "-"
     },
