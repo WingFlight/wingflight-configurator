@@ -2412,11 +2412,17 @@
     "receiverHelpFullThrottle2": {
         "message": "The throttle channel value where throttle is considered 100%."
     },
-    "receiverCyclicDeadband": {
-        "message": "Roll/Pitch Deadband"
+    "receiverRollDeadband": {
+        "message": "Roll Deadband"
     },
-    "receiverHelpCyclicDeadband": {
-        "message": "How far the roll and pitch channel values must move from center before it's considered an input."
+    "receiverHelpRollDeadband": {
+        "message": "How far the roll channel value must move from center before it's considered an input."
+    },
+    "receiverPitchDeadband": {
+        "message": "Pitch Deadband"
+    },
+    "receiverHelpPitchDeadband": {
+        "message": "How far the pitch channel value must move from center before it's considered an input."
     },
     "receiverYawDeadband": {
         "message": "Yaw Deadband"
