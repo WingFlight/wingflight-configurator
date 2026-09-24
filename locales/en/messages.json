@@ -639,6 +639,12 @@
     "escProgrammingSelectManufacturer": {
         "message": "Select ESC manufacturer"
     },
+    "escProgrammingRequiresTelemetry": {
+        "message": "Requires {{protocol}} ESC telemetry"
+    },
+    "escProgrammingTelemetryDisabled": {
+        "message": "ESC telemetry is disabled. Select your ESC's telemetry protocol on the Motors tab to enable ESC programming."
+    },
     "escProgrammingSelectEsc": {
         "message": "Select ESC"
     },
