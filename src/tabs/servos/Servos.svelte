@@ -543,7 +543,7 @@
   // column.
   .bus-options {
     display: grid;
-    grid-template-columns: 4.5rem max-content 1fr;
+    grid-template-columns: 5rem max-content 1fr;
     align-items: center;
     column-gap: 12px;
     row-gap: 12px;
@@ -553,8 +553,11 @@
       white-space: nowrap;
     }
 
+    // Overrides the global select min-width (120px) so a two-digit count
+    // fits the control column instead of spilling into the label.
     select {
       width: 100%;
+      min-width: 0;
     }
   }
 
