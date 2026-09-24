@@ -2953,6 +2953,12 @@
     "adjustmentFunctionValue": {
         "message": "Value"
     },
+    "adjustmentsFunctionSearch": {
+        "message": "Type to filter functions…"
+    },
+    "adjustmentsFunctionNoMatches": {
+        "message": "No matching functions"
+    },
     "adjustmentRangeEnable": {
         "message": "Ena:"
     },
