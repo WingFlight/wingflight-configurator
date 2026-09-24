@@ -287,7 +287,7 @@
   // Serial Rx (Backup) - see FUNCTION_RX_INPUT_BACKUP in wingflight-firmware.
   // No dedicated feature bit, same as SERIALRX_FUNCTION above: the port assignment
   // itself is the enablement.
-  const RX_INPUT_BACKUP_FUNCTION = 4194304;
+  const RX_INPUT_BACKUP_FUNCTION = 8388608; // FUNCTION_RX_INPUT_BACKUP, 1 << 23
   let hasBackupRxPort = $derived(
     FC.SERIAL_CONFIG.ports.some(
       (port) => port.functionMask & RX_INPUT_BACKUP_FUNCTION,

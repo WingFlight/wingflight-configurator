@@ -1,6 +1,6 @@
 import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
 import semver from "semver";
-import { API_VERSION_22_3 } from "@/js/configurator.svelte.js";
+import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
 // Used for LED_STRIP
 const ledDirectionLetters    = ['n', 'e', 's', 'w', 'u', 'd'];      // in LSB bit order
@@ -979,6 +979,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
                 FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
+                // API 22.5: SBUS and F.Bus output channel counts, then the
+                // count the configured bus output drives
+                if (data.byteLength >= 5) {
+                    FC.MIXER_CONFIG.sbus_out_channels = data.readU8();
+                    FC.MIXER_CONFIG.fbus_master_channels = data.readU8();
+                    FC.MIXER_CONFIG.bus_servo_output_count = data.readU8();
+                }
                 break;
             }
 
@@ -2102,6 +2109,10 @@ MspHelper.prototype.crunch = function(code) {
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
             buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
+            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
+                buffer.push8(FC.MIXER_CONFIG.sbus_out_channels);
+                buffer.push8(FC.MIXER_CONFIG.fbus_master_channels);
+            }
             break;
         }
 

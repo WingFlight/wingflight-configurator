@@ -55,7 +55,7 @@
   });
 
   let outputOptions = $derived(
-    Mixer.outputNames.map((_key, i) => ({
+    Mixer.outputOrder().map((i) => ({
       value: i,
       label: Mixer.outputLabel(i, { getMessage: (key) => $i18n.t(key) }),
     })),
