@@ -182,6 +182,11 @@
     <span class="slot-label"
       >{$i18n.t("adjustmentsSlotLabel", { index: index + 1 })}</span
     >
+    {#if adjRange.adjFunction > 0}
+      <span class="func-label"
+        >{$i18n.t("adjustmentsFunction" + adjConfig.name)}</span
+      >
+    {/if}
     <div class="grow"></div>
     <button
       type="button"
@@ -430,6 +435,19 @@
     border-bottom: 1px solid var(--color-border);
   }
 
+  .func-label {
+    margin-left: 0.5em;
+    font-weight: 700;
+    color: var(--color-accent-500);
+
+    &::before {
+      content: "\2014";
+      margin-right: 0.5em;
+      font-weight: 600;
+      color: var(--color-text-soft);
+    }
+  }
+
   .grow {
     flex-grow: 1;
   }
@@ -453,7 +471,9 @@
   // instead of grouping by column like a form.
   .card-body {
     display: grid;
-    grid-template-columns: 130px 190px minmax(260px, 1fr) 190px;
+    // The range column sizes to its two NumberInputs (which never shrink) so
+    // they can't overflow leftwards underneath the slider's end handle.
+    grid-template-columns: 130px 190px minmax(200px, 1fr) max-content;
     grid-template-areas:
       "mode ena-select   ena-slider  ena-range"
       "mode ch-select    ch-slider   ch-range"
@@ -578,6 +598,13 @@
     justify-content: flex-end;
     gap: 4px;
     margin-bottom: 10px;
+
+    // Trim the inputs a little on the multi-column layout so the range
+    // column doesn't squeeze the slider; below 768px it's single-column and
+    // the inputs get their larger touch-size buttons, so leave the default.
+    @media only screen and (min-width: 769px) {
+      --number-input-max-width: 100px;
+    }
   }
 
   .dash {
