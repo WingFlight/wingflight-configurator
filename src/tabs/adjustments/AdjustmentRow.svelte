@@ -16,6 +16,7 @@
     PRIMARY_CHANNEL_COUNT,
     calcAdjValue,
     density,
+    isWithin,
     resetToOff,
   } from "./util.js";
 
@@ -166,6 +167,17 @@
     calcAdjValue(adjRange, adjType, enaChannelPos, adjChannelPos, ALWAYS_ON_CH),
   );
 
+  // Whether the enable channel currently lets this adjustment run - drives
+  // the header band's red "live" state, like the Modes tab's cards. Stepped
+  // mode's adjResult.active only goes true while actually stepping, so it
+  // can't be reused here.
+  let isEnabled = $derived(
+    adjType > 0 &&
+      adjRange.adjFunction > 0 &&
+      (adjRange.enaChannel === ALWAYS_ON_CH ||
+        isWithin(enaChannelPos, adjRange.enaRange)),
+  );
+
   let valMarkerPercent = $derived(
     adjType === 1 && adjResult.active
       ? (
@@ -178,7 +190,7 @@
 </script>
 
 <div class="adjustment-card">
-  <div class="card-header">
+  <div class="card-header" class:on={isEnabled}>
     <span class="slot-label"
       >{$i18n.t("adjustmentsSlotLabel", { index: index + 1 })}</span
     >
@@ -424,27 +436,33 @@
     overflow: hidden;
   }
 
+  // Same dark/red band as the Modes tab's ModeCard header: dark by default,
+  // accent red while the enable channel has this adjustment live, so each
+  // card is easy to pick out in a long list.
   .card-header {
-    display: flex;
-    align-items: center;
-    padding: 6px 10px;
-    font-weight: 600;
+    @extend %section-header;
+    // The header sits flush inside the card's border, so drop the
+    // placeholder's phone-width top margin.
+    margin-top: 0;
+    padding: 0 8px 0 12px;
 
-    color: var(--color-text-soft);
-    background-color: var(--color-surface-float, var(--color-surface));
-    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-alt);
+    background-color: var(--color-surface-alt);
+
+    &.on {
+      background-color: var(--color-accent-500);
+    }
   }
 
   .func-label {
     margin-left: 0.5em;
     font-weight: 700;
-    color: var(--color-accent-500);
 
     &::before {
       content: "\2014";
       margin-right: 0.5em;
       font-weight: 600;
-      color: var(--color-text-soft);
+      opacity: 0.7;
     }
   }
 
@@ -457,10 +475,11 @@
     border: none;
     padding: 4px 6px;
     cursor: pointer;
-    color: var(--color-text-soft);
+    color: inherit;
+    opacity: 0.8;
 
     &:hover {
-      color: var(--color-danger, var(--accent));
+      opacity: 1;
     }
   }
 
