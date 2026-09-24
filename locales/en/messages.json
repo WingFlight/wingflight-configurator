@@ -3545,6 +3545,12 @@
     "servoBusCloneText": {
         "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
     },
+    "servoFbus24Label": {
+        "message": "<strong>24-channel F.Bus output</strong>"
+    },
+    "servoFbus24Text": {
+        "message": " Sends the 24-channel F.Bus frame, adding bus servos 17-24. Channels 25 and 26 are on/off only. Leave this off for receivers and servos that only take the 16-channel frame."
+    },
     "servoOverrideEnable": {
         "message": "Enable"
     },

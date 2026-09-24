@@ -1,9 +1,12 @@
 <script>
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
+  import semver from "semver";
 
+  import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
@@ -15,10 +18,13 @@
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
-  const MAX_SERVOS = 26;
+  const PWM_SERVO_SLOTS = 8;
   const BUS_SERVO_OFFSET = 8;
-  const BUS_SERVO_CHANNELS = 18;
   const OVERRIDE_OFF = 2001;
+
+  const BUS_SERVO_CHANNELS = Mixer.busServoChannels();
+  const MAX_SERVOS = PWM_SERVO_SLOTS + BUS_SERVO_CHANNELS;
+  const hasFbus24 = semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
 
   let loading = $state(true);
   let needReboot = $state(false);
@@ -28,6 +34,9 @@
   // the same dirty/Save/Revert cycle as everything else on this tab instead
   // of silently self-committing with no toolbar feedback.
   let initialBusClonePwm = $state(null);
+  // Same idea for the F.Bus channel setting, which lives on
+  // FC.FBUS_MASTER_CONFIG.
+  let initialFbusChannels = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -49,7 +58,14 @@
       FC.MIXER_CONFIG.bus_servo_clone_pwm !== initialBusClonePwm,
   );
 
-  let dirty = $derived(changes.length > 0 || busCloneDirty);
+  let fbusChannelsDirty = $derived(
+    initialFbusChannels !== null &&
+      FC.FBUS_MASTER_CONFIG.channels !== initialFbusChannels,
+  );
+
+  let dirty = $derived(
+    changes.length > 0 || busCloneDirty || fbusChannelsDirty,
+  );
 
   let hasFbusOrSbus = $derived(
     FC.SERIAL_CONFIG.ports.some(
@@ -57,6 +73,12 @@
         port.functions.includes("FBUS_OUT") ||
         port.functions.includes("SBUS_OUT"),
     ),
+  );
+  let hasFbusOut = $derived(
+    FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("FBUS_OUT")),
+  );
+  let fbus24Active = $derived(
+    hasFbus24 && hasFbusOut && FC.FBUS_MASTER_CONFIG.channels === 1,
   );
   let maxServos = MAX_SERVOS;
   let busActive = $derived(hasFbusOrSbus);
@@ -89,7 +111,9 @@
       return [];
     }
 
-    const displayCount = Math.min(BUS_SERVO_CHANNELS, 16);
+    // Analog channels only -- the two digital channels at the end of the
+    // frame (17-18, or 25-26 in 24-channel F.Bus) aren't listed.
+    const displayCount = fbus24Active ? 24 : 16;
     const list = [];
     for (let i = 0; i < displayCount; i++) {
       const index = pwmServoCount + i;
@@ -191,6 +215,10 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
+    if (hasFbus24 && hasFbusOut) {
+      await MSP.promise(MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG);
+      initialFbusChannels = FC.FBUS_MASTER_CONFIG.channels;
+    }
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
@@ -260,6 +288,19 @@
     mspHelper.sendMixerConfig();
   }
 
+  // Pushed live like onToggleBusClone; saved to EEPROM by onSave().
+  function onToggleFbus24(checked) {
+    FC.FBUS_MASTER_CONFIG.channels = checked ? 1 : 0;
+    sendFbusMasterConfig();
+  }
+
+  function sendFbusMasterConfig() {
+    return MSP.promise(
+      MSPCodes.MSP2_WING_SET_FBUS_MASTER_CONFIG,
+      mspHelper.crunch(MSPCodes.MSP2_WING_SET_FBUS_MASTER_CONFIG),
+    );
+  }
+
   function onClickHelp() {
     window.open(getTabHelpURL("tabServos"), "_system");
   }
@@ -280,6 +321,9 @@
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
+    if (initialFbusChannels !== null) {
+      initialFbusChannels = FC.FBUS_MASTER_CONFIG.channels;
+    }
   }
 
   export async function onRevert() {
@@ -289,6 +333,11 @@
     if (busCloneDirty) {
       FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
       await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    }
+
+    if (fbusChannelsDirty) {
+      FC.FBUS_MASTER_CONFIG.channels = initialFbusChannels;
+      await sendFbusMasterConfig();
     }
 
     needReboot = false;
@@ -366,6 +415,23 @@
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
       </div>
+
+      {#if hasFbus24 && hasFbusOut && initialFbusChannels !== null}
+        <div class="override-toggle">
+          <Switch
+            id="servo-fbus24-enable"
+            bind:checked={
+              () => FC.FBUS_MASTER_CONFIG.channels === 1, onToggleFbus24
+            }
+          />
+          <label for="servo-fbus24-enable">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <span>{@html $i18n.t("servoFbus24Label")}</span>
+          </label>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <span class="description">{@html $i18n.t("servoFbus24Text")}</span>
+        </div>
+      {/if}
 
       <div class="table-scroll">
         <ServoConfigTable

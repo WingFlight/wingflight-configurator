@@ -264,6 +264,7 @@ class FlightController {
     this.FBUS_SENSORS = [];
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
+      channels:                    0,
     };
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});

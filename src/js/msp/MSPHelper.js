@@ -1,6 +1,6 @@
 import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
 import semver from "semver";
-import { API_VERSION_22_3 } from "@/js/configurator.svelte.js";
+import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
 // Used for LED_STRIP
 const ledDirectionLetters    = ['n', 'e', 's', 'w', 'u', 'd'];      // in LSB bit order
@@ -556,13 +556,15 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG: {
-                data.readU8(); // payload version, unused for now
+                const version = data.readU8();
                 const forwardedSensors = [];
                 // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
                 for (let i = 0; i < 8; i++) {
                     forwardedSensors.push(data.readU8());
                 }
                 FC.FBUS_MASTER_CONFIG.forwardedSensors = forwardedSensors;
+                // Version 2 (API 22.5) adds the channel setting: 0 = 16, 1 = 24
+                FC.FBUS_MASTER_CONFIG.channels = version >= 2 ? data.readU8() : 0;
                 break;
             }
 
@@ -2274,6 +2276,9 @@ MspHelper.prototype.crunch = function(code) {
             // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
+            }
+            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
+                buffer.push8(FC.FBUS_MASTER_CONFIG.channels ?? 0);
             }
             break;
         }
