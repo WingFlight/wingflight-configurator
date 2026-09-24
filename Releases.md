@@ -1,6 +1,18 @@
-# Unreleased
+# 0.0.27
 
 Split the Receiver tab's Roll/Pitch Deadband into separate Roll Deadband and Pitch Deadband. Requires matching firmware (MSP_RC_CONFIG layout change); the firmware update resets the Channel Range settings to defaults.
+Hide the GHOST, CPPM, FrSky Hub, MAVLink and LTM options, which the firmware no longer compiles in.
+
+Add a type-to-filter search to the adjustment function picker.
+Show the selected function in each adjustment's header, highlight adjustments that are currently live, and start newly added adjustments with their range handles apart so they can be dragged.
+Fix adjustment range sliders overlapping their number inputs.
+
+Only enable ESC programming manufacturers that match the configured ESC telemetry protocol, and redesign the manufacturer picker as logo cards.
+
+Explain serial port open failures (usually the port is in use by another program or browser tab) and let a failed open be retried once the port is free.
+Prompt for WebUSB DFU access mid-flash on the web build, so a first-time web flash of a USB board can continue.
+Fix "Failed to load remote firmware" on the first online load in the web build.
+Fix a config restore never saving when the backup replay hits CLI errors.
 
 # 0.0.26
 
