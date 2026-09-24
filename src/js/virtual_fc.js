@@ -117,7 +117,8 @@ export function applyVirtualConfig() {
     rc_deflection: 510,
     rc_min_throttle: 0,
     rc_max_throttle: 0,
-    rc_deadband: 5,
+    rc_roll_deadband: 5,
+    rc_pitch_deadband: 5,
     rc_yaw_deadband: 5,
   });
 
