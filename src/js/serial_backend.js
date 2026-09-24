@@ -10,10 +10,13 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 // device chooser immediately on selecting its DFU picker option, rather than
 // waiting for the user to click Flash. Silent (no popup) if a matching device
 // is already authorized, so it's safe to run on every DFU selection.
-// Exported for selectDfuFromPicker() below.
+// Exported for selectDfuFromPicker() below, and for the Firmware Flasher's
+// mid-flash DFU permission prompt (see requestDfuPermission() in
+// firmware_flasher/state.svelte.js). Resolves to the authorized device, or
+// null if there's none (cancelled, or no WebUSB at all).
 export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
-        return;
+        return null;
     }
 
     try {
@@ -36,8 +39,10 @@ export async function requestWebUsbDeviceFromPicker() {
             // see the matching comment in port_handler.js's
             // updatePortSelect().
             .removeAttr('data-dfu-pending');
+        return device;
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
+        return null;
     }
 }
 

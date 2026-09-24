@@ -32,6 +32,8 @@
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
 
+  import DfuPermissionPrompt from "./DfuPermissionPrompt.svelte";
+
   import {
     buildTargetsByManufacturer,
     cleanUnifiedConfigFile,
@@ -887,6 +889,7 @@
         </button>
       {/if}
     </span>
+    <DfuPermissionPrompt />
   </div>
   <button
     class="btn"

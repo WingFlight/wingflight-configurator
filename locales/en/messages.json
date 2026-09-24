@@ -5254,6 +5254,15 @@
     "firmwareFlasherSelectDfu": {
         "message": "Select DFU Device"
     },
+    "firmwareFlasherDfuPermissionNeeded": {
+        "message": "Your board has restarted in DFU (bootloader) mode. Your browser needs permission to access it before flashing can continue. Click <strong>Allow DFU Access</strong> and select the DFU device."
+    },
+    "firmwareFlasherDfuPermissionGrant": {
+        "message": "Allow DFU Access"
+    },
+    "firmwareFlasherDfuPermissionCancel": {
+        "message": "Cancel"
+    },
     "firmwareFlasherReadyToFlash": {
         "message": "Ready to flash: {{target}} — {{version}}"
     },
