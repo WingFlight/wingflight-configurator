@@ -103,11 +103,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-fbus-24ch",
-      "path": "./feature-fbus-24ch/"
-    },
-    {
-      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
