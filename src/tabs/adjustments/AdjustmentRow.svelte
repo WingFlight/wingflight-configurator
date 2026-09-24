@@ -6,6 +6,7 @@
 
   import NumberInput from "@/components/NumberInput.svelte";
   import RangeSlider from "@/components/RangeSlider.svelte";
+  import SearchSelect from "@/components/SearchSelect.svelte";
   import Select from "@/components/Select.svelte";
 
   import { getFunctions, FUNCTION_GROUPS } from "./functions.js";
@@ -37,6 +38,29 @@
   );
 
   let adjConfig = $derived(FUNCTIONS[adjRange.adjFunction] ?? FUNCTIONS[0]);
+
+  // The function picker's options, grouped like the old <optgroup>s. Hidden
+  // functions are left out, unless one is already selected (e.g. from a
+  // loaded config) so the picker can still show what's set.
+  let isListed = (id) => !FUNCTIONS[id].hide || id === adjRange.adjFunction;
+
+  let functionItems = $derived([
+    ...(isListed(0)
+      ? [
+          {
+            value: 0,
+            label: $i18n.t("adjustmentsFunction" + FUNCTIONS[0].name),
+          },
+        ]
+      : []),
+    ...FUNCTION_GROUPS.flatMap((group) =>
+      group.ids.filter(isListed).map((id) => ({
+        value: id,
+        label: $i18n.t("adjustmentsFunction" + FUNCTIONS[id].name),
+        group: $i18n.t(group.label),
+      })),
+    ),
+  ]);
 
   let valSliderRef;
 
@@ -72,8 +96,7 @@
     }
   }
 
-  function onFunctionChange(e) {
-    const id = Number(e.target.value);
+  function onFunctionChange(id) {
     const cfg = FUNCTIONS[id] ?? FUNCTIONS[0];
     adjRange.adjFunction = id;
     adjRange.adjMin = cfg.min;
@@ -364,28 +387,15 @@
 
     <!-- row 3: function -->
     <div class="cell func" class:disabled={adjType === 0}>
-      <select
+      <SearchSelect
         id="function-{index}"
-        class="function-select"
         value={adjRange.adjFunction}
+        items={functionItems}
         disabled={adjType === 0}
+        placeholder={$i18n.t("adjustmentsFunctionSearch")}
+        noMatchesText={$i18n.t("adjustmentsFunctionNoMatches")}
         onchange={onFunctionChange}
-      >
-        <option value={0} hidden={FUNCTIONS[0].hide}
-          >{$i18n.t("adjustmentsFunction" + FUNCTIONS[0].name)}</option
-        >
-        {#each FUNCTION_GROUPS as group (group.label)}
-          {#if group.ids.some((id) => !FUNCTIONS[id].hide)}
-            <optgroup label={$i18n.t(group.label)}>
-              {#each group.ids as id (id)}
-                <option value={id} hidden={FUNCTIONS[id].hide}>
-                  {$i18n.t("adjustmentsFunction" + FUNCTIONS[id].name)}
-                </option>
-              {/each}
-            </optgroup>
-          {/if}
-        {/each}
-      </select>
+      />
 
       <div class="value-line">
         <span class="value-label">{$i18n.t("adjustmentFunctionValue")}</span>
@@ -628,10 +638,6 @@
 
   .dash {
     padding: 0 2px;
-  }
-
-  .function-select {
-    width: 100%;
   }
 
   .value-line {
