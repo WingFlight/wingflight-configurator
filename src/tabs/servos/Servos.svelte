@@ -80,17 +80,23 @@
   );
   let hasFbusOrSbus = $derived(hasSbusOut || hasFbusOut);
 
-  // Bus servos the configured output drives - F.Bus if both are set up, as
-  // in the firmware's getBusServoOutputCount(). Follows the selectors below
-  // straight away; 16 on firmware without the setting.
+  // Bus servos the configured outputs drive. SBUS and F.Bus output can run
+  // at the same time, and bus servo N is channel N on both, so it's the
+  // larger of the two - as in the firmware's getBusServoOutputCount().
+  // Follows the selectors below straight away; 16 on firmware without the
+  // setting.
   let busOutputCount = $derived.by(() => {
     if (!hasBusOutChannels) {
       return 16;
     }
+    let count = 0;
     if (hasFbusOut) {
-      return FC.MIXER_CONFIG.fbus_master_channels;
+      count = Math.max(count, FC.MIXER_CONFIG.fbus_master_channels);
     }
-    return Math.min(FC.MIXER_CONFIG.sbus_out_channels, 16);
+    if (hasSbusOut) {
+      count = Math.max(count, Math.min(FC.MIXER_CONFIG.sbus_out_channels, 16));
+    }
+    return count || 16;
   });
   let maxServos = MAX_SERVOS;
   let busActive = $derived(hasFbusOrSbus);
