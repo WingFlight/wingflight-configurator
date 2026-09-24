@@ -587,6 +587,11 @@ function onOpenVirtual() {
 }
 
 function abortConnect() {
+    // Left set, this made the app still think a connect was in progress
+    // after it had failed: auto-connect (port_handler.js) refuses to fire
+    // while it's set, so it never retried once the port was freed up.
+    GUI.connecting_to = false;
+
     $('div#connectbutton div.connect_state').text(i18n.getMessage('connect'));
     $('div#connectbutton a.connect').removeClass('active');
 

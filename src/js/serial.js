@@ -6,6 +6,7 @@ export const serial = {
     connected:      false,
     connectionId:   false,
     openCanceled:   false,
+    openPending:    false,
     bitrate:        0,
     bytesReceived:  0,
     bytesSent:      0,
@@ -68,15 +69,27 @@ export const serial = {
             return;
         }
 
+        // Tracks that an open is actually in flight, so disconnect() only
+        // raises openCanceled when there's something to cancel -- see there.
+        self.openPending = true;
+        const done = (openInfo) => {
+            self.openPending = false;
+            // A cancel only applies to the attempt it was raised against --
+            // the web backends never consume it, so don't let it outlive
+            // this attempt and cancel an unrelated later one.
+            self.openCanceled = false;
+            callback?.(openInfo);
+        };
+
         const testUrl = path.match(/^tcp:\/\/([A-Za-z0-9.-]+)(?::(\d+))?$/);
         if (testUrl) {
-            self.connectTcp(testUrl[1], testUrl[2], options, callback);
+            self.connectTcp(testUrl[1], testUrl[2], options, done);
         } else if (path === 'virtual') {
-            self.connectVirtual(callback);
+            self.connectVirtual(done);
         } else if (__BACKEND__ === "web" && path.startsWith('bluetooth_')) {
-            self.connectWebBluetooth(path, callback);
+            self.connectWebBluetooth(path, done);
         } else {
-            self.connectSerial(path, options, callback);
+            self.connectSerial(path, options, done);
         }
     },
     connectSerial: function (path, options, callback) {
@@ -337,11 +350,15 @@ export const serial = {
                     callback(true);
                 }
             }
-        } else {
-            // connection wasn't opened, so we won't try to close anything
+        } else if (self.openPending) {
+            // connection wasn't opened yet, so we won't try to close anything
             // instead we will rise canceled flag which will prevent connect from continueing further after being canceled
             self.openCanceled = true;
         }
+        // Otherwise nothing is open or opening (e.g. cleanup after an open
+        // that already failed) -- raising openCanceled here used to leave it
+        // stuck on, so the *next* open was treated as cancelled and closed
+        // straight away, making a retry fail even once the port was free.
     },
     getDevices: function (callback) {
         if (__BACKEND__ === "web") {
