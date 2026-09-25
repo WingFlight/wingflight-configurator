@@ -110,6 +110,11 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-telemetry-status-words",
+      "path": "./feature-telemetry-status-words/"
     }
   ]
 }
