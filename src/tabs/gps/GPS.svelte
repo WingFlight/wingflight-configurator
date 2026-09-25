@@ -106,6 +106,9 @@
   // FBUS and CRSF both receive GPS as pushed sensor telemetry instead of
   // driving a GPS receiver over a serial port of their own.
   let pushedDataSelected = $derived(fbusSelected || crsfSelected);
+  let fbusSatelliteCountUnknown = $derived(
+    fbusSelected && FC.GPS_DATA?.fix && FC.GPS_DATA?.numSat === 0,
+  );
   let ubloxSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("UBLOX"),
   );
@@ -297,7 +300,9 @@
           <span class="title">{$i18n.t("gpsHead")}</span>
           <div class="grow"></div>
           <span class="gps-fix">
-            {#if FC.GPS_DATA.fix}
+            {#if fbusSatelliteCountUnknown}
+              <span class="gpsFixTrue">Position</span>
+            {:else if FC.GPS_DATA.fix}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               {@html $i18n.t("gpsFixYes")}
             {:else}
@@ -343,7 +348,7 @@
           </tr>
           <tr>
             <td>{$i18n.t("gpsSats")}</td>
-            <td>{FC.GPS_DATA.numSat}</td>
+            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td>
           </tr>
           <tr>
             <td>{$i18n.t("gpsDistToHome")}</td>
