@@ -1,3 +1,17 @@
+# 0.0.28
+
+Add the firmware's SYSTEM_STATUS (120) and SYSTEM_CONFIG (121) packed status sensors to the telemetry sensor picker's STATUS group for CRSF and S.Port, and remove the sensors the 0.0.28 firmware dropped: arming flags (90), PID/rates/battery/LED profile (95-98), TV profile (118) and GPS fix type (119).
+IMPORTANT: updating the firmware keeps the model's saved telemetry sensor selection, which does not include SYSTEM_STATUS and SYSTEM_CONFIG, and the 0.0.28 Lua suites need them. After flashing, select them in the telemetry sensor picker, or run this in the CLI and save:
+set telemetry_sensors = 3,4,5,6,15,43,50,52,58,59,60,89,91,99,120,121
+New and reset configs use this list by default, with telemetry enabled, custom CRSF telemetry and SmartFuel in current mode.
+
+Support 24 RC channels and 24 bus servos (MSP API 22.5): the Receiver and Status tabs show up to 24 channels, mixer inputs CH #19-#24 are inputs 30-35, and bus servos 19-24 are mixer outputs 31-36. Configuration requires MSP API 22.5 (0.0.28 firmware).
+Add F.Bus and SBUS output channel count selectors to the Servos tab's Bus Servo Configuration section, each shown when a port has that output assigned. The bus servo table lists as many servos as the configured output drives (the larger count when both run).
+Fix the Receiver tab's backup receiver section only showing when a CRSF Sensors port was configured.
+Fix the GPS map not rendering in browser builds, and clarify the FBUS GPS unknown satellite count display.
+
+Connect to and flash flight controllers shared through the Wingflight Remote Support tool (desktop build only). Remote ports are listed as "Remote - <name>".
+
 # 0.0.27
 
 Split the Receiver tab's Roll/Pitch Deadband into separate Roll Deadband and Pitch Deadband. Requires matching firmware (MSP_RC_CONFIG layout change); the firmware update resets the Channel Range settings to defaults.
