@@ -15,6 +15,11 @@
   import Switch from "@/components/Switch.svelte";
 
   const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+  const MAP_URL =
+    __BACKEND__ === "web"
+      ? `${import.meta.env.BASE_URL}src/tabs/map.html`
+      : "/src/tabs/map.html";
+  const useMapWebview = __BACKEND__ === "nwjs";
 
   // GPS_DATA.chn is a fixed-size channel-tracking array padded with unused
   // zero-filled slots past the actual satellite count - cap how many rows
@@ -133,7 +138,7 @@
   // guaranteeing the attribute is set post-connection.
   $effect(() => {
     if (mapEl) {
-      mapEl.setAttribute("src", "/src/tabs/map.html");
+      mapEl.setAttribute("src", MAP_URL);
     }
   });
 
@@ -376,7 +381,7 @@
 
   <Section label="gpsMapHead">
     <div class="gps-map">
-      <!-- The webview stays mounted for the component's whole lifetime,
+      <!-- The map frame stays mounted for the component's whole lifetime,
            matching legacy - it initializes asynchronously, so tearing it
            down/recreating it based on fix state (as an {#if} branch would)
            risks racing its readiness and never getting a working
@@ -386,8 +391,17 @@
         class="loadmap"
         class:hidden={!online}
       >
-        <webview bind:this={mapEl} id="map" class="map" partition="persist:map"
-        ></webview>
+        {#if useMapWebview}
+          <webview
+            bind:this={mapEl}
+            id="map"
+            class="map"
+            partition="persist:map"
+          ></webview>
+        {:else}
+          <iframe bind:this={mapEl} id="map" class="map" title="GPS map"
+          ></iframe>
+        {/if}
         <div class="controls">
           <button onclick={onZoomIn}>+</button>
           <button onclick={onZoomOut}>–</button>
@@ -514,6 +528,7 @@
   .map {
     flex: 1;
     width: 100%;
+    border: 0;
   }
 
   .controls {
