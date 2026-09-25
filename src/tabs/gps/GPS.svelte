@@ -336,12 +336,10 @@
             <td>{$i18n.t("gpsSpeed")}</td>
             <td>{FC.GPS_DATA.speed} cm/s</td>
           </tr>
-          {#if !pushedDataSelected}
-            <tr>
-              <td>{$i18n.t("gpsSats")}</td>
-              <td>{FC.GPS_DATA.numSat}</td>
-            </tr>
-          {/if}
+          <tr>
+            <td>{$i18n.t("gpsSats")}</td>
+            <td>{FC.GPS_DATA.numSat}</td>
+          </tr>
           <tr>
             <td>{$i18n.t("gpsDistToHome")}</td>
             <td>{FC.GPS_DATA.distanceToHome} m</td>
@@ -386,7 +384,7 @@
            instead. -->
       <div
         class="loadmap"
-        class:hidden={!online || (!FC.GPS_DATA.fix && !gpsWasFixed)}
+        class:hidden={!online}
       >
         <webview bind:this={mapEl} id="map" class="map" partition="persist:map"
         ></webview>
