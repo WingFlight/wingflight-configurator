@@ -87,7 +87,6 @@ export function getSmartPortSensors() {
         { name: "GPS_ALTITUDE" },
         { name: "GPS_HEADING" },
         { name: "GPS_GROUNDSPEED" },
-        { name: "GPS_FIX_TYPE" },
       ],
     },
     {
@@ -95,18 +94,10 @@ export function getSmartPortSensors() {
       sensors: [
         { name: "MODEL_ID" },
         { name: "FLIGHT_MODE" },
-        { name: "ARMING_FLAGS" },
+        { name: "SYSTEM_STATUS" },
+        { name: "SYSTEM_CONFIG" },
         { name: "ARMING_DISABLE_FLAGS" },
         { name: "ADJFUNC" },
-      ],
-    },
-    {
-      title: "PROFILE",
-      sensors: [
-        { name: "PID_PROFILE" },
-        { name: "RATES_PROFILE" },
-        { name: "BATTERY_PROFILE" },
-        { name: "LED_PROFILE" },
       ],
     },
     {

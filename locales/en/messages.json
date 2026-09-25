@@ -2791,8 +2791,11 @@
     "receiverTelemetrySensor_GPS_DATE_TIME": {
         "message": "GPS Date Time"
     },
-    "receiverTelemetrySensor_GPS_FIX_TYPE": {
-        "message": "GPS Fix"
+    "receiverTelemetrySensor_SYSTEM_STATUS": {
+        "message": "System Status"
+    },
+    "receiverTelemetrySensor_SYSTEM_CONFIG": {
+        "message": "System Config"
     },
     "receiverTelemetrySensor_LOAD": {
         "message": "Load"
