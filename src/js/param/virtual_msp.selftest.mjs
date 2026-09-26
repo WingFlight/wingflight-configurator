@@ -14,10 +14,10 @@
 
 import { readFileSync } from "node:fs";
 import { Manifest } from "./manifest.js";
-import { VirtualMsp, VirtualMspError } from "./virtual_msp.js";
+import { VirtualMsp, VirtualMspError, indexRequest } from "./virtual_msp.js";
 import { ReplyRouter } from "./reply_router.js";
 import { MSPCodes } from "../msp/MSPCodes.js";
-import { verifyReplies, verifySetters, symmetricPairs } from "./verify_msp.js";
+import { verifyReplies, verifySetters, verifySetterEffects, symmetricPairs } from "./verify_msp.js";
 
 let checks = 0;
 let failures = 0;
@@ -98,6 +98,8 @@ function board(manifest, fill = () => 0) {
             3: { dir: "in", ops: [["f", 1, 10, 0, 2, "w"], ["s", 1, ""], ["f", 2, 10, 4, 2, "o"]] },
             4: { dir: "in", index: { w: 1, max: 4 }, ops: [["f", 2, 20, 0, 2, "i"], ["f", 1, 20, 2, 1, "i", { min: 2, max: 6 }]] },
             5: { dir: "in", len: 2, ops: [["f", 2, 10, 0, 2, ""]] },
+            6: { dir: "in", index: { w: 1, max: 3, map: [10, 20, 30], miss: "ignore" }, ops: [["f", 2, 20, 0, 2, "i"]] },
+            7: { dir: "in", index: { w: 1, max: 4, miss: "ignore" }, ops: [["f", 2, 20, 0, 2, "i"]] },
         },
     };
     const manifest = new Manifest(raw);
@@ -125,6 +127,12 @@ function board(manifest, fill = () => 0) {
     await v.write(4, [2, 0x34, 0x12, 5]);
     check("an indexed setter writes into its element", hex(b.groups.get(20).slice(6, 9)) === "34 12 05", hex(b.groups.get(20)));
     await refuses("an index past the bound is refused", () => v.write(4, [4, 0, 0, 3]));
+    await v.write(6, [30, 0xcd, 0xab]);
+    check("an id-mapped setter writes the element its id names", hex(b.groups.get(20).slice(6, 8)) === "cd ab", hex(b.groups.get(20)));
+    const rowsBefore = hex(b.groups.get(20));
+    await v.write(6, [2, 0x11, 0x11]);
+    await v.write(7, [4, 0x22, 0x22]);
+    check("an unknown id or index the firmware ignores is accepted and stores nothing", hex(b.groups.get(20)) === rowsBefore, hex(b.groups.get(20)));
     await refuses("a value outside a checked range is refused", () => v.write(4, [1, 0, 0, 7]));
     await refuses("a request of the wrong length is refused", () => v.write(5, [1, 2, 3]));
     await refuses("a request too short for a required field is refused", () => v.write(3, []));
@@ -195,7 +203,7 @@ if (path) {
         const b = board(manifest, () => random());
         b.groups.get(18)?.fill(0); // selected profiles 0
         const v = new VirtualMsp(manifest, b);
-        const request = codec.index ? [codec.index.max - 1] : [];
+        const request = codec.index ? indexRequest(codec, codec.index.max - 1) : [];
         const reply = await v.read(Number(code), request);
         reads++;
         if (!codec.ops.some((op) => op[0] === "z")) { // a string's length is its content's
@@ -302,6 +310,23 @@ if (path) {
             b.groups.get(18)?.fill(0);
             const badSet = await verifySetters(bv, (c, p) => bv.read(c, p ?? []), names, [{ get: getCode, set: setCode, indexed: null }]);
             check("verify_msp setters catches two swapped fields", badSet.bad === 1, badSet.lines.join(" | "));
+
+            // Setter effects, against a "firmware" that is the codecs
+            // themselves: all agree; with two fields swapped, that setter not.
+            const firmware = new VirtualMsp(manifest, b);
+            const firmwareRequest = async (c, p) => {
+                try {
+                    return codecs[c]?.dir === "in" ? (await firmware.write(c, p ?? []), new Uint8Array(0)) : await firmware.read(c, p ?? []);
+                } catch (error) {
+                    if (error instanceof VirtualMspError) return null;
+                    throw error;
+                }
+            };
+            const effects = await verifySetterEffects(v, firmwareRequest, b, names, random);
+            check("verify_msp setter effects passes correct setters", effects.bad === 0 && effects.ok > 0, effects.lines.join(" | "));
+            const badEffects = await verifySetterEffects(bv, firmwareRequest, b, names, random);
+            check("verify_msp setter effects catches two swapped fields",
+                badEffects.bad === 1 && badEffects.lines[0].includes(names[setCode] ?? String(setCode)), badEffects.lines.join(" | "));
         }
     }
 
