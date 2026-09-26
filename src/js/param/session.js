@@ -18,10 +18,16 @@ import {
     writeSetting,
     writeRange,
     readEmbeddedManifest,
+    readTaskInfo,
+    readGyroRegisters,
+    readSetpointInfo,
 } from "./access.js";
 import { resolveManifest, explainMissingManifest, ResolveError } from "./resolve.js";
 import { ParamCli } from "./cli.js";
 import { readTextFile } from "@/js/filesystem.js";
+import { reinitialiseConnection } from "@/js/serial_backend.js";
+import { FC } from "@/js/fc.svelte.js";
+import { decodeStatus, decodeBatteryState } from "./runtime.js";
 
 /** Where a cached manifest lives, keyed by build ID rather than version. */
 const CACHE_PREFIX = "wf-manifest-";
@@ -131,6 +137,72 @@ export async function openParamSession({ sources, storage, fetchRelease, askForF
         writeRange: (pgn, offset, bytes) => writeRange(pgn, offset, bytes),
         save: () => MSP.promise(MSPCodes.MSP_EEPROM_WRITE),
         resetConfig: () => MSP.promise(MSPCodes.MSP_RESET_CONF),
+        readTaskInfo,
+        readGyroRegisters,
+        readSetpointInfo,
+        // `status`: live replies the firmware keeps for telemetry anyway. The
+        // MCU type comes from the MSP_BOARD_INFO read at connect.
+        readStatus: async () => ({
+            status: decodeStatus((await MSP.promise(MSPCodes.MSP_STATUS)).data),
+            battery: decodeBatteryState((await MSP.promise(MSPCodes.MSP_BATTERY_STATE)).data),
+            setpoint: await readSetpointInfo(),
+            mcuTypeId: FC.CONFIG?.mcuTypeId,
+        }),
+        // Switch the board's live profile, as the on-device `profile` command
+        // did. MSP_SELECT_SETTING takes the rate profile with bit 7 set.
+        selectProfile: (section, index) => {
+            if (section === "tv_profile") {
+                return MSP.promise(MSPCodes.MSP2_WING_SELECT_TV_PROFILE, [index]);
+            }
+            return MSP.promise(MSPCodes.MSP_SELECT_SETTING, [section === "rate_profile" ? index | 0x80 : index]);
+        },
+        // --- action commands (param/actions.js) -----------------------------
+        reboot: async (mode) => {
+            const reply = await MSP.promise(MSPCodes.MSP_SET_REBOOT, [mode]);
+            if (!reply || reply.unsupported || reply.crcError) {
+                return { accepted: false };
+            }
+            // MSC modes add a byte: 0 means there is no storage, and no reboot.
+            const storageReady = reply.data.byteLength < 2 || reply.data.getUint8(1) !== 0;
+            if (storageReady) {
+                reinitialiseConnection();
+            }
+            return { accepted: true, storageReady };
+        },
+        bind: async () => {
+            const reply = await MSP.promise(MSPCodes.MSP2_BETAFLIGHT_BIND);
+            return Boolean(reply) && !reply.unsupported;
+        },
+        passthrough: async (mode, argument) => {
+            const reply = await MSP.promise(MSPCodes.MSP_SET_PASSTHROUGH, [mode, argument]);
+            return reply?.data?.byteLength ? reply.data.getUint8(0) : 0;
+        },
+        // After passthrough the port carries another device's bytes: give it
+        // up the same way the Connect button does, once the output is shown.
+        releasePort: () => setTimeout(() => $("div.connect_controls a.connect").trigger("click"), 500),
+        dataflashSummary: async () => {
+            const reply = await MSP.promise(MSPCodes.MSP_DATAFLASH_SUMMARY);
+            const view = reply.data;
+            if (view.byteLength < 13) {
+                return { flags: 0, sectors: 0, totalSize: 0, usedSize: 0 };
+            }
+            return {
+                flags: view.getUint8(0),
+                sectors: view.getUint32(1, true),
+                totalSize: view.getUint32(5, true),
+                usedSize: view.getUint32(9, true),
+            };
+        },
+        dataflashErase: () => MSP.promise(MSPCodes.MSP_DATAFLASH_ERASE),
+        dataflashRead: async (address, length) => {
+            const payload = [address & 0xff, (address >> 8) & 0xff, (address >> 16) & 0xff, (address >>> 24) & 0xff,
+                length & 0xff, (length >> 8) & 0xff, 0 /* no compression */];
+            const reply = await MSP.promise(MSPCodes.MSP_DATAFLASH_READ, payload);
+            const view = reply.data;
+            if (view.byteLength < 7) return new Uint8Array(0);
+            const readLength = Math.min(view.getUint16(4, true), view.byteLength - 7);
+            return new Uint8Array(view.buffer, view.byteOffset + 7, readLength).slice();
+        },
     };
 
     return { identity, manifest, registry, source, io, cli: new ParamCli(manifest, io) };
