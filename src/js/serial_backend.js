@@ -768,6 +768,7 @@ async function onConnect() {
         await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG, false);
         await MSP.promise(MSPCodes.MSP_STATUS, false);
         await MSP.promise(MSPCodes.MSP_DATAFLASH_SUMMARY, false);
+        await MSP.promise(MSPCodes.MSP_SDCARD_SUMMARY, false);
         // Needed here (rather than left to each tab's own fetch) so updateTabList can
         // decide whether to show the xact_servo and FBUS Sensors tabs -- both gated
         // on serial port function -- before the nav is first shown.
@@ -914,6 +915,8 @@ function startLiveDataRefreshTimer() {
     GUI.timeout_add('data_refresh', function () { update_live_status(); }, 100);
 }
 
+let lastSdcardPoll = 0;
+
 function update_live_status() {
 
     const statuswrapper = $('#quad-status_wrapper');
@@ -924,6 +927,15 @@ function update_live_status() {
 
     if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets') {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
+
+        // The SD card may still be starting up right after connect/reboot;
+        // keep polling (slowly) until it settles so the header shows capacity.
+        const sdcardSettling = FC.SDCARD.supported
+            && (FC.SDCARD.state === MSP.SDCARD_STATE_CARD_INIT || FC.SDCARD.state === MSP.SDCARD_STATE_FS_INIT);
+        if (sdcardSettling && Date.now() - lastSdcardPoll > 2000) {
+            lastSdcardPoll = Date.now();
+            MSP.promise(MSPCodes.MSP_SDCARD_SUMMARY, false);
+        }
     }
 
     for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
@@ -1015,9 +1027,7 @@ export function update_dataflash_global() {
         return megabytes.toFixed(1) + "MB";
     }
 
-    const supportsDataflash = FC.DATAFLASH.totalSize > 0;
-
-    if (supportsDataflash){
+    function showUsage(label, totalBytes, freeBytes) {
         $(".noflash_global").css({
            display: 'none'
         });
@@ -1027,19 +1037,53 @@ export function update_dataflash_global() {
         });
 
         $(".dataflash-free_global").css({
-           width: (100-(FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize) / FC.DATAFLASH.totalSize * 100) + "%",
+           width: (100 - freeBytes / totalBytes * 100) + "%",
            display: 'block'
         });
-        $(".dataflash-free_global div").text('Dataflash: free ' + formatFilesize(FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize));
-     } else {
-        $(".noflash_global").css({
+        $(".dataflash-free_global div").text(label + ': free ' + formatFilesize(freeBytes));
+    }
+
+    function showMessage(html) {
+        $(".noflash_global").html(html).css({
            display: 'block'
         });
 
         $(".dataflash-contents_global").css({
            display: 'none'
         });
-     }
+    }
+
+    const supportsDataflash = FC.DATAFLASH.totalSize > 0;
+
+    if (supportsDataflash) {
+        showUsage('Dataflash', FC.DATAFLASH.totalSize, FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize);
+    } else if (FC.SDCARD.supported) {
+        switch (FC.SDCARD.state) {
+            case MSP.SDCARD_STATE_READY:
+                if (FC.SDCARD.totalSizeKB > 0) {
+                    showUsage('SD card', FC.SDCARD.totalSizeKB * 1024, FC.SDCARD.freeSizeKB * 1024);
+                } else {
+                    showMessage(i18n.getMessage('sdcardStatusReady'));
+                }
+                break;
+            case MSP.SDCARD_STATE_NOT_PRESENT:
+                showMessage(i18n.getMessage('sdcardStatusNoCard'));
+                break;
+            case MSP.SDCARD_STATE_FATAL:
+                showMessage(i18n.getMessage('sdcardStatusReboot'));
+                break;
+            case MSP.SDCARD_STATE_CARD_INIT:
+                showMessage(i18n.getMessage('sdcardStatusStarting'));
+                break;
+            case MSP.SDCARD_STATE_FS_INIT:
+                showMessage(i18n.getMessage('sdcardStatusFileSystem'));
+                break;
+            default:
+                showMessage(i18n.getMessage('sdcardStatusUnknown', [FC.SDCARD.state]));
+        }
+    } else {
+        showMessage(i18n.getMessage('sensorDataFlashNotFound'));
+    }
 }
 
 export function reinitialiseConnection(callback) {

@@ -1806,6 +1806,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.SDCARD.filesystemLastError = data.readU8();
                 FC.SDCARD.freeSizeKB = data.readU32();
                 FC.SDCARD.totalSizeKB = data.readU32();
+                update_dataflash_global();
                 break;
             }
 
