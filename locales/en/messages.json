@@ -7989,6 +7989,9 @@
     "options.addressed_config_replies.label": {
         "message": "Experimental: serve configuration reads from addressed parameter access (verified against the board on each connect; applies on next connect)"
     },
+    "options.addressed_config_setters.label": {
+        "message": "Experimental: write configuration through addressed parameter access (each setter verified on its first use against what the board stored; applies on next connect)"
+    },
     "mainHelpArmed": {
         "message": "Motor Arming"
     },

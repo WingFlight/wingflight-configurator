@@ -21,6 +21,9 @@
   let addressedConfigReplies = $state(
     config.get("addressedConfigReplies") ?? false,
   );
+  let addressedConfigSetters = $state(
+    config.get("addressedConfigSetters") ?? false,
+  );
   let showAdvancedFirmwareOpts = $state(
     config.get("showAdvancedFirmwareOpts") ?? false,
   );
@@ -59,6 +62,10 @@
 
   function onAddressedConfigRepliesChange() {
     config.set({ addressedConfigReplies });
+  }
+
+  function onAddressedConfigSettersChange() {
+    config.set({ addressedConfigSetters });
   }
 
   function onShowAdvancedFirmwareOptsChange() {
@@ -130,6 +137,16 @@
         id="opt-addressed-config-replies"
         bind:checked={addressedConfigReplies}
         onchange={onAddressedConfigRepliesChange}
+      />
+    </Field>
+    <Field
+      id="opt-addressed-config-setters"
+      label="options.addressed_config_setters.label"
+    >
+      <Switch
+        id="opt-addressed-config-setters"
+        bind:checked={addressedConfigSetters}
+        onchange={onAddressedConfigSettersChange}
       />
     </Field>
     <Field id="opt-connection-timeout" label="connectionTimeout">

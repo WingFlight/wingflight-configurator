@@ -12,6 +12,12 @@
  *
  * Should a routed reply fail later (the board refuses a PARAM_READ, say),
  * that opcode drops back to the legacy path for the rest of the session.
+ *
+ * With "addressedConfigSetters" on as well, config setters are routed too,
+ * each once it has been verified on its first use (reply_router.js): that
+ * request goes to the firmware, and the codec must find exactly the bytes
+ * the firmware stored. Setter side effects are not replayed; the save
+ * applies them (MSP_EEPROM_WRITE stays on the firmware's opcode).
  */
 
 import * as config from "@/js/config.js";
@@ -23,10 +29,13 @@ import { verifyReplies } from "./verify_msp.js";
 import { ReplyRouter } from "./reply_router.js";
 
 export const OPTION = "addressedConfigReplies";
+export const SETTERS_OPTION = "addressedConfigSetters";
 
 export async function startAddressedReplies(log = console.log) {
     stopAddressedReplies();
-    if (!config.get(OPTION)) {
+    const replies = Boolean(config.get(OPTION));
+    const setters = Boolean(config.get(SETTERS_OPTION));
+    if (!replies && !setters) {
         return;
     }
     let session;
@@ -42,14 +51,22 @@ export async function startAddressedReplies(log = console.log) {
         return;
     }
     const names = Object.fromEntries(Object.entries(MSPCodes).map(([name, code]) => [code, name]));
-    const result = await verifyReplies(virtual, session.io.rawRequest, names);
-    MSP.virtualLayer = new ReplyRouter(virtual, result.matched, MSP);
-    log(
-        `Addressed config replies: serving ${result.ok} verified replies from addressed access` +
-            (result.bad ? `; ${result.bad} did not match this board and stay on the firmware's opcodes` : ""),
-    );
-    for (const line of result.lines.filter((l) => l.startsWith("FAIL"))) {
-        console.warn(line);
+    let matched = [];
+    if (replies) {
+        const result = await verifyReplies(virtual, session.io.rawRequest, names);
+        matched = result.matched;
+        log(
+            `Addressed config replies: serving ${result.ok} verified replies from addressed access` +
+                (result.bad ? `; ${result.bad} did not match this board and stay on the firmware's opcodes` : ""),
+        );
+        for (const line of result.lines.filter((l) => l.startsWith("FAIL"))) {
+            console.warn(line);
+        }
+    }
+    const named = (line) => line.replace(/opcode (\d+)/, (m, code) => names[code] ?? m);
+    MSP.virtualLayer = new ReplyRouter(virtual, matched, MSP, setters ? { io: session.io, log: (line) => log(named(line)) } : null);
+    if (setters) {
+        log("Addressed config writes: each setter is verified on its first use, then written through addressed access");
     }
 }
 

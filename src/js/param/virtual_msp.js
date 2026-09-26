@@ -234,13 +234,24 @@ export class VirtualMsp {
      * throws VirtualMspError where the firmware answered MSP_RESULT_ERROR.
      */
     async write(code, payload) {
+        for (const { pgn, offset, bytes } of await this.plan(code, payload)) {
+            await writeChunked(this.io, pgn, offset, bytes);
+        }
+    }
+
+    /**
+     * What write() would store, without storing it: contiguous runs of
+     * { pgn, offset, bytes }, empty where the firmware stores nothing.
+     * Throws VirtualMspError where the firmware refuses the request.
+     */
+    async plan(code, payload) {
         const codec = this.codec(code);
         if (!codec || codec.dir !== "in") {
             throw new VirtualMspError(`no setter codec for opcode ${code}`);
         }
         const data = payload instanceof Uint8Array ? payload : Uint8Array.from(payload ?? []);
         const index = VirtualMsp.#index(code, codec, data);
-        if (index === null) return; // accepted, and nothing stored
+        if (index === null) return []; // accepted, and nothing stored
         let at = codec.index ? codec.index.w : 0;
 
         const ops = codec.ops.map(info);
@@ -290,6 +301,7 @@ export class VirtualMsp {
         }
 
         // Contiguous runs, so a whole struct goes in as few writes as possible.
+        const runs = [];
         for (const [pgn, map] of patches) {
             const offs = [...map.keys()].sort((a, b) => a - b);
             let start = 0;
@@ -297,9 +309,10 @@ export class VirtualMsp {
                 let end = start;
                 while (end + 1 < offs.length && offs[end + 1] === offs[end] + 1) end++;
                 const run = offs.slice(start, end + 1).map((o) => map.get(o));
-                await writeChunked(this.io, pgn, offs[start], Uint8Array.from(run));
+                runs.push({ pgn, offset: offs[start], bytes: Uint8Array.from(run) });
                 start = end + 1;
             }
         }
+        return runs;
     }
 }
