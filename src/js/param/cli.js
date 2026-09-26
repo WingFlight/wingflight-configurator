@@ -12,9 +12,26 @@
  */
 
 import { ManifestError, settingSpan } from "./manifest.js";
-
-/** Sections a `dump`/`diff` groups settings under, in firmware order. */
-const SECTION_ORDER = ["master", "profile", "rate_profile", "tv_profile", "hardware"];
+import { formatTasks, formatGyroRegisters, formatSetpointInfo, formatStatus } from "./runtime.js";
+import { CliError } from "./cli_error.js";
+import {
+    CONFIG_BLOCKS,
+    blockSupported,
+    nameLines,
+    featureCommand,
+    serialCommand,
+    mapCommand,
+    auxCommand,
+    mixerCommand,
+    servoCommand,
+    rxfailCommand,
+    adjfuncCommand,
+    beeperCommand,
+    ledCommand,
+    colorCommand,
+    modeColorCommand,
+} from "./config_lines.js";
+import * as actions from "./actions.js";
 
 const SECTION_HEADING = {
     master: "master",
@@ -24,7 +41,34 @@ const SECTION_HEADING = {
     hardware: "hardware",
 };
 
-export class CliError extends Error {}
+/**
+ * The three kinds of profile, keyed by manifest section.
+ *
+ * `command` is both the CLI command that selects one and the word a dump
+ * prints before each block (`profile 1`, `rateprofile 1`, `tv_profile 1`), so
+ * a replayed backup selects the right element before its `set` lines. `field`
+ * is where systemConfig keeps the board's current selection.
+ */
+const PROFILE_KINDS = [
+    { section: "profile", command: "profile", field: "pidProfileIndex" },
+    { section: "rate_profile", command: "rateprofile", field: "activeRateProfile" },
+    { section: "tv_profile", command: "tv_profile", field: "tvProfileIndex" },
+];
+
+const SYSTEM_CONFIG_PGN = 18;
+
+/** `dump <word>` targets, with the on-device CLI's keywords first. */
+const DUMP_TARGETS = {
+    master: ["master"],
+    hardware: ["hardware"],
+    profile: ["profile"],
+    rates: ["rate_profile"],
+    rateprofile: ["rate_profile"],
+    tv_profile: ["tv_profile"],
+    tvprofile: ["tv_profile"],
+};
+
+export { CliError };
 
 /**
  * Decode an ioTag into the pin name the CLI printed, e.g. 0x19 -> "A09".
@@ -318,6 +362,67 @@ export class ParamCli {
     constructor(manifest, io) {
         this.manifest = manifest;
         this.io = io;
+        // Which element of each profiled group get/set address, keyed by
+        // section. Read from the board on first use, then tracked locally.
+        this.selection = null;
+    }
+
+    /** How many profiles of a kind this build has, from the manifest. */
+    #profileCount(section) {
+        const setting = this.#sectionSettings(section)[0];
+        return setting ? (this.manifest.group(setting.pgn)?.length ?? 1) : 0;
+    }
+
+    /**
+     * The board's current profile selection.
+     *
+     * Read once from systemConfig rather than assumed to be 0: a `set` after
+     * connecting has to land in the profile the pilot is flying, as it did on
+     * the on-device CLI.
+     */
+    async #currentSelection() {
+        if (this.selection) {
+            return this.selection;
+        }
+        const selection = Object.fromEntries(PROFILE_KINDS.map(({ section }) => [section, 0]));
+        const group = this.manifest.group(SYSTEM_CONFIG_PGN);
+        if (group && this.io.readRange) {
+            const view = await this.io.readRange(SYSTEM_CONFIG_PGN, 0, group.size);
+            for (const { section, field } of PROFILE_KINDS) {
+                const at = group.fields?.find((f) => f.name === field)?.off;
+                const index = at === undefined ? 0 : view.getUint8(at);
+                selection[section] = index < this.#profileCount(section) ? index : 0;
+            }
+        }
+        this.selection = selection;
+        return selection;
+    }
+
+    /** The element index a setting is addressed at: its profile, or 0. */
+    async #indexFor(setting) {
+        const kind = PROFILE_KINDS.find(({ section }) => section === setting.section);
+        return kind ? (await this.#currentSelection())[kind.section] : 0;
+    }
+
+    /**
+     * `profile [n]`, `rateprofile [n]`, `tv_profile [n]`.
+     *
+     * With no argument, prints the selection. With one, switches the board
+     * live -- as changePidProfile() did -- and moves where get/set land.
+     */
+    async selectProfile(kind, argument) {
+        const selection = await this.#currentSelection();
+        if (!argument) {
+            return `${kind.command} ${selection[kind.section]}`;
+        }
+        const count = this.#profileCount(kind.section);
+        const index = Number(argument);
+        if (!/^\d+$/.test(argument) || index >= count) {
+            throw new CliError(`${kind.command.toUpperCase()} OUTSIDE OF [0..${count - 1}]`);
+        }
+        await this.io.selectProfile?.(kind.section, index);
+        selection[kind.section] = index;
+        return `${kind.command} ${index}`;
     }
 
     /** Settings belonging to a section, in manifest order. */
@@ -346,7 +451,7 @@ export class ParamCli {
             const lines = [];
             for (const each of names) {
                 const setting = this.manifest.setting(each);
-                const value = await this.io.read(each, 0);
+                const value = await this.io.read(each, await this.#indexFor(setting));
                 lines.push(`${each} = ${formatValue(setting, value)}`);
             }
             return lines.join("\n");
@@ -362,7 +467,7 @@ export class ParamCli {
         const lines = [];
         for (const each of matches) {
             const setting = this.manifest.setting(each);
-            const value = await this.io.read(each, 0);
+            const value = await this.io.read(each, await this.#indexFor(setting));
             lines.push(`${each} = ${formatValue(setting, value)}`);
             const range = describeRange(setting);
             if (range) {
@@ -385,7 +490,7 @@ export class ParamCli {
         }
 
         const value = parseValue(setting, text);
-        await this.io.write(name, value, 0);
+        await this.io.write(name, value, await this.#indexFor(setting));
         return `${name} set to ${formatValue(setting, value)}`;
     }
 
@@ -393,7 +498,7 @@ export class ParamCli {
      * `dump` and `diff` differ only in whether unchanged settings are included,
      * which is why they share everything but one predicate.
      */
-    async #emit({ onlyChanged, sections, profileIndex = 0 }) {
+    async #emit({ onlyChanged, sections, profileIndex = 0, heading: headingText }) {
         const lines = [];
         for (const section of sections) {
             const entries = await this.#readAll(section, profileIndex);
@@ -413,7 +518,7 @@ export class ParamCli {
                     continue;
                 }
                 if (!heading) {
-                    lines.push("", `# ${SECTION_HEADING[section] ?? section}`);
+                    lines.push("", `# ${headingText ?? SECTION_HEADING[section] ?? section}`);
                     heading = true;
                 }
                 lines.push(`set ${setting.name} = ${formatValue(setting, value)}`);
@@ -435,6 +540,28 @@ export class ParamCli {
         ];
     }
 
+    /**
+     * The `feature` / `serial` / `map` / `aux` blocks, in printConfig() order,
+     * each only where the manifest can describe it. A backup without them
+     * loses mode switches, serial ports and the channel map.
+     */
+    async #configBlocks(onlyChanged) {
+        if (!this.io.readRange) {
+            return [];
+        }
+        const lines = [];
+        for (const block of CONFIG_BLOCKS) {
+            if (!blockSupported(this.manifest, block)) {
+                continue;
+            }
+            const body = await block.lines(this.manifest, this.io, onlyChanged);
+            if (body.length) {
+                lines.push("", `# ${block.heading}`, ...body);
+            }
+        }
+        return lines;
+    }
+
     /** The resource block, when the board and manifest can supply it. */
     async #resources() {
         if (!this.io.readRange || !(this.manifest.raw.resources ?? []).length) {
@@ -450,26 +577,92 @@ export class ParamCli {
         ];
     }
 
+    /**
+     * One profile's block, as cli.c's cliDump*Profile() printed it: the
+     * selecting command always, then the heading and values. The command line
+     * is what makes a replay write the values into the right element.
+     */
+    async #profileBlock(kind, index, onlyChanged) {
+        const body = await this.#emit({
+            onlyChanged,
+            sections: [kind.section],
+            profileIndex: index,
+            heading: `${kind.command} ${index}`,
+        });
+        return ["", `${kind.command} ${index}`, ...body];
+    }
+
+    /**
+     * Every profile of a kind, then a line restoring the board's selection --
+     * without it, replaying a backup would leave the last profile selected.
+     */
+    async #allProfiles(kind, onlyChanged) {
+        const lines = [];
+        for (let index = 0; index < this.#profileCount(kind.section); index++) {
+            lines.push(...(await this.#profileBlock(kind, index, onlyChanged)));
+        }
+        const selected = (await this.#currentSelection())[kind.section];
+        lines.push("", `# restore original ${kind.command} selection`, `${kind.command} ${selected}`);
+        return lines;
+    }
+
+    /**
+     * `dump` / `diff` [all | master | hardware | profile | rates | tv_profile].
+     *
+     * Without `all`, profiles are the currently selected ones, as on the
+     * on-device CLI. With it, every profile of every kind.
+     */
+    async #config(argument, onlyChanged) {
+        const word = argument.trim().toLowerCase().split(/\s+/)[0];
+
+        if (word && word !== "all") {
+            const sections = DUMP_TARGETS[word];
+            if (!sections) {
+                throw new CliError(`Invalid dump target: ${word}`);
+            }
+            const kind = PROFILE_KINDS.find(({ section }) => section === sections[0]);
+            const body = kind
+                ? await this.#profileBlock(kind, (await this.#currentSelection())[kind.section], onlyChanged)
+                : await this.#emit({ onlyChanged, sections });
+            const before =
+                sections[0] === "hardware"
+                    ? await this.#resources()
+                    : sections[0] === "master"
+                      ? [...(await this.#nameLines(onlyChanged)), ...(await this.#configBlocks(onlyChanged))]
+                      : [];
+            return this.#wrap([...before, ...body]);
+        }
+
+        const body = [
+            ...(await this.#nameLines(onlyChanged)),
+            ...(await this.#resources()),
+            ...(await this.#configBlocks(onlyChanged)),
+        ];
+        body.push(...(await this.#emit({ onlyChanged, sections: ["master", "hardware"] })));
+        for (const kind of PROFILE_KINDS) {
+            if (this.#profileCount(kind.section) === 0) {
+                continue;
+            }
+            if (word === "all") {
+                body.push(...(await this.#allProfiles(kind, onlyChanged)));
+            } else {
+                const selected = (await this.#currentSelection())[kind.section];
+                body.push(...(await this.#profileBlock(kind, selected, onlyChanged)));
+            }
+        }
+        return this.#wrap(body);
+    }
+
+    async #nameLines(onlyChanged) {
+        return this.io.readRange ? nameLines(this.manifest, this.io, onlyChanged) : [];
+    }
+
     async dump(argument = "") {
-        const body = await this.#emit({ onlyChanged: false, sections: this.#sectionsFor(argument) });
-        return this.#wrap([...(await this.#resources()), ...body]);
+        return this.#config(argument, false);
     }
 
     async diff(argument = "") {
-        const body = await this.#emit({ onlyChanged: true, sections: this.#sectionsFor(argument) });
-        return this.#wrap([...(await this.#resources()), ...body]);
-    }
-
-    #sectionsFor(argument) {
-        const word = argument.trim().toLowerCase().split(/\s+/)[0];
-        if (!word || word === "all") {
-            return SECTION_ORDER;
-        }
-        const named = Object.entries(SECTION_HEADING).find(([, heading]) => heading === word);
-        if (!named) {
-            throw new CliError(`Invalid dump target: ${word}`);
-        }
-        return [named[0]];
+        return this.#config(argument, true);
     }
 
     #wrap(body) {
@@ -628,7 +821,33 @@ export class ParamCli {
     async defaults(argument) {
         const save = !/\bnosave\b/i.test(argument);
         await this.io.resetConfig();
+        // Defaults reset the board's profile selection too.
+        this.selection = null;
         return save ? "Resetting to defaults and saving" : "Resetting to defaults";
+    }
+
+    /** Run one of the runtime diagnostics, or explain why it cannot be. */
+    async #diagnostic(command, read, format) {
+        if (!read) {
+            throw new CliError(`${command} is not available on this connection`);
+        }
+        return format(await read());
+    }
+
+    async tasks() {
+        return this.#diagnostic("tasks", this.io.readTaskInfo, formatTasks);
+    }
+
+    async gyroregisters() {
+        return this.#diagnostic("gyroregisters", this.io.readGyroRegisters, formatGyroRegisters);
+    }
+
+    async status() {
+        return this.#diagnostic("status", this.io.readStatus, (s) => formatStatus(s, this.manifest.raw.cli));
+    }
+
+    async setpointInfo() {
+        return this.#diagnostic("setpoint_info", this.io.readSetpointInfo, formatSetpointInfo);
     }
 
     async execute(line) {
@@ -659,6 +878,70 @@ export class ParamCli {
                 return this.dma(argument);
             case "defaults":
                 return this.defaults(argument);
+            case "profile":
+            case "rateprofile":
+            case "tv_profile":
+                return this.selectProfile(
+                    PROFILE_KINDS.find((kind) => kind.command === command.toLowerCase()),
+                    argument,
+                );
+            case "feature":
+                return featureCommand(this.manifest, this.io, argument);
+            case "serial":
+                return serialCommand(this.manifest, this.io, argument);
+            case "map":
+                return mapCommand(this.manifest, this.io, argument);
+            case "aux":
+                return auxCommand(this.manifest, this.io, argument);
+            case "mixer":
+                return mixerCommand(this.manifest, this.io, argument);
+            case "servo":
+                return servoCommand(this.manifest, this.io, argument);
+            case "rxfail":
+                return rxfailCommand(this.manifest, this.io, argument);
+            case "adjfunc":
+                return adjfuncCommand(this.manifest, this.io, argument);
+            case "beeper":
+            case "beacon":
+                return beeperCommand(this.manifest, this.io, command.toLowerCase(), argument);
+            case "led":
+                return ledCommand(this.manifest, this.io, argument);
+            case "color":
+                return colorCommand(this.manifest, this.io, argument);
+            case "mode_color":
+                return modeColorCommand(this.manifest, this.io, argument);
+            case "version":
+                return this.#banner()[1];
+            case "exit":
+                return actions.exitCommand(this.io);
+            case "dfu":
+                return actions.dfuCommand(this.io);
+            case "bl":
+                return actions.blCommand(this.manifest, this.io, argument);
+            case "msc":
+                return actions.mscCommand(this.io, argument);
+            case "bind_rx":
+                return actions.bindRxCommand(this.io);
+            case "serialpassthrough":
+                return actions.serialPassthroughCommand(this.manifest, this.io, argument);
+            case "gpspassthrough":
+                return actions.gpsPassthroughCommand(this.manifest, this.io);
+            case "escprog":
+                return actions.escprogCommand(this.manifest, this.io, argument);
+            case "flash_info":
+                return actions.flashInfoCommand(this.io);
+            case "flash_erase":
+                return actions.flashEraseCommand(this.io);
+            case "flash_read":
+                return actions.flashReadCommand(this.io, argument);
+            case "status":
+                return this.status();
+            case "tasks":
+                return this.tasks();
+            case "gyroregisters":
+                return this.gyroregisters();
+            case "setpoint_info":
+                return this.setpointInfo();
             case "batch":
                 // The firmware used a batch to defer errors across a replay.
                 // Nothing here needs deferring, but a dump emits these lines,
@@ -671,8 +954,36 @@ export class ParamCli {
                     "dump     print the configuration",
                     "diff     print what differs from defaults",
                     "save     write the configuration and reboot",
+                    "feature  [list] | [-]<name>  enable or disable a feature",
+                    "serial   <id> <functions> <msp> <gps> <telemetry> <blackbox>  configure a port",
+                    "map      <AETR1234>  channel map",
+                    "aux      <index> <mode> <channel> <start> <end> <logic> <linked>  mode switch",
+                    "mixer    [reset] | input <in> <min> <max> <rate> | rule <n> <op> <in> <out> <weight> <offset> ... | rule <n> del",
+                    "servo    [flags <n> +REV|-REV +GEO|-GEO] | <n> <mid> <min> <max> <rneg> <rpos> <rate> <speed> <flags>",
+                    "rxfail   <channel> [a|h|s [<value>]]  RX failsafe per channel",
+                    "beeper / beacon  [list] | [-]<condition>  enable or disable a beeper condition",
+                    "led      <index> <x>,<y>:<dirs>:<functions>:<color>:<pattern>:<pause>:<alt>",
+                    "color    <index> <h>,<s>,<v>",
+                    "mode_color <mode> <function> <color>",
+                    "status   show system status",
+                    "version  show the firmware version",
+                    "exit     reboot without saving",
+                    "dfu / bl [rom|flash] / msc [<tz minutes>]  reboot into DFU, a bootloader or mass storage",
+                    "bind_rx  start receiver binding",
+                    "serialpassthrough <port|esc_sensor> / gpspassthrough / escprog <sk|bl|ki|cc> <output>  pass this port through",
+                    "flash_info / flash_erase / flash_read <address> <length>  dataflash",
+                    "adjfunc  <index> <function> <ena ch> <ena start> <ena end> <adj ch> <r1 start> <r1 end> <r2 start> <r2 end> <step> <min> <max>",
+                    "profile / rateprofile / tv_profile [<index>]  show or change the selected profile",
+                    "tasks    show task stats",
+                    "gyroregisters  dump gyro config registers contents",
+                    "setpoint_info  show the detected RX frame rate",
                 ].join("\n");
             default:
+                if (Object.hasOwn(actions.NOT_AVAILABLE, command.toLowerCase())) {
+                    throw new CliError(
+                        `${command} is not available in the configurator CLI (${actions.NOT_AVAILABLE[command.toLowerCase()]})`,
+                    );
+                }
                 throw new CliError(`Unknown command: ${command}`);
         }
     }

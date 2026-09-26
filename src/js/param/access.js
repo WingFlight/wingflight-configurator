@@ -10,6 +10,7 @@
 import { MSP } from "@/js/msp.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { decodeValues, encodeValues, settingSpan, ManifestError } from "./manifest.js";
+import { decodeTaskPage, decodeGyroRegisters, decodeSetpointInfo } from "./runtime.js";
 
 /** Matches MSP_PARAM_PROTOCOL_VERSION in the firmware's msp_param.h. */
 export const SUPPORTED_PARAM_PROTOCOL = 1;
@@ -241,6 +242,55 @@ export async function writeSetting(manifest, name, value, profileIndex = 0) {
         throw new ManifestError(`'${name}' takes ${count} value(s), got ${values.length}`);
     }
     await writeRange(pgn, offset, encodeValues(values, setting.kind, setting.size));
+}
+
+/**
+ * The scheduler's task list, for `tasks`.
+ *
+ * Paged like the registry: the board reports where the next page starts and
+ * the list is complete when that reaches the task count. Reading a task resets
+ * its max execution time on the board, as the on-device command did.
+ */
+export async function readTaskInfo() {
+    const tasks = [];
+    let first = 0;
+    let page;
+
+    for (;;) {
+        const view = await request(MSPCodes.MSP2_WING_TASK_INFO, [first], 15, "task info");
+        try {
+            page = decodeTaskPage(view);
+        } catch (error) {
+            throw new ParamError(error.message);
+        }
+        tasks.push(...page.tasks);
+
+        if (page.nextTaskId >= page.taskCount) {
+            break;
+        }
+        if (page.nextTaskId <= first) {
+            throw new ParamError(`task paging went wrong: asked from ${first}, told to continue at ${page.nextTaskId}`);
+        }
+        first = page.nextTaskId;
+    }
+
+    return { flags: page.flags, checkFunc: page.checkFunc, tasks };
+}
+
+/** Gyro chip registers, for `gyroregisters`. The board refuses while armed. */
+export async function readGyroRegisters() {
+    const view = await request(MSPCodes.MSP2_WING_GYRO_REGISTERS, false, 1, "gyro registers (refused while armed)");
+    try {
+        return decodeGyroRegisters(view);
+    } catch (error) {
+        throw new ParamError(error.message);
+    }
+}
+
+/** RX frame timing, for `setpoint_info`. */
+export async function readSetpointInfo() {
+    const view = await request(MSPCodes.MSP2_WING_SETPOINT_INFO, false, 3, "setpoint info");
+    return decodeSetpointInfo(view);
 }
 
 /**
