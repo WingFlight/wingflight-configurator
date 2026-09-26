@@ -790,7 +790,8 @@ if (adc && timerGroup) {
     await c.execute(`serial ${busPort} ${manifest.raw.cli.limits.busServoFunctionMask & -manifest.raw.cli.limits.busServoFunctionMask} 115200 57600 0 115200`);
     const withBus = (await c.execute("servo")).split("\n");
     check("servo lists the bus servos once SBUS out is on a port",
-        withBus.includes("servo 9 1500 -500 500 1000 1000 50 0 0") && withBus.at(-1).startsWith("servo 26 "));
+        withBus.includes("servo 9 1500 -500 500 1000 1000 50 0 0") &&
+            withBus.at(-1).startsWith(`servo ${groupBySymbol("servoParams_SystemArray").length} `));
 
     // rxfail
     check("rxfail sets a value on a flight channel", (await c.execute("rxfail 3 s 1000")) === "rxfail 3 s 1000");
@@ -801,8 +802,9 @@ if (adc && timerGroup) {
     await throwsAsync("rxfail refuses a value for hold", () => c.execute("rxfail 5 h 1500"));
     await throwsAsync("rxfail refuses set without a value", () => c.execute("rxfail 5 s"));
     await throwsAsync("rxfail refuses a value out of range", () => c.execute("rxfail 2 s 3000"));
-    await throwsAsync("rxfail refuses a channel past the last", () => c.execute("rxfail 18"));
-    check("rxfail lists every channel", (await c.execute("rxfail")).split("\n").length === 18);
+    const rxChannels = groupBySymbol("rxFailsafeChannelConfigs_SystemArray").length;
+    await throwsAsync("rxfail refuses a channel past the last", () => c.execute(`rxfail ${rxChannels}`));
+    check("rxfail lists every channel", (await c.execute("rxfail")).split("\n").length === rxChannels);
 
     // adjfunc
     const adj = "adjfunc 0 5 0 1300 1700 1 900 1400 1600 2100 5 -100 100";
