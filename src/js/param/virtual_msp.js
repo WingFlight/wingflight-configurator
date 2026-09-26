@@ -17,7 +17,7 @@
  * reply this would give with the firmware's real one, while both exist.
  */
 
-import { readGroup, writeChunked, readProfileSelection } from "./group_io.js";
+import { readSpan, writeChunked, readProfileSelection } from "./group_io.js";
 
 export class VirtualMspError extends Error {}
 
@@ -116,28 +116,46 @@ export class VirtualMsp {
             throw new VirtualMspError(`no reply codec for opcode ${code}`);
         }
         const { groups, selection } = await this.#context(codec);
+
+        // Where each op's bytes are, then only the span of each group that
+        // covers them: a reply naming three fields of pidProfiles should not
+        // cost the whole 612-byte group.
+        const placed = codec.ops.map((op) => {
+            if (op[0] === "c") return null;
+            if (op[0] !== "f" && op[0] !== "d") throw new VirtualMspError(`op ${op[0]} in a reply codec`);
+            const at = VirtualMsp.#offset(op, groups.get(op[2]), selection, 0);
+            return { at, len: op[0] === "f" ? op[4] : op[1] };
+        });
+        const spans = new Map();
+        codec.ops.forEach((op, i) => {
+            if (!placed[i]) return;
+            const { at, len } = placed[i];
+            const span = spans.get(op[2]) ?? { lo: at, hi: at + len };
+            spans.set(op[2], { lo: Math.min(span.lo, at), hi: Math.max(span.hi, at + len) });
+        });
         const bytes = new Map();
-        for (const [pgn, group] of groups) {
-            bytes.set(pgn, await readGroup(this.io, group));
+        for (const [pgn, { lo, hi }] of spans) {
+            const group = groups.get(pgn);
+            if (hi > group.size) {
+                throw new VirtualMspError(`codec reads past pgn ${pgn}'s ${group.size} bytes`);
+            }
+            const view = new Uint8Array(group.size);
+            view.set(await readSpan(this.io, pgn, lo, hi - lo), lo);
+            bytes.set(pgn, view);
         }
 
         const out = [];
-        for (const op of codec.ops) {
+        codec.ops.forEach((op, i) => {
             if (op[0] === "c") {
                 putInt(out, op[2], op[1]);
             } else if (op[0] === "f") {
                 const [, w, pgn, , size, flags] = op;
-                const at = VirtualMsp.#offset(op, groups.get(pgn), selection, 0);
                 // C widens a signed field by sign extension, an unsigned one by zero.
-                putInt(out, getInt(bytes.get(pgn), at, size, flags.includes("s")), w);
-            } else if (op[0] === "d") {
-                const [, len, pgn] = op;
-                const at = VirtualMsp.#offset(op, groups.get(pgn), selection, 0);
-                out.push(...bytes.get(pgn).slice(at, at + len));
+                putInt(out, getInt(bytes.get(pgn), placed[i].at, size, flags.includes("s")), w);
             } else {
-                throw new VirtualMspError(`op ${op[0]} in a reply codec`);
+                out.push(...bytes.get(op[2]).slice(placed[i].at, placed[i].at + op[1]));
             }
-        }
+        });
         return Uint8Array.from(out);
     }
 

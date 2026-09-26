@@ -3,6 +3,7 @@ import semver from "semver";
 import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
+import { startAddressedReplies } from "@/js/param/msp_routing.js";
 
 // Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
 // connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
@@ -777,6 +778,13 @@ async function onConnect() {
 
     const dataflash = $('#dataflash_wrapper_global');
     dataflash.show();
+
+    // Experimental, opt-in (Options tab): serve config replies this board
+    // verifies from addressed access. Not awaited -- until it has checked,
+    // every request takes the firmware's opcodes as before.
+    if (!CONFIGURATOR.virtualMode) {
+        startAddressedReplies((message) => GUI.log(message));
+    }
 }
 
 function onClosed(result) {

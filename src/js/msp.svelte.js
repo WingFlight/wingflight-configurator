@@ -344,6 +344,12 @@ export const MSP = {
         if (code === undefined) {
             return;
         }
+        // Config replies verified against this board and served from
+        // addressed access (param/msp_routing.js); off unless opted in.
+        if (this.virtualLayer?.routes(code, data)) {
+            this.virtualLayer.answer(code, data, callback_msp, doCallbackOnError);
+            return true;
+        }
         let bufferOut;
         if (code <= 254) {
             bufferOut = this.encode_message_v1(code, data);
@@ -420,6 +426,7 @@ export const MSP = {
         this.callbacks = [];
     },
     disconnect_cleanup: function () {
+        this.virtualLayer = null;
         this.state = 0; // reset packet state for "clean" initial entry (this is only required if user hot-disconnects)
         this.packet_error = 0; // reset CRC packet error counter for next session
 

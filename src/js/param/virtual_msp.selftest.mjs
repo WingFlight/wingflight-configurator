@@ -15,6 +15,7 @@
 import { readFileSync } from "node:fs";
 import { Manifest } from "./manifest.js";
 import { VirtualMsp, VirtualMspError } from "./virtual_msp.js";
+import { ReplyRouter } from "./reply_router.js";
 import { MSPCodes } from "../msp/MSPCodes.js";
 import { verifyReplies, verifySetters, symmetricPairs } from "./verify_msp.js";
 
@@ -115,6 +116,48 @@ function board(manifest, fill = () => 0) {
     await refuses("a request too short for a required field is refused", () => v.write(3, []));
     await refuses("an opcode without a codec is refused", () => v.read(99));
     check("has() answers for codecs only", v.has(1) && !v.has(99));
+}
+
+// --- routing ---------------------------------------------------------------------
+
+{
+    const raw = {
+        schema: 1,
+        build: { id: "0000000000000000" },
+        pgs: [{ pgn: 10, symbol: "demo_System", size: 4, length: 1, elem_size: 4, version: 0, fields: [] }],
+        settings: [],
+        msp_codecs: { 7: { dir: "out", ops: [["f", 1, 10, 0, 1, ""], ["f", 2, 10, 2, 2, ""]] } },
+    };
+    const b = board(new Manifest(raw));
+    b.groups.get(10).set([9, 0, 0x34, 0x12]);
+    const delivered = [];
+    const resent = [];
+    const msp = {
+        listeners: [(handler) => delivered.push(handler)],
+        send_message: (...args) => resent.push(args),
+    };
+    const router = new ReplyRouter(new VirtualMsp(new Manifest(raw), b), [7], msp);
+
+    check("routes a plain request for a verified opcode", router.routes(7, false) && router.routes(7, []));
+    check("does not route a request carrying arguments", !router.routes(7, [1]));
+    check("does not route an opcode it was not given", !router.routes(8, false));
+
+    const callback = () => {};
+    router.answer(7, false, callback, false);
+    await new Promise((r) => setTimeout(r, 10));
+    const h = delivered[0];
+    check("delivers the reply through the listeners", delivered.length === 1 && h?.code === 7 && !h.crcError && !h.unsupported);
+    check("delivers the virtual reply's bytes", h && hex(new Uint8Array(h.dataView.buffer, h.dataView.byteOffset, h.dataView.byteLength)) === "09 34 12");
+    check("hands the caller's callback to process_data", h?.callbacks?.[0]?.callback === callback && h.callbacks[0].code === 7);
+
+    // A read that fails falls back to the firmware, and stops routing that opcode.
+    b.readRange = async () => {
+        throw new Error("refused");
+    };
+    router.answer(7, false, callback, true);
+    await new Promise((r) => setTimeout(r, 10));
+    check("a failed virtual reply is re-sent to the firmware", resent.length === 1 && resent[0][0] === 7 && resent[0][3] === callback);
+    check("and that opcode is no longer routed", !router.routes(7, false));
 }
 
 // --- every codec in a real manifest ---------------------------------------------
