@@ -32,6 +32,9 @@ import {
     modeColorCommand,
 } from "./config_lines.js";
 import * as actions from "./actions.js";
+import { VirtualMsp } from "./virtual_msp.js";
+import { verifyReplies, verifySetters, symmetricPairs } from "./verify_msp.js";
+import { MSPCodes } from "../msp/MSPCodes.js";
 
 const SECTION_HEADING = {
     master: "master",
@@ -842,6 +845,29 @@ export class ParamCli {
         return this.#diagnostic("gyroregisters", this.io.readGyroRegisters, formatGyroRegisters);
     }
 
+    /**
+     * `verify_msp [setters]`: compare the virtual MSP layer with the
+     * firmware's real config opcodes. See verify_msp.js.
+     */
+    async verifyMsp(argument) {
+        if (!this.io.rawRequest) {
+            throw new CliError("verify_msp is not available on this connection");
+        }
+        const virtual = new VirtualMsp(this.manifest, this.io);
+        if (!Object.keys(virtual.codecs).length) {
+            throw new CliError("this firmware's manifest carries no MSP codecs");
+        }
+        const names = Object.fromEntries(Object.entries(MSPCodes).map(([name, code]) => [code, name]));
+        const replies = await verifyReplies(virtual, this.io.rawRequest, names);
+        const lines = [...replies.lines];
+        if (/^setters$/i.test(argument)) {
+            lines.push("# writing current values back through each virtual setter (RAM only, nothing is saved)");
+            const setters = await verifySetters(virtual, this.io.rawRequest, names, symmetricPairs(virtual.codecs, MSPCodes));
+            lines.push(...setters.lines);
+        }
+        return lines.join("\n");
+    }
+
     async status() {
         return this.#diagnostic("status", this.io.readStatus, (s) => formatStatus(s, this.manifest.raw.cli));
     }
@@ -936,6 +962,8 @@ export class ParamCli {
                 return actions.flashReadCommand(this.io, argument);
             case "status":
                 return this.status();
+            case "verify_msp":
+                return this.verifyMsp(argument);
             case "tasks":
                 return this.tasks();
             case "gyroregisters":
@@ -966,6 +994,7 @@ export class ParamCli {
                     "color    <index> <h>,<s>,<v>",
                     "mode_color <mode> <function> <color>",
                     "status   show system status",
+                    "verify_msp [setters]  compare the virtual MSP layer with the firmware's config opcodes",
                     "version  show the firmware version",
                     "exit     reboot without saving",
                     "dfu / bl [rom|flash] / msc [<tz minutes>]  reboot into DFU, a bootloader or mass storage",
