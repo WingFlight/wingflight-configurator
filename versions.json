@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-parameter-addressing",
+      "path": "./feature-parameter-addressing/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
