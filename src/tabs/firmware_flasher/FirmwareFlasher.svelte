@@ -108,6 +108,9 @@
   // in the browser build -- the packaged app's native serial backend has no
   // such prompt.
   const isWebSerialBackend = __BACKEND__ === "web";
+  // DFU on the web is WebUSB-only -- Firefox, for one, doesn't have it, so
+  // the DFU buttons would silently do nothing there.
+  const hasWebUsb = "usb" in navigator;
 
   // Folds the old "backup on/off" toggle + separate diff/dump select into
   // one dropdown: "none" | BACKUP_TYPES.DIFF | BACKUP_TYPES.DUMP. Falls back
@@ -1692,9 +1695,11 @@
            bootloader) is a real, common starting point, not just "no port
            yet" -- offered right alongside Select Serial Port so it's never
            only reachable via the global top-right picker. -->
-      <button class="btn" onclick={onClickSelectDfu}>
-        {$i18n.t("firmwareFlasherSelectDfu")}
-      </button>
+      {#if hasWebUsb}
+        <button class="btn" onclick={onClickSelectDfu}>
+          {$i18n.t("firmwareFlasherSelectDfu")}
+        </button>
+      {/if}
     {:else}
       {$i18n.t("firmwareFlasherNoPortNative")}
     {/if}
@@ -1740,15 +1745,22 @@
             <button class="btn" onclick={onClickSelectPort}>
               {$i18n.t("firmwareFlasherAddSerialDevice")}
             </button>
-            <button class="btn" onclick={onClickSelectDfu}>
-              {$i18n.t("firmwareFlasherAddDfuDevice")}
-            </button>
+            {#if hasWebUsb}
+              <button class="btn" onclick={onClickSelectDfu}>
+                {$i18n.t("firmwareFlasherAddDfuDevice")}
+              </button>
+            {/if}
             {#if "bluetooth" in navigator}
               <button class="btn" onclick={onClickAddBluetoothDevice}>
                 {$i18n.t("firmwareFlasherAddBluetoothDevice")}
               </button>
             {/if}
           </div>
+          {#if !hasWebUsb}
+            <p class="detect-fallback-notice">
+              {$i18n.t("dfuWebUsbUnsupported")}
+            </p>
+          {/if}
         {:else}
           <p class="detect-fallback-notice">
             {$i18n.t("firmwareFlasherConnectNativeHint")}

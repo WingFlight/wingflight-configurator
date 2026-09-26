@@ -5312,6 +5312,9 @@
     "firmwareFlasherDfuPermissionNeeded": {
         "message": "Your board has restarted in DFU (bootloader) mode. Your browser needs permission to access it before flashing can continue. Click <strong>Allow DFU Access</strong> and select the DFU device."
     },
+    "dfuWebUsbUnsupported": {
+        "message": "DFU flashing needs WebUSB, which this browser doesn't support (e.g. Firefox). Please use Chrome, Edge or Opera."
+    },
     "firmwareFlasherDfuPermissionGrant": {
         "message": "Allow DFU Access"
     },

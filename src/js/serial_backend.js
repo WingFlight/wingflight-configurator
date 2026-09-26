@@ -16,6 +16,7 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 // null if there's none (cancelled, or no WebUSB at all).
 export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
+        GUI.log(i18n.getMessage('dfuWebUsbUnsupported'));
         return null;
     }
 

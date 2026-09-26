@@ -123,6 +123,14 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
                                 TABS.firmware_flasher.flashingMessage(i18n.getMessage('stm32UsbDfuNotFound'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
                                 self.callback?.();
                             });
+                        } else if (__BACKEND__ === "web" && !('usb' in navigator)) {
+                            // Same vanished-port case as above, but this
+                            // browser has no WebUSB at all, so the board is
+                            // in DFU with no way to reach it from here.
+                            GUI.connect_lock = false;
+                            GUI.log(i18n.getMessage('dfuWebUsbUnsupported'));
+                            TABS.firmware_flasher.flashingMessage(i18n.getMessage('dfuWebUsbUnsupported'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+                            self.callback?.();
                         } else {
                             GUI.connect_lock = false;
                             GUI.log(i18n.getMessage('serialPortOpenFail'));
