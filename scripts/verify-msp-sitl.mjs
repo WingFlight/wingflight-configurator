@@ -166,6 +166,19 @@ try {
             }
             written += pg.size;
         }
+        // A field that selects an array element (batteryProfile for
+        // batteryCapacity[]) must stay in range: out of range, the firmware
+        // itself reads past the array.
+        for (const codec of Object.values(manifest.raw.msp_codecs ?? {})) {
+            for (const op of codec.ops) {
+                // A string field always ends in a NUL, as its setter leaves it.
+                if (op[0] === "z") await io.writeRange(op[2], op[3] + op[1] - 1, [0]);
+                if (op[0] !== "x") continue;
+                const [, , , , , , selPgn, selOff, selSize, , count] = op;
+                const value = Math.min(count - 1, 1);
+                await io.writeRange(selPgn, selOff, [value, ...new Array(selSize - 1).fill(0)]);
+            }
+        }
         console.log(`# perturbed ${written} bytes of configuration (RAM only)`);
     }
 
