@@ -350,6 +350,11 @@ export const MSP = {
             this.virtualLayer.answer(code, data, callback_msp, doCallbackOnError);
             return true;
         }
+        // A config setter not yet verified is checked behind the firmware's
+        // reply (param/reply_router.js); the callback is unchanged otherwise.
+        if (this.virtualLayer) {
+            callback_msp = this.virtualLayer.observe(code, data, callback_msp);
+        }
         let bufferOut;
         if (code <= 254) {
             bufferOut = this.encode_message_v1(code, data);

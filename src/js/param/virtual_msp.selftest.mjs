@@ -182,6 +182,60 @@ function board(manifest, fill = () => 0) {
     check("and that opcode is no longer routed", !router.routes(7, false));
 }
 
+// --- routing setters, verified on first use ------------------------------------------
+
+{
+    const raw = {
+        schema: 1,
+        build: { id: "0000000000000000" },
+        pgs: [{ pgn: 10, symbol: "demo_System", size: 4, length: 1, elem_size: 4, version: 0, fields: [] }],
+        settings: [],
+        msp_codecs: {
+            8: { dir: "in", ops: [["f", 1, 10, 0, 1, ""], ["f", 2, 10, 2, 2, "", { max: 1000 }]] },
+            9: { dir: "in", ops: [["f", 1, 10, 0, 1, ""], ["f", 2, 10, 2, 2, "", { max: 1000 }]] },
+        },
+    };
+    const wrong = JSON.parse(JSON.stringify(raw));
+    wrong.msp_codecs[9].ops[0][3] = 1; // aimed one byte off
+    const b = board(new Manifest(raw));
+    const firmware = new VirtualMsp(new Manifest(raw), b); // the firmware's own setters
+    const delivered = [];
+    const logged = [];
+    const msp = { listeners: [(handler) => delivered.push(handler)], send_message: () => {} };
+    const router = new ReplyRouter(new VirtualMsp(new Manifest(wrong), b), [], msp, { io: b, log: (l) => logged.push(l) });
+    const settle = () => new Promise((r) => setTimeout(r, 10));
+
+    check("an unverified setter is not routed", !router.routes(8, [1, 2, 0]));
+    let called = 0;
+    const cb = router.observe(8, [7, 0x34, 0x02], () => called++);
+    await firmware.write(8, [7, 0x34, 0x02]); // the firmware takes it
+    cb({ unsupported: false, crcError: false });
+    await settle();
+    check("the caller's callback still runs", called === 1);
+    check("a setter storing what the firmware stored is verified and routed", router.routes(8, [1, 2, 0]), logged.join(" | "));
+    check("a verified setter is observed no more", router.observe(8, [1, 2, 0], null) === null);
+
+    const cb9 = router.observe(9, [5, 0x10, 0x00]);
+    await firmware.write(9, [5, 0x10, 0x00]);
+    cb9({ unsupported: false });
+    await settle();
+    check("a setter aimed at another byte is not routed", !router.routes(9, [1, 2, 0]) && /stays on the firmware/.test(logged.at(-1)), logged.at(-1));
+
+    const refused = new ReplyRouter(new VirtualMsp(new Manifest(raw), b), [], msp, { io: b, log: () => {} });
+    const cbr = refused.observe(8, [1, 0xff, 0xff]);
+    cbr({ unsupported: true });
+    await settle();
+    check("a request the firmware refused verifies nothing, and the next one is observed", !refused.routes(8, [1, 2, 0]) && refused.observe(8, [], null) !== null);
+
+    router.answer(8, [3, 0x20, 0x01], null, false);
+    await settle();
+    check("a routed setter writes through addressed access", hex(b.groups.get(10)) === "03 00 20 01" && delivered.at(-1)?.unsupported === 0, hex(b.groups.get(10)));
+    router.answer(8, [3, 0xff, 0xff], null, false);
+    await settle();
+    check("a request the codec refuses is answered as the firmware's error", delivered.at(-1)?.unsupported === 1 && hex(b.groups.get(10)) === "03 00 20 01");
+    check("setters are not routed without the option", !new ReplyRouter(firmware, [], msp).routes(8, [1, 2, 0]));
+}
+
 // --- every codec in a real manifest ---------------------------------------------
 
 const path = process.argv[2];

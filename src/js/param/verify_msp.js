@@ -196,7 +196,7 @@ export async function verifySetters(virtual, rawRequest, names = {}, pairs = [])
  * codec's range checks accept, and random bytes elsewhere. `i === "miss"`
  * selects no element.
  */
-function samplePayload(codec, i, random) {
+export function samplePayload(codec, i, random) {
     const out = [];
     const put = (value, w) => {
         for (let k = 0; k < w; k++, value = Math.floor(value / 256)) out.push(value % 256);
@@ -306,4 +306,35 @@ export async function verifySetterEffects(virtual, rawRequest, io, names = {}, r
     }
     lines.push(`# setter effects: ${ok} store what the firmware's setter stores, ${bad} do not`);
     return { ok, bad, lines };
+}
+
+/**
+ * Verify a setter codec on its first use, without writing anything: the
+ * firmware's own setter has just accepted `payload`, so a correct codec
+ * would store exactly the bytes that are now there. A codec aimed at the
+ * wrong field finds other bytes there -- unless they happen to be equal,
+ * which the SITL check (verifySetterEffects) does not leave to chance.
+ * A setter whose validation changed what it stored fails too, which only
+ * keeps it on the firmware's opcode.
+ *
+ * @returns { ok: true } | { ok: false, reason } | { ok: null, reason }
+ *          (null: nothing to compare -- the request stored nothing)
+ */
+export async function checkSetterAfterFirmware(virtual, io, code, payload) {
+    let runs;
+    try {
+        runs = await virtual.plan(code, payload);
+    } catch (error) {
+        if (!(error instanceof VirtualMspError)) throw error;
+        return { ok: false, reason: `the firmware accepted a request the codec refuses (${error.message})` };
+    }
+    if (!runs.length) return { ok: null, reason: "the request stored nothing" };
+    for (const { pgn, offset, bytes } of runs) {
+        const stored = await readSpan(io, pgn, offset, bytes.length);
+        const at = firstDifference(stored, bytes);
+        if (at >= 0) {
+            return { ok: false, reason: `pgn ${pgn} offset ${offset + at}: the firmware stored ${stored[at]}, the codec would store ${bytes[at]}` };
+        }
+    }
+    return { ok: true };
 }

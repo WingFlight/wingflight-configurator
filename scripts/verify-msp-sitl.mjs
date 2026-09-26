@@ -9,11 +9,13 @@
  * SITL build (make manifest TARGET=SITL).
  *
  *   node scripts/verify-msp-sitl.mjs <wingflight_SITL binary> <SITL manifest.json>
- *        [--perturb] [--setters] [--effects]
+ *        [--perturb] [--setters] [--effects] [--first-use]
  *
  * --effects runs every setter codec against the firmware's own setter on
  * sampled requests and compares the stored bytes (verifySetterEffects) --
- * the only check for setters without a matching getter.
+ * the only check for setters without a matching getter. --first-use runs
+ * the check the configurator routes setters by (checkSetterAfterFirmware)
+ * after the firmware's own setter took a sampled request, for every setter.
  */
 
 import { spawn } from "node:child_process";
@@ -24,12 +26,19 @@ import { join } from "node:path";
 
 import { Manifest } from "../src/js/param/manifest.js";
 import { VirtualMsp } from "../src/js/param/virtual_msp.js";
-import { verifyReplies, verifySetters, verifySetterEffects, symmetricPairs } from "../src/js/param/verify_msp.js";
+import {
+    verifyReplies,
+    verifySetters,
+    verifySetterEffects,
+    checkSetterAfterFirmware,
+    samplePayload,
+    symmetricPairs,
+} from "../src/js/param/verify_msp.js";
 import { MSPCodes } from "../src/js/msp/MSPCodes.js";
 
 const [binary, manifestPath, ...flags] = process.argv.slice(2);
 if (!binary || !manifestPath) {
-    console.error("usage: node scripts/verify-msp-sitl.mjs <SITL binary> <SITL manifest.json> [--perturb] [--setters] [--effects]");
+    console.error("usage: node scripts/verify-msp-sitl.mjs <SITL binary> <SITL manifest.json> [--perturb] [--setters] [--effects] [--first-use]");
     process.exit(2);
 }
 const PORT = 5761;
@@ -208,6 +217,29 @@ try {
         const effects = await verifySetterEffects(virtual, rawRequest, io, names, random, save);
         effects.lines.forEach((l) => console.log(l));
         failed ||= effects.bad > 0;
+    }
+
+    if (flags.includes("--first-use")) {
+        let seed = 13;
+        const random = () => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) >>> 16) & 0xff;
+        const tally = { verified: 0, kept: 0, refused: 0, nothing: 0 };
+        for (const [code, codec] of Object.entries(virtual.codecs)) {
+            if (codec.dir !== "in") continue;
+            const payload = samplePayload(codec, codec.index ? 0 : null, random);
+            if ((await request(Number(code), payload)) === null) {
+                tally.refused++;
+                continue;
+            }
+            const result = await checkSetterAfterFirmware(virtual, io, Number(code), payload);
+            if (result.ok === true) tally.verified++;
+            else if (result.ok === null) tally.nothing++;
+            else {
+                tally.kept++;
+                console.log(`KEPT ${names[code] ?? code}: ${result.reason}`);
+            }
+        }
+        console.log(`# first use: ${tally.verified} verified, ${tally.kept} kept on the firmware, ` +
+            `${tally.refused} requests refused, ${tally.nothing} stored nothing`);
     }
 } finally {
     socket.destroy();
