@@ -49,8 +49,22 @@ const hex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).jo
 /** A board holding raw group bytes, logging writes. */
 function board(manifest, fill = () => 0) {
     const groups = new Map(manifest.raw.pgs.map((pg) => [pg.pgn, Uint8Array.from({ length: pg.size }, (_, i) => fill(pg.pgn, i))]));
+    // A field selecting an array element must stay in range; out of range the
+    // firmware reads past the array, and the virtual layer refuses.
+    const fixSelectors = () => {
+        for (const codec of Object.values(manifest.raw.msp_codecs ?? {})) {
+            for (const op of codec.ops) {
+                if (op[0] === "x") groups.get(op[6])?.fill(0, op[7], op[7] + op[8]);
+                // A string field always ends in a NUL: its setter clears it and
+                // copies one byte short of it.
+                if (op[0] === "z") groups.get(op[2])?.fill(0, op[3] + op[1] - 1, op[3] + op[1]);
+            }
+        }
+    };
+    fixSelectors();
     return {
         groups,
+        fixSelectors,
         writes: 0,
         async readRange(pgn, offset, length) {
             if (length > 160) throw new Error(`read of ${length} bytes would not fit one MSP reply`);
@@ -181,10 +195,13 @@ if (path) {
         const b = board(manifest, () => random());
         b.groups.get(18)?.fill(0); // selected profiles 0
         const v = new VirtualMsp(manifest, b);
-        const reply = await v.read(Number(code));
+        const request = codec.index ? [codec.index.max - 1] : [];
+        const reply = await v.read(Number(code), request);
         reads++;
-        const expected = codec.ops.reduce((n, op) => n + (op[0] === "d" ? op[1] : op[1]), 0);
-        check(`${byCode[code] ?? code} reply length matches its codec`, reply.length === expected, `${reply.length} vs ${expected}`);
+        if (!codec.ops.some((op) => op[0] === "z")) { // a string's length is its content's
+            const expected = codec.ops.reduce((n, op) => n + op[1], 0);
+            check(`${byCode[code] ?? code} reply length matches its codec`, reply.length === expected, `${reply.length} vs ${expected}`);
+        }
 
         const name = byCode[code];
         const setName = name?.replace(/^MSP_/, "MSP_SET_").replace(/^MSP2_WING_/, "MSP2_WING_SET_");
@@ -228,9 +245,10 @@ if (path) {
         check(`${setName} with ${name}'s reply stores back what was there`, moved.length === 0, moved.join(", "));
 
         for (const bytes of b.groups.values()) bytes.forEach((_, i) => (bytes[i] = random()));
+        b.fixSelectors();
         b.groups.get(18)?.fill(0);
         await v.write(setCode, reply);
-        const again = await v.read(Number(code));
+        const again = await v.read(Number(code), request);
         const differs = lossless.filter((key) => {
             const { pos, w } = got.get(key);
             return hex(again.slice(pos, pos + w)) !== hex(reply.slice(pos, pos + w));
@@ -244,7 +262,7 @@ if (path) {
         const v = new VirtualMsp(manifest, b);
         const names = byCode;
         // A "firmware" that agrees with the codecs...
-        const agreeing = async (c) => v.read(c);
+        const agreeing = async (c, p) => v.read(c, p ?? []);
         const clean = await verifyReplies(v, agreeing, names);
         check("verify_msp passes a firmware that agrees", clean.bad === 0 && clean.ok === reads, clean.lines.at(-1));
         // ...and one that differs in a single byte of one reply.
@@ -257,8 +275,8 @@ if (path) {
             }
             return 0;
         })();
-        const differing = async (c) => {
-            const r = await v.read(c);
+        const differing = async (c, p) => {
+            const r = await v.read(c, p ?? []);
             if (c === victim) r[fieldPos] ^= 0xff;
             return r;
         };
@@ -271,17 +289,18 @@ if (path) {
         // leaves it unchanged, a setter aimed one byte off does not.
         const pairsFound = symmetricPairs(codecs, MSPCodes);
         const good = await verifySetters(v, agreeing, names, pairsFound);
-        check("verify_msp setters passes correct setters", good.bad === 0 && good.ok > 0, good.lines.at(-1));
+        check("verify_msp setters passes correct setters", good.bad === 0 && good.ok > 0, good.lines.join(" | "));
 
-        const [getCode, setCode] = pairsFound.find(([, s]) => codecs[s].ops.filter((op) => op[0] === "f").length > 1) ?? [];
+        const { get: getCode, set: setCode } = pairsFound.find((p) => !p.indexed && codecs[p.set].ops.filter((op) => op[0] === "f").length > 1) ?? {};
         if (setCode) {
             const broken = JSON.parse(JSON.stringify(manifest.raw));
             const ops = broken.msp_codecs[setCode].ops.filter((op) => op[0] === "f");
             [ops[0][3], ops[1][3]] = [ops[1][3], ops[0][3]]; // two fields swapped
             const bv = new VirtualMsp(new Manifest(broken), b);
             for (const bytes of b.groups.values()) bytes.forEach((_, i) => (bytes[i] = random()));
+        b.fixSelectors();
             b.groups.get(18)?.fill(0);
-            const badSet = await verifySetters(bv, (c) => bv.read(c), names, [[getCode, setCode]]);
+            const badSet = await verifySetters(bv, (c, p) => bv.read(c, p ?? []), names, [{ get: getCode, set: setCode, indexed: null }]);
             check("verify_msp setters catches two swapped fields", badSet.bad === 1, badSet.lines.join(" | "));
         }
     }

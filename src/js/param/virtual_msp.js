@@ -23,16 +23,31 @@ export class VirtualMspError extends Error {}
 
 const PROFILE_FLAGS = { P: "pid", R: "rate", T: "tv" };
 
-function flagsOf(op) {
+/**
+ * One shape for every op kind: where its bytes are, how many, its flags.
+ * `wire` is how many request/reply bytes it takes (strings: variable).
+ */
+function info(op) {
     switch (op[0]) {
         case "f":
-            return op[5];
+            return { kind: "f", w: op[1], pgn: op[2], off: op[3], size: op[4], flags: op[5], check: op[6] };
+        case "x":
+            return {
+                kind: "x", w: op[1], pgn: op[2], off: op[3], size: op[4], flags: op[5],
+                sel: { pgn: op[6], off: op[7], size: op[8] }, stride: op[9], count: op[10],
+            };
+        case "d":
+            return { kind: "d", w: op[1], pgn: op[2], off: op[3], size: op[1], flags: op[4] };
+        case "z":
+            return { kind: "z", pgn: op[2], off: op[3], size: op[1], flags: op[4] };
+        case "Z":
+            return { kind: "Z", max: op[1], pgn: op[3], off: op[4], size: op[2], flags: op[5] };
         case "c":
-            return op[3];
+            return { kind: "c", w: op[1], value: op[2], flags: op[3] };
         case "s":
-            return op[2];
+            return { kind: "s", w: op[1], flags: op[2] };
         default:
-            return op[4];
+            throw new VirtualMspError(`unknown codec op ${op[0]}`);
     }
 }
 
@@ -72,88 +87,124 @@ export class VirtualMsp {
         return this.codec(code) !== null;
     }
 
-    /** The groups an opcode touches, and where the selected profiles start. */
-    async #context(codec) {
-        const groups = new Map();
+    #group(pgn) {
+        const group = this.manifest.group(pgn);
+        if (!group) {
+            throw new VirtualMspError(`codec names pgn ${pgn}, which this manifest does not have`);
+        }
+        return group;
+    }
+
+    /** The index a request selects (a setter's first bytes, or a request-indexed reply's). */
+    static #index(code, codec, data) {
+        if (codec.len !== undefined && data.length !== codec.len) {
+            throw new VirtualMspError(`opcode ${code} takes ${codec.len} bytes, got ${data.length}`);
+        }
+        if (codec.min_len !== undefined && data.length < codec.min_len) {
+            throw new VirtualMspError(`opcode ${code} takes at least ${codec.min_len} bytes, got ${data.length}`);
+        }
+        if (!codec.index) return 0;
+        if (data.length < codec.index.w) {
+            throw new VirtualMspError(`opcode ${code} is missing its index`);
+        }
+        const index = getInt(data, 0, codec.index.w, false);
+        if (index >= codec.index.max) {
+            throw new VirtualMspError(`opcode ${code}: index ${index} is past ${codec.index.max - 1}`);
+        }
+        return index;
+    }
+
+    /**
+     * Everything that decides where ops land before their bytes are read: the
+     * profile selection, the index, and each selected element's selector.
+     */
+    async #where(codec, ops, index) {
         let selection = null;
-        for (const op of codec.ops) {
-            if (op[0] === "f" || op[0] === "d") {
-                const pgn = op[2];
-                if (!groups.has(pgn)) {
-                    const group = this.manifest.group(pgn);
-                    if (!group) {
-                        throw new VirtualMspError(`codec names pgn ${pgn}, which this manifest does not have`);
-                    }
-                    groups.set(pgn, group);
-                }
-                if (!selection && /[PRT]/.test(flagsOf(op))) {
-                    selection = await readProfileSelection(this.manifest, this.io);
-                }
+        if (ops.some((o) => o.flags && /[PRT]/.test(o.flags))) {
+            selection = await readProfileSelection(this.manifest, this.io);
+        }
+        const offsets = [];
+        for (const o of ops) {
+            if (o.pgn === undefined) {
+                offsets.push(null);
+                continue;
             }
+            const group = this.#group(o.pgn);
+            const elem = group.size / group.length;
+            let at = o.off;
+            const profile = [...o.flags].map((f) => PROFILE_FLAGS[f]).find(Boolean);
+            if (profile) {
+                at += selection[profile] * elem;
+            } else if (o.flags.includes("i")) {
+                at += index * (codec.index?.stride ?? elem);
+            }
+            if (o.kind === "x") {
+                const view = await readSpan(this.io, o.sel.pgn, o.sel.off, o.sel.size);
+                const which = getInt(view, 0, o.sel.size, false);
+                if (which >= o.count) {
+                    throw new VirtualMspError(`selector for pgn ${o.pgn}+${o.off} is ${which}, past ${o.count - 1}`);
+                }
+                at += which * o.stride;
+            }
+            if (at + o.size > group.size) {
+                throw new VirtualMspError(`codec reaches past pgn ${o.pgn}'s ${group.size} bytes`);
+            }
+            offsets.push(at);
         }
-        return { groups, selection };
+        return offsets;
     }
 
-    /** Byte offset of an op in its group, given the profile selection or element index. */
-    static #offset(op, group, selection, index) {
-        const flags = flagsOf(op);
-        const off = op[3]; // "f" and "d" both carry the offset fourth
-        const elem = group.size / group.length;
-        const profile = [...flags].map((f) => PROFILE_FLAGS[f]).find(Boolean);
-        if (profile) {
-            return off + selection[profile] * elem;
-        }
-        if (flags.includes("i")) {
-            return off + index * elem;
-        }
-        return off;
-    }
-
-    /** The reply the firmware would give to request `code`. */
-    async read(code) {
+    /** The reply the firmware would give to request `code` (with `payload`, for an indexed reply). */
+    async read(code, payload = []) {
         const codec = this.codec(code);
         if (!codec || codec.dir !== "out") {
             throw new VirtualMspError(`no reply codec for opcode ${code}`);
         }
-        const { groups, selection } = await this.#context(codec);
+        const data = payload instanceof Uint8Array ? payload : Uint8Array.from(payload || []);
+        const index = VirtualMsp.#index(code, codec, data);
+        const ops = codec.ops.map(info);
+        const offsets = await this.#where(codec, ops, index);
 
-        // Where each op's bytes are, then only the span of each group that
-        // covers them: a reply naming three fields of pidProfiles should not
-        // cost the whole 612-byte group.
-        const placed = codec.ops.map((op) => {
-            if (op[0] === "c") return null;
-            if (op[0] !== "f" && op[0] !== "d") throw new VirtualMspError(`op ${op[0]} in a reply codec`);
-            const at = VirtualMsp.#offset(op, groups.get(op[2]), selection, 0);
-            return { at, len: op[0] === "f" ? op[4] : op[1] };
-        });
+        // Only the span of each group the reply needs: three fields of
+        // pidProfiles should not cost the whole 612-byte group.
         const spans = new Map();
-        codec.ops.forEach((op, i) => {
-            if (!placed[i]) return;
-            const { at, len } = placed[i];
-            const span = spans.get(op[2]) ?? { lo: at, hi: at + len };
-            spans.set(op[2], { lo: Math.min(span.lo, at), hi: Math.max(span.hi, at + len) });
+        ops.forEach((o, i) => {
+            if (offsets[i] === null) return;
+            const s = spans.get(o.pgn) ?? { lo: offsets[i], hi: offsets[i] + o.size };
+            spans.set(o.pgn, { lo: Math.min(s.lo, offsets[i]), hi: Math.max(s.hi, offsets[i] + o.size) });
         });
         const bytes = new Map();
         for (const [pgn, { lo, hi }] of spans) {
-            const group = groups.get(pgn);
-            if (hi > group.size) {
-                throw new VirtualMspError(`codec reads past pgn ${pgn}'s ${group.size} bytes`);
-            }
-            const view = new Uint8Array(group.size);
+            const view = new Uint8Array(this.#group(pgn).size);
             view.set(await readSpan(this.io, pgn, lo, hi - lo), lo);
             bytes.set(pgn, view);
         }
 
         const out = [];
-        codec.ops.forEach((op, i) => {
-            if (op[0] === "c") {
-                putInt(out, op[2], op[1]);
-            } else if (op[0] === "f") {
-                const [, w, pgn, , size, flags] = op;
-                // C widens a signed field by sign extension, an unsigned one by zero.
-                putInt(out, getInt(bytes.get(pgn), placed[i].at, size, flags.includes("s")), w);
-            } else {
-                out.push(...bytes.get(op[2]).slice(placed[i].at, placed[i].at + op[1]));
+        ops.forEach((o, i) => {
+            const b = bytes.get(o.pgn);
+            const at = offsets[i];
+            switch (o.kind) {
+                case "c":
+                    putInt(out, o.value, o.w);
+                    break;
+                case "f":
+                case "x":
+                    if (o.w === o.size) {
+                        out.push(...b.slice(at, at + o.size)); // exact, whatever the width
+                    } else {
+                        // C widens a signed field by sign extension, an unsigned one by zero.
+                        putInt(out, getInt(b, at, o.size, o.flags.includes("s")), o.w);
+                    }
+                    break;
+                case "d":
+                    out.push(...b.slice(at, at + o.size));
+                    break;
+                case "z":
+                    for (let k = 0; k < o.size && b[at + k] !== 0; k++) out.push(b[at + k]);
+                    break;
+                default:
+                    throw new VirtualMspError(`op ${o.kind} in a reply codec`);
             }
         });
         return Uint8Array.from(out);
@@ -169,71 +220,64 @@ export class VirtualMsp {
             throw new VirtualMspError(`no setter codec for opcode ${code}`);
         }
         const data = payload instanceof Uint8Array ? payload : Uint8Array.from(payload ?? []);
-        if (codec.len !== undefined && data.length !== codec.len) {
-            throw new VirtualMspError(`opcode ${code} takes ${codec.len} bytes, got ${data.length}`);
-        }
-        if (codec.min_len !== undefined && data.length < codec.min_len) {
-            throw new VirtualMspError(`opcode ${code} takes at least ${codec.min_len} bytes, got ${data.length}`);
-        }
+        const index = VirtualMsp.#index(code, codec, data);
+        let at = codec.index ? codec.index.w : 0;
 
-        let at = 0;
-        const take = (w, signed) => {
-            const v = getInt(data, at, w, signed);
-            at += w;
-            return v;
+        const ops = codec.ops.map(info);
+        const offsets = await this.#where(codec, ops, index);
+        const patches = new Map(); // pgn -> Map(offset -> byte)
+        const patch = (pgn, off, bytes) => {
+            if (!patches.has(pgn)) patches.set(pgn, new Map());
+            bytes.forEach((b, i) => patches.get(pgn).set(off + i, b));
         };
 
-        let index = 0;
-        if (codec.index) {
-            if (data.length < codec.index.w) {
-                throw new VirtualMspError(`opcode ${code} is missing its index`);
+        for (let i = 0; i < ops.length; i++) {
+            const o = ops[i];
+            if (o.kind === "Z") {
+                // memset the field, then copy what the request sent, at most max
+                const n = Math.min(o.max, data.length - at);
+                const bytes = new Array(o.size).fill(0);
+                for (let k = 0; k < n; k++) bytes[k] = data[at + k];
+                at += n;
+                patch(o.pgn, offsets[i], bytes);
+                continue;
             }
-            index = take(codec.index.w, false);
-            if (index >= codec.index.max) {
-                throw new VirtualMspError(`opcode ${code}: index ${index} is past ${codec.index.max - 1}`);
-            }
-        }
-
-        const { groups, selection } = await this.#context(codec);
-        const patches = new Map(); // pgn -> Map(offset -> byte)
-        for (const op of codec.ops) {
-            const w = op[1];
-            const flags = flagsOf(op);
-            if (at + w > data.length) {
-                if (flags.includes("o")) {
-                    continue; // an optional tail the request did not send
-                }
+            if (at + o.w > data.length) {
+                if (o.flags.includes("o")) continue; // an optional tail the request left out
                 // The firmware would read past the buffer; refuse instead.
                 throw new VirtualMspError(`opcode ${code}: request is ${data.length} bytes, too short`);
             }
-            if (op[0] === "s") {
-                at += w;
+            if (o.kind === "s") {
+                at += o.w;
                 continue;
             }
-            if (op[0] !== "f") {
-                throw new VirtualMspError(`op ${op[0]} in a setter codec`);
+            if (o.kind !== "f" && o.kind !== "x") {
+                throw new VirtualMspError(`op ${o.kind} in a setter codec`);
             }
-            const [, , pgn, , size, , check] = op;
-            const value = take(w, flags.includes("w"));
-            if (check && ((check.min !== undefined && value < check.min) || (check.max !== undefined && value > check.max))) {
+            if (o.w === o.size && !o.check) {
+                patch(o.pgn, offsets[i], [...data.slice(at, at + o.w)]); // exact, whatever the width
+                at += o.w;
+                continue;
+            }
+            const value = getInt(data, at, o.w, o.flags.includes("w"));
+            at += o.w;
+            if (o.check && ((o.check.min !== undefined && value < o.check.min) || (o.check.max !== undefined && value > o.check.max))) {
                 throw new VirtualMspError(`opcode ${code}: ${value} is out of range`);
             }
-            const off = VirtualMsp.#offset(op, groups.get(pgn), selection, index);
             const bytes = [];
-            putInt(bytes, value, size); // the store truncates to the field
-            if (!patches.has(pgn)) patches.set(pgn, new Map());
-            bytes.forEach((b, i) => patches.get(pgn).set(off + i, b));
+            putInt(bytes, value, o.size); // the store truncates to the field
+            patch(o.pgn, offsets[i], bytes);
         }
 
         // Contiguous runs, so a whole struct goes in as few writes as possible.
-        for (const [pgn, patch] of patches) {
-            const offsets = [...patch.keys()].sort((a, b) => a - b);
+        for (const [pgn, map] of patches) {
+            const offs = [...map.keys()].sort((a, b) => a - b);
             let start = 0;
-            while (start < offsets.length) {
+            while (start < offs.length) {
                 let end = start;
-                while (end + 1 < offsets.length && offsets[end + 1] === offsets[end] + 1) end++;
-                const run = offsets.slice(start, end + 1).map((o) => patch.get(o));
-                await writeChunked(this.io, pgn, offsets[start], Uint8Array.from(run));
+                while (end + 1 < offs.length && offs[end + 1] === offs[end] + 1) end++;
+                const run = offs.slice(start, end + 1).map((o) => map.get(o));
+                await writeChunked(this.io, pgn, offs[start], Uint8Array.from(run));
                 start = end + 1;
             }
         }

@@ -18,15 +18,21 @@ export class ReplyRouter {
         this.msp = msp;
     }
 
-    /** Only plain requests: a request carrying arguments is not a codec's reply. */
+    /**
+     * Only requests the codec describes: a plain one, or for a
+     * request-indexed reply exactly its index.
+     */
     routes(code, data) {
-        return this.codes.has(code) && (!data || data.length === 0);
+        if (!this.codes.has(code)) return false;
+        const codec = this.virtual.codec(code);
+        const length = data ? data.length : 0;
+        return codec?.index ? length === (codec.len ?? codec.index.w) : length === 0;
     }
 
     /** Answer as the firmware would, through the same listeners a reply takes. */
     answer(code, data, callback, callbackOnError) {
         this.virtual
-            .read(code)
+            .read(code, data || [])
             .then((bytes) => {
                 const handler = {
                     code,
