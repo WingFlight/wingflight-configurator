@@ -408,10 +408,6 @@
     padding: 0 8px;
   }
 
-  .effective-pids-header .header-label {
-    color: var(--color-text-alt);
-  }
-
   .curve-expand-button {
     margin-left: auto;
     padding: 0 6px;
@@ -419,7 +415,7 @@
     border: 0;
     border-radius: var(--radius-xs);
     background: transparent;
-    color: var(--color-text-alt);
+    color: var(--color-header-fg);
     cursor: pointer;
     line-height: 1.4rem;
   }
@@ -707,20 +703,6 @@
   // selectors the later rule in the file wins regardless of which one's
   // condition matches - an earlier copy of this block was silently losing
   // to the plain ".grid" rule below it.
-  // %section-header (in _global.scss, shared by every section header in
-  // the app) drops its dark bar entirely at <=480px and switches text to
-  // --color-text to read against the page background that replaces it.
-  // This header force-sets --color-text-alt (white) unconditionally
-  // below, so it needs its own matching swap back to --color-text - but
-  // that has to stay paired with %section-header's own <=480 breakpoint,
-  // not this file's 820px table breakpoint, or the two desync: the bar
-  // stays dark past 480px while the text already went dark-on-dark.
-  @media only screen and (max-width: 480px) {
-    .effective-pids-header .header-label {
-      color: var(--color-text);
-    }
-  }
-
   @media only screen and (max-width: 820px) {
     .desktop-table {
       display: none;
