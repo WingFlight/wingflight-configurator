@@ -39,7 +39,6 @@ export const MSPCodes = {
     MSP_SET_SERIAL_CONFIG:          55,
     MSP_VOLTAGE_METER_CONFIG:       56,
     MSP_SET_VOLTAGE_METER_CONFIG:   57,
-    MSP_SONAR:                      58,
     MSP_DEBUG_CONFIG:               59,
     MSP_SET_DEBUG_CONFIG:           60,
     MSP_ARMING_CONFIG:              61,
@@ -243,6 +242,8 @@ export const MSPCodes = {
     MSP2_WING_ESC_SENSOR_TRIAL:       0x5F14,
     // 0x5F15: 0x5F10-0x5F14 are taken by the entries above.
     MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
+    MSP2_WING_GPS_NAV_CONFIG:         0x5F16,
+    MSP2_WING_SET_GPS_NAV_CONFIG:     0x5F17,
 
     // Generic parameter addressing. These reach configuration by
     // (pgn, offset, length) against the firmware's parameter group registry

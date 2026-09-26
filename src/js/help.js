@@ -26,6 +26,7 @@ const tabHelpURLs = {
     tabRates:           `${docsBaseURL}/configurator/tabs/rates/`,
     tabGyro:            `${docsBaseURL}/configurator/tabs/gyro/`,
     tabAuxiliary:       `${docsBaseURL}/configurator/tabs/auxiliary/`,
+    tabGpsNav:          `${docsBaseURL}/configurator/tabs/gps-navigation/`,
     tabAdjustments:     `${docsBaseURL}/configurator/tabs/adjustments/`,
     tabLogic:           `${docsBaseURL}/configurator/tabs/logic/`,
     tabGPS:             `${docsBaseURL}/configurator/tabs/gps/`,

@@ -126,6 +126,10 @@
     "portsSelectManual": {
         "message": "Manual Selection"
     },
+    "portsRemoteDevice": {
+        "message": "Remote - $1",
+        "description": "A serial port or DFU device on the other computer of a remote support session; $1 is the device name"
+    },
     "portsSelectVirtual": {
         "message": "Virtual Mode (Experimental)",
         "description": "Configure a Virtual Flight Controller without the need of a physical FC."
@@ -363,13 +367,6 @@
         "message": "GPS",
         "description": "Text of the image in the top sensors icons. Please keep it short."
     },
-    "sensorStatusSonar": {
-        "message": "Sonar / Range finder"
-    },
-    "sensorStatusSonarShort": {
-        "message": "Sonar",
-        "description": "Text of the image in the top sensors icons. Please keep it short."
-    },
     "checkForConfiguratorUnstableVersions": {
         "message": "Show update notifications for unstable versions of the configurator"
     },
@@ -462,9 +459,6 @@
     },
     "tabFailsafe": {
         "message": "Failsafe"
-    },
-    "tabVtx": {
-        "message": "Video Tx"
     },
     "tabPower": {
         "message": "Power"
@@ -649,6 +643,12 @@
     "escProgrammingSelectManufacturer": {
         "message": "Select ESC manufacturer"
     },
+    "escProgrammingRequiresTelemetry": {
+        "message": "Requires {{protocol}} ESC telemetry"
+    },
+    "escProgrammingTelemetryDisabled": {
+        "message": "ESC telemetry is disabled. Select your ESC's telemetry protocol on the Motors tab to enable ESC programming."
+    },
     "escProgrammingSelectEsc": {
         "message": "Select ESC"
     },
@@ -720,6 +720,9 @@
     },
     "tabAuxiliary": {
         "message": "Modes"
+    },
+    "tabGpsNav": {
+        "message": "GPS Navigation"
     },
     "tabGroupSetup": {
         "message": "Setup"
@@ -954,6 +957,12 @@
     },
     "serialPortOpenFail": {
         "message": "<span class=\"message-negative\">Failed</span> to open serial port"
+    },
+    "serialPortOpenFailBusy": {
+        "message": "<span class=\"message-negative\">Could not open the serial port</span> - it is most likely in use by another program or browser tab (another configurator, a serial monitor, etc.). Close it, then try again."
+    },
+    "serialPortOpenFailNotFound": {
+        "message": "<span class=\"message-negative\">Serial port not found</span> - check the flight controller is still plugged in, then try again."
     },
     "serialPortClosedOk": {
         "message": "Serial port <span class=\"message-positive\">successfully</span> closed"
@@ -1410,12 +1419,12 @@
         "description": "Message that pops up to describe the PARALYZE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipGPS": {
-        "message": "GPS rescue mode is configured but required number of satellites has not been fixed",
+        "message": "GPS RTH is configured but a GPS fix has not been acquired",
         "description": "Message that pops up to describe the GPS arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipRESC": {
-        "message": "The 'GPS Rescue' switch was activated",
-        "description": "Message that pops up to describe the RESC arming disable flag"
+    "statusArmingDisableFlagsTooltipGPS_RTH": {
+        "message": "The 'GPS RTH' switch was activated",
+        "description": "Message that pops up to describe the GPS_RTH arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRPMFILTER": {
         "message": "RPM based filtering is enabled, but the RPM signal is unconfigured or otherwise unavailable",
@@ -1596,13 +1605,10 @@
         "message": "Enable Software Serial ports"
     },
     "feature_GPS": {
-        "message": "GPS for telemetry"
+        "message": "GPS"
     },
     "feature_THRUST_VECTOR": {
         "message": "Thrust vectoring"
-    },
-    "feature_SONAR": {
-        "message": "Sonar altitude radar"
     },
     "feature_TELEMETRY": {
         "message": "Transmitter telemetry"
@@ -1634,9 +1640,6 @@
     "feature_FREQ_SENSOR": {
         "message": "RPM signal input support"
     },
-    "feature_VTX": {
-        "message": "Video Transmitter"
-    },
     "feature_DYN_NOTCH": {
         "message": "Dynamic Notch filtering"
     },
@@ -1656,7 +1659,7 @@
         "message": "Features"
     },
     "featureTip_GPS": {
-        "message": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration."
+        "message": "Enables GPS telemetry and GPS navigation (RTH, Loiter, and the Failsafe Procedure's GPS Rescue option). Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_THRUST_VECTOR": {
         "message": "Enables a second, independent PID loop for thrust-vectoring actuators, tuned separately from the main roll/pitch/yaw loop. Adds the <i>Thrust Vector</i> tab, and TV Roll/Pitch/Yaw mixer input sources on the <i>Mixer</i> tab."
@@ -2082,9 +2085,6 @@
     "portsHelp": {
         "message": "<strong>Note:</strong> not all combinations are valid.  When the flight controller firmware detects this the serial port configuration will be reset."
     },
-    "portsVtxTableNotSet": {
-        "message": "<span class=\"message-negative\">WARNING:</span> The VTX table has not been set up correctly and without it VTX control will not be possible. Please set up the VTX table in $t(tabVtx.message) tab."
-    },
     "portsMSPHelp": {
         "message": "<strong>Note:</strong> Do <span class=\"message-negative\">NOT</span> disable MSP on the first serial port unless you know what you are doing.  You may have to reflash and erase your configuration if you do."
     },
@@ -2150,12 +2150,6 @@
     },
     "portsFunction_BLACKBOX": {
         "message": "Blackbox Logging"
-    },
-    "portsFunction_TBS_SMARTAUDIO": {
-        "message": "VTX: TBS SmartAudio"
-    },
-    "portsFunction_IRC_TRAMP": {
-        "message": "VTX: IRC Tramp"
     },
     "portsFunction_RUNCAM": {
         "message": "Camera: RunCam"
@@ -2422,11 +2416,17 @@
     "receiverHelpFullThrottle2": {
         "message": "The throttle channel value where throttle is considered 100%."
     },
-    "receiverCyclicDeadband": {
-        "message": "Roll/Pitch Deadband"
+    "receiverRollDeadband": {
+        "message": "Roll Deadband"
     },
-    "receiverHelpCyclicDeadband": {
-        "message": "How far the roll and pitch channel values must move from center before it's considered an input."
+    "receiverHelpRollDeadband": {
+        "message": "How far the roll channel value must move from center before it's considered an input."
+    },
+    "receiverPitchDeadband": {
+        "message": "Pitch Deadband"
+    },
+    "receiverHelpPitchDeadband": {
+        "message": "How far the pitch channel value must move from center before it's considered an input."
     },
     "receiverYawDeadband": {
         "message": "Yaw Deadband"
@@ -2499,12 +2499,6 @@
     },
     "receiverTelemetrySensor_BEC_VOLTAGE": {
         "message": "BEC Voltage"
-    },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tailspeed"
     },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "FC Temperature"
@@ -2797,6 +2791,12 @@
     "receiverTelemetrySensor_GPS_DATE_TIME": {
         "message": "GPS Date Time"
     },
+    "receiverTelemetrySensor_SYSTEM_STATUS": {
+        "message": "System Status"
+    },
+    "receiverTelemetrySensor_SYSTEM_CONFIG": {
+        "message": "System Config"
+    },
     "receiverTelemetrySensor_LOAD": {
         "message": "Load"
     },
@@ -2965,6 +2965,12 @@
     },
     "adjustmentFunctionValue": {
         "message": "Value"
+    },
+    "adjustmentsFunctionSearch": {
+        "message": "Type to filter functions…"
+    },
+    "adjustmentsFunctionNoMatches": {
+        "message": "No matching functions"
     },
     "adjustmentRangeEnable": {
         "message": "Ena:"
@@ -3401,9 +3407,6 @@
     "adjustmentsFunctionGovMaxThrottle": {
         "message": "Governor Max Throttle"
     },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Governor Headspeed"
-    },
     "adjustmentsFunctionGovYawFF": {
         "message": "Governor Yaw F-gain"
     },
@@ -3543,7 +3546,19 @@
         "message": "<strong>Clone PWM outputs to bus servos</strong>"
     },
     "servoBusCloneText": {
-        "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
+        "message": "Bus servo 1 copies PWM servo 1, bus servo 2 copies PWM servo 2, and so on. Turn off to give bus servos their own mixer rules."
+    },
+    "servoFbusOutChannels": {
+        "message": "F.Bus output channels"
+    },
+    "servoFbusOutChannelsHelp": {
+        "message": "How many servo channels F.Bus sends. Use 16 or fewer if a device on the bus can't take 24."
+    },
+    "servoSbusOutChannels": {
+        "message": "SBUS output channels"
+    },
+    "servoSbusOutChannelsHelp": {
+        "message": "How many servo channels SBUS sends."
     },
     "servoOverrideEnable": {
         "message": "Enable"
@@ -3676,6 +3691,24 @@
     },
     "mixerInputRCChannel18": {
         "message": "CH #18"
+    },
+    "mixerInputRCChannel19": {
+        "message": "CH #19"
+    },
+    "mixerInputRCChannel20": {
+        "message": "CH #20"
+    },
+    "mixerInputRCChannel21": {
+        "message": "CH #21"
+    },
+    "mixerInputRCChannel22": {
+        "message": "CH #22"
+    },
+    "mixerInputRCChannel23": {
+        "message": "CH #23"
+    },
+    "mixerInputRCChannel24": {
+        "message": "CH #24"
     },
     "mixerOutputNone": {
         "message": "-"
@@ -4667,9 +4700,6 @@
     "sensorsAltitudeSelect": {
         "message": "Altitude"
     },
-    "sensorsSonarSelect": {
-        "message": "Sonar"
-    },
     "sensorsDebugSelect": {
         "message": "Debug"
     },
@@ -4687,9 +4717,6 @@
     },
     "sensorsAltitudeHint": {
         "message": "The altitude is calculated by combining the output of the barometer (if available) with the altitude output from the GPS (if available). If a GPS connected and the GPS has a fix, the absolute altitude above sea level will be shown when disarmed. When armed, the altitude relative to the position when arming will be shown."
-    },
-    "sensorsSonarTitle": {
-        "message": "Sonar - cm"
     },
     "sensorsDebugTitle": {
         "message": "Debug"
@@ -5117,6 +5144,24 @@
     "firmwareFlasherWizardClose": {
         "message": "Close"
     },
+    "firmwareFlasherRestoreExitTitle": {
+        "message": "Configuration has not been restored"
+    },
+    "firmwareFlasherRestoreExitUnsaved": {
+        "message": "Your previous settings have not been restored to the flight controller. Leaving will discard the backup held in this page. Restore them now or save a backup file before leaving."
+    },
+    "firmwareFlasherRestoreExitSaved": {
+        "message": "Your previous settings have not been restored to the flight controller. You have saved a backup file, so you can restore them later. Leave without restoring?"
+    },
+    "firmwareFlasherRestoreExitSaveFailed": {
+        "message": "The backup was not saved. Stay here to retry or restore it to the flight controller."
+    },
+    "firmwareFlasherRestoreExitStay": {
+        "message": "Stay on this page"
+    },
+    "firmwareFlasherRestoreExitLeave": {
+        "message": "Leave Without Restoring"
+    },
     "firmwareFlasherWizardRestoreTitle": {
         "message": "Restore Configuration"
     },
@@ -5263,6 +5308,18 @@
     },
     "firmwareFlasherSelectDfu": {
         "message": "Select DFU Device"
+    },
+    "firmwareFlasherDfuPermissionNeeded": {
+        "message": "Your board has restarted in DFU (bootloader) mode. Your browser needs permission to access it before flashing can continue. Click <strong>Allow DFU Access</strong> and select the DFU device."
+    },
+    "dfuWebUsbUnsupported": {
+        "message": "DFU flashing needs WebUSB, which this browser doesn't support (e.g. Firefox). Please use Chrome, Edge or Opera."
+    },
+    "firmwareFlasherDfuPermissionGrant": {
+        "message": "Allow DFU Access"
+    },
+    "firmwareFlasherDfuPermissionCancel": {
+        "message": "Cancel"
     },
     "firmwareFlasherReadyToFlash": {
         "message": "Ready to flash: {{target}} — {{version}}"
@@ -5525,9 +5582,6 @@
     },
     "ledStripFadeOverlay": {
         "message": "Fade to alt color (in profile Status Alt)"
-    },
-    "ledStripVtxOverlay": {
-        "message": "VTX (uses vtx frequency to assign color)"
     },
     "ledStripFunctionSection": {
         "message": "LED Functions"
@@ -6083,8 +6137,14 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
+    "profilesRollAngleLimit": {
+        "message": "Bank angle limit (°)"
+    },
+    "profilesPitchAngleLimit": {
+        "message": "Pitch angle limit (°)"
+    },
     "profilesAcroTrainerGroup": {
-        "message": "Acro Trainer"
+        "message": "Trainer (angle limits)"
     },
     "profilesAutoHoverGroup": {
         "message": "Auto Hover"
@@ -6096,13 +6156,19 @@
         "message": "Acro Trainer gain"
     },
     "profilesAcroTrainerGainHelp": {
-        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the aircraft tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
+        "message": "Trainer does not self-level. Gain controls how strongly it corrects back toward the pitch/bank limit when that limit is exceeded."
     },
     "profilesAcroTrainerLimit": {
         "message": "Acro Trainer angle limit"
     },
     "profilesAcroTrainerLimitHelp": {
-        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the aircraft will pitch/roll to"
+        "message": "The same angle limit applies to positive and negative pitch and roll. Inside the limit, Trainer uses normal rate control without self-leveling. Actual attitude can overshoot; this is not stall protection."
+    },
+    "profilesAngleGroup": {
+        "message": "Angle"
+    },
+    "profilesHorizonGroup": {
+        "message": "Horizon"
     },
     "profilesAngleHorizonGroup": {
         "message": "Angle / Horizon Mode"
@@ -6611,8 +6677,14 @@
     "failsafeOffDelayHelp": {
         "message": "Time to stay in landing mode until the motors are turned off and the craft is disarmed"
     },
+    "failsafeRecoveryDelayItem": {
+        "message": "Failsafe Recovery Delay [s]"
+    },
     "failsafeSubTitle1": {
         "message": "Stage 2 - Failsafe Procedure"
+    },
+    "failsafeProcedureItem": {
+        "message": "Procedure"
     },
     "failsafeProcedureItemSelect1": {
         "message": "Land"
@@ -6622,6 +6694,69 @@
     },
     "failsafeProcedureItemSelect4": {
         "message": "GPS Rescue"
+    },
+    "failsafeGpsRescueNavNote": {
+        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, including Nav Throttle, on the GPS Navigation tab. The throttle value below is used only while landing."
+    },
+    "gpsNavSectionTitle": {
+        "message": "GPS Navigation (RTH / Loiter)"
+    },
+    "gpsNavSectionHelp": {
+        "message": "Tuning for GPS RTH (Return To Home) and Loiter, used by the <strong>GPS RTH</strong> / <strong>GPS Loiter</strong> switches and by the Failsafe Procedure's GPS Rescue option above."
+    },
+    "gpsNavLoiterRadiusItem": {
+        "message": "Loiter Radius"
+    },
+    "gpsNavLoiterDirectionItem": {
+        "message": "Loiter Direction"
+    },
+    "gpsNavLoiterDirectionCw": {
+        "message": "CW"
+    },
+    "gpsNavLoiterDirectionCcw": {
+        "message": "CCW"
+    },
+    "gpsNavRthAltitudeItem": {
+        "message": "RTH Altitude"
+    },
+    "gpsNavMinSatsItem": {
+        "message": "Minimum Satellites"
+    },
+    "gpsNavMaxBankAngleItem": {
+        "message": "Max Bank Angle"
+    },
+    "gpsNavMaxPitchAngleItem": {
+        "message": "Max Pitch Angle"
+    },
+    "gpsNavBearingKpItem": {
+        "message": "Bearing Gain"
+    },
+    "gpsNavBearingKpHelp": {
+        "message": "Bank angle commanded per degree of track error, in hundredths of a degree of bank per degree of error (200 = 2.0° bank per ° of error)."
+    },
+    "gpsNavAltitudeKpItem": {
+        "message": "Altitude Gain"
+    },
+    "gpsNavAltitudeKpHelp": {
+        "message": "Pitch angle commanded per meter of altitude error, in hundredths of a degree of pitch per meter of error (100 = 1.0° pitch per meter of error)."
+    },
+    "gpsNavAltitudeKdItem": {
+        "message": "Altitude Damping"
+    },
+    "gpsNavAltitudeKdHelp": {
+        "message": "Reduces the altitude correction while the aircraft is already climbing or descending toward the target, so it doesn't overshoot. In hundredths of a degree of pitch per m/s of climb rate (200 = 2.0° pitch per m/s)."
+    },
+    "gpsNavThrottleItem": {
+        "message": "Nav Throttle"
+    },
+    "gpsNavThrottleHelp": {
+        "message": "Throttle used while GPS Loiter or GPS RTH is on, and while the GPS Rescue failsafe flies home. It takes over from the throttle stick once the aircraft is flying."
+    },
+    "gpsNavTurnCoordinationItem": {
+        "message": "Turn Coordination"
+    },
+    "gpsNavTurnCoordinationHelp": {
+        "message": "Adds rudder into navigation turns so the aircraft turns without skidding. 100% is a fully coordinated turn, 0% turns it off."
     },
     "failsafeGpsRescueItemAngle": {
         "message": "Angle"
@@ -7001,6 +7136,9 @@
     "powerBatteryProfile": {
         "message": "Battery $1"
     },
+    "powerBatteryProfileCellCountHelp": {
+        "message": "Number of cells in the battery. Set to 0 to detect the cell count automatically when the battery is connected."
+    },
     "options.show_advanced_firmware_opts.label": {
         "message": "Show advanced firmware flashing options"
     },
@@ -7009,270 +7147,6 @@
     },
     "options.addressed_config_setters.label": {
         "message": "Experimental: write configuration through addressed parameter access (each setter verified on its first use against what the board stored; applies on next connect)"
-    },
-    "vtxHelp": {
-        "message": "Here you can configure the values for your Video Transmitter (VTX). You can view and change the transmission values, including the VTX Tables, if the flight controller and the VTX support it.<br>To set up your VTX use the following steps:<br>1. Go to <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight/wiki/VTX-tables\">this</a> page;<br>2. Find the appropriate VTX configuration file for your country and your VTX model and download it;<br>3. Click '$t(vtxButtonLoadFile.message)' below, select the VTX configuration file, load it;<br>4. Verify that the settings are correct;<br>5. Click '$t(vtxButtonSave.message)' to store the VTX settings on the flight controller.<br>6. Optionally click '$t(vtxButtonSaveLua.message)' to save a lua configuration file you can use with the betaflight lua scripts (See more <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">here</a>.)",
-        "description": "Introduction message in the VTX tab"
-    },
-    "vtxMessageNotSupported": {
-        "message": "<span class=\"message-negative\">Attention:</span> Your VTX is not configured or not supported. So you can't modify the VTX values from here. This will only be possible if the flight controller is attached to the VTX using some protocol like Tramp or SmartAudio and is correctly configured in the $t(tabPorts.message) tab if needed.",
-        "description": "Message to show when the VTX is not supported in the VTX tab"
-    },
-    "vtxMessageTableNotConfigured": {
-        "message": "<span class=\"message-negative\">Attention:</span> You need to configure and save FIRST the VTX Table at the bottom before you can make use of the $t(vtxSelectedMode.message) fields.",
-        "description": "Message to show when the VTX is not supported in the VTX tab"
-    },
-    "vtxMessageFactoryBandsNotSupported": {
-        "message": "<span class=\"message-negative\">Attention:</span> The selected VTX type does not support the 'factory' setting for bands, but some of your bands have this setting. Click '$t(vtxButtonSave.message)' to fix this.",
-        "description": "Message to show when the configured VTX type does not support factory bands, but one or more of the configured bands are of this type"
-    },
-    "vtxMessageVerifyTable": {
-        "message": "<span class=\"message-negative\">Attention:</span> The values of the VTX Table have been loaded, but not yet stored on the flight controller. You must verify and modify the values to be sure that they are valid and legal in your country and then press the $t(vtxButtonSave.message) button to store them on the flight controller.",
-        "description": "Message to show when the VTX Table has been loaded from a external source"
-    },
-    "vtxFrequencyChannel": {
-        "message": "Enter frequency directly",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxFrequencyChannelHelp": {
-        "message": "If you enable this, the Configurator will let you select a frequency in place of the habitual band/channel. For this to work your VTX must support this feature.",
-        "description": "Help text for the frequency or channel select field of the VTX tab"
-    },
-    "vtxSelectedMode": {
-        "message": "Selected Mode",
-        "description": "Title for the actual mode header of the VTX"
-    },
-    "vtxActualState": {
-        "message": "Current Values",
-        "description": "Title for the actual values header of the VTX"
-    },
-    "vtxType": {
-        "message": "VTX Type",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxType_0": {
-        "message": "Unsupported",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_1": {
-        "message": "RTC607",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_3": {
-        "message": "SmartAudio",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_4": {
-        "message": "Tramp",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_255": {
-        "message": "Unknown",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxBand": {
-        "message": "Band",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxBandHelp": {
-        "message": "You can select here the band for your VTX",
-        "description": "Help text for the band field of the VTX tab"
-    },
-    "vtxBand_0": {
-        "message": "None",
-        "description": "Text of one of the options for the band field of the VTX tab"
-    },
-    "vtxBand_X": {
-        "message": "Band {{bandName}}",
-        "description": "Text of one of the options for the band field of the VTX tab"
-    },
-    "vtxChannel_0": {
-        "message": "None",
-        "description": "Text of one of the options for the channel field of the VTX tab"
-    },
-    "vtxChannel_X": {
-        "message": "Channel {{channelName}}",
-        "description": "Text of one of the options for the channel field of the VTX tab"
-    },
-    "vtxPower_0": {
-        "message": "None",
-        "description": "Text of one of the options for the power field of the VTX tab"
-    },
-    "vtxPower_X": {
-        "message": "Level {{powerLevel}}",
-        "description": "Text of one of the options for the power field of the VTX tab"
-    },
-    "vtxChannel": {
-        "message": "Channel",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxChannelHelp": {
-        "message": "You can select here the channel for your VTX",
-        "description": "Help text for the channel field of the VTX tab"
-    },
-    "vtxFrequency": {
-        "message": "Frequency",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxFrequencyHelp": {
-        "message": "You can select here the frequency for your VTX if it is supported",
-        "description": "Help text for the frequency field of the VTX tab"
-    },
-    "vtxDeviceReady": {
-        "message": "Device ready",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPower": {
-        "message": "Power",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPowerHelp": {
-        "message": "This is the power selected for the VTX. It can be modified if the $t(vtxPitMode.message) or the $t(vtxLowPowerDisarm.message) is enabled",
-        "description": "Help text for the power field of the VTX tab"
-    },
-    "vtxPitMode": {
-        "message": "Pit Mode",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPitModeHelp": {
-        "message": "When enabled, the VTX enters in a very low power mode to let the quad be on at the bench without disturbing other pilots. Usually the range of this mode is less than 5m.<br /><br />NOTE: Some protocols, like SmartAudio, can't enable Pit Mode via software after power-up.",
-        "description": "Help text for the pit mode field of the VTX tab"
-    },
-    "vtxPitModeFrequency": {
-        "message": "Pit Mode frequency",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPitModeFrequencyHelp": {
-        "message": "Frequency at which the Pit Mode changes when enabled.",
-        "description": "Help text for the pit mode field of the VTX tab"
-    },
-    "vtxLowPowerDisarm": {
-        "message": "Low Power Disarm",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxLowPowerDisarmHelp": {
-        "message": "When enabled, the VTX uses the lowest available power when disarmed (except if a failsafe has occurred).",
-        "description": "Help text for the low power disarm field of the VTX tab"
-    },
-    "vtxLowPowerDisarmOption_0": {
-        "message": "Off",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxLowPowerDisarmOption_1": {
-        "message": "On",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxLowPowerDisarmOption_2": {
-        "message": "On until first arm",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxTable": {
-        "message": "VTX Table",
-        "description": "Text of the header of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevels": {
-        "message": "Number of power levels",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsHelp": {
-        "message": "This defines the number of power levels supported by your VTX",
-        "description": "Help for the number of power levels field of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsTableHelp": {
-        "message": "This table represents the different values of power that can be used for the VTX. They are divided into two: <br><b>- $t(vtxTablePowerLevelsValue.message):</b> each power level requires a value that is defined by the hardware manufacturer. Ask your manufacturer for the correct value or consult the Betaflight wiki of VTX Tables to grab some samples. <br><b>- $t(vtxTablePowerLevelsLabel.message):</b> you can put here the label you want for each power level value. It can be numbers (25, 200, 600, 1.2), letters (OFF, MIN, MAX) or a mix of them. <br /><br />You must configure <b>only</b> the power levels that are legal at your country.",
-        "description": "Help for the table of power levels (value-label) that appears in the VTX tab"
-    },
-    "vtxTablePowerLevelsValue": {
-        "message": "Value",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsLabel": {
-        "message": "Label",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBands": {
-        "message": "Number of bands",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableChannels": {
-        "message": "Number of channels by band",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandsChannelsHelp": {
-        "message": "This defines the number of bands and the number of channels by band that you want for your VTX.",
-        "description": "Help for the number of bands and channels field of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleName": {
-        "message": "Name",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleLetter": {
-        "message": "Letter",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleFactory": {
-        "message": "Factory",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandsChannelsTableHelp": {
-        "message": "This table represents all the frequencies that can be used for your VTX. You can have several bands and for each band you must configure:<br><b>- $t(vtxTableBandTitleName.message):</b> Name that you want to assign to this band, like BOSCAM_A, FATSHARK or RACEBAND.<br><b>- $t(vtxTableBandTitleLetter.message):</b> Short letter that references the band.<br><b>- $t(vtxTableBandTitleFactory.message):</b> This indicates if it is a factory band. If enabled Betaflight sends to the VTX a band and channel number. The VTX will then use its built-in frequency table and the frequencies configured here are only to show the value in the OSD and other places. If it is not enabled, then Betaflight will send to the VTX the real frequency configured here.<br><b>- Frequencies:</b> Frequencies for this band.<br /><br />Remember that not all frequencies are legal at your country. You must put a value of <b>zero</b> to each frequency index that you are not allowed to use to disable it.",
-        "description": "Help for the table of bands-channels that appears in the VTX tab"
-    },
-    "vtxSavedFileOk": {
-        "message": "VTX Config file <span class=\"message-positive\">saved</span>",
-        "description": "Message in the GUI log when the VTX Config file is saved"
-    },
-    "vtxSavedFileKo": {
-        "message": "<span class=\"message-negative\">Error</span> while saving the VTX Config file",
-        "description": "Message in the GUI log when the VTX Config file is saved"
-    },
-    "vtxLoadFileOk": {
-        "message": "VTX Config file <span class=\"message-positive\">loaded</span>",
-        "description": "Message in the GUI log when the VTX Config file is loaded"
-    },
-    "vtxLoadFileKo": {
-        "message": "<span class=\"message-negative\">Error</span> while loading the VTX Config file",
-        "description": "Message in the GUI log when the VTX Config file is loaded"
-    },
-    "vtxLoadClipboardOk": {
-        "message": "VTX Config info <span class=\"message-positive\">loaded</span> from clipboard",
-        "description": "Message in the GUI log when the VTX Config file is pasted from clipboard"
-    },
-    "vtxLoadClipboardKo": {
-        "message": "<span class=\"message-negative\">Error</span> while loading the VTX Config info from clipboard. Maybe the contents are not correct",
-        "description": "Message in the GUI log when the VTX Config file is pasted from clipboard"
-    },
-    "vtxButtonSaveFile": {
-        "message": "Save to file",
-        "description": "Save to file button in the VTX tab"
-    },
-    "vtxButtonSaveLua": {
-        "message": "Save Lua Script",
-        "description": "Save Lua script button in the VTX tab"
-    },
-    "vtxLuaFileHelp": {
-        "message": "The '$t(vtxButtonSaveLua.message)' button will allow you to save a <i>craftname</i>.lua file containing the vtx table configuration that can be used with the betaflight lua scripts. (See more <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">here</a>.)",
-        "description": "Tooltip message for the Save Lua script button in the VTX tab"
-    },
-    "vtxButtonLoadFile": {
-        "message": "Load from file",
-        "description": "Load to file button in the VTX tab"
-    },
-    "vtxButtonLoadClipboard": {
-        "message": "Load from clipboard",
-        "description": "Paste from clipboard button in the VTX tab"
-    },
-    "vtxButtonSave": {
-        "message": "Save",
-        "description": "Save button in the VTX tab"
-    },
-    "vtxButtonSaved": {
-        "message": "Saved",
-        "description": "Saved action button in the VTX tab"
-    },
-    "vtxSmartAudioUnlocked": {
-        "message": "{{version}} unlocked",
-        "description": "Indicates if SA device is unlocked"
     },
     "mainHelpArmed": {
         "message": "Motor Arming"
@@ -7452,13 +7326,13 @@
         "message": "ANGLE"
     },
     "modeHelp ANGLE": {
-        "message": "Self-levels the aircraft to match your stick input to a bank/pitch angle, and limits how far it can tilt. The easiest mode for beginners."
+        "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
     },
     "mode HORIZON": {
         "message": "HORIZON"
     },
     "modeHelp HORIZON": {
-        "message": "Self-levels near center stick like Angle mode, but hands off to full manual rate control as you move the sticks further, allowing flips and rolls."
+        "message": "Rate control with added self-leveling near center stick. Leveling fades as the sticks move outward. Unlike Trainer, this mode does not enforce a pitch/bank envelope."
     },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
@@ -7544,17 +7418,23 @@
     "mode PARALYZE": {
         "message": "PARALYZE"
     },
-    "mode GPS RESCUE": {
-        "message": "GPS RESCUE"
+    "mode GPS LOITER": {
+        "message": "GPS LOITER"
     },
-    "modeHelp GPS RESCUE": {
-        "message": "Automatically flies the aircraft back toward its recorded home position using GPS."
+    "modeHelp GPS LOITER": {
+        "message": "Holds position and altitude in a circle around the point where the switch was activated, using GPS. Does not fly toward home."
+    },
+    "mode GPS RTH": {
+        "message": "GPS RTH"
+    },
+    "modeHelp GPS RTH": {
+        "message": "Automatically flies the aircraft back toward, and loiters above, its recorded home position using GPS."
     },
     "mode TRAINER": {
         "message": "TRAINER"
     },
     "modeHelp TRAINER": {
-        "message": "Acro Trainer: flies in rate mode but automatically limits how far the aircraft can bank or pitch, without full self-leveling."
+        "message": "Rate control with pitch and bank limits. Centering the sticks does not command level flight. Opposite stick rolls out of a turn; outward commands are limited near the configured angle limit."
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
@@ -7797,7 +7677,7 @@
     "presetsButtonReview": {
         "message": "Review Selected Presets"
     },
-    "presetsButtonReviewCLI":{
+    "presetsButtonReviewCLI": {
         "message": "Review CLI"
     },
     "presetsButtonApply": {
@@ -7978,5 +7858,14 @@
     },
     "presetsDontShowAgain": {
         "message": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Governor RPM"
     }
 }

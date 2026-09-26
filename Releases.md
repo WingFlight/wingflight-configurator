@@ -1,3 +1,60 @@
+# 0.0.28
+
+Add the firmware's SYSTEM_STATUS (120) and SYSTEM_CONFIG (121) packed status sensors to the telemetry sensor picker's STATUS group for CRSF and S.Port, and remove the sensors the 0.0.28 firmware dropped: arming flags (90), PID/rates/battery/LED profile (95-98), TV profile (118) and GPS fix type (119).
+IMPORTANT: updating the firmware keeps the model's saved telemetry sensor selection, which does not include SYSTEM_STATUS and SYSTEM_CONFIG, and the 0.0.28 Lua suites need them. After flashing, select them in the telemetry sensor picker, or run this in the CLI and save:
+set telemetry_sensors = 3,4,5,6,15,43,50,52,58,59,60,89,91,99,120,121
+New and reset configs use this list by default, with telemetry enabled, custom CRSF telemetry and SmartFuel in current mode.
+
+Support 24 RC channels and 24 bus servos (MSP API 22.5): the Receiver and Status tabs show up to 24 channels, mixer inputs CH #19-#24 are inputs 30-35, and bus servos 19-24 are mixer outputs 31-36. Configuration requires MSP API 22.5 (0.0.28 firmware).
+Add F.Bus and SBUS output channel count selectors to the Servos tab's Bus Servo Configuration section, each shown when a port has that output assigned. The bus servo table lists as many servos as the configured output drives (the larger count when both run).
+Fix the Receiver tab's backup receiver section only showing when a CRSF Sensors port was configured.
+Fix the GPS map not rendering in browser builds, and clarify the FBUS GPS unknown satellite count display.
+
+Connect to and flash flight controllers shared through the Wingflight Remote Support tool (desktop build only). Remote ports are listed as "Remote - <name>".
+
+# 0.0.27
+
+Split the Receiver tab's Roll/Pitch Deadband into separate Roll Deadband and Pitch Deadband. Requires matching firmware (MSP_RC_CONFIG layout change); the firmware update resets the Channel Range settings to defaults.
+Hide the GHOST, CPPM, FrSky Hub, MAVLink and LTM options, which the firmware no longer compiles in.
+
+Add a type-to-filter search to the adjustment function picker.
+Show the selected function in each adjustment's header, highlight adjustments that are currently live, and start newly added adjustments with their range handles apart so they can be dragged.
+Fix adjustment range sliders overlapping their number inputs.
+
+Only enable ESC programming manufacturers that match the configured ESC telemetry protocol, and redesign the manufacturer picker as logo cards.
+
+Explain serial port open failures (usually the port is in use by another program or browser tab) and let a failed open be retried once the port is free.
+Prompt for WebUSB DFU access mid-flash on the web build, so a first-time web flash of a USB board can continue.
+Fix "Failed to load remote firmware" on the first online load in the web build.
+Fix a config restore never saving when the backup replay hits CLI errors.
+
+# 0.0.26
+
+Add Nav Throttle, Altitude Damping and Turn Coordination to the GPS Navigation tab, and default Loiter Radius to 100 m, matching the reworked 0.0.26 firmware GPS Loiter/RTH. Note that the GPS Rescue failsafe now flies home at Nav Throttle; the Failsafe tab's throttle is used only while landing.
+
+Add Failsafe Stage 2 settings (procedure, delay/off delay/throttle low delay/throttle/recovery delay, test switch mode) to the Failsafe tab, and a new GPS Navigation tab (RTH altitude, loiter radius/direction, min satellites, max bank/pitch angle, bearing/altitude gain), both requiring MSP API 22.4 firmware.
+Remove the redundant GPS RESCUE switch; rewire to GPS RTH, which now drives the same return-to-home behavior. Relabel the RESC arming-disable flag and its tooltip to GPS_RTH.
+Add GPS Fix to the CRSF/S.Port telemetry sensor picker.
+
+Warn before leaving a pending firmware restore. Offer restore, backup-file save, stay or explicit leave actions; protect tab/wizard navigation and desktop close, with a browser unload warning. Failed restores automatically offer to save the buffered settings unless a backup file was already saved.
+
+Retry complete online firmware downloads, including interrupted or empty response bodies, in both flashers. Abort stalled transfers after 60 seconds and retry once before reporting failure.
+
+Support independent bank (10–90°) and pitch (10–75°) limits for ANGLE and TRAINER with MSP API 22.4 firmware; retain shared-limit controls for older firmware.
+Show TRAINER in Modes and Conditions without Expert Mode. Make Trainer gain and angle limit available in Profiles without Expert Mode, and clarify how ANGLE, HORIZON and TRAINER differ.
+
+Rename the HEADSPEED/TAILSPEED telemetry sensors to MOTOR1SPEED/MOTOR2SPEED ("Motor 1 RPM"/"Motor 2 RPM").
+Rename the (currently hidden) Governor Headspeed adjustment function to Governor RPM.
+
+# 0.0.25
+
+Support the MSP API 22.3 layout, which removes the heli placeholder bytes from eight MSP messages.
+Add a CRSF Sensors diagnostic tab.
+Add cell count and cell voltages to battery profiles.
+Allow negative flap compensation and diff thrust yaw adjustments.
+Show SmartFuel Sag Gain in volts instead of percent.
+Remove the VTX and sonar/rangefinder leftovers.
+
 # 0.0.24
 
 Show the live runtime servo trim (+N/-N) next to the adjustment badge on the Servos tab, read via the new MSP_SERVO_TRIM.

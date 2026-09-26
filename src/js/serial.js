@@ -1,16 +1,18 @@
 import { loadWebSerialPorts, requestWebSerialPort, connectWebSerial, readWebSerialLoop, writeWebSerial, disconnectWebSerial } from '@/js/protocols/WebSerial.js';
 import { loadBluetoothPorts, requestBluetoothPort, connectWebBluetooth, writeWebBluetooth, disconnectWebBluetooth } from '@/js/protocols/WebBluetooth.js';
 import { connectVirtual } from '@/js/protocols/VirtualSerial.js';
+import { RemoteSupport, REMOTE_PORT_PREFIX } from '@/js/protocols/RemoteSupport.js';
 
 export const serial = {
     connected:      false,
     connectionId:   false,
     openCanceled:   false,
+    openPending:    false,
     bitrate:        0,
     bytesReceived:  0,
     bytesSent:      0,
     failed:         0,
-    connectionType: 'serial', // 'serial' or 'tcp' or 'virtual'
+    connectionType: 'serial', // 'serial', 'tcp', 'virtual', 'bluetooth' or 'remote'
     connectionIP:   '127.0.0.1',
     connectionPort: 5761,
     webSerialPort:  false,
@@ -30,8 +32,28 @@ export const serial = {
     transmitting:   false,
     outputBuffer:   [],
 
+    // Why the most recent connect() failed to open its port: 'notFound' (the
+    // device isn't there any more) or 'openFailed' (it's there but the OS
+    // refused to open it -- in practice almost always because another
+    // program or browser tab already holds it). Null after a successful
+    // open. See openFailureMessage().
+    lastOpenError:  null,
+
+    // The message to show for the last failed open -- every caller used to
+    // log the same generic "Failed to open serial port" (or worse, only its
+    // own downstream symptom, like "board detection failed"), which never
+    // hinted that the fix is just closing whatever else has the port.
+    openFailureMessage: function () {
+        switch (this.lastOpenError) {
+            case 'openFailed': return i18n.getMessage('serialPortOpenFailBusy');
+            case 'notFound': return i18n.getMessage('serialPortOpenFailNotFound');
+            default: return i18n.getMessage('serialPortOpenFail');
+        }
+    },
+
     connect: function (path, options, callback) {
         const self = this;
+        self.lastOpenError = null;
 
         // "requestserial"/"requestbluetooth"/"DFU" are the port picker's
         // permission-request trigger options, not real, connectable devices --
@@ -48,15 +70,29 @@ export const serial = {
             return;
         }
 
+        // Tracks that an open is actually in flight, so disconnect() only
+        // raises openCanceled when there's something to cancel -- see there.
+        self.openPending = true;
+        const done = (openInfo) => {
+            self.openPending = false;
+            // A cancel only applies to the attempt it was raised against --
+            // the web backends never consume it, so don't let it outlive
+            // this attempt and cancel an unrelated later one.
+            self.openCanceled = false;
+            callback?.(openInfo);
+        };
+
         const testUrl = path.match(/^tcp:\/\/([A-Za-z0-9.-]+)(?::(\d+))?$/);
         if (testUrl) {
-            self.connectTcp(testUrl[1], testUrl[2], options, callback);
+            self.connectTcp(testUrl[1], testUrl[2], options, done);
+        } else if (path.startsWith(REMOTE_PORT_PREFIX)) {
+            self.connectRemote(path.slice(REMOTE_PORT_PREFIX.length), options, done);
         } else if (path === 'virtual') {
-            self.connectVirtual(callback);
+            self.connectVirtual(done);
         } else if (__BACKEND__ === "web" && path.startsWith('bluetooth_')) {
-            self.connectWebBluetooth(path, callback);
+            self.connectWebBluetooth(path, done);
         } else {
-            self.connectSerial(path, options, callback);
+            self.connectSerial(path, options, done);
         }
     },
     connectSerial: function (path, options, callback) {
@@ -176,6 +212,7 @@ export const serial = {
                     self.openCanceled = false;
                 } else {
                     console.log(`${self.connectionType}: failed to open serial port`);
+                    self.lastOpenError = 'openFailed';
                 }
                 if (callback) {
                     callback(false);
@@ -270,6 +307,48 @@ export const serial = {
     connectVirtual: function (callback) {
         return connectVirtual(this, callback);
     },
+    // A port on the computer at the other end of a remote support session,
+    // reached through the remote support tool -- see RemoteSupport.js.
+    connectRemote: function (path, options, callback) {
+        const self = this;
+        self.connectionType = 'remote';
+
+        RemoteSupport.openSerial(path, options).then(() => {
+            if (self.openCanceled) {
+                console.log(`${self.connectionType}: connection opened, but request was canceled, disconnecting`);
+                RemoteSupport.closeSerial().catch(() => {});
+                callback?.(false);
+                return;
+            }
+
+            self.connected = true;
+            self.connectionId = 'remote';
+            self.bitrate = options?.bitrate || 115200;
+            self.bytesReceived = 0;
+            self.bytesSent = 0;
+            self.failed = 0;
+
+            RemoteSupport.onSerialData = (data) => {
+                self.bytesReceived += data.byteLength;
+                self.onReceive.dispatch({ connectionId: self.connectionId, data: data });
+            };
+            RemoteSupport.onSerialClosed = (reason) => {
+                RemoteSupport.onSerialData = null;
+                RemoteSupport.onSerialClosed = null;
+                if (self.connected && self.connectionType === 'remote') {
+                    console.log(`${self.connectionType}: remote port closed: ${reason}`);
+                    self.errorHandler('device_lost', 'receive');
+                }
+            };
+
+            console.log(`${self.connectionType}: connection opened to ${path}, Baud: ${self.bitrate}`);
+            callback?.({ connectionId: self.connectionId, socketId: REMOTE_PORT_PREFIX + path, bitrate: self.bitrate });
+        }).catch((error) => {
+            console.log(`${self.connectionType}: failed to open ${path}: ${error.message}`);
+            self.lastOpenError = /not found|no such/i.test(error.message) ? 'notFound' : 'openFailed';
+            callback?.(false);
+        });
+    },
     disconnect: function (callback) {
         const self = this;
         self.connected = false;
@@ -288,6 +367,18 @@ export const serial = {
                 disconnectWebSerial(self, callback);
             } else if (__BACKEND__ === "web" && self.bleDevice) {
                 disconnectWebBluetooth(self, callback);
+            } else if (self.connectionType === 'remote') {
+                RemoteSupport.onSerialData = null;
+                RemoteSupport.onSerialClosed = null;
+                RemoteSupport.closeSerial().then(() => true, (error) => {
+                    console.log(`${self.connectionType}: failed to close: ${error.message}`);
+                    return false;
+                }).then((result) => {
+                    console.log(`${self.connectionType}: ${result ? 'closed' : 'failed to close'} connection, Sent: ${self.bytesSent} bytes, Received: ${self.bytesReceived} bytes`);
+                    self.connectionId = false;
+                    self.bitrate = 0;
+                    callback?.(result);
+                });
             } else if (self.connectionType !== 'virtual') {
                 if (self.connectionType === 'tcp') {
                     chrome.sockets.tcp.disconnect(self.connectionId, function () {
@@ -316,11 +407,15 @@ export const serial = {
                     callback(true);
                 }
             }
-        } else {
-            // connection wasn't opened, so we won't try to close anything
+        } else if (self.openPending) {
+            // connection wasn't opened yet, so we won't try to close anything
             // instead we will rise canceled flag which will prevent connect from continueing further after being canceled
             self.openCanceled = true;
         }
+        // Otherwise nothing is open or opening (e.g. cleanup after an open
+        // that already failed) -- raising openCanceled here used to leave it
+        // stuck on, so the *next* open was treated as cancelled and closed
+        // straight away, making a retry fail even once the port was free.
     },
     getDevices: function (callback) {
         if (__BACKEND__ === "web") {
@@ -347,11 +442,11 @@ export const serial = {
                              });
             });
 
-            callback(devices);
+            callback([...devices, ...RemoteSupport.getSerialPorts()]);
         });
     },
     getInfo: function (callback) {
-        if (__BACKEND__ === "web" && (this.webSerialPort || this.bleDevice)) {
+        if ((__BACKEND__ === "web" && (this.webSerialPort || this.bleDevice)) || this.connectionType === 'remote') {
             callback({ connectionId: this.connectionId, bitrate: this.bitrate, paused: false });
             return;
         }
@@ -394,6 +489,22 @@ export const serial = {
                     self.errorHandler(error.name || 'undefined', 'send');
                     _callback?.({ bytesSent: 0, error: error.name || 'undefined' });
                 });
+                return;
+            }
+
+            if (self.connectionType === 'remote') {
+                // Fire-and-forget: UDP to the local tool, ordering is kept
+                // end to end.
+                RemoteSupport.writeSerial(_data);
+                self.bytesSent += _data.byteLength;
+                _callback?.({ bytesSent: _data.byteLength });
+                self.outputBuffer.shift();
+
+                if (self.outputBuffer.length) {
+                    _send();
+                } else {
+                    self.transmitting = false;
+                }
                 return;
             }
 
@@ -458,7 +569,7 @@ export const serial = {
         listeners: [],
 
         addListener: function (function_reference) {
-            if (__BACKEND__ === "web") {
+            if (__BACKEND__ === "web" || serial.connectionType === 'remote') {
                 this.listeners.push(function_reference);
                 return;
             }
@@ -468,7 +579,7 @@ export const serial = {
             this.listeners.push(function_reference);
         },
         removeListener: function (function_reference) {
-            if (__BACKEND__ === "web") {
+            if (__BACKEND__ === "web" || serial.connectionType === 'remote') {
                 this.listeners = this.listeners.filter((listener) => listener !== function_reference);
                 return;
             }
@@ -491,7 +602,7 @@ export const serial = {
         listeners: [],
 
         addListener: function (function_reference) {
-            if (__BACKEND__ === "web") {
+            if (__BACKEND__ === "web" || serial.connectionType === 'remote') {
                 this.listeners.push(function_reference);
                 return;
             }
@@ -501,7 +612,7 @@ export const serial = {
             this.listeners.push(function_reference);
         },
         removeListener: function (function_reference) {
-            if (__BACKEND__ === "web") {
+            if (__BACKEND__ === "web" || serial.connectionType === 'remote') {
                 this.listeners = this.listeners.filter((listener) => listener !== function_reference);
                 return;
             }

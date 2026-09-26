@@ -1,9 +1,33 @@
+import semver from "semver";
+import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
+import { FC } from "@/js/fc.svelte.js";
+
 export const Mixer = {
 
     PWM_SERVO_COUNT: 8,
     BUS_SERVO_OFFSET: 8,
 
-    inputNames: [
+    // API 22.5 (24-channel F.Bus): 24 bus servos (firmware BUS_SERVO_CHANNELS)
+    // and 24 RC channels, where older firmware has 18 of each.
+    has24Channels: function () {
+        return semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
+    },
+
+    busServoChannels: function () {
+        return this.has24Channels() ? 24 : 18;
+    },
+
+    get inputNames() {
+        if (!this.has24Channels()) {
+            return this.baseInputNames;
+        }
+        return [
+            ...this.baseInputNames,
+            ...Array.from({ length: 6 }, (_, i) => `mixerInputRCChannel${i + 19}`),
+        ];
+    },
+
+    baseInputNames: [
         'mixerInputNone',
         'mixerInputStabilizedRoll',
         'mixerInputStabilizedPitch',
@@ -75,6 +99,11 @@ export const Mixer = {
     // Roll/Pitch/Yaw/Throttle run (9-12) resolved above.
     RC_CHANNEL_RANGE_LAST: 26,
 
+    // CH #19..#24 (API 22.5) are inputNames[30..35], after the thrust-vector
+    // inputs, so existing input numbers didn't move (firmware pg/mixer.h).
+    RC_CHANNEL_HIGH_FIRST: 30,
+    RC_CHANNEL_HIGH_FIRST_NUMBER: 19,
+
     // Physical channel number (1-based) for an inputNames[] index in the
     // combined bypass-Roll/Pitch/Yaw/Throttle + raw-CH#5-18 run, or
     // undefined if it can't be determined (a bypass index without a loaded
@@ -87,6 +116,9 @@ export const Mixer = {
         if (index > this.RC_CHANNEL_BYPASS_FIRST + this.RC_CHANNEL_BYPASS_ROLES.length - 1 &&
             index <= this.RC_CHANNEL_RANGE_LAST) {
             return index - 8;
+        }
+        if (index >= this.RC_CHANNEL_HIGH_FIRST && index < this.inputNames.length) {
+            return index - this.RC_CHANNEL_HIGH_FIRST + this.RC_CHANNEL_HIGH_FIRST_NUMBER;
         }
         return undefined;
     },
@@ -117,35 +149,63 @@ export const Mixer = {
                 .forEach(([, opt], pos) => { options[first + pos] = opt; });
         }
 
+        // CH #19..#24 follow the thrust-vector inputs on the wire; list them
+        // straight after CH #18 with the other RC channels.
+        const high = options.splice(this.RC_CHANNEL_HIGH_FIRST);
+        options.splice(last + 1, 0, ...high);
+
         return options;
     },
 
+    // Mixer output numbers never move (firmware flight/mixer.h): 1-26 are
+    // S1-S26, 27-30 the motors, and from API 22.5 31-36 are S27-S32
+    // (bus servos 19-24), after the motors.
     SERVO_OUTPUT_COUNT: 26,
     MOTOR_OUTPUT_COUNT: 4,
     MOTOR_OUTPUT_OFFSET: 27,
+    HIGH_SERVO_OUTPUT_OFFSET: 31,
 
-    outputNames: [
-        'mixerOutputNone',
-        ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
-        ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
-    ],
+    get outputNames() {
+        const highServoCount = this.busServoChannels() - 18;
+        return [
+            'mixerOutputNone',
+            ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
+            ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
+            ...Array.from({ length: highServoCount }, (_, i) => `mixerOutputServo${i + 27}`),
+        ];
+    },
+
+    // Output numbers in display order: servos by number, then the motors.
+    outputOrder: function () {
+        const count = this.outputNames.length;
+        const servos = [];
+        for (let i = 1; i < count; i++) {
+            if (!this.isMotorOutput(i)) {
+                servos.push(i);
+            }
+        }
+        const motors = Array.from({ length: this.MOTOR_OUTPUT_COUNT }, (_, i) => this.MOTOR_OUTPUT_OFFSET + i);
+        return [0, ...servos, ...motors];
+    },
+
+    isMotorOutput: function (index) {
+        return index >= this.MOTOR_OUTPUT_OFFSET && index < this.MOTOR_OUTPUT_OFFSET + this.MOTOR_OUTPUT_COUNT;
+    },
 
     outputLabel: function (index, i18n) {
-        if (index === 0) {
+        if (index === 0 || this.isMotorOutput(index)) {
             return i18n.getMessage(this.outputNames[index]);
         }
 
-        if (index >= 1 && index <= this.SERVO_OUTPUT_COUNT) {
-            const servoNumber = index;
-            if (servoNumber <= this.PWM_SERVO_COUNT) {
-                return `PWM Servo #${servoNumber}`;
-            }
-
-            const busServoNumber = servoNumber - this.BUS_SERVO_OFFSET;
-            return `Bus Servo #${busServoNumber}`;
+        const servoNumber = index >= this.HIGH_SERVO_OUTPUT_OFFSET ?
+            index - this.HIGH_SERVO_OUTPUT_OFFSET + this.SERVO_OUTPUT_COUNT + 1 :
+            index;
+        if (servoNumber <= this.PWM_SERVO_COUNT) {
+            return `PWM Servo #${servoNumber}`;
         }
 
-        return i18n.getMessage(this.outputNames[index]);
+        const busServoNumber = servoNumber - this.BUS_SERVO_OFFSET;
+        return `Bus Servo #${busServoNumber}`;
     },
 
     operNames: [

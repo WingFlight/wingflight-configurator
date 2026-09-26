@@ -160,7 +160,7 @@
         </select>
         <ChannelBar channel={i} />
       {/each}
-      {#each { length: Math.min(FC.RC.active_channels, 18) - FC.RC_MAP.length } as _, i (i)}
+      {#each { length: Math.min(FC.RC.active_channels, 24) - FC.RC_MAP.length } as _, i (i)}
         {@const channel = i + FC.RC_MAP.length}
         <span class="channel-index">{channel + 1}</span>
         <span class="channel-assignment">{$i18n.t(channelNames[channel])}</span>

@@ -15,6 +15,7 @@
   import { i18n } from "@/js/i18n.js";
   import { ConfigInserter } from "@/js/ConfigInserter.js";
   import { FirmwareCache } from "@/js/FirmwareCache.js";
+  import { downloadFirmware } from "@/js/FirmwareDownload.js";
   import * as github from "@/js/GitHubApi.js";
   import { getIntegerValue } from "@/js/main.js";
   import { manufacturers } from "@/js/manufacturers.js";
@@ -30,6 +31,8 @@
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
+
+  import DfuPermissionPrompt from "./DfuPermissionPrompt.svelte";
 
   import {
     buildTargetsByManufacturer,
@@ -642,9 +645,7 @@
 
     loadingRemote = true;
     try {
-      const res = await fetch(summary.url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.text();
+      const data = await downloadFirmware(summary.url);
       await onLoadSuccess(data, summary);
     } catch (err) {
       console.log("Failed to download firmware", err);
@@ -768,7 +769,7 @@
     } else {
       clearTimeout(detectTimer);
       GUI.log(
-        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${$i18n.t("serialPortOpenFail")}`,
+        `${$i18n.t("firmwareFlasherBoardDetectionFail")}: ${serial.openFailureMessage()}`,
       );
       disconnectDetect();
     }
@@ -888,6 +889,7 @@
         </button>
       {/if}
     </span>
+    <DfuPermissionPrompt />
   </div>
   <button
     class="btn"

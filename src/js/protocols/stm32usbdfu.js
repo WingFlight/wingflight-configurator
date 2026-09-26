@@ -1,3 +1,5 @@
+import { RemoteSupport } from '@/js/protocols/RemoteSupport.js';
+
 /*
     USB DFU uses:
     control transfers for communicating
@@ -16,6 +18,7 @@ var STM32DFU_protocol = function () {
     this.verify_hex = [];
 
     this.handle = null; // connection handle
+    this.useWebUsb = __BACKEND__ === "web"; // WebUSB-style handle (web backend, or a remote device)
 
     this.request = {
         DETACH:     0x00, // OUT, Requests the device to leave DFU mode and enter the application.
@@ -85,8 +88,25 @@ STM32DFU_protocol.prototype.connect = function (device, hex, options, callback) 
     self.upload_time_start = new Date().getTime();
     self.verify_hex = [];
 
+    // The descriptor caches belong to one device; a new connect may well be
+    // a different board (or a remote one instead of a local one).
+    self._webUsbConfigDescriptor = null;
+    self._webUsbLangId = undefined;
+
     // reset progress bar to initial state
     TABS.firmware_flasher.flashingMessage(null, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.NEUTRAL).flashProgress(0);
+
+    // A DFU device on the far end of a remote support session (see
+    // RemoteSupport.js) implements the WebUSB USBDevice interface, so it goes
+    // through the same code path as WebUSB, in any backend.
+    const remoteDevice = RemoteSupport.findDfuDevice(device.filters);
+    self.useWebUsb = __BACKEND__ === "web" || remoteDevice !== null;
+
+    if (remoteDevice) {
+        console.log('Remote USB DFU detected: ' + (remoteDevice.productName || remoteDevice.id));
+        self.openDevice(remoteDevice);
+        return;
+    }
 
     if (__BACKEND__ === "web") {
         self.connectWebUsb(device);
@@ -143,7 +163,7 @@ STM32DFU_protocol.prototype.connectWebUsb = async function (device) {
 STM32DFU_protocol.prototype.openDevice = function (device) {
     var self = this;
 
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         self.openWebUsbDevice(device);
         return;
     }
@@ -198,7 +218,7 @@ STM32DFU_protocol.prototype.openWebUsbDevice = async function (device) {
 STM32DFU_protocol.prototype.closeDevice = function () {
     var self = this;
 
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         self.handle.close()
             .catch((err) => {
                 console.log('Failed to close USB device! ' + err.message);
@@ -228,7 +248,7 @@ STM32DFU_protocol.prototype.closeDevice = function () {
 STM32DFU_protocol.prototype.claimInterface = function (interfaceNumber) {
     var self = this;
 
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         self.claimInterfaceWebUsb(interfaceNumber);
         return;
     }
@@ -292,7 +312,7 @@ STM32DFU_protocol.prototype.claimInterfaceWebUsb = async function (interfaceNumb
 STM32DFU_protocol.prototype.releaseInterface = function (interfaceNumber) {
     var self = this;
 
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         self.handle.releaseInterface(interfaceNumber)
             .catch((err) => console.log('Failed to release USB interface! ' + err.message))
             .then(() => {
@@ -310,7 +330,7 @@ STM32DFU_protocol.prototype.releaseInterface = function (interfaceNumber) {
 };
 
 STM32DFU_protocol.prototype.resetDevice = function (callback) {
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         this.handle.reset()
             .catch((err) => console.log('Reset Device failed: ' + err.message))
             .then(() => callback?.());
@@ -427,7 +447,7 @@ STM32DFU_protocol.prototype.getInterfaceDescriptor = function (_interface, callb
 };
 
 STM32DFU_protocol.prototype.getFunctionalDescriptor = function (_interface, callback) {
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         this.getFunctionalDescriptorWebUsb(callback);
         return;
     }
@@ -610,7 +630,7 @@ STM32DFU_protocol.prototype.getInterfaceDescriptorsWebUsb = async function (inte
 STM32DFU_protocol.prototype.getChipInfo = function (_interface, callback) {
     var self = this;
 
-    var getDescriptors = (__BACKEND__ === "web")
+    var getDescriptors = (this.useWebUsb)
         ? self.getInterfaceDescriptorsWebUsb.bind(self)
         : self.getInterfaceDescriptors.bind(self);
 
@@ -716,7 +736,7 @@ STM32DFU_protocol.prototype.getChipInfo = function (_interface, callback) {
 };
 
 STM32DFU_protocol.prototype.controlTransfer = function (direction, request, value, _interface, length, data, callback, _timeout) {
-    if (__BACKEND__ === "web") {
+    if (this.useWebUsb) {
         this.controlTransferWebUsb(direction, request, value, _interface, length, data, callback);
         return;
     }

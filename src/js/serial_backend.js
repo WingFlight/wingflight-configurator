@@ -11,10 +11,14 @@ import { startAddressedReplies } from "@/js/param/msp_routing.js";
 // device chooser immediately on selecting its DFU picker option, rather than
 // waiting for the user to click Flash. Silent (no popup) if a matching device
 // is already authorized, so it's safe to run on every DFU selection.
-// Exported for selectDfuFromPicker() below.
+// Exported for selectDfuFromPicker() below, and for the Firmware Flasher's
+// mid-flash DFU permission prompt (see requestDfuPermission() in
+// firmware_flasher/state.svelte.js). Resolves to the authorized device, or
+// null if there's none (cancelled, or no WebUSB at all).
 export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
-        return;
+        GUI.log(i18n.getMessage('dfuWebUsbUnsupported'));
+        return null;
     }
 
     try {
@@ -37,8 +41,10 @@ export async function requestWebUsbDeviceFromPicker() {
             // see the matching comment in port_handler.js's
             // updatePortSelect().
             .removeAttr('data-dfu-pending');
+        return device;
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
+        return null;
     }
 }
 
@@ -309,8 +315,7 @@ export function initializeSerialBackend() {
 
     $('div.open_firmware_flasher a.flash').on("click", function() {
         if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
-            $('div#flashbutton a.flash_state').removeClass('active');
-            $('div#flashbutton a.flash').removeClass('active');
+            // The tab switch clears these indicators after its exit guard allows it.
             $('#tabs ul.mode-disconnected .tab_landing a').trigger("click");
         } else {
             $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");
@@ -534,7 +539,7 @@ async function onOpen(openInfo) {
         }
     }
     else {
-        GUI.log(i18n.getMessage('serialPortOpenFail'));
+        GUI.log(serial.openFailureMessage());
         console.log('Failed to open serial port');
         abortConnect();
     }
@@ -584,6 +589,11 @@ function onOpenVirtual() {
 }
 
 function abortConnect() {
+    // Left set, this made the app still think a connect was in progress
+    // after it had failed: auto-connect (port_handler.js) refuses to fire
+    // while it's set, so it never retried once the port was freed up.
+    GUI.connecting_to = false;
+
     $('div#connectbutton div.connect_state').text(i18n.getMessage('connect'));
     $('div#connectbutton a.connect').removeClass('active');
 
@@ -901,8 +911,6 @@ export function have_sensor(sensors_detected, sensor_code) {
             return bit_check(sensors_detected, 2);
         case 'gps':
             return bit_check(sensors_detected, 3);
-        case 'sonar':
-            return bit_check(sensors_detected, 4);
         case 'gyro':
             return bit_check(sensors_detected, 5);
     }
@@ -943,10 +951,14 @@ function update_live_status() {
         }
     }
 
+    const config = FC.BATTERY_CONFIG;
+    const profile = FC.BATTERY_STATE.batteryProfile;
+    const cellVoltage = (legacy, profiles) => (config.hasProfileCells ? profiles[profile] : legacy);
+
     const cells = FC.BATTERY_STATE.cellCount;
-    const min = FC.BATTERY_CONFIG.vbatmincellvoltage * cells;
-    const max = FC.BATTERY_CONFIG.vbatmaxcellvoltage * cells;
-    const warn = FC.BATTERY_CONFIG.vbatwarningcellvoltage * cells;
+    const min = cellVoltage(config.vbatmincellvoltage, config.vbatmincellvoltages) * cells;
+    const max = cellVoltage(config.vbatmaxcellvoltage, config.vbatmaxcellvoltages) * cells;
+    const warn = cellVoltage(config.vbatwarningcellvoltage, config.vbatwarningcellvoltages) * cells;
 
     const NO_BATTERY_VOLTAGE_MAXIMUM = 1.8;
 

@@ -13,6 +13,7 @@
   import NumberInput from "@/components/NumberInput.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
+  import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
@@ -23,6 +24,7 @@
     return $state.snapshot({
       RX_CONFIG: FC.RX_CONFIG,
       RXFAIL_CONFIG: FC.RXFAIL_CONFIG,
+      FAILSAFE_CONFIG: FC.FAILSAFE_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
   }
@@ -43,10 +45,27 @@
     "controlAxisThrottle",
   ];
 
+  // failsafe_procedure values match TABLE_FAILSAFE in src/main/cli/settings.c
+  // (AUTO-LAND, DROP, GPS-RESCUE), 0-indexed. Key numbering (1, 2, 4) is
+  // inherited from upstream and does not correspond to these values.
+  let procedureOptions = $derived([
+    { value: 0, label: $i18n.t("failsafeProcedureItemSelect1") },
+    { value: 1, label: $i18n.t("failsafeProcedureItemSelect2") },
+    { value: 2, label: $i18n.t("failsafeProcedureItemSelect4") },
+  ]);
+
+  // failsafe_switch_mode values match TABLE_FAILSAFE_SWITCH_MODE (STAGE1, KILL, STAGE2).
+  let switchModeOptions = $derived([
+    { value: 0, label: $i18n.t("failsafeSwitchOptionStage1") },
+    { value: 1, label: $i18n.t("failsafeSwitchOptionKill") },
+    { value: 2, label: $i18n.t("failsafeSwitchOptionStage2") },
+  ]);
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_RXFAIL_CONFIG);
     await MSP.promise(MSPCodes.MSP_RX_CONFIG);
+    await MSP.promise(MSPCodes.MSP_FAILSAFE_CONFIG);
 
     initialState = snapshotState();
     loading = false;
@@ -59,6 +78,7 @@
 
     await mspHelper.sendRxFailConfig();
     await save(MSPCodes.MSP_SET_RX_CONFIG);
+    await save(MSPCodes.MSP_SET_FAILSAFE_CONFIG);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -70,6 +90,7 @@
   export function onRevert() {
     Object.assign(FC.RX_CONFIG, initialState.RX_CONFIG);
     Object.assign(FC.RXFAIL_CONFIG, initialState.RXFAIL_CONFIG);
+    Object.assign(FC.FAILSAFE_CONFIG, initialState.FAILSAFE_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
   }
 
@@ -187,7 +208,106 @@
         </SubSection>
       </Section>
     </div>
-    <div></div>
+    <div>
+      <Section label="failsafeSubTitle1">
+        <SubSection>
+          <Field id="failsafe-procedure" label="failsafeProcedureItem">
+            <Select
+              id="failsafe-procedure"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_procedure}
+              options={procedureOptions}
+            />
+          </Field>
+          {#if FC.FAILSAFE_CONFIG.failsafe_procedure === 2}
+            <div class="note" transition:slide>
+              {$i18n.t("failsafeGpsRescueNavNote")}
+            </div>
+          {/if}
+        </SubSection>
+      </Section>
+      <Section
+        label="failsafeStageTwoSettingsTitle"
+        summary="failsafeFeaturesHelpNew"
+      >
+        <SubSection>
+          <Field id="failsafe-delay" label="failsafeDelayItem" unit="0.1s">
+            {#snippet tooltip()}
+              <Tooltip help="failsafeDelayHelp" />
+            {/snippet}
+            <NumberInput
+              id="failsafe-delay"
+              min="2"
+              max="200"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_delay}
+            />
+          </Field>
+          <Field
+            id="failsafe-off-delay"
+            label="failsafeOffDelayItem"
+            unit="0.1s"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="failsafeOffDelayHelp" />
+            {/snippet}
+            <NumberInput
+              id="failsafe-off-delay"
+              min="0"
+              max="200"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_off_delay}
+            />
+          </Field>
+          <Field
+            id="failsafe-throttle-low-delay"
+            label="failsafeThrottleLowItem"
+            unit="0.1s"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="failsafeThrottleLowHelp" />
+            {/snippet}
+            <NumberInput
+              id="failsafe-throttle-low-delay"
+              min="0"
+              max="300"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay}
+            />
+          </Field>
+          <Field id="failsafe-throttle" label="failsafeThrottleItem" unit="μs">
+            <NumberInput
+              id="failsafe-throttle"
+              min="750"
+              max="2250"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_throttle}
+            />
+          </Field>
+          <Field
+            id="failsafe-recovery-delay"
+            label="failsafeRecoveryDelayItem"
+            unit="0.1s"
+          >
+            <NumberInput
+              id="failsafe-recovery-delay"
+              min="0"
+              max="200"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_recovery_delay}
+            />
+          </Field>
+        </SubSection>
+      </Section>
+      <Section label="failsafeSwitchTitle">
+        <SubSection>
+          <Field id="failsafe-switch-mode" label="failsafeSwitchModeItem">
+            {#snippet tooltip()}
+              <Tooltip help="failsafeSwitchModeHelp" />
+            {/snippet}
+            <Select
+              id="failsafe-switch-mode"
+              bind:value={FC.FAILSAFE_CONFIG.failsafe_switch_mode}
+              options={switchModeOptions}
+            />
+          </Field>
+        </SubSection>
+      </Section>
+    </div>
   </div>
 </Page>
 
@@ -202,6 +322,12 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
+  }
+
+  .note {
+    font-size: 0.85rem;
+    color: var(--color-neutral-700);
+    padding: 4px 12px 8px;
   }
 
   .help-btn {

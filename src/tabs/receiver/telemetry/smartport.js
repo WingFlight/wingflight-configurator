@@ -63,7 +63,7 @@ export function getSmartPortSensors() {
     },
     {
       title: "RPM",
-      sensors: [{ name: "HEADSPEED" }, { name: "TAILSPEED" }],
+      sensors: [{ name: "MOTOR1SPEED" }, { name: "MOTOR2SPEED" }],
     },
     {
       title: "BARO",
@@ -94,18 +94,10 @@ export function getSmartPortSensors() {
       sensors: [
         { name: "MODEL_ID" },
         { name: "FLIGHT_MODE" },
-        { name: "ARMING_FLAGS" },
+        { name: "SYSTEM_STATUS" },
+        { name: "SYSTEM_CONFIG" },
         { name: "ARMING_DISABLE_FLAGS" },
         { name: "ADJFUNC" },
-      ],
-    },
-    {
-      title: "PROFILE",
-      sensors: [
-        { name: "PID_PROFILE" },
-        { name: "RATES_PROFILE" },
-        { name: "BATTERY_PROFILE" },
-        { name: "LED_PROFILE" },
       ],
     },
     {

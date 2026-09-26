@@ -1,3 +1,7 @@
+import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
+import semver from "semver";
+import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
+
 // Used for LED_STRIP
 const ledDirectionLetters    = ['n', 'e', 's', 'w', 'u', 'd'];      // in LSB bit order
 const ledBaseFunctionLetters = ['c', 'f', 'a', 'l', 's', 'g', 'r']; // in LSB bit
@@ -5,6 +9,16 @@ const ledOverlayLetters      = ['t', 'o', 'b', 'v', 'i', 'w', 'k', 'd']; // in L
 
 export function MspHelper() {
     const self = this;
+
+    // Firmware before MSP API 22.3 still carries the always-zero heli-only
+    // placeholder bytes in several messages. They are skipped on read and
+    // written as zero, so the same code talks to both layouts.
+    self.hasLegacyPlaceholders = () => semver.lt(FC.CONFIG.apiVersion, API_VERSION_22_3);
+    self.skipBytes = (data, count) => {
+        for (let i = 0; i < count; i++) {
+            data.readU8();
+        }
+    };
 
     // 0 based index, must be identical to 'baudRates' in 'src/main/io/serial.c' in rotorflight
     self.BAUD_RATES = [
@@ -220,10 +234,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP_SONAR: {
-                FC.SENSOR_DATA.sonar = data.read32();
-                break;
-            }
 
             case MSPCodes.MSP_ANALOG: {
                 FC.ANALOG.voltage = data.readU8() / 10.0;
@@ -336,6 +346,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     capacities.push(data.readU16());
                 }
                 FC.BATTERY_CONFIG.capacities = capacities;
+                // Per-profile cell count and cell voltages
+                FC.BATTERY_CONFIG.hasProfileCells = data.remaining() >= 9 * 6;
+                if (FC.BATTERY_CONFIG.hasProfileCells) {
+                    const readArray = (read) => Array.from({ length: 6 }, read);
+                    FC.BATTERY_CONFIG.cellCounts = readArray(() => data.readU8());
+                    FC.BATTERY_CONFIG.vbatmincellvoltages = readArray(() => data.readU16() / 100);
+                    FC.BATTERY_CONFIG.vbatmaxcellvoltages = readArray(() => data.readU16() / 100);
+                    FC.BATTERY_CONFIG.vbatfullcellvoltages = readArray(() => data.readU16() / 100);
+                    FC.BATTERY_CONFIG.vbatwarningcellvoltages = readArray(() => data.readU16() / 100);
+                }
                 break;
             }
 
@@ -363,8 +383,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_RC_TUNING: {
+                const legacy = self.hasLegacyPlaceholders();
                 // TODO: stop scaling these values
-                FC.RC_TUNING.rates_type = data.readU8();
+                if (legacy) data.readU8(); // was rates_type
                 FC.RC_TUNING.roll_rc_rate = parseFloat((data.readU8() / 100).toFixed(2));
                 FC.RC_TUNING.roll_rc_expo = parseFloat((data.readU8() / 100).toFixed(2));
                 FC.RC_TUNING.roll_srate = parseFloat((data.readU8() / 100).toFixed(2));
@@ -380,11 +401,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.RC_TUNING.yaw_srate = parseFloat((data.readU8() / 100).toFixed(2));
                 FC.RC_TUNING.yaw_response_time = data.readU8();
                 FC.RC_TUNING.yaw_accel_limit = data.readU16();
-                FC.RC_TUNING.collective_rc_rate = parseFloat((data.readU8() / 100).toFixed(2));
-                FC.RC_TUNING.collective_rc_expo = parseFloat((data.readU8() / 100).toFixed(2));
-                FC.RC_TUNING.collective_srate = parseFloat((data.readU8() / 100).toFixed(2));
-                FC.RC_TUNING.collective_response_time = data.readU8();
-                FC.RC_TUNING.collective_accel_limit = data.readU16();
+                if (legacy) self.skipBytes(data, 6); // was collective rc_rate/expo/srate/response_time/accel_limit
 
                 FC.RC_TUNING.roll_setpoint_boost_gain = data.readU8();
                 FC.RC_TUNING.roll_setpoint_boost_cutoff = data.readU8();
@@ -392,15 +409,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.RC_TUNING.pitch_setpoint_boost_cutoff = data.readU8();
                 FC.RC_TUNING.yaw_setpoint_boost_gain = data.readU8();
                 FC.RC_TUNING.yaw_setpoint_boost_cutoff = data.readU8();
-                FC.RC_TUNING.collective_setpoint_boost_gain = data.readU8();
-                FC.RC_TUNING.collective_setpoint_boost_cutoff = data.readU8();
+                if (legacy) self.skipBytes(data, 2); // was collective setpoint_boost_gain/cutoff
 
                 FC.RC_TUNING.yaw_dynamic_ceiling_gain = data.readU8();
                 FC.RC_TUNING.yaw_dynamic_deadband_gain = data.readU8();
                 FC.RC_TUNING.yaw_dynamic_deadband_filter = data.readU8();
 
-                data.readU8(); // was cyclic_ring (heli-only, removed)
-                data.readU8(); // was cyclic_polar (heli-only, removed)
+                if (legacy) self.skipBytes(data, 2); // was cyclic_ring, cyclic_polar
 
                 break;
             }
@@ -416,8 +431,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     FC.PIDS_ACTIVE[i][4] = data.readU16(); // B-term
                     FC.PIDS[i][4] = FC.PIDS_ACTIVE[i][4];
                 }
-                for (let i = 0; i < 2; i++) { // RP
-                    data.readU16(); // was O-term (heli-only, removed)
+                if (self.hasLegacyPlaceholders()) {
+                    self.skipBytes(data, 4); // was O-term (RP)
                 }
                 break;
             }
@@ -780,9 +795,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.ESC_SENSOR_CONFIG.half_duplex = Boolean(data.readU8());
                 FC.ESC_SENSOR_CONFIG.update_hz = data.readU16();
                 FC.ESC_SENSOR_CONFIG.current_offset = data.readU16();
-                FC.ESC_SENSOR_CONFIG.hw4_current_offset = data.readU16();
-                FC.ESC_SENSOR_CONFIG.hw4_current_gain = data.readU8();
-                FC.ESC_SENSOR_CONFIG.hw4_voltage_gain = data.readU8();
+                if (self.hasLegacyPlaceholders()) self.skipBytes(data, 4); // was HW4 parameters
                 FC.ESC_SENSOR_CONFIG.pinswap = Boolean(data.readU8());
                 FC.ESC_SENSOR_CONFIG.voltage_correction = data.read8();
                 FC.ESC_SENSOR_CONFIG.current_correction = data.read8();
@@ -940,10 +953,11 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_RC_CONFIG: {
                 FC.RC_CONFIG.rc_center = data.readU16();
                 FC.RC_CONFIG.rc_deflection = data.readU16();
-                FC.RC_CONFIG.rc_arm_throttle = data.readU16();
+                if (self.hasLegacyPlaceholders()) self.skipBytes(data, 2); // was rc_arm_throttle
                 FC.RC_CONFIG.rc_min_throttle = data.readU16();
                 FC.RC_CONFIG.rc_max_throttle = data.readU16();
-                FC.RC_CONFIG.rc_deadband = data.readU8();
+                FC.RC_CONFIG.rc_roll_deadband = data.readU8();
+                FC.RC_CONFIG.rc_pitch_deadband = data.readU8();
                 FC.RC_CONFIG.rc_yaw_deadband = data.readU8();
                 break;
             }
@@ -965,6 +979,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
                 FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
+                // API 22.5: SBUS and F.Bus output channel counts, then the
+                // count the configured bus output drives
+                if (data.byteLength >= 5) {
+                    FC.MIXER_CONFIG.sbus_out_channels = data.readU8();
+                    FC.MIXER_CONFIG.fbus_master_channels = data.readU8();
+                    FC.MIXER_CONFIG.bus_servo_output_count = data.readU8();
+                }
                 break;
             }
 
@@ -1301,6 +1322,28 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.FAILSAFE_CONFIG.failsafe_switch_mode = data.readU8();
                 FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay = data.readU16();
                 FC.FAILSAFE_CONFIG.failsafe_procedure = data.readU8();
+                // Appended field; older firmware only sends the six above.
+                if (data.remaining() >= 2) {
+                    FC.FAILSAFE_CONFIG.failsafe_recovery_delay = data.readU16();
+                }
+                break;
+            }
+
+            case MSPCodes.MSP2_WING_GPS_NAV_CONFIG: {
+                FC.GPS_NAV_CONFIG.nav_loiter_radius = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_loiter_direction = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_rth_altitude = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_min_sats = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_max_bank_angle = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_max_pitch_angle = data.readU8();
+                FC.GPS_NAV_CONFIG.nav_bearing_kp = data.readU16();
+                FC.GPS_NAV_CONFIG.nav_altitude_kp = data.readU16();
+                // Appended fields; older firmware only sends the eight above.
+                if (data.remaining() >= 4) {
+                    FC.GPS_NAV_CONFIG.nav_altitude_kd = data.readU16();
+                    FC.GPS_NAV_CONFIG.nav_throttle = data.readU8();
+                    FC.GPS_NAV_CONFIG.nav_turn_coordination = data.readU8();
+                }
                 break;
             }
 
@@ -1321,7 +1364,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_TELEMETRY_CONFIG: {
                 FC.TELEMETRY_CONFIG.telemetry_inverted = Boolean(data.readU8());
                 FC.TELEMETRY_CONFIG.telemetry_halfduplex = Boolean(data.readU8());
-                FC.TELEMETRY_CONFIG.telemetry_sensors = data.readU32();
+                if (self.hasLegacyPlaceholders()) self.skipBytes(data, 4); // was enableSensors
                 FC.TELEMETRY_CONFIG.telemetry_pinswap = Boolean(data.readU8());
                 FC.TELEMETRY_CONFIG.crsf_telemetry_mode = data.readU8();
                 FC.TELEMETRY_CONFIG.crsf_telemetry_rate = data.readU16();
@@ -1394,13 +1437,14 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_PID_PROFILE: {
+                const legacy = self.hasLegacyPlaceholders();
                 FC.PID_PROFILE.pid_mode                      = data.readU8();
-                data.readU8(); // was error_decay_time_ground (heli-only, removed)
+                if (legacy) data.readU8(); // was error_decay_time_ground
                 FC.PID_PROFILE.iterm_decay_time              = data.readU8();
-                data.readU8(); // was error_decay_time_yaw (heli-only, removed)
+                if (legacy) data.readU8(); // was error_decay_time_yaw
                 FC.PID_PROFILE.iterm_decay_limit             = data.readU8();
-                data.readU8(); // was error_decay_limit_yaw (heli-only, removed)
-                FC.PID_PROFILE.error_rotation                = data.readU8();
+                if (legacy) data.readU8(); // was error_decay_limit_yaw
+                if (legacy) data.readU8(); // was error_rotation
                 FC.PID_PROFILE.errorLimitRoll                = data.readU8();
                 FC.PID_PROFILE.errorLimitPitch               = data.readU8();
                 FC.PID_PROFILE.errorLimitYaw                 = data.readU8();
@@ -1414,14 +1458,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.itermRelaxCutoffRoll          = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffPitch         = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffYaw           = data.readU8();
-                data.readU8(); // was yawStopGainCW (heli-only, removed)
-                data.readU8(); // was yawStopGainCCW (heli-only, removed)
-                data.readU8(); // was yawPrecompCutoff (heli-only, removed)
-                data.readU8(); // was yawFFCyclicGain (heli-only, removed)
-                data.readU8(); // was yawFFCollectiveGain (heli-only, removed)
-                data.read8();  // was yawFFImpulseGain (heli-only, removed)
-                data.readU8(); // was yawFFImpulseDecay (heli-only, removed)
-                data.readU8(); // was pitchFFCollectiveGain (heli-only, removed)
+                if (legacy) self.skipBytes(data, 8); // was yaw stop gains, precomp cutoff, FF and dynamic gains, pitch collective FF
                 // Angle Mode //
                 FC.PID_PROFILE.levelAngleStrength            = data.readU8();
                 FC.PID_PROFILE.levelAngleLimit               = data.readU8();
@@ -1430,10 +1467,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Acro Trainer //
                 FC.PID_PROFILE.acroTrainerGain               = data.readU8();
                 FC.PID_PROFILE.acroTrainerLimit              = data.readU8();
-                // Cyclic CrossCoupling -- heli-only, removed //
-                data.readU8();
-                data.readU8();
-                data.readU8();
+                if (legacy) self.skipBytes(data, 3); // was cyclic cross-coupling
                 // Att Hold //
                 FC.PID_PROFILE.attHoldGain                   = data.readU8();
                 FC.PID_PROFILE.attHoldDeadband                = data.readU8();
@@ -1441,8 +1475,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.btermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.btermCutoffPitch              = data.readU8();
                 FC.PID_PROFILE.btermCutoffYaw                = data.readU8();
-                data.readU8(); // was yaw_inertia_precomp_gain (heli-only, removed)
-                data.readU8(); // was yaw_inertia_precomp_cutoff (heli-only, removed)
+                if (legacy) self.skipBytes(data, 2); // was yaw inertia precomp gain/cutoff
                 // Fixed-wing throttle-based gain attenuation (gain + curve index) //
                 FC.PID_PROFILE.fwTpaGain                     = data.readU8();
                 FC.PID_PROFILE.fwTpaCurve                    = data.readU8();
@@ -1471,6 +1504,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.autoHoverThrottleAssistGain       = data.remaining() >= 4 ? data.readU8() : 0;
                 FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
                 FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
+                readAttitudeLimits(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -1606,7 +1640,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.SENSOR_CONFIG.gyroHighFsr = data.readU8();
                 FC.SENSOR_CONFIG.gyroMovementCalibThreshold = data.readU8();
                 FC.SENSOR_CONFIG.gyroCalibDuration = data.readU16();
-                FC.SENSOR_CONFIG.gyroOffsetYaw = data.readU16();
+                if (self.hasLegacyPlaceholders()) self.skipBytes(data, 2); // was gyro_offset_yaw
                 FC.SENSOR_CONFIG.gyroCheckOverflow = data.readU8();
                 break;
             }
@@ -1917,6 +1951,10 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Failsafe config saved');
                 break;
             }
+            case MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG: {
+                console.log('GPS nav config saved');
+                break;
+            }
             case MSPCodes.MSP_SET_TELEMETRY_CONFIG: {
                 console.log('Telemetry config saved');
                 break;
@@ -2073,6 +2111,10 @@ MspHelper.prototype.crunch = function(code) {
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
             buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
+            if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
+                buffer.push8(FC.MIXER_CONFIG.sbus_out_channels);
+                buffer.push8(FC.MIXER_CONFIG.fbus_master_channels);
+            }
             break;
         }
 
@@ -2136,14 +2178,15 @@ MspHelper.prototype.crunch = function(code) {
             for (let i = 0; i < 3; i++) { // RPY
                 buffer.push16(parseInt(FC.PIDS[i][4])); // B-term
             }
-            for (let i = 0; i < 2; i++) { // RP
-                buffer.push16(0); // was O-term (heli-only, removed)
+            if (self.hasLegacyPlaceholders()) {
+                buffer.push16(0).push16(0); // was O-term (RP)
             }
             break;
         }
 
         case MSPCodes.MSP_SET_RC_TUNING: {
-            buffer.push8(FC.RC_TUNING.rates_type);
+            const legacy = self.hasLegacyPlaceholders();
+            if (legacy) buffer.push8(0); // was rates_type
             buffer.push8(Math.round(FC.RC_TUNING.roll_rc_rate * 100))
                   .push8(Math.round(FC.RC_TUNING.roll_rc_expo * 100))
                   .push8(Math.round(FC.RC_TUNING.roll_srate * 100))
@@ -2159,25 +2202,25 @@ MspHelper.prototype.crunch = function(code) {
                   .push8(Math.round(FC.RC_TUNING.yaw_srate * 100))
                   .push8(FC.RC_TUNING.yaw_response_time)
                   .push16(FC.RC_TUNING.yaw_accel_limit);
-            buffer.push8(Math.round(FC.RC_TUNING.collective_rc_rate * 100))
-                  .push8(Math.round(FC.RC_TUNING.collective_rc_expo * 100))
-                  .push8(Math.round(FC.RC_TUNING.collective_srate * 100))
-                  .push8(FC.RC_TUNING.collective_response_time)
-                  .push16(FC.RC_TUNING.collective_accel_limit);
+            if (legacy) {
+                // was collective rc_rate/expo/srate/response_time/accel_limit
+                buffer.push8(0).push8(0).push8(0).push8(0).push16(0);
+            }
             buffer.push8(FC.RC_TUNING.roll_setpoint_boost_gain)
                   .push8(FC.RC_TUNING.roll_setpoint_boost_cutoff)
                   .push8(FC.RC_TUNING.pitch_setpoint_boost_gain)
                   .push8(FC.RC_TUNING.pitch_setpoint_boost_cutoff)
                   .push8(FC.RC_TUNING.yaw_setpoint_boost_gain)
-                  .push8(FC.RC_TUNING.yaw_setpoint_boost_cutoff)
-                  .push8(FC.RC_TUNING.collective_setpoint_boost_gain)
-                  .push8(FC.RC_TUNING.collective_setpoint_boost_cutoff)
-                  .push8(FC.RC_TUNING.yaw_dynamic_ceiling_gain)
+                  .push8(FC.RC_TUNING.yaw_setpoint_boost_cutoff);
+            if (legacy) {
+                buffer.push8(0).push8(0); // was collective setpoint_boost_gain/cutoff
+            }
+            buffer.push8(FC.RC_TUNING.yaw_dynamic_ceiling_gain)
                   .push8(FC.RC_TUNING.yaw_dynamic_deadband_gain)
                   .push8(FC.RC_TUNING.yaw_dynamic_deadband_filter);
-
-            buffer.push8(0) // was cyclic_ring (heli-only, removed)
-                  .push8(0); // was cyclic_polar (heli-only, removed)
+            if (legacy) {
+                buffer.push8(0).push8(0); // was cyclic_ring, cyclic_polar
+            }
 
             break;
         }
@@ -2293,18 +2336,46 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_BATTERY_CONFIG: {
-            buffer.push16(FC.BATTERY_CONFIG.capacities[0]);
-            buffer.push8(FC.BATTERY_CONFIG.cellCount)
-                  .push8(FC.BATTERY_CONFIG.voltageMeterSource)
-                  .push8(FC.BATTERY_CONFIG.currentMeterSource)
-                  .push16(Math.round(FC.BATTERY_CONFIG.vbatmincellvoltage * 100))
-                  .push16(Math.round(FC.BATTERY_CONFIG.vbatmaxcellvoltage * 100))
-                  .push16(Math.round(FC.BATTERY_CONFIG.vbatfullcellvoltage * 100))
-                  .push16(Math.round(FC.BATTERY_CONFIG.vbatwarningcellvoltage * 100))
-                  .push8(FC.BATTERY_CONFIG.lvcPercentage)
-                  .push8(FC.BATTERY_CONFIG.mahWarningPercentage);
+            const config = FC.BATTERY_CONFIG;
+            const legacy = { ...config };
+            legacy.capacity = config.capacities[0];
+            if (config.hasProfileCells) {
+                // The legacy fields are stored into the active profile, so send its values
+                const profile = FC.BATTERY_STATE.batteryProfile;
+                legacy.capacity = config.capacities[profile];
+                legacy.cellCount = config.cellCounts[profile];
+                legacy.vbatmincellvoltage = config.vbatmincellvoltages[profile];
+                legacy.vbatmaxcellvoltage = config.vbatmaxcellvoltages[profile];
+                legacy.vbatfullcellvoltage = config.vbatfullcellvoltages[profile];
+                legacy.vbatwarningcellvoltage = config.vbatwarningcellvoltages[profile];
+            }
+            buffer.push16(legacy.capacity)
+                  .push8(legacy.cellCount)
+                  .push8(config.voltageMeterSource)
+                  .push8(config.currentMeterSource)
+                  .push16(Math.round(legacy.vbatmincellvoltage * 100))
+                  .push16(Math.round(legacy.vbatmaxcellvoltage * 100))
+                  .push16(Math.round(legacy.vbatfullcellvoltage * 100))
+                  .push16(Math.round(legacy.vbatwarningcellvoltage * 100))
+                  .push8(config.lvcPercentage)
+                  .push8(config.mahWarningPercentage);
             for (let i = 0; i < 6; i++) {
-                buffer.push16(FC.BATTERY_CONFIG.capacities[i]);
+                buffer.push16(config.capacities[i]);
+            }
+            if (config.hasProfileCells) {
+                for (let i = 0; i < 6; i++) {
+                    buffer.push8(config.cellCounts[i]);
+                }
+                for (const voltages of [
+                    config.vbatmincellvoltages,
+                    config.vbatmaxcellvoltages,
+                    config.vbatfullcellvoltages,
+                    config.vbatwarningcellvoltages,
+                ]) {
+                    for (let i = 0; i < 6; i++) {
+                        buffer.push16(Math.round(voltages[i] * 100));
+                    }
+                }
             }
             break;
         }
@@ -2329,10 +2400,10 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push8(FC.ESC_SENSOR_CONFIG.protocol)
                   .push8(Number(FC.ESC_SENSOR_CONFIG.half_duplex))
                   .push16(FC.ESC_SENSOR_CONFIG.update_hz)
-                  .push16(FC.ESC_SENSOR_CONFIG.current_offset)
-                  .push16(FC.ESC_SENSOR_CONFIG.hw4_current_offset)
-                  .push8(FC.ESC_SENSOR_CONFIG.hw4_current_gain)
-                  .push8(FC.ESC_SENSOR_CONFIG.hw4_voltage_gain);
+                  .push16(FC.ESC_SENSOR_CONFIG.current_offset);
+            if (self.hasLegacyPlaceholders()) {
+                buffer.push32(0); // was HW4 parameters
+            }
             buffer.push8(Number(FC.ESC_SENSOR_CONFIG.pinswap));
             buffer.push8(FC.ESC_SENSOR_CONFIG.voltage_correction)
                   .push8(FC.ESC_SENSOR_CONFIG.current_correction)
@@ -2359,14 +2430,32 @@ MspHelper.prototype.crunch = function(code) {
                 .push16(FC.FAILSAFE_CONFIG.failsafe_throttle)
                 .push8(FC.FAILSAFE_CONFIG.failsafe_switch_mode)
                 .push16(FC.FAILSAFE_CONFIG.failsafe_throttle_low_delay)
-                .push8(FC.FAILSAFE_CONFIG.failsafe_procedure);
+                .push8(FC.FAILSAFE_CONFIG.failsafe_procedure)
+                .push16(FC.FAILSAFE_CONFIG.failsafe_recovery_delay);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG: {
+            buffer.push16(FC.GPS_NAV_CONFIG.nav_loiter_radius)
+                .push8(FC.GPS_NAV_CONFIG.nav_loiter_direction)
+                .push16(FC.GPS_NAV_CONFIG.nav_rth_altitude)
+                .push8(FC.GPS_NAV_CONFIG.nav_min_sats)
+                .push8(FC.GPS_NAV_CONFIG.nav_max_bank_angle)
+                .push8(FC.GPS_NAV_CONFIG.nav_max_pitch_angle)
+                .push16(FC.GPS_NAV_CONFIG.nav_bearing_kp)
+                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kp)
+                .push16(FC.GPS_NAV_CONFIG.nav_altitude_kd)
+                .push8(FC.GPS_NAV_CONFIG.nav_throttle)
+                .push8(FC.GPS_NAV_CONFIG.nav_turn_coordination);
             break;
         }
 
         case MSPCodes.MSP_SET_TELEMETRY_CONFIG: {
             buffer.push8(Number(FC.TELEMETRY_CONFIG.telemetry_inverted))
-                .push8(Number(FC.TELEMETRY_CONFIG.telemetry_halfduplex))
-                .push32(FC.TELEMETRY_CONFIG.telemetry_sensors);
+                .push8(Number(FC.TELEMETRY_CONFIG.telemetry_halfduplex));
+            if (self.hasLegacyPlaceholders()) {
+                buffer.push32(0); // was enableSensors
+            }
             buffer.push8(Number(FC.TELEMETRY_CONFIG.telemetry_pinswap))
                   .push8(FC.TELEMETRY_CONFIG.crsf_telemetry_mode)
                   .push16(FC.TELEMETRY_CONFIG.crsf_telemetry_rate)
@@ -2404,11 +2493,14 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_RC_CONFIG: {
             buffer.push16(FC.RC_CONFIG.rc_center)
-                  .push16(FC.RC_CONFIG.rc_deflection)
-                  .push16(FC.RC_CONFIG.rc_arm_throttle)
-                  .push16(FC.RC_CONFIG.rc_min_throttle)
+                  .push16(FC.RC_CONFIG.rc_deflection);
+            if (self.hasLegacyPlaceholders()) {
+                buffer.push16(0); // was rc_arm_throttle
+            }
+            buffer.push16(FC.RC_CONFIG.rc_min_throttle)
                   .push16(FC.RC_CONFIG.rc_max_throttle)
-                  .push8(FC.RC_CONFIG.rc_deadband)
+                  .push8(FC.RC_CONFIG.rc_roll_deadband)
+                  .push8(FC.RC_CONFIG.rc_pitch_deadband)
                   .push8(FC.RC_CONFIG.rc_yaw_deadband);
             break;
         }
@@ -2449,14 +2541,20 @@ MspHelper.prototype.crunch = function(code) {
         }
 
         case MSPCodes.MSP_SET_PID_PROFILE: {
-            buffer.push8(FC.PID_PROFILE.pid_mode)
-                .push8(0) // was error_decay_time_ground (heli-only, removed)
-                .push8(FC.PID_PROFILE.iterm_decay_time)
-                .push8(0) // was error_decay_time_yaw (heli-only, removed)
-                .push8(FC.PID_PROFILE.iterm_decay_limit)
-                .push8(0) // was error_decay_limit_yaw (heli-only, removed)
-                .push8(FC.PID_PROFILE.error_rotation)
-                .push8(FC.PID_PROFILE.errorLimitRoll)
+            // Pre-22.3 firmware still expects the always-zero heli-only placeholder bytes.
+            const legacy = self.hasLegacyPlaceholders();
+            const pad = (count) => {
+                if (legacy) {
+                    for (let i = 0; i < count; i++) buffer.push8(0);
+                }
+            };
+            buffer.push8(FC.PID_PROFILE.pid_mode);
+            pad(1); // was error_decay_time_ground
+            buffer.push8(FC.PID_PROFILE.iterm_decay_time);
+            pad(1); // was error_decay_time_yaw
+            buffer.push8(FC.PID_PROFILE.iterm_decay_limit);
+            pad(2); // was error_decay_limit_yaw, error_rotation
+            buffer.push8(FC.PID_PROFILE.errorLimitRoll)
                 .push8(FC.PID_PROFILE.errorLimitPitch)
                 .push8(FC.PID_PROFILE.errorLimitYaw)
                 .push8(FC.PID_PROFILE.gyroCutoffRoll)
@@ -2468,15 +2566,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.itermRelaxType)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffPitch)
-                .push8(FC.PID_PROFILE.itermRelaxCutoffYaw)
-                .push8(0) // was yawStopGainCW (heli-only, removed)
-                .push8(0) // was yawStopGainCCW (heli-only, removed)
-                .push8(0) // was yawPrecompCutoff (heli-only, removed)
-                .push8(0) // was yawFFCyclicGain (heli-only, removed)
-                .push8(0) // was yawFFCollectiveGain (heli-only, removed)
-                .push8(0) // was yawFFImpulseGain (heli-only, removed)
-                .push8(0) // was yawFFImpulseDecay (heli-only, removed)
-                .push8(0) // was pitchFFCollectiveGain (heli-only, removed)
+                .push8(FC.PID_PROFILE.itermRelaxCutoffYaw);
+            pad(8); // was yaw stop gains, precomp cutoff, FF and dynamic gains, pitch collective FF
+            buffer
                 // Angle //
                 .push8(FC.PID_PROFILE.levelAngleStrength)
                 .push8(FC.PID_PROFILE.levelAngleLimit)
@@ -2484,21 +2576,18 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.horizonLevelStrength)
                 // Acro Trainer //
                 .push8(FC.PID_PROFILE.acroTrainerGain)
-                .push8(FC.PID_PROFILE.acroTrainerLimit)
-                // Cyclic Cross-coupling -- heli-only, removed //
-                .push8(0)
-                .push8(0)
-                .push8(0)
+                .push8(FC.PID_PROFILE.acroTrainerLimit);
+            pad(3); // was cyclic cross-coupling
+            buffer
                 // Att Hold //
                 .push8(FC.PID_PROFILE.attHoldGain)
                 .push8(FC.PID_PROFILE.attHoldDeadband)
                 // B-term cutoffs //
                 .push8(FC.PID_PROFILE.btermCutoffRoll)
                 .push8(FC.PID_PROFILE.btermCutoffPitch)
-                .push8(FC.PID_PROFILE.btermCutoffYaw)
-                // was yaw_inertia_precomp_gain/cutoff (heli-only, removed) //
-                .push8(0)
-                .push8(0)
+                .push8(FC.PID_PROFILE.btermCutoffYaw);
+            pad(2); // was yaw inertia precomp gain/cutoff
+            buffer
                 // Fixed-wing throttle-based gain attenuation (gain + curve index) //
                 .push8(FC.PID_PROFILE.fwTpaGain)
                 .push8(FC.PID_PROFILE.fwTpaCurve)
@@ -2527,6 +2616,7 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.autoHoverThrottleAssistGain)
                 .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
                 .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs);
+            writeAttitudeLimits(buffer, FC.PID_PROFILE);
             break;
         }
 
@@ -2554,9 +2644,11 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.SENSOR_CONFIG.gyro_to_use)
                 .push8(FC.SENSOR_CONFIG.gyroHighFsr)
                 .push8(FC.SENSOR_CONFIG.gyroMovementCalibThreshold)
-                .push16(FC.SENSOR_CONFIG.gyroCalibDuration)
-                .push16(FC.SENSOR_CONFIG.gyroOffsetYaw)
-                .push8(FC.SENSOR_CONFIG.gyroCheckOverflow);
+                .push16(FC.SENSOR_CONFIG.gyroCalibDuration);
+            if (self.hasLegacyPlaceholders()) {
+                buffer.push16(0); // was gyro_offset_yaw
+            }
+            buffer.push8(FC.SENSOR_CONFIG.gyroCheckOverflow);
             break;
         }
 

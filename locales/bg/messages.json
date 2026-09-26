@@ -2293,14 +2293,6 @@
         "message": "BEC напрежение",
         "english": "BEC Voltage"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Обороти на главата",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Обороти на опашката",
-        "english": "Tailspeed"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "Температура на полетния контролер",
         "english": "FC Temperature"
@@ -3297,10 +3289,6 @@
     "adjustmentsFunctionGovMaxThrottle": {
         "message": "Говерньор Максимална газ",
         "english": "Governor Max Throttle"
-    },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Говерньор обороти на ротора",
-        "english": "Governor Headspeed"
     },
     "adjustmentsFunctionGovYawFF": {
         "message": "Говерньор FF-коеф. на опашка",
@@ -8850,5 +8838,17 @@
     "presetsDontShowAgain": {
         "message": "Не показвай повече",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Обороти на главата",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Обороти на опашката",
+        "english": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Говерньор обороти на ротора",
+        "english": "Governor RPM"
     }
 }

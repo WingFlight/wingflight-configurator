@@ -168,7 +168,17 @@ tab.initialize = function (callback) {
         });
 
         self.exit = function (callback) {
-            if (CONFIGURATOR.cliEngineActive) {
+            // In CLI-only fallback mode (unsupported/unrecognised firmware, see
+            // connectCli() in serial_backend.js) the CLI is the only tab, so the
+            // only way a switch away from it can be requested is the header Flash
+            // button. Blocking that behind "type exit" left users stuck: typing
+            // exit reboots the FC, and auto-reconnect lands them straight back in
+            // the CLI. Let it through -- tab cleanup still sends `exit` (changes
+            // are discarded), then the tab switch disconnects and opens the
+            // flasher, which suppresses auto-connect while it's active.
+            const cliOnlyMode = !GUI.allowedTabs.some((tabName) => tabName !== 'cli');
+
+            if (CONFIGURATOR.cliEngineActive && !cliOnlyMode) {
                 const dialog = $('.dialogCLIExit')[0];
 
                 $('.cliExitBackBtn').click(function () {

@@ -176,6 +176,7 @@ export async function connectWebSerial(self, path, options, callback) {
             // up unattended during auto-reconnect. Fail quietly instead
             // and let the user retry/select manually.
             console.warn(`WebSerial port not found: ${path}`);
+            self.lastOpenError = 'notFound';
             callback?.(false);
             return;
         }
@@ -219,6 +220,12 @@ export async function connectWebSerial(self, path, options, callback) {
         callback?.({ connectionId: self.connectionId, bitrate: self.bitrate });
     } catch (error) {
         console.warn('Web Serial connection failed', error);
+        // port.open() rejects with a bare NetworkError ("Failed to open
+        // serial port") when the OS refuses the port -- which is what
+        // another program or tab already holding it looks like -- or
+        // InvalidStateError if it's somehow already open. Neither says
+        // "busy" outright, but that's the practical cause of both.
+        self.lastOpenError = 'openFailed';
         callback?.(false);
     }
 }

@@ -132,14 +132,10 @@
         bind:value={FC.RC_CONFIG.rc_deflection}
       />
     </Field>
-    <Field
-      id="receiver-cyclic-deadband"
-      label="receiverCyclicDeadband"
-      unit="μs"
-    >
+    <Field id="receiver-roll-deadband" label="receiverRollDeadband" unit="μs">
       {#snippet tooltip()}
         <Tooltip
-          help="receiverHelpCyclicDeadband"
+          help="receiverHelpRollDeadband"
           attrs={[
             { name: "genericDefault", value: "5μs" },
             { name: "genericRange", value: "0μs - 100μs" },
@@ -147,10 +143,27 @@
         />
       {/snippet}
       <NumberInput
-        id="receiver-cyclic-deadband"
+        id="receiver-roll-deadband"
         min="0"
         max="100"
-        bind:value={FC.RC_CONFIG.rc_deadband}
+        bind:value={FC.RC_CONFIG.rc_roll_deadband}
+      />
+    </Field>
+    <Field id="receiver-pitch-deadband" label="receiverPitchDeadband" unit="μs">
+      {#snippet tooltip()}
+        <Tooltip
+          help="receiverHelpPitchDeadband"
+          attrs={[
+            { name: "genericDefault", value: "5μs" },
+            { name: "genericRange", value: "0μs - 100μs" },
+          ]}
+        />
+      {/snippet}
+      <NumberInput
+        id="receiver-pitch-deadband"
+        min="0"
+        max="100"
+        bind:value={FC.RC_CONFIG.rc_pitch_deadband}
       />
     </Field>
     <Field id="receiver-yaw-deadband" label="receiverYawDeadband" unit="μs">

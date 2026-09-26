@@ -117,7 +117,8 @@ export function applyVirtualConfig() {
     rc_deflection: 510,
     rc_min_throttle: 0,
     rc_max_throttle: 0,
-    rc_deadband: 5,
+    rc_roll_deadband: 5,
+    rc_pitch_deadband: 5,
     rc_yaw_deadband: 5,
   });
 
@@ -163,6 +164,12 @@ export function applyVirtualConfig() {
     capacity: 10000,
     voltageMeterSource: 1,
     currentMeterSource: 1,
+    hasProfileCells: true,
+    cellCounts: [3, 4, 0, 0, 0, 0],
+    vbatmincellvoltages: [1, 1, 1, 1, 1, 1],
+    vbatmaxcellvoltages: [4, 4, 4, 4, 4, 4],
+    vbatfullcellvoltages: [3.9, 3.9, 3.9, 3.9, 3.9, 3.9],
+    vbatwarningcellvoltages: [3, 3, 3, 3, 3, 3],
   });
 
   Object.assign(FC.SMARTFUEL_CONFIG, {
@@ -334,7 +341,6 @@ export function applyVirtualConfig() {
     "TRAINER",
     "ALTHOLD",
     "RESCUE",
-    "GPSRESCUE",
     "FAILSAFE",
 
     // RC modes
@@ -373,10 +379,6 @@ export function applyVirtualConfig() {
   ];
 
   FC.PID_PROFILE.pid_mode = 1;
-
-  Object.assign(FC.RC_TUNING, {
-    rates_type: 0,
-  });
 }
 
 if (import.meta.hot) {

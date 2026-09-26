@@ -1,9 +1,12 @@
 <script>
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
+  import semver from "semver";
 
+  import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
@@ -15,10 +18,18 @@
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
-  const MAX_SERVOS = 26;
+  const PWM_SERVO_SLOTS = 8;
   const BUS_SERVO_OFFSET = 8;
-  const BUS_SERVO_CHANNELS = 18;
+  // Firmware BUS_SERVO_CHANNELS: 24 from API 22.5, 18 before
+  const BUS_SERVO_CHANNELS = Mixer.busServoChannels();
+  const MAX_SERVOS = PWM_SERVO_SLOTS + BUS_SERVO_CHANNELS;
   const OVERRIDE_OFF = 2001;
+
+  // Bus output channel counts (API 22.5): wingflight-firmware's
+  // sbus_out_channels / fbus_master_channels, carried in MSP_MIXER_CONFIG.
+  const hasBusOutChannels = semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
+  const SBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16];
+  const FBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16, 24];
 
   let loading = $state(true);
   let needReboot = $state(false);
@@ -28,6 +39,8 @@
   // the same dirty/Save/Revert cycle as everything else on this tab instead
   // of silently self-committing with no toolbar feedback.
   let initialBusClonePwm = $state(null);
+  // Same idea for the bus output channel counts (also on FC.MIXER_CONFIG).
+  let initialBusOutChannels = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -49,15 +62,42 @@
       FC.MIXER_CONFIG.bus_servo_clone_pwm !== initialBusClonePwm,
   );
 
-  let dirty = $derived(changes.length > 0 || busCloneDirty);
-
-  let hasFbusOrSbus = $derived(
-    FC.SERIAL_CONFIG.ports.some(
-      (port) =>
-        port.functions.includes("FBUS_OUT") ||
-        port.functions.includes("SBUS_OUT"),
-    ),
+  let busOutChannelsDirty = $derived(
+    initialBusOutChannels !== null &&
+      (FC.MIXER_CONFIG.sbus_out_channels !== initialBusOutChannels.sbus ||
+        FC.MIXER_CONFIG.fbus_master_channels !== initialBusOutChannels.fbus),
   );
+
+  let dirty = $derived(
+    changes.length > 0 || busCloneDirty || busOutChannelsDirty,
+  );
+
+  let hasSbusOut = $derived(
+    FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("SBUS_OUT")),
+  );
+  let hasFbusOut = $derived(
+    FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("FBUS_OUT")),
+  );
+  let hasFbusOrSbus = $derived(hasSbusOut || hasFbusOut);
+
+  // Bus servos the configured outputs drive. SBUS and F.Bus output can run
+  // at the same time, and bus servo N is channel N on both, so it's the
+  // larger of the two - as in the firmware's getBusServoOutputCount().
+  // Follows the selectors below straight away; 16 on firmware without the
+  // setting.
+  let busOutputCount = $derived.by(() => {
+    if (!hasBusOutChannels) {
+      return 16;
+    }
+    let count = 0;
+    if (hasFbusOut) {
+      count = Math.max(count, FC.MIXER_CONFIG.fbus_master_channels);
+    }
+    if (hasSbusOut) {
+      count = Math.max(count, Math.min(FC.MIXER_CONFIG.sbus_out_channels, 16));
+    }
+    return count || 16;
+  });
   let maxServos = MAX_SERVOS;
   let busActive = $derived(hasFbusOrSbus);
 
@@ -89,7 +129,7 @@
       return [];
     }
 
-    const displayCount = Math.min(BUS_SERVO_CHANNELS, 16);
+    const displayCount = Math.min(busOutputCount, BUS_SERVO_CHANNELS);
     const list = [];
     for (let i = 0; i < displayCount; i++) {
       const index = pwmServoCount + i;
@@ -194,6 +234,7 @@
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
+    initialBusOutChannels = snapshotBusOutChannels();
     overrideEnabled = allServos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -260,14 +301,28 @@
     mspHelper.sendMixerConfig();
   }
 
+  // Same live-push as onToggleBusClone; the firmware uses the new count from
+  // its next frame.
+  function onBusOutChannelsChange() {
+    mspHelper.sendMixerConfig();
+  }
+
+  function snapshotBusOutChannels() {
+    return {
+      sbus: FC.MIXER_CONFIG.sbus_out_channels,
+      fbus: FC.MIXER_CONFIG.fbus_master_channels,
+    };
+  }
+
   function onClickHelp() {
     window.open(getTabHelpURL("tabServos"), "_system");
   }
 
   export async function onSave() {
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
-    // Already pushed live by onToggleBusClone when changed -- EEPROM_WRITE
-    // below persists it along with everything else, no need to resend.
+    // Already pushed live by onToggleBusClone / onBusOutChannelsChange when
+    // changed -- EEPROM_WRITE below persists them along with everything else,
+    // no need to resend.
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
@@ -280,14 +335,17 @@
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
+    initialBusOutChannels = snapshotBusOutChannels();
   }
 
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
 
-    if (busCloneDirty) {
+    if (busCloneDirty || busOutChannelsDirty) {
       FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
+      FC.MIXER_CONFIG.sbus_out_channels = initialBusOutChannels.sbus;
+      FC.MIXER_CONFIG.fbus_master_channels = initialBusOutChannels.fbus;
       await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     }
 
@@ -352,7 +410,7 @@
 
   {#if busActive}
     <Section label="servoConfigurationBus">
-      <div class="override-toggle">
+      <div class="bus-options">
         <Switch
           id="servo-bus-clone-enable"
           bind:checked={
@@ -361,10 +419,41 @@
         />
         <label for="servo-bus-clone-enable">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <span>{@html $i18n.t("servoBusCloneLabel")}</span>
+          {@html $i18n.t("servoBusCloneLabel")}
         </label>
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
+
+        {#if hasBusOutChannels && hasFbusOut}
+          <select
+            id="servo-fbus-out-channels"
+            bind:value={FC.MIXER_CONFIG.fbus_master_channels}
+            onchange={onBusOutChannelsChange}
+          >
+            {#each FBUS_OUT_CHANNEL_OPTIONS as count (count)}
+              <option value={count}>{count}</option>
+            {/each}
+          </select>
+          <label for="servo-fbus-out-channels">
+            <strong>{$i18n.t("servoFbusOutChannels")}</strong>
+          </label>
+          <span class="description">{$i18n.t("servoFbusOutChannelsHelp")}</span>
+        {/if}
+        {#if hasBusOutChannels && hasSbusOut}
+          <select
+            id="servo-sbus-out-channels"
+            bind:value={FC.MIXER_CONFIG.sbus_out_channels}
+            onchange={onBusOutChannelsChange}
+          >
+            {#each SBUS_OUT_CHANNEL_OPTIONS as count (count)}
+              <option value={count}>{count}</option>
+            {/each}
+          </select>
+          <label for="servo-sbus-out-channels">
+            <strong>{$i18n.t("servoSbusOutChannels")}</strong>
+          </label>
+          <span class="description">{$i18n.t("servoSbusOutChannelsHelp")}</span>
+        {/if}
       </div>
 
       <div class="table-scroll">
@@ -453,6 +542,29 @@
     align-items: center;
     gap: 8px;
     padding: 8px;
+  }
+
+  // Control | label | description, one row per bus option, so the switch and
+  // the channel selectors line up and every description starts in the same
+  // column.
+  .bus-options {
+    display: grid;
+    grid-template-columns: 5rem max-content 1fr;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 12px;
+    padding: 8px;
+
+    label {
+      white-space: nowrap;
+    }
+
+    // Overrides the global select min-width (120px) so a two-digit count
+    // fits the control column instead of spilling into the label.
+    select {
+      width: 100%;
+      min-width: 0;
+    }
   }
 
   .description {

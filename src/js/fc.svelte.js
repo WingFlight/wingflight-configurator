@@ -31,6 +31,7 @@ class FlightController {
   GAIN_CURVES = $state();
   GOVERNOR_CONFIG = $state();
   GPS_CONFIG = $state();
+  GPS_NAV_CONFIG = $state();
   GPS_DATA = $state();
   GPS_RESCUE = $state();
   LED_COLORS = $state();
@@ -160,6 +161,12 @@ class FlightController {
       vbatwarningcellvoltage:     0,
       lvcPercentage:              0,
       mahWarningPercentage:       0,
+      hasProfileCells:            false,
+      cellCounts:                 [ 0, 0, 0, 0, 0, 0 ],
+      vbatmincellvoltages:        [ 0, 0, 0, 0, 0, 0 ],
+      vbatmaxcellvoltages:        [ 0, 0, 0, 0, 0, 0 ],
+      vbatfullcellvoltages:       [ 0, 0, 0, 0, 0, 0 ],
+      vbatwarningcellvoltages:    [ 0, 0, 0, 0, 0, 0 ],
     };
 
     this.BATTERY_STATE = {
@@ -206,6 +213,11 @@ class FlightController {
     this.MIXER_CONFIG = {
       model_type:                 0,
       bus_servo_clone_pwm:        1,
+      // API 22.5: bus output channel counts (sbus_out_channels,
+      // fbus_master_channels) and the count the configured bus output drives
+      sbus_out_channels:          16,
+      fbus_master_channels:       24,
+      bus_servo_output_count:     0,
     };
 
     this.MIXER_INPUTS =             [];
@@ -282,25 +294,19 @@ class FlightController {
       roll_srate:                 0,
       pitch_srate:                0,
       yaw_srate:                  0,
-      collective_srate:           0,
       yaw_rc_expo:                0,
       yaw_rc_rate:                0,
       pitch_rc_rate:              0,
       pitch_rc_expo:              0,
-      collective_rc_rate:         0,
-      collective_rc_expo:         0,
       roll_rate_limit:            2000,
       pitch_rate_limit:           2000,
       yaw_rate_limit:             2000,
-      collective_rate_limit:      2000,
       roll_response_time:         0,
       pitch_response_time:        0,
       yaw_response_time:          0,
-      collective_response_time:   0,
       roll_accel_limit:           0,
       pitch_accel_limit:          0,
       yaw_accel_limit:            0,
-      collective_accel_limit:     0,
 
       roll_setpoint_boost_gain:   0,
       roll_setpoint_boost_cutoff: 0,
@@ -308,8 +314,6 @@ class FlightController {
       pitch_setpoint_boost_cutoff:0,
       yaw_setpoint_boost_gain:    0,
       yaw_setpoint_boost_cutoff:  0,
-      collective_setpoint_boost_gain:   0,
-      collective_setpoint_boost_cutoff: 0,
 
       yaw_dynamic_ceiling_gain:   0,
       yaw_dynamic_deadband_gain:  0,
@@ -336,9 +340,6 @@ class FlightController {
       half_duplex:                false,
       update_hz:                  0,
       current_offset:             0,
-      hw4_current_offset:         0,
-      hw4_current_gain:           0,
-      hw4_voltage_gain:           0,
       pinswap:                    false,
       voltage_correction:         0,
       current_correction:         0,
@@ -350,7 +351,6 @@ class FlightController {
       accelerometer:              [0, 0, 0],
       magnetometer:               [0, 0, 0],
       altitude:                   0,
-      sonar:                      0,
       kinematics:                 [0.0, 0.0, 0.0],
       debug:                      [0, 0, 0, 0],
     };
@@ -573,7 +573,6 @@ class FlightController {
       levelSensitivity:           0,
       itermThrottleThreshold:     0,
       itermAcceleratorGain:       0,
-      error_rotation:             0,
       iterm_decay_time:    0,
       iterm_decay_limit:   0,
       errorLimitRoll:             0,
@@ -605,6 +604,13 @@ class FlightController {
       acroTrainerAngleLimit:      0,
       acroTrainerLimit:           0,
       acroTrainerGain:            0,
+      hasAxisLimits:              false,
+      angleRollLimit:             0,
+      anglePitchLimit:            0,
+      trainerRollLimit:           0,
+      trainerPitchLimit:          0,
+      axisLimitsRaw:              [],
+      axisLimitsInitial:          [],
       feedforwardRoll:            0,
       feedforwardPitch:           0,
       feedforwardYaw:             0,
@@ -695,7 +701,6 @@ class FlightController {
       gyroHighFsr:                0,
       gyroMovementCalibThreshold: 0,
       gyroCalibDuration:          0,
-      gyroOffsetYaw:              0,
       gyroCheckOverflow:          0,
     };
 
@@ -714,10 +719,10 @@ class FlightController {
     this.RC_CONFIG = {
       rc_center:                    0,
       rc_deflection:                0,
-      rc_arm_throttle:              0,
       rc_min_throttle:              0,
       rc_max_throttle:              0,
-      rc_deadband:                  0,
+      rc_roll_deadband:             0,
+      rc_pitch_deadband:            0,
       rc_yaw_deadband:              0,
     };
 
@@ -728,6 +733,26 @@ class FlightController {
       failsafe_switch_mode:           0,
       failsafe_throttle_low_delay:    0,
       failsafe_procedure:             0,
+      // Appended MSP field (wingflight-firmware#146); defaulted here so a save
+      // against firmware that predates it (data.remaining() < 2 on read, so
+      // this is never overwritten) still crunches a real number, not undefined.
+      failsafe_recovery_delay:        0,
+    };
+
+    this.GPS_NAV_CONFIG = {
+      nav_loiter_radius:              100,
+      nav_loiter_direction:           0,
+      nav_rth_altitude:               50,
+      nav_min_sats:                   8,
+      nav_max_bank_angle:             25,
+      nav_max_pitch_angle:            15,
+      nav_bearing_kp:                 200,
+      nav_altitude_kp:                100,
+      // Appended MSP fields; defaulted here so a save against firmware that
+      // predates them still crunches real numbers (older firmware ignores them).
+      nav_altitude_kd:                200,
+      nav_throttle:                   60,
+      nav_turn_coordination:          100,
     };
 
     this.TELEMETRY_CONFIG = {

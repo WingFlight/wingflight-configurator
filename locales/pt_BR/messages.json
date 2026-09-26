@@ -2772,16 +2772,6 @@
         "english": "BEC Voltage",
         "status": "New entry. Please translate!"
     },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed",
-        "english": "Headspeed",
-        "status": "New entry. Please translate!"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tailspeed",
-        "english": "Tailspeed",
-        "status": "New entry. Please translate!"
-    },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "FC Temperature",
         "english": "FC Temperature",
@@ -10341,6 +10331,16 @@
     "presetsDontShowAgain": {
         "message": "Don't show again",
         "english": "Don't show again",
+        "status": "New entry. Please translate!"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Headspeed",
+        "english": "Motor 1 RPM",
+        "status": "New entry. Please translate!"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Tailspeed",
+        "english": "Motor 2 RPM",
         "status": "New entry. Please translate!"
     }
 }

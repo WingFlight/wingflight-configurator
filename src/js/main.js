@@ -67,7 +67,10 @@ function closeSerial() {
         bufView[3] = 0x74; // t
         bufView[4] = 0x0D; // enter
 
-        const sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        let sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        if (serial.connectionType === 'remote') {
+            sendFn = (_connectionId, data, callback) => serial.send(data, callback);
+        }
         sendFn(connectionId, bufferOut, function () {
             console.log('Send exit');
         });
@@ -105,6 +108,14 @@ function closeSerial() {
 }
 
 function closeHandler() {
+    if (GUI.isNWJS() && GUI.current_tab?.requestClose) {
+        GUI.current_tab.requestClose(() => closeWindow.call(this));
+        return;
+    }
+    closeWindow.call(this);
+}
+
+function closeWindow() {
     if (!GUI.isCordova()) {
         this.hide();
     }
@@ -448,6 +459,7 @@ function notifyOutdatedVersion(releaseData) {
 
 export function updateTabList(features) {
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
+    $('#tabs ul.mode-connected li.tab_gps_nav').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
     $('#tabs ul.mode-connected li.tab_thrust_vector').toggle(features.isEnabled('THRUST_VECTOR'));
 

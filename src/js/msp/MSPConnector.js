@@ -54,7 +54,7 @@ MSPConnectorImpl.prototype.connect = function (port, baud, onConnectCallback, on
                 self.onConnectCallback();
             });
         } else {
-            GUI.log(i18n.getMessage('serialPortOpenFail'));
+            GUI.log(serial.openFailureMessage());
             self.onFailureCallback();
         }
     });

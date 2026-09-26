@@ -11,6 +11,7 @@ import "./failsafe.js";
 import "./fbus_sensors.js";
 import "./firmware_flasher.js";
 import "./gps.js";
+import "./gps_nav.js";
 import "./gyro.js";
 import "./help.js";
 import "./landing.js";

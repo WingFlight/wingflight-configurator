@@ -73,7 +73,7 @@
       "MSP",
       "PARALYZE",
       "GPS",
-      "RESC",
+      "GPS_RTH",
       "RPMFILTER",
       "REBOOT_REQ",
       "DSHOT_BITBANG",
@@ -98,7 +98,7 @@
   let fastInterval;
   let slowInterval;
 
-  let numChs = $derived(Math.min(FC.RC.active_channels ?? 0, 18));
+  let numChs = $derived(Math.min(FC.RC.active_channels ?? 0, 24));
   let numBars = $derived(Math.max(numChs, 8));
 
   function channelWidth(i) {

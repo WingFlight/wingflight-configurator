@@ -133,16 +133,22 @@ export async function runBackupCommand(cliEngine, backupType) {
   return cliEngine.outputHistory;
 }
 
-// True if `text`'s last non-blank line is a bare `save` -- i.e. it looks
-// like a full `dump all`/`diff all` backup capture rather than some other
-// snippet (a handful of `set`s, say) that was never meant to save/reboot
-// anything. Gates replayBackup()'s save-retry below: resending `save` after
-// a snippet that doesn't end with one would just be sending a command that
-// was never part of what was loaded.
+// True if `text`'s last command is a bare `save` -- i.e. it looks like a full
+// `dump all`/`diff all` backup capture rather than some other snippet (a
+// handful of `set`s, say) that was never meant to save/reboot anything.
+// Gates replayBackup()'s save-retry below: resending `save` after a snippet
+// that doesn't end with one would just be sending a command that was never
+// part of what was loaded.
+//
+// Blank and `#` lines are skipped -- the CLI treats `#` lines as comments,
+// and a capture straight off the FC (backupOverSerial()/runBackupCommand())
+// always ends with the CLI's own "# " prompt after the `save`. Checking only
+// the last non-blank line saw that prompt, never matched, and silently
+// skipped the save-retry for every restore.
 function endsWithSave(text) {
   const lines = text.split("\n").map((line) => line.trim());
   for (let i = lines.length - 1; i >= 0; i--) {
-    if (lines[i].length === 0) continue;
+    if (lines[i].length === 0 || lines[i].startsWith("#")) continue;
     return lines[i].toLowerCase() === "save";
   }
   return false;
