@@ -67,7 +67,12 @@
 
     const options = [];
     for (let i = 0; i < FC.DEBUG_CONFIG.debugModeCount; i++) {
-      options.push({ value: i, label: i < names.length ? names[i] : unknown });
+      const label = i < names.length ? names[i] : unknown;
+      // Reserved slots log nothing; only show one if the FC is already set to it.
+      if (label.startsWith("UNUSED_") && i !== FC.DEBUG_CONFIG.debugMode) {
+        continue;
+      }
+      options.push({ value: i, label });
     }
 
     return options.sort((a, b) => {
