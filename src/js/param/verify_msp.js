@@ -43,6 +43,7 @@ function firstDifference(a, b) {
  */
 export async function verifyReplies(virtual, rawRequest, names = {}) {
     const lines = [];
+    const matched = [];
     let ok = 0;
     let bad = 0;
     for (const [code, codec] of Object.entries(virtual.codecs)) {
@@ -64,6 +65,7 @@ export async function verifyReplies(virtual, rawRequest, names = {}) {
         const at = firstDifference(real, mine);
         if (at < 0) {
             ok++;
+            matched.push(Number(code));
         } else {
             bad++;
             lines.push(
@@ -73,7 +75,7 @@ export async function verifyReplies(virtual, rawRequest, names = {}) {
         }
     }
     lines.push(`# replies: ${ok} match the firmware, ${bad} do not`);
-    return { ok, bad, lines };
+    return { ok, bad, lines, matched };
 }
 
 /**

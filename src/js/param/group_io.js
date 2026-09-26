@@ -27,6 +27,16 @@ export function readDefaultGroup(io, group) {
     return io.readDefaultRange ? readChunked((pgn, off, len) => io.readDefaultRange(pgn, off, len), group) : null;
 }
 
+/** Bytes [offset, offset + length) of a group, in transfers that fit. */
+export async function readSpan(io, pgn, offset, length) {
+    const out = new Uint8Array(length);
+    for (let at = 0; at < length; at += CHUNK) {
+        const view = await io.readRange(pgn, offset + at, Math.min(CHUNK, length - at));
+        out.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength), at);
+    }
+    return out;
+}
+
 export async function writeChunked(io, pgn, offset, bytes) {
     for (let at = 0; at < bytes.length; at += CHUNK) {
         await io.writeRange(pgn, offset + at, [...bytes.slice(at, at + CHUNK)]);
