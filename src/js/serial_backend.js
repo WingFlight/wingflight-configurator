@@ -1024,7 +1024,13 @@ export function update_dataflash_global() {
 
         const megabytes = kilobytes / 1024;
 
-        return megabytes.toFixed(1) + "MB";
+        if (megabytes < 1024) {
+            return megabytes.toFixed(1) + "MB";
+        }
+
+        const gigabytes = megabytes / 1024;
+
+        return gigabytes.toFixed(1) + "GB";
     }
 
     function showUsage(label, totalBytes, freeBytes) {
