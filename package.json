@@ -7,6 +7,7 @@
   "node-remote": "http://localhost:*",
   "scripts": {
     "lint": "eslint src \"./*.mjs\"",
+    "verify:msp-sitl": "node scripts/verify-msp-sitl.mjs",
     "lint:fix": "eslint --fix src \"./*.mjs\"",
     "start": "concurrently --kill-others \"pnpm vite\" \"pnpm gulp dev_client\"",
     "build": "node scripts/vite-build.mjs nwjs",
