@@ -60,6 +60,17 @@ function putInt(out, value, bytes) {
     }
 }
 
+/**
+ * The request bytes that select element `i` of an indexed codec: the index
+ * itself, or the id a const table gives element `i` (index.map).
+ */
+export function indexRequest(codec, i) {
+    const value = codec.index.map ? codec.index.map[i] : i;
+    const out = [];
+    putInt(out, value, codec.index.w);
+    return out;
+}
+
 function getInt(bytes, at, size, signed) {
     let v = 0n;
     for (let i = size - 1; i >= 0; i--) {
@@ -95,7 +106,11 @@ export class VirtualMsp {
         return group;
     }
 
-    /** The index a request selects (a setter's first bytes, or a request-indexed reply's). */
+    /**
+     * The element a request selects (a setter's first bytes, or a
+     * request-indexed reply's), or null where the firmware accepts a request
+     * that selects none and does nothing (index.miss "ignore").
+     */
     static #index(code, codec, data) {
         if (codec.len !== undefined && data.length !== codec.len) {
             throw new VirtualMspError(`opcode ${code} takes ${codec.len} bytes, got ${data.length}`);
@@ -107,9 +122,12 @@ export class VirtualMsp {
         if (data.length < codec.index.w) {
             throw new VirtualMspError(`opcode ${code} is missing its index`);
         }
-        const index = getInt(data, 0, codec.index.w, false);
-        if (index >= codec.index.max) {
-            throw new VirtualMspError(`opcode ${code}: index ${index} is past ${codec.index.max - 1}`);
+        const value = getInt(data, 0, codec.index.w, false);
+        // index.map: the request names an element by the id a const table gives it
+        const index = codec.index.map ? codec.index.map.indexOf(value) : value;
+        if (index < 0 || index >= codec.index.max) {
+            if (codec.index.miss === "ignore") return null;
+            throw new VirtualMspError(`opcode ${code}: index ${value} selects no element`);
         }
         return index;
     }
@@ -162,6 +180,7 @@ export class VirtualMsp {
         }
         const data = payload instanceof Uint8Array ? payload : Uint8Array.from(payload || []);
         const index = VirtualMsp.#index(code, codec, data);
+        if (index === null) return new Uint8Array(0); // the firmware writes nothing
         const ops = codec.ops.map(info);
         const offsets = await this.#where(codec, ops, index);
 
@@ -221,6 +240,7 @@ export class VirtualMsp {
         }
         const data = payload instanceof Uint8Array ? payload : Uint8Array.from(payload ?? []);
         const index = VirtualMsp.#index(code, codec, data);
+        if (index === null) return; // accepted, and nothing stored
         let at = codec.index ? codec.index.w : 0;
 
         const ops = codec.ops.map(info);

@@ -8,7 +8,12 @@
  * PARAM_WRITE to the same SITL. The manifest must be the one made for that
  * SITL build (make manifest TARGET=SITL).
  *
- *   node scripts/verify-msp-sitl.mjs <wingflight_SITL binary> <SITL manifest.json> [--setters]
+ *   node scripts/verify-msp-sitl.mjs <wingflight_SITL binary> <SITL manifest.json>
+ *        [--perturb] [--setters] [--effects]
+ *
+ * --effects runs every setter codec against the firmware's own setter on
+ * sampled requests and compares the stored bytes (verifySetterEffects) --
+ * the only check for setters without a matching getter.
  */
 
 import { spawn } from "node:child_process";
@@ -19,12 +24,12 @@ import { join } from "node:path";
 
 import { Manifest } from "../src/js/param/manifest.js";
 import { VirtualMsp } from "../src/js/param/virtual_msp.js";
-import { verifyReplies, verifySetters, symmetricPairs } from "../src/js/param/verify_msp.js";
+import { verifyReplies, verifySetters, verifySetterEffects, symmetricPairs } from "../src/js/param/verify_msp.js";
 import { MSPCodes } from "../src/js/msp/MSPCodes.js";
 
 const [binary, manifestPath, ...flags] = process.argv.slice(2);
 if (!binary || !manifestPath) {
-    console.error("usage: node scripts/verify-msp-sitl.mjs <SITL binary> <SITL manifest.json> [--setters]");
+    console.error("usage: node scripts/verify-msp-sitl.mjs <SITL binary> <SITL manifest.json> [--perturb] [--setters] [--effects]");
     process.exit(2);
 }
 const PORT = 5761;
@@ -190,6 +195,19 @@ try {
         const setters = await verifySetters(virtual, rawRequest, names, symmetricPairs(virtual.codecs, MSPCodes));
         setters.lines.forEach((l) => console.log(l));
         failed ||= setters.bad > 0;
+    }
+
+    if (flags.includes("--effects")) {
+        let seed = 11;
+        const random = () => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) >>> 16) & 0xff;
+        // SITL's eeprom.bin is in the scratch directory: saving is free.
+        const save = async () => {
+            if ((await request(MSPCodes.MSP_EEPROM_WRITE)) === null) throw new Error("MSP_EEPROM_WRITE refused");
+        };
+        await save();
+        const effects = await verifySetterEffects(virtual, rawRequest, io, names, random, save);
+        effects.lines.forEach((l) => console.log(l));
+        failed ||= effects.bad > 0;
     }
 } finally {
     socket.destroy();

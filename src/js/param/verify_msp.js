@@ -12,7 +12,8 @@
  * config (never saved), so it is opt-in.
  */
 
-import { VirtualMspError } from "./virtual_msp.js";
+import { VirtualMspError, indexRequest } from "./virtual_msp.js";
+import { readSpan, writeChunked } from "./group_io.js";
 
 const hex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join(" ");
 
@@ -33,13 +34,7 @@ function opAt(codec, pos) {
 /** The requests to check a reply codec with: none, or each index it takes. */
 function requestsFor(codec) {
     if (!codec.index) return [[]];
-    const out = [];
-    for (let i = 0; i < codec.index.max; i++) {
-        const bytes = [];
-        for (let k = 0, v = i; k < codec.index.w; k++, v = Math.floor(v / 256)) bytes.push(v % 256);
-        out.push(bytes);
-    }
-    return out;
+    return Array.from({ length: codec.index.max }, (_, i) => indexRequest(codec, i));
 }
 
 function firstDifference(a, b) {
@@ -165,7 +160,7 @@ export async function verifySetters(virtual, rawRequest, names = {}, pairs = [])
         const indices = indexed ? [...new Set([0, Math.floor(indexed.max / 2), indexed.max - 1])] : [null];
         let verdict = "ok";
         for (const i of indices) {
-            const request = i === null ? [] : [i];
+            const request = i === null ? [] : indexRequest(virtual.codec(setCode), i);
             const before = await rawRequest(getCode, request.length ? request : undefined);
             if (before === null) {
                 verdict = "skip";
@@ -193,5 +188,122 @@ export async function verifySetters(virtual, rawRequest, names = {}, pairs = [])
         else if (verdict === "bad") bad++;
     }
     lines.push(`# setters: ${ok} leave the firmware's reply unchanged, ${bad} do not`);
+    return { ok, bad, lines };
+}
+
+/**
+ * A request for setter `codec` at element `i` (or none), with values the
+ * codec's range checks accept, and random bytes elsewhere. `i === "miss"`
+ * selects no element.
+ */
+function samplePayload(codec, i, random) {
+    const out = [];
+    const put = (value, w) => {
+        for (let k = 0; k < w; k++, value = Math.floor(value / 256)) out.push(value % 256);
+    };
+    if (codec.index) {
+        if (i === "miss") {
+            let value = codec.index.max;
+            while (codec.index.map?.includes(value)) value++;
+            put(value, codec.index.w);
+        } else {
+            out.push(...indexRequest(codec, i));
+        }
+    }
+    for (const op of codec.ops) {
+        const check = op[0] === "f" ? op[6] : undefined;
+        if (check) {
+            const lo = check.min ?? 0;
+            const hi = check.max ?? lo + 255;
+            put((lo + (random() % (hi - lo + 1)) + 2 ** 32) % 2 ** 32, op[1]);
+        } else if (op[0] === "f" || op[0] === "x" || op[0] === "s") {
+            for (let k = 0; k < op[1]; k++) out.push(random());
+        } else if (op[0] === "Z") {
+            for (let k = 0; k < op[1] + 3; k++) out.push(random()); // past its max, which is dropped
+        }
+    }
+    if (codec.len !== undefined) {
+        while (out.length < codec.len) out.push(random());
+        out.length = codec.len;
+    }
+    return out;
+}
+
+/**
+ * Every setter codec against the firmware's own setter, by effect: the same
+ * request through each, from the same configuration, must leave the same
+ * group bytes (or be refused by both). Covers setters without a matching
+ * getter, which verifySetters cannot. It writes random values into RAM and
+ * restores them after, and the firmware's setter also runs its side effects:
+ * for SITL, not for a board.
+ *
+ * With `save`, both sides are compared after it: a setter's validation
+ * (validateAndFixGyroConfig(), ...) is not replayed by the codec, and it is
+ * the save that has to apply it. Run the save once before, so the starting
+ * configuration is one validation leaves alone.
+ *
+ * @param io     { readRange, writeRange } -- PARAM_READ / PARAM_WRITE
+ * @param random () => a byte
+ * @param save   async () => void, e.g. MSP_EEPROM_WRITE
+ */
+export async function verifySetterEffects(virtual, rawRequest, io, names = {}, random = () => 0, save = null) {
+    const lines = [];
+    let ok = 0;
+    let bad = 0;
+    for (const [code, codec] of Object.entries(virtual.codecs)) {
+        if (codec.dir !== "in") continue;
+        const name = names[code] ?? `opcode ${code}`;
+        const pgns = [...new Set(codec.ops.filter((op) => op[0] !== "c" && op[0] !== "s").map((op) => (op[0] === "Z" ? op[3] : op[2])))];
+        const snapshot = async () => {
+            const map = new Map();
+            for (const pgn of pgns) {
+                map.set(pgn, Uint8Array.from(await readSpan(io, pgn, 0, virtual.manifest.group(pgn).size)));
+            }
+            return map;
+        };
+        const restore = async (map) => {
+            for (const [pgn, bytes] of map) await writeChunked(io, pgn, 0, bytes);
+        };
+        const samples = codec.index
+            ? [...new Set([0, Math.floor(codec.index.max / 2), codec.index.max - 1]), "miss"]
+            : [null];
+        let verdict = "ok";
+        for (const i of samples) {
+            const label = `${name}${i === null ? "" : `[${i}]`}`;
+            const payload = samplePayload(codec, i, random);
+            const before = await snapshot();
+            const realRefused = (await rawRequest(Number(code), payload)) === null;
+            if (save) await save();
+            const real = await snapshot();
+            await restore(before);
+            let virtualRefused = false;
+            try {
+                await virtual.write(Number(code), payload);
+            } catch (error) {
+                if (!(error instanceof VirtualMspError)) throw error;
+                virtualRefused = true;
+            }
+            if (save) await save();
+            const mine = await snapshot();
+            await restore(before);
+            if (realRefused !== virtualRefused) {
+                lines.push(`FAIL ${label}: the firmware ${realRefused ? "refused" : "accepted"} it, the codec ${virtualRefused ? "refused" : "accepted"} it`);
+                verdict = "bad";
+                break;
+            }
+            const diff = pgns
+                .map((pgn) => [pgn, firstDifference(real.get(pgn), mine.get(pgn))])
+                .find(([, at]) => at >= 0);
+            if (diff) {
+                lines.push(`FAIL ${label}: pgn ${diff[0]} differs at offset ${diff[1]} ` +
+                    `(firmware ${real.get(diff[0])[diff[1]]}, codec ${mine.get(diff[0])[diff[1]]})`);
+                verdict = "bad";
+                break;
+            }
+        }
+        if (verdict === "ok") ok++;
+        else bad++;
+    }
+    lines.push(`# setter effects: ${ok} store what the firmware's setter stores, ${bad} do not`);
     return { ok, bad, lines };
 }
