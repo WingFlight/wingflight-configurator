@@ -194,6 +194,12 @@ export async function openParamSession({ sources, storage, fetchRelease, askForF
             };
         },
         dataflashErase: () => MSP.promise(MSPCodes.MSP_DATAFLASH_ERASE),
+        // The firmware's own reply to an opcode, for verify_msp.
+        rawRequest: async (code, payload) => {
+            const reply = await MSP.promise(code, payload ?? false);
+            if (!reply || reply.unsupported || reply.crcError) return null;
+            return new Uint8Array(reply.data.buffer, reply.data.byteOffset, reply.data.byteLength).slice();
+        },
         dataflashRead: async (address, length) => {
             const payload = [address & 0xff, (address >> 8) & 0xff, (address >> 16) & 0xff, (address >>> 24) & 0xff,
                 length & 0xff, (length >> 8) & 0xff, 0 /* no compression */];

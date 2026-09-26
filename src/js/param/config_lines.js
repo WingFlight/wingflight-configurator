@@ -12,6 +12,7 @@
  */
 
 import { CliError } from "./cli_error.js";
+import { readGroup, readDefaultGroup, writeChunked } from "./group_io.js";
 
 // --- plumbing --------------------------------------------------------------
 
@@ -36,36 +37,6 @@ function require(manifest, command, symbol, ...tableNames) {
         throw new CliError(`${command} is not supported by this firmware's manifest`);
     }
     return { group, cli };
-}
-
-/**
- * Largest range moved per request. The smallest MSP buffers are 320 bytes out
- * and 192 in (msp_serial.h), and mixerRules alone is 512 bytes, so a whole
- * group cannot be assumed to fit either way.
- */
-const CHUNK = 128;
-
-async function readChunked(read, group) {
-    const out = new Uint8Array(group.size);
-    for (let off = 0; off < group.size; off += CHUNK) {
-        const view = await read(group.pgn, off, Math.min(CHUNK, group.size - off));
-        out.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength), off);
-    }
-    return out;
-}
-
-async function readGroup(io, group) {
-    return readChunked((pgn, off, len) => io.readRange(pgn, off, len), group);
-}
-
-async function readDefaultGroup(io, group) {
-    return io.readDefaultRange ? readChunked((pgn, off, len) => io.readDefaultRange(pgn, off, len), group) : null;
-}
-
-async function writeChunked(io, pgn, offset, bytes) {
-    for (let at = 0; at < bytes.length; at += CHUNK) {
-        await io.writeRange(pgn, offset + at, [...bytes.slice(at, at + CHUNK)]);
-    }
 }
 
 /** Put a whole group back to its defaults, as PG_RESET() did. */
