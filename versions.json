@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-pages-deploy-concurrency",
+      "path": "./feature-pages-deploy-concurrency/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
