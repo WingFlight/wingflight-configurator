@@ -94,7 +94,7 @@
       : null;
   }
 
-  // Bounce-back Suppression is a 1-10 score per axis (higher = less
+  // Bounce Back is a 1-10 score per axis (higher = less
   // bounce-back); the firmware turns it into the I-term relax cutoff.
   function bouncebackAdjustmentState(axisIndex) {
     return axisIndex < BOUNCEBACK_ADJUSTMENT_FUNCTIONS.length
