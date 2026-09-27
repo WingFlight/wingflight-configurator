@@ -1036,9 +1036,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.itermRelaxLevelRoll   = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelPitch  = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelYaw    = data.readU8();
-                FC.TV_PID_PROFILE.itermRelaxCutoffRoll  = data.readU8();
-                FC.TV_PID_PROFILE.itermRelaxCutoffPitch = data.readU8();
-                FC.TV_PID_PROFILE.itermRelaxCutoffYaw   = data.readU8();
+                FC.TV_PID_PROFILE.bouncebackRoll  = data.readU8();
+                FC.TV_PID_PROFILE.bouncebackPitch = data.readU8();
+                FC.TV_PID_PROFILE.bouncebackYaw   = data.readU8();
                 FC.TV_PID_PROFILE.errorLimitRoll        = data.readU8();
                 FC.TV_PID_PROFILE.errorLimitPitch       = data.readU8();
                 FC.TV_PID_PROFILE.errorLimitYaw         = data.readU8();
@@ -1472,9 +1472,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     FC.PID_PROFILE.itermRelaxLevelPitch      = data.readU8();
                     FC.PID_PROFILE.itermRelaxLevelYaw        = data.readU8();
                 }
-                FC.PID_PROFILE.itermRelaxCutoffRoll          = data.readU8();
-                FC.PID_PROFILE.itermRelaxCutoffPitch         = data.readU8();
-                FC.PID_PROFILE.itermRelaxCutoffYaw           = data.readU8();
+                FC.PID_PROFILE.bouncebackRoll          = data.readU8();
+                FC.PID_PROFILE.bouncebackPitch         = data.readU8();
+                FC.PID_PROFILE.bouncebackYaw           = data.readU8();
                 if (legacy) self.skipBytes(data, 8); // was yaw stop gains, precomp cutoff, FF and dynamic gains, pitch collective FF
                 // Angle Mode //
                 FC.PID_PROFILE.levelAngleStrength            = data.readU8();
@@ -2164,9 +2164,9 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelRoll)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelPitch)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelYaw)
-                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffRoll)
-                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffPitch)
-                .push8(FC.TV_PID_PROFILE.itermRelaxCutoffYaw)
+                .push8(FC.TV_PID_PROFILE.bouncebackRoll)
+                .push8(FC.TV_PID_PROFILE.bouncebackPitch)
+                .push8(FC.TV_PID_PROFILE.bouncebackYaw)
                 .push8(FC.TV_PID_PROFILE.errorLimitRoll)
                 .push8(FC.TV_PID_PROFILE.errorLimitPitch)
                 .push8(FC.TV_PID_PROFILE.errorLimitYaw)
@@ -2591,9 +2591,9 @@ MspHelper.prototype.crunch = function(code) {
                     .push8(FC.PID_PROFILE.itermRelaxLevelPitch)
                     .push8(FC.PID_PROFILE.itermRelaxLevelYaw);
             }
-            buffer.push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
-                .push8(FC.PID_PROFILE.itermRelaxCutoffPitch)
-                .push8(FC.PID_PROFILE.itermRelaxCutoffYaw);
+            buffer.push8(FC.PID_PROFILE.bouncebackRoll)
+                .push8(FC.PID_PROFILE.bouncebackPitch)
+                .push8(FC.PID_PROFILE.bouncebackYaw);
             pad(8); // was yaw stop gains, precomp cutoff, FF and dynamic gains, pitch collective FF
             buffer
                 // Angle //

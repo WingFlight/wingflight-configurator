@@ -142,14 +142,14 @@ export function getFunctions() {
         { id: 117,  name: 'TVItermDecayTimeRoll',        min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
         { id: 118,  name: 'TVItermDecayTimePitch',       min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
         { id: 119,  name: 'TVItermDecayTimeYaw',         min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        // Per-axis I-term relax cutoff in Hz (bounce-back suppression, lower =
-        // more), range matches ITERM_RELAX_CUTOFF_MIN/MAX in pg/pid.h.
-        { id: 120,  name: 'ItermRelaxCutoffRoll',        min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        { id: 121,  name: 'ItermRelaxCutoffPitch',       min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        { id: 122,  name: 'ItermRelaxCutoffYaw',         min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        { id: 123,  name: 'TVItermRelaxCutoffRoll',      min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        { id: 124,  name: 'TVItermRelaxCutoffPitch',     min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
-        { id: 125,  name: 'TVItermRelaxCutoffYaw',       min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        // Per-axis Bounce-back Suppression score (1-10, higher = less bounce-back),
+        // range matches BOUNCEBACK_MIN/MAX in pg/pid.h.
+        { id: 120,  name: 'BouncebackRoll',              min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 121,  name: 'BouncebackPitch',             min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 122,  name: 'BouncebackYaw',               min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 123,  name: 'TVBouncebackRoll',            min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 124,  name: 'TVBouncebackPitch',           min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 125,  name: 'TVBouncebackYaw',             min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
     ];
 }
 

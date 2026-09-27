@@ -9,7 +9,7 @@
   import Select from "@/components/Select.svelte";
   import {
     ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
-    ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS,
+    BOUNCEBACK_ADJUSTMENT_FUNCTIONS,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -30,7 +30,7 @@
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
-      relaxKey: "itermRelaxCutoffRoll",
+      bouncebackKey: "bouncebackRoll",
     },
     {
       key: "pitch",
@@ -39,7 +39,7 @@
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
-      relaxKey: "itermRelaxCutoffPitch",
+      bouncebackKey: "bouncebackPitch",
     },
     {
       key: "yaw",
@@ -48,14 +48,13 @@
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
-      relaxKey: "itermRelaxCutoffYaw",
+      bouncebackKey: "bouncebackYaw",
     },
     {
       key: "throttle",
       axisClass: "THROTTLE",
       label: "controlAxisThrottle",
       uppercase: true,
-      suffix: "TPA",
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
@@ -86,20 +85,20 @@
     return adjustment?.active && runtimeMasterGain(axisIndex) != null;
   }
 
-  // Decay sits beside each axis's master gain because it is the other half
-  // of how "locked" that axis feels: gain sets how hard it pushes back, decay
-  // time sets how long it remembers the disturbance.
+  // Lock (I-term decay time) sits beside each axis's Gain because it is the
+  // other half of how "locked" that axis feels: Gain sets how hard it pushes
+  // back, Lock how long it remembers the disturbance.
   function decayAdjustmentState(axisIndex) {
     return axisIndex < ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS.length
       ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
       : null;
   }
 
-  // Relax (I-term relax cutoff) is bounce-back suppression per axis: lower
-  // cutoff suppresses more I build-up after a stick move.
-  function relaxAdjustmentState(axisIndex) {
-    return axisIndex < ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS.length
-      ? getAdjustmentState(ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS[axisIndex])
+  // Bounce-back Suppression is a 1-10 score per axis (higher = less
+  // bounce-back); the firmware turns it into the I-term relax cutoff.
+  function bouncebackAdjustmentState(axisIndex) {
+    return axisIndex < BOUNCEBACK_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(BOUNCEBACK_ADJUSTMENT_FUNCTIONS[axisIndex])
       : null;
   }
 </script>
@@ -130,8 +129,8 @@
           </th>
           <th>
             <span class="header-label">
-              {$i18n.t("profilesItermRelaxColumn")}
-              <HelpIcon>{$i18n.t("profilesItermRelaxCutoffHelp")}</HelpIcon>
+              {$i18n.t("profilesBouncebackColumn")}
+              <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
             </span>
           </th>
         </tr>
@@ -220,23 +219,25 @@
               {/if}
             </td>
             <td>
-              {#if axis.relaxKey}
-                {@const relaxAdjustment = relaxAdjustmentState(axisIndex)}
+              {#if axis.bouncebackKey}
+                {@const bouncebackAdjustment =
+                  bouncebackAdjustmentState(axisIndex)}
                 <div
                   class="runtime-control"
-                  class:runtime-controlled={relaxAdjustment}
-                  class:runtime-active={relaxAdjustment?.active}
-                  title={adjustmentTitle(relaxAdjustment)}
+                  class:runtime-controlled={bouncebackAdjustment}
+                  class:runtime-active={bouncebackAdjustment?.active}
+                  title={adjustmentTitle(bouncebackAdjustment)}
                 >
                   <NumberInput
                     min="1"
-                    max="100"
-                    bind:value={FC.PID_PROFILE[axis.relaxKey]}
+                    max="10"
+                    bind:value={FC.PID_PROFILE[axis.bouncebackKey]}
                   />
-                  {#if relaxAdjustment}
+                  {#if bouncebackAdjustment}
                     <span class="adjustment-badge">
-                      {relaxAdjustment.active
-                        ? (adjustmentChannelLabel(relaxAdjustment) ?? "LIVE")
+                      {bouncebackAdjustment.active
+                        ? (adjustmentChannelLabel(bouncebackAdjustment) ??
+                          "LIVE")
                         : "ADJ"}
                     </span>
                   {/if}

@@ -3048,7 +3048,7 @@
         "message": "Stability"
     },
     "adjustmentsGroupMasterGains": {
-        "message": "Master Gains"
+        "message": "Flight Feel"
     },
     "adjustmentsGroupAccTrim": {
         "message": "Accelerometer Trim"
@@ -3222,13 +3222,13 @@
         "message": "Acro Trainer Gain"
     },
     "adjustmentsFunctionMasterGainPitch": {
-        "message": "Master Gain Pitch"
+        "message": "Gain Pitch"
     },
     "adjustmentsFunctionMasterGainRoll": {
-        "message": "Master Gain Roll"
+        "message": "Gain Roll"
     },
     "adjustmentsFunctionMasterGainYaw": {
-        "message": "Master Gain Yaw"
+        "message": "Gain Yaw"
     },
     "adjustmentsFunctionAutoHoverGain": {
         "message": "Auto Hover Gain"
@@ -3246,13 +3246,13 @@
         "message": "Servo Trim Yaw"
     },
     "adjustmentsFunctionTVMasterGainRoll": {
-        "message": "TV Master Gain Roll"
+        "message": "TV Gain Roll"
     },
     "adjustmentsFunctionTVMasterGainPitch": {
-        "message": "TV Master Gain Pitch"
+        "message": "TV Gain Pitch"
     },
     "adjustmentsFunctionTVMasterGainYaw": {
-        "message": "TV Master Gain Yaw"
+        "message": "TV Gain Yaw"
     },
     "adjustmentsFunctionTVRollP": {
         "message": "TV Roll P Gain"
@@ -3312,40 +3312,40 @@
         "message": "Differential Thrust Yaw Gain"
     },
     "adjustmentsFunctionItermDecayTimeRoll": {
-        "message": "I-Term Decay Time Roll (0.01 s)"
+        "message": "Lock Roll (0.01 s)"
     },
     "adjustmentsFunctionItermDecayTimePitch": {
-        "message": "I-Term Decay Time Pitch (0.01 s)"
+        "message": "Lock Pitch (0.01 s)"
     },
     "adjustmentsFunctionItermDecayTimeYaw": {
-        "message": "I-Term Decay Time Yaw (0.01 s)"
+        "message": "Lock Yaw (0.01 s)"
     },
     "adjustmentsFunctionTVItermDecayTimeRoll": {
-        "message": "TV I-Term Decay Time Roll (0.01 s)"
+        "message": "TV Lock Roll (0.01 s)"
     },
     "adjustmentsFunctionTVItermDecayTimePitch": {
-        "message": "TV I-Term Decay Time Pitch (0.01 s)"
+        "message": "TV Lock Pitch (0.01 s)"
     },
     "adjustmentsFunctionTVItermDecayTimeYaw": {
-        "message": "TV I-Term Decay Time Yaw (0.01 s)"
+        "message": "TV Lock Yaw (0.01 s)"
     },
-    "adjustmentsFunctionItermRelaxCutoffRoll": {
-        "message": "I-Term Relax Cutoff Roll (Hz)"
+    "adjustmentsFunctionBouncebackRoll": {
+        "message": "Bounce-back Suppression Roll"
     },
-    "adjustmentsFunctionItermRelaxCutoffPitch": {
-        "message": "I-Term Relax Cutoff Pitch (Hz)"
+    "adjustmentsFunctionBouncebackPitch": {
+        "message": "Bounce-back Suppression Pitch"
     },
-    "adjustmentsFunctionItermRelaxCutoffYaw": {
-        "message": "I-Term Relax Cutoff Yaw (Hz)"
+    "adjustmentsFunctionBouncebackYaw": {
+        "message": "Bounce-back Suppression Yaw"
     },
-    "adjustmentsFunctionTVItermRelaxCutoffRoll": {
-        "message": "TV I-Term Relax Cutoff Roll (Hz)"
+    "adjustmentsFunctionTVBouncebackRoll": {
+        "message": "TV Bounce-back Suppression Roll"
     },
-    "adjustmentsFunctionTVItermRelaxCutoffPitch": {
-        "message": "TV I-Term Relax Cutoff Pitch (Hz)"
+    "adjustmentsFunctionTVBouncebackPitch": {
+        "message": "TV Bounce-back Suppression Pitch"
     },
-    "adjustmentsFunctionTVItermRelaxCutoffYaw": {
-        "message": "TV I-Term Relax Cutoff Yaw (Hz)"
+    "adjustmentsFunctionTVBouncebackYaw": {
+        "message": "TV Bounce-back Suppression Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -3939,7 +3939,7 @@
         "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
     },
     "curveCategoryHelpGain": {
-        "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
+        "message": "Gain curves scale a profile axis's Gain (Flight Feel on the Profiles tab) by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
     },
     "curveCategoryHelpServo": {
         "message": "Servo curves add a small corrective delta to a single servo's own output after mixing (and after geometry correction, if enabled) - use this to match the physical travel of two or more servos driving the same control surface (e.g. dual ailerons) so they don't fight each other at the extremes."
@@ -3948,7 +3948,7 @@
         "message": "X axis: this rule's input value.\nY axis: the value used in its place once weighted onto the output.\n\nBoth axes share the rule's own -1000..1000 scale. The default diagonal line passes the input straight through - reshape it for a non-linear response, e.g. more resolution near center or a dead zone."
     },
     "curveExplainGain": {
-        "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per-axis on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+        "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Gain (set per axis in Flight Feel on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
     },
     "curveExplainServo": {
         "message": "X axis: this servo's own output, -100% to +100%.\nY axis: a correction added on top of it at that point, -10% to +10%.\n\nThe default flat line at 0 adds no correction. Nudge it up or down to trim one servo's travel relative to its paired servo, especially near full deflection."
@@ -5952,7 +5952,7 @@
         "message": "Thrust Vector PID Gains"
     },
     "thrustVectorMasterGainGroup": {
-        "message": "Master Gain"
+        "message": "Flight Feel"
     },
     "thrustVectorPidSettings": {
         "message": "Thrust Vector PID Settings"
@@ -6000,25 +6000,25 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Baseline throttle attenuation scale, optionally shaped further by a curve from the Curves tab (evaluated on throttle, 0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. 100% with no curve assigned means no attenuation."
+        "message": "Throttle: scales Roll, Pitch and Yaw gain with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change."
     },
     "profilesMasterGainGroup": {
-        "message": "Master Gains"
+        "message": "Flight Feel"
     },
     "profilesMasterGainColumn": {
         "message": "Gain [%]"
     },
     "profilesMasterGainHelp": {
-        "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+        "message": "How hard this axis pushes back against a disturbance. Scales the axis's P, I, D and FF together, live, so you can find the right overall gain (for example on an Adjustments knob) without editing each term. 100% is your tune as configured; it does not change the stored P/I/D/F values."
     },
     "profilesGainCurveColumn": {
         "message": "Curve"
     },
     "profilesGainCurveHelp": {
-        "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+        "message": "Optionally shapes this axis's Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row. \"-\" means no curve, so Gain applies as set."
     },
     "profilesEffectivePidGainsHelp": {
-        "message": "Read-only preview of the PID gains that are actually used after Master Gain scaling. This helps you see the effective tune while adjusting Master Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100. Boost (B) is shown unchanged because Master Gain does not scale it."
+        "message": "Read-only preview of the PID gains that are actually used after Flight Feel Gain scaling. This helps you see the effective tune while adjusting Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Gain / 100. Boost (B) is shown unchanged because Gain does not scale it."
     },
     "profilesCrossAxisRelaxGroup": {
         "message": "Cross-axis Relax"
@@ -6048,13 +6048,13 @@
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
     },
     "profilesItermDecayGroup": {
-        "message": "I-Term Decay"
+        "message": "Lock (I-Term Decay)"
     },
     "profilesItermDecayColumn": {
-        "message": "Decay [s]"
+        "message": "Lock [s]"
     },
     "profilesItermDecayTimeHelp": {
-        "message": "I-term decay time: how long this axis remembers a disturbance before letting it go. Longer feels more locked in; shorter feels freer and suits 3D flying. Master gain sets how hard the axis pushes back, this sets for how long. Default 0.60 s, range 0.01-1.00 s."
+        "message": "Lock: how long this axis holds on to a correction after a gust or bump before letting it go (the I-term decay time). Longer feels more locked in; shorter feels freer and suits 3D flying. Gain sets how hard the axis pushes back, Lock sets for how long. Default 0.60 s, range 0.01-1.00 s."
     },
     "profilesItermDecayLimit": {
         "message": "I-Term Decay Max Rate [&deg;/s]"
@@ -6080,11 +6080,11 @@
     "profilesErrorRotationHelp": {
         "message": "Rotates the current Roll and Pitch Error Terms around Yaw when the craft rotates. This improves piro control and helps the model to travel in a straight line while pirouetting."
     },
-    "profilesItermRelaxColumn": {
-        "message": "Relax [Hz]"
+    "profilesBouncebackColumn": {
+        "message": "Bounce-back Suppression"
     },
-    "profilesItermRelaxCutoffHelp": {
-        "message": "I-term relax cutoff: bounce-back suppression for this axis. Lower values suppress more bounce-back at the end of rolls and other fast moves; higher values keep more I-term through sustained high-rate turns. Default 10 Hz; most airframes end up between 5 and 10 Hz. If the model bounces back at the end of a roll or loop, lower it a step at a time."
+    "profilesBouncebackHelp": {
+        "message": "Bounce-back Suppression, 1-10: how strongly this axis stops a fast roll, loop or snap from bouncing back when you centre the stick. Higher = less bounce-back; lower keeps more hold through long, sustained rolls and loops. Default 5; most airframes end up between 5 and 9. If the model bounces back at the end of a manoeuvre, raise it a step at a time."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
@@ -6099,7 +6099,7 @@
         "message": "Level for Yaw [°/s]"
     },
     "profilesItermRelaxLevelHelp": {
-        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main bounce-back setting is the Relax cutoff in the Master Gains table; leave level at the default (22) unless that is not enough."
+        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main setting is Bounce-back Suppression in the Flight Feel panel; leave level at the default (22) unless that is not enough."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
