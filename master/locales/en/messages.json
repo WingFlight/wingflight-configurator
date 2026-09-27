@@ -3311,11 +3311,23 @@
     "adjustmentsFunctionDiffThrustYawGain": {
         "message": "Differential Thrust Yaw Gain"
     },
-    "adjustmentsFunctionItermDecayTime": {
-        "message": "I-Term Decay Time (0.01 s)"
+    "adjustmentsFunctionItermDecayTimeRoll": {
+        "message": "I-Term Decay Time Roll (0.01 s)"
     },
-    "adjustmentsFunctionTVItermDecayTime": {
-        "message": "TV I-Term Decay Time (0.01 s)"
+    "adjustmentsFunctionItermDecayTimePitch": {
+        "message": "I-Term Decay Time Pitch (0.01 s)"
+    },
+    "adjustmentsFunctionItermDecayTimeYaw": {
+        "message": "I-Term Decay Time Yaw (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimeRoll": {
+        "message": "TV I-Term Decay Time Roll (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimePitch": {
+        "message": "TV I-Term Decay Time Pitch (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimeYaw": {
+        "message": "TV I-Term Decay Time Yaw (0.01 s)"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -6020,14 +6032,11 @@
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
     },
-    "profilesItermDecayRow": {
-        "message": "I-Term Decay"
-    },
-    "profilesItermDecayTime": {
-        "message": "I-Term Decay Time [s]"
+    "profilesItermDecayColumn": {
+        "message": "Decay [s]"
     },
     "profilesItermDecayTimeHelp": {
-        "message": "How long the model remembers a disturbance before letting it go. Longer feels more locked in; shorter feels freer and suits 3D flying. Master gain sets how hard the model pushes back, this sets for how long. Default 0.60 s, range 0.01-1.00 s."
+        "message": "I-term decay time: how long this axis remembers a disturbance before letting it go. Longer feels more locked in; shorter feels freer and suits 3D flying. Master gain sets how hard the axis pushes back, this sets for how long. Default 0.60 s, range 0.01-1.00 s."
     },
     "profilesItermDecayLimit": {
         "message": "I-Term Decay Max Rate [&deg;/s]"
