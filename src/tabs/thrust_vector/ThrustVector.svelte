@@ -11,6 +11,7 @@
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
+    TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -70,6 +71,10 @@
 
   let holdGainAdjustment = $derived(
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
+  );
+
+  let itermDecayTimeAdjustment = $derived(
+    getAdjustmentState(TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION),
   );
 
   let profileTabs = $derived(
@@ -379,6 +384,42 @@
               </td>
             </tr>
           {/each}
+          <tr>
+            <td class="axis DECAY">
+              <span class="header-label">
+                {$i18n.t("profilesItermDecayRow").toUpperCase()} [s]
+                <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+              </span>
+            </td>
+            <td>
+              <div
+                class="runtime-control"
+                class:runtime-controlled={itermDecayTimeAdjustment}
+                class:runtime-active={itermDecayTimeAdjustment?.active}
+                title={adjustmentTitle(itermDecayTimeAdjustment)}
+              >
+                <NumberInput
+                  id="tv-iterm-decay-time"
+                  min="0.01"
+                  max="1"
+                  step="0.01"
+                  bind:value={
+                    () => FC.TV_PID_PROFILE.iterm_decay_time / 100,
+                    (v) =>
+                      (FC.TV_PID_PROFILE.iterm_decay_time = Math.round(v * 100))
+                  }
+                />
+                {#if itermDecayTimeAdjustment}
+                  <span class="adjustment-badge">
+                    {itermDecayTimeAdjustment.active
+                      ? (adjustmentChannelLabel(itermDecayTimeAdjustment) ??
+                        "LIVE")
+                      : "ADJ"}
+                  </span>
+                {/if}
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -442,21 +483,6 @@
   {#if CONFIGURATOR.expertMode}
     <Section label="thrustVectorPidSettings">
       <SubSection label="profilesItermDecayGroup">
-        <Field id="tv-iterm-decay-time" label="profilesItermDecayTime">
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermDecayTimeHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-iterm-decay-time"
-            min="0"
-            max="25"
-            step="0.1"
-            bind:value={
-              () => FC.TV_PID_PROFILE.iterm_decay_time / 10,
-              (v) => (FC.TV_PID_PROFILE.iterm_decay_time = Math.round(v * 10))
-            }
-          />
-        </Field>
         <Field id="tv-iterm-decay-limit" label="profilesItermDecayLimit">
           {#snippet tooltip()}
             {$i18n.t("profilesItermDecayLimitHelp")}
@@ -927,6 +953,11 @@
   .axis {
     text-align: left;
     padding-left: 8px;
+  }
+
+  // Not an axis: one value for the whole loop, so a neutral tint.
+  .axis.DECAY {
+    background-color: var(--color-input-bg-disabled);
   }
 
   .term-label {

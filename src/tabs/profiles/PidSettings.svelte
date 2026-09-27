@@ -31,21 +31,6 @@
 
 <Section label="profilesPidSettings">
   <SubSection label="profilesItermDecayGroup">
-    <Field id="iterm-decay-time" label="profilesItermDecayTime">
-      {#snippet tooltip()}
-        {$i18n.t("profilesItermDecayTimeHelp")}
-      {/snippet}
-      <NumberInput
-        id="iterm-decay-time"
-        min="0"
-        max="25"
-        step="0.1"
-        bind:value={
-          () => FC.PID_PROFILE.iterm_decay_time / 10,
-          (v) => (FC.PID_PROFILE.iterm_decay_time = Math.round(v * 10))
-        }
-      />
-    </Field>
     <Field id="iterm-decay-limit" label="profilesItermDecayLimit">
       {#snippet tooltip()}
         {$i18n.t("profilesItermDecayLimitHelp")}
