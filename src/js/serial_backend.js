@@ -162,9 +162,7 @@ export async function requestWebBluetoothDeviceFromPicker() {
 }
 
 // Resolves true once the given tab is active and fully initialized, false on
-// timeout. GUI.tab_switch_in_progress alone isn't enough: it only goes true
-// once a switch's cleanup step has finished, so it can read false while a
-// switch (e.g. finishClose()'s jump to the landing tab) is still pending.
+// timeout.
 function waitForActiveTab(tabName, timeoutMs = 5000) {
     return new Promise((resolve) => {
         const started = Date.now();
@@ -181,7 +179,9 @@ function waitForActiveTab(tabName, timeoutMs = 5000) {
     });
 }
 
-export async function handleConnectClick() {
+// openLanding: false skips finishClose()'s jump to the landing tab, for a
+// caller that switches to another tab itself right after disconnecting.
+export async function handleConnectClick({ openLanding = true } = {}) {
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
         const thisElement = $(this);
@@ -247,7 +247,7 @@ export async function handleConnectClick() {
                     // Firmware Flasher here would mount the tab (and enable Detect)
                     // while the previous connection's teardown (cancel reader / release
                     // lock / port.close()) was still in flight.
-                    await finishClose();
+                    await finishClose({ openLanding });
                 } finally {
                     GUI.disconnect_in_progress = false;
                 }
@@ -353,18 +353,17 @@ export function initializeSerialBackend() {
         }
 
         // Still connected (e.g. CLI fallback mode for unsupported firmware):
-        // disconnect exactly as the Disconnect button does, let the landing tab
-        // it opens settle, and only then open the flasher. The flag keeps
+        // disconnect as the Disconnect button does, minus its jump to the
+        // landing tab, then go straight to the flasher. The flag keeps
         // auto-connect from grabbing the FC back as it reboots from the CLI's
         // `exit` in the meantime.
         GUI.opening_firmware_flasher = true;
         try {
             if (GUI.connected_to || GUI.connecting_to) {
-                await handleConnectClick.call($('div#connectbutton a.connect')[0]);
+                await handleConnectClick.call($('div#connectbutton a.connect')[0], { openLanding: false });
                 if (GUI.connected_to || GUI.connecting_to) {
                     return;
                 }
-                await waitForActiveTab('landing');
             }
 
             // A click can still be dropped if it lands mid-switch, so retry
@@ -458,7 +457,7 @@ export function initializeSerialBackend() {
     PortHandler.initialize(GUI.show_all_ports);
 }
 
-function finishClose() {
+function finishClose({ openLanding = true } = {}) {
     if (GUI.isCordova()) {
         UI_PHONES.reset();
     }
@@ -508,7 +507,9 @@ function finishClose() {
         $('#content').empty();
     }
 
-    $('#tabs .tab_landing a').trigger("click");
+    if (openLanding) {
+        $('#tabs .tab_landing a').trigger("click");
+    }
 
     return disconnected;
 }
