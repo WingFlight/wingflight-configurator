@@ -205,7 +205,7 @@ export function startProcess() {
 
                 if (GUI.allowedTabs.indexOf(tabName) < 0 && tabName === "firmware_flasher") {
                     if (GUI.connected_to || GUI.connecting_to) {
-                        await handleConnectClick.call($('a.connect'), { openLanding: false });
+                        await handleConnectClick.call($('a.connect'));
                     }
 
                     if (GUI.allowedTabs.indexOf(tabName) < 0) {
