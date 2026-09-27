@@ -15,6 +15,7 @@
   import PidGains from "./PidGains.svelte";
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
+  import GainCurves from "./GainCurves.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
   import TrainerSettings from "./TrainerSettings.svelte";
   import MasterGains from "./MasterGains.svelte";
@@ -281,6 +282,7 @@
     </div>
     {#if showSettingsColumn}
       <div>
+        <GainCurves profile={FC.PID_PROFILE} throttle />
         <PidSettings />
         <PidBandwidth />
       </div>

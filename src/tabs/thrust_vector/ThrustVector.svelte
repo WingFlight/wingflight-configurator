@@ -7,7 +7,6 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
-  import { GainCurve } from "@/js/GainCurve.js";
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
@@ -21,6 +20,7 @@
 
   import Page from "@/components/Page.svelte";
   import Field from "@/components/Field.svelte";
+  import GainCurves from "@/tabs/profiles/GainCurves.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
@@ -82,16 +82,6 @@
   let holdGainAdjustment = $derived(
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
   );
-
-  // Same curve-slot choices as Profiles' Master Gains (MasterGains.svelte):
-  // the TV loop reads the same shared gain-curve pool.
-  let gainCurveOptions = $derived([
-    { value: 0, label: $i18n.t("mixerCurveNone") },
-    ...Array.from({ length: GainCurve.CURVE_COUNT }, (_, i) => ({
-      value: i + 1,
-      label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
-    })),
-  ]);
 
   function decayAdjustmentState(axisIndex) {
     return getAdjustmentState(
@@ -362,12 +352,6 @@
             </th>
             <th>
               <span class="header-label">
-                {$i18n.t("profilesGainCurveColumn")}
-                <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
-              </span>
-            </th>
-            <th>
-              <span class="header-label">
                 {$i18n.t("profilesItermDecayColumn")}
                 <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
               </span>
@@ -406,13 +390,15 @@
                         : "ADJ"}
                     </span>
                   {/if}
+                  {#if FC.TV_PID_PROFILE[axis.curveKey] > 0}
+                    <span
+                      class="curve-badge"
+                      title={$i18n.t("profilesGainCurveBadgeTitle", {
+                        1: FC.TV_PID_PROFILE[axis.curveKey],
+                      })}>{$i18n.t("profilesGainCurveBadge")}</span
+                    >
+                  {/if}
                 </div>
-              </td>
-              <td>
-                <Select
-                  options={gainCurveOptions}
-                  bind:value={FC.TV_PID_PROFILE[axis.curveKey]}
-                />
               </td>
               <td>
                 <div
@@ -525,6 +511,8 @@
   </Section>
 
   {#if CONFIGURATOR.expertMode}
+    <GainCurves profile={FC.TV_PID_PROFILE} idPrefix="tv-" />
+
     <Section label="thrustVectorPidSettings">
       <SubSection label="profilesItermDecayGroup">
         <Field id="tv-iterm-decay-limit" label="profilesItermDecayLimit">
@@ -913,6 +901,20 @@
   .runtime-control:not(.runtime-active) .adjustment-badge {
     background-color: transparent;
     color: var(--color-text-soft);
+  }
+
+  // Outlined like an idle ADJ badge: a curve is configuration, not live.
+  .curve-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    cursor: help;
   }
 
   .runtime-control.runtime-active :global(.container) {
