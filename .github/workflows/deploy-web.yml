@@ -22,8 +22,16 @@ on:
 permissions:
   contents: write
 
+# One group per deployed ref (and per deleted branch -- a delete event's
+# github.ref is the default branch, so key it on the deleted ref instead).
+# A single shared group let an unrelated run evict a pending one: GitHub keeps
+# only one pending run per group, so deleting a branch right after merging it
+# cancelled the queued master deploy. Within a group a newer run still
+# replaces an older pending one, which is what we want for repeat pushes.
+# Runs in different groups can publish concurrently, so the gh-pages push
+# steps below retry on top of whatever landed first.
 concurrency:
-  group: pages-deploy
+  group: pages-${{ github.event_name == 'delete' && format('delete-{0}', github.event.ref) || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -125,44 +133,52 @@ jobs:
           ref: gh-pages
           path: pages
 
-      - name: Copy build to deployment path
+      - name: Publish to GitHub Pages branch
         shell: bash
         run: |
           DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
+          UPDATE_LATEST="${{ steps.path.outputs.update_latest }}"
 
-          rm -rf "pages/$DEPLOY_PATH"
-          mkdir -p "pages/$DEPLOY_PATH"
-          cp -R bundle/. "pages/$DEPLOY_PATH/"
-
-      - name: Update latest stable deployment
-        if: steps.path.outputs.update_latest == 'true'
-        shell: bash
-        run: |
-          rm -rf pages/latest
-          mkdir -p pages/latest
-          cp -R bundle/. pages/latest/
-
-      - name: Sync landing page
-        shell: bash
-        run: cp .github/pages/index.html pages/index.html
-
-      - name: Generate versions.json
-        shell: bash
-        run: |
-          cd pages
-          python3 ../.github/scripts/generate_versions.py
-
-      - name: Commit GitHub Pages changes
-        shell: bash
-        run: |
           cd pages
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add .
-          git commit -m "deploy: ${{ steps.path.outputs.deploy_path }} from ${{ github.sha }}" || exit 0
-          git push origin gh-pages
+          # Another ref's run may push gh-pages first; each attempt rebuilds
+          # this run's changes on top of the latest gh-pages and tries again.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git reset --hard origin/gh-pages
+
+            rm -rf "$DEPLOY_PATH"
+            mkdir -p "$DEPLOY_PATH"
+            cp -R ../bundle/. "$DEPLOY_PATH/"
+
+            if [ "$UPDATE_LATEST" = "true" ]; then
+              rm -rf latest
+              mkdir -p latest
+              cp -R ../bundle/. latest/
+            fi
+
+            cp ../.github/pages/index.html index.html
+            python3 ../.github/scripts/generate_versions.py
+
+            git add .
+            if git diff --cached --quiet; then
+              echo "No GitHub Pages changes to publish"
+              exit 0
+            fi
+            git commit -m "deploy: $DEPLOY_PATH from ${{ github.sha }}"
+
+            if git push origin gh-pages; then
+              exit 0
+            fi
+            echo "gh-pages push rejected (attempt $attempt); retrying"
+            sleep $((attempt * 5))
+          done
+
+          echo "Failed to publish to gh-pages after 5 attempts"
+          exit 1
 
       - name: Print deployment URLs
         shell: bash
@@ -235,36 +251,44 @@ jobs:
           echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
           echo "Deleting deployment path: $DEPLOY_PATH"
 
-      - name: Delete deployment directory
+      - name: Remove deployment from GitHub Pages branch
         shell: bash
         run: |
           DEPLOY_PATH="${{ steps.path.outputs.deploy_path }}"
 
-          if [ -d "pages/$DEPLOY_PATH" ]; then
-            rm -rf "pages/$DEPLOY_PATH"
-            echo "Deleted pages/$DEPLOY_PATH"
-          else
-            echo "No deployment found for pages/$DEPLOY_PATH"
-          fi
-
-      - name: Sync landing page
-        shell: bash
-        run: cp .github/pages/index.html pages/index.html
-
-      - name: Regenerate versions.json
-        shell: bash
-        run: |
-          cd pages
-          python3 ../.github/scripts/generate_versions.py
-
-      - name: Commit Cleanup Changes
-        shell: bash
-        run: |
           cd pages
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add .
-          git commit -m "cleanup: remove deployment for deleted branch ${{ github.event.ref }}" || exit 0
-          git push origin gh-pages
+          # Same retry-on-rejected-push loop as the deploy job's publish step.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git reset --hard origin/gh-pages
+
+            if [ -d "$DEPLOY_PATH" ]; then
+              rm -rf "$DEPLOY_PATH"
+              echo "Deleted pages/$DEPLOY_PATH"
+            else
+              echo "No deployment found for pages/$DEPLOY_PATH"
+            fi
+
+            cp ../.github/pages/index.html index.html
+            python3 ../.github/scripts/generate_versions.py
+
+            git add .
+            if git diff --cached --quiet; then
+              echo "No GitHub Pages changes to publish"
+              exit 0
+            fi
+            git commit -m "cleanup: remove deployment for deleted branch ${{ github.event.ref }}"
+
+            if git push origin gh-pages; then
+              exit 0
+            fi
+            echo "gh-pages push rejected (attempt $attempt); retrying"
+            sleep $((attempt * 5))
+          done
+
+          echo "Failed to publish to gh-pages after 5 attempts"
+          exit 1
