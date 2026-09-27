@@ -2411,7 +2411,10 @@
 
         <DfuPermissionPrompt />
 
-        {#if needsPortSelection}
+        <!-- Not mid-flash: the board reboots into its bootloader, so its
+             serial port drops out of the picker and would otherwise read as
+             "no port selected" until the flash finishes. -->
+        {#if needsPortSelection && !flashInProgress}
           {@render portPrompt()}
         {/if}
 
