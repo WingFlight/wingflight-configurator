@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-gain-curves",
+      "path": "./feature-gain-curves/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
