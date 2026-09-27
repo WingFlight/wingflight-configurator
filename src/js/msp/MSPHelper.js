@@ -1033,7 +1033,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.itermDecayTimePitch   = data.readU8();
                 FC.TV_PID_PROFILE.itermDecayTimeYaw     = data.readU8();
                 FC.TV_PID_PROFILE.iterm_decay_limit     = data.readU8();
-                FC.TV_PID_PROFILE.itermRelaxType        = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelRoll   = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelPitch  = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelYaw    = data.readU8();
@@ -1466,7 +1465,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.dtermCutoffRoll               = data.readU8();
                 FC.PID_PROFILE.dtermCutoffPitch              = data.readU8();
                 FC.PID_PROFILE.dtermCutoffYaw                = data.readU8();
-                FC.PID_PROFILE.itermRelaxType                = data.readU8();
+                if (legacy) {
+                    data.readU8(); // was iterm_relax_type
+                } else {
+                    FC.PID_PROFILE.itermRelaxLevelRoll       = data.readU8();
+                    FC.PID_PROFILE.itermRelaxLevelPitch      = data.readU8();
+                    FC.PID_PROFILE.itermRelaxLevelYaw        = data.readU8();
+                }
                 FC.PID_PROFILE.itermRelaxCutoffRoll          = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffPitch         = data.readU8();
                 FC.PID_PROFILE.itermRelaxCutoffYaw           = data.readU8();
@@ -2156,7 +2161,6 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.TV_PID_PROFILE.itermDecayTimePitch)
                 .push8(FC.TV_PID_PROFILE.itermDecayTimeYaw)
                 .push8(FC.TV_PID_PROFILE.iterm_decay_limit)
-                .push8(FC.TV_PID_PROFILE.itermRelaxType)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelRoll)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelPitch)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelYaw)
@@ -2579,9 +2583,15 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.gyroCutoffYaw)
                 .push8(FC.PID_PROFILE.dtermCutoffRoll)
                 .push8(FC.PID_PROFILE.dtermCutoffPitch)
-                .push8(FC.PID_PROFILE.dtermCutoffYaw)
-                .push8(FC.PID_PROFILE.itermRelaxType)
-                .push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
+                .push8(FC.PID_PROFILE.dtermCutoffYaw);
+            if (legacy) {
+                buffer.push8(2); // was iterm_relax_type (RPY)
+            } else {
+                buffer.push8(FC.PID_PROFILE.itermRelaxLevelRoll)
+                    .push8(FC.PID_PROFILE.itermRelaxLevelPitch)
+                    .push8(FC.PID_PROFILE.itermRelaxLevelYaw);
+            }
+            buffer.push8(FC.PID_PROFILE.itermRelaxCutoffRoll)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffPitch)
                 .push8(FC.PID_PROFILE.itermRelaxCutoffYaw);
             pad(8); // was yaw stop gains, precomp cutoff, FF and dynamic gains, pitch collective FF

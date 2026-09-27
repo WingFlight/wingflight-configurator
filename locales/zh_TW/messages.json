@@ -1974,7 +1974,7 @@
         "english": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "控制機體追蹤操縱桿（目標點）的力度，並校正外部影響。<br /><br />較高的值（增益）提供更緊密的追蹤，但如果與導數（D-gain）比例過高，可能會造成過度振盪。可以把 P-term 想像成汽車的彈簧。",
+        "message": "控制機體追蹤操縱桿（目標點）的力度，並校正外部影響。 較高的值（增益）提供更緊密的追蹤，但如果與導數（D-gain）比例過高，可能會造成過度振盪。可以把 P-term 想像成汽車的彈簧。",
         "english": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
@@ -1983,7 +1983,7 @@
         "english": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "控制機體保持整體旋轉速率設定點的力度。<br>類似於比例，但更長時間地保持航空器與旋轉速率設定點之間的偏差，以及持續的外部影響，例如穩定的風或重心偏移。<br /><br />較高的增益提供更緊密的設定點追蹤（例如在不斷的翻轉和滾動中），但可能導致飛行器無法在極快的輸入下跟隨設定點，這可能會導致在鬆開操縱桿後仍繼續旋轉。<br>如果與 D-term 比例極高，可能導致振盪。",
+        "message": "控制機體保持整體旋轉速率設定點的力度。 類似於比例，但更長時間地保持航空器與旋轉速率設定點之間的偏差，以及持續的外部影響，例如穩定的風或重心偏移。 較高的增益提供更緊密的設定點追蹤（例如在不斷的翻轉和滾動中），但可能導致飛行器無法在極快的輸入下跟隨設定點，這可能會導致在鬆開操縱桿後仍繼續旋轉。 如果與 D-term 比例極高，可能導致振盪。",
         "english": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
@@ -1992,7 +1992,7 @@
         "english": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "控制飛行器任何角加速度的阻尼強度，無論是來自操縱桿的輸入還是外部影響。對於操縱桿輸入，D-term 會以阻尼來防止過度擺動。對於外部影響（渦流或陣風），D-term 會以阻尼抑制。<br /><br />較高的增益提供更多的阻尼，並減少高 P-term 可能導致的過度擺動。<br>然而，D-term 對高頻陀螺儀振動（噪音 | 放大 10 倍至 100 倍）非常敏感。<br /><br />如果陀螺儀噪音未能正確過濾，控制迴路中的高頻噪音可能導致伺服器過熱並燒壞伺服器（請參照陀螺儀頁面）。<br /><br />將 D-term 想像成汽車的避震器，但具有放大高頻陀螺儀噪音的負面特性。",
+        "message": "控制飛行器任何角加速度的阻尼強度，無論是來自操縱桿的輸入還是外部影響。對於操縱桿輸入，D-term 會以阻尼來防止過度擺動。對於外部影響（渦流或陣風），D-term 會以阻尼抑制。 較高的增益提供更多的阻尼，並減少高 P-term 可能導致的過度擺動。 然而，D-term 對高頻陀螺儀振動（噪音 | 放大 10 倍至 100 倍）非常敏感。 如果陀螺儀噪音未能正確過濾，控制迴路中的高頻噪音可能導致伺服器過熱並燒壞伺服器（請參照陀螺儀頁面）。 將 D-term 想像成汽車的避震器，但具有放大高頻陀螺儀噪音的負面特性。",
         "english": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
@@ -2001,7 +2001,7 @@
         "english": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "這是基於操縱桿輸入的額外推力。 FF 有助於 P-term 推動飛行器進行指令的操縱移動，但不會對任何直升機動作做出反應。<br /><br />FF-term 是基於指令設定點（度/秒）的差異而進行推動。<br /><br />較高的值（增益）會導致對操縱桿輸入的更快速反應。<br>過高的值可能會導致過度擺動，以及在操控輸入結束時的反彈效應。<br>過低或零（0）值會導致對操縱桿輸入的反應緩慢延遲，以及在鬆開操縱桿後繼續旋轉。",
+        "message": "這是基於操縱桿輸入的額外推力。 FF 有助於 P-term 推動飛行器進行指令的操縱移動，但不會對任何直升機動作做出反應。 FF-term 是基於指令設定點（度/秒）的差異而進行推動。 較高的值（增益）會導致對操縱桿輸入的更快速反應。 過高的值可能會導致過度擺動，以及在操控輸入結束時的反彈效應。 過低或零（0）值會導致對操縱桿輸入的反應緩慢延遲，以及在鬆開操縱桿後繼續旋轉。",
         "english": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
@@ -3243,7 +3243,7 @@
         "english": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM更新頻率(Hz)。對於類比舵機，將其設定為50Hz，太高的值可能會損壞舵機。對於數字舵機，數值從100Hz到560Hz是比較常見的。請檢查舵機的參數。<br><b>說明</b>:選擇<i>儲存並重新啟動</i>後，舵機頻率的修改才會生效。",
+        "message": "PWM更新頻率(Hz)。對於類比舵機，將其設定為50Hz，太高的值可能會損壞舵機。對於數字舵機，數值從100Hz到560Hz是比較常見的。請檢查舵機的參數。 說明:選擇儲存並重新啟動後，舵機頻率的修改才會生效。",
         "english": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSpeed": {
@@ -5864,7 +5864,7 @@
         "english": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "較低的數值可抑制移動後的反彈，較高的數值可提高高速旋轉的精確度。<br>小型直升機設定為15-30, 中型直升機設定為10-15，大型直升機設定為小於10。",
+        "message": "較低的數值可抑制移動後的反彈，較高的數值可提高高速旋轉的精確度。 小型直升機設定為15-30, 中型直升機設定為10-15，大型直升機設定為小於10。",
         "english": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
     },
     "profilesPidBandwidth": {

@@ -2254,28 +2254,28 @@
         "message": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
+        "message": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences. Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
     "profilesIntegral": {
         "message": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
+        "message": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint. Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets. Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
     "profilesDerivative": {
         "message": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
+        "message": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance. Higher gains provide more damping and reduce possible overshoot from high P-terms. However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x). High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab). Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
     "profilesFeedforward": {
         "message": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
+        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though. The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). Higher values (gains) will result in a sharper response to stick input. Too high of values may result in overshoot, as well as strikeback at the end of control inputs. Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
     "profilesBoost": {
@@ -3329,6 +3329,24 @@
     "adjustmentsFunctionTVItermDecayTimeYaw": {
         "message": "TV I-Term Decay Time Yaw (0.01 s)"
     },
+    "adjustmentsFunctionItermRelaxCutoffRoll": {
+        "message": "I-Term Relax Cutoff Roll (Hz)"
+    },
+    "adjustmentsFunctionItermRelaxCutoffPitch": {
+        "message": "I-Term Relax Cutoff Pitch (Hz)"
+    },
+    "adjustmentsFunctionItermRelaxCutoffYaw": {
+        "message": "I-Term Relax Cutoff Yaw (Hz)"
+    },
+    "adjustmentsFunctionTVItermRelaxCutoffRoll": {
+        "message": "TV I-Term Relax Cutoff Roll (Hz)"
+    },
+    "adjustmentsFunctionTVItermRelaxCutoffPitch": {
+        "message": "TV I-Term Relax Cutoff Pitch (Hz)"
+    },
+    "adjustmentsFunctionTVItermRelaxCutoffYaw": {
+        "message": "TV I-Term Relax Cutoff Yaw (Hz)"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -3489,7 +3507,7 @@
         "message": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
+        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSource": {
         "message": "Source"
@@ -3501,7 +3519,7 @@
         "message": "Speed [ms]"
     },
     "servoSpeedHelp": {
-        "message": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60&deg; rotation."
+        "message": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60° rotation."
     },
     "servoReverse": {
         "message": "Reverse"
@@ -6062,47 +6080,26 @@
     "profilesErrorRotationHelp": {
         "message": "Rotates the current Roll and Pitch Error Terms around Yaw when the craft rotates. This improves piro control and helps the model to travel in a straight line while pirouetting."
     },
-    "profilesItermRelax": {
-        "message": "I-Term Relax"
-    },
-    "profilesItermRelaxHelp": {
-        "message": "Limits the accumulation of I-term when fast movements happen. This helps in the reduction of bounceback at the end of rolls and other fast movements."
-    },
-    "profilesItermRelaxType": {
-        "message": "I-term Relax Type"
-    },
-    "profilesItermRelaxTypeHelp": {
-        "message": "Choose the axes in which this is active. <br><strong>RP:</strong> Roll, Pitch <br><strong>RPY:</strong> Roll, Pitch, Yaw."
-    },
-    "profilesItermRelaxTypeOptionRP": {
-        "message": "RP"
-    },
-    "profilesItermRelaxTypeOptionRPY": {
-        "message": "RPY"
-    },
-    "profilesItermRelaxCutoffRoll": {
-        "message": "Cutoff Point for Roll"
-    },
-    "profilesItermRelaxCutoffPitch": {
-        "message": "Cutoff Point for Pitch"
-    },
-    "profilesItermRelaxCutoffYaw": {
-        "message": "Cutoff Point for Yaw"
+    "profilesItermRelaxColumn": {
+        "message": "Relax [Hz]"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
+        "message": "I-term relax cutoff: bounce-back suppression for this axis. Lower values suppress more bounce-back at the end of rolls and other fast moves; higher values keep more I-term through sustained high-rate turns. Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft. Default 10 Hz."
     },
-    "tvItermRelaxLevelRoll": {
-        "message": "Level for Roll"
+    "profilesItermRelaxLevelGroup": {
+        "message": "I-Term Relax Level"
     },
-    "tvItermRelaxLevelPitch": {
-        "message": "Level for Pitch"
+    "profilesItermRelaxLevelRoll": {
+        "message": "Level for Roll [°/s]"
     },
-    "tvItermRelaxLevelYaw": {
-        "message": "Level for Yaw"
+    "profilesItermRelaxLevelPitch": {
+        "message": "Level for Pitch [°/s]"
     },
-    "tvItermRelaxLevelHelp": {
-        "message": "Setpoint activity, in degrees/s, above which I-term accumulation is fully suppressed. Lower values relax I-term sooner during stick movement."
+    "profilesItermRelaxLevelYaw": {
+        "message": "Level for Yaw [°/s]"
+    },
+    "profilesItermRelaxLevelHelp": {
+        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main bounce-back setting is the Relax cutoff in the Master Gains table; leave level at the default (22) unless that is not enough."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"

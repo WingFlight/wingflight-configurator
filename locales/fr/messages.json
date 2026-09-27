@@ -1974,7 +1974,7 @@
         "english": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "Contrôle la force avec laquelle la machine suit les manches (le point de consigne) et corrige les influences externes.<br /><br />Une valeur plus élevée (gains) fournit un suivi plus précis, mais peut provoquer un dépassement si elle est trop élevée par rapport à la dérivée. (Gain D). Considérez le terme P comme le ressort d'une voiture.",
+        "message": "Contrôle la force avec laquelle la machine suit les manches (le point de consigne) et corrige les influences externes. Une valeur plus élevée (gains) fournit un suivi plus précis, mais peut provoquer un dépassement si elle est trop élevée par rapport à la dérivée. (Gain D). Considérez le terme P comme le ressort d'une voiture.",
         "english": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
@@ -1983,7 +1983,7 @@
         "english": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "Contrôle la force avec laquelle la machine maintient le point de consigne global du taux de rotation.<br>Similaire au Proportionnel, mais pour des biais plus longs sur l'engin par rapport au point de consigne du taux de rotation, ainsi qu'une influence extérieure persistante, par exemple un vent constant ou des décalages du centre de gravité. <br /><br />Des gains plus élevés permettent un suivi plus précis du point de consigne (c'est-à-dire des retournements et des roulades constants), mais peuvent conduire l'engin à être désormais capable de suivre le point de consigne sur des entrées extrêmement rapides, ce qui peut l'amener à continuer à tourner une fois le bâton relâché. <br>Si extrêmement élevé par rapport au terme D, peut provoquer des oscillations.",
+        "message": "Contrôle la force avec laquelle la machine maintient le point de consigne global du taux de rotation. Similaire au Proportionnel, mais pour des biais plus longs sur l'engin par rapport au point de consigne du taux de rotation, ainsi qu'une influence extérieure persistante, par exemple un vent constant ou des décalages du centre de gravité. Des gains plus élevés permettent un suivi plus précis du point de consigne (c'est-à-dire des retournements et des roulades constants), mais peuvent conduire l'engin à être désormais capable de suivre le point de consigne sur des entrées extrêmement rapides, ce qui peut l'amener à continuer à tourner une fois le bâton relâché. Si extrêmement élevé par rapport au terme D, peut provoquer des oscillations.",
         "english": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
@@ -1992,7 +1992,7 @@
         "english": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "Contrôle la force d'amortissement de TOUTE accélération angulaire de l'engin, qu'elle provienne d'entrées de manche ou d'influences externes. Pour les entrées de manche, le terme D amortit le mouvement pour éviter tout dépassement. Pour une influence extérieure (vorticité ou rafale de vent), le terme D amortit la perturbation.<br /><br />Des gains plus élevés fournissent plus d'amortissement et réduisent les éventuels dépassements des termes P élevés.<br>Cependant, le terme D est TRÈS sensible aux vibrations du gyroscope à haute fréquence (bruit | grossit de 10x à 100x).<br /><br />Le bruit à haute fréquence dans la boucle de contrôle peut provoquer une chaleur excessive des servos et griller les servos si le bruit du gyroscope n'est pas filtré correctement. (voir l'onglet Gyroscope).<br /><br />Considérez le terme D comme l'amortisseur de votre voiture, mais avec la propriété négative inhérente d'amplifier le bruit gyroscopique à haute fréquence.",
+        "message": "Contrôle la force d'amortissement de TOUTE accélération angulaire de l'engin, qu'elle provienne d'entrées de manche ou d'influences externes. Pour les entrées de manche, le terme D amortit le mouvement pour éviter tout dépassement. Pour une influence extérieure (vorticité ou rafale de vent), le terme D amortit la perturbation. Des gains plus élevés fournissent plus d'amortissement et réduisent les éventuels dépassements des termes P élevés. Cependant, le terme D est TRÈS sensible aux vibrations du gyroscope à haute fréquence (bruit | grossit de 10x à 100x). Le bruit à haute fréquence dans la boucle de contrôle peut provoquer une chaleur excessive des servos et griller les servos si le bruit du gyroscope n'est pas filtré correctement. (voir l'onglet Gyroscope). Considérez le terme D comme l'amortisseur de votre voiture, mais avec la propriété négative inhérente d'amplifier le bruit gyroscopique à haute fréquence.",
         "english": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
@@ -2001,7 +2001,7 @@
         "english": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "Il s'agit d'un terme de poussée supplémentaire basé sur la saisie du bâton. FF aide le terme P à pousser l'engin pour les mouvements de manche commandés, mais ne réagit cependant à aucun mouvement de l'hélicoptère.<br /><br />Le terme FF pousse en fonction de la différence entre le point de consigne commandé (deg/sec). <br /><br />Des valeurs (gains) plus élevées entraîneront une réponse plus nette aux entrées du manche.<br>Des valeurs trop élevées peuvent entraîner un dépassement, ainsi qu'un retour en arrière à la fin des entrées de contrôle.<br>Trop. des valeurs faibles ou nulles (0) entraîneront une réponse lente et retardée aux actions du manche, ainsi qu'une rotation continue après le relâchement du manche.",
+        "message": "Il s'agit d'un terme de poussée supplémentaire basé sur la saisie du bâton. FF aide le terme P à pousser l'engin pour les mouvements de manche commandés, mais ne réagit cependant à aucun mouvement de l'hélicoptère. Le terme FF pousse en fonction de la différence entre le point de consigne commandé (deg/sec). Des valeurs (gains) plus élevées entraîneront une réponse plus nette aux entrées du manche. Des valeurs trop élevées peuvent entraîner un dépassement, ainsi qu'un retour en arrière à la fin des entrées de contrôle. Trop. des valeurs faibles ou nulles (0) entraîneront une réponse lente et retardée aux actions du manche, ainsi qu'une rotation continue après le relâchement du manche.",
         "english": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
@@ -3243,7 +3243,7 @@
         "english": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "Taux de mise à jour PWM en Hz. Pour les servos analogiques, réglez-le sur 50 Hz, car des valeurs plus élevées peuvent causer des dommages. Pour les servos numériques, les valeurs de 100 Hz à 560 Hz sont typiques. Veuillez consulter la fiche technique du servo.<br><b>Remarque</b>: Sélectionnez <i>Enregistrer et redémarrer</i> pour modifier réellement la fréquence de mise à jour, car la fréquence est initialisée au moment du démarrage.",
+        "message": "Taux de mise à jour PWM en Hz. Pour les servos analogiques, réglez-le sur 50 Hz, car des valeurs plus élevées peuvent causer des dommages. Pour les servos numériques, les valeurs de 100 Hz à 560 Hz sont typiques. Veuillez consulter la fiche technique du servo. Remarque: Sélectionnez Enregistrer et redémarrer pour modifier réellement la fréquence de mise à jour, car la fréquence est initialisée au moment du démarrage.",
         "english": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSpeed": {
@@ -3251,7 +3251,7 @@
         "english": "Speed [ms]"
     },
     "servoSpeedHelp": {
-        "message": "Limite la vitesse de déplacement du servo. Peut être utilisé par ex. se rétracte. Une valeur de 0 signifie aucune limitation. Les valeurs comprises entre 1 et 60 000 millisecondes spécifient le temps nécessaire pour une rotation de 60&deg;.",
+        "message": "Limite la vitesse de déplacement du servo. Peut être utilisé par ex. se rétracte. Une valeur de 0 signifie aucune limitation. Les valeurs comprises entre 1 et 60 000 millisecondes spécifient le temps nécessaire pour une rotation de 60°.",
         "english": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60&deg; rotation."
     },
     "servoReverse": {
@@ -5864,7 +5864,7 @@
         "english": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "Les valeurs faibles suppriment le rebond après les mouvements, les valeurs élevées augmentent la précision des virages à grande vitesse.<br>Réglé sur 15-30 pour les petits hélicoptères, 10-15 pour les hélicoptères de taille moyenne et moins de 10 pour les grands.",
+        "message": "Les valeurs faibles suppriment le rebond après les mouvements, les valeurs élevées augmentent la précision des virages à grande vitesse. Réglé sur 15-30 pour les petits hélicoptères, 10-15 pour les hélicoptères de taille moyenne et moins de 10 pour les grands.",
         "english": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
     },
     "profilesPidBandwidth": {

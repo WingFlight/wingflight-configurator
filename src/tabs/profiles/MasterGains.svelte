@@ -10,6 +10,7 @@
   import Select from "@/components/Select.svelte";
   import {
     ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
+    ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -32,6 +33,7 @@
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
+      relaxKey: "itermRelaxCutoffRoll",
     },
     {
       key: "pitch",
@@ -40,6 +42,7 @@
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
+      relaxKey: "itermRelaxCutoffPitch",
     },
     {
       key: "yaw",
@@ -48,6 +51,7 @@
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
+      relaxKey: "itermRelaxCutoffYaw",
     },
     {
       key: "throttle",
@@ -94,6 +98,14 @@
       ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
       : null;
   }
+
+  // Relax (I-term relax cutoff) is bounce-back suppression per axis: lower
+  // cutoff suppresses more I build-up after a stick move.
+  function relaxAdjustmentState(axisIndex) {
+    return axisIndex < ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
 </script>
 
 <Section label="profilesMasterGainGroup">
@@ -118,6 +130,12 @@
             <span class="header-label">
               {$i18n.t("profilesItermDecayColumn")}
               <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+            </span>
+          </th>
+          <th>
+            <span class="header-label">
+              {$i18n.t("profilesItermRelaxColumn")}
+              <HelpIcon>{$i18n.t("profilesItermRelaxCutoffHelp")}</HelpIcon>
             </span>
           </th>
         </tr>
@@ -200,6 +218,30 @@
                       <span class="adjustment-badge">
                         {decayAdjustment.active
                           ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
+              <td>
+                {#if axis.relaxKey}
+                  {@const relaxAdjustment = relaxAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={relaxAdjustment}
+                    class:runtime-active={relaxAdjustment?.active}
+                    title={adjustmentTitle(relaxAdjustment)}
+                  >
+                    <NumberInput
+                      min="1"
+                      max="100"
+                      bind:value={FC.PID_PROFILE[axis.relaxKey]}
+                    />
+                    {#if relaxAdjustment}
+                      <span class="adjustment-badge">
+                        {relaxAdjustment.active
+                          ? (adjustmentChannelLabel(relaxAdjustment) ?? "LIVE")
                           : "ADJ"}
                       </span>
                     {/if}

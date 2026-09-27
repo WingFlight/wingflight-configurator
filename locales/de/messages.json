@@ -1974,7 +1974,7 @@
         "english": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "Bestimmt die Stärke, wie eng das Flugmodell der vorgegebenen Drehrate (dem Sollwert) folgt und äußere Einflüsse korrigiert.<br /><br />Höhere Werte sorgen für eine bessere Steuerfolgsamkeit, können aber zu Schwingungen führen, wenn sie im Verhältnis zum Differential-Anteil (D-Anteil) zu hoch sind. Stelle dir den P-Anteil als die Federung in einem Auto vor.",
+        "message": "Bestimmt die Stärke, wie eng das Flugmodell der vorgegebenen Drehrate (dem Sollwert) folgt und äußere Einflüsse korrigiert. Höhere Werte sorgen für eine bessere Steuerfolgsamkeit, können aber zu Schwingungen führen, wenn sie im Verhältnis zum Differential-Anteil (D-Anteil) zu hoch sind. Stelle dir den P-Anteil als die Federung in einem Auto vor.",
         "english": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
@@ -1983,7 +1983,7 @@
         "english": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "Bestimmt die Stärke, wie eng das Flugmodell der vorgegebenen Drehrate folgt.<br>Ähnlich wie Proportional, aber für anhaltende Abweichungen des Flugmodells vom Sollwert der Drehrate, sowie anhaltenden äußeren Einflüssen, wie z.B. gleichmäßiger Wind oder Schwerpunktabweichungen.<br><br>Höhere Werte bieten eine bessere Steuerfolgsamkeit (z.B. bei konstanten Flips oder Rollen), bewirken aber auch, dass das Modell nun auch bei sehr schnellen Steuereingaben dem Sollwert folgt, was dazu führen kann, dass es nach dem Loslassen des Knüppels weiter dreht. <br>Ist der I-Anteil im Verhältnis zum D-Anteil extrem hoch, kann dies Schwingungen verursachen.",
+        "message": "Bestimmt die Stärke, wie eng das Flugmodell der vorgegebenen Drehrate folgt. Ähnlich wie Proportional, aber für anhaltende Abweichungen des Flugmodells vom Sollwert der Drehrate, sowie anhaltenden äußeren Einflüssen, wie z.B. gleichmäßiger Wind oder Schwerpunktabweichungen. Höhere Werte bieten eine bessere Steuerfolgsamkeit (z.B. bei konstanten Flips oder Rollen), bewirken aber auch, dass das Modell nun auch bei sehr schnellen Steuereingaben dem Sollwert folgt, was dazu führen kann, dass es nach dem Loslassen des Knüppels weiter dreht. Ist der I-Anteil im Verhältnis zum D-Anteil extrem hoch, kann dies Schwingungen verursachen.",
         "english": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
@@ -1992,7 +1992,7 @@
         "english": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "Bestimmt die Stärke der Dämpfung des Flugmodells bei jeglicher Winkelbeschleunigung, ob gesteuert oder durch äußere Einflüsse. Wenn die Knüppel bewegt werden, dämpft der D-Anteil die Modell-Bewegung, um ein Überschwingen zu vermeiden. Bei äußeren Einflüssen (Verwirbelungen oder Windböen) dämpft der D-Anteil die resultierende Unruhe des Modells.<br><br>Höhere Werte bieten mehr Dämpfung und reduzieren mögliches Überschwingen bei hohen P-Anteilen.<br>Der D-Anteil ist jedoch SEHR empfindlich für hochfrequente Gyro-Vibrationen (Rauschen | verstärkt sich um Faktor 10 bis 100).<br><br>Hochfrequenzrauschen, welches den Regelkreis erreicht, kann heiße Servos verursachen oder Servos zerstören, wenn das D-Gain zu hoch ist oder das Gyro-Rauschen nicht ausreichend gefiltert wird (siehe Gyro-Registerkarte).<br><br>Der D-Anteil ist vergleichbar mit dem Stoßdämpfer im Auto, aber mit der negativen Eigenschaft, hochfrequentes Rauschen zu verstärken.",
+        "message": "Bestimmt die Stärke der Dämpfung des Flugmodells bei jeglicher Winkelbeschleunigung, ob gesteuert oder durch äußere Einflüsse. Wenn die Knüppel bewegt werden, dämpft der D-Anteil die Modell-Bewegung, um ein Überschwingen zu vermeiden. Bei äußeren Einflüssen (Verwirbelungen oder Windböen) dämpft der D-Anteil die resultierende Unruhe des Modells. Höhere Werte bieten mehr Dämpfung und reduzieren mögliches Überschwingen bei hohen P-Anteilen. Der D-Anteil ist jedoch SEHR empfindlich für hochfrequente Gyro-Vibrationen (Rauschen | verstärkt sich um Faktor 10 bis 100). Hochfrequenzrauschen, welches den Regelkreis erreicht, kann heiße Servos verursachen oder Servos zerstören, wenn das D-Gain zu hoch ist oder das Gyro-Rauschen nicht ausreichend gefiltert wird (siehe Gyro-Registerkarte). Der D-Anteil ist vergleichbar mit dem Stoßdämpfer im Auto, aber mit der negativen Eigenschaft, hochfrequentes Rauschen zu verstärken.",
         "english": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
@@ -2001,7 +2001,7 @@
         "english": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "Dies ist ein zusätzlicher unterstützender Anteil basierend auf den Knüppeleingaben. Die Vorsteuerung (FF) unterstützt den P-Anteil anhand der Knüppelbewegungen, reagiert jedoch nicht auf Bewegungen des Modells.<br><br>Der FF-Anteil unterstützt auf der Grundlage des vorgegebenen Sollwerts (Grad/sek). <br><br>Höhere Werte führen zu einer schärferen Reaktion auf die Knüppeleingabe.<br>Zu hohe Werte können zum Überschwingen führen, sowie zum Zurückschlagen am Ende von Steuereingaben.<br>Zu niedrige Werte oder '0' führen zu einer langsameren und trägen Reaktion auf Steuereingaben, sowie zu einem Nachdrehen des Modells nach Steuereigaben.",
+        "message": "Dies ist ein zusätzlicher unterstützender Anteil basierend auf den Knüppeleingaben. Die Vorsteuerung (FF) unterstützt den P-Anteil anhand der Knüppelbewegungen, reagiert jedoch nicht auf Bewegungen des Modells. Der FF-Anteil unterstützt auf der Grundlage des vorgegebenen Sollwerts (Grad/sek). Höhere Werte führen zu einer schärferen Reaktion auf die Knüppeleingabe. Zu hohe Werte können zum Überschwingen führen, sowie zum Zurückschlagen am Ende von Steuereingaben. Zu niedrige Werte oder '0' führen zu einer langsameren und trägen Reaktion auf Steuereingaben, sowie zu einem Nachdrehen des Modells nach Steuereigaben.",
         "english": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
@@ -3243,7 +3243,7 @@
         "english": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM-Aktualisierungs-Frequenz in Hz. Für analoge Servos muss der Wert auf 50 Hz eingestellt werden, da höhere Werte zu Schäden führen können. Für Digitalservos sind Werte von 100Hz bis 560Hz typisch. Bitte prüfe das Servo-Datenblatt.<br><b>Hinweis:</b> Wähle <i>Speichern und Neustart</i>, damit die Änderungen wirksam werden, da die Frequenz beim Booten initialisiert wird.",
+        "message": "PWM-Aktualisierungs-Frequenz in Hz. Für analoge Servos muss der Wert auf 50 Hz eingestellt werden, da höhere Werte zu Schäden führen können. Für Digitalservos sind Werte von 100Hz bis 560Hz typisch. Bitte prüfe das Servo-Datenblatt. Hinweis: Wähle Speichern und Neustart, damit die Änderungen wirksam werden, da die Frequenz beim Booten initialisiert wird.",
         "english": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSpeed": {
@@ -3251,7 +3251,7 @@
         "english": "Speed [ms]"
     },
     "servoSpeedHelp": {
-        "message": "Begrenzt die Geschwindigkeit der Servobewegung. Ein Wert von 0 ms bedeutet keine Begrenzung. Werte zwischen 1-60000 Millisekunden geben die Zeit an, die für eine 60&deg;-Drehung benötigt wird.",
+        "message": "Begrenzt die Geschwindigkeit der Servobewegung. Ein Wert von 0 ms bedeutet keine Begrenzung. Werte zwischen 1-60000 Millisekunden geben die Zeit an, die für eine 60°-Drehung benötigt wird.",
         "english": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60&deg; rotation."
     },
     "servoReverse": {
@@ -5864,7 +5864,7 @@
         "english": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "Kleinere Werte unterdrücken das Zurückschlagen nach Steuereingaben, höhere Werte verbessern die Präzision bei hohen Drehraten.<br>15-30 für kleine Helis, 10-15 für mittelgroße Helis, weniger als 10 für große Helis (>600er).",
+        "message": "Kleinere Werte unterdrücken das Zurückschlagen nach Steuereingaben, höhere Werte verbessern die Präzision bei hohen Drehraten. 15-30 für kleine Helis, 10-15 für mittelgroße Helis, weniger als 10 für große Helis (>600er).",
         "english": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
     },
     "profilesPidBandwidth": {
