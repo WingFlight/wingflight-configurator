@@ -6084,7 +6084,7 @@
         "message": "Relax [Hz]"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "I-term relax cutoff: bounce-back suppression for this axis. Lower values suppress more bounce-back at the end of rolls and other fast moves; higher values keep more I-term through sustained high-rate turns. Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft. Default 10 Hz."
+        "message": "I-term relax cutoff: bounce-back suppression for this axis. Lower values suppress more bounce-back at the end of rolls and other fast moves; higher values keep more I-term through sustained high-rate turns. Default 10 Hz; most airframes end up between 5 and 10 Hz. If the model bounces back at the end of a roll or loop, lower it a step at a time."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
