@@ -3312,22 +3312,22 @@
         "message": "Differential Thrust Yaw Gain"
     },
     "adjustmentsFunctionItermDecayTimeRoll": {
-        "message": "Lock Roll (0.01 s)"
+        "message": "Lock Roll"
     },
     "adjustmentsFunctionItermDecayTimePitch": {
-        "message": "Lock Pitch (0.01 s)"
+        "message": "Lock Pitch"
     },
     "adjustmentsFunctionItermDecayTimeYaw": {
-        "message": "Lock Yaw (0.01 s)"
+        "message": "Lock Yaw"
     },
     "adjustmentsFunctionTVItermDecayTimeRoll": {
-        "message": "TV Lock Roll (0.01 s)"
+        "message": "TV Lock Roll"
     },
     "adjustmentsFunctionTVItermDecayTimePitch": {
-        "message": "TV Lock Pitch (0.01 s)"
+        "message": "TV Lock Pitch"
     },
     "adjustmentsFunctionTVItermDecayTimeYaw": {
-        "message": "TV Lock Yaw (0.01 s)"
+        "message": "TV Lock Yaw"
     },
     "adjustmentsFunctionBouncebackRoll": {
         "message": "Bounce Back Roll"
