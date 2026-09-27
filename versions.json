@@ -125,6 +125,11 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-virtual-fc",
+      "path": "./feature-virtual-fc/"
     }
   ]
 }
