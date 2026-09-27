@@ -42,9 +42,9 @@ export const TV_HOLD_GAIN_ADJUSTMENT_FUNCTION = 110;
 export const ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS = [114, 115, 116]; // Roll/Pitch/Yaw
 export const TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS = [117, 118, 119]; // Roll/Pitch/Yaw
 
-// Per-axis I-term relax cutoff (Hz), main loop and Thrust Vector loop.
-export const ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS = [120, 121, 122]; // Roll/Pitch/Yaw
-export const TV_ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS = [123, 124, 125]; // Roll/Pitch/Yaw
+// Per-axis Bounce Back score (1-10), main loop and Thrust Vector loop.
+export const BOUNCEBACK_ADJUSTMENT_FUNCTIONS = [120, 121, 122]; // Roll/Pitch/Yaw
+export const TV_BOUNCEBACK_ADJUSTMENT_FUNCTIONS = [123, 124, 125]; // Roll/Pitch/Yaw
 
 // Mixer rule role (Mixer.ROLE_*, pg/mixer.h) -> the adjustment function that
 // live-tunes every rule tagged with that role (flight/mixer.c's

@@ -13,7 +13,7 @@
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
     TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
-    TV_ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS,
+    TV_BOUNCEBACK_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -47,7 +47,7 @@
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
-      relaxKey: "itermRelaxCutoffRoll",
+      bouncebackKey: "bouncebackRoll",
     },
     {
       key: "pitch",
@@ -56,7 +56,7 @@
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
-      relaxKey: "itermRelaxCutoffPitch",
+      bouncebackKey: "bouncebackPitch",
     },
     {
       key: "yaw",
@@ -65,7 +65,7 @@
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
-      relaxKey: "itermRelaxCutoffYaw",
+      bouncebackKey: "bouncebackYaw",
     },
   ];
 
@@ -99,10 +99,8 @@
     );
   }
 
-  function relaxAdjustmentState(axisIndex) {
-    return getAdjustmentState(
-      TV_ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS[axisIndex],
-    );
+  function bouncebackAdjustmentState(axisIndex) {
+    return getAdjustmentState(TV_BOUNCEBACK_ADJUSTMENT_FUNCTIONS[axisIndex]);
   }
 
   let profileTabs = $derived(
@@ -376,8 +374,8 @@
             </th>
             <th>
               <span class="header-label">
-                {$i18n.t("profilesItermRelaxColumn")}
-                <HelpIcon>{$i18n.t("profilesItermRelaxCutoffHelp")}</HelpIcon>
+                {$i18n.t("profilesBouncebackColumn")}
+                <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
               </span>
             </th>
           </tr>
@@ -386,7 +384,7 @@
           {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
             {@const adjustment = masterGainAdjustmentState(axisIndex)}
             {@const decayAdjustment = decayAdjustmentState(axisIndex)}
-            {@const relaxAdjustment = relaxAdjustmentState(axisIndex)}
+            {@const bouncebackAdjustment = bouncebackAdjustmentState(axisIndex)}
             <tr>
               <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
               <td>
@@ -445,19 +443,20 @@
               <td>
                 <div
                   class="runtime-control"
-                  class:runtime-controlled={relaxAdjustment}
-                  class:runtime-active={relaxAdjustment?.active}
-                  title={adjustmentTitle(relaxAdjustment)}
+                  class:runtime-controlled={bouncebackAdjustment}
+                  class:runtime-active={bouncebackAdjustment?.active}
+                  title={adjustmentTitle(bouncebackAdjustment)}
                 >
                   <NumberInput
                     min="1"
-                    max="100"
-                    bind:value={FC.TV_PID_PROFILE[axis.relaxKey]}
+                    max="10"
+                    bind:value={FC.TV_PID_PROFILE[axis.bouncebackKey]}
                   />
-                  {#if relaxAdjustment}
+                  {#if bouncebackAdjustment}
                     <span class="adjustment-badge">
-                      {relaxAdjustment.active
-                        ? (adjustmentChannelLabel(relaxAdjustment) ?? "LIVE")
+                      {bouncebackAdjustment.active
+                        ? (adjustmentChannelLabel(bouncebackAdjustment) ??
+                          "LIVE")
                         : "ADJ"}
                     </span>
                   {/if}
