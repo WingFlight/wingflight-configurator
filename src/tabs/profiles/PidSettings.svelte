@@ -5,28 +5,7 @@
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
-  import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
-  import Switch from "@/components/Switch.svelte";
-
-  // itermRelaxType is 0 when disabled; remember the last non-zero type
-  // locally so re-enabling the switch restores the previous RP/RPY choice
-  // instead of always resetting to RP.
-  let itermRelaxType = $state(
-    FC.PID_PROFILE.itermRelaxType > 0 ? FC.PID_PROFILE.itermRelaxType : 1,
-  );
-  let itermRelaxEnabled = $derived(FC.PID_PROFILE.itermRelaxType > 0);
-
-  function toggleItermRelax(enabled) {
-    FC.PID_PROFILE.itermRelaxType = enabled ? itermRelaxType : 0;
-  }
-
-  function changeItermRelaxType(value) {
-    itermRelaxType = value;
-    if (itermRelaxEnabled) {
-      FC.PID_PROFILE.itermRelaxType = value;
-    }
-  }
 </script>
 
 <Section label="profilesPidSettings">
@@ -97,71 +76,34 @@
     </Field>
   </SubSection>
 
-  <SubSection label="profilesItermRelax">
-    <Field id="iterm-relax" label="profilesItermRelax">
+  <SubSection label="profilesItermRelaxLevelGroup">
+    <Field id="iterm-relax-level-roll" label="profilesItermRelaxLevelRoll">
       {#snippet tooltip()}
-        {$i18n.t("profilesItermRelaxHelp")}
+        {$i18n.t("profilesItermRelaxLevelHelp")}
       {/snippet}
-      <Switch
-        id="iterm-relax"
-        bind:checked={() => itermRelaxEnabled, toggleItermRelax}
+      <NumberInput
+        id="iterm-relax-level-roll"
+        min="10"
+        max="250"
+        bind:value={FC.PID_PROFILE.itermRelaxLevelRoll}
       />
     </Field>
-    {#if itermRelaxEnabled}
-      <SubSection>
-        <Field id="iterm-relax-type" label="profilesItermRelaxType">
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermRelaxTypeHelp")}
-          {/snippet}
-          <Select
-            id="iterm-relax-type"
-            options={[
-              { value: 1, label: $i18n.t("profilesItermRelaxTypeOptionRP") },
-              { value: 2, label: $i18n.t("profilesItermRelaxTypeOptionRPY") },
-            ]}
-            bind:value={() => itermRelaxType, changeItermRelaxType}
-          />
-        </Field>
-        <Field
-          id="iterm-relax-cutoff-roll"
-          label="profilesItermRelaxCutoffRoll"
-        >
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermRelaxCutoffHelp")}
-          {/snippet}
-          <NumberInput
-            id="iterm-relax-cutoff-roll"
-            min="1"
-            max="100"
-            bind:value={FC.PID_PROFILE.itermRelaxCutoffRoll}
-          />
-        </Field>
-        <Field
-          id="iterm-relax-cutoff-pitch"
-          label="profilesItermRelaxCutoffPitch"
-        >
-          <NumberInput
-            id="iterm-relax-cutoff-pitch"
-            min="1"
-            max="100"
-            bind:value={FC.PID_PROFILE.itermRelaxCutoffPitch}
-          />
-        </Field>
-        {#if itermRelaxType > 1}
-          <Field
-            id="iterm-relax-cutoff-yaw"
-            label="profilesItermRelaxCutoffYaw"
-          >
-            <NumberInput
-              id="iterm-relax-cutoff-yaw"
-              min="1"
-              max="100"
-              bind:value={FC.PID_PROFILE.itermRelaxCutoffYaw}
-            />
-          </Field>
-        {/if}
-      </SubSection>
-    {/if}
+    <Field id="iterm-relax-level-pitch" label="profilesItermRelaxLevelPitch">
+      <NumberInput
+        id="iterm-relax-level-pitch"
+        min="10"
+        max="250"
+        bind:value={FC.PID_PROFILE.itermRelaxLevelPitch}
+      />
+    </Field>
+    <Field id="iterm-relax-level-yaw" label="profilesItermRelaxLevelYaw">
+      <NumberInput
+        id="iterm-relax-level-yaw"
+        min="10"
+        max="250"
+        bind:value={FC.PID_PROFILE.itermRelaxLevelYaw}
+      />
+    </Field>
   </SubSection>
 
   <SubSection label="profilesErrorLimit">

@@ -13,6 +13,7 @@
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
     TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
+    TV_ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -25,7 +26,6 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
-  import Switch from "@/components/Switch.svelte";
 
   const AXES = ["ROLL", "PITCH", "YAW"];
   const GAINS = [
@@ -47,6 +47,7 @@
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
+      relaxKey: "itermRelaxCutoffRoll",
     },
     {
       key: "pitch",
@@ -55,6 +56,7 @@
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
+      relaxKey: "itermRelaxCutoffPitch",
     },
     {
       key: "yaw",
@@ -63,6 +65,7 @@
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
+      relaxKey: "itermRelaxCutoffYaw",
     },
   ];
 
@@ -93,6 +96,12 @@
   function decayAdjustmentState(axisIndex) {
     return getAdjustmentState(
       TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex],
+    );
+  }
+
+  function relaxAdjustmentState(axisIndex) {
+    return getAdjustmentState(
+      TV_ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS[axisIndex],
     );
   }
 
@@ -129,28 +138,8 @@
   let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
-  // itermRelaxType is 0 when disabled; remember the last non-zero type
-  // locally so re-enabling the switch restores the previous RP/RPY choice
-  let itermRelaxType = $state(1);
-  let itermRelaxEnabled = $derived(FC.TV_PID_PROFILE.itermRelaxType > 0);
-
-  function toggleItermRelax(enabled) {
-    FC.TV_PID_PROFILE.itermRelaxType = enabled ? itermRelaxType : 0;
-  }
-
-  function changeItermRelaxType(value) {
-    itermRelaxType = value;
-    if (itermRelaxEnabled) {
-      FC.TV_PID_PROFILE.itermRelaxType = value;
-    }
-  }
-
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP2_WING_TV_PID_CONFIG);
-
-    if (FC.TV_PID_PROFILE.itermRelaxType > 0) {
-      itermRelaxType = FC.TV_PID_PROFILE.itermRelaxType;
-    }
 
     initialState = snapshotState();
     loading = false;
@@ -385,12 +374,19 @@
                 <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
               </span>
             </th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesItermRelaxColumn")}
+                <HelpIcon>{$i18n.t("profilesItermRelaxCutoffHelp")}</HelpIcon>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
             {@const adjustment = masterGainAdjustmentState(axisIndex)}
             {@const decayAdjustment = decayAdjustmentState(axisIndex)}
+            {@const relaxAdjustment = relaxAdjustmentState(axisIndex)}
             <tr>
               <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
               <td>
@@ -441,6 +437,27 @@
                     <span class="adjustment-badge">
                       {decayAdjustment.active
                         ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                        : "ADJ"}
+                    </span>
+                  {/if}
+                </div>
+              </td>
+              <td>
+                <div
+                  class="runtime-control"
+                  class:runtime-controlled={relaxAdjustment}
+                  class:runtime-active={relaxAdjustment?.active}
+                  title={adjustmentTitle(relaxAdjustment)}
+                >
+                  <NumberInput
+                    min="1"
+                    max="100"
+                    bind:value={FC.TV_PID_PROFILE[axis.relaxKey]}
+                  />
+                  {#if relaxAdjustment}
+                    <span class="adjustment-badge">
+                      {relaxAdjustment.active
+                        ? (adjustmentChannelLabel(relaxAdjustment) ?? "LIVE")
                         : "ADJ"}
                     </span>
                   {/if}
@@ -524,109 +541,40 @@
         </Field>
       </SubSection>
 
-      <SubSection label="profilesItermRelax">
-        <Field id="tv-iterm-relax" label="profilesItermRelax">
+      <SubSection label="profilesItermRelaxLevelGroup">
+        <Field
+          id="tv-iterm-relax-level-roll"
+          label="profilesItermRelaxLevelRoll"
+        >
           {#snippet tooltip()}
-            {$i18n.t("profilesItermRelaxHelp")}
+            {$i18n.t("profilesItermRelaxLevelHelp")}
           {/snippet}
-          <Switch
-            id="tv-iterm-relax"
-            bind:checked={() => itermRelaxEnabled, toggleItermRelax}
+          <NumberInput
+            id="tv-iterm-relax-level-roll"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
           />
         </Field>
-        {#if itermRelaxEnabled}
-          <SubSection>
-            <Field id="tv-iterm-relax-type" label="profilesItermRelaxType">
-              {#snippet tooltip()}
-                {$i18n.t("profilesItermRelaxTypeHelp")}
-              {/snippet}
-              <Select
-                id="tv-iterm-relax-type"
-                options={[
-                  {
-                    value: 1,
-                    label: $i18n.t("profilesItermRelaxTypeOptionRP"),
-                  },
-                  {
-                    value: 2,
-                    label: $i18n.t("profilesItermRelaxTypeOptionRPY"),
-                  },
-                ]}
-                bind:value={() => itermRelaxType, changeItermRelaxType}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-cutoff-roll"
-              label="profilesItermRelaxCutoffRoll"
-            >
-              {#snippet tooltip()}
-                {$i18n.t("profilesItermRelaxCutoffHelp")}
-              {/snippet}
-              <NumberInput
-                id="tv-iterm-relax-cutoff-roll"
-                min="1"
-                max="100"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffRoll}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-cutoff-pitch"
-              label="profilesItermRelaxCutoffPitch"
-            >
-              <NumberInput
-                id="tv-iterm-relax-cutoff-pitch"
-                min="1"
-                max="100"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffPitch}
-              />
-            </Field>
-            {#if itermRelaxType > 1}
-              <Field
-                id="tv-iterm-relax-cutoff-yaw"
-                label="profilesItermRelaxCutoffYaw"
-              >
-                <NumberInput
-                  id="tv-iterm-relax-cutoff-yaw"
-                  min="1"
-                  max="100"
-                  bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffYaw}
-                />
-              </Field>
-            {/if}
-            <Field id="tv-iterm-relax-level-roll" label="tvItermRelaxLevelRoll">
-              {#snippet tooltip()}
-                {$i18n.t("tvItermRelaxLevelHelp")}
-              {/snippet}
-              <NumberInput
-                id="tv-iterm-relax-level-roll"
-                min="10"
-                max="250"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-level-pitch"
-              label="tvItermRelaxLevelPitch"
-            >
-              <NumberInput
-                id="tv-iterm-relax-level-pitch"
-                min="10"
-                max="250"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
-              />
-            </Field>
-            {#if itermRelaxType > 1}
-              <Field id="tv-iterm-relax-level-yaw" label="tvItermRelaxLevelYaw">
-                <NumberInput
-                  id="tv-iterm-relax-level-yaw"
-                  min="10"
-                  max="250"
-                  bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
-                />
-              </Field>
-            {/if}
-          </SubSection>
-        {/if}
+        <Field
+          id="tv-iterm-relax-level-pitch"
+          label="profilesItermRelaxLevelPitch"
+        >
+          <NumberInput
+            id="tv-iterm-relax-level-pitch"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
+          />
+        </Field>
+        <Field id="tv-iterm-relax-level-yaw" label="profilesItermRelaxLevelYaw">
+          <NumberInput
+            id="tv-iterm-relax-level-yaw"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
+          />
+        </Field>
       </SubSection>
 
       <SubSection label="profilesErrorLimit">

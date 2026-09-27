@@ -1,5 +1,4 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { GainCurve } from "@/js/GainCurve.js";
@@ -10,6 +9,7 @@
   import Select from "@/components/Select.svelte";
   import {
     ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
+    ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -19,11 +19,9 @@
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation
   // folded in as a fourth row since it's the same shape (a baseline gain
-  // optionally shaped by a curve from the same shared pool). Gain and Curve
-  // are both visible regardless of expert mode; expertOnly rows (throttle)
-  // are hidden entirely outside expert mode, matching the previous
-  // standalone Throttle Attenuation section; throttle gets its own help
-  // text since its mechanism differs from the per-axis gain/curve rows.
+  // optionally shaped by a curve from the same shared pool). Every row,
+  // throttle included, is visible regardless of expert mode; throttle gets
+  // its own help text since its mechanism differs from the per-axis rows.
   const MASTER_GAIN_AXES = [
     {
       key: "roll",
@@ -32,6 +30,7 @@
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
+      relaxKey: "itermRelaxCutoffRoll",
     },
     {
       key: "pitch",
@@ -40,6 +39,7 @@
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
+      relaxKey: "itermRelaxCutoffPitch",
     },
     {
       key: "yaw",
@@ -48,6 +48,7 @@
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
+      relaxKey: "itermRelaxCutoffYaw",
     },
     {
       key: "throttle",
@@ -58,7 +59,6 @@
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
-      expertOnly: true,
       gainMax: 200,
     },
   ];
@@ -94,6 +94,14 @@
       ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
       : null;
   }
+
+  // Relax (I-term relax cutoff) is bounce-back suppression per axis: lower
+  // cutoff suppresses more I build-up after a stick move.
+  function relaxAdjustmentState(axisIndex) {
+    return axisIndex < ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(ITERM_RELAX_CUTOFF_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
 </script>
 
 <Section label="profilesMasterGainGroup">
@@ -120,94 +128,122 @@
               <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
             </span>
           </th>
+          <th>
+            <span class="header-label">
+              {$i18n.t("profilesItermRelaxColumn")}
+              <HelpIcon>{$i18n.t("profilesItermRelaxCutoffHelp")}</HelpIcon>
+            </span>
+          </th>
         </tr>
       </thead>
       <tbody>
         {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-          {#if !axis.expertOnly || CONFIGURATOR.expertMode}
-            {@const adjustment = masterGainAdjustmentState(axisIndex)}
-            <tr>
-              <td class="axis {axis.axisClass}">
-                <span class="axis-label">
-                  {axis.uppercase
-                    ? $i18n.t(axis.label).toUpperCase()
-                    : $i18n.t(axis.label)}
-                  {#if axis.suffix}
-                    ({axis.suffix})
-                  {/if}
-                  {#if axis.help}
-                    <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
-                  {/if}
-                </span>
-              </td>
-              <td>
+          {@const adjustment = masterGainAdjustmentState(axisIndex)}
+          <tr>
+            <td class="axis {axis.axisClass}">
+              <span class="axis-label">
+                {axis.uppercase
+                  ? $i18n.t(axis.label).toUpperCase()
+                  : $i18n.t(axis.label)}
+                {#if axis.suffix}
+                  ({axis.suffix})
+                {/if}
+                {#if axis.help}
+                  <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
+                {/if}
+              </span>
+            </td>
+            <td>
+              <div
+                class="runtime-control"
+                class:runtime-controlled={adjustment}
+                class:runtime-active={adjustment?.active}
+                title={adjustmentTitle(adjustment)}
+              >
+                {#if showRuntimeMasterGain(axisIndex, adjustment)}
+                  <div class="runtime-value-field">
+                    <span class="step-button fas fa-minus"></span>
+                    <span class="runtime-value"
+                      >{runtimeMasterGain(axisIndex)}</span
+                    >
+                    <span class="step-button fas fa-plus"></span>
+                  </div>
+                {:else}
+                  <NumberInput
+                    min="25"
+                    max={axis.gainMax ?? 1000}
+                    bind:value={FC.PID_PROFILE[axis.gainKey]}
+                  />
+                {/if}
+                {#if adjustment}
+                  <span class="adjustment-badge">
+                    {adjustment.active
+                      ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                      : "ADJ"}
+                  </span>
+                {/if}
+              </div>
+            </td>
+            <td>
+              <Select
+                options={gainCurveOptions}
+                bind:value={FC.PID_PROFILE[axis.curveKey]}
+              />
+            </td>
+            <td>
+              {#if axis.decayKey}
+                {@const decayAdjustment = decayAdjustmentState(axisIndex)}
                 <div
                   class="runtime-control"
-                  class:runtime-controlled={adjustment}
-                  class:runtime-active={adjustment?.active}
-                  title={adjustmentTitle(adjustment)}
+                  class:runtime-controlled={decayAdjustment}
+                  class:runtime-active={decayAdjustment?.active}
+                  title={adjustmentTitle(decayAdjustment)}
                 >
-                  {#if showRuntimeMasterGain(axisIndex, adjustment)}
-                    <div class="runtime-value-field">
-                      <span class="step-button fas fa-minus"></span>
-                      <span class="runtime-value"
-                        >{runtimeMasterGain(axisIndex)}</span
-                      >
-                      <span class="step-button fas fa-plus"></span>
-                    </div>
-                  {:else}
-                    <NumberInput
-                      min="25"
-                      max={axis.gainMax ?? 1000}
-                      bind:value={FC.PID_PROFILE[axis.gainKey]}
-                    />
-                  {/if}
-                  {#if adjustment}
+                  <NumberInput
+                    min="0.01"
+                    max="1"
+                    step="0.01"
+                    bind:value={
+                      () => FC.PID_PROFILE[axis.decayKey] / 100,
+                      (v) =>
+                        (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
+                    }
+                  />
+                  {#if decayAdjustment}
                     <span class="adjustment-badge">
-                      {adjustment.active
-                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                      {decayAdjustment.active
+                        ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
                         : "ADJ"}
                     </span>
                   {/if}
                 </div>
-              </td>
-              <td>
-                <Select
-                  options={gainCurveOptions}
-                  bind:value={FC.PID_PROFILE[axis.curveKey]}
-                />
-              </td>
-              <td>
-                {#if axis.decayKey}
-                  {@const decayAdjustment = decayAdjustmentState(axisIndex)}
-                  <div
-                    class="runtime-control"
-                    class:runtime-controlled={decayAdjustment}
-                    class:runtime-active={decayAdjustment?.active}
-                    title={adjustmentTitle(decayAdjustment)}
-                  >
-                    <NumberInput
-                      min="0.01"
-                      max="1"
-                      step="0.01"
-                      bind:value={
-                        () => FC.PID_PROFILE[axis.decayKey] / 100,
-                        (v) =>
-                          (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
-                      }
-                    />
-                    {#if decayAdjustment}
-                      <span class="adjustment-badge">
-                        {decayAdjustment.active
-                          ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
-                          : "ADJ"}
-                      </span>
-                    {/if}
-                  </div>
-                {/if}
-              </td>
-            </tr>
-          {/if}
+              {/if}
+            </td>
+            <td>
+              {#if axis.relaxKey}
+                {@const relaxAdjustment = relaxAdjustmentState(axisIndex)}
+                <div
+                  class="runtime-control"
+                  class:runtime-controlled={relaxAdjustment}
+                  class:runtime-active={relaxAdjustment?.active}
+                  title={adjustmentTitle(relaxAdjustment)}
+                >
+                  <NumberInput
+                    min="1"
+                    max="100"
+                    bind:value={FC.PID_PROFILE[axis.relaxKey]}
+                  />
+                  {#if relaxAdjustment}
+                    <span class="adjustment-badge">
+                      {relaxAdjustment.active
+                        ? (adjustmentChannelLabel(relaxAdjustment) ?? "LIVE")
+                        : "ADJ"}
+                    </span>
+                  {/if}
+                </div>
+              {/if}
+            </td>
+          </tr>
         {/each}
       </tbody>
     </table>
