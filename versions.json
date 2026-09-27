@@ -108,11 +108,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-f-gain-min",
-      "path": "./feature-f-gain-min/"
-    },
-    {
-      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
