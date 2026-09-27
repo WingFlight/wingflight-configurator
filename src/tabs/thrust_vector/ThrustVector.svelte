@@ -7,6 +7,7 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { GainCurve } from "@/js/GainCurve.js";
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
@@ -44,6 +45,7 @@
       axisClass: "ROLL",
       label: "axisROLL",
       gainKey: "masterGainRoll",
+      curveKey: "gainCurveRoll",
       decayKey: "itermDecayTimeRoll",
     },
     {
@@ -51,6 +53,7 @@
       axisClass: "PITCH",
       label: "axisPITCH",
       gainKey: "masterGainPitch",
+      curveKey: "gainCurvePitch",
       decayKey: "itermDecayTimePitch",
     },
     {
@@ -58,6 +61,7 @@
       axisClass: "YAW",
       label: "axisYAW",
       gainKey: "masterGainYaw",
+      curveKey: "gainCurveYaw",
       decayKey: "itermDecayTimeYaw",
     },
   ];
@@ -75,6 +79,16 @@
   let holdGainAdjustment = $derived(
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
   );
+
+  // Same curve-slot choices as Profiles' Master Gains (MasterGains.svelte):
+  // the TV loop reads the same shared gain-curve pool.
+  let gainCurveOptions = $derived([
+    { value: 0, label: $i18n.t("mixerCurveNone") },
+    ...Array.from({ length: GainCurve.CURVE_COUNT }, (_, i) => ({
+      value: i + 1,
+      label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
+    })),
+  ]);
 
   function decayAdjustmentState(axisIndex) {
     return getAdjustmentState(
@@ -361,6 +375,12 @@
             </th>
             <th>
               <span class="header-label">
+                {$i18n.t("profilesGainCurveColumn")}
+                <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
+              </span>
+            </th>
+            <th>
+              <span class="header-label">
                 {$i18n.t("profilesItermDecayColumn")}
                 <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
               </span>
@@ -393,6 +413,12 @@
                     </span>
                   {/if}
                 </div>
+              </td>
+              <td>
+                <Select
+                  options={gainCurveOptions}
+                  bind:value={FC.TV_PID_PROFILE[axis.curveKey]}
+                />
               </td>
               <td>
                 <div
