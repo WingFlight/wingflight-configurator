@@ -1029,7 +1029,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.masterGainRoll        = data.readU16();
                 FC.TV_PID_PROFILE.masterGainPitch       = data.readU16();
                 FC.TV_PID_PROFILE.masterGainYaw         = data.readU16();
-                FC.TV_PID_PROFILE.iterm_decay_time      = data.readU8();
+                FC.TV_PID_PROFILE.itermDecayTimeRoll    = data.readU8();
+                FC.TV_PID_PROFILE.itermDecayTimePitch   = data.readU8();
+                FC.TV_PID_PROFILE.itermDecayTimeYaw     = data.readU8();
                 FC.TV_PID_PROFILE.iterm_decay_limit     = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxType        = data.readU8();
                 FC.TV_PID_PROFILE.itermRelaxLevelRoll   = data.readU8();
@@ -1054,6 +1056,9 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.TV_PID_PROFILE.tvHoldGain            = data.remaining() >= 4 ? data.readU8() : 0;
                 FC.TV_PID_PROFILE.tvHoldDeadband        = data.remaining() >= 3 ? data.readU8() : 0;
                 FC.TV_PID_PROFILE.tvHoldMaxRate         = data.remaining() >= 2 ? data.readU16() : 0;
+                FC.TV_PID_PROFILE.gainCurveRoll         = data.remaining() >= 3 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.gainCurvePitch        = data.remaining() >= 2 ? data.readU8() : 0;
+                FC.TV_PID_PROFILE.gainCurveYaw          = data.remaining() >= 1 ? data.readU8() : 0;
                 break;
             }
 
@@ -1439,9 +1444,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_PID_PROFILE: {
                 const legacy = self.hasLegacyPlaceholders();
                 FC.PID_PROFILE.pid_mode                      = data.readU8();
-                if (legacy) data.readU8(); // was error_decay_time_ground
-                FC.PID_PROFILE.iterm_decay_time              = data.readU8();
-                if (legacy) data.readU8(); // was error_decay_time_yaw
+                if (legacy) {
+                    data.readU8(); // was error_decay_time_ground
+                    FC.PID_PROFILE.itermDecayTimeRoll        = data.readU8(); // was error_decay_time_cyclic
+                    FC.PID_PROFILE.itermDecayTimePitch       = FC.PID_PROFILE.itermDecayTimeRoll;
+                    FC.PID_PROFILE.itermDecayTimeYaw         = data.readU8(); // was error_decay_time_yaw
+                } else {
+                    FC.PID_PROFILE.itermDecayTimeRoll        = data.readU8();
+                    FC.PID_PROFILE.itermDecayTimePitch       = data.readU8();
+                    FC.PID_PROFILE.itermDecayTimeYaw         = data.readU8();
+                }
                 FC.PID_PROFILE.iterm_decay_limit             = data.readU8();
                 if (legacy) data.readU8(); // was error_decay_limit_yaw
                 if (legacy) data.readU8(); // was error_rotation
@@ -2140,7 +2152,9 @@ MspHelper.prototype.crunch = function(code) {
             buffer.push16(FC.TV_PID_PROFILE.masterGainRoll)
                 .push16(FC.TV_PID_PROFILE.masterGainPitch)
                 .push16(FC.TV_PID_PROFILE.masterGainYaw)
-                .push8(FC.TV_PID_PROFILE.iterm_decay_time)
+                .push8(FC.TV_PID_PROFILE.itermDecayTimeRoll)
+                .push8(FC.TV_PID_PROFILE.itermDecayTimePitch)
+                .push8(FC.TV_PID_PROFILE.itermDecayTimeYaw)
                 .push8(FC.TV_PID_PROFILE.iterm_decay_limit)
                 .push8(FC.TV_PID_PROFILE.itermRelaxType)
                 .push8(FC.TV_PID_PROFILE.itermRelaxLevelRoll)
@@ -2164,7 +2178,10 @@ MspHelper.prototype.crunch = function(code) {
                 // TV Hold -- independent attitude/heading hold for this loop only //
                 .push8(FC.TV_PID_PROFILE.tvHoldGain)
                 .push8(FC.TV_PID_PROFILE.tvHoldDeadband)
-                .push16(FC.TV_PID_PROFILE.tvHoldMaxRate);
+                .push16(FC.TV_PID_PROFILE.tvHoldMaxRate)
+                .push8(FC.TV_PID_PROFILE.gainCurveRoll)
+                .push8(FC.TV_PID_PROFILE.gainCurvePitch)
+                .push8(FC.TV_PID_PROFILE.gainCurveYaw);
             break;
         }
 
@@ -2549,8 +2566,9 @@ MspHelper.prototype.crunch = function(code) {
             };
             buffer.push8(FC.PID_PROFILE.pid_mode);
             pad(1); // was error_decay_time_ground
-            buffer.push8(FC.PID_PROFILE.iterm_decay_time);
-            pad(1); // was error_decay_time_yaw
+            buffer.push8(FC.PID_PROFILE.itermDecayTimeRoll);
+            if (!legacy) buffer.push8(FC.PID_PROFILE.itermDecayTimePitch);
+            buffer.push8(FC.PID_PROFILE.itermDecayTimeYaw);
             buffer.push8(FC.PID_PROFILE.iterm_decay_limit);
             pad(2); // was error_decay_limit_yaw, error_rotation
             buffer.push8(FC.PID_PROFILE.errorLimitRoll)

@@ -9,7 +9,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import {
-    ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION,
+    ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -31,6 +31,7 @@
       label: "axisROLL",
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
+      decayKey: "itermDecayTimeRoll",
     },
     {
       key: "pitch",
@@ -38,6 +39,7 @@
       label: "axisPITCH",
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
+      decayKey: "itermDecayTimePitch",
     },
     {
       key: "yaw",
@@ -45,6 +47,7 @@
       label: "axisYAW",
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
+      decayKey: "itermDecayTimeYaw",
     },
     {
       key: "throttle",
@@ -83,12 +86,14 @@
     return adjustment?.active && runtimeMasterGain(axisIndex) != null;
   }
 
-  // Sits beside the master gains because it is the other half of how
-  // "locked" the model feels: gain sets how hard it pushes back, decay time
-  // sets how long it remembers the disturbance.
-  let itermDecayTimeAdjustment = $derived(
-    getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION),
-  );
+  // Decay sits beside each axis's master gain because it is the other half
+  // of how "locked" that axis feels: gain sets how hard it pushes back, decay
+  // time sets how long it remembers the disturbance.
+  function decayAdjustmentState(axisIndex) {
+    return axisIndex < ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
 </script>
 
 <Section label="profilesMasterGainGroup">
@@ -107,6 +112,12 @@
             <span class="header-label">
               {$i18n.t("profilesGainCurveColumn")}
               <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
+            </span>
+          </th>
+          <th>
+            <span class="header-label">
+              {$i18n.t("profilesItermDecayColumn")}
+              <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
             </span>
           </th>
         </tr>
@@ -166,45 +177,38 @@
                   bind:value={FC.PID_PROFILE[axis.curveKey]}
                 />
               </td>
+              <td>
+                {#if axis.decayKey}
+                  {@const decayAdjustment = decayAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={decayAdjustment}
+                    class:runtime-active={decayAdjustment?.active}
+                    title={adjustmentTitle(decayAdjustment)}
+                  >
+                    <NumberInput
+                      min="0.01"
+                      max="1"
+                      step="0.01"
+                      bind:value={
+                        () => FC.PID_PROFILE[axis.decayKey] / 100,
+                        (v) =>
+                          (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
+                      }
+                    />
+                    {#if decayAdjustment}
+                      <span class="adjustment-badge">
+                        {decayAdjustment.active
+                          ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
             </tr>
           {/if}
         {/each}
-        <tr>
-          <td class="axis DECAY">
-            <span class="axis-label">
-              {$i18n.t("profilesItermDecayRow").toUpperCase()} [s]
-              <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
-            </span>
-          </td>
-          <td>
-            <div
-              class="runtime-control"
-              class:runtime-controlled={itermDecayTimeAdjustment}
-              class:runtime-active={itermDecayTimeAdjustment?.active}
-              title={adjustmentTitle(itermDecayTimeAdjustment)}
-            >
-              <NumberInput
-                id="iterm-decay-time"
-                min="0.01"
-                max="1"
-                step="0.01"
-                bind:value={
-                  () => FC.PID_PROFILE.iterm_decay_time / 100,
-                  (v) => (FC.PID_PROFILE.iterm_decay_time = Math.round(v * 100))
-                }
-              />
-              {#if itermDecayTimeAdjustment}
-                <span class="adjustment-badge">
-                  {itermDecayTimeAdjustment.active
-                    ? (adjustmentChannelLabel(itermDecayTimeAdjustment) ??
-                      "LIVE")
-                    : "ADJ"}
-                </span>
-              {/if}
-            </div>
-          </td>
-          <td></td>
-        </tr>
       </tbody>
     </table>
   </div>
@@ -335,11 +339,6 @@
 
   .axis.THROTTLE {
     background-color: hsl(35, 100%, 82%);
-  }
-
-  // Not an axis: one value for the whole loop, so a neutral tint.
-  .axis.DECAY {
-    background-color: var(--color-input-bg-disabled);
   }
 
   :global(html[data-theme="dark"]) .axis.ROLL {
