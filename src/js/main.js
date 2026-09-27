@@ -206,10 +206,11 @@ export function startProcess() {
                 if (GUI.allowedTabs.indexOf(tabName) < 0 && tabName === "firmware_flasher") {
                     if (GUI.connected_to || GUI.connecting_to) {
                         await handleConnectClick.call($('a.connect'));
-                    } else {
-                        self.disconnect();
                     }
-                    $('div.open_firmware_flasher a.flash').click();
+
+                    if (GUI.allowedTabs.indexOf(tabName) < 0) {
+                        return;
+                    }
                 }
 
                 if (GUI.defaultAllowedFCTabsWhenConnected.indexOf(tabName) != -1) {
@@ -218,7 +219,7 @@ export function startProcess() {
 
                 GUI.tab_switch_cleanup(function () {
                     // disable active firmware flasher if it was active
-                    if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
+                    if (tabName !== "firmware_flasher" && $('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
                         $('div#flashbutton a.flash_state').removeClass('active');
                         $('div#flashbutton a.flash').removeClass('active');
                     }
