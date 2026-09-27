@@ -3311,6 +3311,12 @@
     "adjustmentsFunctionDiffThrustYawGain": {
         "message": "Differential Thrust Yaw Gain"
     },
+    "adjustmentsFunctionItermDecayTime": {
+        "message": "I-Term Decay Time (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTime": {
+        "message": "TV I-Term Decay Time (0.01 s)"
+    },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
     },
@@ -6014,11 +6020,14 @@
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
     },
+    "profilesItermDecayRow": {
+        "message": "I-Term Decay"
+    },
     "profilesItermDecayTime": {
         "message": "I-Term Decay Time [s]"
     },
     "profilesItermDecayTimeHelp": {
-        "message": "Time constant for bleeding off accumulated I-term error. Longer decay time gives a more stable hold, but may reduce responsiveness during aggressive maneuvers."
+        "message": "How long the model remembers a disturbance before letting it go. Longer feels more locked in; shorter feels freer and suits 3D flying. Master gain sets how hard the model pushes back, this sets for how long. Default 0.60 s, range 0.01-1.00 s."
     },
     "profilesItermDecayLimit": {
         "message": "I-Term Decay Max Rate [&deg;/s]"
