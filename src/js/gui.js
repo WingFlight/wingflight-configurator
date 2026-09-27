@@ -12,6 +12,7 @@ export const GuiControl = function () {
     this.connecting_to = false;
     this.connected_to = false;
     this.connect_lock = false;
+    this.disconnect_in_progress = false;
     this.zoom_level = 100;
     this.active_tab = null;
     this.current_tab = null;

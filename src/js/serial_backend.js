@@ -161,7 +161,10 @@ export async function requestWebBluetoothDeviceFromPicker() {
     }
 }
 
-export async function handleConnectClick() {
+// openLanding: false lets a caller that is about to switch tabs itself (the
+// firmware flasher, when opened while connected) skip finishClose()'s jump to
+// the landing tab, which would otherwise race and replace that switch.
+export async function handleConnectClick({ openLanding = true } = {}) {
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
         const thisElement = $(this);
@@ -208,20 +211,29 @@ export async function handleConnectClick() {
                     $('div#flashbutton a.flash_state').removeClass('active');
                     $('div#flashbutton a.flash').removeClass('active');
                 }
-                GUI.timeout_kill_all();
-                GUI.interval_kill_all();
-                await new Promise((resolve) => GUI.tab_switch_cleanup(resolve));
-                GUI.tab_switch_in_progress = false;
+                // Leaving the CLI sends `exit`, which reboots the FC -- its port
+                // can drop out before GUI.connected_to is cleared below. Flag the
+                // disconnect so PortHandler.removePort() doesn't fire a second one
+                // (and a landing-tab switch with it) or queue a reconnect.
+                GUI.disconnect_in_progress = true;
+                try {
+                    GUI.timeout_kill_all();
+                    GUI.interval_kill_all();
+                    await new Promise((resolve) => GUI.tab_switch_cleanup(resolve));
+                    GUI.tab_switch_in_progress = false;
 
-                await new Promise((resolve) => globalThis.mspHelper.setArmingEnabled(true, resolve));
+                    await new Promise((resolve) => globalThis.mspHelper.setArmingEnabled(true, resolve));
 
-                // Wait for the port to actually finish closing before letting the
-                // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()
-                // used to fire-and-forget serial.disconnect(), so navigating to
-                // Firmware Flasher here would mount the tab (and enable Detect)
-                // while the previous connection's teardown (cancel reader / release
-                // lock / port.close()) was still in flight.
-                await finishClose();
+                    // Wait for the port to actually finish closing before letting the
+                    // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()
+                    // used to fire-and-forget serial.disconnect(), so navigating to
+                    // Firmware Flasher here would mount the tab (and enable Detect)
+                    // while the previous connection's teardown (cancel reader / release
+                    // lock / port.close()) was still in flight.
+                    await finishClose({ openLanding });
+                } finally {
+                    GUI.disconnect_in_progress = false;
+                }
             }
 
             toggleStatus();
@@ -398,7 +410,7 @@ export function initializeSerialBackend() {
     PortHandler.initialize(GUI.show_all_ports);
 }
 
-function finishClose() {
+function finishClose({ openLanding = true } = {}) {
     if (GUI.isCordova()) {
         UI_PHONES.reset();
     }
@@ -448,7 +460,9 @@ function finishClose() {
         $('#content').empty();
     }
 
-    $('#tabs .tab_landing a').trigger("click");
+    if (openLanding) {
+        $('#tabs .tab_landing a').trigger("click");
+    }
 
     return disconnected;
 }

@@ -218,7 +218,7 @@ PortHandler.removePort = function(currentPorts) {
     if (removePorts.length) {
         console.log(`PortHandler - Removed: ${JSON.stringify(removePorts)}`);
         // Handle disconnect and state cleanup for removed ports
-        if (GUI.connected_to) {
+        if (GUI.connected_to && !GUI.disconnect_in_progress) {
             for (let i = 0; i < removePorts.length; i++) {
                 if (removePorts[i].path === GUI.connected_to || removePorts[i] === GUI.connected_to) {
                     // Track the removed port for potential auto-reconnect when it reappears
@@ -283,7 +283,10 @@ PortHandler.detectPort = function(currentPorts) {
 
         // auto-connect if enabled - improved logic for reconnection after device reboot
         const shouldAutoConnect = GUI.auto_connect && !GUI.connecting_to && !GUI.connected_to && GUI.active_tab !== 'firmware_flasher';
-        const isLastConnectedPortReappearing = self.lastConnectedPort && newPorts.some(p => p.path === self.lastConnectedPort);
+        // The flasher owns the port while it's open (it reboots the FC into the
+        // bootloader itself), so a reappearing port must not reconnect either.
+        const isLastConnectedPortReappearing = self.lastConnectedPort && GUI.active_tab !== 'firmware_flasher'
+            && newPorts.some(p => p.path === self.lastConnectedPort);
         
         if (shouldAutoConnect || isLastConnectedPortReappearing) {
             // Clear the tracked port since we're attempting to reconnect
@@ -306,6 +309,9 @@ PortHandler.detectPort = function(currentPorts) {
             const reconnectDelay = isLastConnectedPortReappearing ? 500 : (config.get('connectionTimeout') ?? 100);
             self.reconnectTimeoutId = GUI.timeout_add('auto-connect_timeout', function () {
                 self.reconnectTimeoutId = null;
+                if (GUI.active_tab === 'firmware_flasher') {
+                    return;
+                }
                 $('div#header_btns a.connect').click();
             }, reconnectDelay);
         }
