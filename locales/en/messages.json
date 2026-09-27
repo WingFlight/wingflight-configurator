@@ -6014,8 +6014,17 @@
     "profilesGainCurveColumn": {
         "message": "Curve"
     },
+    "profilesGainCurvesGroup": {
+        "message": "Gain Curves"
+    },
     "profilesGainCurveHelp": {
-        "message": "Optionally shapes this axis's Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row. \"-\" means no curve, so Gain applies as set."
+        "message": "Optionally shapes each axis's Flight Feel Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row. \"-\" means no curve, so Gain applies as set. Flight Feel shows a CURVE badge on any Gain a curve is shaping."
+    },
+    "profilesGainCurveBadge": {
+        "message": "CURVE"
+    },
+    "profilesGainCurveBadgeTitle": {
+        "message": "Gain is shaped by Curve $1 (set in Gain Curves, Expert Mode)"
     },
     "profilesEffectivePidGainsHelp": {
         "message": "Read-only preview of the PID gains that are actually used after Flight Feel Gain scaling. This helps you see the effective tune while adjusting Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Gain / 100. Boost (B) is shown unchanged because Gain does not scale it."

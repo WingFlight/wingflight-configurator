@@ -1,12 +1,10 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { GainCurve } from "@/js/GainCurve.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
-  import Select from "@/components/Select.svelte";
   import {
     ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
     BOUNCEBACK_ADJUSTMENT_FUNCTIONS,
@@ -18,10 +16,12 @@
 
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation
-  // folded in as a fourth row since it's the same shape (a baseline gain
-  // optionally shaped by a curve from the same shared pool). Every row,
-  // throttle included, is visible regardless of expert mode; throttle gets
-  // its own help text since its mechanism differs from the per-axis rows.
+  // folded in as a fourth row since it's the same shape (a baseline gain,
+  // optionally shaped by a curve). Every row, throttle included, is visible
+  // regardless of expert mode; throttle gets its own help text since its
+  // mechanism differs from the per-axis rows. Curves are assigned in the
+  // Expert Mode Gain Curves panel (GainCurves.svelte); a CURVE badge on Gain
+  // shows when one is shaping that row.
   const MASTER_GAIN_AXES = [
     {
       key: "roll",
@@ -61,14 +61,6 @@
       gainMax: 200,
     },
   ];
-
-  let gainCurveOptions = $derived([
-    { value: 0, label: $i18n.t("mixerCurveNone") },
-    ...Array.from({ length: GainCurve.CURVE_COUNT }, (_, i) => ({
-      value: i + 1,
-      label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
-    })),
-  ]);
 
   function masterGainAdjustmentState(axisIndex) {
     return axisIndex < MASTER_GAIN_ADJUSTMENT_FUNCTIONS.length
@@ -113,12 +105,6 @@
             <span class="header-label">
               {$i18n.t("profilesMasterGainColumn")}
               <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
-            </span>
-          </th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesGainCurveColumn")}
-              <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
             </span>
           </th>
           <th>
@@ -181,13 +167,15 @@
                       : "ADJ"}
                   </span>
                 {/if}
+                {#if FC.PID_PROFILE[axis.curveKey] > 0}
+                  <span
+                    class="curve-badge"
+                    title={$i18n.t("profilesGainCurveBadgeTitle", {
+                      1: FC.PID_PROFILE[axis.curveKey],
+                    })}>{$i18n.t("profilesGainCurveBadge")}</span
+                  >
+                {/if}
               </div>
-            </td>
-            <td>
-              <Select
-                options={gainCurveOptions}
-                bind:value={FC.PID_PROFILE[axis.curveKey]}
-              />
             </td>
             <td>
               {#if axis.decayKey}
@@ -345,6 +333,20 @@
   .runtime-control:not(.runtime-active) .adjustment-badge {
     background-color: transparent;
     color: var(--color-text-soft);
+  }
+
+  // Outlined like an idle ADJ badge: a curve is configuration, not live.
+  .curve-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    cursor: help;
   }
 
   .runtime-control.runtime-active .runtime-value-field {
