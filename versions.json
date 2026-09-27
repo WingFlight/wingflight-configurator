@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-flasher-hide-port-prompt-mid-flash",
+      "path": "./feature-flasher-hide-port-prompt-mid-flash/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
