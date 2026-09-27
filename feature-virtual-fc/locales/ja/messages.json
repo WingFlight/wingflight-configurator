@@ -134,9 +134,9 @@
         "english": "Manual Selection"
     },
     "portsSelectVirtual": {
-        "message": "バーチャル接続モード (テスト中)",
-        "english": "Virtual Mode (Experimental)",
-        "description": "Configure a Virtual Flight Controller without the need of a physical FC."
+        "message": "バーチャル接続モード (デモ)",
+        "english": "Virtual Mode (Demo)",
+        "description": "Demo the configurator against a simulated flight controller - no hardware needed, and nothing is written to a real FC."
     },
     "virtualMSPVersion": {
         "message": "バーチャルファームウェアバージョン",
