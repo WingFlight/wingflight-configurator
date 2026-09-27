@@ -113,11 +113,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-fix-flasher-from-cli-fallback",
-      "path": "./feature-fix-flasher-from-cli-fallback/"
-    },
-    {
-      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
