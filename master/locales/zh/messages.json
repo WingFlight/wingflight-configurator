@@ -149,10 +149,10 @@
         "status": "New entry. Please translate!"
     },
     "portsSelectVirtual": {
-        "message": "Virtual Mode (Experimental)",
-        "english": "Virtual Mode (Experimental)",
+        "message": "Virtual Mode (Demo)",
+        "english": "Virtual Mode (Demo)",
         "status": "New entry. Please translate!",
-        "description": "Configure a Virtual Flight Controller without the need of a physical FC."
+        "description": "Demo the configurator against a simulated flight controller - no hardware needed, and nothing is written to a real FC."
     },
     "virtualMSPVersion": {
         "message": "Virtual Firmware Version",
