@@ -9,6 +9,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import {
+    ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -81,6 +82,13 @@
   function showRuntimeMasterGain(axisIndex, adjustment) {
     return adjustment?.active && runtimeMasterGain(axisIndex) != null;
   }
+
+  // Sits beside the master gains because it is the other half of how
+  // "locked" the model feels: gain sets how hard it pushes back, decay time
+  // sets how long it remembers the disturbance.
+  let itermDecayTimeAdjustment = $derived(
+    getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION),
+  );
 </script>
 
 <Section label="profilesMasterGainGroup">
@@ -161,6 +169,42 @@
             </tr>
           {/if}
         {/each}
+        <tr>
+          <td class="axis DECAY">
+            <span class="axis-label">
+              {$i18n.t("profilesItermDecayRow").toUpperCase()} [s]
+              <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+            </span>
+          </td>
+          <td>
+            <div
+              class="runtime-control"
+              class:runtime-controlled={itermDecayTimeAdjustment}
+              class:runtime-active={itermDecayTimeAdjustment?.active}
+              title={adjustmentTitle(itermDecayTimeAdjustment)}
+            >
+              <NumberInput
+                id="iterm-decay-time"
+                min="0.01"
+                max="1"
+                step="0.01"
+                bind:value={
+                  () => FC.PID_PROFILE.iterm_decay_time / 100,
+                  (v) => (FC.PID_PROFILE.iterm_decay_time = Math.round(v * 100))
+                }
+              />
+              {#if itermDecayTimeAdjustment}
+                <span class="adjustment-badge">
+                  {itermDecayTimeAdjustment.active
+                    ? (adjustmentChannelLabel(itermDecayTimeAdjustment) ??
+                      "LIVE")
+                    : "ADJ"}
+                </span>
+              {/if}
+            </div>
+          </td>
+          <td></td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -291,6 +335,11 @@
 
   .axis.THROTTLE {
     background-color: hsl(35, 100%, 82%);
+  }
+
+  // Not an axis: one value for the whole loop, so a neutral tint.
+  .axis.DECAY {
+    background-color: var(--color-input-bg-disabled);
   }
 
   :global(html[data-theme="dark"]) .axis.ROLL {

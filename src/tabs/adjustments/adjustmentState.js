@@ -38,6 +38,11 @@ export const TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [92, 93, 94]; // Roll/Pitch/Y
 // tables above (the hold engine itself is a single 3-axis instance).
 export const TV_HOLD_GAIN_ADJUSTMENT_FUNCTION = 110;
 
+// I-term decay time (0.01 s), main loop and Thrust Vector loop -- single
+// scalars like TV_HOLD_GAIN_ADJUSTMENT_FUNCTION.
+export const ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION = 114;
+export const TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTION = 115;
+
 // Mixer rule role (Mixer.ROLE_*, pg/mixer.h) -> the adjustment function that
 // live-tunes every rule tagged with that role (flight/mixer.c's
 // applyRoleWeight()). A plain map, not an array like the tables above --

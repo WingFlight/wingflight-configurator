@@ -134,6 +134,10 @@ export function getFunctions() {
         // match rc_adjustments.c's ADJ_ENTRY.
         { id: 112,  name: 'FlapCompensationGain',        min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
         { id: 113,  name: 'DiffThrustYawGain',           min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
+        // I-term decay time in 0.01 s (60 = 0.60 s), range matches
+        // ITERM_DECAY_TIME_MIN/MAX in the firmware's pg/pid.h.
+        { id: 114,  name: 'ItermDecayTime',              min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 115,  name: 'TVItermDecayTime',            min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
     ];
 }
 
@@ -158,10 +162,10 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupFilters', ids: [33, 34, 35, 36, 37, 38] },
     { label: 'adjustmentsGroupYawDynamics', ids: [72, 74, 73] },
     { label: 'adjustmentsGroupStability', ids: [47, 45, 46, 87, 88] },
-    { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86] },
+    { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86, 114] },
     { label: 'adjustmentsGroupAccTrim', ids: [64, 65] },
     { label: 'adjustmentsGroupServoTrims', ids: [89, 90, 91] },
-    { label: 'adjustmentsGroupThrustVector', ids: [95, 100, 105, 96, 101, 106, 97, 102, 107, 98, 103, 108, 99, 104, 109, 92, 93, 94] },
+    { label: 'adjustmentsGroupThrustVector', ids: [95, 100, 105, 96, 101, 106, 97, 102, 107, 98, 103, 108, 99, 104, 109, 92, 93, 94, 115] },
     { label: 'adjustmentsGroupSetpointBoost', ids: [71, 68, 69, 70] },
     { label: 'adjustmentsGroupCrossCoupling', ids: [63, 61, 62] },
     { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
