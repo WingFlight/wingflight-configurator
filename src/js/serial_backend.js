@@ -161,12 +161,18 @@ export async function requestWebBluetoothDeviceFromPicker() {
     }
 }
 
-function waitForTabSwitch(timeoutMs = 5000) {
+// Resolves true once the given tab is active and fully initialized, false on
+// timeout. GUI.tab_switch_in_progress alone isn't enough: it only goes true
+// once a switch's cleanup step has finished, so it can read false while a
+// switch (e.g. finishClose()'s jump to the landing tab) is still pending.
+function waitForActiveTab(tabName, timeoutMs = 5000) {
     return new Promise((resolve) => {
         const started = Date.now();
         const check = () => {
-            if (!GUI.tab_switch_in_progress || Date.now() - started > timeoutMs) {
-                resolve();
+            if (GUI.active_tab === tabName && !GUI.tab_switch_in_progress) {
+                resolve(true);
+            } else if (Date.now() - started > timeoutMs) {
+                resolve(false);
             } else {
                 setTimeout(check, 50);
             }
@@ -358,13 +364,20 @@ export function initializeSerialBackend() {
                 if (GUI.connected_to || GUI.connecting_to) {
                     return;
                 }
-                await waitForTabSwitch();
+                await waitForActiveTab('landing');
             }
 
-            $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");
-            $('div#flashbutton a.flash_state').addClass('active');
-            $('div#flashbutton a.flash').addClass('active');
-            await waitForTabSwitch();
+            // A click can still be dropped if it lands mid-switch, so retry
+            // until the flasher is actually the active tab.
+            for (let attempt = 0; attempt < 3 && GUI.active_tab !== 'firmware_flasher'; attempt++) {
+                $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");
+                await waitForActiveTab('firmware_flasher', 2000);
+            }
+
+            if (GUI.active_tab === 'firmware_flasher') {
+                $('div#flashbutton a.flash_state').addClass('active');
+                $('div#flashbutton a.flash').addClass('active');
+            }
         } finally {
             GUI.opening_firmware_flasher = false;
         }
