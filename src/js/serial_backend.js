@@ -161,6 +161,17 @@ export async function requestWebBluetoothDeviceFromPicker() {
     }
 }
 
+// Resolves once fn calls its callback, or after timeoutMs, whichever is first.
+function callbackOrTimeout(fn, timeoutMs) {
+    return new Promise((resolve) => {
+        const timer = setTimeout(resolve, timeoutMs);
+        fn(() => {
+            clearTimeout(timer);
+            resolve();
+        });
+    });
+}
+
 // Resolves true once the given tab is active and fully initialized, false on
 // timeout.
 function waitForActiveTab(tabName, timeoutMs = 5000) {
@@ -224,22 +235,31 @@ export async function handleConnectClick({ openLanding = true } = {}) {
                     serial.connect(portName, {bitrate: selected_baud}, onOpen);
                 }
             } else {
+                // Leaving the CLI sends `exit`, which reboots the FC, and the
+                // resulting device_lost (serial.js errorHandler) or port removal
+                // (PortHandler.removePort) clicks Connect again while this
+                // disconnect is still running. A second disconnect would jump to
+                // the landing tab regardless of openLanding, and its MSP cleanup
+                // drops the callback the first one is awaiting below, leaving it
+                // hung -- so let the one already in flight finish instead.
+                if (GUI.disconnect_in_progress) {
+                    return;
+                }
                 if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
                     $('div#flashbutton a.flash_state').removeClass('active');
                     $('div#flashbutton a.flash').removeClass('active');
                 }
-                // Leaving the CLI sends `exit`, which reboots the FC -- its port
-                // can drop out before GUI.connected_to is cleared below. Flag the
-                // disconnect so PortHandler.removePort() doesn't fire a second one
-                // (and a landing-tab switch with it) or queue a reconnect.
                 GUI.disconnect_in_progress = true;
                 try {
                     GUI.timeout_kill_all();
                     GUI.interval_kill_all();
-                    await new Promise((resolve) => GUI.tab_switch_cleanup(resolve));
+                    // Both steps talk to an FC that may have just rebooted out from
+                    // under us (CLI `exit`), so neither is guaranteed to call back --
+                    // don't let that stall the disconnect.
+                    await callbackOrTimeout((done) => GUI.tab_switch_cleanup(done), 2000);
                     GUI.tab_switch_in_progress = false;
 
-                    await new Promise((resolve) => globalThis.mspHelper.setArmingEnabled(true, resolve));
+                    await callbackOrTimeout((done) => globalThis.mspHelper.setArmingEnabled(true, done), 1000);
 
                     // Wait for the port to actually finish closing before letting the
                     // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()

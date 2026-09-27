@@ -558,10 +558,14 @@
     // onPortChange()'s 'change' listener wouldn't see on its own -- new
     // devices appearing from PortHandler's periodic poll, or DFU's label
     // picking up a product name once requestWebUsbDeviceFromPicker()
-    // authorizes it (see syncPortOptions() above).
+    // authorizes it (see syncPortOptions() above). Re-reads the selection
+    // too, not just the list: PortHandler selects a newly found port with
+    // jQuery's .val()/.trigger('change'), neither of which reaches the
+    // native listener above -- e.g. a board rebooting while this tab opens
+    // (CLI `exit`) came back listed but not selected.
     const portEl = portPickerElement();
     if (portEl) {
-      portListObserver = new MutationObserver(syncPortOptions);
+      portListObserver = new MutationObserver(onPortChange);
       portListObserver.observe(portEl, {
         childList: true,
         subtree: true,
