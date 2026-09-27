@@ -3330,22 +3330,22 @@
         "message": "TV Lock Yaw (0.01 s)"
     },
     "adjustmentsFunctionBouncebackRoll": {
-        "message": "Bounce-back Suppression Roll"
+        "message": "Bounce Back Roll"
     },
     "adjustmentsFunctionBouncebackPitch": {
-        "message": "Bounce-back Suppression Pitch"
+        "message": "Bounce Back Pitch"
     },
     "adjustmentsFunctionBouncebackYaw": {
-        "message": "Bounce-back Suppression Yaw"
+        "message": "Bounce Back Yaw"
     },
     "adjustmentsFunctionTVBouncebackRoll": {
-        "message": "TV Bounce-back Suppression Roll"
+        "message": "TV Bounce Back Roll"
     },
     "adjustmentsFunctionTVBouncebackPitch": {
-        "message": "TV Bounce-back Suppression Pitch"
+        "message": "TV Bounce Back Pitch"
     },
     "adjustmentsFunctionTVBouncebackYaw": {
-        "message": "TV Bounce-back Suppression Yaw"
+        "message": "TV Bounce Back Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -6081,10 +6081,10 @@
         "message": "Rotates the current Roll and Pitch Error Terms around Yaw when the craft rotates. This improves piro control and helps the model to travel in a straight line while pirouetting."
     },
     "profilesBouncebackColumn": {
-        "message": "Bounce-back Suppression"
+        "message": "Bounce Back"
     },
     "profilesBouncebackHelp": {
-        "message": "Bounce-back Suppression, 1-10: how strongly this axis stops a fast roll, loop or snap from bouncing back when you centre the stick. Higher = less bounce-back; lower keeps more hold through long, sustained rolls and loops. Default 5; most airframes end up between 5 and 9. If the model bounces back at the end of a manoeuvre, raise it a step at a time."
+        "message": "Bounce Back, 1-10: how strongly this axis stops a fast roll, loop or snap from bouncing back when you centre the stick. Higher = less bounce-back; lower keeps more hold through long, sustained rolls and loops. Default 5; most airframes end up between 5 and 9. If the model bounces back at the end of a manoeuvre, raise it a step at a time."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
@@ -6099,7 +6099,7 @@
         "message": "Level for Yaw [°/s]"
     },
     "profilesItermRelaxLevelHelp": {
-        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main setting is Bounce-back Suppression in the Flight Feel panel; leave level at the default (22) unless that is not enough."
+        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main setting is Bounce Back in the Flight Feel panel; leave level at the default (22) unless that is not enough."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
