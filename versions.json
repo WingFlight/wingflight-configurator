@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-iterm-decay",
+      "path": "./feature-iterm-decay/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
