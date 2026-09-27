@@ -1974,7 +1974,7 @@
         "english": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "控制直升机跟随摇杆的力度(目标点)，并纠正外部影响。<br /><br />更高的P值可以让飞机更快响应你的打杆，但如果与D值（微分）的比例过高，可能导致超调过冲。 可以将P值想象成汽车的弹簧。",
+        "message": "控制直升机跟随摇杆的力度(目标点)，并纠正外部影响。 更高的P值可以让飞机更快响应你的打杆，但如果与D值（微分）的比例过高，可能导致超调过冲。 可以将P值想象成汽车的弹簧。",
         "english": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
@@ -1983,7 +1983,7 @@
         "english": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "控制直升机能够持续保持跟随你的摇杆的强度。<br>类似于P值，但它更针对持续的力，如重心偏移或是强风影响。<br /><br />较高的增益提供了对目标点更紧密的跟踪(即在不断的翻滚中)，可以使直升机紧密的跟随你的打杆，但过高的值可能在你停止打杆后滚转不会立刻停下。<br>如果与d项的比例非常高，可以引起振荡。",
+        "message": "控制直升机能够持续保持跟随你的摇杆的强度。 类似于P值，但它更针对持续的力，如重心偏移或是强风影响。 较高的增益提供了对目标点更紧密的跟踪(即在不断的翻滚中)，可以使直升机紧密的跟随你的打杆，但过高的值可能在你停止打杆后滚转不会立刻停下。 如果与d项的比例非常高，可以引起振荡。",
         "english": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
@@ -1992,7 +1992,7 @@
         "english": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "控制直升机滚转的阻尼强度，无论是来自于打杆或者是外部的扰动。对于打杆，D值可以抑制运动以防止过度，缓解P值过高所带来的回弹。对于外部的扰动（如涡流或阵风），它可以有更强的抵抗能力。然而，D值对高频陀螺振动非常敏感(放大10倍到100倍)。<br /><br />控制回路中的高频噪声可能导致舵机过热，如果陀螺仪噪声过滤不当(参见陀螺仪标签)，则会烧毁舵机。把D值想象成你车上的减震器，但它的固有负面特性是放大高频陀螺噪声。",
+        "message": "控制直升机滚转的阻尼强度，无论是来自于打杆或者是外部的扰动。对于打杆，D值可以抑制运动以防止过度，缓解P值过高所带来的回弹。对于外部的扰动（如涡流或阵风），它可以有更强的抵抗能力。然而，D值对高频陀螺振动非常敏感(放大10倍到100倍)。 控制回路中的高频噪声可能导致舵机过热，如果陀螺仪噪声过滤不当(参见陀螺仪标签)，则会烧毁舵机。把D值想象成你车上的减震器，但它的固有负面特性是放大高频陀螺噪声。",
         "english": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
@@ -2001,7 +2001,7 @@
         "english": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "前馈是基于打杆的额外补偿，使得P值对打杆输入有更强的响应，但前馈不会对直升机的运动做出任何反应<br /><br /> 前馈基于命令设定值之间的差值(deg/sec)。更高的前馈将会使直升机对摇杆的响应更加敏锐<br>值过高可能导致超调，以及在打杆结束时姿态回缩<br>过低或0将导致对摇杆的响应缓慢和延迟，以及打杆结束后继续旋转。",
+        "message": "前馈是基于打杆的额外补偿，使得P值对打杆输入有更强的响应，但前馈不会对直升机的运动做出任何反应 前馈基于命令设定值之间的差值(deg/sec)。更高的前馈将会使直升机对摇杆的响应更加敏锐 值过高可能导致超调，以及在打杆结束时姿态回缩 过低或0将导致对摇杆的响应缓慢和延迟，以及打杆结束后继续旋转。",
         "english": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
@@ -3247,7 +3247,7 @@
         "english": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM更新频率(Hz)。对于模拟舵机，将其设置为50Hz，太高的值可能会损坏舵机。对于数字舵机，数值从100Hz到560Hz是比较常见的。请检查舵机的参数。<br><b>说明</b>:选择<i>保存并重启</i>后，舵机频率的更改才会生效。",
+        "message": "PWM更新频率(Hz)。对于模拟舵机，将其设置为50Hz，太高的值可能会损坏舵机。对于数字舵机，数值从100Hz到560Hz是比较常见的。请检查舵机的参数。 说明:选择保存并重启后，舵机频率的更改才会生效。",
         "english": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSpeed": {
@@ -5868,7 +5868,7 @@
         "english": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "较低的数值可抑制移动后的反弹，较高的数值可提高高速旋转的精确度。<br>小型直升机设置为15-30, 中型直升机设置为10-15，大型直升机设置为小于10。",
+        "message": "较低的数值可抑制移动后的反弹，较高的数值可提高高速旋转的精确度。 小型直升机设置为15-30, 中型直升机设置为10-15，大型直升机设置为小于10。",
         "english": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
     },
     "profilesPidBandwidth": {
