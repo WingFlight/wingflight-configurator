@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-flight-feel",
+      "path": "./feature-flight-feel/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
