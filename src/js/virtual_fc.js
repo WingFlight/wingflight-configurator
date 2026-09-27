@@ -312,10 +312,20 @@ export function getVirtualResponse(code, requestData) {
     case MSPCodes.MSP_SET_RC_TUNING:
       storeRateSlot();
       return undefined;
+    // Like the FC, copying onto the active profile reloads it
     case MSPCodes.MSP_COPY_PROFILE: {
       const [type, dst, src] = requestData;
-      const slots = type === 0 ? pidSlots : rateSlots;
-      slots[dst] = clone(slots[src]);
+      if (type === 0) {
+        pidSlots[dst] = clone(pidSlots[src]);
+        if (dst === FC.CONFIG.profile) {
+          loadPidSlot(dst);
+        }
+      } else if (type === 1) {
+        rateSlots[dst] = clone(rateSlots[src]);
+        if (dst === FC.CONFIG.rateProfile) {
+          loadRateSlot(dst);
+        }
+      }
       return undefined;
     }
     case MSPCodes.MSP_SET_RESET_CURR_PID:
@@ -331,6 +341,9 @@ export function getVirtualResponse(code, requestData) {
     case MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE: {
       const [dst, src] = requestData;
       tvSlots[dst] = clone(tvSlots[src]);
+      if (dst === FC.CONFIG.tvProfile) {
+        loadTvSlot(dst);
+      }
       return undefined;
     }
     case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
