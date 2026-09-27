@@ -1,4 +1,4 @@
-import { getVirtualEscResponse } from "@/js/virtual_fc.js";
+import { getVirtualResponse } from "@/js/virtual_fc.js";
 
 let packet_error = $state(0);
 
@@ -328,8 +328,9 @@ export const MSP = {
     },
     send_message: function (code, data, callback_sent, callback_msp, doCallbackOnError) {
         if (CONFIGURATOR.virtualMode) {
+            // Run even without a callback: writes like MSP_SELECT_SETTING change virtual FC state
+            const virtualPayload = getVirtualResponse(code, data);
             if (callback_msp) {
-                const virtualPayload = getVirtualEscResponse(code, data);
                 if (virtualPayload) {
                     const buffer = new ArrayBuffer(virtualPayload.length);
                     new Uint8Array(buffer).set(virtualPayload);

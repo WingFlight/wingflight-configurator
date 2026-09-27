@@ -3,6 +3,10 @@ import { RemoteSupport, REMOTE_PORT_PREFIX } from '@/js/protocols/RemoteSupport.
 
 const TIMEOUT_CHECK = 500 ; // With 250 it seems that it produces a memory leak and slowdown in some versions, reason unknown
 
+// The Virtual FC is a dev tool on desktop, but on the web build it doubles as a
+// no-hardware demo of every tab (see virtual_fc.js).
+const SHOW_VIRTUAL_PORT = import.meta.env.DEV || __BACKEND__ === "web";
+
 export const usbDevices = { filters: [
     {'vendorId': 1155, 'productId': 57105},
     {'vendorId': 10473, 'productId': 393},
@@ -176,7 +180,7 @@ PortHandler.rebuildPortPickerOptions = function (dfuText) {
         'data-is-dfu': 'true',
     }));
 
-    if (import.meta.env.DEV) {
+    if (SHOW_VIRTUAL_PORT) {
         self.portPickerElement.append($('<option/>', {
            value: 'virtual',
            text: i18n.getMessage('portsSelectVirtual'),
@@ -369,12 +373,16 @@ PortHandler.updatePortSelect = function (ports) {
         }));
     }
 
-    if (import.meta.env.DEV) {
-        this.portPickerElement.append($("<option/>", {
-           value: 'virtual',
-           text: i18n.getMessage('portsSelectVirtual'),
-           data: {isVirtual: true},
-        }));
+    const virtualOption = () => $("<option/>", {
+        value: 'virtual',
+        text: i18n.getMessage('portsSelectVirtual'),
+        data: {isVirtual: true},
+    });
+
+    // On web it goes last instead (below), so an empty picker still defaults
+    // to "please select" rather than silently connecting to the demo.
+    if (SHOW_VIRTUAL_PORT && __BACKEND__ !== "web") {
+        this.portPickerElement.append(virtualOption());
     }
 
     if (__BACKEND__ !== "web") {
@@ -443,6 +451,8 @@ PortHandler.updatePortSelect = function (ports) {
                 'data-dfu-pending': 'true',
             }));
         }
+
+        this.portPickerElement.append(virtualOption());
     }
 
     this.setPortsInputWidth();

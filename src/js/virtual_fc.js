@@ -1,6 +1,12 @@
 import { FC } from "@/js/fc.svelte.js";
+import { GainCurve } from "@/js/GainCurve.js";
+import { MixerCurve } from "@/js/MixerCurve.js";
+import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
+
+// MSP_SELECT_SETTING's index offset for "select rate profile N" (see Rates.svelte)
+const RATE_PROFILE_MASK = 128;
 
 let virtualEscManufacturerId = null;
 
@@ -27,10 +33,327 @@ function currentVirtualEscBuffer() {
   return virtualEscBuffers.get(virtualEscManufacturerId);
 }
 
-// Lets the ESC Programming tab be developed/tested without hardware: MSP.send_message's
-// virtualMode branch calls this before falling back to its normal no-op ack. `requestData` is
+// FC's $state proxies can't go through structuredClone, and the slot copies below must not
+// alias the live FC objects a tab is editing.
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+// Mirrors the firmware's reset templates (pg/pid.c resetPidProfile(), pg/rates.c,
+// pg/tv_pid.c) so a fresh virtual FC looks like a freshly flashed one.
+const DEFAULT_PIDS = [
+  [50, 16, 0, 100, 0], // roll  P I D F B
+  [50, 16, 0, 100, 0], // pitch
+  [80, 20, 0, 100, 0], // yaw
+];
+
+function defaultPidSlot() {
+  return {
+    pids: clone(DEFAULT_PIDS),
+    profile: {
+      pid_mode: 1,
+      itermDecayTimeRoll: 60,
+      itermDecayTimePitch: 60,
+      itermDecayTimeYaw: 60,
+      iterm_decay_limit: 35,
+      itermRelaxLevelRoll: 22,
+      itermRelaxLevelPitch: 22,
+      itermRelaxLevelYaw: 22,
+      bouncebackRoll: 5,
+      bouncebackPitch: 5,
+      bouncebackYaw: 5,
+      errorLimitRoll: 45,
+      errorLimitPitch: 45,
+      errorLimitYaw: 60,
+      gyroCutoffRoll: 50,
+      gyroCutoffPitch: 50,
+      gyroCutoffYaw: 100,
+      dtermCutoffRoll: 15,
+      dtermCutoffPitch: 15,
+      dtermCutoffYaw: 20,
+      btermCutoffRoll: 15,
+      btermCutoffPitch: 15,
+      btermCutoffYaw: 20,
+      levelAngleStrength: 40,
+      levelAngleLimit: 55,
+      horizonLevelStrength: 40,
+      acroTrainerGain: 75,
+      acroTrainerLimit: 20,
+      attHoldGain: 40,
+      attHoldDeadband: 5,
+      attHoldMaxRate: 300,
+      fwTpaGain: 100,
+      fwTpaCurve: 0,
+      masterGainRoll: 100,
+      masterGainPitch: 100,
+      masterGainYaw: 100,
+      autoHoverGain: 50,
+      autoHoverMaxAngle: 30,
+      autoHoverMaxRate: 120,
+      autoHoverRollDeadband: 5,
+      autoHoverThrottleAssistGain: 0,
+      autoHoverThrottleAssistMax: 15,
+      autoHoverThrottleAssistTriggerMs: 300,
+      crossAxisRelaxStrength: 0,
+      crossAxisRelaxLevel: 100,
+      crossAxisRelaxCutoff: 10,
+      crossAxisRelaxPitchStrength: 0,
+      gainCurveRoll: 0,
+      gainCurvePitch: 0,
+      gainCurveYaw: 0,
+      // API 22.4 per-axis attitude limits: raw 0 = inherit the shared limit above
+      hasAxisLimits: true,
+      angleRollLimit: 55,
+      anglePitchLimit: 55,
+      trainerRollLimit: 20,
+      trainerPitchLimit: 20,
+      axisLimitsRaw: [0, 0, 0, 0],
+      axisLimitsInitial: [55, 55, 20, 20],
+    },
+  };
+}
+
+function defaultRateSlot() {
+  return {
+    roll_rc_rate: 0.5,
+    pitch_rc_rate: 0.5,
+    yaw_rc_rate: 0.7,
+    roll_rc_expo: 0.3,
+    pitch_rc_expo: 0.3,
+    yaw_rc_expo: 0.3,
+    roll_srate: 0.05,
+    pitch_srate: 0.05,
+    yaw_srate: 0.05,
+    roll_response_time: 0,
+    pitch_response_time: 0,
+    yaw_response_time: 0,
+    roll_accel_limit: 0,
+    pitch_accel_limit: 0,
+    yaw_accel_limit: 0,
+    roll_setpoint_boost_gain: 0,
+    pitch_setpoint_boost_gain: 0,
+    yaw_setpoint_boost_gain: 0,
+    roll_setpoint_boost_cutoff: 15,
+    pitch_setpoint_boost_cutoff: 15,
+    yaw_setpoint_boost_cutoff: 90,
+    yaw_dynamic_ceiling_gain: 0,
+    yaw_dynamic_deadband_gain: 10,
+    yaw_dynamic_deadband_filter: 60,
+  };
+}
+
+function defaultTvSlot() {
+  return {
+    pids: clone(DEFAULT_PIDS),
+    profile: {
+      masterGainRoll: 100,
+      masterGainPitch: 100,
+      masterGainYaw: 100,
+      gainCurveRoll: 0,
+      gainCurvePitch: 0,
+      gainCurveYaw: 0,
+      itermDecayTimeRoll: 60,
+      itermDecayTimePitch: 60,
+      itermDecayTimeYaw: 60,
+      iterm_decay_limit: 35,
+      itermRelaxLevelRoll: 22,
+      itermRelaxLevelPitch: 22,
+      itermRelaxLevelYaw: 22,
+      bouncebackRoll: 5,
+      bouncebackPitch: 5,
+      bouncebackYaw: 5,
+      errorLimitRoll: 45,
+      errorLimitPitch: 45,
+      errorLimitYaw: 60,
+      dtermCutoffRoll: 15,
+      dtermCutoffPitch: 15,
+      dtermCutoffYaw: 20,
+      btermCutoffRoll: 15,
+      btermCutoffPitch: 15,
+      btermCutoffYaw: 20,
+      gyroCutoffRoll: 50,
+      gyroCutoffPitch: 50,
+      gyroCutoffYaw: 100,
+      tvHoldGain: 40,
+      tvHoldDeadband: 5,
+      tvHoldMaxRate: 300,
+    },
+  };
+}
+
+// The FC's per-profile "EEPROM": FC.PIDS/PID_PROFILE, FC.RC_TUNING and FC.TV_PIDS/
+// TV_PID_PROFILE only ever hold the active profile (as on real hardware), so every
+// profile's saved copy lives here. A save writes the active slot, a select loads one -
+// saving on the SET rather than on the switch means edits discarded on the way out of
+// a tab are never persisted.
+let pidSlots = [];
+let rateSlots = [];
+let tvSlots = [];
+
+function copyPids(target, pids) {
+  pids.forEach((axis, i) => axis.forEach((value, j) => (target[i][j] = value)));
+}
+
+function loadPidSlot(index) {
+  const slot = clone(pidSlots[index]);
+  copyPids(FC.PIDS, slot.pids);
+  copyPids(FC.PIDS_ACTIVE, slot.pids);
+  Object.assign(FC.PID_PROFILE, slot.profile);
+  FC.CONFIG.profile = index;
+}
+
+function storePidSlot() {
+  pidSlots[FC.CONFIG.profile] = {
+    pids: FC.PIDS.map((axis) => axis.slice(0, 5)),
+    profile: clone(FC.PID_PROFILE),
+  };
+}
+
+function loadRateSlot(index) {
+  Object.assign(FC.RC_TUNING, clone(rateSlots[index]));
+  FC.CONFIG.rateProfile = index;
+}
+
+function storeRateSlot() {
+  rateSlots[FC.CONFIG.rateProfile] = clone(FC.RC_TUNING);
+}
+
+function loadTvSlot(index) {
+  const slot = clone(tvSlots[index]);
+  copyPids(FC.TV_PIDS, slot.pids);
+  Object.assign(FC.TV_PID_PROFILE, slot.profile);
+  FC.CONFIG.tvProfile = index;
+}
+
+function storeTvSlot() {
+  tvSlots[FC.CONFIG.tvProfile] = {
+    pids: clone(FC.TV_PIDS),
+    profile: clone(FC.TV_PID_PROFILE),
+  };
+}
+
+function resetProfileSlots() {
+  const count = FC.CONFIG.numProfiles;
+  pidSlots = Array.from({ length: count }, defaultPidSlot);
+  rateSlots = Array.from({ length: count }, defaultRateSlot);
+  tvSlots = Array.from({ length: count }, defaultTvSlot);
+  loadPidSlot(0);
+  loadRateSlot(0);
+  loadTvSlot(0);
+}
+
+// Mirrors pidGetRuntimeGains() (flight/pid.c) for the active profile's *saved* values -
+// like the real FC, effective gains don't move until a save. Sticks and throttle sit at
+// rest in virtual mode, so curves are evaluated at zero deflection/throttle.
+function encodeEffectivePidGains() {
+  const { pids, profile } = pidSlots[FC.CONFIG.profile];
+  const curveScale = (index, x) => {
+    const curve = FC.GAIN_CURVES[index - 1];
+    return index > 0 && curve ? GainCurve.evaluate(curve, x) / 100 : 1;
+  };
+  const centi = (value) => Math.round(Math.max(0, value) * 100);
+  const fwTpa = (profile.fwTpaGain / 100) * curveScale(profile.fwTpaCurve, 0);
+
+  const buffer = [];
+  buffer.push8(2); // payload version
+  buffer.push8(profile.pid_mode);
+  buffer.push32(centi(fwTpa * 100));
+
+  ["Roll", "Pitch", "Yaw"].forEach((axis, i) => {
+    const [P, I, D, F, B] = pids[i];
+    const masterGainRaw = profile[`masterGain${axis}`];
+    const gainCurve = curveScale(profile[`gainCurve${axis}`], 0);
+    const masterGain = (masterGainRaw / 100) * gainCurve;
+
+    [P, I, D, F, B].forEach((value) => buffer.push16(value));
+    buffer.push16(masterGainRaw);
+    buffer.push32(centi(gainCurve * 100));
+    buffer.push32(0); // gain curve position: stick centred
+    buffer.push32(centi(P * masterGain * fwTpa));
+    buffer.push32(centi(I * masterGain));
+    buffer.push32(centi(D * masterGain * fwTpa));
+    buffer.push32(centi(F));
+    buffer.push32(centi(B));
+  });
+
+  return Uint8Array.from(buffer);
+}
+
+// Runs a virtual reply through the real decoder, so FC is updated exactly as it would
+// be by hardware (and a payload that drifts from the wire format shows up here).
+function decodeVirtualReply(code, payload) {
+  globalThis.mspHelper.process_data({
+    code,
+    dataView: new DataView(payload.buffer),
+    crcError: false,
+    callbacks: [],
+  });
+  return payload;
+}
+
+// MSP.send_message's virtualMode branch calls this before falling back to its normal
+// no-op ack. Most reads need nothing here - FC is seeded once by applyVirtualConfig() and
+// a read in virtual mode simply leaves it alone - so this only covers requests whose
+// effect on real hardware is more than "return what FC already holds". `requestData` is
 // the outgoing write payload (a plain array of byte values) for write codes.
-export function getVirtualEscResponse(code, requestData) {
+export function getVirtualResponse(code, requestData) {
+  switch (code) {
+    case MSPCodes.MSP_SELECT_SETTING: {
+      const index = requestData[0];
+      if (index & RATE_PROFILE_MASK) {
+        loadRateSlot(index & ~RATE_PROFILE_MASK);
+      } else {
+        loadPidSlot(index);
+      }
+      return undefined;
+    }
+    case MSPCodes.MSP_SET_PID_TUNING:
+    case MSPCodes.MSP_SET_PID_PROFILE:
+      storePidSlot();
+      return undefined;
+    case MSPCodes.MSP_SET_RC_TUNING:
+      storeRateSlot();
+      return undefined;
+    // Like the FC, copying onto the active profile reloads it
+    case MSPCodes.MSP_COPY_PROFILE: {
+      const [type, dst, src] = requestData;
+      if (type === 0) {
+        pidSlots[dst] = clone(pidSlots[src]);
+        if (dst === FC.CONFIG.profile) {
+          loadPidSlot(dst);
+        }
+      } else if (type === 1) {
+        rateSlots[dst] = clone(rateSlots[src]);
+        if (dst === FC.CONFIG.rateProfile) {
+          loadRateSlot(dst);
+        }
+      }
+      return undefined;
+    }
+    case MSPCodes.MSP_SET_RESET_CURR_PID:
+      pidSlots[FC.CONFIG.profile] = defaultPidSlot();
+      loadPidSlot(FC.CONFIG.profile);
+      return undefined;
+    case MSPCodes.MSP2_WING_SET_TV_PID_CONFIG:
+      storeTvSlot();
+      return undefined;
+    case MSPCodes.MSP2_WING_SELECT_TV_PROFILE:
+      loadTvSlot(requestData[0]);
+      return undefined;
+    case MSPCodes.MSP2_WING_COPY_TV_PID_PROFILE: {
+      const [dst, src] = requestData;
+      tvSlots[dst] = clone(tvSlots[src]);
+      if (dst === FC.CONFIG.tvProfile) {
+        loadTvSlot(dst);
+      }
+      return undefined;
+    }
+    case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
+      return decodeVirtualReply(code, encodeEffectivePidGains());
+    default:
+      return getVirtualEscResponse(code, requestData);
+  }
+}
+
+function getVirtualEscResponse(code, requestData) {
   if (code === MSPCodes.MSP_ESC_PARAMETERS) {
     const buffer = currentVirtualEscBuffer();
     return buffer ? Uint8Array.from(buffer) : undefined;
@@ -370,15 +693,156 @@ export function applyVirtualConfig() {
     31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   ];
 
-  FC.MIXER_INPUTS = [
-    { rate: 0, min: 0, max: 0 },
-    { rate: 0, min: 0, max: 0 },
-    { rate: 0, min: 0, max: 0 },
-    { rate: 0, min: 0, max: 0 },
-    { rate: 0, min: 0, max: 0 },
+  // Modes: ARM on AUX1 high, ANGLE on AUX2 mid; the rest of the
+  // MAX_MODE_ACTIVATION_CONDITION_COUNT slots unused, as the FC reports them.
+  FC.MODE_RANGES = Array.from({ length: 20 }, () => ({
+    id: 0,
+    auxChannelIndex: 0,
+    range: { start: 900, end: 900 },
+  }));
+  FC.MODE_RANGES_EXTRA = Array.from({ length: 20 }, () => ({
+    id: 0,
+    modeLogic: 0,
+    linkedTo: 0,
+  }));
+  FC.MODE_RANGES[0] = {
+    id: 0,
+    auxChannelIndex: 0,
+    range: { start: 1700, end: 2100 },
+  };
+  FC.MODE_RANGES[1] = {
+    id: 1,
+    auxChannelIndex: 1,
+    range: { start: 1300, end: 1700 },
+  };
+  FC.MODE_RANGES_EXTRA[1].id = 1;
+
+  // Profiles/Rates/Thrust Vector (also sets FC.PIDS, PID_PROFILE, RC_TUNING,
+  // TV_PIDS and TV_PID_PROFILE from the active slots)
+  resetProfileSlots();
+
+  FC.GAIN_CURVES = Array.from({ length: GainCurve.CURVE_COUNT }, () =>
+    GainCurve.nullCurve(),
+  );
+
+  // Mixer: pg/mixer.c defaults - regular airplane, 2 ailerons + elevator +
+  // rudder on S1-S4 and throttle on M1
+  FC.MIXER_CONFIG.model_type = 0;
+
+  FC.MIXER_INPUTS = Array.from({ length: 35 }, (_, i) => {
+    if (i === 0) return { rate: 0, min: 0, max: 0 }; // MIXER_IN_NONE
+    if (i === 4) return { rate: 1000, min: 0, max: 1000 }; // stabilized throttle
+    return { rate: 1000, min: -1000, max: 1000 };
+  });
+
+  const SERVO_OUTPUT = 1; // MIXER_SERVO_OFFSET
+  const MOTOR_OUTPUT = 27; // MIXER_MOTOR_OFFSET
+  const mixerRule = (src, dst, weight) => ({
+    oper: 1, // MIXER_OP_SET
+    src,
+    dst,
+    offset: 0,
+    weight,
+    weightNeg: weight,
+    speed: 0,
+    curve: 0,
+    condition: 0,
+    role: 0,
+  });
+  FC.MIXER_RULES = [
+    mixerRule(1, SERVO_OUTPUT + 0, 1000), // left aileron
+    mixerRule(1, SERVO_OUTPUT + 1, -1000), // right aileron
+    mixerRule(2, SERVO_OUTPUT + 2, 1000), // elevator
+    mixerRule(3, SERVO_OUTPUT + 3, 1000), // rudder
+    mixerRule(4, MOTOR_OUTPUT + 0, 1000), // motor
+  ];
+  while (FC.MIXER_RULES.length < 32) {
+    FC.MIXER_RULES.push({ ...mixerRule(0, 0, 0), oper: 0 });
+  }
+
+  FC.MIXER_CURVES = Array.from({ length: MixerCurve.CURVE_COUNT }, () =>
+    MixerCurve.nullCurve(),
+  );
+
+  // One balance curve per servo, same count as MSP_SERVO_CONFIGURATIONS
+  FC.SERVO_CURVES = FC.SERVO_CONFIG.map(() => ServoBalanceCurve.nullCurve());
+
+  // Failsafe/arming: pg/failsafe.c and pg/arming.c defaults
+  Object.assign(FC.FAILSAFE_CONFIG, {
+    failsafe_delay: 15,
+    failsafe_off_delay: 10,
+    failsafe_throttle: 1000,
+    failsafe_switch_mode: 0,
+    failsafe_throttle_low_delay: 100,
+    failsafe_procedure: 1, // drop
+    failsafe_recovery_delay: 10,
+  });
+  FC.ARMING_CONFIG.auto_disarm_delay = 5;
+
+  // Power: ADC battery + BEC voltage meters and the battery current meter,
+  // with pg/voltage.c / pg/current.c calibration defaults
+  FC.VOLTAGE_METERS = [
+    { id: 10, voltage: 12 },
+    { id: 20, voltage: 5.1 },
+  ];
+  FC.VOLTAGE_METER_CONFIGS = FC.VOLTAGE_METERS.map(({ id }) => ({
+    id,
+    sensorType: 1, // ADC
+    vbatscale: 110,
+    vbatresdivval: 10,
+    vbatresdivmultiplier: 1,
+  }));
+  FC.CURRENT_METERS = [{ id: 10, amperage: 3, mAhDrawn: 1200 }];
+  FC.CURRENT_METER_CONFIGS = [
+    { id: 10, sensorType: 1, scale: 400, offset: 0 }, // ADC
   ];
 
-  FC.PID_PROFILE.pid_mode = 1;
+  // LED strip: io/ledstrip.c's hsv[] palette (padded to
+  // LED_CONFIGURABLE_COLOR_COUNT) and default mode/special colors, in
+  // MSP_LED_STRIP_MODECOLOR order
+  FC.LED_COLORS = [
+    [0, 0, 0],
+    [0, 255, 255],
+    [0, 0, 255],
+    [30, 0, 255],
+    [60, 0, 255],
+    [90, 0, 255],
+    [120, 0, 255],
+    [150, 0, 255],
+    [180, 0, 255],
+    [210, 0, 255],
+    [240, 0, 255],
+    [270, 0, 255],
+    [300, 0, 255],
+    [330, 0, 255],
+    [0, 0, 0],
+    [0, 0, 0],
+  ].map(([h, s, v]) => ({ h, s, v }));
+
+  const WHITE = 1,
+    RED = 2,
+    ORANGE = 3,
+    YELLOW = 4,
+    GREEN = 6,
+    MINT = 7;
+  const CYAN = 8,
+    BLUE = 10,
+    VIOLET = 11,
+    PINK = 13;
+  const modeColors = [
+    [WHITE, VIOLET, RED, PINK, BLUE, ORANGE], // orientation
+    [BLUE, VIOLET, YELLOW, PINK, BLUE, ORANGE], // horizon
+    [CYAN, VIOLET, YELLOW, PINK, BLUE, ORANGE], // angle
+    [MINT, VIOLET, ORANGE, PINK, BLUE, ORANGE], // rescue
+  ];
+  const specialColors = [GREEN, BLUE, WHITE, 0, 0, RED, ORANGE, GREEN, 0, 0, 0];
+  FC.LED_MODE_COLORS = [
+    ...modeColors.flatMap((colors, mode) =>
+      colors.map((color, direction) => ({ mode, direction, color })),
+    ),
+    ...specialColors.map((color, direction) => ({ mode: 4, direction, color })),
+    { mode: 5, direction: 0, color: 3 }, // LED_AUX_CHANNEL: throttle
+  ];
 }
 
 if (import.meta.hot) {
