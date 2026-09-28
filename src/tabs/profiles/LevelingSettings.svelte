@@ -42,45 +42,22 @@
   {/if}
 {/snippet}
 
-{#if configuredModes.has("ANGLE")}
-  <Section label="profilesAngleGroup">
-    <SubSection>
-      <Field id="angle-mode-gain" label="profilesAngleModeGain">
-        {#snippet tooltip()}
-          {$i18n.t("profilesAngleModeGainHelp")}
-        {/snippet}
-        <NumberInput
-          id="angle-mode-gain"
-          min="0"
-          max="200"
-          bind:value={FC.PID_PROFILE.levelAngleStrength}
-        />
-      </Field>
-      {@render angleLimits()}
-    </SubSection>
-  </Section>
-{/if}
-
-{#if configuredModes.has("HORIZON")}
-  <Section label="profilesHorizonGroup">
-    <SubSection>
-      <Field id="horizon-mode-gain" label="profilesHorizonModeGain">
-        {#snippet tooltip()}
-          {$i18n.t("profilesHorizonModeGainHelp")}
-        {/snippet}
-        <NumberInput
-          id="horizon-mode-gain"
-          min="0"
-          max="200"
-          bind:value={FC.PID_PROFILE.horizonLevelStrength}
-        />
-      </Field>
-      {#if !configuredModes.has("ANGLE")}
-        {@render angleLimits()}
-      {/if}
-    </SubSection>
-  </Section>
-{/if}
+<Section label="profilesAngleGroup">
+  <SubSection>
+    <Field id="angle-mode-gain" label="profilesAngleModeGain">
+      {#snippet tooltip()}
+        {$i18n.t("profilesAngleModeGainHelp")}
+      {/snippet}
+      <NumberInput
+        id="angle-mode-gain"
+        min="0"
+        max="200"
+        bind:value={FC.PID_PROFILE.levelAngleStrength}
+      />
+    </Field>
+    {@render angleLimits()}
+  </SubSection>
+</Section>
 
 {#if configuredModes.has("ATT HOLD")}
   <Section label="profilesAttHoldGroup">

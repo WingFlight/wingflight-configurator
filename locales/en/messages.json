@@ -1875,7 +1875,7 @@
         "message": "Accelerometer Trim"
     },
     "configurationAccelTrimsHelp": {
-        "message": "Accelerometer Trims adjust the horizon to correct drift in stabilized modes like Angle, Horizon, and Rescue."
+        "message": "Accelerometer Trims correct the level reference used by Trainer and by the self-leveling in Failsafe, GPS Rescue, RTH and Loiter."
     },
     "configurationAccelTrimRoll": {
         "message": "Accelerometer Roll Trim"
@@ -3216,10 +3216,7 @@
         "message": "Rescue Altitude D-gain"
     },
     "adjustmentsFunctionAngleLevelGain": {
-        "message": "Angle Level Gain"
-    },
-    "adjustmentsFunctionHorizonLevelGain": {
-        "message": "Horizon Level Gain"
+        "message": "Self-Level Gain"
     },
     "adjustmentsFunctionAcroTrainerGain": {
         "message": "Acro Trainer Gain"
@@ -5967,7 +5964,7 @@
         "message": "Attitude / Heading Hold"
     },
     "thrustVectorHoldIntroNote": {
-        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Attitude Hold mode -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
     },
     "thrustVectorHoldGain": {
         "message": "Hold gain"
@@ -6213,31 +6210,19 @@
         "message": "The same angle limit applies to positive and negative pitch and roll. Inside the limit, Trainer uses normal rate control without self-leveling. Actual attitude can overshoot; this is not stall protection."
     },
     "profilesAngleGroup": {
-        "message": "Angle"
-    },
-    "profilesHorizonGroup": {
-        "message": "Horizon"
-    },
-    "profilesAngleHorizonGroup": {
-        "message": "Angle / Horizon Mode"
+        "message": "Self-Leveling (Failsafe & GPS)"
     },
     "profilesAngleModeGain": {
-        "message": "Angle Mode leveling gain"
+        "message": "Leveling gain"
     },
     "profilesAngleModeGainHelp": {
-        "message": "Angle Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Angle Mode"
+        "message": "How firmly the aircraft is brought back to level, or to the bank and pitch GPS navigation asks for, while Failsafe, GPS Rescue, RTH or Loiter is flying it."
     },
     "profilesAngleModeLimit": {
-        "message": "Angle Mode maximum angle"
+        "message": "Maximum angle"
     },
     "profilesAngleModeLimitHelp": {
-        "message": "Angle Mode maximum angle. The aircraft is limited to this angle when in Angle mode"
-    },
-    "profilesHorizonModeGain": {
-        "message": "Horizon Mode leveling gain"
-    },
-    "profilesHorizonModeGainHelp": {
-        "message": "Horizon Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Horizon Mode"
+        "message": "The most bank and pitch Failsafe, GPS Rescue, RTH and Loiter may command."
     },
     "profilesAttHoldGain": {
         "message": "Attitude Hold gain"
@@ -7176,7 +7161,7 @@
         "message": "Accelerometer"
     },
     "configurationAccHardwareHelp": {
-        "message": "Enables the Accelerometer. This is required for all stabilisation modes: Angle, Horizon, Acro Trainer and Rescue."
+        "message": "Enables the Accelerometer. This is required for Trainer, Attitude Hold, and the self-leveling in Failsafe, GPS Rescue, RTH and Loiter."
     },
     "configurationBaroHardware": {
         "message": "Barometer"
@@ -7322,18 +7307,6 @@
     "modeHelp ARM": {
         "message": "Arms the motors and control surfaces for flight. Arming can be blocked while any arming-disable condition (calibration, failsafe, PREARM, etc.) is active."
     },
-    "mode ANGLE": {
-        "message": "ANGLE"
-    },
-    "modeHelp ANGLE": {
-        "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
-    },
-    "mode HORIZON": {
-        "message": "HORIZON"
-    },
-    "modeHelp HORIZON": {
-        "message": "Rate control with added self-leveling near center stick. Leveling fades as the sticks move outward. Unlike Trainer, this mode does not enforce a pitch/bank envelope."
-    },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
     },
@@ -7453,12 +7426,6 @@
     },
     "modeHelp GPS BEEP SATELLITE COUNT": {
         "message": "Beeps out the current number of GPS satellites in view while active."
-    },
-    "mode AUTO HOVER": {
-        "message": "AUTO HOVER"
-    },
-    "modeHelp AUTO HOVER": {
-        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Attitude Hold while active."
     },
     "mode GOVERNOR": {
         "message": "GOVERNOR"

@@ -601,7 +601,6 @@ class FlightController {
       absoluteControlGain:        0,
       throttleBoost:              0,
       levelAngleStrength:         0,
-      horizonLevelStrength:       0,
       acroTrainerAngleLimit:      0,
       acroTrainerLimit:           0,
       acroTrainerGain:            0,
