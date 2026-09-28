@@ -1512,10 +1512,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.masterGainRoll                = data.readU16();
                 FC.PID_PROFILE.masterGainPitch               = data.readU16();
                 FC.PID_PROFILE.masterGainYaw                 = data.readU16();
-                // Auto Hover //
-                FC.PID_PROFILE.autoHoverGain                 = data.readU8();
-                FC.PID_PROFILE.autoHoverMaxAngle             = data.readU8();
-                FC.PID_PROFILE.autoHoverMaxRate              = data.readU16();
+                self.skipBytes(data, 4); // reserved, was Auto Hover gain/max angle/max rate
                 // Cross-axis relax //
                 FC.PID_PROFILE.crossAxisRelaxStrength        = data.remaining() >= 3 ? data.readU8() : 0;
                 FC.PID_PROFILE.crossAxisRelaxLevel           = data.remaining() >= 2 ? data.readU8() : 100;
@@ -1527,12 +1524,8 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.gainCurveYaw                  = data.remaining() >= 1 ? data.readU8() : 0;
                 // Att Hold max rate //
                 FC.PID_PROFILE.attHoldMaxRate                = data.remaining() >= 2 ? data.readU16() : 300;
-                // Auto Hover roll deadband //
-                FC.PID_PROFILE.autoHoverRollDeadband         = data.remaining() >= 1 ? data.readU8() : 5;
-                // Auto Hover throttle assist //
-                FC.PID_PROFILE.autoHoverThrottleAssistGain       = data.remaining() >= 4 ? data.readU8() : 0;
-                FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
-                FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
+                // reserved, was Auto Hover roll deadband and throttle assist gain/max/trigger //
+                self.skipBytes(data, Math.min(5, data.remaining()));
                 readAttitudeLimits(data, FC.PID_PROFILE);
                 readFwSpa(data, FC.PID_PROFILE);
                 break;
@@ -2635,10 +2628,10 @@ MspHelper.prototype.crunch = function(code) {
                 .push16(FC.PID_PROFILE.masterGainRoll)
                 .push16(FC.PID_PROFILE.masterGainPitch)
                 .push16(FC.PID_PROFILE.masterGainYaw)
-                // Auto Hover //
-                .push8(FC.PID_PROFILE.autoHoverGain)
-                .push8(FC.PID_PROFILE.autoHoverMaxAngle)
-                .push16(FC.PID_PROFILE.autoHoverMaxRate)
+                // reserved, was Auto Hover gain/max angle/max rate //
+                .push8(0)
+                .push8(0)
+                .push16(0)
                 // Cross-axis relax //
                 .push8(FC.PID_PROFILE.crossAxisRelaxStrength)
                 .push8(FC.PID_PROFILE.crossAxisRelaxLevel)
@@ -2650,12 +2643,11 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.gainCurveYaw)
                 // Att Hold max rate //
                 .push16(FC.PID_PROFILE.attHoldMaxRate)
-                // Auto Hover roll deadband //
-                .push8(FC.PID_PROFILE.autoHoverRollDeadband)
-                // Auto Hover throttle assist //
-                .push8(FC.PID_PROFILE.autoHoverThrottleAssistGain)
-                .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
-                .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs);
+                // reserved, was Auto Hover roll deadband and throttle assist gain/max/trigger //
+                .push8(0)
+                .push8(0)
+                .push8(0)
+                .push16(0);
             writeAttitudeLimits(buffer, FC.PID_PROFILE);
             writeFwSpa(buffer, FC.PID_PROFILE);
             break;

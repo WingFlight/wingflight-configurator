@@ -128,7 +128,7 @@ export function getDebugModes() {
     "UNUSED_76",
     "UNUSED_77",
     "GYRO_CALIBRATION",
-    "AUTOHOVER",
+    "UNUSED_79",
     "ATTHOLD",
     "TVHOLD",
   ];
