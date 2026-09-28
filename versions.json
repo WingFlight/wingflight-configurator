@@ -123,6 +123,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-real-names",
+      "path": "./feature-real-names/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
