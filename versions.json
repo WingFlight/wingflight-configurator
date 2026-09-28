@@ -123,11 +123,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-rm-modes",
-      "path": "./feature-rm-modes/"
-    },
-    {
-      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
