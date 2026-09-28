@@ -74,7 +74,6 @@ function defaultPidSlot() {
       btermCutoffYaw: 20,
       levelAngleStrength: 40,
       levelAngleLimit: 55,
-      horizonLevelStrength: 40,
       acroTrainerGain: 75,
       acroTrainerLimit: 20,
       attHoldGain: 40,
@@ -663,7 +662,6 @@ export function applyVirtualConfig() {
 
     // Flight modes
     "ANGLE",
-    "HORIZON",
     "TRAINER",
     "ALTHOLD",
     "RESCUE",
@@ -834,7 +832,7 @@ export function applyVirtualConfig() {
     PINK = 13;
   const modeColors = [
     [WHITE, VIOLET, RED, PINK, BLUE, ORANGE], // orientation
-    [BLUE, VIOLET, YELLOW, PINK, BLUE, ORANGE], // horizon
+    [0, 0, 0, 0, 0, 0], // reserved, was horizon
     [CYAN, VIOLET, YELLOW, PINK, BLUE, ORANGE], // angle
     [MINT, VIOLET, ORANGE, PINK, BLUE, ORANGE], // rescue
   ];

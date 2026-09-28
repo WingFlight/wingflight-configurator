@@ -55,7 +55,7 @@ export function getFunctions() {
         { id: 43,   name: 'RescueAltI',                 min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 44,   name: 'RescueAltD',                 min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 45,   name: 'AngleLevelGain',             min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
-        { id: 46,   name: 'HorizonLevelGain',           min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
+        { id: 46,   name: 'Reserved',                   min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ], hide: true },
         { id: 47,   name: 'AcroTrainerGain',            min: 25,    max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 48,   name: 'GovernorGain',               min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 49,   name: 'GovernorP',                  min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },

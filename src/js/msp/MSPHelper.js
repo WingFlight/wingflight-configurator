@@ -1491,8 +1491,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 // Angle Mode //
                 FC.PID_PROFILE.levelAngleStrength            = data.readU8();
                 FC.PID_PROFILE.levelAngleLimit               = data.readU8();
-                // Horizon mode //
-                FC.PID_PROFILE.horizonLevelStrength          = data.readU8();
+                self.skipBytes(data, 1); // reserved, was Horizon level strength
                 // Acro Trainer //
                 FC.PID_PROFILE.acroTrainerGain               = data.readU8();
                 FC.PID_PROFILE.acroTrainerLimit              = data.readU8();
@@ -2605,8 +2604,8 @@ MspHelper.prototype.crunch = function(code) {
                 // Angle //
                 .push8(FC.PID_PROFILE.levelAngleStrength)
                 .push8(FC.PID_PROFILE.levelAngleLimit)
-                // Horizon //
-                .push8(FC.PID_PROFILE.horizonLevelStrength)
+                // reserved, was Horizon level strength //
+                .push8(0)
                 // Acro Trainer //
                 .push8(FC.PID_PROFILE.acroTrainerGain)
                 .push8(FC.PID_PROFILE.acroTrainerLimit);

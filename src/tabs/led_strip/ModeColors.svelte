@@ -20,7 +20,7 @@
   let selectedMode = $state(0);
 
   let modeOptions = $derived(
-    MODE_OPTIONS.map((label, value) => ({ value, label: $i18n.t(label) })),
+    MODE_OPTIONS.map(({ value, label }) => ({ value, label: $i18n.t(label) })),
   );
 
   let visibleSpecialSlots = $derived(

@@ -29,13 +29,11 @@ export const FUNCTION_COLORS = {
   r: "radial-gradient(ellipse at center, #000 0%, #000 60%, #fff 60%, #fff 70%, #000 70%, #000 100%)",
 };
 
+// Firmware mode-colour slots (LED_MODE_* in io/ledstrip.h). Slot 1 (was HORIZON) and
+// slot 3 (RESCUE) are never shown by the firmware, so they are not offered here.
 export const MODE_OPTIONS = [
-  "ledStripModeColorsModeOrientation",
-  "ledStripModeColorsModeHeadfree",
-  "ledStripModeColorsModeHorizon",
-  "ledStripModeColorsModeAngle",
-  "ledStripModeColorsModeMag",
-  "ledStripModeColorsModeBaro",
+  { value: 0, label: "ledStripModeColorsModeOrientation" },
+  { value: 2, label: "ledStripModeColorsModeAngle" },
 ];
 
 // Special "mode 6" mode-color slots - which ones are relevant depends on the
