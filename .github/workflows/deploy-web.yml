@@ -22,8 +22,10 @@ on:
 permissions:
   contents: write
 
-# One group per deployed ref (and per deleted branch -- a delete event's
-# github.ref is the default branch, so key it on the deleted ref instead).
+# One group per deployed ref. A delete event's github.ref is the default
+# branch, so key it on the deleted branch's full ref instead -- the same group
+# as that branch's push deploys, so the cleanup waits for an in-flight deploy
+# (or replaces a pending one) rather than racing it and being undone by it.
 # A single shared group let an unrelated run evict a pending one: GitHub keeps
 # only one pending run per group, so deleting a branch right after merging it
 # cancelled the queued master deploy. Within a group a newer run still
@@ -31,7 +33,7 @@ permissions:
 # Runs in different groups can publish concurrently, so the gh-pages push
 # steps below retry on top of whatever landed first.
 concurrency:
-  group: pages-${{ github.event_name == 'delete' && format('delete-{0}', github.event.ref) || github.ref }}
+  group: pages-${{ github.event_name == 'delete' && format('refs/heads/{0}', github.event.ref) || github.ref }}
   cancel-in-progress: false
 
 jobs:
