@@ -386,6 +386,9 @@ export function initializeSerialBackend() {
                 }
             }
 
+            // The Virtual FC is not listed while the flasher owns the port
+            PortHandler.syncVirtualOption();
+
             // A click can still be dropped if it lands mid-switch, so retry
             // until the flasher is actually the active tab.
             for (let attempt = 0; attempt < 3 && GUI.active_tab !== 'firmware_flasher'; attempt++) {
