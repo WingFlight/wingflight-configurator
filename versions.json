@@ -118,11 +118,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-no-horizon",
-      "path": "./feature-no-horizon/"
-    },
-    {
-      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
