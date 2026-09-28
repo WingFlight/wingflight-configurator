@@ -3,6 +3,7 @@
   import { GainCurve } from "@/js/GainCurve.js";
 
   import Field from "@/components/Field.svelte";
+  import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
 
@@ -19,11 +20,13 @@
     { key: "gainCurveYaw", label: "axisYAW" },
   ];
 
-  let rows = $derived(
-    throttle
-      ? [...AXES, { key: "fwTpaCurve", label: "controlAxisThrottle" }]
-      : AXES,
-  );
+  let rows = $derived([
+    ...AXES,
+    ...(throttle ? [{ key: "fwTpaCurve", label: "controlAxisThrottle" }] : []),
+    ...(throttle && profile.hasFwSpa
+      ? [{ key: "fwSpaCurve", label: "controlAxisSpeed" }]
+      : []),
+  ]);
 
   let options = $derived([
     { value: 0, label: $i18n.t("mixerCurveNone") },
@@ -44,4 +47,18 @@
       />
     </Field>
   {/each}
+  {#if throttle && profile.hasFwSpa}
+    <Field
+      id="{idPrefix}gain-curve-speed-max"
+      label="profilesFwSpaSpeedMax"
+      unit="km/h"
+    >
+      <NumberInput
+        id="{idPrefix}gain-curve-speed-max"
+        min="10"
+        max="600"
+        bind:value={profile.fwSpaSpeedMax}
+      />
+    </Field>
+  {/if}
 </Section>

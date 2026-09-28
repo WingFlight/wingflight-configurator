@@ -73,8 +73,21 @@
     return runtimeGains?.fwTpa ?? 100;
   }
 
+  function runtimeSpeedGain() {
+    return runtimeGains?.fwSpa ?? 100;
+  }
+
+  // P/D scale from TPA and GPS speed attenuation together, percent
+  function runtimeAttenuation() {
+    return (runtimeThrottleGain() * runtimeSpeedGain()) / 100;
+  }
+
   function hasRuntimeThrottleDelta() {
-    return Math.abs(runtimeThrottleGain() - 100) >= 0.5;
+    return Math.abs(runtimeAttenuation() - 100) >= 0.5;
+  }
+
+  function hasRuntimeSpeedDelta() {
+    return Math.abs(runtimeSpeedGain() - 100) >= 0.5;
   }
 
   function scaledCurveY(curveY, masterGain, termScale = 100) {
@@ -95,7 +108,7 @@
       profileMasterGain(axisIndex),
       runtimeMasterGain(axisIndex),
     ];
-    const termScales = [100, runtimeThrottleGain()];
+    const termScales = [100, runtimeAttenuation()];
     const maxPoint = Math.max(
       ...masterGains.flatMap((masterGain) =>
         termScales.flatMap((termScale) => [
@@ -251,7 +264,7 @@
           d={curvePath(
             axisIndex,
             runtimeMasterGain(axisIndex),
-            runtimeThrottleGain(),
+            runtimeAttenuation(),
           )}
         ></path>
       {/if}
@@ -269,11 +282,11 @@
           r="3"
         ></circle>
       {/if}
-      {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
+      {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeAttenuation())}
         <circle
           class="throttle-marker"
-          cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
-          cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
+          cx={curveMarker(axisIndex, runtimeAttenuation()).x}
+          cy={curveMarker(axisIndex, runtimeAttenuation()).y}
           r="2.4"
         ></circle>
       {/if}
@@ -293,11 +306,16 @@
     {#if hasRuntimeThrottleDelta()}
       <span
         class="curve-throttle-label"
-        class:tpa-higher={runtimeThrottleGain() > 100}
-        class:tpa-lower={runtimeThrottleGain() < 100}
-        title="P/D throttle attenuation"
+        class:tpa-higher={runtimeAttenuation() > 100}
+        class:tpa-lower={runtimeAttenuation() < 100}
+        title="P/D throttle (TPA) and GPS speed (SPA) attenuation"
       >
-        TPA {formatThrottleGain(runtimeThrottleGain())}%
+        {#if Math.abs(runtimeThrottleGain() - 100) >= 0.5 || !hasRuntimeSpeedDelta()}
+          TPA {formatThrottleGain(runtimeThrottleGain())}%
+        {/if}
+        {#if hasRuntimeSpeedDelta()}
+          SPA {formatThrottleGain(runtimeSpeedGain())}%
+        {/if}
       </span>
     {/if}
   </div>

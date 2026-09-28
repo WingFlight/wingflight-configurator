@@ -64,6 +64,26 @@
     },
   ];
 
+  // GPS speed attenuation (API 22.10): same shape as the throttle row, with
+  // GPS speed in place of throttle. Only shown when the firmware carries it.
+  const SPEED_ROW = {
+    key: "speed",
+    axisClass: "SPEED",
+    label: "controlAxisSpeed",
+    uppercase: true,
+    suffix: "SPA",
+    gainKey: "fwSpaGain",
+    curveKey: "fwSpaCurve",
+    help: "profilesFwSpaHelp",
+    gainMax: 200,
+  };
+
+  let rows = $derived(
+    FC.PID_PROFILE.hasFwSpa
+      ? [...MASTER_GAIN_AXES, SPEED_ROW]
+      : MASTER_GAIN_AXES,
+  );
+
   function masterGainAdjustmentState(axisIndex) {
     return axisIndex < MASTER_GAIN_ADJUSTMENT_FUNCTIONS.length
       ? getAdjustmentState(MASTER_GAIN_ADJUSTMENT_FUNCTIONS[axisIndex])
@@ -125,7 +145,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
+          {#each rows as axis, axisIndex (axis.key)}
             {@const adjustment = masterGainAdjustmentState(axisIndex)}
             <tr>
               <td class="axis {axis.axisClass}">
@@ -240,7 +260,7 @@
         </tbody>
       </table>
     </div>
-    <FlightFeelGuide throttle />
+    <FlightFeelGuide throttle speed={FC.PID_PROFILE.hasFwSpa} />
   </div>
 </Section>
 
@@ -394,6 +414,10 @@
     background-color: hsl(35, 100%, 82%);
   }
 
+  .axis.SPEED {
+    background-color: hsl(190, 80%, 82%);
+  }
+
   :global(html[data-theme="dark"]) .axis.ROLL {
     background-color: hsl(0, 40%, 30%);
   }
@@ -408,6 +432,10 @@
 
   :global(html[data-theme="dark"]) .axis.THROTTLE {
     background-color: hsl(35, 45%, 28%);
+  }
+
+  :global(html[data-theme="dark"]) .axis.SPEED {
+    background-color: hsl(190, 40%, 28%);
   }
 
   // This table has room to spare even at desktop density - it's not the
