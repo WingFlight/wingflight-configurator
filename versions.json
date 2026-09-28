@@ -118,6 +118,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-no-autohover",
+      "path": "./feature-no-autohover/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
