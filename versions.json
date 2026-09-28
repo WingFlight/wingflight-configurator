@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-gps-spa",
+      "path": "./feature-gps-spa/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
