@@ -2,6 +2,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import FlightFeelGuide from "./FlightFeelGuide.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
@@ -20,7 +21,7 @@
   // optionally shaped by a curve). Every row, throttle included, is visible
   // regardless of expert mode; throttle gets its own help text since its
   // mechanism differs from the per-axis rows. Curves are assigned in the
-  // Expert Mode Gain Curves panel (GainCurves.svelte); a CURVE badge on Gain
+  // Expert Mode Gain Curves panel (GainCurves.svelte); a CURVE badge on Master Gain
   // shows when one is shaping that row.
   const MASTER_GAIN_AXES = [
     {
@@ -55,6 +56,7 @@
       axisClass: "THROTTLE",
       label: "controlAxisThrottle",
       uppercase: true,
+      suffix: "TPA",
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
@@ -77,17 +79,17 @@
     return adjustment?.active && runtimeMasterGain(axisIndex) != null;
   }
 
-  // Lock (I-term decay time) sits beside each axis's Gain because it is the
-  // other half of how "locked" that axis feels: Gain sets how hard it pushes
-  // back, Lock how long it remembers the disturbance.
+  // I-Term Decay sits beside each axis's Master Gain because it is the other
+  // half of how "locked" that axis feels: Master Gain sets how hard it pushes
+  // back, I-Term Decay how long it remembers the disturbance.
   function decayAdjustmentState(axisIndex) {
     return axisIndex < ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS.length
       ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
       : null;
   }
 
-  // Bounce Back is a 1-10 score per axis (higher = less
-  // bounce-back); the firmware turns it into the I-term relax cutoff.
+  // I-Term Relax is a 1-10 score per axis (higher = more relax, less
+  // bounce-back); the firmware turns it into the relax filter cutoff.
   function bouncebackAdjustmentState(axisIndex) {
     return axisIndex < BOUNCEBACK_ADJUSTMENT_FUNCTIONS.length
       ? getAdjustmentState(BOUNCEBACK_ADJUSTMENT_FUNCTIONS[axisIndex])
@@ -96,150 +98,162 @@
 </script>
 
 <Section label="profilesMasterGainGroup">
-  <div class="table-scroll">
-    <table class="grid">
-      <thead>
-        <tr>
-          <th></th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesMasterGainColumn")}
-              <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
-            </span>
-          </th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesItermDecayColumn")}
-              <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
-            </span>
-          </th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesBouncebackColumn")}
-              <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-          {@const adjustment = masterGainAdjustmentState(axisIndex)}
+  <div class="flight-feel-layout">
+    <div class="table-scroll">
+      <table class="grid">
+        <thead>
           <tr>
-            <td class="axis {axis.axisClass}">
-              <span class="axis-label">
-                {axis.uppercase
-                  ? $i18n.t(axis.label).toUpperCase()
-                  : $i18n.t(axis.label)}
-                {#if axis.suffix}
-                  ({axis.suffix})
-                {/if}
-                {#if axis.help}
-                  <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
-                {/if}
+            <th></th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesMasterGainColumn")}
+                <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
               </span>
-            </td>
-            <td>
-              <div
-                class="runtime-control"
-                class:runtime-controlled={adjustment}
-                class:runtime-active={adjustment?.active}
-                title={adjustmentTitle(adjustment)}
-              >
-                {#if showRuntimeMasterGain(axisIndex, adjustment)}
-                  <div class="runtime-value-field">
-                    <span class="step-button fas fa-minus"></span>
-                    <span class="runtime-value"
-                      >{runtimeMasterGain(axisIndex)}</span
-                    >
-                    <span class="step-button fas fa-plus"></span>
-                  </div>
-                {:else}
-                  <NumberInput
-                    min="25"
-                    max={axis.gainMax ?? 1000}
-                    bind:value={FC.PID_PROFILE[axis.gainKey]}
-                  />
-                {/if}
-                {#if adjustment}
-                  <span class="adjustment-badge">
-                    {adjustment.active
-                      ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                      : "ADJ"}
-                  </span>
-                {/if}
-                {#if FC.PID_PROFILE[axis.curveKey] > 0}
-                  <span
-                    class="curve-badge"
-                    title={$i18n.t("profilesGainCurveBadgeTitle", {
-                      1: FC.PID_PROFILE[axis.curveKey],
-                    })}>{$i18n.t("profilesGainCurveBadge")}</span
-                  >
-                {/if}
-              </div>
-            </td>
-            <td>
-              {#if axis.decayKey}
-                {@const decayAdjustment = decayAdjustmentState(axisIndex)}
-                <div
-                  class="runtime-control"
-                  class:runtime-controlled={decayAdjustment}
-                  class:runtime-active={decayAdjustment?.active}
-                  title={adjustmentTitle(decayAdjustment)}
-                >
-                  <NumberInput
-                    min="0.01"
-                    max="1"
-                    step="0.01"
-                    bind:value={
-                      () => FC.PID_PROFILE[axis.decayKey] / 100,
-                      (v) =>
-                        (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
-                    }
-                  />
-                  {#if decayAdjustment}
-                    <span class="adjustment-badge">
-                      {decayAdjustment.active
-                        ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
-                        : "ADJ"}
-                    </span>
-                  {/if}
-                </div>
-              {/if}
-            </td>
-            <td>
-              {#if axis.bouncebackKey}
-                {@const bouncebackAdjustment =
-                  bouncebackAdjustmentState(axisIndex)}
-                <div
-                  class="runtime-control"
-                  class:runtime-controlled={bouncebackAdjustment}
-                  class:runtime-active={bouncebackAdjustment?.active}
-                  title={adjustmentTitle(bouncebackAdjustment)}
-                >
-                  <NumberInput
-                    min="1"
-                    max="10"
-                    bind:value={FC.PID_PROFILE[axis.bouncebackKey]}
-                  />
-                  {#if bouncebackAdjustment}
-                    <span class="adjustment-badge">
-                      {bouncebackAdjustment.active
-                        ? (adjustmentChannelLabel(bouncebackAdjustment) ??
-                          "LIVE")
-                        : "ADJ"}
-                    </span>
-                  {/if}
-                </div>
-              {/if}
-            </td>
+            </th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesItermDecayColumn")}
+                <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+              </span>
+            </th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesBouncebackColumn")}
+                <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
+              </span>
+            </th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
+            {@const adjustment = masterGainAdjustmentState(axisIndex)}
+            <tr>
+              <td class="axis {axis.axisClass}">
+                <span class="axis-label">
+                  {axis.uppercase
+                    ? $i18n.t(axis.label).toUpperCase()
+                    : $i18n.t(axis.label)}
+                  {#if axis.suffix}
+                    ({axis.suffix})
+                  {/if}
+                  {#if axis.help}
+                    <HelpIcon>{$i18n.t(axis.help)}</HelpIcon>
+                  {/if}
+                </span>
+              </td>
+              <td>
+                <div
+                  class="runtime-control"
+                  class:runtime-controlled={adjustment}
+                  class:runtime-active={adjustment?.active}
+                  title={adjustmentTitle(adjustment)}
+                >
+                  {#if showRuntimeMasterGain(axisIndex, adjustment)}
+                    <div class="runtime-value-field">
+                      <span class="step-button fas fa-minus"></span>
+                      <span class="runtime-value"
+                        >{runtimeMasterGain(axisIndex)}</span
+                      >
+                      <span class="step-button fas fa-plus"></span>
+                    </div>
+                  {:else}
+                    <NumberInput
+                      min="25"
+                      max={axis.gainMax ?? 1000}
+                      bind:value={FC.PID_PROFILE[axis.gainKey]}
+                    />
+                  {/if}
+                  {#if adjustment}
+                    <span class="adjustment-badge">
+                      {adjustment.active
+                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                        : "ADJ"}
+                    </span>
+                  {/if}
+                  {#if FC.PID_PROFILE[axis.curveKey] > 0}
+                    <span
+                      class="curve-badge"
+                      title={$i18n.t("profilesGainCurveBadgeTitle", {
+                        1: FC.PID_PROFILE[axis.curveKey],
+                      })}>{$i18n.t("profilesGainCurveBadge")}</span
+                    >
+                  {/if}
+                </div>
+              </td>
+              <td>
+                {#if axis.decayKey}
+                  {@const decayAdjustment = decayAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={decayAdjustment}
+                    class:runtime-active={decayAdjustment?.active}
+                    title={adjustmentTitle(decayAdjustment)}
+                  >
+                    <NumberInput
+                      min="0.01"
+                      max="1"
+                      step="0.01"
+                      bind:value={
+                        () => FC.PID_PROFILE[axis.decayKey] / 100,
+                        (v) =>
+                          (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
+                      }
+                    />
+                    {#if decayAdjustment}
+                      <span class="adjustment-badge">
+                        {decayAdjustment.active
+                          ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
+              <td>
+                {#if axis.bouncebackKey}
+                  {@const bouncebackAdjustment =
+                    bouncebackAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={bouncebackAdjustment}
+                    class:runtime-active={bouncebackAdjustment?.active}
+                    title={adjustmentTitle(bouncebackAdjustment)}
+                  >
+                    <NumberInput
+                      min="1"
+                      max="10"
+                      bind:value={FC.PID_PROFILE[axis.bouncebackKey]}
+                    />
+                    {#if bouncebackAdjustment}
+                      <span class="adjustment-badge">
+                        {bouncebackAdjustment.active
+                          ? (adjustmentChannelLabel(bouncebackAdjustment) ??
+                            "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    <FlightFeelGuide throttle />
   </div>
 </Section>
 
 <style lang="scss">
+  // Table on the left, plain-language guide in the space to its right;
+  // the guide wraps below the table on narrow windows.
+  .flight-feel-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
   .table-scroll {
     overflow-x: auto;
   }
