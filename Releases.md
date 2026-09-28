@@ -1,3 +1,20 @@
+# 0.0.29
+
+Support MSP API 22.10 (0.0.29 firmware). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
+Rename the Master Gains panel to Flight Feel on Profiles and Thrust Vector, with per-axis Master Gain, I-Term Decay and I-Term Relax columns and the Throttle (TPA) row always shown. A plain-language guide beside the table says what each one feels like and which way to turn it.
+Set I-term decay time per axis in 0.01 s steps (0.01-1.00 s), and I-term relax as a per-axis 1-10 score (higher = less bounce-back). The relax on/off switch and type are gone because relax is always on, and the relax level is shown under PID Settings. Adjustment functions 114-125 use the same names.
+Add a Gain Curves panel in Expert Mode (Profiles and Thrust Vector) to assign gain curves, including the new thrust-vector curves. Flight Feel shows a CURVE badge on any gain a curve is shaping. Expert Mode panels now sit below the main ones.
+Add GPS speed attenuation (SPA): a Speed row on Flight Feel, the Speed curve and speed range (km/h) on Gain Curves, and TPA x SPA in the Effective PID Gains preview.
+Set the F gain minimum to 50 on the PID gains table, matching the firmware.
+Fix the Blackbox debug mode list labelling every mode from SBUS on two slots off. Unused placeholder modes are hidden unless the FC is set to one.
+
+Complete the Virtual FC with firmware defaults and per-profile storage, and offer it on the web build as "Virtual Mode (Demo)". It stays out of USB detection, flashing and auto-connect.
+Fix flashing into DFU: wait up to 10 s for the DFU device after the reboot instead of checking once, never open the board's disappearing COM port, and never leave the flasher locked. If DFU never appears, say so and point at the driver fixer.
+Fix Update Firmware and the Flash button from CLI fallback mode, and hide the flasher's "No serial port selected yet" prompt while a flash is in progress.
+Explain that DFU flashing needs Chrome, Edge or Opera in browsers without WebUSB, such as Firefox.
+Show SD card capacity and free space in the header storage bar on boards without onboard flash.
+Replace leftover Rotorflight and multirotor wording on the Welcome page and in the setup and GPS help.
+
 # 0.0.28
 
 Add the firmware's SYSTEM_STATUS (120) and SYSTEM_CONFIG (121) packed status sensors to the telemetry sensor picker's STATUS group for CRSF and S.Port, and remove the sensors the 0.0.28 firmware dropped: arming flags (90), PID/rates/battery/LED profile (95-98), TV profile (118) and GPS fix type (119).
