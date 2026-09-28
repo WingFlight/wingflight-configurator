@@ -997,6 +997,9 @@
     "stm32UsbDfuNotFound": {
         "message": "USB DFU not found"
     },
+    "stm32UsbDfuNotFoundAfterReboot": {
+        "message": "The board rebooted into the bootloader, but its USB DFU device did not appear. On Windows this usually means the DFU driver is missing or failed: run the <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight driver fixer</a>, then unplug and replug the board and flash again. The board stays in the bootloader until it is power-cycled."
+    },
     "stm32RebootingToBootloader": {
         "message": "Initiating reboot to bootloader ..."
     },
