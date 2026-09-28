@@ -82,6 +82,11 @@ function defaultPidSlot() {
       attHoldMaxRate: 300,
       fwTpaGain: 100,
       fwTpaCurve: 0,
+      // API 22.10 GPS speed attenuation (curve 0 = off)
+      hasFwSpa: true,
+      fwSpaGain: 100,
+      fwSpaCurve: 0,
+      fwSpaSpeedMax: 150,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,
@@ -242,7 +247,8 @@ function resetProfileSlots() {
 
 // Mirrors pidGetRuntimeGains() (flight/pid.c) for the active profile's *saved* values -
 // like the real FC, effective gains don't move until a save. Sticks and throttle sit at
-// rest in virtual mode, so curves are evaluated at zero deflection/throttle.
+// rest in virtual mode, so curves are evaluated at zero deflection/throttle. There is
+// no GPS fix, so GPS speed attenuation stays at 100%.
 function encodeEffectivePidGains() {
   const { pids, profile } = pidSlots[FC.CONFIG.profile];
   const curveScale = (index, x) => {
@@ -253,7 +259,7 @@ function encodeEffectivePidGains() {
   const fwTpa = (profile.fwTpaGain / 100) * curveScale(profile.fwTpaCurve, 0);
 
   const buffer = [];
-  buffer.push8(2); // payload version
+  buffer.push8(3); // payload version
   buffer.push8(profile.pid_mode);
   buffer.push32(centi(fwTpa * 100));
 
@@ -273,6 +279,10 @@ function encodeEffectivePidGains() {
     buffer.push32(centi(F));
     buffer.push32(centi(B));
   });
+
+  buffer.push32(centi(100)); // SPA scale: no GPS fix
+  buffer.push16(0); // SPA speed
+  buffer.push8(profile.fwSpaCurve > 0 ? 1 : 0);
 
   return Uint8Array.from(buffer);
 }

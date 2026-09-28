@@ -1,4 +1,5 @@
 import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
+import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import semver from "semver";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
@@ -512,6 +513,17 @@ MspHelper.prototype.process_data = function(dataHandler) {
                         gainCurvePosition,
                         effective,
                     });
+                }
+
+                // v3 (API 22.10): GPS speed attenuation, after the axes
+                if (version >= 3 && data.remaining() >= 7) {
+                    runtimeGains.fwSpa = data.readU32() / 100;
+                    runtimeGains.fwSpaSpeed = data.readU16() / 10;
+                    runtimeGains.fwSpaEnabled = data.readU8() !== 0;
+                } else {
+                    runtimeGains.fwSpa = 100;
+                    runtimeGains.fwSpaSpeed = null;
+                    runtimeGains.fwSpaEnabled = false;
                 }
 
                 FC.PID_RUNTIME_GAINS = runtimeGains;
@@ -1522,6 +1534,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.PID_PROFILE.autoHoverThrottleAssistMax        = data.remaining() >= 3 ? data.readU8() : 15;
                 FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs  = data.remaining() >= 2 ? data.readU16() : 300;
                 readAttitudeLimits(data, FC.PID_PROFILE);
+                readFwSpa(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -2644,6 +2657,7 @@ MspHelper.prototype.crunch = function(code) {
                 .push8(FC.PID_PROFILE.autoHoverThrottleAssistMax)
                 .push16(FC.PID_PROFILE.autoHoverThrottleAssistTriggerMs);
             writeAttitudeLimits(buffer, FC.PID_PROFILE);
+            writeFwSpa(buffer, FC.PID_PROFILE);
             break;
         }
 

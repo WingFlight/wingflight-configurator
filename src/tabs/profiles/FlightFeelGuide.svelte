@@ -5,8 +5,9 @@
   // their real names (Master Gain, I-Term Decay, I-Term Relax) and this says
   // what each one feels like in the air and which way to turn it. Always
   // visible rather than a tooltip, so it works on touch screens too.
-  // `throttle` adds the Throttle (TPA) line (main loop only).
-  let { throttle = false } = $props();
+  // `throttle` adds the Throttle (TPA) line (main loop only), `speed` the
+  // GPS Speed (SPA) line.
+  let { throttle = false, speed = false } = $props();
 
   let rows = $derived([
     { name: "profilesMasterGainColumn", text: "profilesFlightFeelGuideGain" },
@@ -19,6 +20,9 @@
             text: "profilesFlightFeelGuideThrottle",
           },
         ]
+      : []),
+    ...(speed
+      ? [{ name: "controlAxisSpeed", text: "profilesFlightFeelGuideSpeed" }]
       : []),
   ]);
 </script>
