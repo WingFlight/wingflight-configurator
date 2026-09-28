@@ -1875,7 +1875,7 @@
         "message": "Accelerometer Trim"
     },
     "configurationAccelTrimsHelp": {
-        "message": "Accelerometer Trims adjust the horizon to correct drift in stabilized modes like Angle, Horizon, and Rescue."
+        "message": "Accelerometer Trims adjust the horizon to correct drift in stabilized modes like Angle and Rescue."
     },
     "configurationAccelTrimRoll": {
         "message": "Accelerometer Roll Trim"
@@ -3217,9 +3217,6 @@
     },
     "adjustmentsFunctionAngleLevelGain": {
         "message": "Angle Level Gain"
-    },
-    "adjustmentsFunctionHorizonLevelGain": {
-        "message": "Horizon Level Gain"
     },
     "adjustmentsFunctionAcroTrainerGain": {
         "message": "Acro Trainer Gain"
@@ -5667,24 +5664,8 @@
         "message": "Orientation",
         "description": "One of the modes in Color Mode in Led Strip"
     },
-    "ledStripModeColorsModeHeadfree": {
-        "message": "Headfree",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeHorizon": {
-        "message": "Horizon",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
     "ledStripModeColorsModeAngle": {
         "message": "Angle",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeMag": {
-        "message": "Mag",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeBaro": {
-        "message": "Baro",
         "description": "One of the modes in Color Mode in Led Strip"
     },
     "ledStripDirN": {
@@ -6215,12 +6196,6 @@
     "profilesAngleGroup": {
         "message": "Angle"
     },
-    "profilesHorizonGroup": {
-        "message": "Horizon"
-    },
-    "profilesAngleHorizonGroup": {
-        "message": "Angle / Horizon Mode"
-    },
     "profilesAngleModeGain": {
         "message": "Angle Mode leveling gain"
     },
@@ -6232,12 +6207,6 @@
     },
     "profilesAngleModeLimitHelp": {
         "message": "Angle Mode maximum angle. The aircraft is limited to this angle when in Angle mode"
-    },
-    "profilesHorizonModeGain": {
-        "message": "Horizon Mode leveling gain"
-    },
-    "profilesHorizonModeGainHelp": {
-        "message": "Horizon Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Horizon Mode"
     },
     "profilesAttHoldGain": {
         "message": "Attitude Hold gain"
@@ -7176,7 +7145,7 @@
         "message": "Accelerometer"
     },
     "configurationAccHardwareHelp": {
-        "message": "Enables the Accelerometer. This is required for all stabilisation modes: Angle, Horizon, Acro Trainer and Rescue."
+        "message": "Enables the Accelerometer. This is required for all stabilisation modes: Angle, Acro Trainer and Rescue."
     },
     "configurationBaroHardware": {
         "message": "Barometer"
@@ -7328,12 +7297,6 @@
     "modeHelp ANGLE": {
         "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
     },
-    "mode HORIZON": {
-        "message": "HORIZON"
-    },
-    "modeHelp HORIZON": {
-        "message": "Rate control with added self-leveling near center stick. Leveling fades as the sticks move outward. Unlike Trainer, this mode does not enforce a pitch/bank envelope."
-    },
     "mode ALTHOLD": {
         "message": "ALTHOLD"
     },
@@ -7453,12 +7416,6 @@
     },
     "modeHelp GPS BEEP SATELLITE COUNT": {
         "message": "Beeps out the current number of GPS satellites in view while active."
-    },
-    "mode AUTO HOVER": {
-        "message": "AUTO HOVER"
-    },
-    "modeHelp AUTO HOVER": {
-        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Attitude Hold while active."
     },
     "mode GOVERNOR": {
         "message": "GOVERNOR"
