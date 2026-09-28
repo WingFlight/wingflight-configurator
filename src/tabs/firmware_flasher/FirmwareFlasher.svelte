@@ -616,9 +616,14 @@
   function onPortChange() {
     const el = portPickerElement();
     const selected = el?.options?.[el.selectedIndex];
+    // The Virtual FC is not a device the flasher can talk to. PortHandler
+    // stops listing it while this tab is open; until it does, treat it as
+    // no selection.
+    const value = el ? String(el.value) : "0";
+    const usable = value !== "0" && value !== "virtual";
     portIsDfu = !!selected?.dataset?.isDfu || !!selected?.isDFU;
-    portSelected = !!el && String(el.value) !== "0";
-    selectedPortValue = el ? String(el.value) : "0";
+    portSelected = usable;
+    selectedPortValue = usable ? value : "0";
     selectedPortLabel = selected?.text ?? "";
     syncPortOptions();
   }
@@ -1236,7 +1241,7 @@
   // global port selection has since changed underneath it.
   function startBackup() {
     const el = portPickerElement();
-    backupPort = el ? String(el.value) : "0";
+    backupPort = el && portSelected ? String(el.value) : "0";
     backupBaud = getIntegerValue("select#baud") ?? 115200;
     runBackup();
   }
@@ -1417,7 +1422,7 @@
 
     if (!portIsDfu) {
       const el = portPickerElement();
-      if (el && String(el.value) !== "0") {
+      if (el && portSelected) {
         flashInProgress = true;
         STM32.connect(
           String(el.value),
