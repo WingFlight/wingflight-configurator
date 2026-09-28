@@ -5852,6 +5852,9 @@
     "controlAxisThrottle": {
         "message": "Throttle"
     },
+    "controlAxisSpeed": {
+        "message": "Speed"
+    },
     "controlAxisThr": {
         "message": "Throttle"
     },
@@ -6002,6 +6005,12 @@
     "profilesFwTpaHelp": {
         "message": "Throttle: scales Roll, Pitch and Yaw gain with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change."
     },
+    "profilesFwSpaHelp": {
+        "message": "GPS Speed: scales Roll, Pitch and Yaw P and D with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
+    },
+    "profilesFwSpaSpeedMax": {
+        "message": "Speed curve range"
+    },
     "profilesMasterGainGroup": {
         "message": "Flight Feel"
     },
@@ -6018,7 +6027,7 @@
         "message": "Gain Curves"
     },
     "profilesGainCurveHelp": {
-        "message": "Optionally shapes each axis's Master Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row. \"-\" means no curve, so Master Gain applies as set. Flight Feel shows a CURVE badge on any Master Gain a curve is shaping."
+        "message": "Optionally shapes each axis's Master Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row, by GPS speed on the Speed row (0 to the speed curve range, in km/h). \"-\" means no curve, so Master Gain applies as set. Flight Feel shows a CURVE badge on any Master Gain a curve is shaping."
     },
     "profilesGainCurveBadge": {
         "message": "CURVE"
@@ -6109,6 +6118,9 @@
     },
     "profilesFlightFeelGuideThrottle": {
         "message": "Changes Master Gain with throttle, usually to reduce it at high throttle where surfaces in prop wash gain authority."
+    },
+    "profilesFlightFeelGuideSpeed": {
+        "message": "Changes Master Gain with GPS speed, usually to reduce it when fast so a tune that is right at cruise does not wobble in a dive. Needs a GPS and a curve."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
