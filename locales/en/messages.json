@@ -6211,6 +6211,12 @@
     "profilesAngleModeGainHelp": {
         "message": "Angle Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Angle Mode"
     },
+    "profilesAngleModeDamping": {
+        "message": "Angle Mode damping"
+    },
+    "profilesAngleModeDampingHelp": {
+        "message": "Percent of the measured roll and pitch rate taken off the leveling command. It damps the return to the target angle through the rate PID's feedforward, so it scales with the airframe's tune. Higher values settle with less overshoot but level more slowly. 0 turns it off"
+    },
     "profilesAngleModeLimit": {
         "message": "Angle Mode maximum angle"
     },
