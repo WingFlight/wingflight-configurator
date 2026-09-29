@@ -123,6 +123,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-servo-limit-warn",
+      "path": "./feature-servo-limit-warn/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
