@@ -254,6 +254,8 @@ function encodeEffectivePidGains() {
   };
   const centi = (value) => Math.round(Math.max(0, value) * 100);
   const fwTpa = (profile.fwTpaGain / 100) * curveScale(profile.fwTpaCurve, 0);
+  // P, D, F and B scale, floored at 25% like PID_ATTENUATION_MIN (SPA is 100% here)
+  const atten = Math.max(0.25, fwTpa);
 
   const buffer = [];
   buffer.push8(3); // payload version
@@ -270,11 +272,11 @@ function encodeEffectivePidGains() {
     buffer.push16(masterGainRaw);
     buffer.push32(centi(gainCurve * 100));
     buffer.push32(0); // gain curve position: stick centred
-    buffer.push32(centi(P * masterGain * fwTpa));
+    buffer.push32(centi(P * masterGain * atten));
     buffer.push32(centi(I * masterGain));
-    buffer.push32(centi(D * masterGain * fwTpa));
-    buffer.push32(centi(F));
-    buffer.push32(centi(B));
+    buffer.push32(centi(D * masterGain * atten));
+    buffer.push32(centi(F * atten));
+    buffer.push32(centi(B * atten));
   });
 
   buffer.push32(centi(100)); // SPA scale: no GPS fix
