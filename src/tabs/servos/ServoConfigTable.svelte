@@ -6,6 +6,11 @@
   import { requestCurveView } from "@/js/curveNav.svelte.js";
   import { Mixer } from "@/js/Mixer.js";
   import {
+    servoSignalRange,
+    servoTravelLimited,
+    servoTravelLimits,
+  } from "@/js/servoLimits.js";
+  import {
     SERVO_TRIM_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -174,16 +179,36 @@
     containerWidth === 0 || containerWidth < gridMinWidth,
   );
 
+  // Min/Max stop where center + travel would leave the signal range, since
+  // the firmware cuts them to that anyway (see servoLimits.js).
   function bounds(servo, field) {
+    const mid = FC.SERVO_CONFIG[servo.index].mid;
+    const limits = servoTravelLimits(mid, servo.isBusServo);
     if (servo.isBusServo) {
       if (field === "mid") return { min: 1001, max: 1999 };
-      if (field === "min") return { min: -500, max: -1 };
-      if (field === "max") return { min: 1, max: 500 };
+      if (field === "min") return { min: limits.min, max: -1 };
+      if (field === "max") return { min: 1, max: limits.max };
     } else {
       if (field === "mid") return { min: 50, max: 2250 };
-      if (field === "min" || field === "max") return { min: -1000, max: 1000 };
+      if (field === "min") return { min: limits.min, max: 1000 };
+      if (field === "max") return { min: -1000, max: limits.max };
     }
     return {};
+  }
+
+  function limited(servo) {
+    return servoTravelLimited(FC.SERVO_CONFIG[servo.index], servo.isBusServo);
+  }
+
+  function limitTitle(servo, field) {
+    if (!limited(servo)[field]) {
+      return undefined;
+    }
+    const signal = servoSignalRange(servo.isBusServo);
+    return $i18n.t("servoTravelLimitedHelp", {
+      1: FC.SERVO_CONFIG[servo.index].mid,
+      2: field === "max" ? signal.max : signal.min,
+    });
   }
 
   function meterRange(servo) {
@@ -388,14 +413,22 @@
               {/if}
             </span>
           {/if}
-          <span>
+          <span
+            class="travel-cell"
+            class:limited={limited(servo).min}
+            title={limitTitle(servo, "min")}
+          >
             <NumberInput
               {...bounds(servo, "min")}
               bind:value={config.min}
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          <span>
+          <span
+            class="travel-cell"
+            class:limited={limited(servo).max}
+            title={limitTitle(servo, "max")}
+          >
             <NumberInput
               {...bounds(servo, "max")}
               bind:value={config.max}
@@ -520,20 +553,32 @@
 
           <div class="mobile-field">
             {@render fieldLabel("servoMin", "servoMinHelp")}
-            <NumberInput
-              {...bounds(servo, "min")}
-              bind:value={config.min}
-              onchange={() => onFieldChange(servo.index)}
-            />
+            <span
+              class="travel-cell"
+              class:limited={limited(servo).min}
+              title={limitTitle(servo, "min")}
+            >
+              <NumberInput
+                {...bounds(servo, "min")}
+                bind:value={config.min}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
           </div>
 
           <div class="mobile-field">
             {@render fieldLabel("servoMax", "servoMaxHelp")}
-            <NumberInput
-              {...bounds(servo, "max")}
-              bind:value={config.max}
-              onchange={() => onFieldChange(servo.index)}
-            />
+            <span
+              class="travel-cell"
+              class:limited={limited(servo).max}
+              title={limitTitle(servo, "max")}
+            >
+              <NumberInput
+                {...bounds(servo, "max")}
+                bind:value={config.max}
+                onchange={() => onFieldChange(servo.index)}
+              />
+            </span>
           </div>
 
           <div class="mobile-field">
@@ -793,6 +838,12 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+  }
+
+  // Min/Max at the limit set by the center: see limitTitle().
+  .travel-cell.limited :global(input) {
+    color: var(--error);
+    font-weight: 700;
   }
 
   .servo-checkbox {

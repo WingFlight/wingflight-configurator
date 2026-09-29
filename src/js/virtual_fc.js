@@ -2,7 +2,9 @@ import { FC } from "@/js/fc.svelte.js";
 import { GainCurve } from "@/js/GainCurve.js";
 import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+import { Mixer } from "@/js/Mixer.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
+import { clampServoConfig } from "@/js/servoLimits.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
 
 // MSP_SELECT_SETTING's index offset for "select rate profile N" (see Rates.svelte)
@@ -348,11 +350,34 @@ export function getVirtualResponse(code, requestData) {
       }
       return undefined;
     }
+    // Like the FC, cut center + min/max back into the signal range. The tab
+    // sees the result on its next MSP_SERVO_CONFIGURATIONS poll.
+    case MSPCodes.MSP_SET_SERVO_CONFIGURATION: {
+      const index = requestData[0];
+      const config = FC.SERVO_CONFIG[index];
+      if (config) {
+        clampServoConfig(config, isVirtualBusServo(index));
+      }
+      return undefined;
+    }
     case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
       return decodeVirtualReply(code, encodeEffectivePidGains());
     default:
       return getVirtualEscResponse(code, requestData);
   }
+}
+
+// Same PWM/bus split as the Servos tab: once SBUS or F.Bus output is on,
+// the last BUS_SERVO_CHANNELS entries of FC.SERVO_CONFIG are bus servos.
+function isVirtualBusServo(index) {
+  const busActive = FC.SERIAL_CONFIG.ports.some(
+    (port) =>
+      port.functions.includes("SBUS_OUT") ||
+      port.functions.includes("FBUS_OUT"),
+  );
+  return (
+    busActive && index >= FC.SERVO_CONFIG.length - Mixer.busServoChannels()
+  );
 }
 
 function getVirtualEscResponse(code, requestData) {
