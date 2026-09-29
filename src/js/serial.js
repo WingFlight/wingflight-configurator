@@ -242,6 +242,7 @@ export const serial = {
         const self = serial;
         const dataView = event.target.value;
         const buffer = dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength);
+        self.bytesReceived += buffer.byteLength;
         self.onReceive.dispatch({ connectionId: self.connectionId, data: buffer });
     },
     handleBluetoothDisconnect: function () {

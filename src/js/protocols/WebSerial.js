@@ -280,6 +280,7 @@ export async function readWebSerialLoop(self, port) {
                         break;
                     }
                     if (value) {
+                        self.bytesReceived += value.byteLength;
                         self.onReceive.dispatch({
                             connectionId: self.connectionId,
                             data: value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength),

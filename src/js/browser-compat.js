@@ -119,17 +119,23 @@ Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).
       return; // No need to show banner
     }
 
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    // Fixed to the top of the page rather than inserted into the layout: the
+    // app shell is a full-height layout with no room for an extra row, and a
+    // missing container must not silently hide the warning.
+    const container = document.getElementById(containerId) || document.body;
 
     const banner = document.createElement('div');
     banner.id = 'browser-compat-banner';
+    banner.setAttribute('role', 'alert');
     banner.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100000;
       background-color: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 4px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
+      border-bottom: 1px solid #ffc107;
+      padding: 10px 44px 10px 16px;
       color: #856404;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       font-size: 14px;
@@ -146,6 +152,24 @@ Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).
       `Your browser (${compat.browserName}) doesn't support ${missing.join(', ')}. ` +
       `Device communication needs at least one of Web Serial, Web Bluetooth, or WebUSB. ` +
       `Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).`;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss');
+    close.textContent = '×';
+    close.style.cssText = `
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      border: 0;
+      background: none;
+      color: inherit;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    `;
+    close.addEventListener('click', () => banner.remove());
+    banner.appendChild(close);
+
     container.insertBefore(banner, container.firstChild);
   },
 };
