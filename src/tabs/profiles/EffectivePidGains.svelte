@@ -77,9 +77,15 @@
     return runtimeGains?.fwSpa ?? 100;
   }
 
-  // P/D scale from TPA and GPS speed attenuation together, percent
+  // P/D/F/B scale from TPA and GPS speed attenuation together, percent.
+  // The firmware floors it at 25% so the surfaces always keep some throw.
+  const ATTENUATION_MIN = 25;
+
   function runtimeAttenuation() {
-    return (runtimeThrottleGain() * runtimeSpeedGain()) / 100;
+    return Math.max(
+      ATTENUATION_MIN,
+      (runtimeThrottleGain() * runtimeSpeedGain()) / 100,
+    );
   }
 
   function hasRuntimeThrottleDelta() {
@@ -308,7 +314,7 @@
         class="curve-throttle-label"
         class:tpa-higher={runtimeAttenuation() > 100}
         class:tpa-lower={runtimeAttenuation() < 100}
-        title="P/D throttle (TPA) and GPS speed (SPA) attenuation"
+        title="Throttle (TPA) and GPS speed (SPA) attenuation of P, D, F and B"
       >
         {#if Math.abs(runtimeThrottleGain() - 100) >= 0.5 || !hasRuntimeSpeedDelta()}
           TPA {formatThrottleGain(runtimeThrottleGain())}%
