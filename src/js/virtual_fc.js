@@ -350,8 +350,9 @@ export function getVirtualResponse(code, requestData) {
       }
       return undefined;
     }
-    // Like the FC, cut center + min/max back into the signal range. The tab
-    // sees the result on its next MSP_SERVO_CONFIGURATIONS poll.
+    // Like the FC's validateAndFixServoConfig(): keep the center in the
+    // signal range and min/max in their travel range. min/max aren't cut
+    // against the center; the FC only limits them when working out the output.
     case MSPCodes.MSP_SET_SERVO_CONFIGURATION: {
       const index = requestData[0];
       const config = FC.SERVO_CONFIG[index];
