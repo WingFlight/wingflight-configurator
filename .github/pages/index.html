@@ -131,7 +131,9 @@
       filter: brightness(0) invert(1);
     }
 
-    .hero > * { position: relative; z-index: 1; }
+    /* Background layers are excluded: a bare `.hero > *` has the same
+       specificity as `.hero-bg`, so it would win and pull them into the flow. */
+    .hero > :not(.hero-bg):not(.hero-wing-bg) { position: relative; z-index: 1; }
 
     .hero-eyebrow {
       font-size: 0.72rem;
@@ -516,6 +518,8 @@
     }
     .version-card.featured .version-card-icon { opacity: 0.09; }
     .version-card.featured:hover .version-card-icon { opacity: 0.14; }
+
+    .versions-empty {
       grid-column: 1 / -1;
       padding: 32px;
       text-align: center;

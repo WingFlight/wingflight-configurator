@@ -229,6 +229,8 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
             console.log('Looking for capabilities via MSP failed');
 
             TABS.firmware_flasher.flashingMessage(i18n.getMessage('stm32RebootingToBootloaderFailed'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+            // Finish the attempt, or the flasher waits for it forever.
+            self.callback?.();
         };
 
         // The port couldn't even be opened (e.g. another program has it) --
