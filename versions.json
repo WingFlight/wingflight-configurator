@@ -113,11 +113,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-angle-damping",
-      "path": "./feature-angle-damping/"
-    },
-    {
-      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
