@@ -11,9 +11,10 @@ export const API_VERSION_22_9 = "22.9.0";
 export const API_VERSION_22_10 = "22.10.0";
 export const API_VERSION_22_11 = "22.11.0";
 export const API_VERSION_22_12 = "22.12.0";
+export const API_VERSION_22_13 = "22.13.0";
 
 export const API_VERSION_WGFL_MIN = API_VERSION_22_9;
-export const API_VERSION_WGFL_MAX = API_VERSION_22_12;
+export const API_VERSION_WGFL_MAX = API_VERSION_22_13;
 
 export const FW_VERSION_WGFL_MIN = "4.3.0-0";
 export const FW_VERSION_WGFL_MAX = "4.6.99";

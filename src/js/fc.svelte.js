@@ -639,6 +639,8 @@ class FlightController {
       fwSpaGain:                  100,
       fwSpaCurve:                 0,
       fwSpaSpeedMax:              150,
+      hasLevelDamping:            false,
+      levelDamping:               0,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,

@@ -1,5 +1,6 @@
 import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
 import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
+import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import semver from "semver";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
@@ -1527,6 +1528,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 self.skipBytes(data, Math.min(5, data.remaining()));
                 readAttitudeLimits(data, FC.PID_PROFILE);
                 readFwSpa(data, FC.PID_PROFILE);
+                readLevelDamping(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -2649,6 +2651,7 @@ MspHelper.prototype.crunch = function(code) {
                 .push16(0);
             writeAttitudeLimits(buffer, FC.PID_PROFILE);
             writeFwSpa(buffer, FC.PID_PROFILE);
+            writeLevelDamping(buffer, FC.PID_PROFILE);
             break;
         }
 

@@ -56,6 +56,19 @@
           bind:value={FC.PID_PROFILE.levelAngleStrength}
         />
       </Field>
+      {#if FC.PID_PROFILE.hasLevelDamping}
+        <Field id="angle-mode-damping" label="profilesAngleModeDamping">
+          {#snippet tooltip()}
+            {$i18n.t("profilesAngleModeDampingHelp")}
+          {/snippet}
+          <NumberInput
+            id="angle-mode-damping"
+            min="0"
+            max="100"
+            bind:value={FC.PID_PROFILE.levelDamping}
+          />
+        </Field>
+      {/if}
       {@render angleLimits()}
     </SubSection>
   </Section>

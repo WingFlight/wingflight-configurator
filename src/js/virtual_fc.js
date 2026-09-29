@@ -88,6 +88,9 @@ function defaultPidSlot() {
       fwSpaGain: 100,
       fwSpaCurve: 0,
       fwSpaSpeedMax: 150,
+      // API 22.13 ANGLE mode rate damping
+      hasLevelDamping: true,
+      levelDamping: 25,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,
