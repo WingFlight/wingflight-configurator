@@ -8,7 +8,8 @@
   import {
     servoSignalRange,
     servoTravelLimited,
-    servoTravelLimits,
+    servoTravelRange,
+    servoUsableTravel,
   } from "@/js/servoLimits.js";
   import {
     SERVO_TRIM_ADJUSTMENT_FUNCTIONS,
@@ -179,19 +180,18 @@
     containerWidth === 0 || containerWidth < gridMinWidth,
   );
 
-  // Min/Max stop where center + travel would leave the signal range, since
-  // the firmware cuts them to that anyway (see servoLimits.js).
+  // Min/Max keep what's typed. The firmware limits them against the center
+  // when it works out the output (see servoLimits.js), and limitTitle() says
+  // how much is used.
   function bounds(servo, field) {
-    const mid = FC.SERVO_CONFIG[servo.index].mid;
-    const limits = servoTravelLimits(mid, servo.isBusServo);
+    const travel = servoTravelRange(servo.isBusServo);
     if (servo.isBusServo) {
       if (field === "mid") return { min: 1001, max: 1999 };
-      if (field === "min") return { min: limits.min, max: -1 };
-      if (field === "max") return { min: 1, max: limits.max };
+      if (field === "min") return { min: travel.min, max: -1 };
+      if (field === "max") return { min: 1, max: travel.max };
     } else {
       if (field === "mid") return { min: 50, max: 2250 };
-      if (field === "min") return { min: limits.min, max: 1000 };
-      if (field === "max") return { min: -1000, max: limits.max };
+      if (field === "min" || field === "max") return travel;
     }
     return {};
   }
@@ -204,10 +204,12 @@
     if (!limited(servo)[field]) {
       return undefined;
     }
+    const config = FC.SERVO_CONFIG[servo.index];
     const signal = servoSignalRange(servo.isBusServo);
     return $i18n.t("servoTravelLimitedHelp", {
-      1: FC.SERVO_CONFIG[servo.index].mid,
-      2: field === "max" ? signal.max : signal.min,
+      1: config.mid,
+      2: servoUsableTravel(config, servo.isBusServo)[field],
+      3: field === "max" ? signal.max : signal.min,
     });
   }
 
@@ -840,7 +842,7 @@
     gap: 5px;
   }
 
-  // Min/Max at the limit set by the center: see limitTitle().
+  // Min/Max limited by the center: see limitTitle().
   .travel-cell.limited :global(input) {
     color: var(--error);
     font-weight: 700;
