@@ -7297,9 +7297,6 @@
     "modeHelp ANGLE": {
         "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
     },
-    "mode ALTHOLD": {
-        "message": "ALTHOLD"
-    },
     "mode ATT HOLD": {
         "message": "ATTITUDE HOLD"
     },
@@ -7342,9 +7339,6 @@
     "modeHelp LEDLOW": {
         "message": "Turns off the LED strip while active."
     },
-    "mode CALIB": {
-        "message": "CALIB"
-    },
     "mode OSD DISABLE": {
         "message": "OSD DISABLE"
     },
@@ -7378,9 +7372,6 @@
     "modeHelp PREARM": {
         "message": "A safety switch that must be enabled before you can arm, to prevent accidental arming."
     },
-    "mode PARALYZE": {
-        "message": "PARALYZE"
-    },
     "mode GPS LOITER": {
         "message": "GPS LOITER"
     },
@@ -7401,12 +7392,6 @@
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
-    },
-    "mode STICK COMMANDS DISABLE": {
-        "message": "STICK COMMANDS DISABLE"
-    },
-    "modeHelp STICK COMMANDS DISABLE": {
-        "message": "Blocks stick-gesture commands (arm/disarm, menu access) while active, to prevent accidental triggers."
     },
     "mode BEEPER MUTE": {
         "message": "BEEPER MUTE"

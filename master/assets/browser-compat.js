@@ -7,14 +7,27 @@ ${t.map(e=>`  • ${e}`).join(`
 `)}
 
 Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).
-    `.trim();return console.warn(n),!1},injectBanner(e,t=`app`){if(e.isCompatible)return;let n=document.getElementById(t);if(!n)return;let r=document.createElement(`div`);r.id=`browser-compat-banner`,r.style.cssText=`
+    `.trim();return console.warn(n),!1},injectBanner(e,t=`app`){if(e.isCompatible)return;let n=document.getElementById(t)||document.body,r=document.createElement(`div`);r.id=`browser-compat-banner`,r.setAttribute(`role`,`alert`),r.style.cssText=`
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100000;
       background-color: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 4px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
+      border-bottom: 1px solid #ffc107;
+      padding: 10px 44px 10px 16px;
       color: #856404;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       font-size: 14px;
       line-height: 1.5;
-    `;let i=[];e.hasWebSerial||i.push(`Web Serial`),e.hasWebBluetooth||i.push(`Web Bluetooth`),e.hasWebUSB||i.push(`WebUSB`),r.innerHTML=`⚠️ <strong>Unsupported Browser</strong><br/>Your browser (${e.browserName}) doesn't support ${i.join(`, `)}. Device communication needs at least one of Web Serial, Web Bluetooth, or WebUSB. Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).`,n.insertBefore(r,n.firstChild)}};function t(t={}){let{showBanner:n=!0,containerId:r=`app`,onIncompatible:i=null}=t;if(typeof window>`u`)return null;let a=e.checkAll();return e.displayWarning(a),n&&!a.isCompatible&&(document.readyState===`loading`?document.addEventListener(`DOMContentLoaded`,()=>{e.injectBanner(a,r)}):e.injectBanner(a,r)),!a.isCompatible&&typeof i==`function`&&i(a),a}export{t as initBrowserCompat};
+    `;let i=[];e.hasWebSerial||i.push(`Web Serial`),e.hasWebBluetooth||i.push(`Web Bluetooth`),e.hasWebUSB||i.push(`WebUSB`),r.innerHTML=`⚠️ <strong>Unsupported Browser</strong><br/>Your browser (${e.browserName}) doesn't support ${i.join(`, `)}. Device communication needs at least one of Web Serial, Web Bluetooth, or WebUSB. Please use a Chromium-based desktop browser (Chrome, Edge, Brave, or Opera).`;let a=document.createElement(`button`);a.type=`button`,a.setAttribute(`aria-label`,`Dismiss`),a.textContent=`×`,a.style.cssText=`
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      border: 0;
+      background: none;
+      color: inherit;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    `,a.addEventListener(`click`,()=>r.remove()),r.appendChild(a),n.insertBefore(r,n.firstChild)}};function t(t={}){let{showBanner:n=!0,containerId:r=`app`,onIncompatible:i=null}=t;if(typeof window>`u`)return null;let a=e.checkAll();return e.displayWarning(a),n&&!a.isCompatible&&(document.readyState===`loading`?document.addEventListener(`DOMContentLoaded`,()=>{e.injectBanner(a,r)}):e.injectBanner(a,r)),!a.isCompatible&&typeof i==`function`&&i(a),a}export{t as initBrowserCompat};
