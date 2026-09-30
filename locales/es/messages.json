@@ -2587,7 +2587,7 @@
     },
     "receiverTelemetrySensor_GPS_HEADING": {
         "message": "Rumbo GPS",
-        "english": "GPS Heading"
+        "english": "GPS Course"
     },
     "receiverTelemetrySensor_GPS_GROUNDSPEED": {
         "message": "Velocidad sobre el suelo GPS",
