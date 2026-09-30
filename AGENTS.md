@@ -10,6 +10,24 @@ names give unwieldy URLs and labels. This matches the firmware repo, where the
 branch name goes into the version string and a long one fails the build (see
 `wingflight-firmware/AGENTS.md`).
 
+## Never bump version numbers
+
+Agents must not change version numbers. The maintainers bump them manually
+when a new version is released. This keeps version changes to a minimum.
+
+Do not touch:
+
+- the `API_VERSION_*` constants, `API_VERSION_WGFL_MIN`,
+  `API_VERSION_WGFL_MAX`, `FW_VERSION_WGFL_MIN` or `FW_VERSION_WGFL_MAX` in
+  `src/js/configurator.svelte.js`,
+- the Virtual firmware versions in `virtualFirmwareVersions`
+  (`src/js/utils/common.js`),
+- `version` in `package.json`.
+
+Gate new MSP fields on the constant for the upcoming, not yet released API
+version. If no such constant exists yet, say so in the PR instead of adding
+one.
+
 ## Keep the Virtual FC in sync
 
 The Virtual FC ([src/js/virtual_fc.js](src/js/virtual_fc.js)) lets every tab run
