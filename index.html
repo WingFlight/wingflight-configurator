@@ -429,6 +429,11 @@
       word-break: break-all;
     }
     .versions-grid .version-name { font-size: 1.1rem; }
+    /* Branch names: wrap at their hyphens rather than mid-word. */
+    .version-name.is-branch {
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
 
     .version-meta {
       font-size: 0.8rem;
@@ -441,6 +446,14 @@
       display: flex;
       align-items: center;
       gap: 7px;
+    }
+    .version-meta a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .version-meta a:hover {
+      color: var(--text);
+      text-decoration: underline;
     }
 
     .version-card .btn { display: none; } /* replaced by card-launch */
@@ -714,10 +727,13 @@
     //     { "type": "release",  "name": "0.0.9",         "path": "./release/0.0.9/", "date": "2026-07-01", "notes": "First flyable release" },
     //     { "type": "snapshot", "name": "0.0.9",         "path": "./snapshot/0.0.9/", "date": "2026-07-24" },
     //     { "type": "branch",   "name": "feature/xyz",   "path": "./feature-xyz/", "date": "2026-06-20" },
-    //     { "type": "pr",       "name": "42",            "path": "./pr/42/",       "date": "2026-06-20" }
+    //     { "type": "pr",       "name": "42",            "path": "./pr/42/",       "date": "2026-06-20",
+    //       "branch": "feature/xyz", "title": "...", "url": "https://github.com/.../pull/42" }
     //   ]
     // }
     // type: "stable" | "master" | "release" | "snapshot" | "branch" | "pr"
+    // PR previews also carry "branch", "title" and "url" (from the PR, so
+    // untrusted); a PR card is headed by its branch.
     // Only "stable" is pinned above the tabs -- master is only "current"
     // for developers, so it's grouped into the Development tab along with
     // branch/pr, not pinned next to the thing end users actually want.
@@ -726,7 +742,10 @@
 
     const ICON_CLOCK = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>`;
     const ICON_CAL   = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>`;
+    const ICON_PR    = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354z"/></svg>`;
     const ICON_TAG   = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".45"><path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1H2zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg>`;
+
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     function fmtDate(d) {
       if (!d) return '';
@@ -734,7 +753,7 @@
     }
 
     function makeCard(entry, pinned) {
-      const { type, name, path, tag, date, notes } = entry;
+      const { type, name, path, tag, date, notes, branch, title, url } = entry;
       const card = document.createElement('div');
       const featured = type === 'stable' || type === 'master';
       card.className = 'version-card' + (featured ? ' featured' : '');
@@ -744,16 +763,25 @@
       const btnClass   = featured ? 'btn-primary' : 'btn-ghost';
 
       let meta = '';
-      if (tag)   meta += `<span>${ICON_TAG} ${tag}</span>`;
-      if (date)  meta += `<span>${ICON_CAL} ${fmtDate(date)}</span>`;
-      if (notes) meta += `<span>${ICON_CLOCK} ${notes}</span>`;
+      if (type === 'pr') {
+        const label = `PR #${esc(name)}`;
+        const link = typeof url === 'string' && url.startsWith('https://github.com/')
+          ? `<a href="${esc(url)}" target="_blank" rel="noopener"${title ? ` title="${esc(title)}"` : ''}>${label}</a>`
+          : label;
+        meta += `<span>${ICON_PR} ${link}</span>`;
+      }
+      if (tag)   meta += `<span>${ICON_TAG} ${esc(tag)}</span>`;
+      if (date)  meta += `<span>${ICON_CAL} ${esc(fmtDate(date))}</span>`;
+      if (notes) meta += `<span>${ICON_CLOCK} ${esc(notes)}</span>`;
 
       card.innerHTML = `
         <img class="version-card-icon" src="logos/wf_icon.svg" alt="" aria-hidden="true">
         <span class="version-badge ${badgeClass}">${badgeLabel}</span>
-        <div class="version-name">${name}</div>
+        ${type === 'pr' && branch
+          ? `<div class="version-name is-branch">${esc(branch)}</div>`
+          : `<div class="version-name">${esc(name)}</div>`}
         ${meta ? `<div class="version-meta">${meta}</div>` : ''}
-        <a href="${path}" class="card-launch">
+        <a href="${esc(path)}" class="card-launch">
           Open Configurator
           <span class="card-launch-icon">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
