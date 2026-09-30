@@ -526,6 +526,7 @@ export function applyVirtualConfig() {
     vbatmaxcellvoltages: [4, 4, 4, 4, 4, 4],
     vbatfullcellvoltages: [3.9, 3.9, 3.9, 3.9, 3.9, 3.9],
     vbatwarningcellvoltages: [3, 3, 3, 3, 3, 3],
+    mahWarningPercentage: 35,
   });
 
   Object.assign(FC.SMARTFUEL_CONFIG, {
