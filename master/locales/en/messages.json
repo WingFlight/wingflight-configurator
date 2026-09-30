@@ -2780,7 +2780,7 @@
         "message": "GPS Altitude"
     },
     "receiverTelemetrySensor_GPS_HEADING": {
-        "message": "GPS Heading"
+        "message": "GPS Course"
     },
     "receiverTelemetrySensor_GPS_GROUNDSPEED": {
         "message": "GPS Groundspeed"
