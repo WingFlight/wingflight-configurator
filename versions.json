@@ -135,6 +135,11 @@
       "type": "branch",
       "name": "feature-smartfuel-alert-percent",
       "path": "./feature-smartfuel-alert-percent/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-version-bump-policy",
+      "path": "./feature-version-bump-policy/"
     }
   ]
 }
