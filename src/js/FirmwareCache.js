@@ -139,21 +139,19 @@ export const FirmwareCache = (function () {
             release: release,
             hexdata: hexdata,
         };
-        // The web build's localStorage-backed chrome.storage shim throws
-        // synchronously (QuotaExceededError) for a multi-MB hex. Store the
-        // data first and only journal it once that succeeded -- journalling
-        // first left an entry claiming a cached file that was never written,
-        // and the throw escaped into the caller's download error path.
-        try {
-            chrome.storage.local.set(obj, () => {
-                onPutToCache(release);
-            });
-        } catch (e) {
-            console.warn("Unable to cache firmware " + key + ": " + e.message);
-            return;
-        }
-        journal.set(key, true);
-        JournalStorage.persist(journal.toJSON());
+        // A multi-MB hex often doesn't fit the web build's localStorage. Store
+        // the data first and only journal it once that succeeded --
+        // journalling first left an entry claiming a cached file that was
+        // never written.
+        chrome.storage.local.set(obj, () => {
+            if (chrome.runtime?.lastError) {
+                console.warn("Unable to cache firmware " + key + ": " + chrome.runtime.lastError.message);
+                return;
+            }
+            journal.set(key, true);
+            JournalStorage.persist(journal.toJSON());
+            onPutToCache(release);
+        });
     }
 
     /**
