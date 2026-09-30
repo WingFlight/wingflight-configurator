@@ -118,11 +118,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-gps-course",
-      "path": "./feature-gps-course/"
-    },
-    {
-      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
