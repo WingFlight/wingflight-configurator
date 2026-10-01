@@ -8179,6 +8179,9 @@
     "setupWizardStep_servoType": {
         "message": "Servo type"
     },
+    "setupWizardStep_motor": {
+        "message": "Motor"
+    },
     "setupWizardStep_centre": {
         "message": "Center"
     },
@@ -8346,6 +8349,60 @@
     },
     "setupWizardServoTypeAllSurfaces": {
         "message": "Applies to every control-surface servo. Switching between normal and narrow-band also resets that servo's center, limits and scale."
+    },
+    "setupWizardMotorIntro": {
+        "message": "Choose how the flight controller talks to the ESC, then check the motor runs. Telemetry, throttle range and other settings are on the Motors tab."
+    },
+    "setupWizardMotorProtocolTitle": {
+        "message": "ESC protocol"
+    },
+    "setupWizardMotor_pwm": {
+        "message": "Standard PWM"
+    },
+    "setupWizardMotorHelp_pwm": {
+        "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
+    },
+    "setupWizardMotor_dshot300": {
+        "message": "DShot300"
+    },
+    "setupWizardMotorHelp_dshot300": {
+        "message": "Digital, no calibration needed. For BLHeli_32, BLHeli_S, Bluejay and AM32 ESCs."
+    },
+    "setupWizardMotor_dshot600": {
+        "message": "DShot600"
+    },
+    "setupWizardMotorHelp_dshot600": {
+        "message": "Faster DShot, for ESCs that support it."
+    },
+    "setupWizardMotor_none": {
+        "message": "No motor"
+    },
+    "setupWizardMotorHelp_none": {
+        "message": "Gliders, or a motor not driven by the flight controller."
+    },
+    "setupWizardMotorOther": {
+        "message": "Currently set to $1 on the Motors tab. Choosing an option here replaces it."
+    },
+    "setupWizardMotorTestTitle": {
+        "message": "Check the motor"
+    },
+    "setupWizardMotorPropOff": {
+        "message": "The propeller is removed"
+    },
+    "setupWizardMotorTestThrottle": {
+        "message": "Throttle"
+    },
+    "setupWizardMotorHoldToSpin": {
+        "message": "Hold to spin"
+    },
+    "setupWizardMotorSpinning": {
+        "message": "Spinning (release to stop)"
+    },
+    "setupWizardMotorTestCheck": {
+        "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
+    },
+    "setupWizardOpenMotors": {
+        "message": "Open the Motors tab"
     },
     "setupWizardCentreIntro": {
         "message": "The surfaces are held at center. First set each horn and linkage so the surface is close to neutral, then fine-tune the center here."

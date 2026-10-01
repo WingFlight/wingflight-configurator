@@ -14,6 +14,7 @@
   import StepSensors from "./StepSensors.svelte";
   import StepAirframe from "./StepAirframe.svelte";
   import StepServoType from "./StepServoType.svelte";
+  import StepMotor from "./StepMotor.svelte";
   import StepCentre from "./StepCentre.svelte";
   import StepDirection from "./StepDirection.svelte";
   import StepLimits from "./StepLimits.svelte";
@@ -31,6 +32,7 @@
     { key: "sensors", component: StepSensors },
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
+    { key: "motor", component: StepMotor },
     { key: "centre", component: StepCentre },
     { key: "direction", component: StepDirection },
     { key: "limits", component: StepLimits },
@@ -119,6 +121,8 @@
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_RX_MAP);
     await MSP.promise(MSPCodes.MSP_RC_TUNING);
+    await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
+    await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
