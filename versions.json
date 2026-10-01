@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-expert-basic",
+      "path": "./feature-expert-basic/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fb-defaults",
       "path": "./feature-fb-defaults/"
     },
