@@ -5,38 +5,40 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-  const wiz = getContext("setupWizard");
+  import {
+    STYLES,
+    STYLE_AXES as AXES,
+    applyStyle,
+    expoOf,
+    matchingStyle,
+    rateOf,
+    relaxOf,
+  } from "./styles.js";
 
-  // Starting points by flying style, applied to roll, pitch and yaw. The
-  // Rates tab holds rate as deg/s / 500 and expo as a fraction.
-  const PRESETS = [
-    { key: "gentle", rate: 150, expo: 20 },
-    { key: "sport", rate: 250, expo: 30 },
-    { key: "3d", rate: 500, expo: 60 },
-  ];
-  const AXES = ["roll", "pitch", "yaw"];
+  const wiz = getContext("setupWizard");
 
   let changed = $state(false);
 
+  let current = $derived(matchingStyle(FC.RC_TUNING, FC.PID_PROFILE));
+
   function rate(axis) {
-    return Math.round(FC.RC_TUNING[`${axis}_rc_rate`] * 500);
+    return rateOf(FC.RC_TUNING, axis);
   }
 
   function expo(axis) {
-    return Math.round(FC.RC_TUNING[`${axis}_rc_expo`] * 100);
+    return expoOf(FC.RC_TUNING, axis);
   }
 
-  function isCurrent(preset) {
-    return AXES.every(
-      (a) => rate(a) === preset.rate && expo(a) === preset.expo,
-    );
+  function relax(axis) {
+    return relaxOf(FC.PID_PROFILE, axis);
   }
 
-  function apply(preset) {
-    for (const axis of AXES) {
-      FC.RC_TUNING[`${axis}_rc_rate`] = preset.rate / 500;
-      FC.RC_TUNING[`${axis}_rc_expo`] = preset.expo / 100;
-    }
+  function isCurrent(style) {
+    return current?.key === style.key;
+  }
+
+  function apply(style) {
+    applyStyle(style, FC.RC_TUNING, FC.PID_PROFILE);
     changed = true;
     wiz.markChanged();
   }
@@ -47,72 +49,71 @@
       MSPCodes.MSP_SET_RC_TUNING,
       mspHelper.crunch(MSPCodes.MSP_SET_RC_TUNING),
     );
+    await MSP.promise(
+      MSPCodes.MSP_SET_PID_PROFILE,
+      mspHelper.crunch(MSPCodes.MSP_SET_PID_PROFILE),
+    );
     changed = false;
   });
 </script>
 
-<p>{$i18n.t("setupWizardRatesIntro")}</p>
+<p>{$i18n.t("setupWizardStyleIntro")}</p>
 
-<div class="presets">
-  {#each PRESETS as preset (preset.key)}
+<div class="styles">
+  {#each STYLES as style (style.key)}
     <button
-      class={["preset", isCurrent(preset) && "current"]}
-      onclick={() => apply(preset)}
+      class={["style", isCurrent(style) && "current"]}
+      onclick={() => apply(style)}
     >
-      <strong>{$i18n.t(`setupWizardRates_${preset.key}`)}</strong>
+      <strong>{$i18n.t(`setupWizardStyle_${style.key}`)}</strong>
+      <span class="muted">{$i18n.t(`setupWizardStyleHelp_${style.key}`)}</span>
       <span class="numbers">
-        {$i18n.t("setupWizardRatesValues", { 1: preset.rate, 2: preset.expo })}
+        {$i18n.t("setupWizardStyleRates", { 1: style.rate, 2: style.expo })}
       </span>
-      <span class="muted">{$i18n.t(`setupWizardRatesHelp_${preset.key}`)}</span>
+      <span class="numbers">
+        {$i18n.t(`setupWizardStyleRelax_${style.key}`)}
+      </span>
     </button>
   {/each}
 </div>
 
-<table class="current-rates">
+<table class="now">
   <tbody>
     {#each AXES as axis (axis)}
       <tr>
         <td>{$i18n.t(`setupWizardAxis_${axis}`)}</td>
         <td
-          >{$i18n.t("setupWizardRatesValues", {
+          >{$i18n.t("setupWizardStyleRates", {
             1: rate(axis),
             2: expo(axis),
           })}</td
         >
+        <td>{$i18n.t("setupWizardStyleRelaxValue", { 1: relax(axis) })}</td>
       </tr>
     {/each}
   </tbody>
 </table>
 
-<p class="muted">{$i18n.t("setupWizardRatesMore")}</p>
-<div>
-  <button class="btn" onclick={() => wiz.openTab("rates")}>
-    {$i18n.t("tabRates")}
-  </button>
-</div>
+<p class="muted">{$i18n.t("setupWizardStyleMore")}</p>
 
 <style lang="scss">
-  .btn {
-    @extend %button;
-  }
-
   p {
     margin: 0;
     max-width: 70ch;
   }
 
-  .presets {
+  .styles {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
 
-  .preset {
+  .style {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    width: 200px;
+    width: 220px;
     padding: 10px 12px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
@@ -136,14 +137,14 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .current-rates {
+  .now {
     width: auto;
     border-collapse: collapse;
-  }
 
-  .current-rates td {
-    padding: 2px 16px 2px 0;
-    font-variant-numeric: tabular-nums;
+    td {
+      padding: 2px 16px 2px 0;
+      font-variant-numeric: tabular-nums;
+    }
   }
 
   .muted {

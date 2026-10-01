@@ -4,6 +4,7 @@ import {
     surfacesFromRules, primaryAxis, outputForAxis, servoSide,
     travelReach, maxScale,
 } from '../../src/tabs/setup_wizard/surfaces.js';
+import { STYLES, applyStyle, matchingStyle } from '../../src/tabs/setup_wizard/styles.js';
 
 const SET = 1, ADD = 2;
 const rule = (oper, src, dst, weight, weightNeg = weight) => ({ oper, src, dst, weight, weightNeg });
@@ -73,4 +74,25 @@ test('largest scale that keeps full stick inside the binding limit', () => {
     assert.equal(maxScale(0.5, 700), 1000);  // never past the servo travel limit
     assert.equal(maxScale(1, 20), 50);       // never below the minimum
     assert.equal(maxScale(0, 700), 1000);    // axis gain 0: nothing to limit
+});
+
+test('flying styles set rates and I-term relax, and are recognised afterwards', () => {
+    const rcTuning = {};
+    const pidProfile = {};
+    for (const axis of ['roll', 'pitch', 'yaw']) {
+        rcTuning[`${axis}_rc_rate`] = 0.5;
+        rcTuning[`${axis}_rc_expo`] = 0;
+    }
+    assert.equal(matchingStyle(rcTuning, pidProfile), null);
+
+    const threeD = STYLES.find((s) => s.key === '3d');
+    applyStyle(threeD, rcTuning, pidProfile);
+    assert.equal(rcTuning.roll_rc_rate, 1);    // 500 deg/s, stored as deg/s / 500
+    assert.equal(rcTuning.yaw_rc_expo, 0.6);
+    assert.equal(pidProfile.bouncebackPitch, 7);
+    assert.equal(pidProfile.itermRelaxLevelYaw, 15);
+    assert.equal(matchingStyle(rcTuning, pidProfile).key, '3d');
+
+    rcTuning.yaw_rc_rate = 0.7; // edited on the Rates tab: no longer a preset
+    assert.equal(matchingStyle(rcTuning, pidProfile), null);
 });

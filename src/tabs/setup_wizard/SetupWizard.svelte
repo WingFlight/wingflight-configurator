@@ -22,7 +22,7 @@
   import StepTravel from "./StepTravel.svelte";
   import StepGyro from "./StepGyro.svelte";
   import StepModes from "./StepModes.svelte";
-  import StepRates from "./StepRates.svelte";
+  import StepStyle from "./StepStyle.svelte";
   import StepFinish from "./StepFinish.svelte";
 
   // Order is the procedure: each step relies on the ones before it (the
@@ -40,7 +40,7 @@
     { key: "travel", component: StepTravel },
     { key: "gyro", component: StepGyro },
     { key: "modes", component: StepModes },
-    { key: "rates", component: StepRates },
+    { key: "style", component: StepStyle },
     { key: "finish", component: StepFinish },
   ];
 
@@ -121,6 +121,7 @@
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_RX_MAP);
     await MSP.promise(MSPCodes.MSP_RC_TUNING);
+    await MSP.promise(MSPCodes.MSP_PID_PROFILE);
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
@@ -386,6 +387,13 @@
     get setupModeForced() {
       return !!forced;
     },
+    get pending() {
+      return pending;
+    },
+    get saving() {
+      return saving;
+    },
+    save,
     forceSetupMode,
     get setupModeAssigned() {
       return setupModeAssigned;
@@ -520,18 +528,15 @@
           {$i18n.t("setupWizardBack")}
         </button>
         <div class="grow"></div>
-        {#if pending}
-          <span class="unsaved">{$i18n.t("setupWizardUnsaved")}</span>
-        {/if}
+        <!-- The last step has its own Finish button. -->
         {#if stepIndex < STEPS.length - 1}
+          {#if pending}
+            <span class="unsaved">{$i18n.t("setupWizardUnsaved")}</span>
+          {/if}
           <button class="btn primary" disabled={saving} onclick={next}>
             {pending
               ? $i18n.t("setupWizardSaveNext")
               : $i18n.t("setupWizardNext")}
-          </button>
-        {:else if pending}
-          <button class="btn primary" disabled={saving} onclick={save}>
-            {$i18n.t("buttonSave")}
           </button>
         {/if}
       </div>

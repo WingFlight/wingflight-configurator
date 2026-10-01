@@ -8203,11 +8203,11 @@
     "setupWizardStep_modes": {
         "message": "Mode switches"
     },
-    "setupWizardStep_rates": {
-        "message": "Rates"
+    "setupWizardStep_style": {
+        "message": "Flying style"
     },
     "setupWizardStep_finish": {
-        "message": "Tune and backup"
+        "message": "Finish"
     },
     "setupWizardStepCounter": {
         "message": "Step $1 of $2"
@@ -8620,43 +8620,85 @@
     "setupWizardOpenModes": {
         "message": "Open the Modes tab"
     },
-    "setupWizardRatesIntro": {
-        "message": "Choose how fast the model rotates at full stick. Pick the style closest to how you fly; you can fine-tune each axis on the Rates tab later."
+    "setupWizardStyleIntro": {
+        "message": "Choose the style closest to how you fly. It sets how fast the model rotates at full stick, and how the stabilizer's I-term behaves while you move the sticks. These are starting points to tune from."
     },
-    "setupWizardRates_gentle": {
-        "message": "Gentle"
+    "setupWizardStyle_trainer": {
+        "message": "Trainer"
     },
-    "setupWizardRatesHelp_gentle": {
+    "setupWizardStyleHelp_trainer": {
         "message": "Trainers, scale models and first flights."
     },
-    "setupWizardRates_sport": {
+    "setupWizardStyle_sport": {
         "message": "Sport"
     },
-    "setupWizardRatesHelp_sport": {
+    "setupWizardStyleHelp_sport": {
         "message": "General sport flying and aerobatics."
     },
-    "setupWizardRates_3d": {
+    "setupWizardStyle_3d": {
         "message": "3D"
     },
-    "setupWizardRatesHelp_3d": {
-        "message": "Hovering, harriers and tumbling."
+    "setupWizardStyleHelp_3d": {
+        "message": "Hovering, harriers, snaps and tumbles."
     },
-    "setupWizardRatesValues": {
+    "setupWizardStyleRates": {
         "message": "$1 °/s, $2% expo"
     },
-    "setupWizardRatesMore": {
-        "message": "Applies to roll, pitch and yaw. For different rates per axis, or more rate profiles, use the Rates tab."
+    "setupWizardStyleRelax_trainer": {
+        "message": "I-term holds trim soon after each input"
+    },
+    "setupWizardStyleRelax_sport": {
+        "message": "Default I-term relax"
+    },
+    "setupWizardStyleRelax_3d": {
+        "message": "I-term held back through big inputs, less bounce-back"
+    },
+    "setupWizardStyleRelaxValue": {
+        "message": "I-term relax $1"
+    },
+    "setupWizardStyleMore": {
+        "message": "Applies to roll, pitch and yaw in the current rate and PID profiles."
     },
     "setupWizardFinishIntro": {
-        "message": "The model is set up. What's left is tuning how it flies, and saving a backup."
+        "message": "That's the setup done. Here is what the wizard set."
+    },
+    "setupWizardFinishModel": {
+        "message": "Model"
+    },
+    "setupWizardFinishSurfaces": {
+        "message": "Control surfaces"
+    },
+    "setupWizardFinishEsc": {
+        "message": "ESC protocol"
+    },
+    "setupWizardFinishThrows": {
+        "message": "Throw"
+    },
+    "setupWizardFinishStyle": {
+        "message": "Flying style"
+    },
+    "setupWizardFinishStyleCustom": {
+        "message": "Custom"
+    },
+    "setupWizardFinishBeforeTitle": {
+        "message": "Before the first flight:"
+    },
+    "setupWizardFinishBefore_1": {
+        "message": "Fit the propeller and check it is the right way round and tight."
+    },
+    "setupWizardFinishBefore_2": {
+        "message": "With SETUP mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement."
+    },
+    "setupWizardFinishBefore_3": {
+        "message": "Do a range check with your radio."
+    },
+    "setupWizardFinishButton": {
+        "message": "Finish"
+    },
+    "setupWizardFinishDone": {
+        "message": "Setup saved. The model is ready for its first flight."
     },
     "setupWizardFinishThrowsTune": {
         "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
-    },
-    "setupWizardFinishTune": {
-        "message": "Tune the stabilizer, starting from the defaults."
-    },
-    "setupWizardFinishBackup": {
-        "message": "Save a backup of the finished setup."
     }
 }
