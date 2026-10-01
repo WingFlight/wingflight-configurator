@@ -1,7 +1,9 @@
 <script>
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
+  import { slide } from "svelte/transition";
 
+  import * as config from "@/js/config.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -19,11 +21,13 @@
   import {
     ALWAYS_ON_CH,
     PRIMARY_CHANNEL_COUNT,
+    isWithin,
     resetToOff,
     spreadCollapsedRanges,
   } from "./util.js";
 
   const FUNCTIONS = getFunctions();
+  const OTHER_GROUP = "adjustmentsGroupOther";
 
   let loading = $state(true);
   let initialState = $state(null);
@@ -135,6 +139,58 @@
     })).filter((group) => group.items.length > 0),
   );
 
+  // The cards sit under the picker's FUNCTION_GROUPS headings, in the same
+  // order. Each group can be collapsed, and that's remembered.
+  function groupKeyOf(id) {
+    return (
+      FUNCTION_GROUPS.find((group) => group.ids.includes(id))?.label ??
+      OTHER_GROUP
+    );
+  }
+
+  let cardGroups = $derived(
+    [...FUNCTION_GROUPS.map((group) => group.label), OTHER_GROUP]
+      .map((key) => ({
+        key,
+        slots: visibleSlots.filter(
+          (i) => groupKeyOf(FC.ADJUSTMENT_RANGES[i].adjFunction) === key,
+        ),
+      }))
+      .filter((group) => group.slots.length > 0),
+  );
+
+  let collapsedGroups = $state(config.get("adjustmentsCollapsedGroups") ?? []);
+
+  function setCollapsedGroups(keys) {
+    collapsedGroups = keys;
+    config.set({ adjustmentsCollapsedGroups: keys });
+  }
+
+  function toggleGroup(key) {
+    setCollapsedGroups(
+      collapsedGroups.includes(key)
+        ? collapsedGroups.filter((k) => k !== key)
+        : [...collapsedGroups, key],
+    );
+  }
+
+  function expandGroupOf(id) {
+    const key = groupKeyOf(id);
+    if (collapsedGroups.includes(key)) {
+      toggleGroup(key);
+    }
+  }
+
+  // Same test as a card's live header band: its enable channel lets it run.
+  function isLive(index) {
+    const adjRange = FC.ADJUSTMENT_RANGES[index];
+    if (adjRange.enaChannel === ALWAYS_ON_CH) {
+      return true;
+    }
+    const pos = FC.RC.channels[adjRange.enaChannel + PRIMARY_CHANNEL_COUNT];
+    return pos != null && isWithin(pos, adjRange.enaRange);
+  }
+
   function addAdjustment() {
     if (hiddenSlots.length === 0) {
       return;
@@ -158,6 +214,7 @@
   function onPickFunction(id) {
     if (pickerSlot !== null) {
       setFunction(FC.ADJUSTMENT_RANGES[pickerSlot], id);
+      expandGroupOf(id);
       return;
     }
     const next = Math.min(...hiddenSlots);
@@ -166,6 +223,7 @@
     setFunction(adjRange, id);
     adjRange.adjStep = 0; // start as Mapped
     visibleSlots = [...visibleSlots, next].sort((a, b) => a - b);
+    expandGroupOf(id);
   }
 
   function removeAdjustment(index) {
@@ -280,17 +338,39 @@
       <p>{$i18n.t("adjustmentsEmptyState")}</p>
     </div>
   {:else}
-    <div class="rows">
-      {#each visibleSlots as index (index + ":" + revertGeneration + ":" + FC.ADJUSTMENT_RANGES[index].adjFunction)}
-        <AdjustmentRow
-          {index}
-          {enaChannelOptions}
-          {adjChannelOptions}
-          onChangeFunction={() => changeFunction(index)}
-          onRemove={() => removeAdjustment(index)}
-        />
-      {/each}
-    </div>
+    {#each cardGroups as group (group.key)}
+      {@const open = !collapsedGroups.includes(group.key)}
+      <section class="group">
+        <button
+          type="button"
+          class="group-header"
+          aria-expanded={open}
+          onclick={() => toggleGroup(group.key)}
+        >
+          <em class={["fas", "fa-chevron-right", "chevron", open && "open"]}
+          ></em>
+          <span class="group-title">{$i18n.t(group.key)}</span>
+          <span class="group-count">{group.slots.length}</span>
+          {#if group.slots.some(isLive)}
+            <span class="live-dot" title={$i18n.t("adjustmentsGroupLive")}
+            ></span>
+          {/if}
+        </button>
+        {#if open}
+          <div class="rows" transition:slide={{ duration: 150 }}>
+            {#each group.slots as index (index + ":" + revertGeneration + ":" + FC.ADJUSTMENT_RANGES[index].adjFunction)}
+              <AdjustmentRow
+                {index}
+                {enaChannelOptions}
+                {adjChannelOptions}
+                onChangeFunction={() => changeFunction(index)}
+                onRemove={() => removeAdjustment(index)}
+              />
+            {/each}
+          </div>
+        {/if}
+      </section>
+    {/each}
   {/if}
 </Page>
 
@@ -344,7 +424,7 @@
   }
 
   .empty-state,
-  .rows {
+  .group {
     margin-top: var(--section-gap);
   }
 
@@ -357,9 +437,66 @@
     border-radius: var(--radius-sm);
   }
 
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 4px;
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-hover);
+      }
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+  }
+
+  .chevron {
+    width: 1em;
+    font-size: 0.75rem;
+    color: var(--color-text-soft);
+    transition: transform var(--animation-speed);
+
+    &.open {
+      transform: rotate(90deg);
+    }
+  }
+
+  .group-count {
+    min-width: 1.5em;
+    padding: 0 6px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    text-align: center;
+    border-radius: 999px;
+    color: var(--color-text-soft);
+    background-color: var(--color-surface-sunken);
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+  }
+
   .rows {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding-top: 12px;
   }
 </style>
