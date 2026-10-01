@@ -561,7 +561,7 @@
             id="power-smartfuel-alert"
             bind:value={FC.BATTERY_CONFIG.mahWarningPercentage}
             min={0}
-            max={100}
+            max={60}
             step={1}
           />
         </Field>
