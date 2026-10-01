@@ -18,8 +18,8 @@
 
   import Page from "@/components/Page.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
+  import PickerDialog from "@/components/PickerDialog.svelte";
 
-  import AddModeDialog from "./AddModeDialog.svelte";
   import ModeCard from "./ModeCard.svelte";
 
   const PRIMARY_CHANNEL_COUNT = 4;
@@ -82,8 +82,8 @@
       const modeName = FC.AUX_CONFIG[i];
       const key = MODE_GROUPS[getModeOrder(modeName).group]?.key;
       const label = $i18n.t(`auxiliaryGroup${key ?? MODE_GROUP_OTHER}`);
-      if (groups.at(-1)?.label !== label) groups.push({ label, modes: [] });
-      groups.at(-1).modes.push({
+      if (groups.at(-1)?.label !== label) groups.push({ label, items: [] });
+      groups.at(-1).items.push({
         value: i,
         label: getModeDisplayName(modeName),
         description: getModeDescription(modeName),
@@ -396,9 +396,12 @@
   {/each}
 </Page>
 
-<AddModeDialog
+<PickerDialog
   bind:this={addModeDialog}
+  title={$i18n.t("auxiliaryAddModeTitle")}
   groups={addModeGroups}
+  searchPlaceholder={$i18n.t("auxiliaryAddModeSearch")}
+  noMatchesText={$i18n.t("auxiliaryAddModeNoMatches")}
   onSelect={addMode}
 />
 
