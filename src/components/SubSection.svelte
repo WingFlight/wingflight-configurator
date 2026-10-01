@@ -1,15 +1,21 @@
 <script>
   import { slide } from "svelte/transition";
 
+  import { createExpertSubsection } from "@/js/expert.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
   // actions: optional snippet for a right-aligned action (e.g. a button) on
   // the label row itself - for something that acts specifically on this
   // subsection's own fields, as opposed to the whole Section header above it.
   let { children, label, actions } = $props();
+
+  // Hidden (not unmounted, so the fields keep reporting) when basic mode
+  // hides every field in it, so no heading is left over an empty group.
+  const expert = createExpertSubsection();
+  let allHidden = $derived(expert.items > 0 && expert.hidden === expert.items);
 </script>
 
-<div class="container">
+<div class="container" class:all-hidden={allHidden}>
   {#if label}
     <div transition:slide class="header">
       <span>{$i18n.t(label)}</span>
@@ -22,6 +28,10 @@
 </div>
 
 <style lang="scss">
+  .all-hidden {
+    display: none;
+  }
+
   .header {
     display: flex;
     align-items: center;

@@ -55,7 +55,12 @@
 
 <Section label="gyroNotchFilterHeading" summary="gyroNotchFilterHelp">
   <SubSection label="gyroNotchFilter1">
-    <Field id="notch-filter-1-enable" label="genericEnable">
+    <Field
+      expert
+      changed={notch1Enable}
+      id="notch-filter-1-enable"
+      label="genericEnable"
+    >
       <Switch
         id="notch-filter-1-enable"
         bind:checked={() => notch1Enable, toggleNotch1}
@@ -93,7 +98,12 @@
     {/if}
   </SubSection>
   <SubSection label="gyroNotchFilter2">
-    <Field id="notch-filter-2-enable" label="genericEnable">
+    <Field
+      expert
+      changed={notch2Enable}
+      id="notch-filter-2-enable"
+      label="genericEnable"
+    >
       <Switch
         id="notch-filter-2-enable"
         bind:checked={() => notch2Enable, toggleNotch2}

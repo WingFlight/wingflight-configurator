@@ -8,7 +8,6 @@
   import { reinitialiseConnection } from "@/js/serial_backend";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
-  import Expert from "@/components/Expert.svelte";
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Page from "@/components/Page.svelte";
@@ -80,6 +79,8 @@
   export function isDirty() {
     return changes.length > 0;
   }
+
+  // Expert-field defaults: pg/gps_nav.c.
 </script>
 
 {#snippet header()}
@@ -195,60 +196,75 @@
             />
           </Field>
         </SubSection>
-        <Expert>
-          <div transition:slide>
-            <SubSection>
-              <Field id="gps-nav-bearing-kp" label="gpsNavBearingKpItem">
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavBearingKpHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-bearing-kp"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_bearing_kp}
-                />
-              </Field>
-              <Field id="gps-nav-altitude-kp" label="gpsNavAltitudeKpItem">
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavAltitudeKpHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-altitude-kp"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kp}
-                />
-              </Field>
-              <Field id="gps-nav-altitude-kd" label="gpsNavAltitudeKdItem">
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavAltitudeKdHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-altitude-kd"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kd}
-                />
-              </Field>
-              <Field
+        <div transition:slide>
+          <SubSection>
+            <Field
+              expert
+              changed={FC.GPS_NAV_CONFIG.nav_bearing_kp !== 200}
+              id="gps-nav-bearing-kp"
+              label="gpsNavBearingKpItem"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="gpsNavBearingKpHelp" />
+              {/snippet}
+              <NumberInput
+                id="gps-nav-bearing-kp"
+                min="0"
+                max="1000"
+                bind:value={FC.GPS_NAV_CONFIG.nav_bearing_kp}
+              />
+            </Field>
+            <Field
+              expert
+              changed={FC.GPS_NAV_CONFIG.nav_altitude_kp !== 100}
+              id="gps-nav-altitude-kp"
+              label="gpsNavAltitudeKpItem"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="gpsNavAltitudeKpHelp" />
+              {/snippet}
+              <NumberInput
+                id="gps-nav-altitude-kp"
+                min="0"
+                max="1000"
+                bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kp}
+              />
+            </Field>
+            <Field
+              expert
+              changed={FC.GPS_NAV_CONFIG.nav_altitude_kd !== 200}
+              id="gps-nav-altitude-kd"
+              label="gpsNavAltitudeKdItem"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="gpsNavAltitudeKdHelp" />
+              {/snippet}
+              <NumberInput
+                id="gps-nav-altitude-kd"
+                min="0"
+                max="1000"
+                bind:value={FC.GPS_NAV_CONFIG.nav_altitude_kd}
+              />
+            </Field>
+            <Field
+              expert
+              changed={FC.GPS_NAV_CONFIG.nav_turn_coordination !== 100}
+              id="gps-nav-turn-coordination"
+              label="gpsNavTurnCoordinationItem"
+              unit="%"
+            >
+              {#snippet tooltip()}
+                <Tooltip help="gpsNavTurnCoordinationHelp" />
+              {/snippet}
+              <NumberInput
                 id="gps-nav-turn-coordination"
-                label="gpsNavTurnCoordinationItem"
-                unit="%"
-              >
-                {#snippet tooltip()}
-                  <Tooltip help="gpsNavTurnCoordinationHelp" />
-                {/snippet}
-                <NumberInput
-                  id="gps-nav-turn-coordination"
-                  min="0"
-                  max="200"
-                  bind:value={FC.GPS_NAV_CONFIG.nav_turn_coordination}
-                />
-              </Field>
-            </SubSection>
-          </div>
-        </Expert>
+                min="0"
+                max="200"
+                bind:value={FC.GPS_NAV_CONFIG.nav_turn_coordination}
+              />
+            </Field>
+          </SubSection>
+        </div>
       </Section>
     </div>
     <div></div>
