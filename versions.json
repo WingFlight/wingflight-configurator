@@ -123,6 +123,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-modes-picker",
+      "path": "./feature-modes-picker/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
