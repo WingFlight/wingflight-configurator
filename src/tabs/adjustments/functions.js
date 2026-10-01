@@ -1,3 +1,5 @@
+import { i18n } from '@/js/localization.js';
+
 // `id` must stay positionally aligned with the firmware's adjustmentFunc_e
 // enum (fc/rc_adjustments.h) - this array is indexed directly by that value
 // (FUNCTIONS[adjRange.adjFunction]), so entries are never reordered or
@@ -185,3 +187,9 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
     { label: 'adjustmentsGroupMixer', ids: [112, 113] },
 ];
+
+// Short help for a function, shown on its picker tile and card header.
+export function getFunctionDescription(name) {
+    return i18n.existsMessage('adjustmentsFunctionHelp' + name) ?
+        i18n.getMessage('adjustmentsFunctionHelp' + name) : '';
+}

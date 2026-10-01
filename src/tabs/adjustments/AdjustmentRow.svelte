@@ -4,11 +4,12 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import RangeSlider from "@/components/RangeSlider.svelte";
   import Select from "@/components/Select.svelte";
 
-  import { getFunctions } from "./functions.js";
+  import { getFunctions, getFunctionDescription } from "./functions.js";
   import {
     ALWAYS_ON_CH,
     AUX_MIN,
@@ -42,6 +43,7 @@
   );
 
   let adjConfig = $derived(FUNCTIONS[adjRange.adjFunction] ?? FUNCTIONS[0]);
+  let description = $derived(getFunctionDescription(adjConfig.name));
 
   function setAdjType(newType) {
     adjType = newType;
@@ -172,6 +174,9 @@
       {$i18n.t("adjustmentsFunction" + adjConfig.name)}
       <em class="fas fa-pen"></em>
     </button>
+    {#if description}
+      <HelpIcon>{description}</HelpIcon>
+    {/if}
     <span class="slot-label"
       >{$i18n.t("adjustmentsSlotLabel", { index: index + 1 })}</span
     >

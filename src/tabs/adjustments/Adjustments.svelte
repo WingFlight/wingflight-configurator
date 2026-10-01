@@ -11,7 +11,11 @@
   import PickerDialog from "@/components/PickerDialog.svelte";
 
   import AdjustmentRow from "./AdjustmentRow.svelte";
-  import { getFunctions, FUNCTION_GROUPS } from "./functions.js";
+  import {
+    getFunctions,
+    getFunctionDescription,
+    FUNCTION_GROUPS,
+  } from "./functions.js";
   import {
     ALWAYS_ON_CH,
     PRIMARY_CHANNEL_COUNT,
@@ -121,6 +125,7 @@
         .map((id) => ({
           value: id,
           label: $i18n.t("adjustmentsFunction" + FUNCTIONS[id].name),
+          description: getFunctionDescription(FUNCTIONS[id].name),
           badge: visibleSlots.some(
             (i) => FC.ADJUSTMENT_RANGES[i].adjFunction === id,
           )
