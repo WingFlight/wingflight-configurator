@@ -15,6 +15,8 @@
   let autoThrottleRange = $derived(
     FC.RC_CONFIG.rc_min_throttle === 0 && FC.RC_CONFIG.rc_max_throttle === 0,
   );
+
+  // Expert-field defaults: pg/rx.c (deadbands default to 5).
 </script>
 
 {#snippet throttle()}
@@ -132,7 +134,13 @@
         bind:value={FC.RC_CONFIG.rc_deflection}
       />
     </Field>
-    <Field id="receiver-roll-deadband" label="receiverRollDeadband" unit="μs">
+    <Field
+      expert
+      changed={FC.RC_CONFIG.rc_roll_deadband !== 5}
+      id="receiver-roll-deadband"
+      label="receiverRollDeadband"
+      unit="μs"
+    >
       {#snippet tooltip()}
         <Tooltip
           help="receiverHelpRollDeadband"
@@ -149,7 +157,13 @@
         bind:value={FC.RC_CONFIG.rc_roll_deadband}
       />
     </Field>
-    <Field id="receiver-pitch-deadband" label="receiverPitchDeadband" unit="μs">
+    <Field
+      expert
+      changed={FC.RC_CONFIG.rc_pitch_deadband !== 5}
+      id="receiver-pitch-deadband"
+      label="receiverPitchDeadband"
+      unit="μs"
+    >
       {#snippet tooltip()}
         <Tooltip
           help="receiverHelpPitchDeadband"
@@ -166,7 +180,13 @@
         bind:value={FC.RC_CONFIG.rc_pitch_deadband}
       />
     </Field>
-    <Field id="receiver-yaw-deadband" label="receiverYawDeadband" unit="μs">
+    <Field
+      expert
+      changed={FC.RC_CONFIG.rc_yaw_deadband !== 5}
+      id="receiver-yaw-deadband"
+      label="receiverYawDeadband"
+      unit="μs"
+    >
       {#snippet tooltip()}
         <Tooltip
           help="receiverHelpYawDeadband"

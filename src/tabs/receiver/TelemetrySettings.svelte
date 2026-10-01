@@ -12,6 +12,8 @@
   let { telemetry, resetTelemetry } = $props();
   let enabled = $derived(FC.FEATURE_CONFIG.features.TELEMETRY);
   let crsfSettings = $derived(telemetry.proto === "crsf");
+
+  // Expert-field defaults: pg/telemetry.c.
 </script>
 
 <Section label="receiverTelemetrySettings">
@@ -65,6 +67,8 @@
           />
         </Field>
         <Field
+          expert
+          changed={FC.TELEMETRY_CONFIG.crsf_telemetry_rate !== 250}
           id="telemetry-crsf-packet-rate"
           label="receiverCrsfTelemetryRate"
           unit="Hz"
@@ -81,6 +85,8 @@
           />
         </Field>
         <Field
+          expert
+          changed={FC.TELEMETRY_CONFIG.crsf_telemetry_ratio !== 8}
           id="telmetry-crsf-packet-ratio"
           label="receiverCrsfTelemetryRatio"
         >
