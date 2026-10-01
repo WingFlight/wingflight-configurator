@@ -67,8 +67,6 @@
           />
         </Field>
         <Field
-          expert
-          changed={FC.TELEMETRY_CONFIG.crsf_telemetry_rate !== 250}
           id="telemetry-crsf-packet-rate"
           label="receiverCrsfTelemetryRate"
           unit="Hz"
