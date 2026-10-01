@@ -20,6 +20,10 @@
 
 <p>{$i18n.t("setupWizardGyroIntro")}</p>
 
+{#if wiz.setupModeActive}
+  <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
+{/if}
+
 <ul class="checks">
   {#each checks as axis (axis)}
     <li>
@@ -55,6 +59,15 @@
 </table>
 
 <style lang="scss">
+  .setup-on {
+    padding: 8px 12px;
+    border-left: 3px solid var(--color-status-bad);
+    border-radius: var(--radius-xs);
+    background-color: var(--color-surface);
+    max-width: 70ch;
+    font-weight: 600;
+  }
+
   .btn {
     @extend %button;
   }

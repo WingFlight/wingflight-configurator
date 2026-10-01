@@ -22,7 +22,7 @@
   import StepTravel from "./StepTravel.svelte";
   import StepGyro from "./StepGyro.svelte";
   import StepModes from "./StepModes.svelte";
-  import StepFailsafe from "./StepFailsafe.svelte";
+  import StepRates from "./StepRates.svelte";
   import StepFinish from "./StepFinish.svelte";
 
   // Order is the procedure: each step relies on the ones before it (the
@@ -40,7 +40,7 @@
     { key: "travel", component: StepTravel },
     { key: "gyro", component: StepGyro },
     { key: "modes", component: StepModes },
-    { key: "failsafe", component: StepFailsafe },
+    { key: "rates", component: StepRates },
     { key: "finish", component: StepFinish },
   ];
 
@@ -53,6 +53,8 @@
   let pending = $state(false);
   let saving = $state(false);
   let armed = $state(false);
+  let setupModeActive = $state(false);
+  let setupModeAssigned = $state(false);
   let commitFn = null;
   let leaveFn = null;
   let snapshot = null;
@@ -113,10 +115,12 @@
     await MSP.promise(MSPCodes.MSP_BOXNAMES);
     await MSP.promise(MSPCodes.MSP_BOXIDS);
     await MSP.promise(MSPCodes.MSP_MODE_RANGES);
+    await MSP.promise(MSPCodes.MSP_MODE_RANGES_EXTRA);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_RX_MAP);
+    await MSP.promise(MSPCodes.MSP_RC_TUNING);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
@@ -130,20 +134,105 @@
     }
 
     takeSnapshot();
-    armed = isArmed();
+    // Start from no overrides at all: one left on (by the Servos or Mixer
+    // tab, or by a step before the tab was reloaded) would hold its surface
+    // still and make every later check look wrong. Steps that need one set
+    // it themselves when they open.
+    releaseAll();
+    updateModes();
     loading = false;
 
     poller = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_SERVO);
       await MSP.promise(MSPCodes.MSP_STATUS);
-      armed = isArmed();
+      updateModes();
     }, 200);
   });
+
+  // SETUP is PASSTHROUGH before firmware#182 renamed it; permanent box ID 12.
+  const SETUP_BOX_ID = 12;
+
+  function updateModes() {
+    armed = isArmed();
+    const setupIndex = FC.AUX_CONFIG.findIndex(
+      (name) => name === "SETUP" || name === "PASSTHROUGH",
+    );
+    setupModeActive = setupIndex >= 0 && bit_check(FC.CONFIG.mode, setupIndex);
+    setupModeAssigned = FC.MODE_RANGES.some(
+      (r, i) =>
+        i !== forced?.index &&
+        r.id === SETUP_BOX_ID &&
+        r.range.start < r.range.end,
+    );
+  }
+
+  //// SETUP mode on demand. There is no MSP command to switch a mode, so the
+  //// wizard puts a SETUP range covering the whole of AUX1 (875-2125 us, so
+  //// any channel value matches) into a free mode-range slot, and puts the
+  //// slot back afterwards. The range is in RAM only: it is always removed
+  //// before the wizard writes EEPROM, so it can never be saved, and a power
+  //// cycle clears it. The FC ignores SETUP while in failsafe, so the radio
+  //// must be on, as it is anyway for using the sticks.
+
+  const FULL_RANGE = { start: 875, end: 2125 };
+  let forced = $state(null);
+  let wantSetup = false;
+
+  async function sendModeRange(index) {
+    await new Promise((resolve) => mspHelper.sendModeRange(index, resolve));
+  }
+
+  async function applySetupForce() {
+    if (forced) return true;
+    const index = FC.MODE_RANGES.findIndex(
+      (r) => !(r.range.start < r.range.end),
+    );
+    if (index < 0 || !FC.MODE_RANGES_EXTRA[index]) return false;
+    forced = {
+      index,
+      range: $state.snapshot(FC.MODE_RANGES[index]),
+      extra: $state.snapshot(FC.MODE_RANGES_EXTRA[index]),
+    };
+    FC.MODE_RANGES[index] = {
+      id: SETUP_BOX_ID,
+      auxChannelIndex: 0,
+      range: { ...FULL_RANGE },
+    };
+    FC.MODE_RANGES_EXTRA[index] = {
+      ...forced.extra,
+      id: SETUP_BOX_ID,
+      modeLogic: 0,
+      linkedTo: 0,
+    };
+    await sendModeRange(index);
+    return true;
+  }
+
+  async function removeSetupForce() {
+    if (!forced) return;
+    const { index, range, extra } = forced;
+    forced = null;
+    FC.MODE_RANGES[index] = range;
+    FC.MODE_RANGES_EXTRA[index] = extra;
+    await sendModeRange(index);
+  }
+
+  // Called by the steps that measure throws.
+  async function forceSetupMode() {
+    wantSetup = true;
+    return applySetupForce();
+  }
+
+  async function releaseSetupMode() {
+    wantSetup = false;
+    await removeSetupForce();
+  }
 
   onDestroy(() => {
     clearInterval(poller);
     leaveFn?.();
     releaseAll();
+    releaseSetupMode();
   });
 
   //// Overrides. The FC ignores both kinds while armed (flight/mixer.c
@@ -225,6 +314,9 @@
 
   async function save() {
     saving = true;
+    // Never let a forced SETUP range reach EEPROM.
+    const reforce = wantSetup;
+    await removeSetupForce();
     try {
       if (commitFn) {
         await commitFn();
@@ -235,6 +327,9 @@
       takeSnapshot();
     } finally {
       saving = false;
+      if (reforce && wantSetup) {
+        await applySetupForce();
+      }
     }
   }
 
@@ -242,6 +337,7 @@
   // alignment). The Configurator reconnects on its own tab afterwards, so
   // the wizard remembers to resume at the next step.
   async function saveAndReboot() {
+    wantSetup = false;
     await save();
     storeStep(Math.min(stepIndex + 1, STEPS.length - 1));
     MSP.send_message(MSPCodes.MSP_SET_REBOOT);
@@ -282,6 +378,16 @@
     get armed() {
       return armed;
     },
+    get setupModeActive() {
+      return setupModeActive;
+    },
+    get setupModeForced() {
+      return !!forced;
+    },
+    forceSetupMode,
+    get setupModeAssigned() {
+      return setupModeAssigned;
+    },
     holdAxes,
     releaseAxes,
     holdServo,
@@ -318,6 +424,7 @@
     leaveFn = null;
     commitFn = null;
     releaseAll();
+    releaseSetupMode();
     stepIndex = index;
     storeStep(index);
   }

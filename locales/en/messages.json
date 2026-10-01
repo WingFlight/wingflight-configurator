@@ -8203,11 +8203,11 @@
     "setupWizardStep_modes": {
         "message": "Mode switches"
     },
-    "setupWizardStep_failsafe": {
-        "message": "Failsafe"
+    "setupWizardStep_rates": {
+        "message": "Rates"
     },
     "setupWizardStep_finish": {
-        "message": "Rates, tune and backup"
+        "message": "Tune and backup"
     },
     "setupWizardStepCounter": {
         "message": "Step $1 of $2"
@@ -8422,44 +8422,59 @@
     "setupWizardLimitsHowTo": {
         "message": "Move in small steps until the surface binds, back off one step, then press Set limit here. Do both directions, then press Done."
     },
+    "setupWizardSetupModeOn": {
+        "message": "SETUP mode is on. The sticks move the surfaces directly, at full travel, with no gyro."
+    },
+    "setupWizardSetupModeForced": {
+        "message": "SETUP mode is on for this step: the sticks move the surfaces directly, at full travel, with no gyro. The wizard switches it off again when you leave the step. Keep your radio on."
+    },
+    "setupWizardSetupModeWaiting": {
+        "message": "Switching to SETUP mode… Check your radio is on."
+    },
+    "setupWizardSetupModeOff": {
+        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use). Switch your radio to SETUP mode to carry on."
+    },
+    "setupWizardSetupModeNotAssigned": {
+        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use), and SETUP isn't on a switch. Free a slot or assign SETUP on the Modes tab, then come back to this step."
+    },
+    "setupWizardSetupModeTurnOff": {
+        "message": "Switch SETUP mode off for this step: in SETUP mode the sticks drive the surfaces directly and the flight controller can't move them."
+    },
     "setupWizardThrowsIntro": {
-        "message": "Enter the throw you want for each axis, from the model's setup guide. Hold full stick, measure one surface on that axis, enter the angle and press Apply. The wizard changes that axis's gain (Mixer tab, Axis Gain) so full stick gives your target. Measure again to check."
+        "message": "Set how far each surface moves at full stick, using the throws from your model's setup guide. You need your radio and a throw meter or ruler on the surface. The wizard puts the model in SETUP mode for this step."
     },
-    "setupWizardThrowsAxis": {
-        "message": "Axis"
+    "setupWizardThrowsHowTitle": {
+        "message": "How to do it:"
     },
-    "setupWizardThrowsTarget": {
-        "message": "Target"
+    "setupWizardThrowsHow_1": {
+        "message": "Check the box above is green: the model is in SETUP mode and your sticks move the surfaces directly."
     },
-    "setupWizardThrowsMeasured": {
-        "message": "Measured"
+    "setupWizardThrowsHow_2": {
+        "message": "Hold one stick at full deflection, for example full right aileron, and watch one of its surfaces on the meter."
     },
-    "setupWizardThrowsGain": {
-        "message": "Gain"
+    "setupWizardThrowsHow_3": {
+        "message": "Press − or + for that axis until the surface reaches the throw you want. Check the other direction too: both share this setting, and the next step sets them apart if needed."
     },
-    "setupWizardThrowsHold_roll": {
-        "message": "Hold full right roll"
+    "setupWizardThrowsHow_4": {
+        "message": "Repeat for each axis."
     },
-    "setupWizardThrowsHold_pitch": {
-        "message": "Hold full stick back"
+    "setupWizardThrowsThrow": {
+        "message": "Throw"
     },
-    "setupWizardThrowsHold_yaw": {
-        "message": "Hold full right yaw"
+    "setupWizardThrowsAtLimit": {
+        "message": "$1 reaches its binding limit before full stick at this throw. Lower the throw, or allow more travel in the Binding limits step."
     },
     "setupWizardThrowsRepeat": {
-        "message": "Throw is set per axis, so both ailerons share one setting. Use the next step if the two directions of a surface need different throws."
+        "message": "The percentage is how much of the servo's normal travel full stick uses (Axis Gain on the Mixer tab). Every surface on an axis shares it, so both ailerons change together."
     },
     "setupWizardUpDownIntro": {
-        "message": "Optional. Use this when a surface should move further one way than the other, such as aileron differential, or when the linkage makes it do so. For each direction, hold full stick, measure, and enter the throw you want. The wizard changes that servo's scale for that side (Servos tab)."
+        "message": "Optional. Use this when a surface should move further one way than the other, such as aileron differential, or when the linkage makes it do so. The wizard puts the model in SETUP mode: hold full stick one way and press − or + on that direction's row until the surface reaches the throw you want, then do the other direction. This changes that servo's scale for one side (Servos tab)."
+    },
+    "setupWizardUpDownAtLimit": {
+        "message": "Full stick reaches the binding limit on this side."
     },
     "setupWizardUpDownMixedNote": {
         "message": "This servo works more than one axis, so the change applies to all of them."
-    },
-    "setupWizardUpDownScales": {
-        "message": "Scale −: $1 µs, +: $2 µs"
-    },
-    "setupWizardUpDownWanted": {
-        "message": "Wanted"
     },
     "setupWizardUpDown_rollRight": {
         "message": "Full right roll"
@@ -8545,26 +8560,38 @@
     "setupWizardOpenModes": {
         "message": "Open the Modes tab"
     },
-    "setupWizardFailsafeIntro": {
-        "message": "Set what happens if the radio link is lost."
+    "setupWizardRatesIntro": {
+        "message": "Choose how fast the model rotates at full stick. Pick the style closest to how you fly; you can fine-tune each axis on the Rates tab later."
     },
-    "setupWizardFailsafeReceiver": {
-        "message": "Set the receiver's own failsafe to no pulses (or hold), not to fixed stick positions, so the flight controller can tell the link is lost."
+    "setupWizardRates_gentle": {
+        "message": "Gentle"
     },
-    "setupWizardFailsafeTest": {
-        "message": "With the propeller off, arm, switch the transmitter off, and check that failsafe starts."
+    "setupWizardRatesHelp_gentle": {
+        "message": "Trainers, scale models and first flights."
     },
-    "setupWizardOpenFailsafe": {
-        "message": "Open the Failsafe tab"
+    "setupWizardRates_sport": {
+        "message": "Sport"
+    },
+    "setupWizardRatesHelp_sport": {
+        "message": "General sport flying and aerobatics."
+    },
+    "setupWizardRates_3d": {
+        "message": "3D"
+    },
+    "setupWizardRatesHelp_3d": {
+        "message": "Hovering, harriers and tumbling."
+    },
+    "setupWizardRatesValues": {
+        "message": "$1 °/s, $2% expo"
+    },
+    "setupWizardRatesMore": {
+        "message": "Applies to roll, pitch and yaw. For different rates per axis, or more rate profiles, use the Rates tab."
     },
     "setupWizardFinishIntro": {
-        "message": "The surfaces are set up. What's left is how the model flies."
+        "message": "The model is set up. What's left is tuning how it flies, and saving a backup."
     },
     "setupWizardFinishThrowsTune": {
         "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
-    },
-    "setupWizardFinishRates": {
-        "message": "Set the roll, pitch and yaw rates you want at full stick."
     },
     "setupWizardFinishTune": {
         "message": "Tune the stabilizer, starting from the defaults."

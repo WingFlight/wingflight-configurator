@@ -24,9 +24,11 @@ export const SERVO_FLAG_REVERSE = 1;
 export const AXIS_GAIN_MIN = 0;
 export const AXIS_GAIN_MAX = 200;
 
-// Scale range the wizard will set (us per unit of output). Below this a
-// side has almost no travel; above the travel limit it only clips.
+// Scale range the wizard will set (us per unit of output). Below the
+// minimum a side has almost no travel; the maximum is the servo travel limit
+// (SERVO_LIMIT_MAX in the firmware's flight/servos.h).
 export const SCALE_MIN = 50;
+export const SCALE_MAX = 1000;
 
 // Contribution of each stabilized axis to each servo output, as weight
 // fractions for positive and negative input. Only SET/ADD rules count; MUL
@@ -131,25 +133,11 @@ export function travelReach(surface, servoConfig, axisGains) {
   };
 }
 
-// New Axis Gain (percent) that turns the measured throw into the target,
-// assuming throw is proportional to gain.
-export function gainForThrow(currentPercent, measured, target) {
-  if (!(measured > 0) || !(target > 0)) return currentPercent;
-  const next = Math.round((currentPercent * target) / measured);
-  return Math.min(AXIS_GAIN_MAX, Math.max(AXIS_GAIN_MIN, next));
-}
-
-// New scale (us) for one servo side that turns the measured throw into the
-// target. `output` is the mixer output on that side at the stick position
-// that was measured (its magnitude). The throw was measured where the servo
-// actually got to, which is the travel limit if scale x output passed it, so
-// the correction starts from there. The result is capped so the new throw
-// stays inside the limit rather than clipping against it.
-export function scaleForThrow(currentScale, output, measured, target, sideLimit) {
+// Largest scale (us) for one servo side at which full stick (mixer output
+// `output` on that side) still stays inside the side's binding limit. Past
+// it the surface would stop at the limit before full stick.
+export function maxScale(output, sideLimit) {
   const out = Math.abs(output);
-  if (!(measured > 0) || !(target > 0) || !(out > 0)) return currentScale;
-  const reached = sideLimit > 0 ? Math.min(currentScale * out, sideLimit) : currentScale * out;
-  let next = (reached * target) / measured / out;
-  if (sideLimit > 0) next = Math.min(next, sideLimit / out);
-  return Math.max(SCALE_MIN, Math.round(next));
+  if (!(out > 0) || !(sideLimit > 0)) return SCALE_MAX;
+  return Math.max(SCALE_MIN, Math.min(SCALE_MAX, Math.floor(sideLimit / out)));
 }

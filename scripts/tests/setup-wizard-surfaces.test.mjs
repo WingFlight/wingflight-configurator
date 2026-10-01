@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
     surfacesFromRules, primaryAxis, outputForAxis, servoSide,
-    travelReach, gainForThrow, scaleForThrow,
+    travelReach, maxScale,
 } from '../../src/tabs/setup_wizard/surfaces.js';
 
 const SET = 1, ADD = 2;
@@ -65,23 +65,12 @@ test('axis gain scales the reach', () => {
     assert.equal(reach.pos.fraction, 0.5);
 });
 
-test('gain and scale corrections', () => {
-    assert.equal(gainForThrow(100, 30, 25), 83);
-    assert.equal(gainForThrow(100, 10, 40), 200); // capped at the Mixer tab's 200%
-    assert.equal(gainForThrow(100, 0, 25), 100);  // nothing measured, no change
-    // full output, inside the limit: plain ratio
-    assert.equal(scaleForThrow(500, 1, 20, 15, 700), 375);
-    // output 0.83 (gain 83%): ratio is the same, limit is checked at 0.83
-    assert.equal(scaleForThrow(500, 0.83, 20, 15, 700), 375);
-    // more throw wanted than the limit allows: stops where full output meets the limit
-    assert.equal(scaleForThrow(500, 1, 20, 40, 600), 600);
-    assert.equal(scaleForThrow(500, 1, 20, 1, 700), 50); // never below the minimum
-});
-
-test('scale correction starts from where a clipped servo actually got to', () => {
-    // 500 us x 0.83 = 415 us, but the limit is 110 us, so the measured 20 degrees
-    // is at 110 us. Wanting 15 degrees means 82.5 us, i.e. scale 99 at 0.83.
-    assert.equal(scaleForThrow(500, 0.83, 20, 15, 110), 99);
-    // negative-side output is used by magnitude
-    assert.equal(scaleForThrow(500, -0.83, 20, 15, 110), 99);
+test('largest scale that keeps full stick inside the binding limit', () => {
+    assert.equal(maxScale(1, 700), 700);
+    // axis gain 83%: full stick is output 0.83, so the scale may be larger
+    assert.equal(maxScale(0.83, 700), 843);
+    assert.equal(maxScale(-0.83, 700), 843); // either side, by magnitude
+    assert.equal(maxScale(0.5, 700), 1000);  // never past the servo travel limit
+    assert.equal(maxScale(1, 20), 50);       // never below the minimum
+    assert.equal(maxScale(0, 700), 1000);    // axis gain 0: nothing to limit
 });

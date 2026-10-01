@@ -11,12 +11,6 @@
 
 <ol class="tasks">
   <li>
-    <span>{$i18n.t("setupWizardFinishRates")}</span>
-    <button class="btn" onclick={() => wiz.openTab("rates")}
-      >{$i18n.t("tabRates")}</button
-    >
-  </li>
-  <li>
     <span>{$i18n.t("setupWizardFinishTune")}</span>
     <button class="btn" onclick={() => wiz.openTab("profiles")}
       >{$i18n.t("tabProfiles")}</button

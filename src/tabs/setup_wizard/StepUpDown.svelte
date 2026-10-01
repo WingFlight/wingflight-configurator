@@ -4,18 +4,22 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import LivePulse from "./LivePulse.svelte";
+  import SetupModeStatus from "./SetupModeStatus.svelte";
   import {
     primaryAxis,
     outputForAxis,
     servoSide,
-    scaleForThrow,
+    maxScale,
+    SCALE_MIN,
     SERVO_FLAG_REVERSE,
   } from "./surfaces.js";
 
+  // Like the Throws step, done with the radio in SETUP mode: hold full stick
+  // one way, watch the surface, and nudge the scale of the servo side that
+  // direction drives. Signs as in the Direction step.
   const wiz = getContext("setupWizard");
 
-  // Each surface is checked on its own axis, full stick both ways. Signs as
-  // in the Direction step.
   const DIRECTIONS = {
     roll: [
       { stick: 1, key: "rollRight" },
@@ -31,76 +35,34 @@
     ],
   };
 
-  // The surface list doesn't change while this step is open (it comes from
-  // the mixer rules), so every entry can be created up front.
-  let entries = $state(
-    Object.fromEntries(
-      wiz.surfaces.flatMap((s) =>
-        DIRECTIONS[primaryAxis(s)].map((d) => [
-          `${s.servo}:${d.key}`,
-          { measured: null, wanted: null },
-        ]),
-      ),
-    ),
-  );
-  let active = $state(null);
-
-  function entry(servo, key) {
-    return entries[`${servo}:${key}`];
-  }
-
-  function hold(surface, direction) {
-    const axis = primaryAxis(surface);
-    active = `${surface.servo}:${direction.key}`;
-    wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0, [axis]: direction.stick });
-  }
-
-  function apply(surface) {
+  // Which scale field this stick direction uses on this servo, and the most
+  // it may be before full stick passes the side's binding limit.
+  function sideOf(surface, direction) {
     const axis = primaryAxis(surface);
     const config = FC.SERVO_CONFIG[surface.servo];
+    const output = outputForAxis(surface, axis, direction.stick, wiz.axisGains);
     const reversed = (config.flags & SERVO_FLAG_REVERSE) !== 0;
-
-    for (const direction of DIRECTIONS[axis]) {
-      const e = entry(surface.servo, direction.key);
-      if (!(e.measured > 0) || !(e.wanted > 0)) continue;
-      const output = outputForAxis(
-        surface,
-        axis,
-        direction.stick,
-        wiz.axisGains,
-      );
-      if (output === 0) continue;
-      if (servoSide(output, reversed) === "pos") {
-        config.rpos = scaleForThrow(
-          config.rpos,
-          output,
-          e.measured,
-          e.wanted,
-          config.max,
-        );
-      } else {
-        config.rneg = scaleForThrow(
-          config.rneg,
-          output,
-          e.measured,
-          e.wanted,
-          -config.min,
-        );
-      }
-      e.measured = null;
-    }
-    wiz.sendServo(surface.servo);
+    const pos = servoSide(output, reversed) === "pos";
+    return {
+      field: pos ? "rpos" : "rneg",
+      max: maxScale(output, pos ? config.max : -config.min),
+    };
   }
 
-  function canApply(surface) {
-    return DIRECTIONS[primaryAxis(surface)].some((d) => {
-      const e = entries[`${surface.servo}:${d.key}`];
-      return e && e.measured > 0 && e.wanted > 0;
-    });
+  function nudge(surface, direction, delta) {
+    const config = FC.SERVO_CONFIG[surface.servo];
+    const side = sideOf(surface, direction);
+    config[side.field] = Math.min(
+      side.max,
+      Math.max(SCALE_MIN, config[side.field] + delta),
+    );
+    wiz.sendServo(surface.servo);
   }
 </script>
 
 <p>{$i18n.t("setupWizardUpDownIntro")}</p>
+
+<SetupModeStatus />
 
 {#each wiz.surfaces as surface (surface.servo)}
   {@const axis = primaryAxis(surface)}
@@ -108,71 +70,40 @@
   <section class="surface">
     <div class="head">
       <strong>{wiz.surfaceLabel(surface)}</strong>
-      <span class="muted">
-        {$i18n.t("setupWizardUpDownScales", { 1: config.rneg, 2: config.rpos })}
-      </span>
+      <LivePulse servo={surface.servo} />
     </div>
     {#if Object.keys(surface.axes).length > 1}
       <span class="muted">{$i18n.t("setupWizardUpDownMixedNote")}</span>
     {/if}
-    <table class="rows">
-      <tbody>
-        {#each DIRECTIONS[axis] as direction (direction.key)}
-          {@const e = entry(surface.servo, direction.key)}
-          {@const id = `${surface.servo}-${direction.key}`}
-          <tr
-            class={active === `${surface.servo}:${direction.key}` && "active"}
-          >
-            <td>
-              <button class="btn" onclick={() => hold(surface, direction)}>
-                {$i18n.t(`setupWizardUpDown_${direction.key}`)}
-              </button>
-            </td>
-            <td>
-              <label for={`measured-${id}`}
-                >{$i18n.t("setupWizardThrowsMeasured")}</label
-              >
-              <input
-                id={`measured-${id}`}
-                type="number"
-                min="0"
-                max="90"
-                step="0.5"
-                bind:value={e.measured}
-              /> °
-            </td>
-            <td>
-              <label for={`wanted-${id}`}
-                >{$i18n.t("setupWizardUpDownWanted")}</label
-              >
-              <input
-                id={`wanted-${id}`}
-                type="number"
-                min="1"
-                max="90"
-                step="0.5"
-                bind:value={e.wanted}
-              /> °
-            </td>
-          </tr>
+    {#each DIRECTIONS[axis] as direction (direction.key)}
+      {@const side = sideOf(surface, direction)}
+      <div class="row">
+        <span class="label"
+          >{$i18n.t(`setupWizardUpDown_${direction.key}`)}</span
+        >
+        {#each [-25, -5] as delta (delta)}
+          <button class="btn" onclick={() => nudge(surface, direction, delta)}>
+            {delta}
+          </button>
         {/each}
-      </tbody>
-    </table>
-    <div>
-      <button
-        class="btn"
-        disabled={!canApply(surface)}
-        onclick={() => apply(surface)}
-      >
-        {$i18n.t("setupWizardApply")}
-      </button>
-    </div>
+        <span class="amount">{config[side.field]} µs</span>
+        {#each [5, 25] as delta (delta)}
+          <button class="btn" onclick={() => nudge(surface, direction, delta)}>
+            +{delta}
+          </button>
+        {/each}
+        {#if config[side.field] >= side.max}
+          <span class="warn">{$i18n.t("setupWizardUpDownAtLimit")}</span>
+        {/if}
+      </div>
+    {/each}
   </section>
 {/each}
 
 <style lang="scss">
   .btn {
     @extend %button;
+    min-width: 2.6em;
   }
 
   p {
@@ -187,37 +118,38 @@
     padding: 10px 12px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
+    max-width: 720px;
   }
 
   .head {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 12px;
-    align-items: baseline;
+    align-items: center;
+    gap: 4px 16px;
   }
 
-  .rows {
-    border-collapse: collapse;
-
-    td {
-      padding: 4px 12px 4px 0;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
-
-    tr.active td {
-      background-color: var(--color-surface);
-    }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
   }
 
-  label {
-    margin-right: 4px;
-    color: var(--color-text-soft);
+  .label {
+    min-width: 10em;
+  }
+
+  .amount {
+    min-width: 5em;
+    text-align: center;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .warn {
+    margin-left: 8px;
+    color: var(--color-yellow-500);
     font-size: 0.9em;
-  }
-
-  input {
-    width: 5em;
   }
 
   .muted {

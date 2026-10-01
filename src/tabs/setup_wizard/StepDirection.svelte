@@ -70,6 +70,10 @@
 
 <p>{$i18n.t("setupWizardDirectionIntro")}</p>
 
+{#if wiz.setupModeActive}
+  <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
+{/if}
+
 {#each checks as check (check.key)}
   <section class={["check", active === check.key && "active"]}>
     <div class="check-head">
@@ -137,6 +141,15 @@
 {/each}
 
 <style lang="scss">
+  .setup-on {
+    padding: 8px 12px;
+    border-left: 3px solid var(--color-status-bad);
+    border-radius: var(--radius-xs);
+    background-color: var(--color-surface);
+    max-width: 70ch;
+    font-weight: 600;
+  }
+
   .btn {
     @extend %button;
   }

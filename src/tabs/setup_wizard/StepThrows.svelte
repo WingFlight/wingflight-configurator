@@ -1,107 +1,116 @@
 <script>
   import { getContext } from "svelte";
 
+  import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
-  import { AXES, gainForThrow } from "./surfaces.js";
+  import LivePulse from "./LivePulse.svelte";
+  import SetupModeStatus from "./SetupModeStatus.svelte";
+  import {
+    AXES,
+    AXIS_GAIN_MIN,
+    AXIS_GAIN_MAX,
+    travelReach,
+  } from "./surfaces.js";
 
+  // Throws are set with the radio in SETUP mode, so full stick is exactly
+  // what the pilot's sticks and endpoints give, with no gyro. No overrides
+  // here: in SETUP mode the FC replaces the stabilized inputs with the stick
+  // anyway (flight/mixer.c), and Axis Gain still scales them.
   const wiz = getContext("setupWizard");
 
-  // Full stick in the direction named on the button; signs as in the
-  // Direction step (pitch - is stick back, yaw - is yaw right).
-  const FULL = { roll: 1, pitch: -1, yaw: -1 };
-
-  let target = $state({ roll: null, pitch: null, yaw: null });
-  let measured = $state({ roll: null, pitch: null, yaw: null });
-  let active = $state(null);
-
   let axes = $derived(
-    AXES.filter((a) => wiz.surfaces.some((s) => s.axes[a.key])).map(
-      (a) => a.key,
+    AXES.map((a) => a.key).filter((axis) =>
+      wiz.surfaces.some((s) => s.axes[axis]),
     ),
   );
 
-  function hold(axis) {
-    active = axis;
-    wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0, [axis]: FULL[axis] });
+  function surfacesOn(axis) {
+    return wiz.surfaces.filter((s) => s.axes[axis]);
   }
 
-  function apply(axis) {
-    const next = gainForThrow(
-      wiz.axisGainPercent(axis),
-      measured[axis],
-      target[axis],
+  function nudge(axis, delta) {
+    const next = Math.min(
+      AXIS_GAIN_MAX,
+      Math.max(AXIS_GAIN_MIN, wiz.axisGainPercent(axis) + delta),
     );
     wiz.setAxisGainPercent(axis, next);
-    measured[axis] = null;
+  }
+
+  // Surfaces on this axis that hit a limit with this axis alone at full
+  // stick, so the pilot sees it while setting the throw rather than later.
+  function limited(axis) {
+    return surfacesOn(axis).filter((surface) => {
+      const alone = { ...surface, axes: { [axis]: surface.axes[axis] } };
+      const reach = travelReach(
+        alone,
+        FC.SERVO_CONFIG[surface.servo],
+        wiz.axisGains,
+      );
+      return reach.pos.fraction > 1 || reach.neg.fraction > 1;
+    });
   }
 </script>
 
 <p>{$i18n.t("setupWizardThrowsIntro")}</p>
 
-<table class="rows">
-  <thead>
-    <tr>
-      <th>{$i18n.t("setupWizardThrowsAxis")}</th>
-      <th>{$i18n.t("setupWizardThrowsTarget")}</th>
-      <th></th>
-      <th>{$i18n.t("setupWizardThrowsMeasured")}</th>
-      <th>{$i18n.t("setupWizardThrowsGain")}</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each axes as axis (axis)}
-      <tr class={active === axis && "active"}>
-        <td class="name">{$i18n.t(`setupWizardAxis_${axis}`)}</td>
-        <td>
-          <input
-            id={`throw-target-${axis}`}
-            type="number"
-            min="1"
-            max="90"
-            step="1"
-            bind:value={target[axis]}
-          /> °
-        </td>
-        <td>
-          <button class="btn" onclick={() => hold(axis)}>
-            {$i18n.t(`setupWizardThrowsHold_${axis}`)}
-          </button>
-        </td>
-        <td>
-          <input
-            id={`throw-measured-${axis}`}
-            type="number"
-            min="0"
-            max="90"
-            step="0.5"
-            disabled={active !== axis}
-            bind:value={measured[axis]}
-          /> °
-        </td>
-        <td class="gain">{wiz.axisGainPercent(axis)}%</td>
-        <td>
-          <button
-            class="btn"
-            disabled={active !== axis ||
-              !(measured[axis] > 0) ||
-              !(target[axis] > 0)}
-            onclick={() => apply(axis)}
-          >
-            {$i18n.t("setupWizardApply")}
-          </button>
-        </td>
-      </tr>
+<SetupModeStatus />
+
+<div class="how">
+  <strong>{$i18n.t("setupWizardThrowsHowTitle")}</strong>
+  <ol>
+    {#each [1, 2, 3, 4] as n (n)}
+      <li>
+        <span class="n">{n}.</span>
+        <span>{$i18n.t(`setupWizardThrowsHow_${n}`)}</span>
+      </li>
     {/each}
-  </tbody>
-</table>
+  </ol>
+</div>
+
+{#each axes as axis (axis)}
+  {@const atLimit = limited(axis)}
+  <section class="axis">
+    <strong>{$i18n.t(`setupWizardAxis_${axis}`)}</strong>
+
+    <div class="row">
+      <span class="label">{$i18n.t("setupWizardThrowsThrow")}</span>
+      {#each [-5, -1] as delta (delta)}
+        <button class="btn" onclick={() => nudge(axis, delta)}>{delta}</button>
+      {/each}
+      <span class="amount">{wiz.axisGainPercent(axis)}%</span>
+      {#each [1, 5] as delta (delta)}
+        <button class="btn" onclick={() => nudge(axis, delta)}>+{delta}</button>
+      {/each}
+    </div>
+
+    <table class="surfaces">
+      <tbody>
+        {#each surfacesOn(axis) as surface (surface.servo)}
+          <tr>
+            <td class="name">{wiz.surfaceLabel(surface)}</td>
+            <td><LivePulse servo={surface.servo} /></td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+
+    {#if atLimit.length > 0}
+      <span class="warn">
+        {$i18n.t("setupWizardThrowsAtLimit", {
+          1: atLimit.map((s) => wiz.surfaceLabel(s)).join(", "),
+        })}
+      </span>
+    {/if}
+  </section>
+{/each}
 
 <p class="muted">{$i18n.t("setupWizardThrowsRepeat")}</p>
 
 <style lang="scss">
   .btn {
     @extend %button;
+    min-width: 2.6em;
   }
 
   p {
@@ -109,39 +118,67 @@
     max-width: 70ch;
   }
 
-  .rows {
-    border-collapse: collapse;
+  .how {
+    max-width: 70ch;
 
-    th {
-      text-align: left;
+    ol {
+      list-style: none;
+      margin: 4px 0 0;
+      padding-left: 4px;
+    }
+
+    li {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .n {
+      flex: 0 0 1.2em;
       font-weight: 600;
-      font-size: 0.9em;
-      color: var(--color-text-soft);
-      padding: 0 12px 4px 0;
-    }
-
-    td {
-      padding: 6px 12px 6px 0;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
-
-    tr.active td {
-      background-color: var(--color-surface);
     }
   }
 
-  input {
-    width: 5em;
+  .axis {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    max-width: 720px;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .label {
+    min-width: 6em;
+    color: var(--color-text-soft);
+  }
+
+  .amount {
+    min-width: 4em;
+    text-align: center;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .surfaces td {
+    padding: 2px 12px 2px 0;
   }
 
   .name {
-    font-weight: 600;
-    padding-left: 8px;
+    white-space: nowrap;
   }
 
-  .gain {
-    font-variant-numeric: tabular-nums;
+  .warn {
+    color: var(--color-yellow-500);
+    font-size: 0.9em;
   }
 
   .muted {
