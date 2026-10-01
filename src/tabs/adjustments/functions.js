@@ -153,7 +153,7 @@ export function getFunctions() {
     ];
 }
 
-// Curates how the "Function" dropdown presents the FUNCTIONS entries: grouped
+// Curates how the function picker presents the FUNCTIONS entries: grouped
 // by what they tune, rather than flat firmware-enum order. This is purely a
 // display concern - `ids` reference FUNCTIONS[id] and each id's <option
 // value> stays equal to that id, so FUNCTIONS itself is never reordered.
@@ -161,7 +161,7 @@ export function getFunctions() {
 // terms - e.g. all P-gains, then all I-gains - stay together.
 //
 // A group is only rendered if at least one of its ids has `hide` falsy
-// (see AdjustmentRow.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
+// (see Adjustments.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
 // heli-only concepts (see the FUNCTIONS comment above) whose every id is
 // permanently hidden, so they disappear entirely rather than showing an
 // empty heading.

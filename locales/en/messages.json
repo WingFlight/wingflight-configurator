@@ -3041,6 +3041,15 @@
     "adjustmentsSlotCount": {
         "message": "{{used}} / {{total}} configured"
     },
+    "adjustmentsPickFunctionTitle": {
+        "message": "Choose a function"
+    },
+    "adjustmentsChangeFunction": {
+        "message": "Change function"
+    },
+    "adjustmentsFunctionInUse": {
+        "message": "in use"
+    },
     "adjustmentsAddButton": {
         "message": "Add Adjustment"
     },

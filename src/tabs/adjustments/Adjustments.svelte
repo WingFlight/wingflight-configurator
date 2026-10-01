@@ -8,14 +8,18 @@
   import { getTabHelpURL } from "@/js/help";
 
   import Page from "@/components/Page.svelte";
+  import PickerDialog from "@/components/PickerDialog.svelte";
 
   import AdjustmentRow from "./AdjustmentRow.svelte";
+  import { getFunctions, FUNCTION_GROUPS } from "./functions.js";
   import {
     ALWAYS_ON_CH,
     PRIMARY_CHANNEL_COUNT,
     resetToOff,
     spreadCollapsedRanges,
   } from "./util.js";
+
+  const FUNCTIONS = getFunctions();
 
   let loading = $state(true);
   let initialState = $state(null);
@@ -103,12 +107,59 @@
     }
   }
 
+  // The function comes first: "Add Adjustment" and a card's title both open
+  // this picker, and pickerSlot says which slot the choice goes to (null
+  // for a new one).
+  let functionPicker;
+  let pickerSlot = null;
+
+  let functionGroups = $derived(
+    FUNCTION_GROUPS.map((group) => ({
+      label: $i18n.t(group.label),
+      items: group.ids
+        .filter((id) => !FUNCTIONS[id].hide)
+        .map((id) => ({
+          value: id,
+          label: $i18n.t("adjustmentsFunction" + FUNCTIONS[id].name),
+          badge: visibleSlots.some(
+            (i) => FC.ADJUSTMENT_RANGES[i].adjFunction === id,
+          )
+            ? $i18n.t("adjustmentsFunctionInUse")
+            : "",
+        })),
+    })).filter((group) => group.items.length > 0),
+  );
+
   function addAdjustment() {
     if (hiddenSlots.length === 0) {
       return;
     }
+    pickerSlot = null;
+    functionPicker.open();
+  }
+
+  function changeFunction(index) {
+    pickerSlot = index;
+    functionPicker.open(FC.ADJUSTMENT_RANGES[index].adjFunction);
+  }
+
+  function setFunction(adjRange, id) {
+    const cfg = FUNCTIONS[id];
+    adjRange.adjFunction = id;
+    adjRange.adjMin = cfg.min;
+    adjRange.adjMax = cfg.max;
+  }
+
+  function onPickFunction(id) {
+    if (pickerSlot !== null) {
+      setFunction(FC.ADJUSTMENT_RANGES[pickerSlot], id);
+      return;
+    }
     const next = Math.min(...hiddenSlots);
-    spreadCollapsedRanges(FC.ADJUSTMENT_RANGES[next]);
+    const adjRange = FC.ADJUSTMENT_RANGES[next];
+    spreadCollapsedRanges(adjRange);
+    setFunction(adjRange, id);
+    adjRange.adjStep = 0; // start as Mapped
     visibleSlots = [...visibleSlots, next].sort((a, b) => a - b);
   }
 
@@ -228,17 +279,27 @@
     </div>
   {:else}
     <div class="rows">
-      {#each visibleSlots as index (index + ":" + revertGeneration)}
+      {#each visibleSlots as index (index + ":" + revertGeneration + ":" + FC.ADJUSTMENT_RANGES[index].adjFunction)}
         <AdjustmentRow
           {index}
           {enaChannelOptions}
           {adjChannelOptions}
+          onChangeFunction={() => changeFunction(index)}
           onRemove={() => removeAdjustment(index)}
         />
       {/each}
     </div>
   {/if}
 </Page>
+
+<PickerDialog
+  bind:this={functionPicker}
+  title={$i18n.t("adjustmentsPickFunctionTitle")}
+  groups={functionGroups}
+  searchPlaceholder={$i18n.t("adjustmentsFunctionSearch")}
+  noMatchesText={$i18n.t("adjustmentsFunctionNoMatches")}
+  onSelect={onPickFunction}
+/>
 
 <style lang="scss">
   h1 {
