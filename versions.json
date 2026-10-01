@@ -143,6 +143,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-poptop",
+      "path": "./feature-poptop/"
+    },
+    {
+      "type": "branch",
       "name": "feature-pr-preview-deploys",
       "path": "./feature-pr-preview-deploys/"
     },
