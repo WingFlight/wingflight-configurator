@@ -10,7 +10,7 @@ export const UNUSED_MODES = ['RESCUE', 'GOVERNOR SUSPEND', 'GOVERNOR FALLBACK', 
 
 // Lower-level/diagnostic boxes that are only worth showing to users who've
 // opted into Expert Mode - kept out of the way of a normal setup.
-export const EXPERT_MODES = ['BLACKBOX', 'BLACKBOX ERASE', 'BEEPER', 'BEEPER MUTE', 'FAILSAFE', 'GPS BEEP SATELLITE COUNT', 'PASSTHROUGH', 'PREARM'];
+export const EXPERT_MODES = ['BLACKBOX', 'BLACKBOX ERASE', 'BEEPER', 'BEEPER MUTE', 'FAILSAFE', 'GPS BEEP SATELLITE COUNT', 'PREARM'];
 
 export function getModeDisplayName(modeName) {
     return i18n.existsMessage('mode ' + modeName) ?
@@ -27,7 +27,7 @@ export function getModeDescription(modeName) {
 // isn't named here falls into a trailing "other" group so it stays reachable.
 export const MODE_GROUPS = [
     { key: 'Arming', modes: ['ARM', 'PREARM', 'FAILSAFE'] },
-    { key: 'Flight', modes: ['ANGLE', 'ATT HOLD', 'MANUAL', 'TRADITIONAL', 'PASSTHROUGH', 'AUTO TRIM', 'TRAINER'] },
+    { key: 'Flight', modes: ['ANGLE', 'ATT HOLD', 'GYRO OFF', 'MANUAL', 'TRADITIONAL', 'SETUP', 'PASSTHROUGH', 'AUTO TRIM', 'TRAINER'] },
     { key: 'ThrustVector', modes: ['THRUST VECTOR', 'THRUST VECTOR ATTITUDE HOLD'] },
     { key: 'Gps', modes: ['GPS LOITER', 'GPS RTH', 'GPS BEEP SATELLITE COUNT'] },
     { key: 'Power', modes: ['GOVERNOR'] },
