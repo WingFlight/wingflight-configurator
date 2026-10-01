@@ -2,7 +2,7 @@
   import { untrack } from "svelte";
 
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
-  import { getExpertSection } from "@/js/expert.svelte.js";
+  import { getExpertSection, getExpertSubsection } from "@/js/expert.svelte.js";
 
   // Settings only experts need. They are hidden while expert mode is off,
   // unless `changed` is true (the FC holds a non-default value the pilot
@@ -13,6 +13,7 @@
   let { children, changed = false, counted = true } = $props();
 
   const section = getExpertSection();
+  const subsection = getExpertSubsection();
 
   // Once shown because of a changed value, stay shown so the field doesn't
   // vanish while it is being edited back to its default.
@@ -24,6 +25,21 @@
   let basicHidden = $derived(!CONFIGURATOR.expertMode && !changed && !keep);
 
   $effect(() => {
+    if (subsection && counted) {
+      untrack(() => subsection.items++);
+      return () => untrack(() => subsection.items--);
+    }
+  });
+
+  let hiddenNow = $derived(basicHidden && !section?.revealed);
+  $effect(() => {
+    if (subsection && counted && hiddenNow) {
+      untrack(() => subsection.hidden++);
+      return () => untrack(() => subsection.hidden--);
+    }
+  });
+
+  $effect(() => {
     if (section && counted && basicHidden) {
       untrack(() => section.hidden++);
       return () => untrack(() => section.hidden--);
@@ -31,6 +47,6 @@
   });
 </script>
 
-{#if !basicHidden || section?.revealed}
+{#if !hiddenNow}
   {@render children?.()}
 {/if}

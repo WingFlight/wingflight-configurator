@@ -1,9 +1,11 @@
 <script>
+  import { untrack } from "svelte";
   import { slide } from "svelte/transition";
 
   import { i18n } from "@/js/i18n.js";
   import Expert from "@/components/Expert.svelte";
   import HoverTooltip from "@/components/HoverTooltip.svelte";
+  import { getExpertSubsection } from "@/js/expert.svelte.js";
 
   // expert: hide the field in basic mode, see Expert.svelte. changed: the
   // value differs from the firmware default, so show it anyway.
@@ -16,6 +18,17 @@
     expert = false,
     changed = false,
   } = $props();
+
+  // A plain field counts towards its SubSection's items (an expert one is
+  // counted by its <Expert>), so the SubSection knows it has something
+  // showing.
+  const subsection = getExpertSubsection();
+  $effect(() => {
+    if (subsection && !expert) {
+      untrack(() => subsection.items++);
+      return () => untrack(() => subsection.items--);
+    }
+  });
 
   let width = $state(0);
   let mobile = $derived(width <= 480);
