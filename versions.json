@@ -153,6 +153,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-setup-wizard",
+      "path": "./feature-setup-wizard/"
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
