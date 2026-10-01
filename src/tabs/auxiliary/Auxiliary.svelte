@@ -1,7 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
 
-  import * as config from "@/js/config.js";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
@@ -10,13 +9,17 @@
   import {
     UNUSED_MODES,
     EXPERT_MODES,
+    MODE_GROUPS,
+    MODE_GROUP_OTHER,
+    getModeDescription,
     getModeDisplayName,
+    getModeOrder,
   } from "@/js/FlightMode.js";
 
   import Page from "@/components/Page.svelte";
-  import Switch from "@/components/Switch.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
 
+  import AddModeDialog from "./AddModeDialog.svelte";
   import ModeCard from "./ModeCard.svelte";
 
   const PRIMARY_CHANNEL_COUNT = 4;
@@ -25,20 +28,20 @@
   let dirty = $state(false);
   let showToolbar = $derived(!loading && dirty);
 
-  let hideUnused = $state(!!config.get("hideUnusedModes"));
-  $effect(() => {
-    config.set({ hideUnusedModes: hideUnused });
-  });
-
   let entries = $state({});
   let initialEntries;
+  // Modes listed on the page: ARM, every mode with a range or link, and
+  // any mode picked from "Add mode" this session. Everything else lives in
+  // the picker, so the page only grows with what's actually configured.
+  let shownModes = $state([]);
+  let initialShownModes;
   let previousRcChannels = null;
 
   let rcPollerInterval;
   let statusPollerInterval;
 
   // ARM is always the first mode reported by the FC; keep it pinned at the
-  // top of the list and alphabetize the rest by their display name. Modes
+  // top of the list and order the rest by MODE_GROUPS, then name. Modes
   // that are heli-specific/unused, or expert-only while not in expert mode,
   // are dropped from the list entirely -- and (matching legacy) from what
   // gets saved, since only modes represented here are written back.
@@ -51,14 +54,45 @@
       indices.push(i);
     }
     const armIndex = indices.shift();
-    indices.sort((a, b) =>
-      getModeDisplayName(FC.AUX_CONFIG[a]).localeCompare(
-        getModeDisplayName(FC.AUX_CONFIG[b]),
-      ),
-    );
+    indices.sort((a, b) => {
+      const oa = getModeOrder(FC.AUX_CONFIG[a]);
+      const ob = getModeOrder(FC.AUX_CONFIG[b]);
+      return (
+        oa.group - ob.group ||
+        oa.index - ob.index ||
+        getModeDisplayName(FC.AUX_CONFIG[a]).localeCompare(
+          getModeDisplayName(FC.AUX_CONFIG[b]),
+        )
+      );
+    });
     if (armIndex !== undefined) indices.unshift(armIndex);
     return indices;
   });
+
+  let visibleIndices = $derived(
+    modeIndices.filter((i) => i === modeIndices[0] || shownModes.includes(i)),
+  );
+
+  // Modes not on the page yet, bucketed by MODE_GROUPS for the add dialog.
+  // modeIndices is already in group order, so buckets fill in order.
+  let addModeGroups = $derived.by(() => {
+    const groups = [];
+    for (const i of modeIndices) {
+      if (visibleIndices.includes(i)) continue;
+      const modeName = FC.AUX_CONFIG[i];
+      const key = MODE_GROUPS[getModeOrder(modeName).group]?.key;
+      const label = $i18n.t(`auxiliaryGroup${key ?? MODE_GROUP_OTHER}`);
+      if (groups.at(-1)?.label !== label) groups.push({ label, modes: [] });
+      groups.at(-1).modes.push({
+        value: i,
+        label: getModeDisplayName(modeName),
+        description: getModeDescription(modeName),
+      });
+    }
+    return groups;
+  });
+
+  let addModeDialog;
 
   let auxChannelCount = $derived(
     Math.max(0, FC.RC.active_channels - PRIMARY_CHANNEL_COUNT),
@@ -192,7 +226,9 @@
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
 
     entries = buildEntries();
+    shownModes = modeIndices.filter((i) => entries[i].length > 0);
     initialEntries = structuredClone($state.snapshot(entries));
+    initialShownModes = [...shownModes];
     loading = false;
 
     rcPollerInterval = setInterval(async () => {
@@ -227,6 +263,17 @@
 
   function addLink(modeIndex) {
     entries[modeIndex].push({ type: "link", logic: 0, linkedTo: 0 });
+    dirty = true;
+  }
+
+  function addMode(modeIndex) {
+    if (!shownModes.includes(modeIndex)) shownModes.push(modeIndex);
+    addRange(modeIndex);
+  }
+
+  function removeMode(modeIndex) {
+    entries[modeIndex] = [];
+    shownModes = shownModes.filter((i) => i !== modeIndex);
     dirty = true;
   }
 
@@ -284,11 +331,13 @@
     GUI.log($i18n.t("eepromSaved"));
 
     initialEntries = structuredClone($state.snapshot(entries));
+    initialShownModes = [...shownModes];
     dirty = false;
   }
 
   export async function onRevert() {
     entries = structuredClone(initialEntries);
+    shownModes = [...initialShownModes];
     dirty = false;
   }
 
@@ -308,10 +357,14 @@
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html $i18n.t("auxiliaryHelp")}
   </HelpIcon>
-  <label class="toggle-unused">
-    <Switch bind:checked={hideUnused} />
-    {$i18n.t("auxiliaryToggleUnused")}
-  </label>
+  <button
+    class="btn add-mode"
+    disabled={addModeGroups.length === 0}
+    onclick={() => addModeDialog.open()}
+  >
+    <span class="fas fa-plus"></span>
+    {$i18n.t("auxiliaryAddMode")}
+  </button>
   <button class="btn help-btn" onclick={onClickHelp}>
     {$i18n.t("buttonHelp")}
   </button>
@@ -323,14 +376,11 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  {#each modeIndices as modeIndex (modeIndex)}
+  {#each visibleIndices as modeIndex (modeIndex)}
     <ModeCard
       modeId={FC.AUX_CONFIG_IDS[modeIndex]}
       modeName={FC.AUX_CONFIG[modeIndex]}
       items={entries[modeIndex] ?? []}
-      hidden={hideUnused &&
-        modeIndices.some((i) => entries[i]?.length > 0) &&
-        (entries[modeIndex]?.length ?? 0) === 0}
       isOn={isModeOn(modeIndex)}
       {channelOptions}
       {logicOptions}
@@ -338,10 +388,19 @@
       onAddRange={() => addRange(modeIndex)}
       onAddLink={() => addLink(modeIndex)}
       onDeleteItem={(item) => deleteItem(modeIndex, item)}
+      onRemove={modeIndex === modeIndices[0]
+        ? null
+        : () => removeMode(modeIndex)}
       onEdit={markDirty}
     />
   {/each}
 </Page>
+
+<AddModeDialog
+  bind:this={addModeDialog}
+  groups={addModeGroups}
+  onSelect={addMode}
+/>
 
 <style lang="scss">
   h1 {
@@ -361,10 +420,10 @@
     min-width: 60px;
   }
 
-  .toggle-unused {
+  .add-mode {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
+    gap: 6px;
+    padding: 4px 10px;
   }
 </style>
