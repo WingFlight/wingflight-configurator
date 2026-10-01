@@ -2908,6 +2908,9 @@
     "auxiliaryAddModeNoMatches": {
         "message": "No matching modes"
     },
+    "auxiliaryGroupLive": {
+        "message": "A mode in this group is active"
+    },
     "auxiliaryRemoveMode": {
         "message": "Remove mode"
     },
@@ -3040,6 +3043,12 @@
     },
     "adjustmentsSlotCount": {
         "message": "{{used}} / {{total}} configured"
+    },
+    "adjustmentsGroupOther": {
+        "message": "Other"
+    },
+    "adjustmentsGroupLive": {
+        "message": "An adjustment in this group is enabled"
     },
     "adjustmentsPickFunctionTitle": {
         "message": "Choose a function"
