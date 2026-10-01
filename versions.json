@@ -118,6 +118,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-gps-arm-without-fix",
+      "path": "./feature-gps-arm-without-fix/"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
