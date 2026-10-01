@@ -549,6 +549,22 @@
             options={smartFuelSourceOptions}
           />
         </Field>
+        <Field
+          id="power-smartfuel-alert"
+          label="powerSmartFuelAlertPercent"
+          unit="%"
+        >
+          {#snippet tooltip()}
+            <Tooltip help="powerSmartFuelAlertPercentHelp" />
+          {/snippet}
+          <NumberInput
+            id="power-smartfuel-alert"
+            bind:value={FC.BATTERY_CONFIG.mahWarningPercentage}
+            min={0}
+            max={60}
+            step={1}
+          />
+        </Field>
         {#if smartFuelTuningEnabled}
           <Field
             id="power-smartfuel-vdrop"
