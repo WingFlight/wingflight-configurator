@@ -131,6 +131,8 @@ export function getDebugModes() {
     "UNUSED_79",
     "ATTHOLD",
     "TVHOLD",
+    "GAIN_ATTEN",
+    "SNAP_RELAX",
   ];
 }
 

@@ -76,6 +76,65 @@
     </Field>
   </SubSection>
 
+  {#if FC.PID_PROFILE.hasSnapRelax}
+    <SubSection label="profilesSnapRelaxGroup">
+      <Field
+        id="snap-relax-strength"
+        label="profilesSnapRelaxStrength"
+        unit="%"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesSnapRelaxStrengthHelp")}
+        {/snippet}
+        <NumberInput
+          id="snap-relax-strength"
+          min="0"
+          max="100"
+          bind:value={FC.PID_PROFILE.snapRelaxStrength}
+        />
+      </Field>
+      <Field
+        id="snap-relax-threshold"
+        label="profilesSnapRelaxThreshold"
+        unit="%"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesSnapRelaxThresholdHelp")}
+        {/snippet}
+        <NumberInput
+          id="snap-relax-threshold"
+          min="20"
+          max="100"
+          bind:value={FC.PID_PROFILE.snapRelaxThreshold}
+        />
+      </Field>
+      <Field id="snap-relax-window" label="profilesSnapRelaxWindow" unit="ms">
+        {#snippet tooltip()}
+          {$i18n.t("profilesSnapRelaxWindowHelp")}
+        {/snippet}
+        <NumberInput
+          id="snap-relax-window"
+          min="0"
+          max="1000"
+          step="10"
+          bind:value={FC.PID_PROFILE.snapRelaxWindow}
+        />
+      </Field>
+      <Field id="snap-relax-hold" label="profilesSnapRelaxHold" unit="ms">
+        {#snippet tooltip()}
+          {$i18n.t("profilesSnapRelaxHoldHelp")}
+        {/snippet}
+        <NumberInput
+          id="snap-relax-hold"
+          min="0"
+          max="1000"
+          step="10"
+          bind:value={FC.PID_PROFILE.snapRelaxHold}
+        />
+      </Field>
+    </SubSection>
+  {/if}
+
   <SubSection label="profilesItermRelaxLevelGroup">
     <Field id="iterm-relax-level-roll" label="profilesItermRelaxLevelRoll">
       {#snippet tooltip()}

@@ -6373,6 +6373,33 @@
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
     },
+    "profilesSnapRelaxGroup": {
+        "message": "Snap relax"
+    },
+    "profilesSnapRelaxStrength": {
+        "message": "Strength"
+    },
+    "profilesSnapRelaxStrengthHelp": {
+        "message": "How much roll and pitch feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation, and yaw, are not touched. 0 turns it off"
+    },
+    "profilesSnapRelaxThreshold": {
+        "message": "Stick threshold"
+    },
+    "profilesSnapRelaxThresholdHelp": {
+        "message": "Stick deflection that roll, pitch and yaw must all reach to count as a snap"
+    },
+    "profilesSnapRelaxWindow": {
+        "message": "Entry window"
+    },
+    "profilesSnapRelaxWindowHelp": {
+        "message": "All three sticks must pass the threshold within this time of each other. A slower build-up of the same inputs, such as a rolling harrier, does not count as a snap"
+    },
+    "profilesSnapRelaxHold": {
+        "message": "Fade-out"
+    },
+    "profilesSnapRelaxHoldHelp": {
+        "message": "Time over which full feedback returns after any of the three sticks drops below the threshold. Reversing the stick against the snap brings full feedback back at once"
+    },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
     },
