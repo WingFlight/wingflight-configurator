@@ -33,6 +33,7 @@ export const GuiControl = function () {
     this.defaultAllowedFCTabsWhenConnected = [
         'status',
         'setup',
+        'setup_wizard',
         'failsafe',
         'power',
         'adjustments',

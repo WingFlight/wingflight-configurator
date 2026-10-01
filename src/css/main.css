@@ -1678,10 +1678,10 @@ li.active .ic_backup {
     background-image: url(/images/icons/cf_icon_backup_white.svg);
 }
 
-.ic_wizzard {
+.ic_wizard {
     background-image: url(/images/icons/cf_icon_wizard_grey.svg);
 }
-.ic_wizzard:hover {
+.ic_wizard:hover {
     background-image: url(/images/icons/cf_icon_wizard_white.svg);
 }
 

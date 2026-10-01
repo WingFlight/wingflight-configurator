@@ -430,6 +430,9 @@
     "tabSetup": {
         "message": "Setup"
     },
+    "tabSetupWizard": {
+        "message": "Setup Wizard"
+    },
     "tabConfiguration": {
         "message": "Configuration"
     },
@@ -8166,5 +8169,407 @@
     },
     "adjustmentsFunctionGovRPM": {
         "message": "Governor RPM"
+    },
+    "setupWizardStep_sensors": {
+        "message": "Sensors and level"
+    },
+    "setupWizardStep_airframe": {
+        "message": "Airframe"
+    },
+    "setupWizardStep_servoType": {
+        "message": "Servo type"
+    },
+    "setupWizardStep_centre": {
+        "message": "Center"
+    },
+    "setupWizardStep_direction": {
+        "message": "Direction"
+    },
+    "setupWizardStep_limits": {
+        "message": "Binding limits"
+    },
+    "setupWizardStep_throws": {
+        "message": "Throws"
+    },
+    "setupWizardStep_upDown": {
+        "message": "Up/down difference"
+    },
+    "setupWizardStep_travel": {
+        "message": "Travel check"
+    },
+    "setupWizardStep_gyro": {
+        "message": "Gyro direction"
+    },
+    "setupWizardStep_modes": {
+        "message": "Mode switches"
+    },
+    "setupWizardStep_failsafe": {
+        "message": "Failsafe"
+    },
+    "setupWizardStep_finish": {
+        "message": "Rates, tune and backup"
+    },
+    "setupWizardStepCounter": {
+        "message": "Step $1 of $2"
+    },
+    "setupWizardBack": {
+        "message": "Back"
+    },
+    "setupWizardNext": {
+        "message": "Next"
+    },
+    "setupWizardSaveNext": {
+        "message": "Save and continue"
+    },
+    "setupWizardUnsaved": {
+        "message": "Unsaved changes"
+    },
+    "setupWizardApply": {
+        "message": "Apply"
+    },
+    "setupWizardDone": {
+        "message": "Done"
+    },
+    "setupWizardYes": {
+        "message": "Yes"
+    },
+    "setupWizardNo": {
+        "message": "No"
+    },
+    "setupWizardIdentify": {
+        "message": "Identify"
+    },
+    "setupWizardArmedWarning": {
+        "message": "The model is armed. The wizard can only move the surfaces while it is disarmed."
+    },
+    "setupWizardNoServos": {
+        "message": "No PWM servos found. Check that the board has servo outputs."
+    },
+    "setupWizardRebootNeeded": {
+        "message": "These settings take effect after a reboot. Open the Setup Wizard again afterwards to carry on from the next step."
+    },
+    "setupWizardSurfaceLabel": {
+        "message": "Servo $1 · $2"
+    },
+    "setupWizardSurface_aileron": {
+        "message": "Aileron"
+    },
+    "setupWizardSurface_elevator": {
+        "message": "Elevator"
+    },
+    "setupWizardSurface_rudder": {
+        "message": "Rudder"
+    },
+    "setupWizardSurface_elevon": {
+        "message": "Elevon"
+    },
+    "setupWizardSurface_ruddervator": {
+        "message": "V-tail"
+    },
+    "setupWizardSurface_mixed": {
+        "message": "Mixed surface"
+    },
+    "setupWizardAxis_roll": {
+        "message": "Roll"
+    },
+    "setupWizardAxis_pitch": {
+        "message": "Pitch"
+    },
+    "setupWizardAxis_yaw": {
+        "message": "Yaw"
+    },
+    "setupWizardSensorsIntro": {
+        "message": "The flight controller needs to know how it is mounted and which way is level. Power on with the model still: the gyro calibrates itself at power-up."
+    },
+    "setupWizardSensorsNoAcc": {
+        "message": "No accelerometer found, so the board orientation and level can't be set here."
+    },
+    "setupWizardSensorsTailWheelQuestion": {
+        "message": "Does the model sit on a tail wheel or tail skid?"
+    },
+    "setupWizardSensorsTailWheelNote": {
+        "message": "Prop the tail up until the fuselage is level, as it is in flight, for the accelerometer calibration and the level step. Resting on its tail wheel the model is 10–15° nose-up, and ANGLE, Attitude Hold and failsafe would all level to that."
+    },
+    "setupWizardSensorsAccTitle": {
+        "message": "Calibrate the accelerometer"
+    },
+    "setupWizardSensorsAccText": {
+        "message": "Hold the model level and still."
+    },
+    "setupWizardSensorsAlignTitle": {
+        "message": "Find the board orientation"
+    },
+    "setupWizardSensorsAlignText": {
+        "message": "Place the model flat, press the button, then lift the tail by at least 20°."
+    },
+    "setupWizardSensorsAlignValues": {
+        "message": "Now: roll $1°, pitch $2°, yaw $3°"
+    },
+    "setupWizardSensorsLevelTitle": {
+        "message": "Set level"
+    },
+    "setupWizardSensorsLevelText": {
+        "message": "Hold the model in its flying attitude and keep it still while it measures."
+    },
+    "setupWizardSensorsLevelValues": {
+        "message": "Mounting trim now: roll $1°, pitch $2°"
+    },
+    "setupWizardAirframeIntro": {
+        "message": "Choose the model type and its options. This decides which servo drives which surface."
+    },
+    "setupWizardAirframeSurfaces": {
+        "message": "Control surfaces found:"
+    },
+    "setupWizardAirframeNoSurfaces": {
+        "message": "None yet. Choose a model type."
+    },
+    "setupWizardAirframeCustomNote": {
+        "message": "The wizard sets up PWM servos 1–8 driven by roll, pitch and yaw. Set up bus servos and flaps on the Servos tab."
+    },
+    "setupWizardServoTypeIntro": {
+        "message": "What kind of servos drive the control surfaces?"
+    },
+    "setupWizardServoType_analog": {
+        "message": "Analog"
+    },
+    "setupWizardServoTypeHelp_analog": {
+        "message": "50 Hz. Works with any standard servo."
+    },
+    "setupWizardServoType_digital": {
+        "message": "Digital"
+    },
+    "setupWizardServoTypeHelp_digital": {
+        "message": "333 Hz. Check that your servos support it."
+    },
+    "setupWizardServoType_narrow": {
+        "message": "Narrow-band (760 µs)"
+    },
+    "setupWizardServoTypeHelp_narrow": {
+        "message": "560 Hz. Only for servos made for a 760 µs center."
+    },
+    "setupWizardServoTypeAllSurfaces": {
+        "message": "Applies to every control-surface servo. Switching between normal and narrow-band also resets that servo's center, limits and scale."
+    },
+    "setupWizardCentreIntro": {
+        "message": "The surfaces are held at center. First set each horn and linkage so the surface is close to neutral, then fine-tune the center here."
+    },
+    "setupWizardCentreFarWarning": {
+        "message": "Far from the servo's normal center. Move the horn instead, or this side loses travel."
+    },
+    "setupWizardDirectionIntro": {
+        "message": "The wizard moves one axis at a time to half stick. Check that each surface moves as described. Identify wiggles one servo so you can see which surface a row is about."
+    },
+    "setupWizardDirectionMove_pitch": {
+        "message": "Stick back"
+    },
+    "setupWizardDirectionExpect_pitch": {
+        "message": "Elevator, elevons and V-tail: trailing edges go up."
+    },
+    "setupWizardDirectionMove_roll": {
+        "message": "Roll right"
+    },
+    "setupWizardDirectionExpect_roll": {
+        "message": "The right aileron or elevon goes up and the left one goes down."
+    },
+    "setupWizardDirectionMove_yaw": {
+        "message": "Yaw right"
+    },
+    "setupWizardDirectionExpect_yaw": {
+        "message": "Rudder and V-tail: trailing edges move to the right, seen from behind."
+    },
+    "setupWizardDirectionCorrect": {
+        "message": "Correct"
+    },
+    "setupWizardDirectionWrong": {
+        "message": "Wrong way"
+    },
+    "setupWizardDirectionReversed": {
+        "message": "Reversed"
+    },
+    "setupWizardDirectionMixedHint": {
+        "message": "This surface also works another axis, so reversing its servo would break that one. If both surfaces are wrong here, invert the axis below. If only one is, change its mix on the Mixer tab."
+    },
+    "setupWizardDirectionAllWrong": {
+        "message": "Every surface on this axis moved the wrong way?"
+    },
+    "setupWizardDirectionInvert_pitch": {
+        "message": "Invert pitch"
+    },
+    "setupWizardDirectionInvert_roll": {
+        "message": "Invert roll"
+    },
+    "setupWizardDirectionInvert_yaw": {
+        "message": "Invert yaw"
+    },
+    "setupWizardLimitsIntro": {
+        "message": "Find how far each servo can move before the surface or linkage binds."
+    },
+    "setupWizardLimitsHardStop": {
+        "message": "These limits are hard stops that protect the servo. Don't use them to set throw: a surface at its limit leaves the stabilizer nothing to work with. Throw is set in a later step."
+    },
+    "setupWizardLimitsStart": {
+        "message": "Find limits"
+    },
+    "setupWizardLimitsValues": {
+        "message": "Min $1 µs, Max $2 µs"
+    },
+    "setupWizardLimitsSetHere": {
+        "message": "Set limit here"
+    },
+    "setupWizardLimitsFinish": {
+        "message": "Done"
+    },
+    "setupWizardLimitsHowTo": {
+        "message": "Move in small steps until the surface binds, back off one step, then press Set limit here. Do both directions, then press Done."
+    },
+    "setupWizardThrowsIntro": {
+        "message": "Enter the throw you want for each axis, from the model's setup guide. Hold full stick, measure one surface on that axis, enter the angle and press Apply. The wizard changes that axis's gain (Mixer tab, Axis Gain) so full stick gives your target. Measure again to check."
+    },
+    "setupWizardThrowsAxis": {
+        "message": "Axis"
+    },
+    "setupWizardThrowsTarget": {
+        "message": "Target"
+    },
+    "setupWizardThrowsMeasured": {
+        "message": "Measured"
+    },
+    "setupWizardThrowsGain": {
+        "message": "Gain"
+    },
+    "setupWizardThrowsHold_roll": {
+        "message": "Hold full right roll"
+    },
+    "setupWizardThrowsHold_pitch": {
+        "message": "Hold full stick back"
+    },
+    "setupWizardThrowsHold_yaw": {
+        "message": "Hold full right yaw"
+    },
+    "setupWizardThrowsRepeat": {
+        "message": "Throw is set per axis, so both ailerons share one setting. Use the next step if the two directions of a surface need different throws."
+    },
+    "setupWizardUpDownIntro": {
+        "message": "Optional. Use this when a surface should move further one way than the other, such as aileron differential, or when the linkage makes it do so. For each direction, hold full stick, measure, and enter the throw you want. The wizard changes that servo's scale for that side (Servos tab)."
+    },
+    "setupWizardUpDownMixedNote": {
+        "message": "This servo works more than one axis, so the change applies to all of them."
+    },
+    "setupWizardUpDownScales": {
+        "message": "Scale −: $1 µs, +: $2 µs"
+    },
+    "setupWizardUpDownWanted": {
+        "message": "Wanted"
+    },
+    "setupWizardUpDown_rollRight": {
+        "message": "Full right roll"
+    },
+    "setupWizardUpDown_rollLeft": {
+        "message": "Full left roll"
+    },
+    "setupWizardUpDown_pitchBack": {
+        "message": "Full stick back"
+    },
+    "setupWizardUpDown_pitchForward": {
+        "message": "Full stick forward"
+    },
+    "setupWizardUpDown_yawRight": {
+        "message": "Full right yaw"
+    },
+    "setupWizardUpDown_yawLeft": {
+        "message": "Full left yaw"
+    },
+    "setupWizardTravelIntro": {
+        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side."
+    },
+    "setupWizardTravelSurface": {
+        "message": "Surface"
+    },
+    "setupWizardTravelNeg": {
+        "message": "− side"
+    },
+    "setupWizardTravelPos": {
+        "message": "+ side"
+    },
+    "setupWizardTravelValue": {
+        "message": "$1% ($2 of $3 µs)"
+    },
+    "setupWizardTravelClipping": {
+        "message": "Some surfaces reach their limit. Lower the throw on the axes that share them in the Throws step, or accept it knowingly: full roll with full pitch on elevons is the usual case."
+    },
+    "setupWizardTravelOk": {
+        "message": "Every surface stays inside its limits."
+    },
+    "setupWizardGyroIntro": {
+        "message": "Overrides are off now, so the stabilizer drives the surfaces. Move the model by hand: the surfaces move only while it is moving, and should push against the movement."
+    },
+    "setupWizardGyroCheck_roll": {
+        "message": "Roll the model so the right wing drops: the right aileron or elevon goes down and the left one goes up."
+    },
+    "setupWizardGyroCheck_pitch": {
+        "message": "Lift the nose: elevator, elevons and V-tail trailing edges go down."
+    },
+    "setupWizardGyroCheck_yaw": {
+        "message": "Swing the nose to the right: the rudder trailing edge moves to the left."
+    },
+    "setupWizardGyroWrong": {
+        "message": "If a surface was right in the Direction step but is wrong here, the board orientation doesn't match how the board is mounted. Go back to step 1 and run the orientation check again. Don't reverse servos to fix this."
+    },
+    "setupWizardModesIntro": {
+        "message": "Put these on switches on the Modes tab. ARM is required; SETUP and GYRO OFF are recommended."
+    },
+    "setupWizardModes_arm": {
+        "message": "ARM"
+    },
+    "setupWizardModesHelp_arm": {
+        "message": "Arms the motor."
+    },
+    "setupWizardModes_setup": {
+        "message": "SETUP"
+    },
+    "setupWizardModesHelp_setup": {
+        "message": "Sticks straight to the surfaces at full travel. Use it to check throws on the bench."
+    },
+    "setupWizardModes_gyroOff": {
+        "message": "GYRO OFF"
+    },
+    "setupWizardModesHelp_gyroOff": {
+        "message": "Stabilization off, with your rates kept. A way out if the stabilizer misbehaves."
+    },
+    "setupWizardModesAssigned": {
+        "message": "On a switch"
+    },
+    "setupWizardModesNotAssigned": {
+        "message": "No switch"
+    },
+    "setupWizardOpenModes": {
+        "message": "Open the Modes tab"
+    },
+    "setupWizardFailsafeIntro": {
+        "message": "Set what happens if the radio link is lost."
+    },
+    "setupWizardFailsafeReceiver": {
+        "message": "Set the receiver's own failsafe to no pulses (or hold), not to fixed stick positions, so the flight controller can tell the link is lost."
+    },
+    "setupWizardFailsafeTest": {
+        "message": "With the propeller off, arm, switch the transmitter off, and check that failsafe starts."
+    },
+    "setupWizardOpenFailsafe": {
+        "message": "Open the Failsafe tab"
+    },
+    "setupWizardFinishIntro": {
+        "message": "The surfaces are set up. What's left is how the model flies."
+    },
+    "setupWizardFinishThrowsTune": {
+        "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
+    },
+    "setupWizardFinishRates": {
+        "message": "Set the roll, pitch and yaw rates you want at full stick."
+    },
+    "setupWizardFinishTune": {
+        "message": "Tune the stabilizer, starting from the defaults."
+    },
+    "setupWizardFinishBackup": {
+        "message": "Save a backup of the finished setup."
     }
 }
