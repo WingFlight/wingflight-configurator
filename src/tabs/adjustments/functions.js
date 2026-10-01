@@ -1,3 +1,5 @@
+import { i18n } from '@/js/localization.js';
+
 // `id` must stay positionally aligned with the firmware's adjustmentFunc_e
 // enum (fc/rc_adjustments.h) - this array is indexed directly by that value
 // (FUNCTIONS[adjRange.adjFunction]), so entries are never reordered or
@@ -153,7 +155,7 @@ export function getFunctions() {
     ];
 }
 
-// Curates how the "Function" dropdown presents the FUNCTIONS entries: grouped
+// Curates how the function picker presents the FUNCTIONS entries: grouped
 // by what they tune, rather than flat firmware-enum order. This is purely a
 // display concern - `ids` reference FUNCTIONS[id] and each id's <option
 // value> stays equal to that id, so FUNCTIONS itself is never reordered.
@@ -161,7 +163,7 @@ export function getFunctions() {
 // terms - e.g. all P-gains, then all I-gains - stay together.
 //
 // A group is only rendered if at least one of its ids has `hide` falsy
-// (see AdjustmentRow.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
+// (see Adjustments.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
 // heli-only concepts (see the FUNCTIONS comment above) whose every id is
 // permanently hidden, so they disappear entirely rather than showing an
 // empty heading.
@@ -185,3 +187,9 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
     { label: 'adjustmentsGroupMixer', ids: [112, 113] },
 ];
+
+// Short help for a function, shown on its picker tile and card header.
+export function getFunctionDescription(name) {
+    return i18n.existsMessage('adjustmentsFunctionHelp' + name) ?
+        i18n.getMessage('adjustmentsFunctionHelp' + name) : '';
+}

@@ -3041,6 +3041,15 @@
     "adjustmentsSlotCount": {
         "message": "{{used}} / {{total}} configured"
     },
+    "adjustmentsPickFunctionTitle": {
+        "message": "Choose a function"
+    },
+    "adjustmentsChangeFunction": {
+        "message": "Change function"
+    },
+    "adjustmentsFunctionInUse": {
+        "message": "in use"
+    },
     "adjustmentsAddButton": {
         "message": "Add Adjustment"
     },
@@ -3067,6 +3076,261 @@
     },
     "adjustmentsRangeScale": {
         "message": "Scale"
+    },
+    "adjustmentsFunctionHelpRateProfile": {
+        "message": "Switches the active rate profile, for example to change stick feel between flights or manoeuvres."
+    },
+    "adjustmentsFunctionHelpPIDProfile": {
+        "message": "Switches the active PID profile, so you can swap between complete tunes in flight."
+    },
+    "adjustmentsFunctionHelpLEDProfile": {
+        "message": "Switches the LED strip profile."
+    },
+    "adjustmentsFunctionHelpBatteryProfile": {
+        "message": "Switches the active battery profile (cell count, capacity and warnings)."
+    },
+    "adjustmentsFunctionHelpTVProfile": {
+        "message": "Switches the active thrust vector profile."
+    },
+    "adjustmentsFunctionHelpAngleLevelGain": {
+        "message": "How strongly Angle mode pulls the model back to level."
+    },
+    "adjustmentsFunctionHelpAcroTrainerGain": {
+        "message": "How strongly Trainer corrects back toward the pitch/bank limit when it's exceeded. Trainer doesn't self-level."
+    },
+    "adjustmentsFunctionHelpAttHoldGain": {
+        "message": "How strongly Attitude Hold returns the model to its held attitude once the sticks are centred."
+    },
+    "adjustmentsFunctionHelpTVHoldGain": {
+        "message": "How strongly TV Attitude Hold returns the thrust vector loop to its held attitude once the sticks are centred."
+    },
+    "adjustmentsFunctionHelpAccTrimPitch": {
+        "message": "Accelerometer pitch trim. Corrects pitch drift in stabilised modes like Angle."
+    },
+    "adjustmentsFunctionHelpAccTrimRoll": {
+        "message": "Accelerometer roll trim. Corrects roll drift in stabilised modes like Angle."
+    },
+    "adjustmentsFunctionHelpYawDynCeilingGain": {
+        "message": "Reduces the yaw stick travel needed for maximum rate while the stick is moving quickly toward its end."
+    },
+    "adjustmentsFunctionHelpYawDynDeadbandGain": {
+        "message": "Widens the yaw stick deadband while the stick is moving quickly back toward centre."
+    },
+    "adjustmentsFunctionHelpYawDynDeadbandFilter": {
+        "message": "Smoothing for the yaw stick speed that drives the dynamic ceiling and deadband (cutoff in 0.1 Hz). Lower reacts more slowly."
+    },
+    "adjustmentsFunctionHelpFlapCompensationGain": {
+        "message": "Scales every mixer rule tagged Flap Compensation. Negative values reverse them all together."
+    },
+    "adjustmentsFunctionHelpDiffThrustYawGain": {
+        "message": "Scales the differential thrust yaw mix, which speeds up one motor and slows the other for extra yaw authority. Negative values reverse it."
+    },
+    "adjustmentsFunctionHelpRollRate": {
+        "message": "The roll Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpRollRCRate": {
+        "message": "The roll RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpRollRCExpo": {
+        "message": "The roll expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpRollP": {
+        "message": "Roll P-gain: how hard the roll axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpRollI": {
+        "message": "Roll I-gain: how firmly the roll axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpRollD": {
+        "message": "Roll D-gain: damps roll movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpRollF": {
+        "message": "Roll feedforward: pushes the roll axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpRollB": {
+        "message": "Roll boost: extra feedforward from how fast the roll stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpRollGyroCutoff": {
+        "message": "Roll PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpRollDtermCutoff": {
+        "message": "Roll D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpRollSetpointBoostGain": {
+        "message": "Boosts roll stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainRoll": {
+        "message": "Scales roll P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimeRoll": {
+        "message": "How long the roll axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackRoll": {
+        "message": "How strongly the roll axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimRoll": {
+        "message": "Live trim in µs for servos on the roll axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainRoll": {
+        "message": "Thrust vector loop: scales roll P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVRollP": {
+        "message": "Thrust vector loop roll P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVRollI": {
+        "message": "Thrust vector loop roll I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVRollD": {
+        "message": "Thrust vector loop roll D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVRollF": {
+        "message": "Thrust vector loop roll feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVRollB": {
+        "message": "Thrust vector loop roll boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimeRoll": {
+        "message": "Thrust vector loop: how long the roll axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackRoll": {
+        "message": "Thrust vector loop: how strongly the roll axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpPitchRate": {
+        "message": "The pitch Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpPitchRCRate": {
+        "message": "The pitch RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpPitchRCExpo": {
+        "message": "The pitch expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpPitchP": {
+        "message": "Pitch P-gain: how hard the pitch axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpPitchI": {
+        "message": "Pitch I-gain: how firmly the pitch axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpPitchD": {
+        "message": "Pitch D-gain: damps pitch movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpPitchF": {
+        "message": "Pitch feedforward: pushes the pitch axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpPitchB": {
+        "message": "Pitch boost: extra feedforward from how fast the pitch stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpPitchGyroCutoff": {
+        "message": "Pitch PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpPitchDtermCutoff": {
+        "message": "Pitch D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpPitchSetpointBoostGain": {
+        "message": "Boosts pitch stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainPitch": {
+        "message": "Scales pitch P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimePitch": {
+        "message": "How long the pitch axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackPitch": {
+        "message": "How strongly the pitch axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimPitch": {
+        "message": "Live trim in µs for servos on the pitch axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainPitch": {
+        "message": "Thrust vector loop: scales pitch P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVPitchP": {
+        "message": "Thrust vector loop pitch P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVPitchI": {
+        "message": "Thrust vector loop pitch I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVPitchD": {
+        "message": "Thrust vector loop pitch D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVPitchF": {
+        "message": "Thrust vector loop pitch feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVPitchB": {
+        "message": "Thrust vector loop pitch boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimePitch": {
+        "message": "Thrust vector loop: how long the pitch axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackPitch": {
+        "message": "Thrust vector loop: how strongly the pitch axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpYawRate": {
+        "message": "The yaw Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpYawRCRate": {
+        "message": "The yaw RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpYawRCExpo": {
+        "message": "The yaw expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpYawP": {
+        "message": "Yaw P-gain: how hard the yaw axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpYawI": {
+        "message": "Yaw I-gain: how firmly the yaw axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpYawD": {
+        "message": "Yaw D-gain: damps yaw movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpYawF": {
+        "message": "Yaw feedforward: pushes the yaw axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpYawB": {
+        "message": "Yaw boost: extra feedforward from how fast the yaw stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpYawGyroCutoff": {
+        "message": "Yaw PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpYawDtermCutoff": {
+        "message": "Yaw D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpYawSetpointBoostGain": {
+        "message": "Boosts yaw stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainYaw": {
+        "message": "Scales yaw P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimeYaw": {
+        "message": "How long the yaw axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackYaw": {
+        "message": "How strongly the yaw axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimYaw": {
+        "message": "Live trim in µs for servos on the yaw axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainYaw": {
+        "message": "Thrust vector loop: scales yaw P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVYawP": {
+        "message": "Thrust vector loop yaw P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVYawI": {
+        "message": "Thrust vector loop yaw I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVYawD": {
+        "message": "Thrust vector loop yaw D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVYawF": {
+        "message": "Thrust vector loop yaw feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVYawB": {
+        "message": "Thrust vector loop yaw boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimeYaw": {
+        "message": "Thrust vector loop: how long the yaw axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackYaw": {
+        "message": "Thrust vector loop: how strongly the yaw axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
     },
     "adjustmentsFunctionNone": {
         "message": "No changes"
