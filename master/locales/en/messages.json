@@ -2896,6 +2896,51 @@
     "auxiliaryToggleUnused": {
         "message": "Hide unused modes"
     },
+    "auxiliaryAddMode": {
+        "message": "Add mode"
+    },
+    "auxiliaryAddModeTitle": {
+        "message": "Add a mode"
+    },
+    "auxiliaryAddModeSearch": {
+        "message": "Search modes"
+    },
+    "auxiliaryAddModeNoMatches": {
+        "message": "No matching modes"
+    },
+    "auxiliaryRemoveMode": {
+        "message": "Remove mode"
+    },
+    "auxiliaryGroupArming": {
+        "message": "Arming & Safety"
+    },
+    "auxiliaryGroupFlight": {
+        "message": "Flight Modes"
+    },
+    "auxiliaryGroupThrustVector": {
+        "message": "Thrust Vectoring"
+    },
+    "auxiliaryGroupGps": {
+        "message": "GPS & Navigation"
+    },
+    "auxiliaryGroupPower": {
+        "message": "Power"
+    },
+    "auxiliaryGroupAlerts": {
+        "message": "Beeper & Lights"
+    },
+    "auxiliaryGroupLogging": {
+        "message": "Logging & Telemetry"
+    },
+    "auxiliaryGroupCamera": {
+        "message": "Camera"
+    },
+    "auxiliaryGroupUser": {
+        "message": "User Outputs"
+    },
+    "auxiliaryGroupOther": {
+        "message": "Other"
+    },
     "auxiliaryMin": {
         "message": "Min"
     },
