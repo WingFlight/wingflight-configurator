@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-adjust-groups",
+      "path": "./feature-adjust-groups/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
