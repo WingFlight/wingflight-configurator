@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-fb-defaults",
+      "path": "./feature-fb-defaults/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
