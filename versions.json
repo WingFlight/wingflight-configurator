@@ -155,11 +155,6 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-smartfuel-alert-percent",
-      "path": "./feature-smartfuel-alert-percent/"
     }
   ]
 }
