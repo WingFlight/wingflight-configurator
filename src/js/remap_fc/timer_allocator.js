@@ -21,7 +21,9 @@
  *      critical owner of that base is within the group itself.
  *   4. S1-S3 and M1-M4 prefer to share one common base with a unique
  *      channel each, tried before falling back to allocating each
- *      member individually.
+ *      member individually -- on whichever subset of the group actually
+ *      has a row (at least two), not only when the full canonical group
+ *      is present.
  *   5. Frequency inputs (Freq1, Freq2, ...) prefer TIM2 or TIM5 when
  *      available.
  *   6. A feature that needs DMA (motors, the LED strip -- see
@@ -39,12 +41,22 @@
  *      available -- otherwise a freq input claiming a base purely for
  *      its own convenience can cost a motor/the LED strip a DMA option
  *      it has no alternative for.
+ *   8. S4 -- a helicopter's tail servo, by this tool's own convention
+ *      (S1-S3 are the cyclic/swashplate servos, see rule 4) -- prefers
+ *      a base other than whichever one(s) S1-S3 ended up on, since a
+ *      base's period/prescaler is shared across every channel on it: a
+ *      tail servo is often a high-speed digital one needing its own
+ *      independent update rate, which sharing a base with the slower
+ *      cyclic servos would prevent. Soft preference only, the same
+ *      shape as rule 6's DMA preference -- still perfectly fine to
+ *      share S1-S3's base if no other option exists for S4 at all.
  *
  * Allocation runs in a fixed order -- freq inputs, LED strip, S1-S3 as
- * a group, remaining servos, M1-M4 as a group, remaining motors, then
- * everything else -- so the features with the narrowest options are
- * resolved first, before their preferred bases get taken by something
- * more flexible.
+ * a group (then individually if grouping fails), S4 (see rule 8),
+ * remaining servos, M1-M4 as a group, remaining motors, then everything
+ * else -- so the features with the narrowest options are resolved
+ * first, before their preferred bases get taken by something more
+ * flexible.
  */
 
 import { classifyFeature, SERVO_GROUP, MOTOR_GROUP } from "./feature_classifier.js";
@@ -192,10 +204,19 @@ export function allocateTimers(features, reservedTimers = new Set()) {
   // and refusing to actually send it, rather than this allocator
   // silently leaving the feature unconfigured, which would read as
   // "nothing wrong here" when something very much still is.
-  function pickBestOption(row, label, avoidCritical = true) {
+  //
+  // avoidBases (rule 8, S4 only) is the same shape of soft preference
+  // as rule 6's DMA one: narrows the pool to options whose base isn't
+  // in the set, but only when that narrowing actually leaves something
+  // -- never at the cost of falling back to the "forced" escape hatch,
+  // since avoiding a base is a convenience, not a correctness rule the
+  // way avoiding an already-clashing option is.
+  function pickBestOption(row, label, avoidCritical = true, avoidBases = new Set()) {
     const candidates = row.options.filter((o) => canUseOption(row, o, avoidCritical));
     const forced = candidates.length === 0 && row.options.length > 0;
-    const pool = forced ? row.options : candidates;
+    const validPool = forced ? row.options : candidates;
+    const preferred = validPool.filter((o) => !avoidBases.has(o.base));
+    const pool = !forced && preferred.length > 0 ? preferred : validPool;
     const nonNegative = pool.filter((o) => !o.negative);
 
     // See rule 6 -- a DMA-capable option is worth preferring over a
@@ -214,7 +235,10 @@ export function allocateTimers(features, reservedTimers = new Set()) {
   // distinct channel on the same base, none of them already claimed.
   function findUniqueChannelAssignment(optionsByFeature) {
     const features = Object.keys(optionsByFeature);
-    const assignment = {};
+    // A Map rather than a plain object so the backtracking undo step
+    // can remove a feature's tentative choice by key without a
+    // dynamically-computed `delete`.
+    const assignment = new Map();
     const usedChannels = new Set();
 
     function backtrack(i) {
@@ -225,10 +249,10 @@ export function allocateTimers(features, reservedTimers = new Set()) {
         if (usedFullTimers.has(opt.timer)) continue;
 
         usedChannels.add(opt.channel);
-        assignment[f] = opt;
+        assignment.set(f, opt);
         if (backtrack(i + 1)) return true;
         usedChannels.delete(opt.channel);
-        delete assignment[f];
+        assignment.delete(f);
       }
       return false;
     }
@@ -236,12 +260,25 @@ export function allocateTimers(features, reservedTimers = new Set()) {
     return backtrack(0) ? assignment : null;
   }
 
-  // Tries to put every member of a preference group (S1-S3, M1-M4) on
-  // one shared base with a unique channel each. Only bases every
+  // Tries to put every *present* member of a preference group (S1-S3,
+  // M1-M4) on one shared base with a unique channel each -- a board
+  // rarely has all four canonical motor slots occupied at once, so this
+  // works on whichever subset of the group actually has a row (at
+  // least two, since sharing a base is meaningless for just one), the
+  // same way it would for the full group. Only bases every present
   // member has an option on, and whose critical owners (if any) are
-  // entirely within the group, are considered -- if none work out,
-  // this is a no-op and every member is left for individual
-  // allocation afterwards.
+  // entirely within the group -- present or not, see canUseOption's own
+  // avoidCritical -- are considered -- if none work out, this is a
+  // no-op and every present member is left for individual allocation
+  // afterwards.
+  //
+  // Requiring only a subset matters in practice: without it, M1 and M2
+  // sharing TIM2 (M1's only possible base, so critical) would never
+  // even be attempted whenever M3/M4 don't exist on a board -- M2 would
+  // fall straight to individual allocation, where rule 3 excludes TIM2
+  // for it (M2 isn't TIM2's critical owner), even though grouping with
+  // M1 on distinct channels is exactly the valid arrangement this
+  // function exists to find.
   //
   // preferDma (rule 6, M1-M4 only -- servos never need DMA) makes this
   // try every candidate base twice: first restricted to each member's
@@ -254,7 +291,8 @@ export function allocateTimers(features, reservedTimers = new Set()) {
   // behaviour intact when no fully-DMA-capable base exists.
   function tryGroup(groupNames, label, preferDma = false) {
     const groupRows = rows.filter((r) => groupNames.includes(r.feature));
-    if (groupRows.length !== groupNames.length) return;
+    if (groupRows.length < 2) return;
+    const presentNames = groupRows.map((r) => r.feature);
 
     const optionsByBase = {};
     for (const row of groupRows) {
@@ -267,7 +305,7 @@ export function allocateTimers(features, reservedTimers = new Set()) {
     }
 
     const candidateBases = Object.keys(optionsByBase).filter((base) => {
-      if (!groupNames.every((name) => optionsByBase[base][name]?.length > 0)) {
+      if (!presentNames.every((name) => optionsByBase[base][name]?.length > 0)) {
         return false;
       }
       const owners = criticalOwnersByBase.get(base);
@@ -278,7 +316,7 @@ export function allocateTimers(features, reservedTimers = new Set()) {
       for (const base of candidateBases) {
         const perFeature = {};
         let baseUsable = true;
-        for (const name of groupNames) {
+        for (const name of presentNames) {
           const opts = optionsByBase[base][name];
           const nonNegative = opts.filter((o) => !o.negative);
           let pool = nonNegative.length > 0 ? nonNegative : opts;
@@ -297,7 +335,7 @@ export function allocateTimers(features, reservedTimers = new Set()) {
         const assignment = findUniqueChannelAssignment(perFeature);
         if (assignment) {
           for (const row of groupRows) {
-            row.chosen = assignment[row.feature];
+            row.chosen = assignment.get(row.feature);
             row.rule = `${label}: grouped on ${base}`;
             registerUsage(row);
           }
@@ -342,20 +380,38 @@ export function allocateTimers(features, reservedTimers = new Set()) {
   const ledRow = rows.find((r) => r.type === "led");
   if (ledRow) pickBestOption(ledRow, "LED_STRIP: assigned");
 
-  // 3) S1-S3 as a group, then whatever's left individually.
+  // 3) S1-S3 as a group, then any of them still unresolved (grouping
+  // can fail) individually -- both done before S4 specifically, so
+  // rule 8's avoidBases below always sees S1-S3's real, final bases
+  // regardless of whether grouping succeeded.
   tryGroup(SERVO_GROUP, "servo S1-S3");
+  for (const row of rows.filter((r) => SERVO_GROUP.includes(r.feature) && !r.chosen)) {
+    pickBestOption(row, "servo: assigned");
+  }
+
+  // 4) S4 (rule 8): prefers a base other than whatever S1-S3 landed on.
+  const cyclicBases = new Set(
+    rows
+      .filter((r) => SERVO_GROUP.includes(r.feature) && r.chosen)
+      .map((r) => r.chosen.base),
+  );
+  const tailRow = rows.find((r) => r.feature === "S4" && !r.chosen);
+  if (tailRow) pickBestOption(tailRow, "servo: assigned", true, cyclicBases);
+
+  // 5) Every other servo (S5-S8), individually -- no base preference,
+  // this tool has no convention for what they're used for.
   for (const row of rows.filter((r) => r.type === "servo" && !r.chosen)) {
     pickBestOption(row, "servo: assigned");
   }
 
-  // 4) M1-M4 as a group, then whatever's left individually. preferDma
+  // 6) M1-M4 as a group, then whatever's left individually. preferDma
   // (rule 6): unlike S1-S3, motors need DMA.
   tryGroup(MOTOR_GROUP, "motor M1-M4", true);
   for (const row of rows.filter((r) => r.type === "motor" && !r.chosen)) {
     pickBestOption(row, "motor: assigned");
   }
 
-  // 5) Everything else, individually.
+  // 7) Everything else, individually.
   for (const row of rows.filter((r) => r.type === "other" && !r.chosen)) {
     pickBestOption(row, "other: assigned");
   }

@@ -12,10 +12,13 @@ import { FC } from "@/js/fc.svelte.js";
 import { mount, unmount } from "svelte";
 import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import { parseHardwareDump, parseMcuType } from "@/js/remap_fc/hardware_parser.js";
+import { isGenericBoardDesign } from "@/js/remap_fc/remap_table.js";
+import { parseServoRates } from "@/js/remap_fc/servo_config_parser.js";
 import {
   parseReservedDmaStreams,
   parseReservedTimers,
 } from "@/js/remap_fc/timer_dma_lookup.js";
+import { withTimeout } from "@/js/remap_fc/with_timeout.js";
 import { fetchWingflightTargetDefaults } from "@/js/remap_fc/wingflight_target_source.js";
 
 const IDLE_THRESHOLD_MS = 500;
@@ -36,19 +39,16 @@ const BULK_TRANSFER_TIMEOUT_MS = 180000;
 // working save is ever expected to take anywhere near this long.
 const REBOOT_TIMEOUT_MS = 8000;
 
-// Races `promise` against a timeout, rejecting with an error naming
-// `label` if it fires first. Used to bound the two bulk-data steps in
-// #doRunSequence -- see BULK_TRANSFER_TIMEOUT_MS.
-function withTimeout(promise, ms, label) {
-  let timeoutId;
-  const timeout = new Promise((_resolve, reject) => {
-    timeoutId = setTimeout(
-      () => reject(new Error(`Timed out waiting for ${label}`)),
-      ms,
-    );
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-}
+// How long #activateCli waits for CONFIGURATOR.cliEngineValid to flip
+// true after sending the CLI entry trigger, before giving up -- entry
+// normally completes within a second, so this is purely to bound the
+// pathological case (the board never responds at all) rather than a
+// working entry ever needing anywhere near this long. Every other step
+// in this file's sequences is already timeout-bounded (see
+// BULK_TRANSFER_TIMEOUT_MS, REBOOT_TIMEOUT_MS); this was the one gap
+// left unbounded, which could hang "Read FC"/"Load Changes" forever
+// with the UI stuck on its loading spinner and no error ever shown.
+const CLI_ENTRY_TIMEOUT_MS = 10000;
 
 // `dump`/`diff` output ends with a bare `save` line, meant for
 // pasting straight onto a fresh board -- exactly what this restore
@@ -100,6 +100,16 @@ class RemapFcTab {
   /** @type {Set<string>} */
   #reservedTimers = new Set();
 
+  // Each configured servo's own update rate (Hz), parsed from `servo`
+  // -- see servo_config_parser.js's parseServoRates. Handed to the
+  // Svelte component's servo-frequency review card, which warns when
+  // two servos sharing a timer are configured for different rates.
+  // Read alongside dma show/timer show since, like those, it reflects
+  // the FC's live config rather than anything `defaults nosave` below
+  // would change.
+  /** @type {Object.<string, number>} */
+  #servoRates = {};
+
   // Set to true once cleanup() starts, so an in-flight runSequence()
   // knows to stop sending further commands rather than racing with
   // the tab switch.
@@ -135,6 +145,12 @@ class RemapFcTab {
   // exited.
   /** @type {?Promise<void>} */
   #runSequencePromise = null;
+
+  // Bumped by every #waitForIdle() call, and used there to tell apart
+  // "I'm still the watcher whose subscription is live" from "a newer
+  // #waitForIdle() call has since taken over" -- see that method's own
+  // comment for the race this guards against.
+  #idleWatcherToken = 0;
 
   // Read-only accessors so other code (e.g. tests, future features) can
   // inspect the last parsed hardware state without reaching into
@@ -202,11 +218,12 @@ class RemapFcTab {
       return Promise.resolve();
     }
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       CONFIGURATOR.cliEngineActive = true;
       CONFIGURATOR.cliTab = "remap_fc";
       this.#cliEngine.enterCliMode();
 
+      const start = performance.now();
       const waitForValidCliEngine = setInterval(() => {
         if (CONFIGURATOR.cliEngineValid) {
           clearInterval(waitForValidCliEngine);
@@ -215,6 +232,9 @@ class RemapFcTab {
             () => resolve(),
             IDLE_THRESHOLD_MS,
           );
+        } else if (performance.now() - start > CLI_ENTRY_TIMEOUT_MS) {
+          clearInterval(waitForValidCliEngine);
+          reject(new Error(i18n.getMessage("remapFcCliEntryTimeout")));
         }
       }, IDLE_THRESHOLD_MS);
     });
@@ -223,7 +243,21 @@ class RemapFcTab {
   // Resolves once no CLI output has been received for IDLE_THRESHOLD_MS.
   // Commands aren't response-synchronized, so this is how we know a
   // command (e.g. a dump) has actually finished producing output.
+  //
+  // #cliEngine only ever tracks one response callback at a time (see
+  // cli_engine.js's subscribeResponseCallback), so if a call here gets
+  // abandoned by an outer withTimeout() race -- its own interval left
+  // running because nothing cancels it when the race's loser is
+  // ignored -- and a later #waitForIdle() call then subscribes its own
+  // callback, the abandoned watcher must not call
+  // unsubscribeResponseCallback() once its own stale idle check
+  // eventually fires: that would sever the *newer* call's live
+  // subscription instead of its own, making it resolve early, before
+  // the command it's actually waiting on has finished producing
+  // output. #idleWatcherToken tells the two apart -- only whichever
+  // call is still the most recent one actually unsubscribes.
   #waitForIdle() {
+    const token = ++this.#idleWatcherToken;
     return new Promise((resolve) => {
       let lastReceived = performance.now();
       this.#cliEngine.subscribeResponseCallback(() => {
@@ -236,7 +270,9 @@ class RemapFcTab {
         () => {
           if (performance.now() - lastReceived > IDLE_THRESHOLD_MS) {
             GUI.interval_remove(intervalName);
-            this.#cliEngine.unsubscribeResponseCallback();
+            if (token === this.#idleWatcherToken) {
+              this.#cliEngine.unsubscribeResponseCallback();
+            }
             resolve();
           }
         },
@@ -300,6 +336,7 @@ class RemapFcTab {
     this.#mcuType = null;
     this.#reservedDmaStreams = new Set();
     this.#reservedTimers = new Set();
+    this.#servoRates = {};
     this.#restoreHadCliErrors = false;
 
     try {
@@ -350,6 +387,15 @@ class RemapFcTab {
       this.#reservedTimers = parseReservedTimers(timerShowOutput);
       if (this.#tornDown) return;
 
+      // `servo` reports each configured servo's own update rate, among
+      // other settings -- captured here alongside dma show/timer show,
+      // before `defaults nosave` wipes it, since it's this tool's own
+      // live config, not something the reset-then-restore sequence
+      // below needs to round-trip itself.
+      const servoOutput = await this.#runCommandAndCapture("servo");
+      this.#servoRates = parseServoRates(servoOutput);
+      if (this.#tornDown) return;
+
       await this.#runCommandAndCapture("defaults nosave");
       if (this.#tornDown) return;
 
@@ -368,24 +414,23 @@ class RemapFcTab {
       console.log("remap_fc: mcuType", this.#mcuType);
 
       // A board with no Rotorflight-specific build of its own (see
-      // remap_fc.svelte's isGenericBoard for the same check) only
-      // ever reports resources up to whatever Rotorflight's own
-      // runtime was compiled to support -- kick off a lookup of the
-      // richer default set its own shared Betaflight target actually
-      // defines (see wingflight_target_source.js), in parallel with
-      // the CLI restore sequence below since it's an unrelated
-      // network fetch, not something to make the user wait on twice.
-      // Purely for display -- this.#defaultHardware itself, used
-      // below to compute what actually gets sent back to the FC,
-      // stays exactly what was really read regardless of how this
-      // resolves.
-      const targetDefaultsPromise =
-        !FC.CONFIG.boardDesign || FC.CONFIG.boardDesign === "BTFL"
-          ? fetchWingflightTargetDefaults(
-              FC.CONFIG.manufacturerId,
-              FC.CONFIG.boardName,
-            )
-          : Promise.resolve(null);
+      // isGenericBoardDesign, also used by remap_fc.svelte's
+      // isGenericBoard for the same check) only ever reports resources
+      // up to whatever Rotorflight's own runtime was compiled to
+      // support -- kick off a lookup of the richer default set its own
+      // shared Betaflight target actually defines (see
+      // wingflight_target_source.js), in parallel with the CLI
+      // restore sequence below since it's an unrelated network fetch,
+      // not something to make the user wait on twice. Purely for
+      // display -- this.#defaultHardware itself, used below to compute
+      // what actually gets sent back to the FC, stays exactly what was
+      // really read regardless of how this resolves.
+      const targetDefaultsPromise = isGenericBoardDesign(FC.CONFIG.boardDesign)
+        ? fetchWingflightTargetDefaults(
+            FC.CONFIG.manufacturerId,
+            FC.CONFIG.boardName,
+          )
+        : Promise.resolve(null);
 
       // `defaults nosave` resets the FC's *entire* live config in RAM,
       // not just resources/timer/DMA -- PID gains, rates, filters, the
@@ -448,6 +493,7 @@ class RemapFcTab {
         this.#mcuType,
         this.#reservedDmaStreams,
         this.#reservedTimers,
+        this.#servoRates,
       );
     } catch (err) {
       console.error("remap_fc: CLI sequence failed", err);

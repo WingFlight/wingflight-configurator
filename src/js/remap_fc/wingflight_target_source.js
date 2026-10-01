@@ -32,24 +32,12 @@
 
 import * as github from "@/js/GitHubApi.js";
 import { parseHardwareDump } from "./hardware_parser.js";
+import { withTimeout } from "./with_timeout.js";
 
 const REPO = "WingFlight/wingflight-targets";
 const BRANCH = "master";
 const CONFIGS_PATH = "configs";
 const FETCH_TIMEOUT_MS = 4000;
-
-// Races `promise` against a timeout, clearing the timer either way --
-// left running, it would still fire after `promise` already won the
-// race, rejecting a promise nothing is left to handle (an unhandled
-// rejection a few seconds into every successful call, not just a
-// slow/failed one).
-function withTimeout(promise, ms) {
-  let timeoutId;
-  const timeout = new Promise((_resolve, reject) => {
-    timeoutId = setTimeout(() => reject(new Error("timed out")), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-}
 
 async function fetchRawConfig(url) {
   const res = await fetch(url, { cache: "no-cache" });
@@ -81,6 +69,7 @@ export async function fetchWingflightTargetDefaults(manufacturerId, boardName) {
     const entries = await withTimeout(
       github.getContents(REPO, BRANCH, CONFIGS_PATH),
       FETCH_TIMEOUT_MS,
+      "the wingflight-targets config listing",
     );
     const match = entries.find(
       (entry) => entry.name.toUpperCase() === wantedName,
@@ -93,6 +82,7 @@ export async function fetchWingflightTargetDefaults(manufacturerId, boardName) {
     const configText = await withTimeout(
       fetchRawConfig(match.download_url),
       FETCH_TIMEOUT_MS,
+      "the wingflight-targets config file",
     );
     const hardware = parseHardwareDump(configText);
     if (Object.keys(hardware).length === 0) {

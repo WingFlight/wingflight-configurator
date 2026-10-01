@@ -12,6 +12,7 @@
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
   import { getTabHelpURL } from "@/js/help";
+  import { classifyFeature } from "@/js/remap_fc/feature_classifier.js";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
@@ -23,6 +24,8 @@
     buildRowsForOptions,
     getAddableOptions,
     getRowSelectableOptions,
+    isGenericBoardDesign,
+    findSequenceGaps,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
   import { isMcuSupported } from "@/js/remap_fc/timer_dma_lookup.js";
@@ -92,6 +95,13 @@
   // Same idea for timer+channel claims (the gyro's clock/sync, ...).
   /** @type {Set<string>} */
   let reservedTimers = $state(new Set());
+  // Each configured servo's own update rate (Hz), as read -- see
+  // remap_fc.js's #servoRates. Drives the servo-frequency review card,
+  // which warns when two servos sharing a timer are configured for
+  // different rates (physically impossible, since a timer's own period
+  // is shared across every channel on it).
+  /** @type {Object.<string, number>} */
+  let servoRates = $state({});
   // Option keys with a row in the table, seeded on read and grown via
   // "+ Add". Picking "None" removes the row again.
   /** @type {string[]} */
@@ -249,9 +259,7 @@
   // bare, uncased PCB (see GENERIC.svg) instead of the cased shape
   // below -- the same condition remap_fc.js already uses to decide
   // whether to fetch richer Betaflight-target defaults.
-  let isGenericBoard = $derived(
-    !FC.CONFIG.boardDesign || FC.CONFIG.boardDesign === "BTFL",
-  );
+  let isGenericBoard = $derived(isGenericBoardDesign(FC.CONFIG.boardDesign));
 
   // Body/bezel colours for the board diagram -- grey is the generic
   // fallback; manufacturers with a real reference diagram get their
@@ -359,6 +367,13 @@
     ]),
   ]);
 
+  // Motors/servos left stranded above a hole in their own numbering.
+  // The add-side rule (isEligibleToAdd) can't catch this: the hole
+  // gets made by vacating something in the middle, not by assigning
+  // out of order. Blocks Load Changes, because the firmware silently
+  // drops every output above the hole -- see findSequenceGaps.
+  let sequenceGaps = $derived(hasRead ? findSequenceGaps(claimedOptions) : []);
+
   // Everything still addable via "+ Add" -- every default option not
   // already shown a row, minus reservedPins.
   let addablePool = $derived(
@@ -444,6 +459,7 @@
           reservedDmaStreams,
           reservedTimers,
           tableRows,
+          unresolvedFeatures,
         )
       : { unresolvedFeatures: [], suggestions: [] },
   );
@@ -476,6 +492,78 @@
   let hasStagedCommands = $derived(
     hasPendingChanges || timerDmaCommands.length > 0,
   );
+
+  // The rate a freshly assigned/moved servo will actually come up at
+  // once it's saved and the FC reboots -- servoRates is only ever
+  // populated once, from the initial `servo` read, so a servo with no
+  // resource assigned yet at that point has no entry of its own there
+  // at all (the CLI's own `servo` dump only reports indices that
+  // currently have one). Every other servo this board's `servo` dump
+  // did report shares the identical rate (see the screenshots this was
+  // confirmed against), so that's a real, board-specific value to fall
+  // back on -- not a guessed universal constant that could be wrong
+  // for some other firmware target -- for anything servoTimerGroups
+  // below still can't otherwise account for.
+  let assumedDefaultServoRate = $derived(
+    Object.values(servoRates).find((rate) => rate !== undefined) ?? null,
+  );
+
+  // Every servo currently resolved to a real timer (see
+  // reconciled.allocation), grouped by that timer's own base (e.g.
+  // "TIM3") -- a timer's whole period/frequency is one property of the
+  // timer itself, shared across every channel on it, so every servo in
+  // a group is expected to share one single rate (see the servo-rate
+  // card's own description) rather than being tracked/compared
+  // per-servo here; that expectation is enforced elsewhere, not
+  // something this card needs to verify. Purely informational: never
+  // treated as a clash reconcileTimersAndDma itself reports, and never
+  // blocks Load Changes.
+  let servoTimerGroups = $derived.by(() => {
+    // A plain object/array throughout, deliberately -- this is a
+    // throwaway grouping built fresh on every recompute, never mutated
+    // afterward, so there's no reactive state here for SvelteMap to
+    // actually help track.
+    const byBase = {};
+    for (const result of reconciled.allocation) {
+      if (classifyFeature(result.feature) !== "servo" || !result.chosen)
+        continue;
+      (byBase[result.chosen.base] ??= []).push(result.feature);
+    }
+
+    return Object.entries(byBase)
+      .map(([base, features]) => {
+        const sorted = [...features].sort();
+        // A freshly reassigned/moved servo has no rate of its own yet
+        // -- but if it now shares a timer with a servo that *does*
+        // have a known rate, that's the rate it'll actually end up at
+        // too (every servo on a timer shares one rate), so that's used
+        // first rather than assumedDefaultServoRate purely because
+        // this particular group member happens to sort first. Only
+        // once nothing in the group has its own known rate does this
+        // fall back to the board's own apparent default -- flagged via
+        // isDefault so the template can label it, rather than
+        // presenting it as an equally-confirmed reported value.
+        const knownRate = sorted
+          .map((feature) => servoRates[feature])
+          .find((r) => r !== undefined);
+        const rate = knownRate ?? assumedDefaultServoRate;
+        return {
+          base,
+          features: sorted,
+          rate,
+          isDefault: knownRate === undefined,
+        };
+      })
+      .sort(
+        // By each group's own lowest servo number (e.g. a group
+        // containing S4 sorts after one containing S1) rather than by
+        // timer base name, which is allocator-driven and meaningless
+        // to read by -- this way the groups list in the same S1->S8
+        // order the rest of the table already uses.
+        (a, b) =>
+          Number(a.features[0].slice(1)) - Number(b.features[0].slice(1)),
+      );
+  });
 
   // Every managed motor output is assumed to run plain DMA-driven
   // DSHOT (see feature_classifier.js's featureNeedsDma), so these are
@@ -520,6 +608,7 @@
    * @param {?string} mcu
    * @param {Set<string>} [reservedDma] - See remap_fc.js's #reservedDmaStreams.
    * @param {Set<string>} [reservedTmr] - See remap_fc.js's #reservedTimers.
+   * @param {Object.<string, number>} [servoRts] - See remap_fc.js's #servoRates.
    */
   export function setHardware(
     current,
@@ -527,6 +616,7 @@
     mcu,
     reservedDma = new Set(),
     reservedTmr = new Set(),
+    servoRts = {},
   ) {
     workingCurrent = { ...current };
     originalCurrent = { ...current };
@@ -534,6 +624,7 @@
     mcuType = mcu;
     reservedDmaStreams = reservedDma;
     reservedTimers = reservedTmr;
+    servoRates = servoRts;
     hasRead = true;
 
     const occupantOf = (pin) =>
@@ -605,6 +696,7 @@
     defaultHardware = {};
     reservedDmaStreams = new Set();
     reservedTimers = new Set();
+    servoRates = {};
     visibleOptions = [];
     unsetOptions = [];
     selectedAddOption = "";
@@ -1033,6 +1125,32 @@
     {/if}
   {/if}
 
+  <!-- A motor/servo left stranded above a hole in its own numbering.
+       Blocks "Load Changes" like the pin-conflict card does, because
+       the firmware stops at the first unassigned output instead of
+       skipping it -- so applying this would quietly drop everything
+       above the hole (see findSequenceGaps). -->
+  {#if mcuSupported && sequenceGaps.length}
+    <div class="pin-conflict-card">
+      <Section>
+        {#snippet header()}
+          <div class="header">
+            <span class="title warning-title"
+              >{$i18n.t("remapFcSequenceGapHeading")}</span
+            >
+          </div>
+        {/snippet}
+
+        <p class="allocation-warning">
+          {$i18n.t("remapFcSequenceGapWarning", {
+            missing: sequenceGaps.flatMap((gap) => gap.missing).join(", "),
+            stranded: sequenceGaps.flatMap((gap) => gap.stranded).join(", "),
+          })}
+        </p>
+      </Section>
+    </div>
+  {/if}
+
   <!-- Shown once the current pin assignment has a timer/DMA clash
        reallocation alone can't resolve -- above Pending Changes,
        since "Load Changes" is blocked while this is up. -->
@@ -1097,6 +1215,42 @@
     </div>
   {/if}
 
+  <!-- Every resolved servo's own update rate, grouped by shared timer
+       (see servoTimerGroups), one group per line -- led with the rate
+       itself (what the user actually set) rather than the underlying
+       timer base (meaningless outside this tool), followed by which
+       servos it covers. Every servo in a group is expected to share
+       one rate (see the hint below), so this is purely an indication
+       of what's currently configured, not another interactive card.
+       Never blocks Load Changes. -->
+  {#if mcuSupported && servoTimerGroups.length}
+    <div class="servo-rate-card">
+      <Section label="remapFcServoRateHeading">
+        <div class="servo-rate-groups">
+          {#each servoTimerGroups as group (group.base)}
+            <p class="servo-rate-group-line">
+              {#if group.rate == null}
+                {$i18n.t("remapFcNoneOption")}
+              {:else if group.isDefault}
+                {$i18n.t("remapFcServoRateDefaultEntry", {
+                  rate: group.rate,
+                })}
+              {:else}
+                {`${group.rate}Hz`}
+              {/if}
+              → {group.features
+                .map((feature) => optionLabel(feature))
+                .join(", ")}
+            </p>
+          {/each}
+        </div>
+        <p class="servo-rate-card-hint">
+          {$i18n.t("remapFcServoRateDescription")}
+        </p>
+      </Section>
+    </div>
+  {/if}
+
   <!-- "Load Changes" sends the staged diff (resource + timer/DMA +
        save); the panel next to it previews the exact commands. -->
   {#if hasStagedCommands}
@@ -1108,10 +1262,13 @@
               class="btn apply-btn"
               onclick={handleLoadChanges}
               disabled={running ||
-                pinConflictResult.unresolvedFeatures.length > 0}
+                pinConflictResult.unresolvedFeatures.length > 0 ||
+                sequenceGaps.length > 0}
               title={pinConflictResult.unresolvedFeatures.length > 0
                 ? $i18n.t("remapFcLoadChangesBlocked")
-                : ""}
+                : sequenceGaps.length > 0
+                  ? $i18n.t("remapFcSequenceGapBlocked")
+                  : ""}
             >
               {running
                 ? $i18n.t("remapFcApplying")
@@ -1248,6 +1405,7 @@
   .calculated-config-card,
   .pending-changes-card,
   .pin-conflict-card,
+  .servo-rate-card,
   .mcu-unsupported-card {
     max-width: 560px;
   }
@@ -1291,6 +1449,29 @@
 
   .allocation-warning {
     color: var(--color-status-bad);
+  }
+
+  // Tighter than the card's own default paragraph spacing -- these
+  // lines read as one related group of results, so they sit closer to
+  // each other than to the hint below the whole block.
+  .servo-rate-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+
+  .servo-rate-group-line {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text);
+  }
+
+  .servo-rate-card-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--color-text);
+    opacity: 0.6;
   }
 
   // The suggestion picker (a single suggestion shows as plain text

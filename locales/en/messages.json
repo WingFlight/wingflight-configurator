@@ -7441,6 +7441,9 @@
     "remapFcSaveNoReboot": {
         "message": "Flight controller did not reboot after Save -- the change may not have been applied. Check the connection and try again."
     },
+    "remapFcCliEntryTimeout": {
+        "message": "Flight controller did not respond to enter CLI mode. Check the connection and try again."
+    },
     "remapFcTableOption": {
         "message": "FC Label"
     },
@@ -7506,6 +7509,24 @@
     },
     "remapFcAcceptSuggestion": {
         "message": "Accept Suggestion"
+    },
+    "remapFcSequenceGapBlocked": {
+        "message": "Close the gap in the motor/servo numbering before sending changes"
+    },
+    "remapFcSequenceGapHeading": {
+        "message": "Gap in motor/servo numbering"
+    },
+    "remapFcSequenceGapWarning": {
+        "message": "Nothing is assigned to {{missing}}, which strands {{stranded}}. The flight controller stops at the first unassigned output rather than skipping it, so {{stranded}} would be silently dropped - and a dropped output still reports its centre value, so mixer rules using it look correct while doing nothing. Assign {{missing}}, or move the higher outputs down to close the gap."
+    },
+    "remapFcServoRateHeading": {
+        "message": "Servo frequency groups"
+    },
+    "remapFcServoRateDescription": {
+        "message": "Servos sharing a timer must always be changed together, to the same rate."
+    },
+    "remapFcServoRateDefaultEntry": {
+        "message": "{{rate}}Hz (default)"
     },
     "remapFcSuggestionSwap": {
         "message": "Swap pins for {{feature}} and {{otherFeature}}"
