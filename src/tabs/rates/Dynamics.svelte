@@ -1,140 +1,182 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
+  import { defaultRateSlot } from "@/js/virtual_fc.js";
   import { i18n } from "@/js/i18n.js";
 
+  import Expert from "@/components/Expert.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
+
+  // Firmware defaults (pg/rates.c), so a changed value
+  // stays visible in basic mode. The Virtual FC seeds its rate profiles from
+  // the same values. Every row here is an expert setting.
+  const DEFAULTS = defaultRateSlot();
+  const differs = (...keys) =>
+    keys.some((key) => FC.RC_TUNING[key] !== DEFAULTS[key]);
+
+  let responseChanged = $derived(
+    differs("roll_response_time", "pitch_response_time", "yaw_response_time"),
+  );
+  let boostChanged = $derived(
+    differs(
+      "roll_setpoint_boost_gain",
+      "pitch_setpoint_boost_gain",
+      "yaw_setpoint_boost_gain",
+      "roll_setpoint_boost_cutoff",
+      "pitch_setpoint_boost_cutoff",
+      "yaw_setpoint_boost_cutoff",
+    ),
+  );
+  let yawDynamicChanged = $derived(
+    differs(
+      "yaw_dynamic_ceiling_gain",
+      "yaw_dynamic_deadband_gain",
+      "yaw_dynamic_deadband_filter",
+    ),
+  );
 </script>
 
 <Section label="rateSetupDynamic">
   <div class="grid">
-    <div class="title">
-      <div class="header"></div>
-      <div class="axis-title roll">{$i18n.t("axisROLL")}</div>
-      <div class="axis-title pitch">{$i18n.t("axisPITCH")}</div>
-      <div class="axis-title yaw">{$i18n.t("axisYAW")}</div>
-    </div>
-
-    <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateSetupResponse")}
-          >{$i18n.t("rateSetupResponse")}</span
-        >
-        <HelpIcon>{$i18n.t("rateSetupResponseHelp")}</HelpIcon>
+    <Expert
+      changed={responseChanged || boostChanged || yawDynamicChanged}
+      counted={false}
+    >
+      <div class="title">
+        <div class="header"></div>
+        <div class="axis-title roll">{$i18n.t("axisROLL")}</div>
+        <div class="axis-title pitch">{$i18n.t("axisPITCH")}</div>
+        <div class="axis-title yaw">{$i18n.t("axisYAW")}</div>
       </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_response_time}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_response_time}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_response_time}
-      />
-    </div>
+    </Expert>
 
-    <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateSetpointBoostGain")}
-          >{$i18n.t("rateSetpointBoostGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateSetpointBoostGainHelp")}</HelpIcon>
+    <Expert changed={responseChanged}>
+      <div class="group">
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateSetupResponse")}
+            >{$i18n.t("rateSetupResponse")}</span
+          >
+          <HelpIcon>{$i18n.t("rateSetupResponseHelp")}</HelpIcon>
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_response_time}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_response_time}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.yaw_response_time}
+        />
       </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_setpoint_boost_gain}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_setpoint_boost_gain}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_setpoint_boost_gain}
-      />
+    </Expert>
 
-      <div class="row-label">
-        <span
-          class="label-text"
-          title="{$i18n.t('rateSetpointBoostCutoff')} [Hz]"
-          >{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span
-        >
-      </div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.roll_setpoint_boost_cutoff}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.pitch_setpoint_boost_cutoff}
-      />
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_setpoint_boost_cutoff}
-      />
-    </div>
+    <Expert changed={boostChanged}>
+      <div class="group">
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateSetpointBoostGain")}
+            >{$i18n.t("rateSetpointBoostGain")}</span
+          >
+          <HelpIcon>{$i18n.t("rateSetpointBoostGainHelp")}</HelpIcon>
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_setpoint_boost_gain}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_setpoint_boost_gain}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.yaw_setpoint_boost_gain}
+        />
 
-    <div class="group">
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateYawDynamicCeilingGain")}
-          >{$i18n.t("rateYawDynamicCeilingGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateYawDynamicCeilingGainHelp")}</HelpIcon>
+        <div class="row-label">
+          <span
+            class="label-text"
+            title="{$i18n.t('rateSetpointBoostCutoff')} [Hz]"
+            >{$i18n.t("rateSetpointBoostCutoff")} [Hz]</span
+          >
+        </div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.roll_setpoint_boost_cutoff}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.pitch_setpoint_boost_cutoff}
+        />
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.yaw_setpoint_boost_cutoff}
+        />
       </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_dynamic_ceiling_gain}
-      />
+    </Expert>
 
-      <div class="row-label">
-        <span class="label-text" title={$i18n.t("rateYawDynamicDeadbandGain")}
-          >{$i18n.t("rateYawDynamicDeadbandGain")}</span
-        >
-        <HelpIcon>{$i18n.t("rateYawDynamicDeadbandGainHelp")}</HelpIcon>
-      </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="250"
-        bind:value={FC.RC_TUNING.yaw_dynamic_deadband_gain}
-      />
+    <Expert changed={yawDynamicChanged}>
+      <div class="group">
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateYawDynamicCeilingGain")}
+            >{$i18n.t("rateYawDynamicCeilingGain")}</span
+          >
+          <HelpIcon>{$i18n.t("rateYawDynamicCeilingGainHelp")}</HelpIcon>
+        </div>
+        <div></div>
+        <div></div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.yaw_dynamic_ceiling_gain}
+        />
 
-      <div class="row-label">
-        <span
-          class="label-text"
-          title="{$i18n.t('rateYawDynamicDeadbandFilter')} [Hz]"
-          >{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span
-        >
+        <div class="row-label">
+          <span class="label-text" title={$i18n.t("rateYawDynamicDeadbandGain")}
+            >{$i18n.t("rateYawDynamicDeadbandGain")}</span
+          >
+          <HelpIcon>{$i18n.t("rateYawDynamicDeadbandGainHelp")}</HelpIcon>
+        </div>
+        <div></div>
+        <div></div>
+        <NumberInput
+          min="0"
+          max="250"
+          bind:value={FC.RC_TUNING.yaw_dynamic_deadband_gain}
+        />
+
+        <div class="row-label">
+          <span
+            class="label-text"
+            title="{$i18n.t('rateYawDynamicDeadbandFilter')} [Hz]"
+            >{$i18n.t("rateYawDynamicDeadbandFilter")} [Hz]</span
+          >
+        </div>
+        <div></div>
+        <div></div>
+        <NumberInput
+          min="0"
+          max="25"
+          step="0.1"
+          bind:value={
+            () => FC.RC_TUNING.yaw_dynamic_deadband_filter / 10,
+            (v) =>
+              (FC.RC_TUNING.yaw_dynamic_deadband_filter = Math.round(v * 10))
+          }
+        />
       </div>
-      <div></div>
-      <div></div>
-      <NumberInput
-        min="0"
-        max="25"
-        step="0.1"
-        bind:value={
-          () => FC.RC_TUNING.yaw_dynamic_deadband_filter / 10,
-          (v) => (FC.RC_TUNING.yaw_dynamic_deadband_filter = Math.round(v * 10))
-        }
-      />
-    </div>
+    </Expert>
   </div>
 </Section>
 
