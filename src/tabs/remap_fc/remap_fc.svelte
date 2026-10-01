@@ -13,6 +13,11 @@
   import { FC } from "@/js/fc.svelte.js";
   import { getTabHelpURL } from "@/js/help";
   import { classifyFeature } from "@/js/remap_fc/feature_classifier.js";
+  import {
+    MANUFACTURER_BOARD_NAMES,
+    MANUFACTURER_BRAND_IMAGES,
+    MANUFACTURER_BOARD_COLORS,
+  } from "@/js/remap_fc/manufacturer_branding.js";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
@@ -22,30 +27,55 @@
     TABLE_OPTION_KEYS,
     buildChangeCommands,
     buildRowsForOptions,
+    findSequenceGaps,
     getAddableOptions,
     getRowSelectableOptions,
     isGenericBoardDesign,
-    findSequenceGaps,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
-  import { isMcuSupported } from "@/js/remap_fc/timer_dma_lookup.js";
+  import {
+    getPinTimerOptions,
+    isMcuSupported,
+  } from "@/js/remap_fc/timer_dma_lookup.js";
   import { findPinConflictSuggestions } from "@/js/remap_fc/pin_conflict_suggestions.js";
   import {
+    buildDesignOrder,
+    buildHiddenPins,
+    buildManufacturerNamedConnectorPins,
+    buildNamedConnectorPins,
     buildReferenceLabels,
     buildReservedPins,
-    buildNamedConnectorPins,
     expandOptionName,
   } from "@/js/remap_fc/reference_design_labels.js";
-  import { loadReferenceDesigns } from "@/js/remap_fc/reference_design_source.js";
+  import {
+    loadManufacturerDesigns,
+    loadReferenceDesigns,
+  } from "@/js/remap_fc/reference_design_source.js";
   import mcuAllData from "@/tabs/remap_fc/MCU-all.json";
+  import manufacturerDesignsLocal from "@/tabs/remap_fc/manufacturer_designs.json";
   import referenceDesignsLocal from "@/tabs/remap_fc/reference_designs.json";
 
-  // Starts as the bundled copy, then replaces itself with the latest
-  // version fetched from GitHub (see reference_design_source.js), so
-  // a newly documented board doesn't need a new release.
-  let referenceDesigns = $state(referenceDesignsLocal);
+  // Each of referenceDesignsData/manufacturerDesignsData starts as its
+  // own bundled copy, then independently replaces itself with the
+  // latest version fetched from GitHub (see reference_design_source.js)
+  // once that resolves, so a newly documented board -- official or
+  // manufacturer-supplied -- doesn't need a new configurator release
+  // before it shows up here. referenceDesigns itself just re-merges
+  // whichever combination of the two is current, manufacturer data
+  // spread last so a (currently never-occurring, but never assumed
+  // impossible) key collision between the two files favours the
+  // manufacturer's own entry.
+  let referenceDesignsData = $state(referenceDesignsLocal);
+  let manufacturerDesignsData = $state(manufacturerDesignsLocal);
+  let referenceDesigns = $derived({
+    ...referenceDesignsData,
+    ...manufacturerDesignsData,
+  });
   loadReferenceDesigns(referenceDesignsLocal).then((data) => {
-    referenceDesigns = data;
+    referenceDesignsData = data;
+  });
+  loadManufacturerDesigns(manufacturerDesignsLocal).then((data) => {
+    manufacturerDesignsData = data;
   });
 
   // Sentinel dropdown value meaning "nothing assigned to this pin" —
@@ -85,9 +115,18 @@
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   let originalCurrent = $state({});
   // Read-only reference for each option's default pin; never changes
-  // after a read.
+  // after a read. This is the *augmented* map setHardware builds (see
+  // its own fallbackAnchors comment) -- rawDefaultHardware below is the
+  // one to hand back to setHardware itself (e.g. from
+  // handleClearChanges), since feeding this augmented one back in as
+  // its own input would make every fallback anchor look
+  // already-claimed and silently stop getting recreated.
   /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
   let defaultHardware = $state({});
+  // The defaultHw setHardware was actually called with, before its own
+  // fallback-anchor augmentation -- see defaultHardware's own comment.
+  /** @type {import("@/js/remap_fc/hardware_parser.js").HardwareMap} */
+  let rawDefaultHardware = $state({});
   // DMA streams claimed outside this tool's control (SPI, ADC, ...),
   // so reallocation never proposes stealing them.
   /** @type {Set<string>} */
@@ -145,10 +184,36 @@
         : $i18n.t("remapFcRunning"),
   );
 
-  // Keep the visible rows in the same fixed order as OPTION_KEYS,
-  // regardless of the order options were added in.
+  // This board's own row order (see buildDesignOrder) -- its
+  // manufacturer design's physical pin layout if it has one (e.g. the
+  // Flydragon Pro's silkscreen order top to bottom), else its matching
+  // official Rotorflight reference design's own order if it follows
+  // one. null for a board matching neither, which just means "no
+  // override" below.
+  let designOrder = $derived(
+    buildDesignOrder(
+      referenceDesigns,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+      defaultHardware,
+    ),
+  );
+
+  // Keep the visible rows in a fixed order, regardless of the order
+  // options were added in: this board's own designOrder first if it
+  // has one, then remap_table.js's generic OPTION_KEYS order for
+  // anything designOrder doesn't cover (or the whole list, for a board
+  // with no designOrder at all).
   let orderedVisible = $derived(
-    OPTION_KEYS.filter((option) => visibleOptions.includes(option)),
+    designOrder
+      ? [
+          ...designOrder.filter((option) => visibleOptions.includes(option)),
+          ...OPTION_KEYS.filter(
+            (option) =>
+              visibleOptions.includes(option) && !designOrder.includes(option),
+          ),
+        ]
+      : OPTION_KEYS.filter((option) => visibleOptions.includes(option)),
   );
 
   // The rows actually rendered in the table, recomputed from the
@@ -180,39 +245,11 @@
   const DIAGRAM_ASPECT_RATIO = 1;
   let diagramWidth = $derived(diagramHeight * DIAGRAM_ASPECT_RATIO);
 
-  // The board's own printed brand name -- distinct from
-  // manufacturers.js's own `name` (the parent RC-radio manufacturer,
-  // e.g. "FrSky"), this is what's actually silkscreened on the board
-  // itself (e.g. "Vantac"). Falls back to FC.CONFIG's own reported
-  // manufacturerId when a board has no dedicated diagram.
-  const MANUFACTURER_BOARD_NAMES = {
-    RDMS: "RadioMaster",
-    FRSK: "Vantac",
-    GSKY: "Goosky",
-    FDRC: "FlyDragon",
-    FWRF: "FlyWing",
-    MTKS: "Matek",
-  };
   let boardBrandName = $derived(
     MANUFACTURER_BOARD_NAMES[FC.CONFIG.manufacturerId] ??
       FC.CONFIG.manufacturerId,
   );
 
-  // The board's own printed branding artwork -- one <MANUFACTURER>_
-  // BRAND.svg file per manufacturer (see src/images/remap_fc/), each
-  // laid over the diagram at a fixed width (see BRAND_IMAGE_WIDTH)
-  // with its own aspect ratio setting the height, so every image can
-  // have a different natural shape without needing per-manufacturer
-  // layout code. A manufacturer with no entry here just shows the
-  // plain generic body.
-  const MANUFACTURER_BRAND_IMAGES = {
-    RDMS: { file: "RADIOMASTER_BRAND.svg", aspect: 282 / 75 },
-    FRSK: { file: "VANTAC_BRAND.svg", aspect: 1377 / 596 },
-    GSKY: { file: "GOOSKY_BRAND.svg", aspect: 1427 / 135 },
-    FDRC: { file: "FLYDRAGON_BRAND.svg", aspect: 500 / 360 },
-    FWRF: { file: "FLYWING_BRAND.svg", aspect: 613 / 171 },
-    MTKS: { file: "MATEKSYS_BRAND.svg", aspect: 300 / 70 },
-  };
   const BRAND_IMAGE_X = 590;
   const BRAND_IMAGE_Y = 109; // 55 + 10% of the board's own 540-tall height
   const BRAND_IMAGE_WIDTH = 400;
@@ -261,15 +298,6 @@
   // whether to fetch richer Betaflight-target defaults.
   let isGenericBoard = $derived(isGenericBoardDesign(FC.CONFIG.boardDesign));
 
-  // Body/bezel colours for the board diagram -- grey is the generic
-  // fallback; manufacturers with a real reference diagram get their
-  // own real case colours instead.
-  const MANUFACTURER_BOARD_COLORS = {
-    RDMS: { bezel: "#c9d0d6", body: "#2f6f96" },
-    FDRC: { bezel: "#c9d0d6", body: "#a13d3d" },
-    GSKY: { bezel: "#c9d0d6", body: "#6f4a91" },
-    FRSK: { bezel: "#2b2d31", body: "#101113" },
-  };
   let boardBezelColor = $derived(
     MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId]?.bezel ?? "#9ba3ac",
   );
@@ -278,33 +306,58 @@
   );
 
   // Pin -> board's own silkscreen name (e.g. "ESC", "TAIL") from the
-  // matching reference design; empty for an undocumented board.
+  // matching reference design (official family match or a
+  // manufacturer's own design, merged -- see reference_design_labels.js);
+  // empty for an undocumented board.
   let referenceLabels = $derived(
-    buildReferenceLabels(referenceDesigns, FC.CONFIG.boardDesign),
+    buildReferenceLabels(
+      referenceDesigns,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+    ),
   );
 
   // Pins wired to fixed onboard sensors (baro, gyro, ...) -- excluded
   // from "+ Add" so they can't be reassigned.
   let reservedPins = $derived(
-    buildReservedPins(referenceDesigns, FC.CONFIG.boardDesign),
+    buildReservedPins(
+      referenceDesigns,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+    ),
+  );
+
+  // Pins a manufacturer design explicitly marks `"hide": true` -- a
+  // genuine, otherwise-ordinary CLI resource electrically, but
+  // hard-wired straight to something onboard with no physical port to
+  // connect anything else to (e.g. Flydragon Pro's Int Rec.Tx/Rx).
+  // Excluded from "+ Add"/"Other Pins" the same as reservedPins, and
+  // (on the rare board where the pin is still shown as a permanent
+  // row) its own dropdown is locked too.
+  let hiddenPins = $derived(
+    buildHiddenPins(
+      referenceDesigns,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+    ),
   );
 
   // Pins the reference design names as a specific connector (AUX,
   // SBUS, TLM, RPM, ...) rather than a generic port.
   let namedConnectorPins = $derived(
-    buildNamedConnectorPins(referenceDesigns, FC.CONFIG.boardDesign),
+    buildNamedConnectorPins(
+      referenceDesigns,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+    ),
   );
 
-  // Option keys behind those named connectors (e.g. "RX2" for "TLM"),
-  // fed into getRowSelectableOptions so they stay pickable by name.
-  // Excludes TABLE_OPTION_KEYS to avoid offering a key twice (e.g.
-  // "TAIL" can be S4's own default pin).
-  let namedConnectorOptionKeys = $derived(
-    Object.keys(defaultHardware).filter(
-      (option) =>
-        !TABLE_OPTION_KEYS.includes(option) &&
-        namedConnectorPins.has(defaultHardware[option]?.pin),
-    ),
+  // The subset of namedConnectorPins a manufacturer design specifically
+  // documents (never an official reference design family) -- see
+  // buildManufacturerNamedConnectorPins and setHardware's own comment
+  // for why only these get the own-defaults fallback.
+  let manufacturerNamedConnectorPins = $derived(
+    buildManufacturerNamedConnectorPins(referenceDesigns, FC.CONFIG.boardName),
   );
 
   // Labels that read misleadingly as displayName's plain fallback
@@ -378,7 +431,9 @@
   // already shown a row, minus reservedPins.
   let addablePool = $derived(
     getAddableOptions(defaultHardware, visibleOptions).filter(
-      (addable) => !reservedPins.has(addable.defaultPin),
+      (addable) =>
+        !reservedPins.has(addable.defaultPin) &&
+        !hiddenPins.has(addable.defaultPin),
     ),
   );
 
@@ -391,14 +446,28 @@
   // tall when there's a lot to pick from.
   let addMenuSize = $derived(Math.min(addablePool.length + 1, 10));
 
+  // Whether row's own pin has any timer capability at all -- see
+  // getRowSelectableOptions' own pinHasTimer param for why a row on a
+  // pin with none (e.g. a receive-only UART pin) must never offer a
+  // PWM-needing candidate (motor/servo/freq/LED): the `resource`
+  // command would send fine, but the feature would have nothing
+  // driving it, silently and with no warning anywhere else in this
+  // tool -- this is the one place that gets caught before it's ever
+  // picked.
+  function pinHasTimerCapability(pin) {
+    return getPinTimerOptions(mcuAllData, mcuType, pin).length > 0;
+  }
+
   // Pool for a row's own Current Option dropdown. Excludes the row's
   // own current pick from claimedOptions first, so a candidate that's
   // only eligible because of it isn't offered (M3 needs M2 configured
   // -- offering M3 while M2 is what this row holds would let picking
-  // it break that invariant). Otherwise excludes only options
-  // genuinely claimed elsewhere (not merely "unset" in another row),
-  // and includes namedConnectorOptionKeys so named connectors (AUX,
-  // SBUS, TLM, ...) stay pickable by name.
+  // it break that invariant). getRowSelectableOptions applies the
+  // UART/I2C rule: a row may only be pointed at a PWM output
+  // (motor/servo/Freq/LED), and a UART/I2C pad (TLM, SBUS, AUX,
+  // SDA/SCL, ...) additionally at its own original resource. A
+  // UART/I2C resource is never offered anywhere else -- see its doc
+  // comment.
   /**
    * @param {import("@/js/remap_fc/remap_table.js").RemapRow} row
    */
@@ -409,7 +478,12 @@
 
     return [
       NONE_VALUE,
-      ...getRowSelectableOptions(claimedIfPicked, namedConnectorOptionKeys),
+      ...getRowSelectableOptions(
+        row.option,
+        claimedIfPicked,
+        pinHasTimerCapability(row.defaultPin),
+        hiddenPins.has(row.defaultPin),
+      ),
     ].filter((option) => option !== row.currentOption);
   }
 
@@ -598,11 +672,26 @@
     error = message;
   }
 
+  // Whether option's row is a permanent fixture of the table: a fixed
+  // FW feature (motor/servo/Freq/LED) or the reference design's own
+  // named connector (TLM/SBUS/AUX, ...). Both always get a row the
+  // moment they're eligible, unlike a dynamically-added row (a
+  // beyond-capacity M5+/S9+, or a generic UART/I2C port), which only
+  // shows up once something actually occupies its pin.
+  function isPermanentOption(option, defaultPin) {
+    return (
+      TABLE_OPTION_KEYS.includes(option) ||
+      (defaultPin != null && namedConnectorPins.has(defaultPin))
+    );
+  }
+
   /**
    * Seeds the editable working copy from a fresh CLI read. A row shows
    * for a TABLE_OPTION_KEYS identity whenever its default pin is
-   * occupied; a UART/I2C identity only gets an automatic row when
-   * reassigned onto, or named as a connector by, the reference design.
+   * occupied for anything TABLE_OPTION_KEYS or the reference design
+   * doesn't cover; a TABLE_OPTION_KEYS identity or a reference design's
+   * own named connector (TLM/SBUS/AUX, ...) always gets a row, empty or
+   * not (see isPermanentOption).
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} current
    * @param {import("@/js/remap_fc/hardware_parser.js").HardwareMap} defaultHw
    * @param {?string} mcu
@@ -618,9 +707,51 @@
     reservedTmr = new Set(),
     servoRts = {},
   ) {
+    rawDefaultHardware = defaultHw;
+
+    // A manufacturer design's own named connector can be physically
+    // wired to a pin this board's compiled defaults leave completely
+    // unclaimed -- Flydragon Pro's AUX (B09) is a real example: the
+    // manufacturer confirms it's unconnected by default (it shares its
+    // pin with a secondary gyro interrupt), but it's still meant to be
+    // usable for remapping. Without a fallback such a pin is invisible
+    // everywhere: no option in defaultHw has that pin, so neither the
+    // visibleOptions loop below nor getAddableOptions (which requires
+    // `option in defaultHardware`) ever surfaces it.
+    //
+    // This never guesses *what* such a pin should default to -- a bare
+    // timer channel like AUX's is just as plausibly an extra servo as
+    // it is a frequency input, and manufacturer_designs.json doesn't
+    // say which. So this only ever anchors the row to *some*
+    // currently-unclaimed TABLE_OPTION_KEYS identity -- purely an
+    // internal handle so the row can exist and its pin can be
+    // reassigned through the normal machinery (the anchor itself is
+    // never shown -- displayName resolves the row's label from its
+    // pin, not its anchor key, and the row starts in unsetOptions below
+    // so its Current Option area prompts for a pick rather than
+    // showing the anchor as if it were a real default) -- and only for
+    // a manufacturer design's own connectors, never an official
+    // reference design's (see buildManufacturerNamedConnectorPins).
+    const augmentedDefaultHw = { ...defaultHw };
+    const fallbackAnchors = [];
+    for (const pin of manufacturerNamedConnectorPins) {
+      const alreadyClaimed = Object.values(augmentedDefaultHw).some(
+        (entry) => entry.pin === pin,
+      );
+      if (alreadyClaimed) continue;
+
+      const anchor = TABLE_OPTION_KEYS.find(
+        (option) => !(option in augmentedDefaultHw),
+      );
+      if (!anchor) continue; // no free slot left to anchor this pin to
+
+      augmentedDefaultHw[anchor] = { pin };
+      fallbackAnchors.push(anchor);
+    }
+
     workingCurrent = { ...current };
     originalCurrent = { ...current };
-    defaultHardware = { ...defaultHw };
+    defaultHardware = augmentedDefaultHw;
     mcuType = mcu;
     reservedDmaStreams = reservedDma;
     reservedTimers = reservedTmr;
@@ -630,32 +761,35 @@
     const occupantOf = (pin) =>
       Object.keys(current).find((key) => current[key].pin === pin);
 
-    // No special-casing for a beyond-capacity key (e.g. "M5") -- it
-    // behaves like any other option, shown when occupied and offered
-    // via "+ Add" otherwise; TABLE_OPTION_KEYS already keeps it from
-    // ever being picked as a value.
     visibleOptions = OPTION_KEYS.filter((option) => {
-      const defaultPin = defaultHw[option]?.pin;
+      const defaultPin = defaultHardware[option]?.pin;
       if (defaultPin === undefined) return false;
 
-      if (
-        !TABLE_OPTION_KEYS.includes(option) &&
-        namedConnectorPins.has(defaultPin)
-      ) {
-        return true;
-      }
+      // A pin a manufacturer design marks `"hide": true` never gets an
+      // automatic row, even a fixed FW feature slot like LED that would
+      // otherwise always show one below (see hiddenPins' own comment --
+      // e.g. a board whose LED header is documented but not actually
+      // wired to anything usable).
+      if (hiddenPins.has(defaultPin)) return false;
 
+      // A fixed FW feature or a reference design's own named connector
+      // always gets a row -- whether or not anything currently occupies
+      // its pin (see isPermanentOption).
+      if (isPermanentOption(option, defaultPin)) return true;
+
+      // Everything else -- a beyond-capacity M5+/S9+, or a UART/I2C pin
+      // the reference design doesn't name -- only gets an automatic row
+      // once a real feature has actually taken its pin; otherwise it's
+      // reachable via "+ Add".
       const occupant = occupantOf(defaultPin);
-      if (occupant === undefined) return false;
-      return (
-        TABLE_OPTION_KEYS.includes(option) ||
-        TABLE_OPTION_KEYS.includes(occupant)
-      );
+      return occupant !== undefined && TABLE_OPTION_KEYS.includes(occupant);
     });
 
-    // Rows freshly read from the FC are never "unset" — only ones
-    // added afterwards via "+ Add" start in that placeholder state.
-    unsetOptions = [];
+    // Rows freshly read from the FC are never "unset", except a
+    // manufacturer-design fallback anchor (see above), which starts
+    // exactly like a manually "+ Add"ed row: labelled correctly, but
+    // with no value assigned until the user actually picks one.
+    unsetOptions = fallbackAnchors;
   }
 
   /**
@@ -694,6 +828,7 @@
     workingCurrent = {};
     originalCurrent = {};
     defaultHardware = {};
+    rawDefaultHardware = {};
     reservedDmaStreams = new Set();
     reservedTimers = new Set();
     servoRates = {};
@@ -747,14 +882,27 @@
   // every edit made since the last successful read/apply by simply
   // re-running setHardware with originalCurrent -- the same as what
   // happens right after an initial read, since originalCurrent already
-  // holds exactly that baseline (see setHardware/markApplied).
+  // holds exactly that baseline (see setHardware/markApplied). Passes
+  // the already-known servoRates back through explicitly -- omitting it
+  // would fall back to setHardware's own default ({}), silently wiping
+  // servo rate data a revert never actually invalidates (it doesn't
+  // re-read the FC), which would leave every servoTimerGroups entry
+  // showing "None" after Revert instead of the board's real rates.
+  // Passes rawDefaultHardware, not defaultHardware, for the same
+  // reason: defaultHardware is setHardware's own *augmented* output
+  // (see its comment), and feeding that back in as input makes every
+  // fallback-anchored connector look already-claimed, so it silently
+  // stops being recreated -- which would lose the "Default" placeholder
+  // for a connector like Flydragon Pro's AUX after Revert, showing it
+  // as a plain "None" instead.
   function handleClearChanges() {
     setHardware(
       originalCurrent,
-      defaultHardware,
+      rawDefaultHardware,
       mcuType,
       reservedDmaStreams,
       reservedTimers,
+      servoRates,
     );
   }
 
@@ -1036,41 +1184,71 @@
                     />
                   </td>
                   <td>
-                    <!-- Force a remount whenever the displayed value changes
-                     (e.g. because a different row's edit cleared this
-                     row's occupant, or this row just got resolved out
-                     of the "unset" placeholder state) so the select
-                     always reflects it. -->
-                    {#key unset ? "unset" : row.currentOption}
-                      <Select
-                        value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
-                        onchange={(e) => handleCurrentOptionChange(row, e)}
-                        options={[
-                          ...(unset
-                            ? [
-                                {
-                                  value: "",
-                                  label: $i18n.t("remapFcSetOption"),
-                                },
-                              ]
-                            : row.currentOption
+                    {#if hiddenPins.has(row.defaultPin)}
+                      <!-- A manufacturer design can mark a pin
+                           "hide": true (see reference_design_labels.js's
+                           buildHiddenPins) -- a genuine, otherwise-
+                           ordinary CLI resource electrically, but
+                           hard-wired straight to something onboard with
+                           no physical port to connect anything else to.
+                           Excluded from "+ Add" the same as
+                           reservedPins; this branch only matters on the
+                           rare board where the pin is still shown as a
+                           permanent row. Checked before the no-timer
+                           case below since it's a stronger,
+                           unconditional reason: it can still apply to a
+                           pin that *does* have a timer. -->
+                      <p class="locked-pin-message">
+                        {$i18n.t("remapFcPinNotRemappable")}
+                      </p>
+                    {:else if !pinHasTimerCapability(row.defaultPin)}
+                      <!-- A pin with zero timer options can never drive
+                           any PWM-needing feature (see
+                           pinHasTimerCapability/getRowSelectableOptions'
+                           own pinHasTimer param) -- its only ever
+                           possible Current Option is its own original
+                           resource, so there's nothing an interactive
+                           dropdown would actually let the user change. -->
+                      <p class="locked-pin-message">
+                        {$i18n.t("remapFcNoAlternativeFeatures")}
+                      </p>
+                    {:else}
+                      <!-- Force a remount whenever the displayed value changes
+                       (e.g. because a different row's edit cleared this
+                       row's occupant, or this row just got resolved out
+                       of the "unset" placeholder state) so the select
+                       always reflects it. -->
+                      {#key unset ? "unset" : row.currentOption}
+                        <Select
+                          value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
+                          onchange={(e) => handleCurrentOptionChange(row, e)}
+                          options={[
+                            ...(unset
                               ? [
                                   {
-                                    value: row.currentOption,
-                                    label: optionLabel(row.currentOption),
+                                    value: "",
+                                    label: $i18n.t("remapFcSetOption"),
                                   },
                                 ]
-                              : []),
-                          ...optionsForRow(row).map((option) => ({
-                            value: option,
-                            label:
-                              option === NONE_VALUE
-                                ? $i18n.t("remapFcNoneOption")
-                                : optionLabel(option),
-                          })),
-                        ]}
-                      />
-                    {/key}
+                              : row.currentOption
+                                ? [
+                                    {
+                                      value: row.currentOption,
+                                      label: optionLabel(row.currentOption),
+                                    },
+                                  ]
+                                : []),
+                            ...optionsForRow(row).map((option) => ({
+                              value: option,
+                              label:
+                                option === NONE_VALUE
+                                  ? $i18n.t("remapFcNoneOption")
+                                  : optionLabel(option),
+                            })),
+                          ]}
+                        />
+                      {/key}
+                    {/if}
                   </td>
                 </tr>
               {/each}
@@ -1692,6 +1870,17 @@
       width: 57px;
       height: auto;
       opacity: 0.85;
+    }
+
+    // Shown in place of the Current Option dropdown for a row that
+    // can't actually be remapped (see hiddenPins/pinHasTimerCapability)
+    // -- same size as the dropdown it replaces, but quieter, since
+    // there's nothing to interact with here.
+    .locked-pin-message {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--color-text);
+      opacity: 0.6;
     }
 
     .add-row td {

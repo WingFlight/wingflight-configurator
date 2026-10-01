@@ -7462,6 +7462,12 @@
     "remapFcSetOption": {
         "message": "Set Option"
     },
+    "remapFcPinNotRemappable": {
+        "message": "This pin is hard-wired and cannot be remapped."
+    },
+    "remapFcNoAlternativeFeatures": {
+        "message": "No alternative resource features can be allocated to this port"
+    },
     "remapFcMcuLabel": {
         "message": "MCU"
     },

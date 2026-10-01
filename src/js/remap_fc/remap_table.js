@@ -56,6 +56,26 @@ export function isGenericBoardDesign(boardDesign) {
   return !boardDesign || boardDesign === "BTFL";
 }
 
+const UART_OR_I2C_RE = /^(RX|TX|SDA|SCL)\d+$/;
+
+/**
+ * Whether optionKey is a UART (RX/TX) or I2C (SDA/SCL) resource. The
+ * board's named connectors -- TLM, SBUS, AUX, ... -- are just labelled
+ * UART pins, so they match this too. Such a resource can only ever be
+ * mapped to a PWM output (motor/servo/Freq/LED) or back to its own
+ * original pin: it must never be moved onto a *different* UART/I2C pin.
+ * Swapping two fixed connectors is physically meaningless, and this
+ * tool doesn't validate UART/I2C pin capability the way it does
+ * timers/DMA, so it would emit a `resource` command for a pin the
+ * target may not be able to route that peripheral to at all. See
+ * getRowSelectableOptions.
+ * @param {string} optionKey - e.g. "RX2", "SDA1".
+ * @returns {boolean}
+ */
+export function isUartOrI2cResource(optionKey) {
+  return UART_OR_I2C_RE.test(optionKey);
+}
+
 /**
  * @typedef {Object} RemapRow
  * @property {string} option - The resource key, e.g. "M1".
@@ -332,12 +352,22 @@ export function findSequenceGaps(configuredOptions) {
  * So these are only offered once their row has actually been removed
  * entirely (visibleOptions no longer includes them).
  *
- * UART/I2C resources, on the other hand, are never offered as a row's
- * Current Option (see getRowSelectableOptions), so there's no separate
- * reclaim path for them at all — once one has a row, regardless of
- * what that row currently holds, it's fully spoken for and excluded
+ * A UART/I2C resource, on the other hand, is only ever offered as its
+ * own row's Current Option (restoring a displaced pad -- see
+ * getRowSelectableOptions), never as another row's, so there's no
+ * separate reclaim path for them at all — once one has a row, regardless
+ * of what that row currently holds, it's fully spoken for and excluded
  * via visibleOptions too, the same as TABLE_OPTION_KEYS options are
  * here.
+ * Sorted so a UART/I2C port's two halves sit next to each other --
+ * RX5 immediately followed by TX5, SDA2 immediately followed by SCL2
+ * -- rather than OPTION_KEYS' own raw order, which lists every RX (or
+ * SDA) pin on the whole board in one block and every TX (or SCL) pin
+ * in another, regardless of which port each actually belongs to.
+ * Motor/servo/freq/LED options are unaffected, keeping OPTION_KEYS'
+ * own relative order (and sorting before every UART/I2C option, same
+ * as today) -- they're not part of a two-pin port, so there's nothing
+ * to group them by.
  * @param {import("./hardware_parser.js").HardwareMap} defaultHardware
  * @param {string[]} visibleOptions - option keys that currently have a row.
  * @returns {AddableOption[]}
@@ -345,28 +375,155 @@ export function findSequenceGaps(configuredOptions) {
 export function getAddableOptions(defaultHardware, visibleOptions) {
   return OPTION_KEYS.filter(
     (option) => option in defaultHardware && !visibleOptions.includes(option),
-  ).map((option) => ({ option, defaultPin: defaultHardware[option].pin }));
+  )
+    .map((option) => ({ option, defaultPin: defaultHardware[option].pin }))
+    .sort((a, b) => compareBySortKey(portGroupedSortKey(a.option), portGroupedSortKey(b.option)));
+}
+
+// A UART/I2C option's own port number and direction rank (RX/SDA
+// before TX/SCL) -- see getAddableOptions' own comment for why. Every
+// other option key sorts by its own OPTION_KEYS position instead,
+// under a bus rank of -1 so it always sorts before any UART/I2C
+// option, matching OPTION_KEYS' own existing relative order.
+const UART_I2C_BUS_RANK = { RX: 0, TX: 0, SDA: 1, SCL: 1 };
+const UART_I2C_DIRECTION_RANK = { RX: 0, TX: 1, SDA: 0, SCL: 1 };
+const UART_I2C_OPTION_RE = /^(RX|TX|SDA|SCL)(\d+)$/;
+
+function portGroupedSortKey(option) {
+  const match = option.match(UART_I2C_OPTION_RE);
+  if (!match) return [-1, OPTION_KEYS.indexOf(option), 0];
+
+  const [, prefix, indexStr] = match;
+  return [UART_I2C_BUS_RANK[prefix], Number(indexStr), UART_I2C_DIRECTION_RANK[prefix]];
+}
+
+function compareBySortKey(keyA, keyB) {
+  for (let i = 0; i < keyA.length; i++) {
+    if (keyA[i] !== keyB[i]) return keyA[i] - keyB[i];
+  }
+  return 0;
+}
+
+// A motor/servo/frequency option's own group prefix and numeric index
+// -- used by orderFeatureKeys below to work out, per group, whether
+// this board's own physical layout numbers that group upward or
+// downward as you read down the column. LED has no numeric suffix and
+// never groups with anything, so it deliberately doesn't match.
+const FEATURE_GROUP_RE = /^(M|S|Freq)(\d+)$/;
+
+function featureGroupPrefix(key) {
+  return key.match(FEATURE_GROUP_RE)?.[1] ?? null;
+}
+
+function featureGroupIndex(key) {
+  const match = key.match(FEATURE_GROUP_RE);
+  return match ? Number(match[2]) : null;
+}
+
+/**
+ * Orders the Feature column's rows to match this board's own physical
+ * top-to-bottom layout (see reference_design_labels.js's
+ * buildDesignOrder), instead of TABLE_OPTION_KEYS' fixed
+ * motors-then-servos-then-freq-then-LED order -- a board like the
+ * NEXUS_X, whose real silkscreen reads S1/S2/S3/TAIL(S4)/ESC(M1)/
+ * RPM(Freq1) top to bottom, should show its Feature rows in that same
+ * interleaved order, not with every motor artificially pulled to the
+ * top.
+ *
+ * designOrder only ever documents a board's *default* named
+ * connectors, so a beyond-default member of a numbered group -- an S5
+ * added via "+ Add" onto a UART pin, say, on a board whose reference
+ * design only ever names S1-S4 -- has no position of its own to fall
+ * back on. For those, this infers the group's own counting direction
+ * from whichever members designOrder *does* place (does the number
+ * increase or decrease as you read down the column?) and inserts the
+ * newcomer immediately beyond the group's furthest known member in
+ * that same direction, so it reads as a natural continuation rather
+ * than always being appended dead last regardless of which way the
+ * board actually counts. A group with fewer than two known members --
+ * most boards' single default motor is the common case -- has nothing
+ * to infer a direction from, so it defaults to increasing (a lone M1
+ * assumed to sit at the edge of the column, with any M2/M3 that might
+ * later join it continuing downward from there); a group with no known
+ * members at all is simply appended in numeric order at the very end.
+ * @param {?string[]} designOrder - This board's own physical row order
+ *   (see remap_fc.svelte's designOrder), or null for a board matching no
+ *   manufacturer or reference design at all.
+ * @param {string[]} presentKeys - TABLE_OPTION_KEYS entries that
+ *   currently need a Feature row (see remap_fc.svelte's featureRows).
+ * @returns {string[]} presentKeys, reordered.
+ */
+export function orderFeatureKeys(designOrder, presentKeys) {
+  const presentSet = new Set(presentKeys);
+  if (!designOrder) {
+    return TABLE_OPTION_KEYS.filter((key) => presentSet.has(key));
+  }
+
+  const result = designOrder.filter((key) => presentSet.has(key));
+  const extras = TABLE_OPTION_KEYS.filter(
+    (key) => presentSet.has(key) && !result.includes(key),
+  );
+
+  const extrasByPrefix = new Map();
+  for (const key of extras) {
+    const prefix = featureGroupPrefix(key);
+    if (!prefix) continue;
+    if (!extrasByPrefix.has(prefix)) extrasByPrefix.set(prefix, []);
+    extrasByPrefix.get(prefix).push(key);
+  }
+
+  for (const [prefix, group] of extrasByPrefix) {
+    const known = result
+      .map((key, pos) => ({ key, pos, index: featureGroupIndex(key) }))
+      .filter((entry) => featureGroupPrefix(entry.key) === prefix);
+
+    if (known.length === 0) {
+      result.push(...group.sort((a, b) => featureGroupIndex(a) - featureGroupIndex(b)));
+      continue;
+    }
+
+    const increasing = known.length < 2 || known[known.length - 1].index >= known[0].index;
+    group.sort((a, b) =>
+      increasing
+        ? featureGroupIndex(a) - featureGroupIndex(b)
+        : featureGroupIndex(b) - featureGroupIndex(a),
+    );
+
+    const anchor = increasing ? known[known.length - 1] : known[0];
+    const insertAt = increasing ? anchor.pos + 1 : anchor.pos;
+    result.splice(insertAt, 0, ...group);
+  }
+
+  // Anything present but neither placed by designOrder nor grouped
+  // above (LED has no numeric suffix to group by, so a LED pin
+  // designOrder doesn't document falls through to here) -- appended in
+  // TABLE_OPTION_KEYS' own relative order, same as the no-designOrder
+  // fallback.
+  const placed = new Set(result);
+  const leftover = TABLE_OPTION_KEYS.filter((key) => presentSet.has(key) && !placed.has(key));
+  result.push(...leftover);
+
+  return result;
 }
 
 /**
  * Returns the options that could be assigned as a row's Current
- * Option: every one of the FC's own fixed options — motors, servos,
- * output-frequency groups, and the LED pin (see TABLE_OPTION_KEYS),
- * plus whichever UART/I2C options namedConnectorKeys names (see
- * reference_design_labels.js's buildNamedConnectorPins -- a caller
- * passes the option keys whose *own* default pin one of those names,
- * e.g. "RX2" when this board's reference design calls RX2's own pin
- * "TLM") — that isn't already claimed by some row, and that passes
- * the FC's filling-order rules (see isEligibleToAdd) so gaps can't be
- * created (e.g. S3 can't be picked unless S1 and S2 are already
- * claimed; a namedConnectorKeys option always passes this trivially,
- * since isEligibleToAdd's rules only ever apply to M/S/Freq prefixes).
- * Every other UART/I2C option stays unreachable here, only ever
- * addable via "+ Add" — offering every possible RX/TX/SDA/SCL slot in
- * every row's own dropdown regardless of whether this board's own
- * reference design ever names it anything would just be clutter, the
- * same reasoning TABLE_OPTION_KEYS's own doc comment gives for leaving
- * UART/I2C out of the table's default row set to begin with.
+ * Option: the FC's own fixed PWM features — motors, servos,
+ * output-frequency groups, and the LED pin (see TABLE_OPTION_KEYS) —
+ * that aren't already claimed by some row and that pass the FC's
+ * filling-order rules (see isEligibleToAdd) so gaps can't be created
+ * (e.g. S3 can't be picked unless S1 and S2 are already claimed).
+ *
+ * The UART/I2C rule (see isUartOrI2cResource): a UART or I2C resource
+ * is NEVER offered as a selectable option in any row -- not another
+ * row's (moving SERIAL_RX 2 onto a servo pad is meaningless, and this
+ * tool doesn't validate UART/I2C pin capability), and not even a
+ * board-named connector's (TLM/SBUS/AUX are just labelled UART pins).
+ * The one exception is a UART/I2C row's own original resource, so a
+ * labelled pad a remap displaced -- "Port C Tx" now holding a servo --
+ * can be restored. Everything else UART/I2C is reachable only via
+ * "+ Add", which brings the pad's row back so a PWM feature can take
+ * it or its own resource can be restored.
  *
  * Deliberately uses claimedOptions rather than the broader
  * "configured" notion getAddableOptions uses: a row's own dropdown
@@ -379,32 +536,64 @@ export function getAddableOptions(defaultHardware, visibleOptions) {
  * Unlike getAddableOptions, this deliberately ignores defaultHardware
  * for TABLE_OPTION_KEYS: a row's Current Option is picked from the
  * FC's fixed set of possible options, not from whatever this specific
- * board's default dump happens to report. namedConnectorKeys is the
- * one exception, since by construction every option key in it already
- * has a default pin (that's what makes it a named connector at all).
+ * board's default dump happens to report.
+ * @param {string} rowOption - the row's own resource key (its labelled
+ *   pad's default), e.g. "S4" or "RX2".
  * @param {string[]} claimedOptions - option keys currently claimed as some row's Current Option.
- * @param {string[]} [namedConnectorKeys] - option keys whose own
- *   default pin this board's reference design documents as a named
- *   connector (e.g. "RX2" for a board that calls it "TLM"). A
- *   TABLE_OPTION_KEYS member listed here too (a servo/motor's own
- *   default pin can itself be a named connector -- "TAIL" is S4's own
- *   pin on some boards) is harmless: deduped below rather than
- *   requiring the caller to filter it out first, since offering the
- *   same option twice in one dropdown is a Svelte each_key_duplicate
- *   crash, not just a cosmetic glitch, and not every future caller can
- *   be trusted to remember that. A beyond-capacity one (see
- *   isOverCapacity) is filtered out below the same way, since a
- *   reference design has no reason to know Rotorflight's own motor/
- *   servo limits when it names a connector.
+ * @param {boolean} [pinHasTimer] - Whether the row's own pin has *any*
+ *   timer option at all (see timer_dma_lookup.js's getPinTimerOptions)
+ *   -- every TABLE_OPTION_KEYS candidate (motor/servo/freq/LED) needs
+ *   some timer to function at all, so offering one for a pin with none
+ *   would let the user pick a value that can never actually work: the
+ *   `resource` command sends fine, but the feature has nothing driving
+ *   it, a problem no timer/DMA reallocation could ever fix (the pin
+ *   itself is the problem). Doesn't affect a UART/I2C row's own
+ *   restore-original-resource bypass below, which never needs a timer
+ *   regardless. Defaults to true so an existing caller that doesn't
+ *   pass it keeps today's behaviour.
+ * @param {boolean} [locked] - Whether this row's own pin is
+ *   explicitly marked `"hide": true` in a manufacturer design (see
+ *   reference_design_labels.js's buildHiddenPins) -- a pin that's a
+ *   genuine, otherwise-ordinary CLI resource electrically,
+ *   but is hard-wired straight to something onboard with no physical
+ *   port to connect anything else to (e.g. Flydragon Pro's Int
+ *   Rec.Tx/Rx, wired directly to the onboard receiver). Locked takes
+ *   priority over everything else here: nothing is ever offered, not
+ *   even the row's own restore-original-resource bypass, since
+ *   there's nothing to "restore" a pin like this away from in the
+ *   first place. Defaults to false so an existing caller that doesn't
+ *   pass it keeps today's behaviour.
  * @returns {string[]}
  */
-export function getRowSelectableOptions(claimedOptions, namedConnectorKeys = []) {
-  return [...new Set([...TABLE_OPTION_KEYS, ...namedConnectorKeys])].filter(
-    (option) =>
+export function getRowSelectableOptions(
+  rowOption,
+  claimedOptions,
+  pinHasTimer = true,
+  locked = false,
+) {
+  if (locked) return [];
+
+  const pool = isUartOrI2cResource(rowOption)
+    ? [...TABLE_OPTION_KEYS, rowOption]
+    : TABLE_OPTION_KEYS;
+
+  return pool.filter((option) => {
+    // A UART/I2C row always offers its own resource back, so a labelled
+    // pad a remap displaced (e.g. "Port C Tx" now holding a servo) can
+    // be restored even while that resource sits claimed on some other
+    // pin. isEligibleToAdd's filling-order rules only ever apply to
+    // M/S/Freq, so this bypass only matters for the restore-your-own-
+    // UART case.
+    if (option === rowOption && isUartOrI2cResource(rowOption)) return true;
+
+    if (!pinHasTimer) return false;
+
+    return (
       !isOverCapacity(option) &&
       !claimedOptions.includes(option) &&
-      isEligibleToAdd(option, claimedOptions),
-  );
+      isEligibleToAdd(option, claimedOptions)
+    );
+  });
 }
 
 /**
