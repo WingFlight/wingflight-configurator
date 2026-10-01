@@ -20,7 +20,6 @@
     items = [],
     disabled = false,
     placeholder = "",
-    emptyLabel = "",
     noMatchesText = "",
     onchange,
   } = $props();
@@ -228,7 +227,7 @@
   onclick={() => (open ? close() : openPanel())}
   onkeydown={onTriggerKeydown}
 >
-  <span class="trigger-label">{selected?.label ?? emptyLabel}</span>
+  <span class="trigger-label">{selected?.label ?? ""}</span>
 </button>
 
 {#if open}

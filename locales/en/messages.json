@@ -2897,7 +2897,10 @@
         "message": "Hide unused modes"
     },
     "auxiliaryAddMode": {
-        "message": "Add mode…"
+        "message": "Add mode"
+    },
+    "auxiliaryAddModeTitle": {
+        "message": "Add a mode"
     },
     "auxiliaryAddModeSearch": {
         "message": "Search modes"
