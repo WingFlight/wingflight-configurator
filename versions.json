@@ -133,6 +133,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-gyro-off",
+      "path": "./feature-gyro-off/"
+    },
+    {
+      "type": "branch",
       "name": "feature-modes-picker",
       "path": "./feature-modes-picker/"
     },
