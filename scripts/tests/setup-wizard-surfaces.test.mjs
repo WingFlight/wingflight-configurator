@@ -96,3 +96,16 @@ test('flying styles set rates and I-term relax, and are recognised afterwards', 
     rcTuning.yaw_rc_rate = 0.7; // edited on the Rates tab: no longer a preset
     assert.equal(matchingStyle(rcTuning, pidProfile), null);
 });
+
+test('mode range from a flicked switch', async () => {
+    const { rangeForSwitch } = await import('../../src/tabs/setup_wizard/modeRanges.js');
+    // 2-position switch, low to high and high to low
+    assert.deepEqual(rangeForSwitch(1000, 2000), { start: 1500, end: 2100 });
+    assert.deepEqual(rangeForSwitch(2000, 1000), { start: 900, end: 1500 });
+    // 3-position switch: low to middle gives the middle band only
+    assert.deepEqual(rangeForSwitch(1000, 1500), { start: 1250, end: 1750 });
+    // middle to high
+    assert.deepEqual(rangeForSwitch(1500, 2000), { start: 1750, end: 2100 });
+    // radios with 988-2012 endpoints still reach the end stops
+    assert.deepEqual(rangeForSwitch(988, 2012), { start: 1500, end: 2100 });
+});

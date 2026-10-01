@@ -102,6 +102,9 @@
       MIXER_INPUTS: FC.MIXER_INPUTS,
       MIXER_RULES: FC.MIXER_RULES,
       MIXER_CONFIG: FC.MIXER_CONFIG,
+      // Sent live by the Mode switches step.
+      MODE_RANGES: FC.MODE_RANGES,
+      MODE_RANGES_EXTRA: FC.MODE_RANGES_EXTRA,
     });
   }
 
@@ -350,6 +353,10 @@
 
   async function revert() {
     if (!snapshot) return;
+    await releaseSetupMode();
+    FC.MODE_RANGES = snapshot.MODE_RANGES;
+    FC.MODE_RANGES_EXTRA = snapshot.MODE_RANGES_EXTRA;
+    await new Promise((resolve) => mspHelper.sendModeRanges(resolve));
     FC.SERVO_CONFIG = snapshot.SERVO_CONFIG;
     FC.MIXER_INPUTS = snapshot.MIXER_INPUTS;
     FC.MIXER_RULES = snapshot.MIXER_RULES;

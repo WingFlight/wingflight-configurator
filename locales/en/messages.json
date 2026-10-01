@@ -8591,7 +8591,7 @@
         "message": "If a surface was right in the Direction step but is wrong here, the board orientation doesn't match how the board is mounted. Go back to step 1 and run the orientation check again. Don't reverse servos to fix this."
     },
     "setupWizardModesIntro": {
-        "message": "Put these on switches on the Modes tab. ARM is required; SETUP and GYRO OFF are recommended."
+        "message": "Put these on switches on your radio. For each one, press Assign and flick the switch to the position you want it on. ARM is required; SETUP and GYRO OFF are recommended."
     },
     "setupWizardModes_arm": {
         "message": "ARM"
@@ -8616,6 +8616,33 @@
     },
     "setupWizardModesNotAssigned": {
         "message": "No switch"
+    },
+    "setupWizardModesAssign": {
+        "message": "Assign"
+    },
+    "setupWizardModesFlick": {
+        "message": "Flick the switch to the on position now…"
+    },
+    "setupWizardModesCancel": {
+        "message": "Cancel"
+    },
+    "setupWizardModesRange": {
+        "message": "AUX $1, $2–$3"
+    },
+    "setupWizardModesOn": {
+        "message": "On now"
+    },
+    "setupWizardModesOff": {
+        "message": "Off"
+    },
+    "setupWizardModesChange": {
+        "message": "Change"
+    },
+    "setupWizardModesRemove": {
+        "message": "Remove"
+    },
+    "setupWizardModesArmOn": {
+        "message": "The ARM switch is on. Switch it off before you carry on."
     },
     "setupWizardOpenModes": {
         "message": "Open the Modes tab"
