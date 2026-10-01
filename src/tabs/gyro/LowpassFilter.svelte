@@ -112,7 +112,11 @@
 {/snippet}
 
 <Section label="gyroLowpassFilterHeading" summary="gyroLowpassFilterHelp">
-  <SubSection label={CONFIGURATOR.expertMode ? "gyroLowpassFilter1" : null}>
+  <SubSection
+    label={CONFIGURATOR.expertMode || lowpass2Enabled
+      ? "gyroLowpassFilter1"
+      : null}
+  >
     <Field id="lowpass-filter-1-enable" label="genericEnable">
       <Switch
         id="lowpass-filter-1-enable"
@@ -142,16 +146,19 @@
               bind:value={FC.FILTER_CONFIG.gyro_lowpass_hz}
             />
           </Field>
-          {#if CONFIGURATOR.expertMode || lowpass1DynEnabledInitial || lowpass1DynEnabled}
-            <div transition:slide>
-              <Field id="gyro-lowpass-1-dyn" label="gyroLowpassDynamicCutoff">
-                <Switch
-                  id="gyro-lowpass-1-dyn"
-                  bind:checked={() => lowpass1DynEnabled, toggleLowpass1Dyn}
-                />
-              </Field>
-            </div>
-          {/if}
+          <div transition:slide>
+            <Field
+              expert
+              changed={lowpass1DynEnabledInitial || lowpass1DynEnabled}
+              id="gyro-lowpass-1-dyn"
+              label="gyroLowpassDynamicCutoff"
+            >
+              <Switch
+                id="gyro-lowpass-1-dyn"
+                bind:checked={() => lowpass1DynEnabled, toggleLowpass1Dyn}
+              />
+            </Field>
+          </div>
           {#if lowpass1DynEnabled}
             <div transition:slide>
               <SubSection>
@@ -186,44 +193,47 @@
       </div>
     {/if}
   </SubSection>
-  {#if CONFIGURATOR.expertMode}
-    <div transition:slide>
-      <SubSection label="gyroLowpassFilter2">
-        <Field id="lowpass-filter-2-enable" label="genericEnable">
-          <Switch
-            id="lowpass-filter-2-enable"
-            bind:checked={() => lowpass2Enabled, toggleLowpass2}
-          />
-        </Field>
-        {#if lowpass2Enabled}
-          <div transition:slide>
-            <SubSection>
-              <Field id="gyro-lowpass-2-type" label="gyroLowpassType">
-                <select
-                  id="gyro-lowpass-2-type"
-                  bind:value={FC.FILTER_CONFIG.gyro_lowpass2_type}
-                >
-                  {@render filterOpts(FC.FILTER_CONFIG.gyro_lowpass2_type)}
-                </select>
-              </Field>
-              <Field
-                id="gyro-lowpass-2-freq"
-                label="gyroLowpassFrequency"
-                unit="Hz"
+  <div transition:slide>
+    <SubSection label="gyroLowpassFilter2">
+      <Field
+        expert
+        changed={lowpass2Enabled}
+        id="lowpass-filter-2-enable"
+        label="genericEnable"
+      >
+        <Switch
+          id="lowpass-filter-2-enable"
+          bind:checked={() => lowpass2Enabled, toggleLowpass2}
+        />
+      </Field>
+      {#if lowpass2Enabled}
+        <div transition:slide>
+          <SubSection>
+            <Field id="gyro-lowpass-2-type" label="gyroLowpassType">
+              <select
+                id="gyro-lowpass-2-type"
+                bind:value={FC.FILTER_CONFIG.gyro_lowpass2_type}
               >
-                <NumberInput
-                  id="gyro-lowpass-2-freq"
-                  min="0"
-                  max="1000"
-                  bind:value={FC.FILTER_CONFIG.gyro_lowpass2_hz}
-                />
-              </Field>
-            </SubSection>
-          </div>
-        {/if}
-      </SubSection>
-    </div>
-  {/if}
+                {@render filterOpts(FC.FILTER_CONFIG.gyro_lowpass2_type)}
+              </select>
+            </Field>
+            <Field
+              id="gyro-lowpass-2-freq"
+              label="gyroLowpassFrequency"
+              unit="Hz"
+            >
+              <NumberInput
+                id="gyro-lowpass-2-freq"
+                min="0"
+                max="1000"
+                bind:value={FC.FILTER_CONFIG.gyro_lowpass2_hz}
+              />
+            </Field>
+          </SubSection>
+        </div>
+      {/if}
+    </SubSection>
+  </div>
 </Section>
 
 <style lang="scss">

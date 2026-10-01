@@ -3,7 +3,6 @@
   import { onMount } from "svelte";
   import diff from "microdiff";
 
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { getTabHelpURL } from "@/js/help";
@@ -147,11 +146,9 @@
   <div class="content">
     <div>
       <LowpassFilter {FC} />
-      {#if CONFIGURATOR.expertMode}
-        <div transition:slide>
-          <NotchFilter {FC} />
-        </div>
-      {/if}
+      <div transition:slide>
+        <NotchFilter {FC} />
+      </div>
       <DynamicFilter {FC} />
     </div>
     <div>
