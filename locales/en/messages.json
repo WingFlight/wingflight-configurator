@@ -6742,6 +6742,12 @@
     "gpsNavThrottleHelp": {
         "message": "Throttle used while GPS Loiter or GPS RTH is on, and while the GPS Rescue failsafe flies home. It takes over from the throttle stick once the aircraft is flying."
     },
+    "gpsNavAllowArmingWithoutFixItem": {
+        "message": "Allow arming without GPS fix"
+    },
+    "gpsNavAllowArmingWithoutFixHelp": {
+        "message": "When the GPS Rescue failsafe or a <strong>GPS RTH</strong> switch is set up, the first arm after power-up needs a GPS fix. Turn this on to arm without one, for example when no lock can be had at the field.<br><br><span class=\"message-negative\">Without a fix at arming no home point is recorded for that flight: a failsafe glides down with the motor off instead of flying home, and the GPS RTH switch flies level without turning home.</span>"
+    },
     "gpsNavTurnCoordinationItem": {
         "message": "Turn Coordination"
     },
