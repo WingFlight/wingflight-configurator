@@ -18,7 +18,6 @@
   import StepDirection from "./StepDirection.svelte";
   import StepLimits from "./StepLimits.svelte";
   import StepThrows from "./StepThrows.svelte";
-  import StepUpDown from "./StepUpDown.svelte";
   import StepTravel from "./StepTravel.svelte";
   import StepGyro from "./StepGyro.svelte";
   import StepModes from "./StepModes.svelte";
@@ -36,7 +35,6 @@
     { key: "direction", component: StepDirection },
     { key: "limits", component: StepLimits },
     { key: "throws", component: StepThrows },
-    { key: "upDown", component: StepUpDown },
     { key: "travel", component: StepTravel },
     { key: "gyro", component: StepGyro },
     { key: "modes", component: StepModes },

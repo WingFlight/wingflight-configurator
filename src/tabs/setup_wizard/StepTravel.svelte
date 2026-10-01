@@ -4,6 +4,8 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import LivePulse from "./LivePulse.svelte";
+  import SetupModeStatus from "./SetupModeStatus.svelte";
   import { travelReach } from "./surfaces.js";
 
   const wiz = getContext("setupWizard");
@@ -30,10 +32,13 @@
 
 <p>{$i18n.t("setupWizardTravelIntro")}</p>
 
+<SetupModeStatus />
+
 <table class="rows">
   <thead>
     <tr>
       <th>{$i18n.t("setupWizardTravelSurface")}</th>
+      <th>{$i18n.t("setupWizardTravelLive")}</th>
       <th>{$i18n.t("setupWizardTravelNeg")}</th>
       <th>{$i18n.t("setupWizardTravelPos")}</th>
     </tr>
@@ -42,6 +47,7 @@
     {#each rows as { surface, reach } (surface.servo)}
       <tr>
         <td class="name">{wiz.surfaceLabel(surface)}</td>
+        <td><LivePulse servo={surface.servo} /></td>
         {#each [reach.neg, reach.pos] as side, i (i)}
           {@const clips = side.fraction > 1}
           <td>

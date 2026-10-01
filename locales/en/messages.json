@@ -8191,9 +8191,6 @@
     "setupWizardStep_throws": {
         "message": "Throws"
     },
-    "setupWizardStep_upDown": {
-        "message": "Up/down difference"
-    },
     "setupWizardStep_travel": {
         "message": "Travel check"
     },
@@ -8453,7 +8450,7 @@
         "message": "Hold one stick at full deflection, for example full right aileron, and watch one of its surfaces on the meter."
     },
     "setupWizardThrowsHow_3": {
-        "message": "Press − or + for that axis until the surface reaches the throw you want. Check the other direction too: both share this setting, and the next step sets them apart if needed."
+        "message": "Press − or + on that axis's Throw until the surface reaches the throw you want, then check the other direction. If one surface or one direction comes out different, for example for aileron differential, correct just that one under Fine-tune."
     },
     "setupWizardThrowsHow_4": {
         "message": "Repeat for each axis."
@@ -8461,41 +8458,44 @@
     "setupWizardThrowsThrow": {
         "message": "Throw"
     },
+    "setupWizardThrowsThrowHelp": {
+        "message": "Every surface on this axis, both directions."
+    },
+    "setupWizardThrowsFineTitle": {
+        "message": "Fine-tune one surface and direction (servo scale for that side):"
+    },
+    "setupWizardThrowsMixedNote": {
+        "message": "This servo also works another axis; fine-tuning it changes that axis too."
+    },
+    "setupWizardThrowsSideAtLimit": {
+        "message": "Full stick reaches the binding limit on this side."
+    },
+    "setupWizardThrowsDir_rollRight": {
+        "message": "Full right roll"
+    },
+    "setupWizardThrowsDir_rollLeft": {
+        "message": "Full left roll"
+    },
+    "setupWizardThrowsDir_pitchBack": {
+        "message": "Full stick back"
+    },
+    "setupWizardThrowsDir_pitchForward": {
+        "message": "Full stick forward"
+    },
+    "setupWizardThrowsDir_yawRight": {
+        "message": "Full right yaw"
+    },
+    "setupWizardThrowsDir_yawLeft": {
+        "message": "Full left yaw"
+    },
     "setupWizardThrowsAtLimit": {
         "message": "$1 reaches its binding limit before full stick at this throw. Lower the throw, or allow more travel in the Binding limits step."
     },
     "setupWizardThrowsRepeat": {
-        "message": "The percentage is how much of the servo's normal travel full stick uses (Axis Gain on the Mixer tab). Every surface on an axis shares it, so both ailerons change together."
-    },
-    "setupWizardUpDownIntro": {
-        "message": "Optional. Use this when a surface should move further one way than the other, such as aileron differential, or when the linkage makes it do so. The wizard puts the model in SETUP mode: hold full stick one way and press − or + on that direction's row until the surface reaches the throw you want, then do the other direction. This changes that servo's scale for one side (Servos tab)."
-    },
-    "setupWizardUpDownAtLimit": {
-        "message": "Full stick reaches the binding limit on this side."
-    },
-    "setupWizardUpDownMixedNote": {
-        "message": "This servo works more than one axis, so the change applies to all of them."
-    },
-    "setupWizardUpDown_rollRight": {
-        "message": "Full right roll"
-    },
-    "setupWizardUpDown_rollLeft": {
-        "message": "Full left roll"
-    },
-    "setupWizardUpDown_pitchBack": {
-        "message": "Full stick back"
-    },
-    "setupWizardUpDown_pitchForward": {
-        "message": "Full stick forward"
-    },
-    "setupWizardUpDown_yawRight": {
-        "message": "Full right yaw"
-    },
-    "setupWizardUpDown_yawLeft": {
-        "message": "Full left yaw"
+        "message": "Throw is a percentage of the servo's normal travel (Axis Gain on the Mixer tab), shared by every surface on the axis. Fine-tune changes one servo's scale on one side (Servos tab)."
     },
     "setupWizardTravelIntro": {
-        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side."
+        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in SETUP mode, so you can move the sticks into the corners and watch the live positions."
     },
     "setupWizardTravelSurface": {
         "message": "Surface"
@@ -8505,6 +8505,9 @@
     },
     "setupWizardTravelPos": {
         "message": "+ side"
+    },
+    "setupWizardTravelLive": {
+        "message": "Live"
     },
     "setupWizardTravelValue": {
         "message": "$1% ($2 of $3 µs)"
