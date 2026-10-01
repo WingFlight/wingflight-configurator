@@ -12,9 +12,14 @@
   // travel on one side.
   const MID_WARN_US = 100;
 
-  // Hold every stabilized axis at zero so the gyro can't move the surfaces
-  // while they are being centred.
-  onMount(() => wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0 }));
+  // Servo override at 0 puts each servo exactly at its Mid, as on the Servos
+  // tab: nothing from the mixer (gyro, offsets, flaps, curves) reaches it.
+  // Released by the wizard when the step is left.
+  onMount(() => {
+    for (const surface of wiz.surfaces) {
+      wiz.holdServo(surface.servo, 0);
+    }
+  });
 
   function bandCentre(config) {
     return config.mid > 860 ? 1500 : 760;
