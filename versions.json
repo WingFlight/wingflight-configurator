@@ -113,6 +113,11 @@
     },
     {
       "type": "branch",
+      "name": "feature-adjust-picker",
+      "path": "./feature-adjust-picker/"
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
