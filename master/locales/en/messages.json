@@ -6311,7 +6311,7 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and MANUAL mode is not affected."
+        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and GYRO OFF mode is not affected."
     },
     "profilesFwSpaHelp": {
         "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
@@ -7642,17 +7642,29 @@
     "modeHelp ATT HOLD": {
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
     },
+    "mode SETUP": {
+        "message": "SETUP"
+    },
+    "modeHelp SETUP": {
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
+    },
     "mode PASSTHROUGH": {
-        "message": "PASSTHROUGH"
+        "message": "SETUP"
     },
     "modeHelp PASSTHROUGH": {
-        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo - fully manual flying."
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
+    },
+    "mode GYRO OFF": {
+        "message": "GYRO OFF"
+    },
+    "modeHelp GYRO OFF": {
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
     },
     "mode MANUAL": {
-        "message": "MANUAL"
+        "message": "GYRO OFF"
     },
     "modeHelp MANUAL": {
-        "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
     },
     "mode TRADITIONAL": {
         "message": "TRADITIONAL"
