@@ -6914,7 +6914,7 @@
         "message": "Smart Fuel Alert Level"
     },
     "powerSmartFuelAlertPercentHelp": {
-        "message": "Remaining charge, in percent, at which the low fuel warning is raised. Radio scripts that support it treat this as the landing reserve and show 0% fuel at this level. The flight controller's own warning also needs <code>use_cbat_alerts</code> to be enabled in the CLI. This setting is used in all modes."
+        "message": "<p>The charge, in percent, you want left in the pack when you land.</p><p>Radio scripts that support it show 0% fuel at this level, so the gauge reads empty when you reach your reserve.</p><p>The flight controller's own low fuel warning is off by default. To use it, enter <code>set use_cbat_alerts = ON</code> in the CLI.</p>"
     },
     "powerBatteryMinimumCellVoltage": {
         "message": "Minimum Cell Voltage"
