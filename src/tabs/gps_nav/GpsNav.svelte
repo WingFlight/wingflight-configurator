@@ -15,6 +15,7 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
+  import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
   let loading = $state(true);
@@ -23,6 +24,7 @@
   function snapshotState() {
     return $state.snapshot({
       GPS_NAV_CONFIG: FC.GPS_NAV_CONFIG,
+      GPS_RESCUE: FC.GPS_RESCUE,
     });
   }
 
@@ -43,6 +45,7 @@
 
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP2_WING_GPS_NAV_CONFIG);
+    await MSP.promise(MSPCodes.MSP_GPS_RESCUE);
 
     initialState = snapshotState();
     loading = false;
@@ -52,6 +55,10 @@
     await MSP.promise(
       MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG,
       mspHelper.crunch(MSPCodes.MSP2_WING_SET_GPS_NAV_CONFIG),
+    );
+    await MSP.promise(
+      MSPCodes.MSP_SET_GPS_RESCUE,
+      mspHelper.crunch(MSPCodes.MSP_SET_GPS_RESCUE),
     );
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
@@ -63,6 +70,7 @@
 
   export function onRevert() {
     Object.assign(FC.GPS_NAV_CONFIG, initialState.GPS_NAV_CONFIG);
+    Object.assign(FC.GPS_RESCUE, initialState.GPS_RESCUE);
   }
 
   function onClickHelp() {
@@ -94,6 +102,21 @@
     <div>
       <Section label="gpsNavSectionTitle" summary="gpsNavSectionHelp">
         <SubSection>
+          <Field
+            id="gps-nav-allow-arming-without-fix"
+            label="gpsNavAllowArmingWithoutFixItem"
+          >
+            {#snippet tooltip()}
+              <Tooltip help="gpsNavAllowArmingWithoutFixHelp" />
+            {/snippet}
+            <Switch
+              id="gps-nav-allow-arming-without-fix"
+              bind:checked={
+                () => FC.GPS_RESCUE.allowArmingWithoutFix !== 0,
+                (v) => (FC.GPS_RESCUE.allowArmingWithoutFix = v ? 1 : 0)
+              }
+            />
+          </Field>
           <Field
             id="gps-nav-rth-altitude"
             label="gpsNavRthAltitudeItem"
