@@ -1,3 +1,22 @@
+# 0.0.30
+
+Support MSP API 22.13 (0.0.30 firmware). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
+Add the Snap Relax settings (strength, stick threshold, entry window, fade-out) under PID Settings in Expert Mode.
+Add Angle Mode damping to the Angle panel.
+Show PASSTHROUGH as SETUP and MANUAL as GYRO OFF. SETUP is no longer hidden behind Expert Mode, since surface throws are set there.
+Remove the Auto Hover and Horizon settings, matching the firmware.
+Show that throttle (TPA) and GPS speed (SPA) attenuation now scale F and B too, floored at 25%, in Effective PID Gains and the help text.
+Keep servo Min/Max as typed, and show how far each servo can actually travel at its center.
+Add the GAIN_ATTEN and SNAP_RELAX debug modes to the Blackbox list.
+
+Show only the modes in use on the Modes tab, and add others from a grouped, searchable picker. Adjustments work the same way: pick the function first, and the cards sit under collapsible groups.
+Add the Smart Fuel alert level (landing reserve) to the Power tab.
+Add an allow-arming-without-GPS-fix switch to the GPS Nav tab.
+Label the GPS heading telemetry sensor GPS Course.
+Fix the LED strip mode colours editing the wrong slots (Angle edited the Rescue colours).
+Keep each web build's caches separate, so moving between web versions can't break the firmware list.
+Fix the unsupported-browser banner never showing, the web port's receive meter reading 0%, and the flasher sticking when the FC ignores the reboot-to-bootloader request.
+
 # 0.0.29
 
 Support MSP API 22.10 (0.0.29 firmware). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
