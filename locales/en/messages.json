@@ -7483,6 +7483,57 @@
     "remapFcDesignLabel": {
         "message": "Design"
     },
+    "remapFcCardDescription": {
+        "message": "Choose what this pin does. Picking a feature moves it here from wherever it's currently assigned; picking the pin's own default puts it back."
+    },
+    "remapFcCardDescriptionUart": {
+        "message": "This pin defaults to {{resource}}.\n\n{{hint}}"
+    },
+    "remapFcCardDescriptionUartNoAlternative": {
+        "message": "This pin defaults to {{resource}}."
+    },
+    "remapFcCardPlaceholder": {
+        "message": "Click on a pin to see the remapping options"
+    },
+    "remapFcCloseCard": {
+        "message": "Close"
+    },
+    "remapFcDefaultOption": {
+        "message": "Default"
+    },
+    "remapFcHintGeneric": {
+        "message": "It can be freely repurposed for a motor, servo, or other feature."
+    },
+    "remapFcHintSbus": {
+        "message": "The SBUS port is the default port used for an SBUS receiver -- enable it by setting this port to serial RX in the Configuration tab and selecting the appropriate serial protocol in the Receiver tab."
+    },
+    "remapFcHintTlm": {
+        "message": "TLM is commonly used for ESC telemetry -- enable it by setting this port's Telemetry Output to \"ESC Telemetry\" in the Configuration tab."
+    },
+    "remapFcPurposeFreq1": {
+        "message": "Commonly the main rotor RPM sensor input, used by the governor."
+    },
+    "remapFcPurposeLed": {
+        "message": "Drives an addressable LED strip (WS2811/WS2812)."
+    },
+    "remapFcPurposeM1": {
+        "message": "Use this port to connect your main ESC, or a throttle servo for a nitro or turbine setup."
+    },
+    "remapFcPurposeM2": {
+        "message": "Connect your tail motor's ESC to this port -- for a motorised (direct-drive) tail."
+    },
+    "remapFcPurposeS1": {
+        "message": "Servo 1. Commonly this is the left side cyclic servo."
+    },
+    "remapFcPurposeS2": {
+        "message": "Servo 2. Commonly this is the right side cyclic servo."
+    },
+    "remapFcPurposeS3": {
+        "message": "Servo 3. Commonly this is the elevator cyclic servo."
+    },
+    "remapFcPurposeS4": {
+        "message": "Commonly the tail servo, for a mechanical (non-motorised) tail rotor."
+    },
     "remapFcLoadChangesButton": {
         "message": "Load Changes"
     },

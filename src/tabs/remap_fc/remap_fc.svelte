@@ -31,6 +31,8 @@
     getAddableOptions,
     getRowSelectableOptions,
     isGenericBoardDesign,
+    isUartOrI2cResource,
+    orderFeatureKeys,
   } from "@/js/remap_fc/remap_table.js";
   import { reconcileTimersAndDma } from "@/js/remap_fc/timer_dma_reconciler.js";
   import {
@@ -145,7 +147,7 @@
   // "+ Add". Picking "None" removes the row again.
   /** @type {string[]} */
   let visibleOptions = $state([]);
-  // Options whose row shows the "Set Option" placeholder instead of a
+  // Options whose row shows the "Default" placeholder instead of a
   // resolved value.
   /** @type {string[]} */
   let unsetOptions = $state([]);
@@ -161,6 +163,30 @@
   // Whether the "Calculated config" card is expanded -- collapsed by
   // default, since most users never need it.
   let showCalculatedDetails = $state(false);
+
+  // The FC Label row whose Current Option card is open, by option key
+  // -- null while no pin is selected (the card area then shows a
+  // placeholder instead of being empty -- see cardRow/the template).
+  // Only one open at a time; the card itself lives to the right of the
+  // Feature column, not anchored under the button that opened it.
+  let openCardOption = $state(null);
+
+  // Which column opened the card: "pin" (an FC Label button) gets the
+  // full editing card (pin number, description, the Current Option
+  // dropdown); "feature" (a Feature button, on the same underlying pad
+  // -- see the template's toggleCard call) is read-only, just the
+  // description -- clicking a feature is about learning what it's for,
+  // not remapping it, so the pin number and the dropdown (which would
+  // let you change what's already showing) don't belong there.
+  let openCardSource = $state(null);
+
+  // The actual row the open card should show, if any -- null both
+  // before anything's been clicked and if the selected option's row
+  // has since disappeared (e.g. set to None while it was open), so the
+  // template only needs one placeholder-vs-card branch.
+  let cardRow = $derived(
+    tableRows.find((row) => row.option === openCardOption) ?? null,
+  );
 
   // Whether MCU-all.json has real timer/DMA data for this board's
   // MCU -- false means pin remapping can't be safely calculated, so
@@ -216,24 +242,121 @@
       : OPTION_KEYS.filter((option) => visibleOptions.includes(option)),
   );
 
-  // The rows actually rendered in the table, recomputed from the
-  // (possibly edited) working copy every time it changes.
+  // The rows actually rendered in the FC Label column, recomputed from
+  // the (possibly edited) working copy every time it changes.
   let tableRows = $derived(
     buildRowsForOptions(orderedVisible, workingCurrent, defaultHardware),
   );
 
-  // Diagram height, computed from the table's row count rather than
-  // measured from the DOM (which would also catch the "+ Add"
-  // dropdown temporarily inflating it), and clamped to a sensible
-  // range. This app's runtime doesn't support CSS aspect-ratio, so
-  // this is the reliable alternative.
-  const DIAGRAM_BASE_SIZE = 24;
-  const DIAGRAM_ROW_SIZE = 28;
+  // The Feature column: every TABLE_OPTION_KEYS feature currently
+  // allocated to some pin, in this board's own physical row order (see
+  // orderFeatureKeys) rather than TABLE_OPTION_KEYS' fixed
+  // motors-then-servos-then-freq-then-LED order, so a board whose real
+  // silkscreen interleaves them (e.g. the NEXUS_X's
+  // S1/S2/S3/TAIL/ESC/RPM) shows its Feature rows the same way instead
+  // of pulling every motor to the top. A feature with nowhere to point
+  // (not in workingCurrent at all) is left out entirely, not just
+  // dimmed -- there's no pin for a wire to reach.
+  //
+  // A pad still holding its own original UART/I2C identity (see the
+  // UART/I2C rule -- it can never hold anything else's) gets no Feature
+  // entry or wire at all: it isn't "pointing" anywhere interesting. Its
+  // FC Label row looks the same as any other configured row -- and its
+  // own card explains what "default" means for it (see
+  // cardDescription).
+  //
+  // Filters out a feature with no matching pinRow: that happens when
+  // the live config already has this feature CLI-remapped (outside
+  // this tool) onto a pin that isn't any resource's own default pin,
+  // so no visible FC Label row's defaultPin matches it. There's no row
+  // for such a feature's wire to point at, so it's excluded here
+  // rather than reaching the template with pinRow: null -- every
+  // consumer below (the {#each} key, the wire link lookup, the
+  // onclick) dereferences pinRow.option unconditionally.
+  let featureRows = $derived(
+    orderFeatureKeys(
+      designOrder,
+      TABLE_OPTION_KEYS.filter((key) => key in workingCurrent),
+    )
+      .map((key) => ({
+        key,
+        pinRow: tableRows.find((row) => row.currentOption === key) ?? null,
+      }))
+      .filter((featureRow) => featureRow.pinRow !== null),
+  );
+
+  // One connecting wire per Feature row whose pad still has a row on
+  // the FC Label side, expressed as the two columns' own row *indices*
+  // (see wireRowHeight/wireY below for how that becomes an actual SVG
+  // path) -- both columns render every row at the same height, so the
+  // index alone is enough to place it, once that height is known.
+  let wireLinks = $derived(
+    featureRows
+      .map((featureRow, rightIndex) => {
+        const leftIndex = tableRows.findIndex(
+          (row) => row.option === featureRow.pinRow.option,
+        );
+        return leftIndex === -1 ? null : { leftIndex, rightIndex };
+      })
+      .filter((link) => link !== null),
+  );
+
+  // Geometry for the wires SVG between the FC Label and Feature
+  // columns. wireHeaderHeight/wireRowHeight are measured live from the
+  // actual rendered DOM (bind:clientHeight on .column-header and every
+  // .pin-row, in the template -- they all share the same fixed CSS
+  // height, so whichever one renders last just re-confirms the same
+  // value) rather than trusted as fixed constants -- a hardcoded pixel
+  // guess here previously drifted out of sync with the real render
+  // (most visibly at a non-100% zoom level, where the browser's own
+  // subpixel rounding of .pin-row's CSS height isn't guaranteed to
+  // match a constant computed assuming exact whole pixels), which
+  // showed up as the wires no longer meeting the pins they're supposed
+  // to connect to. The *_FALLBACK values only matter for the one frame
+  // before the bound elements have actually rendered.
+  const WIRE_HEADER_HEIGHT_FALLBACK = 29;
+  const WIRE_ROW_HEIGHT_FALLBACK = 33;
+  const WIRE_GUTTER_WIDTH = 130;
+  let measuredHeaderHeight = $state(0);
+  let measuredRowHeight = $state(0);
+  let wireHeaderHeight = $derived(
+    measuredHeaderHeight || WIRE_HEADER_HEIGHT_FALLBACK,
+  );
+  let wireRowHeight = $derived(measuredRowHeight || WIRE_ROW_HEIGHT_FALLBACK);
+  function wireY(index) {
+    return wireHeaderHeight + index * wireRowHeight + wireRowHeight / 2;
+  }
+  let wireSvgHeight = $derived(
+    wireHeaderHeight +
+      Math.max(tableRows.length, featureRows.length) * wireRowHeight,
+  );
+  // A gentle S-curve rather than a straight line, so a long run of
+  // same-row (uncrossed) wires still reads clearly instead of a solid
+  // horizontal bar; the control points sit at the gutter's own midpoint.
+  function wirePath(leftIndex, rightIndex) {
+    const y1 = wireY(leftIndex);
+    const y2 = wireY(rightIndex);
+    const midX = WIRE_GUTTER_WIDTH / 2;
+    return `M0,${y1} C${midX},${y1} ${midX},${y2} ${WIRE_GUTTER_WIDTH},${y2}`;
+  }
+
+  // Diagram height -- just the row span (wireSvgHeight minus its own
+  // header term), since .board-diagram-caption's own height is set
+  // inline to wireHeaderHeight too (see the template), the same as
+  // .column-header. That's what actually makes the top/bottom insets
+  // match: the diagram and the FC Label column both reserve the same
+  // header height above their own row span, so lining up wrap-top with
+  // row-span-top (via matching row-span *heights*) is enough -- no
+  // need to also match the header regions' own heights pixel-for-pixel
+  // separately, since they're already forced identical. Clamped to a
+  // sensible range. This app's runtime doesn't support CSS
+  // aspect-ratio, so deriving this from wireSvgHeight -- itself built
+  // from the live-measured row/header heights above, not the row
+  // *count* alone -- is the reliable alternative to also measuring the
+  // diagram column's own rendered height directly (which would need
+  // to filter out the "+ Add" dropdown temporarily inflating it).
   let diagramHeight = $derived(
-    Math.min(
-      480,
-      Math.max(160, DIAGRAM_BASE_SIZE + tableRows.length * DIAGRAM_ROW_SIZE),
-    ),
+    Math.min(480, Math.max(160, wireSvgHeight - wireHeaderHeight)),
   );
   // Width derived from the diagram's own square shape (see the
   // inline <svg>'s viewBox below -- it's cropped to a square on the
@@ -279,14 +402,29 @@
   // auto-fit for text, so this measures the actual rendered width via
   // getComputedTextLength() and recomputes the scale whenever the
   // name changes.
+  //
+  // Scaling is uniform (x and y together, via the <g> transform), so
+  // filling the same target *width* regardless of length also means a
+  // short name gets taller the more it's scaled up -- a name as short
+  // as "V2_2" filled MODEL_TEXT_TARGET_WIDTH at a large enough scale
+  // to grow tall enough to overlap the brand image above it.
+  // MAX_MODEL_TEXT_SCALE caps how far a short name is ever enlarged
+  // (past this, it just doesn't reach the full target width), keeping
+  // its height bounded instead.
   const MODEL_TEXT_TARGET_WIDTH = BRAND_IMAGE_WIDTH;
+  const MAX_MODEL_TEXT_SCALE = 1.5;
   let modelTextEl = $state(null);
   let boardModelTextScale = $state(1);
   $effect(() => {
-    boardModelName; // re-measure whenever the displayed name changes
+    // Read boardModelName so this re-measures whenever the displayed
+    // name changes, not just when modelTextEl is (re)bound.
+    void boardModelName;
     if (modelTextEl) {
       const width = modelTextEl.getComputedTextLength();
-      boardModelTextScale = width > 0 ? MODEL_TEXT_TARGET_WIDTH / width : 1;
+      boardModelTextScale =
+        width > 0
+          ? Math.min(MODEL_TEXT_TARGET_WIDTH / width, MAX_MODEL_TEXT_SCALE)
+          : 1;
     }
   });
 
@@ -294,8 +432,9 @@
   // "BTFL" placeholder Rotorflight uses for an unrecognised
   // Betaflight target, isn't a real cased board. It's shown as a
   // bare, uncased PCB (see GENERIC.svg) instead of the cased shape
-  // below -- the same condition remap_fc.js already uses to decide
-  // whether to fetch richer Betaflight-target defaults.
+  // below -- see isGenericBoardDesign for the identical check
+  // remap_fc.js uses to decide whether to fetch richer
+  // Betaflight-target defaults.
   let isGenericBoard = $derived(isGenericBoardDesign(FC.CONFIG.boardDesign));
 
   let boardBezelColor = $derived(
@@ -360,14 +499,18 @@
     buildManufacturerNamedConnectorPins(referenceDesigns, FC.CONFIG.boardName),
   );
 
-  // Labels that read misleadingly as displayName's plain fallback
-  // (e.g. "Motor 2" is really a second ESC output) -- applied by
-  // optionLabel only once a reference design actually matched, so an
-  // undocumented board never gets these guessed at.
-  const DISPLAY_LABEL_OVERRIDES = {
-    TAIL: "Servo 4",
-    "Motor 2": "ESC 2",
-  };
+  // Whether option's row is a permanent fixture of the table: a fixed
+  // FW feature (motor/servo/Freq/LED) or the reference design's own
+  // named connector (TLM/SBUS/AUX, ...). Both always get a row the
+  // moment they're eligible, unlike a dynamically-added row (a
+  // beyond-capacity M5+/S9+, or a generic UART/I2C port), which only
+  // shows up once something actually occupies its pin.
+  function isPermanentOption(option, defaultPin) {
+    return (
+      TABLE_OPTION_KEYS.includes(option) ||
+      (defaultPin != null && namedConnectorPins.has(defaultPin))
+    );
+  }
 
   // Board's own name for a port (e.g. "ESC", "TAIL") from its
   // reference design, falling back to expandOptionName's spelled-out
@@ -381,13 +524,186 @@
     );
   }
 
-  // Label for a value being picked as some port's Current Option --
-  // displayName with DISPLAY_LABEL_OVERRIDES applied, only once a
-  // reference design matched (referenceLabels is {} otherwise).
-  function optionLabel(option) {
+  // FC Label column / "+ Add" menu text: displayName, with a generic
+  // "Servo N" or "Motor N" pad name (from a reference design that
+  // doesn't give it its own identity, or expandOptionName's fallback on
+  // an undocumented board) shortened to its CLI-style "SN"/"MN" form. A
+  // pad with a real name of its own -- "TAIL", "ESC", "SBUS" -- never
+  // matches this and is left untouched.
+  const GENERIC_SERVO_MOTOR_RE = /^(Servo|Motor) (\d+)$/;
+  function fcLabel(option) {
     const name = displayName(option);
-    const hasReferenceDesign = Object.keys(referenceLabels).length > 0;
-    return hasReferenceDesign ? (DISPLAY_LABEL_OVERRIDES[name] ?? name) : name;
+    const match = name.match(GENERIC_SERVO_MOTOR_RE);
+    return match ? `${match[1][0]}${match[2]}` : name;
+  }
+
+  // The FC Label *column*'s own text -- fcLabel with a generic UART/I2C
+  // bus name ("Serial RX 1", "I2C SDA 3") further shortened to just its
+  // bus/instance half ("RX 1", "SDA 3"): the column is too narrow for
+  // the full name to ever fit without truncating (see pin-row-text's
+  // own CSS). The "+ Add" menu and the pin card's own title (see
+  // fcLabel's other callers) keep the full name -- they have the room,
+  // and it reads better there without the identical column-width
+  // constraint forcing it shorter.
+  const BUS_PREFIX_RE = /^(?:Serial|I2C) /;
+  function pinColumnLabel(option) {
+    return fcLabel(option).replace(BUS_PREFIX_RE, "");
+  }
+
+  // The bus-and-instance name for a UART/I2C resource key -- "UART RX 1",
+  // "I2C SDA 1". Falls back to expandOptionName for anything unexpected.
+  function busResourceName(option) {
+    const match = option.match(/^(RX|TX|SDA|SCL)(\d+)$/);
+    if (!match) return expandOptionName(option);
+    const [, prefix, index] = match;
+    const bus = prefix === "SDA" || prefix === "SCL" ? "I2C" : "UART";
+    return `${bus} ${prefix} ${index}`;
+  }
+
+  // Label for the resource on the *other* end of a row -- the value
+  // being picked as its Current Option, not the physical pad. Always
+  // the plain CLI-style name (expandOptionName: "Motor 1", "Servo 3",
+  // "Frequency 1", "LED Strip"), never a board's own silkscreen name
+  // for it -- that's what displayName/fcLabel are for, on the FC Label
+  // side. Keeping the Feature side's own *labels* board-independent
+  // this way is unrelated to featureRows' own row *order*, which does
+  // vary per board (see orderFeatureKeys). A UART/I2C resource can only
+  // ever be its own row's value (see the UART/I2C rule), so it's
+  // always "this pad, unremapped" -- reads as plain "Default" rather
+  // than the bus name (see busResourceName for that; it still appears,
+  // spelled out, in cardDescription).
+  function optionLabel(option) {
+    if (isUartOrI2cResource(option)) return $i18n.t("remapFcDefaultOption");
+    return expandOptionName(option);
+  }
+
+  // Purpose hint keys for a UART/I2C pad's own default identity, keyed
+  // by its friendly connector name (see displayName) -- deliberately
+  // narrow: only connectors with an unambiguous, board-independent
+  // meaning across the RC/FC hobby (TLM = the ESC telemetry return,
+  // SBUS = the receiver's SBUS signal). AUX and any other/generic
+  // UART/I2C pad has no fixed purpose of its own, so falls back to
+  // remapFcHintGeneric.
+  const CONNECTOR_HINT_KEYS = {
+    TLM: "remapFcHintTlm",
+    SBUS: "remapFcHintSbus",
+  };
+
+  // Purpose hint keys for a PWM feature's own well-established,
+  // board-independent role on a typical helicopter build -- keyed by
+  // the CLI option key itself, since (unlike a UART connector) the
+  // feature's identity IS the canonical thing here, not whichever pad
+  // it currently sits on. Deliberately incomplete: M3/M4, S5-S8 and
+  // Freq2-4 vary too much by build (twin-motor rigs, flaps, retracts,
+  // extra sensors, ...) to state a specific purpose for confidently, so
+  // they fall back to the generic remapFcCardDescription blurb instead
+  // of a guessed-at one.
+  const FEATURE_PURPOSE_KEYS = {
+    M1: "remapFcPurposeM1",
+    M2: "remapFcPurposeM2",
+    S1: "remapFcPurposeS1",
+    S2: "remapFcPurposeS2",
+    S3: "remapFcPurposeS3",
+    S4: "remapFcPurposeS4",
+    Freq1: "remapFcPurposeFreq1",
+    LED: "remapFcPurposeLed",
+  };
+
+  // Title for the open card. A "pin" card (opened from the FC Label
+  // column) is about the pad, so it's titled with the pad's own name
+  // (fcLabel), same as always. A "feature" card (opened from the
+  // Feature column) is about the feature instead -- titled with that
+  // feature's own name (optionLabel(row.currentOption): "Servo 1"),
+  // not the pad it happens to currently sit on.
+  function cardTitle(row) {
+    return openCardSource === "feature" && row.currentOption
+      ? optionLabel(row.currentOption)
+      : fcLabel(row.option);
+  }
+
+  // Whether row's own pin has any timer capability at all -- see
+  // getRowSelectableOptions' own pinHasTimer param for why a row on a
+  // pin with none (e.g. a receive-only UART pin) must never offer a
+  // PWM-needing candidate (motor/servo/freq/LED): the `resource`
+  // command would send fine, but the feature would have nothing
+  // driving it, silently and with no warning anywhere else in this
+  // tool -- this is the one place that gets caught before it's ever
+  // picked.
+  function pinHasTimerCapability(pin) {
+    return getPinTimerOptions(mcuAllData, mcuType, pin).length > 0;
+  }
+
+  // Whether a pad's own pin can never actually be reassigned to
+  // anything else at all, for whichever reason -- explicitly hidden as
+  // an internal/hard-wired connection with no physical port (see
+  // hiddenPins), or simply having zero timer capability (see
+  // pinHasTimerCapability). Used by cardDescription to skip the "can be
+  // freely repurposed" hint, which would otherwise flatly contradict
+  // either pin's own "nothing to pick from" message shown just below
+  // it in the template.
+  function hasNoAlternativeResource(pin) {
+    return hiddenPins.has(pin) || !pinHasTimerCapability(pin);
+  }
+
+  // Description shown in a pad's Current Option card. A UART/I2C pad's
+  // own row names its underlying bus resource ("UART RX 2") and a
+  // connector-purpose hint, since "Default" alone (see optionLabel)
+  // doesn't say what that default actually is. A PWM feature currently
+  // sitting on this pad gets its own purpose hint if it has one (see
+  // FEATURE_PURPOSE_KEYS); everything else (an empty pad, or a feature
+  // without a confident hint) gets the generic "choose a feature" blurb.
+  //
+  // escapeValue: false -- hint is itself an already-resolved
+  // translation being interpolated into another one, and i18next
+  // HTML-escapes interpolated values by default (quotes/apostrophes
+  // become &quot;/&#39;), which is meant for untrusted values inserted
+  // as raw HTML. This is plain developer-authored text rendered as a
+  // text node (Svelte's {expression}, never {@html}), so there's
+  // nothing to protect against and escaping just corrupts the
+  // punctuation on screen.
+  function cardDescription(row) {
+    if (isUartOrI2cResource(row.option)) {
+      // No alternative resource for this pad at all (see
+      // hasNoAlternativeResource) skips the repurposing hint entirely
+      // -- "can be freely repurposed" would flatly contradict the
+      // separate "cannot be remapped"/"no alternative resource
+      // features" message the template shows right below for one of
+      // these, rather than complementing it the way the hint does for
+      // an ordinary pad.
+      if (hasNoAlternativeResource(row.defaultPin)) {
+        return $i18n.t("remapFcCardDescriptionUartNoAlternative", {
+          resource: busResourceName(row.option),
+        });
+      }
+
+      const hintKey = CONNECTOR_HINT_KEYS[displayName(row.option)];
+      return $i18n.t("remapFcCardDescriptionUart", {
+        resource: busResourceName(row.option),
+        hint: $i18n.t(hintKey ?? "remapFcHintGeneric"),
+        interpolation: { escapeValue: false },
+      });
+    }
+
+    const purposeKey =
+      row.currentOption && FEATURE_PURPOSE_KEYS[row.currentOption];
+    return $i18n.t(purposeKey ?? "remapFcCardDescription");
+  }
+
+  // Friendly FC Label name for a raw MCU pin (e.g. "B14" -> "Servo 1"),
+  // used by suggestionLabel below -- pin_conflict_suggestions.js only
+  // deals in raw pins and CLI keys, not this board's own pad naming.
+  // The unabbreviated displayName, not fcLabel's "S1" short form: this
+  // reads as a sentence ("Move Servo 3 to Servo 1"), where the fully
+  // spelled-out name (matching how the feature side of that same
+  // sentence already reads) fits better than a terse column label.
+  // Falls back to the bare pin if no option in defaultHardware claims
+  // it (shouldn't normally happen -- every suggested target pin comes
+  // from some row's own defaultPin).
+  function pinLabel(pin) {
+    const option = Object.keys(defaultHardware).find(
+      (key) => defaultHardware[key].pin === pin,
+    );
+    return option ? displayName(option) : pin;
   }
 
   // Human-readable label for a pin-conflict suggestion, using this
@@ -401,7 +717,7 @@
         })
       : $i18n.t("remapFcSuggestionMove", {
           feature: optionLabel(suggestion.feature),
-          targetPin: suggestion.targetPin,
+          targetPin: pinLabel(suggestion.targetPin),
         });
   }
 
@@ -428,7 +744,7 @@
   let sequenceGaps = $derived(hasRead ? findSequenceGaps(claimedOptions) : []);
 
   // Everything still addable via "+ Add" -- every default option not
-  // already shown a row, minus reservedPins.
+  // already shown a row, minus reservedPins and hiddenPins.
   let addablePool = $derived(
     getAddableOptions(defaultHardware, visibleOptions).filter(
       (addable) =>
@@ -445,18 +761,6 @@
   // choice plus the placeholder, capped so it can't grow unreasonably
   // tall when there's a lot to pick from.
   let addMenuSize = $derived(Math.min(addablePool.length + 1, 10));
-
-  // Whether row's own pin has any timer capability at all -- see
-  // getRowSelectableOptions' own pinHasTimer param for why a row on a
-  // pin with none (e.g. a receive-only UART pin) must never offer a
-  // PWM-needing candidate (motor/servo/freq/LED): the `resource`
-  // command would send fine, but the feature would have nothing
-  // driving it, silently and with no warning anywhere else in this
-  // tool -- this is the one place that gets caught before it's ever
-  // picked.
-  function pinHasTimerCapability(pin) {
-    return getPinTimerOptions(mcuAllData, mcuType, pin).length > 0;
-  }
 
   // Pool for a row's own Current Option dropdown. Excludes the row's
   // own current pick from claimedOptions first, so a candidate that's
@@ -555,8 +859,20 @@
   // one the user most recently placed, falling back to whichever
   // unresolved feature comes first if nothing's been touched yet this
   // session (e.g. the clash was already there on read).
+  //
+  // Only trusts lastChangedOption while it still names something
+  // actually present in workingCurrent -- handleCurrentOptionChange
+  // sets it whenever a row is *placed*, but never clears it once set,
+  // so picking "None" on that same row afterwards (or a different row's
+  // edit evicting it from its pin) would otherwise leave this pointing
+  // at a feature that no longer exists anywhere on the board:
+  // handleResetToSetOption's own tableRows lookup would then silently
+  // find nothing and no-op, while the panel still displayed that stale
+  // feature's name as the thing needing a manual fix.
   let manualFixTarget = $derived(
-    lastChangedOption ?? pinConflictResult.unresolvedFeatures[0] ?? null,
+    (lastChangedOption in workingCurrent ? lastChangedOption : null) ??
+      pinConflictResult.unresolvedFeatures[0] ??
+      null,
   );
 
   // Whether there's anything staged to actually send -- resource
@@ -670,19 +986,6 @@
 
   export function setError(message) {
     error = message;
-  }
-
-  // Whether option's row is a permanent fixture of the table: a fixed
-  // FW feature (motor/servo/Freq/LED) or the reference design's own
-  // named connector (TLM/SBUS/AUX, ...). Both always get a row the
-  // moment they're eligible, unlike a dynamically-added row (a
-  // beyond-capacity M5+/S9+, or a generic UART/I2C port), which only
-  // shows up once something actually occupies its pin.
-  function isPermanentOption(option, defaultPin) {
-    return (
-      TABLE_OPTION_KEYS.includes(option) ||
-      (defaultPin != null && namedConnectorPins.has(defaultPin))
-    );
   }
 
   /**
@@ -837,6 +1140,8 @@
     selectedAddOption = "";
     addMenuOpen = false;
     lastChangedOption = null;
+    openCardOption = null;
+    openCardSource = null;
   }
 
   // onClick handles the "Read FC" button: clear any previous run's
@@ -850,11 +1155,29 @@
     window.open(getTabHelpURL("tabRemapFC"), "_system");
   }
 
+  // Fires when an FC Label or Feature button is clicked: opens that
+  // pad's Current Option card in the clicked column's own mode (see
+  // openCardSource), or closes it again if it was already open in that
+  // exact mode -- clicking the other column's button for the same pad
+  // switches modes rather than closing.
+  function toggleCard(option, source) {
+    if (openCardOption === option && openCardSource === source) {
+      openCardOption = null;
+      openCardSource = null;
+    } else {
+      openCardOption = option;
+      openCardSource = source;
+    }
+  }
+
   // handleAddChange fires when an option is picked from the "+ Add"
-  // dropdown: give it a row (if it doesn't already have one), mark it
-  // "unset" so it shows the "Set Option" placeholder until the user
-  // makes an explicit choice, then close the dropdown back down to
-  // just the "+ Add" button.
+  // dropdown: give it a row (if it doesn't already have one), then close
+  // the dropdown back down to just the "+ Add" button. Only a
+  // dynamically-added row (a beyond-capacity M5+/S9+, or a generic
+  // UART/I2C port -- see isPermanentOption) ever reaches here at all,
+  // since every permanent row already has one. It starts "unset" (the
+  // "Default" placeholder) unless its resource turns out to already
+  // be assigned, in which case its real value shows straight away.
   /**
    * @param {Event} e
    */
@@ -862,10 +1185,10 @@
     const option = e.target.value;
     selectedAddOption = "";
     addMenuOpen = false;
-    if (!option) return;
+    if (!option || visibleOptions.includes(option)) return;
 
-    if (!visibleOptions.includes(option)) {
-      visibleOptions = [...visibleOptions, option];
+    visibleOptions = [...visibleOptions, option];
+    if (workingCurrent[option]?.pin == null) {
       unsetOptions = [...unsetOptions, option];
     }
   }
@@ -907,22 +1230,32 @@
   }
 
   // Fires when a row's Current Option changes: frees whoever occupied
-  // that pin, then assigns the pick (or removes the row on "None").
+  // that pin, then assigns the pick. On "None", a dynamically-added row
+  // (a beyond-capacity M5+/S9+, or a generic UART/I2C port) disappears
+  // back to "+ Add"; a permanent row (see isPermanentOption) stays in
+  // the table showing "None".
   /**
    * @param {import("@/js/remap_fc/remap_table.js").RemapRow} row
    * @param {Event} e
    */
   function handleCurrentOptionChange(row, e) {
     const chosen = e.target.value;
-    const next = { ...workingCurrent };
 
-    const previousOccupant = Object.keys(next).find(
-      (key) => next[key].pin === row.defaultPin,
+    // Drop whoever currently occupies this row's default pin (a pin can
+    // only host one resource) by rebuilding the map without them,
+    // rather than a dynamically-computed delete.
+    const next = Object.fromEntries(
+      Object.entries(workingCurrent).filter(
+        ([, resource]) => resource.pin !== row.defaultPin,
+      ),
     );
-    if (previousOccupant) delete next[previousOccupant];
 
     if (chosen === NONE_VALUE) {
-      visibleOptions = visibleOptions.filter((option) => option !== row.option);
+      if (!isPermanentOption(row.option, row.defaultPin)) {
+        visibleOptions = visibleOptions.filter(
+          (option) => option !== row.option,
+        );
+      }
     } else if (chosen) {
       next[chosen] = { pin: row.defaultPin };
       lastChangedOption = chosen;
@@ -962,9 +1295,9 @@
     );
     if (!affectedRow) return;
 
-    const next = { ...workingCurrent };
-    delete next[manualFixTarget];
-    workingCurrent = next;
+    workingCurrent = Object.fromEntries(
+      Object.entries(workingCurrent).filter(([key]) => key !== manualFixTarget),
+    );
     unsetOptions = unsetOptions.includes(affectedRow.option)
       ? unsetOptions
       : [...unsetOptions, affectedRow.option];
@@ -980,7 +1313,31 @@
   </button>
 {/snippet}
 
-<Page {header} loading={false}>
+<!-- Action row, only while something is staged -- same bottom toolbar
+     every other Svelte tab uses for Revert / Save & Reboot. The full
+     list of commands shows in the "Pending Changes" card in the body
+     once "Show details" is on. -->
+{#snippet toolbar()}
+  <button class="btn" onclick={handleClearChanges} disabled={running}>
+    {$i18n.t("buttonRevert")}
+  </button>
+  <button
+    class="btn"
+    onclick={handleLoadChanges}
+    disabled={running ||
+      pinConflictResult.unresolvedFeatures.length > 0 ||
+      sequenceGaps.length > 0}
+    title={pinConflictResult.unresolvedFeatures.length > 0
+      ? $i18n.t("remapFcLoadChangesBlocked")
+      : sequenceGaps.length > 0
+        ? $i18n.t("remapFcSequenceGapBlocked")
+        : ""}
+  >
+    {running ? $i18n.t("remapFcApplying") : $i18n.t("buttonSaveReboot")}
+  </button>
+{/snippet}
+
+<Page {header} toolbar={hasStagedCommands && toolbar} loading={false}>
   <!-- Before a read, offer the button that triggers one, plus a short
        explanation of what the tab actually does -- everything else
        below only has anything to show once the FC's actually been
@@ -989,17 +1346,22 @@
   {#if !hasRead}
     <div class="intro-card">
       <Section label="remapFcIntroHeading">
-        <div class="intro-content">
-          <p>{$i18n.t("remapFcIntroDescription")}</p>
-          <img
-            class="intro-illustration"
-            src="/images/remap_fc/REMAP_ILLUSTRATION.svg"
-            alt=""
-          />
+        <!-- One padded wrapper for the whole card body: Section's own
+             .content only insets 4px, which leaves buttons and text
+             hugging the card edge. -->
+        <div class="intro-body">
+          <div class="intro-content">
+            <p>{$i18n.t("remapFcIntroDescription")}</p>
+            <img
+              class="intro-illustration"
+              src="/images/remap_fc/REMAP_ILLUSTRATION.svg"
+              alt=""
+            />
+          </div>
+          <button class="btn run-btn" onclick={onClick} disabled={running}>
+            {runButtonLabel}
+          </button>
         </div>
-        <button class="btn run-btn" onclick={onClick} disabled={running}>
-          {runButtonLabel}
-        </button>
       </Section>
     </div>
   {/if}
@@ -1062,17 +1424,19 @@
       <div class="table-with-diagram">
         <!-- Two fallback diagrams: a bare, uncased PCB (GENERIC.svg)
            for a board reporting no real reference design at all (see
-           isGenericBoard), or a cased case shape for every other
-           board -- not board-specific artwork, building/fetching a
-           dedicated diagram per manufacturer doesn't scale. Outer/
-           inner body shape matches flydragon.svg's own outline (a
-           plain rounded rect, rx 20/14), in grey as the fallback
-           colour a board with no dedicated diagram of its own gets
-           (see boardBezelColor/boardBodyColor for manufacturers with
-           their own real case colours). The FC's own reported name
-           sits above the diagram, not overlaid on it. -->
+           isGenericBoard), or a plain rounded-rect case (drawn inline
+           below, not its own SVG file) for every other board -- not
+           board-specific artwork, building/fetching a dedicated
+           diagram per manufacturer doesn't scale. Grey is the fallback
+           colour a board with no dedicated case colours of its own
+           gets (see boardBezelColor/boardBodyColor for manufacturers
+           with their own real ones). The FC's own reported name sits
+           above the diagram, not overlaid on it. -->
         <div class="board-diagram-column">
-          <div class="board-diagram-caption">
+          <div
+            class="board-diagram-caption"
+            style="height: {wireHeaderHeight}px"
+          >
             {boardBrandName}
             {FC.CONFIG.boardName}
           </div>
@@ -1157,130 +1521,273 @@
             <p>{$i18n.t("remapFcLoadingHardware")}</p>
           </div>
         {:else if tableRows.length || hasRealAddableOptions}
-          <table class="remap-table">
-            <thead>
-              <tr>
-                <th>{$i18n.t("remapFcTableOption")}</th>
-                {#if showCalculatedDetails}
-                  <th>{$i18n.t("remapFcTableDefaultPin")}</th>
-                {/if}
-                <th></th>
-                <th>{$i18n.t("remapFcTableCurrentOption")}</th>
-              </tr>
-            </thead>
-            <tbody>
+          {@const activeLeftIndex = tableRows.findIndex(
+            (row) => row.option === openCardOption,
+          )}
+          <div class="wiring-row">
+            <!-- FC Label column: one button per physical pad. Clicking
+                 it opens/closes its Current Option card (see
+                 .card-col below) -- it no longer carries its own
+                 dropdown. -->
+            <div class="pins-col">
+              <div
+                class="column-header"
+                bind:clientHeight={measuredHeaderHeight}
+              >
+                {$i18n.t("remapFcTableOption")}
+              </div>
               {#each tableRows as row (row.option)}
-                {@const unset = unsetOptions.includes(row.option)}
-                <tr>
-                  <td>{displayName(row.option)}</td>
-                  {#if showCalculatedDetails}
-                    <td>{row.defaultPin ?? "—"}</td>
-                  {/if}
-                  <td class="arrow">
-                    <img
-                      class="arrow-cable"
-                      src="/images/remap_fc/CABLE_ARROW.svg"
-                      alt=""
-                    />
-                  </td>
-                  <td>
-                    {#if hiddenPins.has(row.defaultPin)}
-                      <!-- A manufacturer design can mark a pin
-                           "hide": true (see reference_design_labels.js's
-                           buildHiddenPins) -- a genuine, otherwise-
-                           ordinary CLI resource electrically, but
-                           hard-wired straight to something onboard with
-                           no physical port to connect anything else to.
-                           Excluded from "+ Add" the same as
-                           reservedPins; this branch only matters on the
-                           rare board where the pin is still shown as a
-                           permanent row. Checked before the no-timer
-                           case below since it's a stronger,
-                           unconditional reason: it can still apply to a
-                           pin that *does* have a timer. -->
-                      <p class="locked-pin-message">
-                        {$i18n.t("remapFcPinNotRemappable")}
-                      </p>
-                    {:else if !pinHasTimerCapability(row.defaultPin)}
-                      <!-- A pin with zero timer options can never drive
-                           any PWM-needing feature (see
-                           pinHasTimerCapability/getRowSelectableOptions'
-                           own pinHasTimer param) -- its only ever
-                           possible Current Option is its own original
-                           resource, so there's nothing an interactive
-                           dropdown would actually let the user change. -->
-                      <p class="locked-pin-message">
-                        {$i18n.t("remapFcNoAlternativeFeatures")}
-                      </p>
-                    {:else}
-                      <!-- Force a remount whenever the displayed value changes
-                       (e.g. because a different row's edit cleared this
-                       row's occupant, or this row just got resolved out
-                       of the "unset" placeholder state) so the select
-                       always reflects it. -->
-                      {#key unset ? "unset" : row.currentOption}
-                        <Select
-                          value={unset ? "" : (row.currentOption ?? NONE_VALUE)}
-                          onchange={(e) => handleCurrentOptionChange(row, e)}
-                          options={[
-                            ...(unset
-                              ? [
-                                  {
-                                    value: "",
-                                    label: $i18n.t("remapFcSetOption"),
-                                  },
-                                ]
-                              : row.currentOption
-                                ? [
-                                    {
-                                      value: row.currentOption,
-                                      label: optionLabel(row.currentOption),
-                                    },
-                                  ]
-                                : []),
-                            ...optionsForRow(row).map((option) => ({
-                              value: option,
-                              label:
-                                option === NONE_VALUE
-                                  ? $i18n.t("remapFcNoneOption")
-                                  : optionLabel(option),
-                            })),
-                          ]}
-                        />
-                      {/key}
-                    {/if}
-                  </td>
-                </tr>
+                <button
+                  type="button"
+                  class="pin-row"
+                  class:active={openCardOption === row.option}
+                  onclick={() => toggleCard(row.option, "pin")}
+                  bind:clientHeight={measuredRowHeight}
+                >
+                  <img class="pin-icon" src="/images/remap_fc/PIN.svg" alt="" />
+                  <span class="pin-row-text">{pinColumnLabel(row.option)}</span>
+                </button>
               {/each}
               {#if hasRealAddableOptions}
-                <tr class="add-row">
-                  <td colspan={showCalculatedDetails ? 4 : 3}>
-                    {#if addMenuOpen}
-                      <Select
+                <div class="add-row">
+                  {#if addMenuOpen}
+                    <!-- svelte-ignore a11y_autofocus -->
+                    <div class="add-menu">
+                      <select
+                        class="add-menu-select"
+                        autofocus
                         bind:value={selectedAddOption}
                         onchange={handleAddChange}
+                        onblur={() => (addMenuOpen = false)}
                         size={addMenuSize}
+                      >
+                        <option value="">{$i18n.t("remapFcAddOption")}</option>
+                        {#each addablePool as addable (addable.option)}
+                          <option value={addable.option}>
+                            {fcLabel(addable.option)}
+                          </option>
+                        {/each}
+                      </select>
+                    </div>
+                  {:else}
+                    <button
+                      class="btn add-btn"
+                      onclick={() => (addMenuOpen = true)}
+                    >
+                      {$i18n.t("remapFcAddOption")}
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+
+            <!-- The literal connections: one path per Feature row,
+                 from its FC Label row's index to its own. Both columns
+                 render every row at the same height (wireRowHeight,
+                 measured off the .pin-row rows below), so a plain
+                 index->pixel formula (wireY) places every endpoint. -->
+            <svg
+              class="wires"
+              width={WIRE_GUTTER_WIDTH}
+              height={wireSvgHeight}
+              viewBox="0 0 {WIRE_GUTTER_WIDTH} {wireSvgHeight}"
+            >
+              {#each wireLinks as link (featureRows[link.rightIndex].pinRow.option)}
+                <path
+                  class:active={link.leftIndex === activeLeftIndex}
+                  d={wirePath(link.leftIndex, link.rightIndex)}
+                />
+              {/each}
+            </svg>
+
+            <!-- Feature column: a button per feature, in this board's
+                 own physical row order (see featureRows/
+                 orderFeatureKeys) -- a pin with nothing allocated has
+                 no entry here at all. Clicking
+                 one opens a read-only card (see toggleCard's "feature"
+                 mode) titled with the feature's own name and showing
+                 its purpose hint, if it has one (see cardDescription). -->
+            <div class="features-col">
+              <div class="column-header">
+                {$i18n.t("remapFcTableCurrentOption")}
+              </div>
+              {#each featureRows as featureRow (featureRow.pinRow.option)}
+                <button
+                  type="button"
+                  class="feature-row"
+                  class:active={openCardOption === featureRow.pinRow.option}
+                  onclick={() =>
+                    toggleCard(featureRow.pinRow.option, "feature")}
+                >
+                  {optionLabel(featureRow.key)}
+                </button>
+              {/each}
+            </div>
+
+            <!-- The open pad's card -- a standing placeholder while
+                 nothing's selected, rather than empty, so there's
+                 always something here prompting the next action. Its
+                 content depends on openCardSource (see toggleCard): a
+                 "pin" card gets the full title+pin/description/dropdown
+                 treatment; a "feature" card is read-only -- title (the
+                 feature's own name, see cardTitle) and description
+                 only, no pin number and no dropdown, since clicking a
+                 feature is about learning what it's for, not
+                 remapping it. -->
+            <div class="card-col">
+              {#if cardRow}
+                {@const unset = unsetOptions.includes(cardRow.option)}
+                {@const isPinCard = openCardSource === "pin"}
+                <div class="option-card">
+                  <div class="option-card-header">
+                    <span class="option-card-title">
+                      {cardTitle(cardRow)}
+                      {#if isPinCard && cardRow.defaultPin}
+                        <span class="option-card-pin"
+                          >({cardRow.defaultPin})</span
+                        >
+                      {/if}
+                    </span>
+                    <button
+                      type="button"
+                      class="option-card-close"
+                      onclick={() => {
+                        openCardOption = null;
+                        openCardSource = null;
+                      }}
+                      aria-label={$i18n.t("remapFcCloseCard")}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <p class="option-card-description">
+                    {cardDescription(cardRow)}
+                  </p>
+                  {#if isPinCard && hiddenPins.has(cardRow.defaultPin)}
+                    <!-- A manufacturer design can mark a pin
+                         "hide": true (see reference_design_labels.js's
+                         buildHiddenPins) -- a genuine,
+                         otherwise-ordinary CLI resource electrically,
+                         but hard-wired straight to something onboard
+                         (e.g. Flydragon Pro's Int Rec.Tx/Rx, wired
+                         directly to the onboard receiver) with no
+                         physical port to connect anything else to.
+                         Excluded from "+ Add" the same as reservedPins;
+                         this branch only matters on the rare board
+                         where the pin is still shown as a permanent
+                         row. Checked before the no-timer case below
+                         since it's a stronger, unconditional reason: it
+                         can still apply to a pin that *does* have a
+                         timer. -->
+                    <p class="option-card-description">
+                      {$i18n.t("remapFcPinNotRemappable")}
+                    </p>
+                  {:else if isPinCard && !pinHasTimerCapability(cardRow.defaultPin)}
+                    <!-- A pin with zero timer options can never drive
+                         any PWM-needing feature (see
+                         pinHasTimerCapability/getRowSelectableOptions'
+                         own pinHasTimer param) -- its only ever
+                         possible Current Option is its own original
+                         resource, so there's nothing an interactive
+                         dropdown would actually let the user change. -->
+                    <p class="option-card-description">
+                      {$i18n.t("remapFcNoAlternativeFeatures")}
+                    </p>
+                  {:else if isPinCard}
+                    <!-- Force a remount whenever the displayed value
+                         changes (e.g. because a different row's edit
+                         cleared this row's occupant, or this row just
+                         got resolved out of the "unset" placeholder
+                         state) so the select always reflects it. -->
+                    {#key unset ? "unset" : cardRow.currentOption}
+                      <Select
+                        value={unset
+                          ? ""
+                          : (cardRow.currentOption ?? NONE_VALUE)}
+                        onchange={(e) => handleCurrentOptionChange(cardRow, e)}
                         options={[
-                          { value: "", label: $i18n.t("remapFcAddOption") },
-                          ...addablePool.map((addable) => ({
-                            value: addable.option,
-                            label: displayName(addable.option),
+                          ...(unset
+                            ? [
+                                {
+                                  value: "",
+                                  label: $i18n.t("remapFcDefaultOption"),
+                                  disabled: true,
+                                  hidden: true,
+                                },
+                              ]
+                            : cardRow.currentOption
+                              ? [
+                                  {
+                                    value: cardRow.currentOption,
+                                    label: optionLabel(cardRow.currentOption),
+                                  },
+                                ]
+                              : []),
+                          ...optionsForRow(cardRow).map((option) => ({
+                            value: option,
+                            label:
+                              option === NONE_VALUE
+                                ? $i18n.t("remapFcNoneOption")
+                                : optionLabel(option),
                           })),
                         ]}
                       />
-                    {:else}
-                      <button
-                        class="btn add-btn"
-                        onclick={() => (addMenuOpen = true)}
-                      >
-                        {$i18n.t("remapFcAddOption")}
-                      </button>
-                    {/if}
-                  </td>
-                </tr>
+                    {/key}
+                  {/if}
+                </div>
+              {:else}
+                <div class="option-card option-card-placeholder">
+                  <p class="option-card-description">
+                    {$i18n.t("remapFcCardPlaceholder")}
+                  </p>
+                </div>
               {/if}
-            </tbody>
-          </table>
+
+              <!-- Config review: every resolved servo's own update
+                   rate, grouped by shared timer (see
+                   servoTimerGroups), one group per line -- led with
+                   the rate itself (what the user actually set) rather
+                   than the underlying timer base (meaningless outside
+                   this tool), followed by which servos it covers. Each
+                   group line is the one thing here actually worth a
+                   glance, so it's set apart (brighter, see
+                   .servo-rate-group-line) from the label above and the
+                   hint below, which stay quiet. Every servo in a group
+                   is expected to share one rate (see the hint), so
+                   this is purely an indication of what's currently
+                   configured, not another interactive card, and still
+                   styled well below the pad detail card above it
+                   overall. Never blocks Load Changes. -->
+              {#if servoTimerGroups.length}
+                <div class="servo-rate-footnote">
+                  <p class="servo-rate-footnote-label">
+                    {$i18n.t("remapFcServoRateHeading")}:
+                  </p>
+                  <div class="servo-rate-groups">
+                    {#each servoTimerGroups as group (group.base)}
+                      <p class="servo-rate-group-line">
+                        {#if group.rate == null}
+                          {$i18n.t("remapFcNoneOption")}
+                        {:else if group.isDefault}
+                          {$i18n.t("remapFcServoRateDefaultEntry", {
+                            rate: group.rate,
+                          })}
+                        {:else}
+                          {`${group.rate}Hz`}
+                        {/if}
+                        → {group.features
+                          .map((feature) => optionLabel(feature))
+                          .join(", ")}
+                      </p>
+                    {/each}
+                  </div>
+                  <p class="servo-rate-footnote-hint">
+                    {$i18n.t("remapFcServoRateDescription")}
+                  </p>
+                </div>
+              {/if}
+            </div>
+          </div>
         {/if}
       </div>
     {:else}
@@ -1393,88 +1900,6 @@
     </div>
   {/if}
 
-  <!-- Every resolved servo's own update rate, grouped by shared timer
-       (see servoTimerGroups), one group per line -- led with the rate
-       itself (what the user actually set) rather than the underlying
-       timer base (meaningless outside this tool), followed by which
-       servos it covers. Every servo in a group is expected to share
-       one rate (see the hint below), so this is purely an indication
-       of what's currently configured, not another interactive card.
-       Never blocks Load Changes. -->
-  {#if mcuSupported && servoTimerGroups.length}
-    <div class="servo-rate-card">
-      <Section label="remapFcServoRateHeading">
-        <div class="servo-rate-groups">
-          {#each servoTimerGroups as group (group.base)}
-            <p class="servo-rate-group-line">
-              {#if group.rate == null}
-                {$i18n.t("remapFcNoneOption")}
-              {:else if group.isDefault}
-                {$i18n.t("remapFcServoRateDefaultEntry", {
-                  rate: group.rate,
-                })}
-              {:else}
-                {`${group.rate}Hz`}
-              {/if}
-              → {group.features
-                .map((feature) => optionLabel(feature))
-                .join(", ")}
-            </p>
-          {/each}
-        </div>
-        <p class="servo-rate-card-hint">
-          {$i18n.t("remapFcServoRateDescription")}
-        </p>
-      </Section>
-    </div>
-  {/if}
-
-  <!-- "Load Changes" sends the staged diff (resource + timer/DMA +
-       save); the panel next to it previews the exact commands. -->
-  {#if hasStagedCommands}
-    <div class="pending-changes-card">
-      <Section label="remapFcChangesHeading">
-        <div class="changes-bar">
-          <div class="changes-row">
-            <button
-              class="btn apply-btn"
-              onclick={handleLoadChanges}
-              disabled={running ||
-                pinConflictResult.unresolvedFeatures.length > 0 ||
-                sequenceGaps.length > 0}
-              title={pinConflictResult.unresolvedFeatures.length > 0
-                ? $i18n.t("remapFcLoadChangesBlocked")
-                : sequenceGaps.length > 0
-                  ? $i18n.t("remapFcSequenceGapBlocked")
-                  : ""}
-            >
-              {running
-                ? $i18n.t("remapFcApplying")
-                : $i18n.t("remapFcLoadChangesButton")}
-            </button>
-
-            <details class="commands-panel">
-              <summary
-                >{$i18n.t("remapFcPendingCommands", {
-                  count: commandsToSend.length,
-                })}
-              </summary>
-              <pre>{commandsToSend.join("\n")}</pre>
-            </details>
-          </div>
-
-          <button
-            class="btn clear-btn"
-            onclick={handleClearChanges}
-            disabled={running}
-          >
-            {$i18n.t("remapFcClearChangesButton")}
-          </button>
-        </div>
-      </Section>
-    </div>
-  {/if}
-
   <!-- A genuine problem (unresolvedFeatures) always stays visible
        regardless of "Show details" -- only the table itself hides
        behind the toggle. -->
@@ -1526,21 +1951,34 @@
         </Section>
       </div>
     {/if}
+
+    <!-- The exact CLI batch "Load Changes" will send, revealed by the
+         same "Show details" toggle as the calculated-config table. -->
+    {#if showCalculatedDetails && hasStagedCommands}
+      <div class="pending-changes-card">
+        <Section label="remapFcChangesHeading">
+          <pre class="pending-commands">{commandsToSend.join("\n")}</pre>
+        </Section>
+      </div>
+    {/if}
   {/if}
 </Page>
 
 <style lang="scss">
-  .run-btn {
+  .btn {
     @extend %button;
-    align-self: flex-start;
-    margin: 16px 16px 24px 16px;
-    padding: 0 24px;
   }
 
-  // Custom Section headers (board-info card, live-warning card):
-  // matches Section.svelte/Status.svelte's own header/title styling,
-  // since supplying a header snippet bypasses Section's default one
-  // entirely.
+  /* align-self keeps it from stretching to the intro card's full width;
+     spacing off the text/illustration above comes from .intro-body's gap. */
+  .run-btn {
+    align-self: flex-start;
+  }
+
+  /* Custom Section headers (board-info card, live-warning card):
+     matches Section.svelte/Status.svelte's own header/title styling,
+     since supplying a header snippet bypasses Section's default one
+     entirely. */
   .header {
     @extend %section-header;
     padding-right: 8px;
@@ -1555,8 +1993,8 @@
     color: var(--color-status-bad);
   }
 
-  // Plain label/value rows, matching Status.svelte's own info-table
-  // convention.
+  /* Plain label/value rows, matching Status.svelte's own info-table
+     convention. */
   .info-table {
     width: 100%;
 
@@ -1571,19 +2009,18 @@
     }
   }
 
-  // Hugs its own short content, matching Status.svelte's compact
-  // info cards; margin-bottom separates it from the table below.
+  /* Hugs its own short content, matching Status.svelte's compact
+     info cards; margin-bottom separates it from the table below. */
   .board-info-card {
     max-width: 320px;
     margin-bottom: 24px;
   }
 
-  // Wider than .board-info-card since the table has four columns, but
-  // still capped rather than spanning the full page.
+  /* Wider than .board-info-card since the table has four columns, but
+     still capped rather than spanning the full page. */
   .calculated-config-card,
   .pending-changes-card,
   .pin-conflict-card,
-  .servo-rate-card,
   .mcu-unsupported-card {
     max-width: 560px;
   }
@@ -1592,12 +2029,21 @@
     max-width: 700px;
   }
 
+  /* Wraps the whole intro card body in real padding -- Section's own
+     .content only gives 4px, so without this the text and Read FC
+     button sit flush against the card edge. */
+  .intro-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 16px 12px;
+  }
+
   .intro-content {
     display: flex;
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
-    padding-left: 16px; // lines up with .run-btn's own left margin below
 
     p {
       flex: 1 1 280px;
@@ -1629,32 +2075,9 @@
     color: var(--color-status-bad);
   }
 
-  // Tighter than the card's own default paragraph spacing -- these
-  // lines read as one related group of results, so they sit closer to
-  // each other than to the hint below the whole block.
-  .servo-rate-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-bottom: 8px;
-  }
-
-  .servo-rate-group-line {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--color-text);
-  }
-
-  .servo-rate-card-hint {
-    margin: 0;
-    font-size: 0.72rem;
-    color: var(--color-text);
-    opacity: 0.6;
-  }
-
-  // The suggestion picker (a single suggestion shows as plain text
-  // instead -- see the template) plus "Accept Suggestion", at the
-  // bottom of the pin-conflict warning panel.
+  /* The suggestion picker (a single suggestion shows as plain text
+     instead -- see the template) plus "Accept Suggestion", at the
+     bottom of the pin-conflict warning panel. */
   .suggestion-row {
     display: flex;
     align-items: center;
@@ -1663,14 +2086,59 @@
     flex-wrap: wrap;
   }
 
-  // Shown instead of .suggestion-row when no swap/move resolves the
-  // clash -- same top spacing, so the two are interchangeable.
+  /* Shown instead of .suggestion-row when no swap/move resolves the
+     clash -- same top spacing, so the two are interchangeable. */
   .suggestion-manual-fix {
     margin: 10px 0 0;
   }
 
   .accept-suggestion-btn {
     @extend %button;
+  }
+
+  /* Deliberately quiet overall -- an indication, not another
+     interactive card: no box, border, or shadow, at the same 260px
+     width/left margin as .option-card so it still lines up under the
+     pad detail card above it. The gap separates the label, the
+     groups block as a whole, and the hint -- see .servo-rate-groups
+     for the tighter spacing between individual group lines within
+     that block. */
+  .servo-rate-footnote {
+    width: 260px;
+    margin: 0 0 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  /* Tighter than .servo-rate-footnote's own gap -- these lines read
+     as one related group of results, so they sit closer to each
+     other than to the label above/hint below the whole block. */
+  .servo-rate-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .servo-rate-footnote-label,
+  .servo-rate-footnote-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--color-text);
+    opacity: 0.6;
+  }
+
+  /* The one thing here actually worth a glance -- brighter (bold,
+     fuller opacity) than the label/hint around it, at the same size
+     as them, so the timer groupings stand out as the important
+     information without overpowering the quiet caption feel. */
+  .servo-rate-group-line {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text);
+    opacity: 0.95;
   }
 
   .allocation-table {
@@ -1689,15 +2157,15 @@
       opacity: 0.8;
     }
 
-    // Flags a row left untouched because nothing could be resolved
-    // for it, rather than one that was actually (re)allocated.
+    /* Flags a row left untouched because nothing could be resolved
+       for it, rather than one that was actually (re)allocated. */
     tr.unresolved td {
       color: var(--color-status-bad);
     }
 
-    // A DMA cell shown for reference only (servo/freq inputs never
-    // actually use DMA -- see featureNeedsDma); struck through so it
-    // reads as inert.
+    /* A DMA cell shown for reference only (servo/freq inputs never
+       actually use DMA -- see featureNeedsDma); struck through so it
+       reads as inert. */
     td.dma-unmanaged {
       opacity: 0.5;
       text-decoration: line-through;
@@ -1709,10 +2177,10 @@
     font-size: 0.9em;
   }
 
-  // Every timer option this pin actually supports, not just the one
-  // in use -- the chosen one stands out at full weight/opacity, the
-  // rest are dimmed rather than removed entirely, so it's still
-  // obvious what else was available.
+  /* Every timer option this pin actually supports, not just the one
+     in use -- the chosen one stands out at full weight/opacity, the
+     rest are dimmed rather than removed entirely, so it's still
+     obvious what else was available. */
   .timer-options {
     display: flex;
     flex-direction: column;
@@ -1733,45 +2201,23 @@
     }
   }
 
-  // "Load Changes" plus its command-preview panel, stacked above the
-  // separate "Clear Changes" row.
-  .changes-bar {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .changes-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .apply-btn,
-  .clear-btn {
-    @extend %button;
-    align-self: flex-start;
-  }
-
-  .commands-panel {
+  /* Read-only preview of exactly what "Save and Reboot" will paste into
+     the CLI. Same width cap as the calculated-config card it sits
+     beside. */
+  .pending-commands {
+    margin: 0;
+    padding: 8px 12px;
+    max-height: 50vh;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-input-bg);
+    white-space: pre;
     color: var(--color-text);
-
-    summary {
-      cursor: pointer;
-      opacity: 0.8;
-    }
-
-    pre {
-      margin: 6px 0 0;
-      padding: 8px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      white-space: pre-wrap;
-    }
   }
 
-  // Header help button, matching every other tab's <Page> header.
+  /* Header spacer: pushes the help button to the right, matching every
+     other tab's <Page> header. */
   .grow {
     flex-grow: 1;
   }
@@ -1782,9 +2228,9 @@
     min-width: 60px;
   }
 
-  // Lays the board diagram out beside the remap table on wide
-  // viewports, and stacks them (diagram above table) once there's not
-  // enough room for both side by side.
+  /* Lays the board diagram out beside the remap table on wide
+     viewports, and stacks them (diagram above table) once there's not
+     enough room for both side by side. */
   .table-with-diagram {
     display: flex;
     flex-wrap: wrap;
@@ -1796,21 +2242,33 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     flex-shrink: 0;
     margin-left: 24px;
   }
 
+  /* Height set inline to wireHeaderHeight (the script block's live
+     measurement of .column-header's own rendered height), not a fixed
+     px value here -- with no gap below it either (see
+     .board-diagram-column), this puts .board-diagram-wrap's own top
+     exactly level with the FC Label column's first row, the same way
+     diagramHeight is sized to exactly match its row span. Without this
+     the diagram's top/bottom insets relative to the first/last row
+     visibly drifted apart depending on how tall this caption's own
+     natural line box happened to render. */
   .board-diagram-caption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     font-weight: 700;
     font-size: 13px;
     color: var(--color-text);
     text-align: center;
   }
 
-  // No CSS sizing here -- width/height come from diagramWidth/
-  // diagramHeight (see <script>), since this app's runtime doesn't
-  // support CSS aspect-ratio.
+  /* No CSS sizing here -- width/height come from diagramWidth/
+     diagramHeight (see the component script above), since this app's
+     runtime doesn't support CSS aspect-ratio. */
   .board-diagram-wrap {
     position: relative;
   }
@@ -1821,14 +2279,14 @@
     height: 100%;
   }
 
-  // Shown in place of the table while a read is in flight -- matches
-  // Page.svelte's own loading spinner, smaller and inline.
+  /* Shown in place of the table while a read is in flight -- matches
+     Page.svelte's own loading spinner, smaller and inline. */
   .table-loading {
     display: flex;
     align-items: center;
     gap: 10px;
     align-self: stretch;
-    // Lines up with .remap-table's own th/td padding.
+    /* Lines up with .remap-table's own th/td padding. */
     padding-left: 12px;
     color: var(--color-text);
     opacity: 0.8;
@@ -1844,60 +2302,254 @@
     background-size: contain;
   }
 
-  // Comparison table: option name, default pin, arrow, current option.
-  .remap-table {
-    border-collapse: collapse;
+  /* FC Label / wires / Feature / card layout. Two independently
+     ordered row lists (pins physical order, features in that same
+     board's physical order too -- see orderFeatureKeys) connected by
+     SVG wires -- see featureRows/wireLinks/wireY in the
+     script block. wireHeaderHeight/wireRowHeight there are measured
+     live off .column-header/every .pin-row (bind:clientHeight in
+     the template), so a wire's endpoint always matches the actual
+     rendered row position, including under browser zoom. */
+  .wiring-row {
+    display: flex;
+    align-items: flex-start;
+  }
 
-    th,
-    td {
-      padding: 4px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--color-border);
+  .column-header {
+    height: 29px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    white-space: nowrap;
+    color: var(--color-text);
+    opacity: 0.8;
+  }
+
+  .pins-col,
+  .features-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Same width as .features-col -- the wire gutter between them (see
+     WIRE_GUTTER_WIDTH in the script block) stays fixed regardless, so
+     widening this doesn't touch that. */
+  .pins-col,
+  .features-col {
+    min-width: 140px;
+  }
+
+  /* Stacks the pad detail card and the quiet servo-rate footnote (see
+     servoTimerGroups) below it -- a tighter gap than between two full
+     cards, so the footnote reads as attached to/about the card above
+     it rather than a peer of its own. */
+  .card-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Both are buttons, on the same underlying pad, but open the card in
+     different modes (see toggleCard/openCardSource): an FC Label row
+     opens the full editing card; a Feature row opens a read-only one
+     describing just that feature. */
+  .pin-row,
+  .feature-row {
+    height: 33px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0 12px;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background: none;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--color-text);
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-surface-float);
+      }
     }
 
-    th {
-      color: var(--color-text);
-      opacity: 0.8;
+    &.active {
+      background-color: var(--color-surface-float);
     }
+  }
 
-    .arrow {
-      padding-left: 4px;
-      padding-right: 4px;
-    }
+  .pin-row {
+    /* Pulls the pin icon in close to the board diagram beside it
+       (a thin gap rather than the shared 12px .pin-row/.feature-row
+       padding) while keeping the label text exactly where it was --
+       gap grows by the same 8px padding-left loses, so the label's
+       distance from the row's own left edge (icon + gap) is unchanged. */
+    padding-left: 4px;
+    gap: 16px;
+  }
 
-    .arrow-cable {
-      display: block;
-      width: 57px;
-      height: auto;
-      opacity: 0.85;
-    }
+  .pin-icon {
+    display: block;
+    width: 15px;
+    height: auto;
+    flex-shrink: 0;
+  }
 
-    // Shown in place of the Current Option dropdown for a row that
-    // can't actually be remapped (see hiddenPins/pinHasTimerCapability)
-    // -- same size as the dropdown it replaces, but quieter, since
-    // there's nothing to interact with here.
-    .locked-pin-message {
-      margin: 0;
-      font-size: 0.85rem;
-      color: var(--color-text);
-      opacity: 0.6;
-    }
+  /* Ellipsis rather than overflowing/wrapping -- still a safety net
+     even at .pins-col's now-wider, .features-col-matching width (see
+     above), for a longer name than this board's own ("TAIL", "SBUS")
+     that would otherwise spill past the row. min-width: 0 lets a flex
+     child actually shrink below its content's natural width, which a
+     plain overflow/text-overflow pair alone won't do. */
+  .pin-row-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-    .add-row td {
-      border-bottom: none;
-      padding-top: 8px;
-    }
+  /* The wires themselves: a gentle S-curve per Feature row (see
+     wirePath), the one belonging to the open card picked out in the
+     accent colour so it's obvious which pad it leads back to. */
+  .wires {
+    flex-shrink: 0;
 
-    .add-btn {
-      @extend %button;
-    }
+    path {
+      fill: none;
+      stroke: var(--color-border-accent);
+      stroke-width: 1.5;
+      opacity: 0.5;
 
-    // Fixed width keeps every row's dropdown the same size regardless
-    // of its own label length. :global(), since Select.svelte renders
-    // the actual <select> itself.
-    tr:not(.add-row) td:last-child :global(select) {
-      width: 104px;
+      &.active {
+        stroke: var(--color-accent-500);
+        stroke-width: 2;
+        opacity: 1;
+      }
     }
+  }
+
+  .add-row {
+    padding-top: 8px;
+    /* Anchors the .add-menu overlay below. */
+    position: relative;
+  }
+
+  .add-btn {
+    @extend %button;
+  }
+
+  /* The expanded "+ Add" picker floats over whatever sits below (the
+     Pending Changes card) rather than being clipped to a single row by
+     the global select{height:1.5rem} rule or shoving the page layout
+     around while it's open. Closes on blur (see the select's onblur). */
+  .add-menu {
+    position: absolute;
+    top: 6px;
+    left: 12px;
+    z-index: 30;
+  }
+
+  .add-menu-select {
+    /* height:auto lets the `size` attribute set the visible rows,
+       overriding the global select{height:1.5rem}. */
+    height: auto;
+    min-width: 220px;
+    padding: 4px 0;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border-accent);
+    border-radius: 4px;
+    box-shadow: 0 6px 20px var(--color-shadow);
+
+    option {
+      padding: 3px 12px;
+    }
+  }
+
+  /* The selected pad's Current Option card. Always present -- see
+     .option-card-placeholder for the "nothing selected yet" state. */
+  .option-card {
+    width: 260px;
+    margin-left: 16px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: var(--color-surface-float);
+    border: 1px solid var(--color-border-accent);
+    border-radius: 6px;
+    box-shadow: 0 6px 20px var(--color-shadow);
+  }
+
+  /* Shown instead of a real card before any pin's been clicked (or
+     after the selected one's row disappeared -- see cardRow). Just the
+     prompt, centred, at roughly the same height a real card's header +
+     description would take up so nothing jumps when a pin is picked. */
+  .option-card-placeholder {
+    min-height: 64px;
+    align-items: center;
+    justify-content: center;
+
+    .option-card-description {
+      text-align: center;
+    }
+  }
+
+  .option-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* The pad's own MCU pin (e.g. "A03") -- shown here, in the card
+     title, rather than in the FC Label row itself (where it used to
+     sit behind the "Show details" toggle). */
+  .option-card-pin {
+    margin-left: 4px;
+    font-weight: 400;
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .option-card-close {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    color: var(--color-text);
+    opacity: 0.6;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  /* pre-line rather than the default: remapFcCardDescriptionUart puts a
+     blank line between its two sentences (the plain "defaults to X"
+     fact and the longer purpose/how-to-enable hint), which a plain
+     text node would otherwise collapse away like any other whitespace. */
+  .option-card-description {
+    margin: 0;
+    white-space: pre-line;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--color-text);
+    opacity: 0.75;
+  }
+
+  /* Fills the card's own fixed width. :global(), since Select.svelte
+     renders the actual <select> itself. */
+  .option-card :global(select) {
+    width: 100%;
   }
 
   .error_message {
