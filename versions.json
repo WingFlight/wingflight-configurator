@@ -171,17 +171,6 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
-    },
-    {
-      "type": "pr",
-      "name": "63",
-      "path": "./pr/63/",
-      "branch": "feature/remap_fc",
-      "date": "2026-10-02T19:48:37Z",
-      "number": 63,
-      "title": "feature/remap fc",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/63",
-      "draft": false
     }
   ]
 }
