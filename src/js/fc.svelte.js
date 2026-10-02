@@ -759,7 +759,7 @@ class FlightController {
       // Appended MSP fields; defaulted here so a save against firmware that
       // predates them still crunches real numbers (older firmware ignores them).
       nav_altitude_kd:                200,
-      nav_throttle:                   60,
+      nav_throttle:                   65,
       nav_turn_coordination:          100,
     };
 
