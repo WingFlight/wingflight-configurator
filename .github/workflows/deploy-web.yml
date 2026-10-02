@@ -1,5 +1,17 @@
 name: Deploy Web App
 
+# Builds the web app and pushes it to the gh-pages branch:
+#   master              -> /master/
+#   feature/foo etc.    -> /feature-foo/
+#   release/<ver> tag   -> /release/<ver>/  (and /latest/ for plain x.y.z)
+#   snapshot/<ver> tag  -> /snapshot/<ver>/
+#   pull request        -> /pr/<number>/  (pr-preview-*.yml, "preview" label)
+#
+# Deleting a branch removes its directory again.
+#
+# This only updates the gh-pages branch; publish-pages.yml deploys it to
+# GitHub Pages once this run completes.
+
 on:
   push:
     branches:
