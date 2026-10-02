@@ -148,11 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-pr-preview-deploys",
-      "path": "./feature-pr-preview-deploys/"
-    },
-    {
-      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
