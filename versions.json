@@ -143,13 +143,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-nav-kp",
-      "path": "./feature-nav-kp/",
-      "branch": "feature/nav-kp",
-      "date": "2026-10-02T13:36:25Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
