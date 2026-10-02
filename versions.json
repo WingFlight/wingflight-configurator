@@ -148,13 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-pr-branch-info",
-      "path": "./feature-pr-branch-info/",
-      "branch": "feature/pr-branch-info",
-      "date": "2026-10-02T07:25:22Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-pr-preview-deploys",
       "path": "./feature-pr-preview-deploys/"
     },
