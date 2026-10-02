@@ -143,6 +143,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-nav-kp",
+      "path": "./feature-nav-kp/",
+      "branch": "feature/nav-kp",
+      "date": "2026-10-02T13:36:25Z",
+      "number": 140,
+      "title": "Match firmware default GPS nav bearing gain of 120",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/140",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
