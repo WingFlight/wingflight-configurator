@@ -148,6 +148,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-pr-branch-info",
+      "path": "./feature-pr-branch-info/",
+      "branch": "feature/pr-branch-info",
+      "date": "2026-10-02T07:25:22Z",
+      "number": 139,
+      "title": "Group development builds by PR on the landing page",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/139",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-pr-preview-deploys",
       "path": "./feature-pr-preview-deploys/"
     },
