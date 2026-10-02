@@ -593,11 +593,17 @@
   // board-independent role on a typical helicopter build -- keyed by
   // the CLI option key itself, since (unlike a UART connector) the
   // feature's identity IS the canonical thing here, not whichever pad
-  // it currently sits on. Deliberately incomplete: M3/M4, S5-S8 and
-  // Freq2-4 vary too much by build (twin-motor rigs, flaps, retracts,
-  // extra sensors, ...) to state a specific purpose for confidently, so
-  // they fall back to the generic remapFcCardDescription blurb instead
-  // of a guessed-at one.
+  // it currently sits on. Deliberately incomplete: M3/M4 and Freq2-4
+  // vary too much by build (twin-motor rigs, extra sensors, ...) to
+  // state a specific purpose for confidently, so they fall back to the
+  // generic remapFcCardDescription blurb instead of a guessed-at one.
+  //
+  // S5-S8 share one entry rather than having four of their own. Beyond
+  // the swashplate and tail, a servo has no conventional role to name,
+  // so the shared text describes the kind of thing they're for
+  // (landing gear, glow plugs, ...) and points at the Custom Mixer
+  // rules on the Mixer tab -- which is what actually has to be set up
+  // to drive one, and isn't otherwise discoverable from this tab.
   const FEATURE_PURPOSE_KEYS = {
     M1: "remapFcPurposeM1",
     M2: "remapFcPurposeM2",
@@ -605,6 +611,10 @@
     S2: "remapFcPurposeS2",
     S3: "remapFcPurposeS3",
     S4: "remapFcPurposeS4",
+    S5: "remapFcPurposeServoExtra",
+    S6: "remapFcPurposeServoExtra",
+    S7: "remapFcPurposeServoExtra",
+    S8: "remapFcPurposeServoExtra",
     Freq1: "remapFcPurposeFreq1",
     LED: "remapFcPurposeLed",
   };

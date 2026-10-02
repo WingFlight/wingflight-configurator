@@ -7528,6 +7528,9 @@
     "remapFcPurposeS4": {
         "message": "Commonly the tail servo, for a mechanical (non-motorised) tail rotor."
     },
+    "remapFcPurposeServoExtra": {
+        "message": "Extra servos can be used for functions such as landing gear, or other PWM devices such as remote glow and battery backups. Set up the channel you wish to control it from using Custom Mixer Rules on the Mixer tab."
+    },
     "remapFcLoadChangesBlocked": {
         "message": "Resolve the pin conflict below before sending changes"
     },
