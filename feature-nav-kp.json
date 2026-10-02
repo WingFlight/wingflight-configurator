@@ -1,8 +1,4 @@
 {
   "branch": "feature/nav-kp",
-  "date": "2026-10-02T13:36:25Z",
-  "number": 140,
-  "title": "Match firmware nav defaults: bearing gain 120, throttle 65%",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/140",
-  "draft": false
+  "date": "2026-10-02T13:36:25Z"
 }
