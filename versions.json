@@ -158,6 +158,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-side-by-side-installs",
+      "path": "./feature-side-by-side-installs/",
+      "branch": "feature/side-by-side-installs",
+      "date": "2026-10-02T18:20:53Z",
+      "number": 141,
+      "title": "Install each release line side by side",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/141",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
