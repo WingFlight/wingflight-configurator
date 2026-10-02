@@ -91,6 +91,12 @@ function defaultPidSlot() {
       // API 22.13 ANGLE mode rate damping
       hasLevelDamping: true,
       levelDamping: 25,
+      // Snap relax (pop tops, pinwheels, snaps)
+      hasSnapRelax: true,
+      snapRelaxStrength: 100,
+      snapRelaxThreshold: 60,
+      snapRelaxWindow: 400,
+      snapRelaxHold: 150,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,

@@ -641,6 +641,11 @@ class FlightController {
       fwSpaSpeedMax:              150,
       hasLevelDamping:            false,
       levelDamping:               0,
+      hasSnapRelax:               false,
+      snapRelaxStrength:          100,
+      snapRelaxThreshold:         60,
+      snapRelaxWindow:            400,
+      snapRelaxHold:              150,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,
@@ -749,12 +754,12 @@ class FlightController {
       nav_min_sats:                   8,
       nav_max_bank_angle:             25,
       nav_max_pitch_angle:            15,
-      nav_bearing_kp:                 200,
+      nav_bearing_kp:                 120,
       nav_altitude_kp:                100,
       // Appended MSP fields; defaulted here so a save against firmware that
       // predates them still crunches real numbers (older firmware ignores them).
       nav_altitude_kd:                200,
-      nav_throttle:                   60,
+      nav_throttle:                   65,
       nav_turn_coordination:          100,
     };
 
