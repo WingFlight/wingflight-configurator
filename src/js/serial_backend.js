@@ -251,12 +251,17 @@ export async function handleConnectClick({ openLanding = true } = {}) {
                 }
                 GUI.disconnect_in_progress = true;
                 try {
+                    // tab_switch_cleanup() kills timeouts/intervals itself, only
+                    // once the current tab's own cleanup() has finished — doing
+                    // it here first would kill any GUI timer that cleanup()
+                    // is still relying on (e.g. a CLI session polling for idle
+                    // before exiting). Both steps talk to an FC that may have just
+                    // rebooted out from under us (CLI `exit`), so neither is
+                    // guaranteed to call back -- don't let that stall the disconnect,
+                    // and kill any leftover timers if cleanup timed out.
+                    await callbackOrTimeout((done) => GUI.tab_switch_cleanup(done), 2000);
                     GUI.timeout_kill_all();
                     GUI.interval_kill_all();
-                    // Both steps talk to an FC that may have just rebooted out from
-                    // under us (CLI `exit`), so neither is guaranteed to call back --
-                    // don't let that stall the disconnect.
-                    await callbackOrTimeout((done) => GUI.tab_switch_cleanup(done), 2000);
                     GUI.tab_switch_in_progress = false;
 
                     await callbackOrTimeout((done) => globalThis.mspHelper.setArmingEnabled(true, done), 1000);
@@ -916,6 +921,9 @@ export function read_serial(info) {
             case 'presets':
                 TABS.presets.read(info);
                 break;
+            case 'remap_fc':
+                TABS.remap_fc.read(info);
+                break;
         }
     }
 }
@@ -1009,7 +1017,7 @@ function update_live_status() {
        display: 'inline-block'
     });
 
-    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets') {
+    if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets' && GUI.active_tab != 'remap_fc') {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
 
         // The SD card may still be starting up right after connect/reboot;
