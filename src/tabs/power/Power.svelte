@@ -16,7 +16,7 @@
   import Select from "@/components/Select.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
 
-  const METER_SOURCE_KEYS = ["None", "Adc", "Esc", "Fbus"];
+  const METER_SOURCE_KEYS = ["None", "Adc", "Esc", "Fbus", "Crsf"];
   const SMARTFUEL_SOURCE_KEYS = ["None", "Voltage", "Current", "Combined"];
 
   let loading = $state(true);
@@ -122,6 +122,14 @@
   }
   function setChargeDropRate(v) {
     FC.SMARTFUEL_CONFIG.chargeDropRate = Math.round(v * 100);
+  }
+
+  // Stored as hundredths of a volt per cell at full power; shown in volts.
+  function getSagGain() {
+    return FC.SMARTFUEL_CONFIG.sagGain / 100;
+  }
+  function setSagGain(v) {
+    FC.SMARTFUEL_CONFIG.sagGain = Math.round(v * 100);
   }
 
   function activateBatteryProfile(index) {
@@ -352,89 +360,185 @@
       </Section>
 
       <Section label="powerBatteryHead">
-        <Field
-          id="power-min-cell-voltage"
-          label="powerBatteryMinimumCellVoltage"
-        >
-          <NumberInput
-            id="power-min-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatmincellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field id="power-full-cell-voltage" label="powerBatteryFullCellVoltage">
-          <NumberInput
-            id="power-full-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatfullcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field
-          id="power-warning-cell-voltage"
-          label="powerBatteryWarningCellVoltage"
-        >
-          <NumberInput
-            id="power-warning-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatwarningcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field
-          id="power-max-cell-voltage"
-          label="powerBatteryMaximumCellVoltage"
-        >
-          <NumberInput
-            id="power-max-cell-voltage"
-            bind:value={FC.BATTERY_CONFIG.vbatmaxcellvoltage}
-            min={1}
-            max={5}
-            step={0.01}
-          />
-        </Field>
-        <Field id="power-cell-count" label="powerBatteryCellCount">
-          <NumberInput
-            id="power-cell-count"
-            bind:value={FC.BATTERY_CONFIG.cellCount}
-            min={0}
-            max={24}
-            step={1}
-          />
-        </Field>
-
-        <div class="profile-capacities">
-          {#each Array.from({ length: 6 }) as _, i (i)}
-            <div
-              class={[
-                "profile-capacity",
-                i === FC.BATTERY_STATE.batteryProfile && "active",
-              ]}
-            >
-              <button
-                type="button"
-                class="profile-activate"
-                onclick={() => activateBatteryProfile(i)}
+        {#if FC.BATTERY_CONFIG.hasProfileCells}
+          <div class="battery-profiles">
+            {#each Array.from({ length: 6 }) as _, i (i)}
+              <div
+                class={[
+                  "profile-card",
+                  i === FC.BATTERY_STATE.batteryProfile && "active",
+                ]}
               >
-                {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
-              </button>
-              <div class="profile-capacity-input">
-                <NumberInput
-                  id={`power-capacity-${i}`}
-                  bind:value={FC.BATTERY_CONFIG.capacities[i]}
-                  min={0}
-                  max={40000}
-                  step={10}
-                />
-                <span class="unit">mAh</span>
+                <button
+                  type="button"
+                  class="profile-activate"
+                  onclick={() => activateBatteryProfile(i)}
+                >
+                  {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
+                </button>
+                <Field id={`power-capacity-${i}`} label="powerBatteryCapacity">
+                  <NumberInput
+                    id={`power-capacity-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.capacities[i]}
+                    min={0}
+                    max={40000}
+                    step={10}
+                  />
+                </Field>
+                <Field
+                  id={`power-cell-count-${i}`}
+                  label="powerBatteryCellCount"
+                >
+                  {#snippet tooltip()}
+                    <Tooltip help="powerBatteryProfileCellCountHelp" />
+                  {/snippet}
+                  <NumberInput
+                    id={`power-cell-count-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.cellCounts[i]}
+                    min={0}
+                    max={24}
+                    step={1}
+                  />
+                </Field>
+                <Field
+                  id={`power-max-cell-voltage-${i}`}
+                  label="powerBatteryMaximumCellVoltage"
+                >
+                  <NumberInput
+                    id={`power-max-cell-voltage-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.vbatmaxcellvoltages[i]}
+                    min={1}
+                    max={5}
+                    step={0.01}
+                  />
+                </Field>
+                <Field
+                  id={`power-full-cell-voltage-${i}`}
+                  label="powerBatteryFullCellVoltage"
+                >
+                  <NumberInput
+                    id={`power-full-cell-voltage-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.vbatfullcellvoltages[i]}
+                    min={1}
+                    max={5}
+                    step={0.01}
+                  />
+                </Field>
+                <Field
+                  id={`power-warning-cell-voltage-${i}`}
+                  label="powerBatteryWarningCellVoltage"
+                >
+                  <NumberInput
+                    id={`power-warning-cell-voltage-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.vbatwarningcellvoltages[i]}
+                    min={1}
+                    max={5}
+                    step={0.01}
+                  />
+                </Field>
+                <Field
+                  id={`power-min-cell-voltage-${i}`}
+                  label="powerBatteryMinimumCellVoltage"
+                >
+                  <NumberInput
+                    id={`power-min-cell-voltage-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.vbatmincellvoltages[i]}
+                    min={1}
+                    max={5}
+                    step={0.01}
+                  />
+                </Field>
               </div>
-            </div>
-          {/each}
-        </div>
+            {/each}
+          </div>
+        {:else}
+          <Field
+            id="power-min-cell-voltage"
+            label="powerBatteryMinimumCellVoltage"
+          >
+            <NumberInput
+              id="power-min-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatmincellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+          <Field
+            id="power-full-cell-voltage"
+            label="powerBatteryFullCellVoltage"
+          >
+            <NumberInput
+              id="power-full-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatfullcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+          <Field
+            id="power-warning-cell-voltage"
+            label="powerBatteryWarningCellVoltage"
+          >
+            <NumberInput
+              id="power-warning-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatwarningcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+          <Field
+            id="power-max-cell-voltage"
+            label="powerBatteryMaximumCellVoltage"
+          >
+            <NumberInput
+              id="power-max-cell-voltage"
+              bind:value={FC.BATTERY_CONFIG.vbatmaxcellvoltage}
+              min={1}
+              max={5}
+              step={0.01}
+            />
+          </Field>
+          <Field id="power-cell-count" label="powerBatteryCellCount">
+            <NumberInput
+              id="power-cell-count"
+              bind:value={FC.BATTERY_CONFIG.cellCount}
+              min={0}
+              max={24}
+              step={1}
+            />
+          </Field>
+
+          <div class="profile-capacities">
+            {#each Array.from({ length: 6 }) as _, i (i)}
+              <div
+                class={[
+                  "profile-capacity",
+                  i === FC.BATTERY_STATE.batteryProfile && "active",
+                ]}
+              >
+                <button
+                  type="button"
+                  class="profile-activate"
+                  onclick={() => activateBatteryProfile(i)}
+                >
+                  {$i18n.t("powerBatteryProfile", { 1: i + 1 })}
+                </button>
+                <div class="profile-capacity-input">
+                  <NumberInput
+                    id={`power-capacity-${i}`}
+                    bind:value={FC.BATTERY_CONFIG.capacities[i]}
+                    min={0}
+                    max={40000}
+                    step={10}
+                  />
+                  <span class="unit">mAh</span>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
       </Section>
 
       <Section label="powerSmartFuelHead" summary="powerSmartFuelSourceHelp">
@@ -443,6 +547,22 @@
             id="power-smartfuel-source"
             bind:value={FC.SMARTFUEL_CONFIG.mode}
             options={smartFuelSourceOptions}
+          />
+        </Field>
+        <Field
+          id="power-smartfuel-alert"
+          label="powerSmartFuelAlertPercent"
+          unit="%"
+        >
+          {#snippet tooltip()}
+            <Tooltip help="powerSmartFuelAlertPercentHelp" />
+          {/snippet}
+          <NumberInput
+            id="power-smartfuel-alert"
+            bind:value={FC.BATTERY_CONFIG.mahWarningPercentage}
+            min={0}
+            max={60}
+            step={1}
           />
         </Field>
         {#if smartFuelTuningEnabled}
@@ -481,17 +601,17 @@
           <Field
             id="power-smartfuel-sag"
             label="powerSmartFuelSagGain"
-            unit="%"
+            unit="V"
           >
             {#snippet tooltip()}
               <Tooltip help="powerSmartFuelSagGainHelp" />
             {/snippet}
             <NumberInput
               id="power-smartfuel-sag"
-              bind:value={FC.SMARTFUEL_CONFIG.sagGain}
+              bind:value={getSagGain, setSagGain}
               min={0}
-              max={100}
-              step={1}
+              max={1}
+              step={0.01}
             />
           </Field>
         {/if}
@@ -737,7 +857,7 @@
     flex-direction: column;
     gap: 4px;
     padding: 8px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -770,8 +890,39 @@
     color: var(--color-text-soft);
   }
 
+  .battery-profiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    padding: 12px 4px 4px;
+  }
+
+  .profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    border-radius: var(--radius-xs);
+
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+
+    &.active {
+      border-color: var(--color-accent, var(--accent));
+    }
+
+    &.active .profile-activate {
+      color: var(--color-text-inverse, #000);
+      background-color: var(--color-accent, var(--accent));
+    }
+
+    .profile-activate {
+      margin-bottom: 4px;
+    }
+  }
+
   .meter-card {
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 4px;
 
     background-color: var(--color-surface);
@@ -805,7 +956,7 @@
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .content {

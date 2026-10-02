@@ -1,14 +1,14 @@
 <script>
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { GainCurve } from "@/js/GainCurve.js";
 
+  import FlightFeelGuide from "./FlightFeelGuide.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
-  import Select from "@/components/Select.svelte";
   import {
+    ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
+    BOUNCEBACK_ADJUSTMENT_FUNCTIONS,
     MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
@@ -17,12 +17,12 @@
 
   // One row per axis, matching PidGains.svelte's table (same axis color
   // coding, plus a fourth color for throttle), plus throttle attenuation
-  // folded in as a fourth row since it's the same shape (a baseline gain
-  // optionally shaped by a curve from the same shared pool). Gain and Curve
-  // are both visible regardless of expert mode; expertOnly rows (throttle)
-  // are hidden entirely outside expert mode, matching the previous
-  // standalone Throttle Attenuation section; throttle gets its own help
-  // text since its mechanism differs from the per-axis gain/curve rows.
+  // folded in as a fourth row since it's the same shape (a baseline gain,
+  // optionally shaped by a curve). Every row, throttle included, is visible
+  // regardless of expert mode; throttle gets its own help text since its
+  // mechanism differs from the per-axis rows. Curves are assigned in the
+  // Expert Mode Gain Curves panel (GainCurves.svelte); a CURVE badge on Master Gain
+  // shows when one is shaping that row.
   const MASTER_GAIN_AXES = [
     {
       key: "roll",
@@ -30,6 +30,8 @@
       label: "axisROLL",
       gainKey: "masterGainRoll",
       curveKey: "gainCurveRoll",
+      decayKey: "itermDecayTimeRoll",
+      bouncebackKey: "bouncebackRoll",
     },
     {
       key: "pitch",
@@ -37,6 +39,8 @@
       label: "axisPITCH",
       gainKey: "masterGainPitch",
       curveKey: "gainCurvePitch",
+      decayKey: "itermDecayTimePitch",
+      bouncebackKey: "bouncebackPitch",
     },
     {
       key: "yaw",
@@ -44,6 +48,8 @@
       label: "axisYAW",
       gainKey: "masterGainYaw",
       curveKey: "gainCurveYaw",
+      decayKey: "itermDecayTimeYaw",
+      bouncebackKey: "bouncebackYaw",
     },
     {
       key: "throttle",
@@ -54,18 +60,29 @@
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
-      expertOnly: true,
       gainMax: 200,
     },
   ];
 
-  let gainCurveOptions = $derived([
-    { value: 0, label: $i18n.t("mixerCurveNone") },
-    ...Array.from({ length: GainCurve.CURVE_COUNT }, (_, i) => ({
-      value: i + 1,
-      label: $i18n.t("mixerCurveLabel", { 1: i + 1 }),
-    })),
-  ]);
+  // GPS speed attenuation (API 22.10): same shape as the throttle row, with
+  // GPS speed in place of throttle. Only shown when the firmware carries it.
+  const SPEED_ROW = {
+    key: "speed",
+    axisClass: "SPEED",
+    label: "controlAxisSpeed",
+    uppercase: true,
+    suffix: "SPA",
+    gainKey: "fwSpaGain",
+    curveKey: "fwSpaCurve",
+    help: "profilesFwSpaHelp",
+    gainMax: 200,
+  };
+
+  let rows = $derived(
+    FC.PID_PROFILE.hasFwSpa
+      ? [...MASTER_GAIN_AXES, SPEED_ROW]
+      : MASTER_GAIN_AXES,
+  );
 
   function masterGainAdjustmentState(axisIndex) {
     return axisIndex < MASTER_GAIN_ADJUSTMENT_FUNCTIONS.length
@@ -81,31 +98,54 @@
   function showRuntimeMasterGain(axisIndex, adjustment) {
     return adjustment?.active && runtimeMasterGain(axisIndex) != null;
   }
+
+  // I-Term Decay sits beside each axis's Master Gain because it is the other
+  // half of how "locked" that axis feels: Master Gain sets how hard it pushes
+  // back, I-Term Decay how long it remembers the disturbance.
+  function decayAdjustmentState(axisIndex) {
+    return axisIndex < ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
+
+  // I-Term Relax is a 1-10 score per axis (higher = more relax, less
+  // bounce-back); the firmware turns it into the relax filter cutoff.
+  function bouncebackAdjustmentState(axisIndex) {
+    return axisIndex < BOUNCEBACK_ADJUSTMENT_FUNCTIONS.length
+      ? getAdjustmentState(BOUNCEBACK_ADJUSTMENT_FUNCTIONS[axisIndex])
+      : null;
+  }
 </script>
 
 <Section label="profilesMasterGainGroup">
-  <div class="table-scroll">
-    <table class="grid">
-      <thead>
-        <tr>
-          <th></th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesMasterGainColumn")}
-              <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
-            </span>
-          </th>
-          <th>
-            <span class="header-label">
-              {$i18n.t("profilesGainCurveColumn")}
-              <HelpIcon>{$i18n.t("profilesGainCurveHelp")}</HelpIcon>
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-          {#if !axis.expertOnly || CONFIGURATOR.expertMode}
+  <div class="flight-feel-layout">
+    <div class="table-scroll">
+      <table class="grid">
+        <thead>
+          <tr>
+            <th></th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesMasterGainColumn")}
+                <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
+              </span>
+            </th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesItermDecayColumn")}
+                <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+              </span>
+            </th>
+            <th>
+              <span class="header-label">
+                {$i18n.t("profilesBouncebackColumn")}
+                <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each rows as axis, axisIndex (axis.key)}
             {@const adjustment = masterGainAdjustmentState(axisIndex)}
             <tr>
               <td class="axis {axis.axisClass}">
@@ -150,23 +190,90 @@
                         : "ADJ"}
                     </span>
                   {/if}
+                  {#if FC.PID_PROFILE[axis.curveKey] > 0}
+                    <span
+                      class="curve-badge"
+                      title={$i18n.t("profilesGainCurveBadgeTitle", {
+                        1: FC.PID_PROFILE[axis.curveKey],
+                      })}>{$i18n.t("profilesGainCurveBadge")}</span
+                    >
+                  {/if}
                 </div>
               </td>
               <td>
-                <Select
-                  options={gainCurveOptions}
-                  bind:value={FC.PID_PROFILE[axis.curveKey]}
-                />
+                {#if axis.decayKey}
+                  {@const decayAdjustment = decayAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={decayAdjustment}
+                    class:runtime-active={decayAdjustment?.active}
+                    title={adjustmentTitle(decayAdjustment)}
+                  >
+                    <NumberInput
+                      min="0.01"
+                      max="1"
+                      step="0.01"
+                      bind:value={
+                        () => FC.PID_PROFILE[axis.decayKey] / 100,
+                        (v) =>
+                          (FC.PID_PROFILE[axis.decayKey] = Math.round(v * 100))
+                      }
+                    />
+                    {#if decayAdjustment}
+                      <span class="adjustment-badge">
+                        {decayAdjustment.active
+                          ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
+              <td>
+                {#if axis.bouncebackKey}
+                  {@const bouncebackAdjustment =
+                    bouncebackAdjustmentState(axisIndex)}
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={bouncebackAdjustment}
+                    class:runtime-active={bouncebackAdjustment?.active}
+                    title={adjustmentTitle(bouncebackAdjustment)}
+                  >
+                    <NumberInput
+                      min="1"
+                      max="10"
+                      bind:value={FC.PID_PROFILE[axis.bouncebackKey]}
+                    />
+                    {#if bouncebackAdjustment}
+                      <span class="adjustment-badge">
+                        {bouncebackAdjustment.active
+                          ? (adjustmentChannelLabel(bouncebackAdjustment) ??
+                            "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
               </td>
             </tr>
-          {/if}
-        {/each}
-      </tbody>
-    </table>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    <FlightFeelGuide throttle speed={FC.PID_PROFILE.hasFwSpa} />
   </div>
 </Section>
 
 <style lang="scss">
+  // Table on the left, plain-language guide in the space to its right;
+  // the guide wraps below the table on narrow windows.
+  .flight-feel-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
   .table-scroll {
     overflow-x: auto;
   }
@@ -247,7 +354,7 @@
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-accent, var(--accent));
     color: var(--color-text-inverse, #fff);
     font-size: 0.62rem;
@@ -260,6 +367,20 @@
   .runtime-control:not(.runtime-active) .adjustment-badge {
     background-color: transparent;
     color: var(--color-text-soft);
+  }
+
+  // Outlined like an idle ADJ badge: a curve is configuration, not live.
+  .curve-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    cursor: help;
   }
 
   .runtime-control.runtime-active .runtime-value-field {
@@ -293,6 +414,10 @@
     background-color: hsl(35, 100%, 82%);
   }
 
+  .axis.SPEED {
+    background-color: hsl(190, 80%, 82%);
+  }
+
   :global(html[data-theme="dark"]) .axis.ROLL {
     background-color: hsl(0, 40%, 30%);
   }
@@ -307,6 +432,10 @@
 
   :global(html[data-theme="dark"]) .axis.THROTTLE {
     background-color: hsl(35, 45%, 28%);
+  }
+
+  :global(html[data-theme="dark"]) .axis.SPEED {
+    background-color: hsl(190, 40%, 28%);
   }
 
   // This table has room to spare even at desktop density - it's not the

@@ -13,6 +13,12 @@ let iconGeometry,
 
 window.onload = initializeMap;
 
+function updateMapSize() {
+    if (map) {
+        map.updateSize();
+    }
+}
+
 function initializeMap() {
 
     const lonLat = ol.proj.fromLonLat([DEFAULT_LON, DEFAULT_LAT]);
@@ -73,11 +79,17 @@ function initializeMap() {
     map.addLayer(currentPositionLayer);
 
     window.addEventListener('message', processMapEvents);
+    window.addEventListener('resize', updateMapSize);
+
+    requestAnimationFrame(updateMapSize);
+    setTimeout(updateMapSize, 250);
 }
 
 function processMapEvents(e) {
 
     try {
+        updateMapSize();
+
         switch(e.data.action) {
 
         case 'zoom_in':

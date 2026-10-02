@@ -126,9 +126,13 @@
     "portsSelectManual": {
         "message": "Manual Selection"
     },
+    "portsRemoteDevice": {
+        "message": "Remote - $1",
+        "description": "A serial port or DFU device on the other computer of a remote support session; $1 is the device name"
+    },
     "portsSelectVirtual": {
-        "message": "Virtual Mode (Experimental)",
-        "description": "Configure a Virtual Flight Controller without the need of a physical FC."
+        "message": "Virtual Mode (Demo)",
+        "description": "Demo the configurator against a simulated flight controller - no hardware needed, and nothing is written to a real FC."
     },
     "virtualMSPVersion": {
         "message": "Virtual Firmware Version"
@@ -363,13 +367,6 @@
         "message": "GPS",
         "description": "Text of the image in the top sensors icons. Please keep it short."
     },
-    "sensorStatusSonar": {
-        "message": "Sonar / Range finder"
-    },
-    "sensorStatusSonarShort": {
-        "message": "Sonar",
-        "description": "Text of the image in the top sensors icons. Please keep it short."
-    },
     "checkForConfiguratorUnstableVersions": {
         "message": "Show update notifications for unstable versions of the configurator"
     },
@@ -462,9 +459,6 @@
     },
     "tabFailsafe": {
         "message": "Failsafe"
-    },
-    "tabVtx": {
-        "message": "Video Tx"
     },
     "tabPower": {
         "message": "Power"
@@ -649,6 +643,12 @@
     "escProgrammingSelectManufacturer": {
         "message": "Select ESC manufacturer"
     },
+    "escProgrammingRequiresTelemetry": {
+        "message": "Requires {{protocol}} ESC telemetry"
+    },
+    "escProgrammingTelemetryDisabled": {
+        "message": "ESC telemetry is disabled. Select your ESC's telemetry protocol on the Motors tab to enable ESC programming."
+    },
     "escProgrammingSelectEsc": {
         "message": "Select ESC"
     },
@@ -721,6 +721,9 @@
     "tabAuxiliary": {
         "message": "Modes"
     },
+    "tabGpsNav": {
+        "message": "GPS Navigation"
+    },
     "tabGroupSetup": {
         "message": "Setup"
     },
@@ -784,6 +787,120 @@
     "fbusSensorsColPackets": {
         "message": "Packets"
     },
+    "tabCrsfSensors": {
+        "message": "CRSF Sensors"
+    },
+    "crsfSensorsDescription": {
+        "message": "Live link diagnostics and decoded readings from a CRSF-protocol sensor accessory (GPS, battery, barometer, or per-cell voltage) wired to the CRSF Sensors serial port."
+    },
+    "crsfSensorsLearnMore": {
+        "message": "Learn more"
+    },
+    "crsfSensorsNotSupported": {
+        "message": "This firmware does not support the CRSF Sensors diagnostic."
+    },
+    "crsfSensorsPortNotConfigured": {
+        "message": "No serial port is assigned the CRSF Sensors function yet -- set one on the Ports tab."
+    },
+    "crsfSensorsBadgeReceiving": {
+        "message": "Receiving"
+    },
+    "crsfSensorsBadgeNoData": {
+        "message": "No data"
+    },
+    "crsfSensorsBadgePortEnabled": {
+        "message": "Port enabled"
+    },
+    "crsfSensorsBadgePortDisabled": {
+        "message": "Port disabled"
+    },
+    "crsfSensorsLinkTitle": {
+        "message": "Link"
+    },
+    "crsfSensorsRxBytes": {
+        "message": "RX bytes"
+    },
+    "crsfSensorsRxSyncBytes": {
+        "message": "RX sync bytes"
+    },
+    "crsfSensorsCrcOk": {
+        "message": "CRC OK frames"
+    },
+    "crsfSensorsCrcFail": {
+        "message": "CRC fail"
+    },
+    "crsfSensorsLastFrame": {
+        "message": "Last frame type/len"
+    },
+    "crsfSensorsNoData": {
+        "message": "No data received yet"
+    },
+    "crsfSensorsGpsTitle": {
+        "message": "GPS"
+    },
+    "crsfSensorsGpsLat": {
+        "message": "Latitude"
+    },
+    "crsfSensorsGpsLon": {
+        "message": "Longitude"
+    },
+    "crsfSensorsGpsSpeed": {
+        "message": "Ground speed"
+    },
+    "crsfSensorsGpsHeading": {
+        "message": "Heading"
+    },
+    "crsfSensorsGpsAlt": {
+        "message": "Altitude"
+    },
+    "crsfSensorsGpsSats": {
+        "message": "Satellites"
+    },
+    "crsfSensorsBatteryTitle": {
+        "message": "Battery"
+    },
+    "crsfSensorsBatteryVoltage": {
+        "message": "Voltage"
+    },
+    "crsfSensorsBatteryCurrent": {
+        "message": "Current"
+    },
+    "crsfSensorsBatteryCapacity": {
+        "message": "Capacity used"
+    },
+    "crsfSensorsBatteryRemaining": {
+        "message": "Remaining"
+    },
+    "crsfSensorsBaroTitle": {
+        "message": "Barometer"
+    },
+    "crsfSensorsBaroAlt": {
+        "message": "Altitude"
+    },
+    "crsfSensorsBaroVspeed": {
+        "message": "Vertical speed"
+    },
+    "crsfSensorsCellsTitle": {
+        "message": "Cell Voltages"
+    },
+    "crsfSensorsCellsCount": {
+        "message": "Cell count"
+    },
+    "crsfSensorsCellsTotal": {
+        "message": "Total voltage"
+    },
+    "crsfSensorsCellsChip": {
+        "message": "Cell $1"
+    },
+    "crsfSensorsRpmTitle": {
+        "message": "RPM"
+    },
+    "crsfSensorsRpmChip": {
+        "message": "Source $1"
+    },
+    "crsfSensorsRpmCaveat": {
+        "message": "Set crsf_sensors_use_rpm = ON (CLI-only) to feed this into blackbox, telemetry, RPM Filter, and the Governor. Telemetry-rate, not motor-rate -- use at your own risk for RPM Filter or the Governor's RPM modes, both of which need bidirectional DShot or a dedicated RPM/frequency sensor to actually track real motor speed."
+    },
     "rxInputBackupStatusDescription": {
         "message": "Live status for the secondary RX input assigned as a backup if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
     },
@@ -841,6 +958,12 @@
     "serialPortOpenFail": {
         "message": "<span class=\"message-negative\">Failed</span> to open serial port"
     },
+    "serialPortOpenFailBusy": {
+        "message": "<span class=\"message-negative\">Could not open the serial port</span> - it is most likely in use by another program or browser tab (another configurator, a serial monitor, etc.). Close it, then try again."
+    },
+    "serialPortOpenFailNotFound": {
+        "message": "<span class=\"message-negative\">Serial port not found</span> - check the flight controller is still plugged in, then try again."
+    },
     "serialPortClosedOk": {
         "message": "Serial port <span class=\"message-positive\">successfully</span> closed"
     },
@@ -873,6 +996,9 @@
     },
     "stm32UsbDfuNotFound": {
         "message": "USB DFU not found"
+    },
+    "stm32UsbDfuNotFoundAfterReboot": {
+        "message": "The board rebooted into the bootloader, but its USB DFU device did not appear. On Windows this usually means the DFU driver is missing or failed: run the <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight driver fixer</a>, then unplug and replug the board and flash again. The board stays in the bootloader until it is power-cycled."
     },
     "stm32RebootingToBootloader": {
         "message": "Initiating reboot to bootloader ..."
@@ -1104,7 +1230,7 @@
         "message": "Downloads"
     },
     "defaultDownloadsText": {
-        "message": "The latest Rotorflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/WingFlight/wingflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Configurator</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Rotorflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/rotorflight/rotorflight-lua-scripts/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/WingFlight/wingflight-lua-ethos-suite/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Wingflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>."
+        "message": "The latest Wingflight software downloads are available here:<br /><ul><li><a href=\"https://github.com/WingFlight/wingflight-configurator/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Configurator</a></li><li><a href=\"https://github.com/WingFlight/wingflight-blackbox/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Blackbox Log Viewer</a></li><li><a href=\"https://github.com/WingFlight/wingflight-lua-edgetx/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for EdgeTx & OpenTx</a></li><li><a href=\"https://github.com/WingFlight/wingflight-lua-ethos-suite/releases\" target=\"_blank\" rel=\"noopener noreferrer\">LUA Scripts for FrSky Ethos</a></li></ul>Wingflight is <b>Open Source</b> software. The source code is available in <a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>."
     },
     "defaultCommunityHead": {
         "message": "Community"
@@ -1119,22 +1245,22 @@
         "message": "<a href=\"https://discord.gg/aEyyAJTXRw/\" target=\"_blank\" rel=\"noopener noreferrer\">Discord</a> is the official place for online support and discussions."
     },
     "defaultFacebookText": {
-        "message": "<a href=\"https://www.facebook.com/groups/wingflight/\" target=\"_blank\" rel=\"noopener noreferrer\">Facebook Group</a> is a good place for hanging out with other RF pilots."
+        "message": "<a href=\"https://www.facebook.com/groups/wingflight/\" target=\"_blank\" rel=\"noopener noreferrer\">Facebook Group</a> is a good place for hanging out with other Wingflight pilots."
     },
     "defaultContributingHead": {
         "message": "Contributing"
     },
     "defaultContributingText": {
-        "message": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
+        "message": "Wingflight is an open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
     },
     "defaultDonateHead": {
-        "message": "Supporting Rotorflight"
+        "message": "Supporting Wingflight"
     },
     "defaultDonateText": {
-        "message": "<p>Wingflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Wingflight useful, please consider <b>supporting</b> the development by donating to the Rotorflight Project.</p>"
+        "message": "<p>Wingflight is <i>open source software</i> and is available <i>free of charge</i>, without warranty.</p><p>If you find Wingflight useful, please consider <b>supporting</b> the development by donating to the Wingflight Project.</p>"
     },
     "defaultDonateTooltip": {
-        "message": "Donate to the Rotorflight Project"
+        "message": "Donate to the Wingflight Project"
     },
     "defaultChangelogHead": {
         "message": "Configurator - Changelog"
@@ -1146,10 +1272,10 @@
         "message": "Wingflight documentation is available in release notes and website.<br /><br />"
     },
     "defaultDocumentation1": {
-        "message": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "The Wingflight documentation is a great resource for information, it can be found <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation2": {
-        "message": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "The latest news can be read on the Wingflight website, <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation3": {
         "message": "The release notes for the firmware can be read at GitHub releases page, <a href=\"https://github.com/WingFlight/wingflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
@@ -1160,26 +1286,14 @@
     "defaultSupportSubline1": {
         "message": "Support Sources"
     },
-    "defaultSupportSubline2": {
-        "message": "Betaflight Information"
-    },
     "defaultSupport": {
         "message": "For support please search the forums and website first or contact your vendor.<br /><br />"
     },
     "defaultSupport1": {
         "message": "<a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight Website</a>"
     },
-    "defaultSupport2": {
-        "message": "<a href=\"http://www.rcgroups.com/forums/showthread.php?t=4000345\" target=\"_blank\" rel=\"noopener noreferrer\">RC Groups Rotorflight thread</a>"
-    },
     "defaultSupport3": {
         "message": "<a href=\"https://discord.com/invite/aEyyAJTXRw\" target=\"_blank\" rel=\"noopener noreferrer\">Wingflight discussion on Discord</a>"
-    },
-    "defaultSupport4": {
-        "message": "<a href=\"https://betaflight.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Betaflight Website</a>"
-    },
-    "defaultSupport5": {
-        "message": "<a href=\"https://github.com/betaflight/betaflight/wiki\" target=\"_blank\" rel=\"noopener noreferrer\">Betaflight Wiki</a>"
     },
     "statusButtonResetZaxis": {
         "message": "Reset Z axis, offset: 0 deg"
@@ -1230,7 +1344,7 @@
         "message": "Arming Allowed"
     },
     "statusArmingDisableFlagsTooltip": {
-        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
+        "message": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
     },
     "statusArmingDisableFlagsTooltipNO_GYRO": {
         "message": "A gyro was not detected",
@@ -1308,12 +1422,12 @@
         "description": "Message that pops up to describe the PARALYZE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipGPS": {
-        "message": "GPS rescue mode is configured but required number of satellites has not been fixed",
+        "message": "GPS RTH is configured but a GPS fix has not been acquired",
         "description": "Message that pops up to describe the GPS arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipRESC": {
-        "message": "The 'GPS Rescue' switch was activated",
-        "description": "Message that pops up to describe the RESC arming disable flag"
+    "statusArmingDisableFlagsTooltipGPS_RTH": {
+        "message": "The 'GPS RTH' switch was activated",
+        "description": "Message that pops up to describe the GPS_RTH arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRPMFILTER": {
         "message": "RPM based filtering is enabled, but the RPM signal is unconfigured or otherwise unavailable",
@@ -1337,6 +1451,10 @@
     },
     "statusArmingDisableFlagsTooltipOVERRIDE": {
         "message": "Servo Override or Mixer Override is active"
+    },
+    "statusArmingDisableFlagsTooltipBACKUP_RX": {
+        "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
+        "description": "Message that pops up to describe the BACKUP_RX arming disable flag"
     },
     "statusArmingDisableFlagsTooltipARM_SWITCH": {
         "message": "Arm switch is activated while other arming disable conditions are active",
@@ -1376,7 +1494,7 @@
         "message": "Calibrate Magnetometer"
     },
     "initialSetupCalibrateMagText": {
-        "message": "Move multirotor at least <strong>360</strong> degrees on all axis of rotation, you have 30 seconds to perform this task"
+        "message": "Move the aircraft at least <strong>360</strong> degrees on all axes of rotation, you have 30 seconds to perform this task"
     },
     "initialSetupButtonCalibratingText": {
         "message": "Calibrating..."
@@ -1490,13 +1608,10 @@
         "message": "Enable Software Serial ports"
     },
     "feature_GPS": {
-        "message": "GPS for telemetry"
+        "message": "GPS"
     },
     "feature_THRUST_VECTOR": {
         "message": "Thrust vectoring"
-    },
-    "feature_SONAR": {
-        "message": "Sonar altitude radar"
     },
     "feature_TELEMETRY": {
         "message": "Transmitter telemetry"
@@ -1528,9 +1643,6 @@
     "feature_FREQ_SENSOR": {
         "message": "RPM signal input support"
     },
-    "feature_VTX": {
-        "message": "Video Transmitter"
-    },
     "feature_DYN_NOTCH": {
         "message": "Dynamic Notch filtering"
     },
@@ -1550,7 +1662,7 @@
         "message": "Features"
     },
     "featureTip_GPS": {
-        "message": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration."
+        "message": "Enables GPS telemetry and GPS navigation (RTH, Loiter, and the Failsafe Procedure's GPS Rescue option). Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_THRUST_VECTOR": {
         "message": "Enables a second, independent PID loop for thrust-vectoring actuators, tuned separately from the main roll/pitch/yaw loop. Adds the <i>Thrust Vector</i> tab, and TV Roll/Pitch/Yaw mixer input sources on the <i>Mixer</i> tab."
@@ -1763,7 +1875,7 @@
         "message": "Accelerometer Trim"
     },
     "configurationAccelTrimsHelp": {
-        "message": "Accelerometer Trims adjust the horizon to correct drift in stabilized modes like Angle, Horizon, and Rescue."
+        "message": "Accelerometer Trims adjust the horizon to correct drift in stabilized modes like Angle and Rescue."
     },
     "configurationAccelTrimRoll": {
         "message": "Accelerometer Roll Trim"
@@ -1940,7 +2052,7 @@
         "description": "Option to set the Home Point with the first arm only, not with each arm in the GPS Configuration"
     },
     "configurationGPSHomeOnceHelp": {
-        "message": "When enabled, only the first arm after the battery is connected will be used as home point. If not enabled, every time the quad is armed, the home point will be updated.",
+        "message": "When enabled, only the first arm after the battery is connected will be used as home point. If not enabled, every time the aircraft is armed, the home point will be updated.",
         "description": "Help text for the option to set the Home Point with the first arm only, not with each arm in the GPS Configuration"
     },
     "configurationEepromSaved": {
@@ -1975,9 +2087,6 @@
     },
     "portsHelp": {
         "message": "<strong>Note:</strong> not all combinations are valid.  When the flight controller firmware detects this the serial port configuration will be reset."
-    },
-    "portsVtxTableNotSet": {
-        "message": "<span class=\"message-negative\">WARNING:</span> The VTX table has not been set up correctly and without it VTX control will not be possible. Please set up the VTX table in $t(tabVtx.message) tab."
     },
     "portsMSPHelp": {
         "message": "<strong>Note:</strong> Do <span class=\"message-negative\">NOT</span> disable MSP on the first serial port unless you know what you are doing.  You may have to reflash and erase your configuration if you do."
@@ -2018,6 +2127,9 @@
     "portsFunction_SRXL2_ESC": {
         "message": "SRXL2 ESC"
     },
+    "portsFunction_CRSF_SENSORS": {
+        "message": "CRSF Sensors"
+    },
     "portsFunction_RX_INPUT_BACKUP": {
         "message": "Serial Rx (Backup)"
     },
@@ -2041,12 +2153,6 @@
     },
     "portsFunction_BLACKBOX": {
         "message": "Blackbox Logging"
-    },
-    "portsFunction_TBS_SMARTAUDIO": {
-        "message": "VTX: TBS SmartAudio"
-    },
-    "portsFunction_IRC_TRAMP": {
-        "message": "VTX: IRC Tramp"
     },
     "portsFunction_RUNCAM": {
         "message": "Camera: RunCam"
@@ -2151,28 +2257,28 @@
         "message": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
+        "message": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences. Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
     "profilesIntegral": {
         "message": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
+        "message": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint. Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets. Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
     "profilesDerivative": {
         "message": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
+        "message": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance. Higher gains provide more damping and reduce possible overshoot from high P-terms. However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x). High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab). Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
     "profilesFeedforward": {
         "message": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
+        "message": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any aircraft movements though. The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). Higher values (gains) will result in a sharper response to stick input. Too high of values may result in overshoot, as well as strikeback at the end of control inputs. Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
     "profilesBoost": {
@@ -2232,6 +2338,51 @@
     "receiverSerialPinSwapHelp": {
         "message": "<p>Swaps the Rx and Tx pins.</p><p><strong>Note:</strong> This option is NOT supported on F4 MCUs, see help.</p>"
     },
+    "receiverWiringDetectButton": {
+        "message": "Detect Wiring"
+    },
+    "receiverWiringDetectHelp": {
+        "message": "<p>Tries every combination of Inverted / Half-Duplex / Pin Swap for the selected protocol and stops as soon as one produces signal. Nothing is saved until you press Save on this tab.</p><p><strong>Note:</strong> requires no unsaved changes first - it tests whatever protocol/provider is currently saved on the flight controller, not a pending selection.</p><p>Your transmitter must be powered on and bound to the receiver - detection can't find a wiring combination if the receiver has no signal to give it in the first place.</p><p>Only available while disarmed - it cycles the receiver wiring live and could interrupt control input.</p>"
+    },
+    "receiverWiringDetectSaveFirst": {
+        "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
+    },
+    "receiverWiringDetectArmedFirst": {
+        "message": "Disarm first - wiring detection cycles the receiver connection live and can't run while armed."
+    },
+    "receiverWiringDetectWizardTitle": {
+        "message": "Detect RX Wiring"
+    },
+    "receiverBackupWiringDetectWizardTitle": {
+        "message": "Detect Backup RX Wiring"
+    },
+    "receiverWiringDetectWizardStep1": {
+        "message": "Step 1 of 2: Scanning"
+    },
+    "receiverWiringDetectWizardStep2": {
+        "message": "Step 2 of 2: Result"
+    },
+    "receiverWiringDetectScanning": {
+        "message": "Trying combination $1 of $2…"
+    },
+    "receiverWiringDetectSuccess": {
+        "message": "Signal found — Inverted: $1, Half-Duplex: $2, Pin Swap: $3. Save and reboot to keep it, or Close to discard and restore the previous setting."
+    },
+    "receiverWiringDetectFailed": {
+        "message": "No signal found on any wiring combination for this protocol. Make sure the transmitter is powered on and bound to the receiver, check the protocol selection and connections, then try again."
+    },
+    "receiverWiringDetectRejected": {
+        "message": "Wiring detection was rejected - it needs a serial receiver protocol with an assigned UART, and the aircraft must be disarmed."
+    },
+    "receiverWiringDetectUnsupported": {
+        "message": "Wiring detection is not supported by this firmware build."
+    },
+    "receiverWiringDetectWizardRetry": {
+        "message": "Retry"
+    },
+    "receiverWiringDetectWizardClose": {
+        "message": "Close"
+    },
     "receiverStickCenter": {
         "message": "Stick Center"
     },
@@ -2268,11 +2419,17 @@
     "receiverHelpFullThrottle2": {
         "message": "The throttle channel value where throttle is considered 100%."
     },
-    "receiverCyclicDeadband": {
-        "message": "Roll/Pitch Deadband"
+    "receiverRollDeadband": {
+        "message": "Roll Deadband"
     },
-    "receiverHelpCyclicDeadband": {
-        "message": "How far the roll and pitch channel values must move from center before it's considered an input."
+    "receiverHelpRollDeadband": {
+        "message": "How far the roll channel value must move from center before it's considered an input."
+    },
+    "receiverPitchDeadband": {
+        "message": "Pitch Deadband"
+    },
+    "receiverHelpPitchDeadband": {
+        "message": "How far the pitch channel value must move from center before it's considered an input."
     },
     "receiverYawDeadband": {
         "message": "Yaw Deadband"
@@ -2311,7 +2468,7 @@
         "message": "Telemetry Packet Ratio"
     },
     "receiverHelpCrsfTelemetryMode": {
-        "message": "Enables the Custom Rotorflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for your aircraft."
+        "message": "Enables the Custom Wingflight telemetry with ELRS. Requires a Lua script in the Tx for decoding the sensors. Custom telemetry provides a plethora of sensors for your aircraft."
     },
     "receiverHelpCrsfTelemetryRate": {
         "message": "Radio link packet rate for telemetry. Set this to the same value as the ELRS packet rate in the Tx."
@@ -2345,12 +2502,6 @@
     },
     "receiverTelemetrySensor_BEC_VOLTAGE": {
         "message": "BEC Voltage"
-    },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Tailspeed"
     },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "FC Temperature"
@@ -2629,7 +2780,7 @@
         "message": "GPS Altitude"
     },
     "receiverTelemetrySensor_GPS_HEADING": {
-        "message": "GPS Heading"
+        "message": "GPS Course"
     },
     "receiverTelemetrySensor_GPS_GROUNDSPEED": {
         "message": "GPS Groundspeed"
@@ -2642,6 +2793,12 @@
     },
     "receiverTelemetrySensor_GPS_DATE_TIME": {
         "message": "GPS Date Time"
+    },
+    "receiverTelemetrySensor_SYSTEM_STATUS": {
+        "message": "System Status"
+    },
+    "receiverTelemetrySensor_SYSTEM_CONFIG": {
+        "message": "System Config"
     },
     "receiverTelemetrySensor_LOAD": {
         "message": "Load"
@@ -2739,6 +2896,54 @@
     "auxiliaryToggleUnused": {
         "message": "Hide unused modes"
     },
+    "auxiliaryAddMode": {
+        "message": "Add mode"
+    },
+    "auxiliaryAddModeTitle": {
+        "message": "Add a mode"
+    },
+    "auxiliaryAddModeSearch": {
+        "message": "Search modes"
+    },
+    "auxiliaryAddModeNoMatches": {
+        "message": "No matching modes"
+    },
+    "auxiliaryGroupLive": {
+        "message": "A mode in this group is active"
+    },
+    "auxiliaryRemoveMode": {
+        "message": "Remove mode"
+    },
+    "auxiliaryGroupArming": {
+        "message": "Arming & Safety"
+    },
+    "auxiliaryGroupFlight": {
+        "message": "Flight Modes"
+    },
+    "auxiliaryGroupThrustVector": {
+        "message": "Thrust Vectoring"
+    },
+    "auxiliaryGroupGps": {
+        "message": "GPS & Navigation"
+    },
+    "auxiliaryGroupPower": {
+        "message": "Power"
+    },
+    "auxiliaryGroupAlerts": {
+        "message": "Beeper & Lights"
+    },
+    "auxiliaryGroupLogging": {
+        "message": "Logging & Telemetry"
+    },
+    "auxiliaryGroupCamera": {
+        "message": "Camera"
+    },
+    "auxiliaryGroupUser": {
+        "message": "User Outputs"
+    },
+    "auxiliaryGroupOther": {
+        "message": "Other"
+    },
     "auxiliaryMin": {
         "message": "Min"
     },
@@ -2777,10 +2982,10 @@
         "message": "Examples:"
     },
     "adjustmentsExample1": {
-        "message": "Use a three position switch on AUX1 to select between Pitch/Roll P, I and D and another three position switch on AUX2 to increase or decrease the value when held up or down."
+        "message": "Use a three position switch on CH #5 to select between Pitch/Roll P, I and D and another three position switch on CH #6 to increase or decrease the value when held up or down."
     },
     "adjustmentsExample2": {
-        "message": "Use a three position switch on AUX4 to select enable Rate Profile Selection via the same three position switch on the same channel."
+        "message": "Use a three position switch on CH #8 to select enable Rate Profile Selection via the same three position switch on the same channel."
     },
     "adjustmentsColumnMode": {
         "message": "Mode"
@@ -2812,6 +3017,12 @@
     "adjustmentFunctionValue": {
         "message": "Value"
     },
+    "adjustmentsFunctionSearch": {
+        "message": "Type to filter functions…"
+    },
+    "adjustmentsFunctionNoMatches": {
+        "message": "No matching functions"
+    },
     "adjustmentRangeEnable": {
         "message": "Ena:"
     },
@@ -2832,6 +3043,21 @@
     },
     "adjustmentsSlotCount": {
         "message": "{{used}} / {{total}} configured"
+    },
+    "adjustmentsGroupOther": {
+        "message": "Other"
+    },
+    "adjustmentsGroupLive": {
+        "message": "An adjustment in this group is enabled"
+    },
+    "adjustmentsPickFunctionTitle": {
+        "message": "Choose a function"
+    },
+    "adjustmentsChangeFunction": {
+        "message": "Change function"
+    },
+    "adjustmentsFunctionInUse": {
+        "message": "in use"
     },
     "adjustmentsAddButton": {
         "message": "Add Adjustment"
@@ -2859,6 +3085,261 @@
     },
     "adjustmentsRangeScale": {
         "message": "Scale"
+    },
+    "adjustmentsFunctionHelpRateProfile": {
+        "message": "Switches the active rate profile, for example to change stick feel between flights or manoeuvres."
+    },
+    "adjustmentsFunctionHelpPIDProfile": {
+        "message": "Switches the active PID profile, so you can swap between complete tunes in flight."
+    },
+    "adjustmentsFunctionHelpLEDProfile": {
+        "message": "Switches the LED strip profile."
+    },
+    "adjustmentsFunctionHelpBatteryProfile": {
+        "message": "Switches the active battery profile (cell count, capacity and warnings)."
+    },
+    "adjustmentsFunctionHelpTVProfile": {
+        "message": "Switches the active thrust vector profile."
+    },
+    "adjustmentsFunctionHelpAngleLevelGain": {
+        "message": "How strongly Angle mode pulls the model back to level."
+    },
+    "adjustmentsFunctionHelpAcroTrainerGain": {
+        "message": "How strongly Trainer corrects back toward the pitch/bank limit when it's exceeded. Trainer doesn't self-level."
+    },
+    "adjustmentsFunctionHelpAttHoldGain": {
+        "message": "How strongly Attitude Hold returns the model to its held attitude once the sticks are centred."
+    },
+    "adjustmentsFunctionHelpTVHoldGain": {
+        "message": "How strongly TV Attitude Hold returns the thrust vector loop to its held attitude once the sticks are centred."
+    },
+    "adjustmentsFunctionHelpAccTrimPitch": {
+        "message": "Accelerometer pitch trim. Corrects pitch drift in stabilised modes like Angle."
+    },
+    "adjustmentsFunctionHelpAccTrimRoll": {
+        "message": "Accelerometer roll trim. Corrects roll drift in stabilised modes like Angle."
+    },
+    "adjustmentsFunctionHelpYawDynCeilingGain": {
+        "message": "Reduces the yaw stick travel needed for maximum rate while the stick is moving quickly toward its end."
+    },
+    "adjustmentsFunctionHelpYawDynDeadbandGain": {
+        "message": "Widens the yaw stick deadband while the stick is moving quickly back toward centre."
+    },
+    "adjustmentsFunctionHelpYawDynDeadbandFilter": {
+        "message": "Smoothing for the yaw stick speed that drives the dynamic ceiling and deadband (cutoff in 0.1 Hz). Lower reacts more slowly."
+    },
+    "adjustmentsFunctionHelpFlapCompensationGain": {
+        "message": "Scales every mixer rule tagged Flap Compensation. Negative values reverse them all together."
+    },
+    "adjustmentsFunctionHelpDiffThrustYawGain": {
+        "message": "Scales the differential thrust yaw mix, which speeds up one motor and slows the other for extra yaw authority. Negative values reverse it."
+    },
+    "adjustmentsFunctionHelpRollRate": {
+        "message": "The roll Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpRollRCRate": {
+        "message": "The roll RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpRollRCExpo": {
+        "message": "The roll expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpRollP": {
+        "message": "Roll P-gain: how hard the roll axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpRollI": {
+        "message": "Roll I-gain: how firmly the roll axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpRollD": {
+        "message": "Roll D-gain: damps roll movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpRollF": {
+        "message": "Roll feedforward: pushes the roll axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpRollB": {
+        "message": "Roll boost: extra feedforward from how fast the roll stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpRollGyroCutoff": {
+        "message": "Roll PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpRollDtermCutoff": {
+        "message": "Roll D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpRollSetpointBoostGain": {
+        "message": "Boosts roll stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainRoll": {
+        "message": "Scales roll P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimeRoll": {
+        "message": "How long the roll axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackRoll": {
+        "message": "How strongly the roll axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimRoll": {
+        "message": "Live trim in µs for servos on the roll axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainRoll": {
+        "message": "Thrust vector loop: scales roll P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVRollP": {
+        "message": "Thrust vector loop roll P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVRollI": {
+        "message": "Thrust vector loop roll I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVRollD": {
+        "message": "Thrust vector loop roll D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVRollF": {
+        "message": "Thrust vector loop roll feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVRollB": {
+        "message": "Thrust vector loop roll boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimeRoll": {
+        "message": "Thrust vector loop: how long the roll axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackRoll": {
+        "message": "Thrust vector loop: how strongly the roll axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpPitchRate": {
+        "message": "The pitch Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpPitchRCRate": {
+        "message": "The pitch RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpPitchRCExpo": {
+        "message": "The pitch expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpPitchP": {
+        "message": "Pitch P-gain: how hard the pitch axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpPitchI": {
+        "message": "Pitch I-gain: how firmly the pitch axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpPitchD": {
+        "message": "Pitch D-gain: damps pitch movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpPitchF": {
+        "message": "Pitch feedforward: pushes the pitch axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpPitchB": {
+        "message": "Pitch boost: extra feedforward from how fast the pitch stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpPitchGyroCutoff": {
+        "message": "Pitch PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpPitchDtermCutoff": {
+        "message": "Pitch D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpPitchSetpointBoostGain": {
+        "message": "Boosts pitch stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainPitch": {
+        "message": "Scales pitch P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimePitch": {
+        "message": "How long the pitch axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackPitch": {
+        "message": "How strongly the pitch axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimPitch": {
+        "message": "Live trim in µs for servos on the pitch axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainPitch": {
+        "message": "Thrust vector loop: scales pitch P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVPitchP": {
+        "message": "Thrust vector loop pitch P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVPitchI": {
+        "message": "Thrust vector loop pitch I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVPitchD": {
+        "message": "Thrust vector loop pitch D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVPitchF": {
+        "message": "Thrust vector loop pitch feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVPitchB": {
+        "message": "Thrust vector loop pitch boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimePitch": {
+        "message": "Thrust vector loop: how long the pitch axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackPitch": {
+        "message": "Thrust vector loop: how strongly the pitch axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpYawRate": {
+        "message": "The yaw Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpYawRCRate": {
+        "message": "The yaw RC Rate value in the active rate profile. Its exact effect depends on the rates type."
+    },
+    "adjustmentsFunctionHelpYawRCExpo": {
+        "message": "The yaw expo in the active rate profile. Higher softens the stick around centre."
+    },
+    "adjustmentsFunctionHelpYawP": {
+        "message": "Yaw P-gain: how hard the yaw axis corrects errors right now. Too high oscillates quickly."
+    },
+    "adjustmentsFunctionHelpYawI": {
+        "message": "Yaw I-gain: how firmly the yaw axis holds against steady errors such as trim, wind or CG."
+    },
+    "adjustmentsFunctionHelpYawD": {
+        "message": "Yaw D-gain: damps yaw movement to stop overshoot. Too high runs hot and amplifies noise."
+    },
+    "adjustmentsFunctionHelpYawF": {
+        "message": "Yaw feedforward: pushes the yaw axis from stick input alone, for a sharper response to commands."
+    },
+    "adjustmentsFunctionHelpYawB": {
+        "message": "Yaw boost: extra feedforward from how fast the yaw stick is moving, for a sharper start and stop."
+    },
+    "adjustmentsFunctionHelpYawGyroCutoff": {
+        "message": "Yaw PID loop overall bandwidth in Hz."
+    },
+    "adjustmentsFunctionHelpYawDtermCutoff": {
+        "message": "Yaw D-term cutoff frequency in Hz. Lower is smoother but adds delay."
+    },
+    "adjustmentsFunctionHelpYawSetpointBoostGain": {
+        "message": "Boosts yaw stick inputs for a snappier feel."
+    },
+    "adjustmentsFunctionHelpMasterGainYaw": {
+        "message": "Scales yaw P, I, D and F together, live, without changing the stored gains. 100% is the tune as configured."
+    },
+    "adjustmentsFunctionHelpItermDecayTimeYaw": {
+        "message": "How long the yaw axis holds a correction after a gust or bump before letting it go. Longer feels more locked in."
+    },
+    "adjustmentsFunctionHelpBouncebackYaw": {
+        "message": "How strongly the yaw axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
+    },
+    "adjustmentsFunctionHelpServoTrimYaw": {
+        "message": "Live trim in µs for servos on the yaw axis. Not saved: it starts from zero after a reboot."
+    },
+    "adjustmentsFunctionHelpTVMasterGainYaw": {
+        "message": "Thrust vector loop: scales yaw P, I, D and F together, live, without changing the stored gains."
+    },
+    "adjustmentsFunctionHelpTVYawP": {
+        "message": "Thrust vector loop yaw P-gain: how hard it corrects errors right now."
+    },
+    "adjustmentsFunctionHelpTVYawI": {
+        "message": "Thrust vector loop yaw I-gain: how firmly it holds against steady errors."
+    },
+    "adjustmentsFunctionHelpTVYawD": {
+        "message": "Thrust vector loop yaw D-gain: damps movement to stop overshoot."
+    },
+    "adjustmentsFunctionHelpTVYawF": {
+        "message": "Thrust vector loop yaw feedforward: pushes from stick input alone."
+    },
+    "adjustmentsFunctionHelpTVYawB": {
+        "message": "Thrust vector loop yaw boost: extra feedforward from how fast the stick is moving."
+    },
+    "adjustmentsFunctionHelpTVItermDecayTimeYaw": {
+        "message": "Thrust vector loop: how long the yaw axis holds a correction before letting it go."
+    },
+    "adjustmentsFunctionHelpTVBouncebackYaw": {
+        "message": "Thrust vector loop: how strongly the yaw axis stops a fast manoeuvre bouncing back. Higher means less bounce-back."
     },
     "adjustmentsFunctionNone": {
         "message": "No changes"
@@ -2888,7 +3369,7 @@
         "message": "Stability"
     },
     "adjustmentsGroupMasterGains": {
-        "message": "Master Gains"
+        "message": "Flight Feel"
     },
     "adjustmentsGroupAccTrim": {
         "message": "Accelerometer Trim"
@@ -2913,6 +3394,9 @@
     },
     "adjustmentsGroupGovernor": {
         "message": "Governor (Heli)"
+    },
+    "adjustmentsGroupMixer": {
+        "message": "Mixer"
     },
     "adjustmentsFunctionRateProfile": {
         "message": "Rate Profile Selection"
@@ -3052,9 +3536,6 @@
     "adjustmentsFunctionAngleLevelGain": {
         "message": "Angle Level Gain"
     },
-    "adjustmentsFunctionHorizonLevelGain": {
-        "message": "Horizon Level Gain"
-    },
     "adjustmentsFunctionAcroTrainerGain": {
         "message": "Acro Trainer Gain"
     },
@@ -3066,9 +3547,6 @@
     },
     "adjustmentsFunctionMasterGainYaw": {
         "message": "Master Gain Yaw"
-    },
-    "adjustmentsFunctionAutoHoverGain": {
-        "message": "Auto Hover Gain"
     },
     "adjustmentsFunctionAttHoldGain": {
         "message": "Attitude Hold Gain"
@@ -3141,6 +3619,48 @@
     },
     "adjustmentsFunctionTVProfile": {
         "message": "TV Profile Selection"
+    },
+    "adjustmentsFunctionFlapCompensationGain": {
+        "message": "Flap Compensation Gain"
+    },
+    "adjustmentsFunctionDiffThrustYawGain": {
+        "message": "Differential Thrust Yaw Gain"
+    },
+    "adjustmentsFunctionItermDecayTimeRoll": {
+        "message": "I-Term Decay Roll (0.01 s)"
+    },
+    "adjustmentsFunctionItermDecayTimePitch": {
+        "message": "I-Term Decay Pitch (0.01 s)"
+    },
+    "adjustmentsFunctionItermDecayTimeYaw": {
+        "message": "I-Term Decay Yaw (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimeRoll": {
+        "message": "TV I-Term Decay Roll (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimePitch": {
+        "message": "TV I-Term Decay Pitch (0.01 s)"
+    },
+    "adjustmentsFunctionTVItermDecayTimeYaw": {
+        "message": "TV I-Term Decay Yaw (0.01 s)"
+    },
+    "adjustmentsFunctionBouncebackRoll": {
+        "message": "I-Term Relax Roll"
+    },
+    "adjustmentsFunctionBouncebackPitch": {
+        "message": "I-Term Relax Pitch"
+    },
+    "adjustmentsFunctionBouncebackYaw": {
+        "message": "I-Term Relax Yaw"
+    },
+    "adjustmentsFunctionTVBouncebackRoll": {
+        "message": "TV I-Term Relax Roll"
+    },
+    "adjustmentsFunctionTVBouncebackPitch": {
+        "message": "TV I-Term Relax Pitch"
+    },
+    "adjustmentsFunctionTVBouncebackYaw": {
+        "message": "TV I-Term Relax Yaw"
     },
     "adjustmentsFunctionGovernorGain": {
         "message": "Governor PID-gain"
@@ -3238,9 +3758,6 @@
     "adjustmentsFunctionGovMaxThrottle": {
         "message": "Governor Max Throttle"
     },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Governor Headspeed"
-    },
     "adjustmentsFunctionGovYawFF": {
         "message": "Governor Yaw F-gain"
     },
@@ -3267,6 +3784,9 @@
     },
     "servoMidHelp": {
         "message": "Center position in µs. The servo arm should be level in this position."
+    },
+    "servoLiveTrimHelp": {
+        "message": "Live trim in µs from a Mapped ServoTrim adjustment. The servo Center is unchanged; this is not saved and starts from zero after a reboot."
     },
     "servoTrimColumn": {
         "message": "Trim"
@@ -3302,7 +3822,7 @@
         "message": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
+        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSource": {
         "message": "Source"
@@ -3314,7 +3834,7 @@
         "message": "Speed [ms]"
     },
     "servoSpeedHelp": {
-        "message": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60&deg; rotation."
+        "message": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60° rotation."
     },
     "servoReverse": {
         "message": "Reverse"
@@ -3331,8 +3851,26 @@
     "servoSignal": {
         "message": "PWM Signal"
     },
+    "servoCurveActive": {
+        "message": "Balance curve active - edit on the Curves tab"
+    },
+    "servoCurveActiveCloned": {
+        "message": "Cloned from PWM $1's balance curve - edit on the Curves tab"
+    },
+    "servoCurveEdit": {
+        "message": "Edit balance curve on the Curves tab"
+    },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
+    },
+    "servoTravelLimitedMaxWarning": {
+        "message": "<span class=\"message-negative\">Servo $1:</span> at <i>Center</i> $2, <i>Max</i> can only reach $3, because the output can't go above $4 µs. Move the center closer to the middle to use more."
+    },
+    "servoTravelLimitedMinWarning": {
+        "message": "<span class=\"message-negative\">Servo $1:</span> at <i>Center</i> $2, <i>Min</i> can only reach $3, because the output can't go below $4 µs. Move the center closer to the middle to use more."
+    },
+    "servoTravelLimitedHelp": {
+        "message": "At center $1 this can only reach $2: the output can't go past $3 µs."
     },
     "servoUnusualLimitsWarning": {
         "message": "<span class=\"message-negative\">Warning:</span> The servo <i>Limits</i> are set to unusual values. Please check!"
@@ -3368,7 +3906,19 @@
         "message": "<strong>Clone PWM outputs to bus servos</strong>"
     },
     "servoBusCloneText": {
-        "message": " When enabled, each bus servo channel mirrors the matching PWM servo output (PWM1 &rarr; Bus 1, PWM2 &rarr; Bus 2, ...), so a mixer built for PWM outputs also drives bus servos with no extra setup. Turn this off for a custom model where the bus servos need their own mixer rules, independent of the PWM outputs."
+        "message": "Bus servo 1 copies PWM servo 1, bus servo 2 copies PWM servo 2, and so on. Turn off to give bus servos their own mixer rules."
+    },
+    "servoFbusOutChannels": {
+        "message": "F.Bus output channels"
+    },
+    "servoFbusOutChannelsHelp": {
+        "message": "How many servo channels F.Bus sends. Use 16 or fewer if a device on the bus can't take 24."
+    },
+    "servoSbusOutChannels": {
+        "message": "SBUS output channels"
+    },
+    "servoSbusOutChannelsHelp": {
+        "message": "How many servo channels SBUS sends."
     },
     "servoOverrideEnable": {
         "message": "Enable"
@@ -3461,46 +4011,64 @@
         "message": "RC Throttle (bypass)"
     },
     "mixerInputRCChannelAux1": {
-        "message": "RC Channel AUX1"
+        "message": "CH #5"
     },
     "mixerInputRCChannelAux2": {
-        "message": "RC Channel AUX2"
+        "message": "CH #6"
     },
     "mixerInputRCChannelAux3": {
-        "message": "RC Channel AUX3"
+        "message": "CH #7"
     },
     "mixerInputRCChannel8": {
-        "message": "RC Channel #8"
+        "message": "CH #8"
     },
     "mixerInputRCChannel9": {
-        "message": "RC Channel #9"
+        "message": "CH #9"
     },
     "mixerInputRCChannel10": {
-        "message": "RC Channel #10"
+        "message": "CH #10"
     },
     "mixerInputRCChannel11": {
-        "message": "RC Channel #11"
+        "message": "CH #11"
     },
     "mixerInputRCChannel12": {
-        "message": "RC Channel #12"
+        "message": "CH #12"
     },
     "mixerInputRCChannel13": {
-        "message": "RC Channel #13"
+        "message": "CH #13"
     },
     "mixerInputRCChannel14": {
-        "message": "RC Channel #14"
+        "message": "CH #14"
     },
     "mixerInputRCChannel15": {
-        "message": "RC Channel #15"
+        "message": "CH #15"
     },
     "mixerInputRCChannel16": {
-        "message": "RC Channel #16"
+        "message": "CH #16"
     },
     "mixerInputRCChannel17": {
-        "message": "RC Channel #17"
+        "message": "CH #17"
     },
     "mixerInputRCChannel18": {
-        "message": "RC Channel #18"
+        "message": "CH #18"
+    },
+    "mixerInputRCChannel19": {
+        "message": "CH #19"
+    },
+    "mixerInputRCChannel20": {
+        "message": "CH #20"
+    },
+    "mixerInputRCChannel21": {
+        "message": "CH #21"
+    },
+    "mixerInputRCChannel22": {
+        "message": "CH #22"
+    },
+    "mixerInputRCChannel23": {
+        "message": "CH #23"
+    },
+    "mixerInputRCChannel24": {
+        "message": "CH #24"
     },
     "mixerOutputNone": {
         "message": "-"
@@ -3679,23 +4247,50 @@
     "curvesTitleGain": {
         "message": "Gain Curves"
     },
+    "curvesTitleServo": {
+        "message": "Servo Balance Curves"
+    },
     "curveCategoryMixer": {
         "message": "Mixer"
     },
     "curveCategoryGain": {
         "message": "Gain"
     },
+    "curveCategoryServo": {
+        "message": "Servo"
+    },
     "curveCategoryHelpMixer": {
         "message": "Mixer curves reshape a mixer rule's input before it's weighted onto an output - useful for a non-linear throttle-to-motor response, asymmetric control surface deflection, and similar shaping. Assign one to a rule on the Mixer tab."
     },
     "curveCategoryHelpGain": {
-        "message": "Gain curves scale a profile axis's Master Gain by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
+        "message": "Gain curves scale a profile axis's Master Gain (Flight Feel on the Profiles tab) by stick deflection (0-100%, same in both directions) - useful for tapering stabilization gain in or out as the stick moves away from center. Assign one to Roll/Pitch/Yaw on the Profiles tab."
+    },
+    "curveCategoryHelpServo": {
+        "message": "Servo curves add a small corrective delta to a single servo's own output after mixing (and after geometry correction, if enabled) - use this to match the physical travel of two or more servos driving the same control surface (e.g. dual ailerons) so they don't fight each other at the extremes."
     },
     "curveExplainMixer": {
         "message": "X axis: this rule's input value.\nY axis: the value used in its place once weighted onto the output.\n\nBoth axes share the rule's own -1000..1000 scale. The default diagonal line passes the input straight through - reshape it for a non-linear response, e.g. more resolution near center or a dead zone."
     },
     "curveExplainGain": {
-        "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per-axis on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+        "message": "X axis: stick deflection, 0% (centered) to 100% (full throw) - the same curve applies in both directions.\nY axis: gain multiplier, 0-500%. 100% = no change.\n\nFinal gain = Master Gain (set per axis in Flight Feel on the Profiles tab) x this curve's value at the current stick position. A flat line at 100% has no effect - drag a point below 100 to soften gain there, above 100 to sharpen it."
+    },
+    "curveExplainServo": {
+        "message": "X axis: this servo's own output, -100% to +100%.\nY axis: a correction added on top of it at that point, -10% to +10%.\n\nThe default flat line at 0 adds no correction. Nudge it up or down to trim one servo's travel relative to its paired servo, especially near full deflection."
+    },
+    "servoCurveLabel": {
+        "message": "Servo $1"
+    },
+    "curveNoServosConfigured": {
+        "message": "No servos configured - connect and configure servos on the Servos tab first."
+    },
+    "curveEditLabel": {
+        "message": "Editing:"
+    },
+    "curveCompareLabel": {
+        "message": "Compare with:"
+    },
+    "curveCompareNone": {
+        "message": "None"
     },
     "curveReset": {
         "message": "Reset Curve"
@@ -3883,6 +4478,18 @@
     "mixerRuleCondition": {
         "message": "Condition"
     },
+    "mixerRuleRole": {
+        "message": "Role"
+    },
+    "mixerRoleNone": {
+        "message": "-"
+    },
+    "mixerRoleFlapCompensation": {
+        "message": "Flap Compensation"
+    },
+    "mixerRoleDifferentialThrustYaw": {
+        "message": "Differential Thrust Yaw"
+    },
     "mixerRuleActionsHeader": {
         "message": ""
     },
@@ -3930,6 +4537,9 @@
     },
     "mixerChannelSummaryInput": {
         "message": "Input"
+    },
+    "mixerCompensationRole": {
+        "message": "Compensation"
     },
     "mixerRuleMoveUp": {
         "message": "Move up"
@@ -3995,7 +4605,16 @@
         "message": "Flaps"
     },
     "mixerWizardFlapsEnable": {
-        "message": "Add a flap servo (driven by an aux channel)"
+        "message": "Add flaps (driven by an aux channel)"
+    },
+    "mixerWizardFlapServos1": {
+        "message": "1 servo (shared Y-cable channel)"
+    },
+    "mixerWizardFlapServos2": {
+        "message": "2 independent servos"
+    },
+    "mixerWizardFlapsCompensationHint": {
+        "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
@@ -4161,6 +4780,48 @@
     },
     "motorsEscTelemetryPinswapHelp": {
         "message": "<p>Swaps the Rx and Tx pins.</p><p><strong>Note:</strong> This option is NOT supported on F4 MCUs, see help.</p>"
+    },
+    "motorsEscWiringDetectButton": {
+        "message": "Detect Wiring"
+    },
+    "motorsEscWiringDetectHelp": {
+        "message": "<p>Tries every combination of Half-Duplex / Pin Swap for the selected telemetry protocol and stops as soon as one produces a valid frame. Nothing is saved until you press Save on this tab.</p><p><strong>Note:</strong> requires no unsaved changes first - it tests whatever protocol is currently saved on the flight controller, not a pending selection.</p><p>The ESC(s) must be powered and outputting telemetry - detection can't find a wiring combination if nothing is being sent in the first place.</p><p>Only available while disarmed - it cycles the ESC telemetry wiring live while motors could be spinning.</p>"
+    },
+    "motorsEscWiringDetectSaveFirst": {
+        "message": "Save your changes first - this tests whatever is currently saved on the flight controller, not a pending selection."
+    },
+    "motorsEscWiringDetectArmedFirst": {
+        "message": "Disarm first - wiring detection cycles the ESC telemetry connection live and can't run while armed."
+    },
+    "motorsEscWiringDetectWizardTitle": {
+        "message": "Detect ESC Telemetry Wiring"
+    },
+    "motorsEscWiringDetectWizardStep1": {
+        "message": "Step 1 of 2: Scanning"
+    },
+    "motorsEscWiringDetectWizardStep2": {
+        "message": "Step 2 of 2: Result"
+    },
+    "motorsEscWiringDetectScanning": {
+        "message": "Trying combination $1 of $2…"
+    },
+    "motorsEscWiringDetectSuccess": {
+        "message": "Signal found — Half-Duplex: $1, Pin Swap: $2. Save and reboot to keep it, or Close to discard and restore the previous setting."
+    },
+    "motorsEscWiringDetectFailed": {
+        "message": "No valid frame found on any wiring combination for this protocol. Make sure the ESC(s) are powered and outputting telemetry, check the protocol selection and connections, then try again."
+    },
+    "motorsEscWiringDetectRejected": {
+        "message": "Wiring detection was rejected - either it isn't available for this telemetry protocol (Castle Link, F.BUS and SRXL2 ESC telemetry each use their own dedicated connection, not a generic UART), no port is assigned, or the aircraft became armed."
+    },
+    "motorsEscWiringDetectUnsupported": {
+        "message": "Wiring detection is not supported by this firmware build."
+    },
+    "motorsEscWiringDetectWizardRetry": {
+        "message": "Retry"
+    },
+    "motorsEscWiringDetectWizardClose": {
+        "message": "Close"
     },
     "motorsUnsyncedPwm": {
         "message": "Unsyncronised ESC update"
@@ -4399,9 +5060,6 @@
     "sensorsAltitudeSelect": {
         "message": "Altitude"
     },
-    "sensorsSonarSelect": {
-        "message": "Sonar"
-    },
     "sensorsDebugSelect": {
         "message": "Debug"
     },
@@ -4419,9 +5077,6 @@
     },
     "sensorsAltitudeHint": {
         "message": "The altitude is calculated by combining the output of the barometer (if available) with the altitude output from the GPS (if available). If a GPS connected and the GPS has a fix, the absolute altitude above sea level will be shown when disarmed. When armed, the altitude relative to the position when arming will be shown."
-    },
-    "sensorsSonarTitle": {
-        "message": "Sonar - cm"
     },
     "sensorsDebugTitle": {
         "message": "Debug"
@@ -4455,6 +5110,24 @@
     },
     "cliLoadFromFileBtn": {
         "message": "Load from file"
+    },
+    "cliBackupToFileBtn": {
+        "message": "Backup"
+    },
+    "cliBackupInProgress": {
+        "message": "Running backup..."
+    },
+    "dialogCliBackupChoiceTitle": {
+        "message": "Backup Configuration"
+    },
+    "dialogCliBackupChoiceNote": {
+        "message": "Choose which backup to run. The result is captured from the CLI and saved to a file."
+    },
+    "dialogCliBackupChoiceDiffButton": {
+        "message": "Backup (diff all)"
+    },
+    "dialogCliBackupChoiceDumpButton": {
+        "message": "Backup (dump all)"
     },
     "cliConfirmSnippetDialogTitle": {
         "message": "Loaded file <strong>{{fileName}}</strong>. Review the loaded commands"
@@ -4765,6 +5438,270 @@
     "firmwareFlasherFullChipEraseDescription": {
         "message": "Wipes all configuration data currently stored on the board."
     },
+    "firmwareFlasherBackupModeNone": {
+        "message": "Don't back up"
+    },
+    "firmwareFlasherBackupBeforeFlashingDescription": {
+        "message": "Walks through backing up your current settings before flashing, then restoring them once the new firmware boots. Only available when flashing over a serial port (not DFU)."
+    },
+    "firmwareFlasherBackupTypeDiff": {
+        "message": "Diff (changed settings only)"
+    },
+    "firmwareFlasherBackupTypeDump": {
+        "message": "Dump (full configuration)"
+    },
+    "firmwareFlasherBackupTypeDescription": {
+        "message": "Diff is smaller and faster to capture/restore; Dump records every setting explicitly."
+    },
+    "firmwareFlasherBackupSkippedNoPort": {
+        "message": "No serial port selected, skipping pre-flash backup."
+    },
+    "firmwareFlasherBackupSkippedDfu": {
+        "message": "Board is in DFU mode, skipping pre-flash backup and restore."
+    },
+    "firmwareFlasherRestoreSkippedFlashFailed": {
+        "message": "Flashing did not complete successfully, skipping restore."
+    },
+    "firmwareFlasherWizardBackupTitle": {
+        "message": "Back Up Configuration"
+    },
+    "firmwareFlasherWizardConnecting": {
+        "message": "Connecting to flight controller..."
+    },
+    "firmwareFlasherWizardBackupRunning": {
+        "message": "Running {{command}}..."
+    },
+    "firmwareFlasherWizardBackupReady": {
+        "message": "Backup captured -- it's held in memory and will be offered for restore automatically once the new firmware boots. Saving a copy to a file below is optional, but recommended in case anything goes wrong."
+    },
+    "firmwareFlasherWizardBackupForeignFirmware": {
+        "message": "This board isn't currently running Wingflight, so this backup won't be offered for restore automatically after flashing -- its settings aren't guaranteed to carry over. Save a copy below if you want it for reference."
+    },
+    "firmwareFlasherWizardBackupSaved": {
+        "message": "Saved"
+    },
+    "firmwareFlasherWizardBackupFailed": {
+        "message": "Could not connect to the flight controller to run the backup."
+    },
+    "firmwareFlasherWizardSaveBackupFile": {
+        "message": "Save Backup File..."
+    },
+    "firmwareFlasherWizardContinueToFlash": {
+        "message": "Continue to Flash"
+    },
+    "firmwareFlasherWizardCancel": {
+        "message": "Cancel"
+    },
+    "firmwareFlasherWizardRetry": {
+        "message": "Retry"
+    },
+    "firmwareFlasherWizardSelectPort": {
+        "message": "Select Port..."
+    },
+    "firmwareFlasherWizardSkip": {
+        "message": "Skip"
+    },
+    "firmwareFlasherWizardClose": {
+        "message": "Close"
+    },
+    "firmwareFlasherRestoreExitTitle": {
+        "message": "Configuration has not been restored"
+    },
+    "firmwareFlasherRestoreExitUnsaved": {
+        "message": "Your previous settings have not been restored to the flight controller. Leaving will discard the backup held in this page. Restore them now or save a backup file before leaving."
+    },
+    "firmwareFlasherRestoreExitSaved": {
+        "message": "Your previous settings have not been restored to the flight controller. You have saved a backup file, so you can restore them later. Leave without restoring?"
+    },
+    "firmwareFlasherRestoreExitSaveFailed": {
+        "message": "The backup was not saved. Stay here to retry or restore it to the flight controller."
+    },
+    "firmwareFlasherRestoreExitStay": {
+        "message": "Stay on this page"
+    },
+    "firmwareFlasherRestoreExitLeave": {
+        "message": "Leave Without Restoring"
+    },
+    "firmwareFlasherWizardRestoreTitle": {
+        "message": "Restore Configuration"
+    },
+    "firmwareFlasherWizardRestorePrompt": {
+        "message": "Flashing complete. Restore your saved configuration onto the new firmware now?"
+    },
+    "firmwareFlasherWizardRestoreNow": {
+        "message": "Restore Now"
+    },
+    "firmwareFlasherWizardRestoreWaiting": {
+        "message": "Waiting for the new firmware to finish booting..."
+    },
+    "firmwareFlasherWizardRestoreRunning": {
+        "message": "Restoring your configuration..."
+    },
+    "firmwareFlasherWizardRestoreDone": {
+        "message": "Configuration restored successfully."
+    },
+    "firmwareFlasherWizardRestoreFailed": {
+        "message": "Could not reconnect to restore the configuration automatically. You can retry, or use the CLI tab's Load button to replay the saved backup_pre_flash file manually."
+    },
+    "firmwareFlasherStepSourceTitle": {
+        "message": "Source"
+    },
+    "firmwareFlasherStepConnectTitle": {
+        "message": "Connect"
+    },
+    "firmwareFlasherConnectChoose": {
+        "message": "Choose a port"
+    },
+    "firmwareFlasherConnectDescription": {
+        "message": "Select the port your board is connected on -- or add a new serial, DFU, or Bluetooth device below if you don't see it listed."
+    },
+    "firmwareFlasherAddSerialDevice": {
+        "message": "Add Serial Device"
+    },
+    "firmwareFlasherAddBluetoothDevice": {
+        "message": "Add Bluetooth Device"
+    },
+    "firmwareFlasherAddDfuDevice": {
+        "message": "Add DFU Device"
+    },
+    "firmwareFlasherConnectNativeHint": {
+        "message": "New devices appear automatically when connected -- plug in your board and select it above."
+    },
+    "firmwareFlasherUseLegacyFlasher": {
+        "message": "Prefer the previous flasher? Use the legacy version instead."
+    },
+    "firmwareFlasherLegacyBackToWizard": {
+        "message": "Back to wizard"
+    },
+    "firmwareFlasherStepBoardTitle": {
+        "message": "Board"
+    },
+    "firmwareFlasherSkipToLocalFirmware": {
+        "message": "Flashing from a local file instead? Skip board selection"
+    },
+    "firmwareFlasherSwitchToLocalFirmware": {
+        "message": "Load a local firmware file instead"
+    },
+    "firmwareFlasherSwitchToOnlineFirmware": {
+        "message": "Choose an online firmware version instead"
+    },
+    "firmwareFlasherLocalNoBoardSelected": {
+        "message": "No board selected — this will flash exactly as loaded, with no default config combined in."
+    },
+    "firmwareFlasherGoSelectBoard": {
+        "message": "Select a board"
+    },
+    "firmwareFlasherLocalWillCombineConfig": {
+        "message": "Will combine with {{target}}'s default config at flash time."
+    },
+    "firmwareFlasherBoardWillCombineConfig": {
+        "message": "{{target}} selected -- its default config will be combined at flash time."
+    },
+    "firmwareFlasherBoardSelectedPlain": {
+        "message": "{{target}} selected."
+    },
+    "firmwareFlasherSourceOnlineTitle": {
+        "message": "Online"
+    },
+    "firmwareFlasherSourceOnlineDescription": {
+        "message": "Download an official release or development build for your board."
+    },
+    "firmwareFlasherSourceLocalTitle": {
+        "message": "Local File"
+    },
+    "firmwareFlasherSourceLocalDescription": {
+        "message": "Flash a .hex file (and optional .config) you already have."
+    },
+    "firmwareFlasherStepFirmwareTitle": {
+        "message": "Firmware"
+    },
+    "firmwareFlasherStepBackupTitle": {
+        "message": "Backup"
+    },
+    "firmwareFlasherStepReviewTitle": {
+        "message": "Flash"
+    },
+    "firmwareFlasherStepRestoreTitle": {
+        "message": "Restore"
+    },
+    "firmwareFlasherStepFinishedTitle": {
+        "message": "Finished"
+    },
+    "firmwareFlasherFinishedTitle": {
+        "message": "All done -- the update is complete"
+    },
+    "firmwareFlasherFinishedRestoreSkipped": {
+        "message": "Configuration restore was skipped."
+    },
+    "firmwareFlasherFinishedInstructions": {
+        "message": "Nothing is running any more. You can now close this window or disconnect your board, or click Flash Another Board to update a different one."
+    },
+    "firmwareFlasherDetectUnavailableDfu": {
+        "message": "<strong>{{device}}</strong> connected. Automatic board detection needs a normal serial connection though, so it (along with backup and restore) won't be available this session. A DFU connection is enough to flash new firmware: continue to Firmware below, or select your board manually if you'd like its default config combined at flash time."
+    },
+    "firmwareFlasherDetectBoardCta": {
+        "message": "Detect My Board"
+    },
+    "firmwareFlasherSelectBoardManually": {
+        "message": "Select board manually instead"
+    },
+    "firmwareFlasherTryDetectInstead": {
+        "message": "Try auto-detect instead"
+    },
+    "firmwareFlasherRunBackupCta": {
+        "message": "Back Up Now"
+    },
+    "firmwareFlasherFlashCompleteMessage": {
+        "message": "Firmware flashed successfully."
+    },
+    "firmwareFlasherStartOver": {
+        "message": "Flash Another Board"
+    },
+    "firmwareFlasherNoPortWeb": {
+        "message": "No serial port selected yet."
+    },
+    "firmwareFlasherNoPortNative": {
+        "message": "No serial port selected — choose one from the toolbar above."
+    },
+    "firmwareFlasherSelectPort": {
+        "message": "Select Serial Port"
+    },
+    "firmwareFlasherSelectDfu": {
+        "message": "Select DFU Device"
+    },
+    "firmwareFlasherDfuPermissionNeeded": {
+        "message": "Your board has restarted in DFU (bootloader) mode. Your browser needs permission to access it before flashing can continue. Click <strong>Allow DFU Access</strong> and select the DFU device."
+    },
+    "dfuWebUsbUnsupported": {
+        "message": "DFU flashing needs WebUSB, which this browser doesn't support (e.g. Firefox). Please use Chrome, Edge or Opera."
+    },
+    "firmwareFlasherDfuPermissionGrant": {
+        "message": "Allow DFU Access"
+    },
+    "firmwareFlasherDfuPermissionCancel": {
+        "message": "Cancel"
+    },
+    "firmwareFlasherReadyToFlash": {
+        "message": "Ready to flash: {{target}} — {{version}}"
+    },
+    "firmwareFlasherShowDetails": {
+        "message": "Show details"
+    },
+    "firmwareFlasherHideDetails": {
+        "message": "Hide details"
+    },
+    "firmwareFlasherSaveFirmware": {
+        "message": "Save Firmware (.hex)"
+    },
+    "firmwareFlasherSaveConfig": {
+        "message": "Save Config (.config)"
+    },
+    "firmwareFlasherWizardBack": {
+        "message": "Back"
+    },
+    "firmwareFlasherWizardNext": {
+        "message": "Next"
+    },
     "firmwareFlasherManualPort": {
         "message": "Port"
     },
@@ -4800,6 +5737,9 @@
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersion": {
         "message": "Choose a Firmware version"
+    },
+    "firmwareFlasherVersionCachedLabel": {
+        "message": "{{label}} (cached)"
     },
     "firmwareFlasherOptionLabelSelectFirmwareVersionFor": {
         "message": "Choose a Firmware version for"
@@ -4856,7 +5796,7 @@
         "message": "<strong>Recovery / Lost communication</strong>"
     },
     "firmwareFlasherRecoveryText": {
-        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'No reboot sequence', enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
+        "message": "If you have lost communication with your board follow these steps to restore communication: <ul><li>Power off</li><li>Enable 'Full chip erase'.</li><li>Jumper the BOOT pins or hold BOOT button.</li><li>Power on (activity LED will NOT flash if done correctly).</li><li>Install the correct USB driver if required &mdash; use <a href=\"https://github.com/WingFlight/wingflight-driver-fixer/releases\" target=\"_blank\" rel=\"noopener noreferrer\">WingFlight Driver Fixer</a> to detect your board and install it automatically (see <a href=\"https://doc.wingflight.org/getting-started/flashing-the-firmware/\" target=\"_blank\" rel=\"noopener noreferrer\">USB Flashing</a> section of the manual for details).</li><li>Close configurator, Restart Configurator.</li><li>Release BOOT button if your FC has one.</li><li>Flash with correct firmware (using manual baud rate if specified in your FC's manual).</li><li>Power off.</li><li>Remove BOOT jumper.</li><li>Power on (activity LED should flash).</li><li>Connect normally.</li></ul>"
     },
     "firmwareFlasherFirmwareNotLoaded": {
         "message": "Firmware not loaded"
@@ -5003,9 +5943,6 @@
     "ledStripFadeOverlay": {
         "message": "Fade to alt color (in profile Status Alt)"
     },
-    "ledStripVtxOverlay": {
-        "message": "VTX (uses vtx frequency to assign color)"
-    },
     "ledStripFunctionSection": {
         "message": "LED Functions"
     },
@@ -5054,24 +5991,8 @@
         "message": "Orientation",
         "description": "One of the modes in Color Mode in Led Strip"
     },
-    "ledStripModeColorsModeHeadfree": {
-        "message": "Headfree",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeHorizon": {
-        "message": "Horizon",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
     "ledStripModeColorsModeAngle": {
         "message": "Angle",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeMag": {
-        "message": "Mag",
-        "description": "One of the modes in Color Mode in Led Strip"
-    },
-    "ledStripModeColorsModeBaro": {
-        "message": "Baro",
         "description": "One of the modes in Color Mode in Led Strip"
     },
     "ledStripDirN": {
@@ -5239,89 +6160,92 @@
     "controlAxisThrottle": {
         "message": "Throttle"
     },
+    "controlAxisSpeed": {
+        "message": "Speed"
+    },
     "controlAxisThr": {
         "message": "Throttle"
     },
     "controlAxisAux1": {
-        "message": "AUX 1"
+        "message": "CH #5"
     },
     "controlAxisAux2": {
-        "message": "AUX 2"
+        "message": "CH #6"
     },
     "controlAxisAux3": {
-        "message": "AUX 3"
+        "message": "CH #7"
     },
     "controlAxisAux4": {
-        "message": "AUX 4"
+        "message": "CH #8"
     },
     "controlAxisAux5": {
-        "message": "AUX 5"
+        "message": "CH #9"
     },
     "controlAxisAux6": {
-        "message": "AUX 6"
+        "message": "CH #10"
     },
     "controlAxisAux7": {
-        "message": "AUX 7"
+        "message": "CH #11"
     },
     "controlAxisAux8": {
-        "message": "AUX 8"
+        "message": "CH #12"
     },
     "controlAxisAux9": {
-        "message": "AUX 9"
+        "message": "CH #13"
     },
     "controlAxisAux10": {
-        "message": "AUX 10"
+        "message": "CH #14"
     },
     "controlAxisAux11": {
-        "message": "AUX 11"
+        "message": "CH #15"
     },
     "controlAxisAux12": {
-        "message": "AUX 12"
+        "message": "CH #16"
     },
     "controlAxisAux13": {
-        "message": "AUX 13"
+        "message": "CH #17"
     },
     "controlAxisAux14": {
-        "message": "AUX 14"
+        "message": "CH #18"
     },
     "controlAxisAux15": {
-        "message": "AUX 15"
+        "message": "CH #19"
     },
     "controlAxisAux16": {
-        "message": "AUX 16"
+        "message": "CH #20"
     },
     "controlAxisAux17": {
-        "message": "AUX 17"
+        "message": "CH #21"
     },
     "controlAxisAux18": {
-        "message": "AUX 18"
+        "message": "CH #22"
     },
     "controlAxisAux19": {
-        "message": "AUX 19"
+        "message": "CH #23"
     },
     "controlAxisAux20": {
-        "message": "AUX 20"
+        "message": "CH #24"
     },
     "controlAxisAux21": {
-        "message": "AUX 21"
+        "message": "CH #25"
     },
     "controlAxisAux22": {
-        "message": "AUX 22"
+        "message": "CH #26"
     },
     "controlAxisAux23": {
-        "message": "AUX 23"
+        "message": "CH #27"
     },
     "controlAxisAux24": {
-        "message": "AUX 24"
+        "message": "CH #28"
     },
     "controlAxisAux25": {
-        "message": "AUX 25"
+        "message": "CH #29"
     },
     "controlAxisAux26": {
-        "message": "AUX 26"
+        "message": "CH #30"
     },
     "controlAxisAux27": {
-        "message": "AUX 27"
+        "message": "CH #31"
     },
     "rssiOptionAUTO": {
         "message": "AUTO"
@@ -5339,7 +6263,7 @@
         "message": "Thrust Vector PID Gains"
     },
     "thrustVectorMasterGainGroup": {
-        "message": "Master Gain"
+        "message": "Flight Feel"
     },
     "thrustVectorPidSettings": {
         "message": "Thrust Vector PID Settings"
@@ -5387,22 +6311,37 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Baseline throttle attenuation scale, optionally shaped further by a curve from the Curves tab (evaluated on throttle, 0-100%). On a fixed-wing aircraft, control surfaces in prop wash become more authoritative as throttle rises, so this is typically used to reduce gain at higher throttle. 100% with no curve assigned means no attenuation."
+        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and GYRO OFF mode is not affected."
+    },
+    "profilesFwSpaHelp": {
+        "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
+    },
+    "profilesFwSpaSpeedMax": {
+        "message": "Speed curve range"
     },
     "profilesMasterGainGroup": {
-        "message": "Master Gains"
+        "message": "Flight Feel"
     },
     "profilesMasterGainColumn": {
-        "message": "Gain [%]"
+        "message": "Master Gain [%]"
     },
     "profilesMasterGainHelp": {
-        "message": "Scales this axis's P, I, D and FF by this percentage, live - useful for quickly finding the right per-axis gain (e.g. with a knob on an Adjustments channel) without editing each gain. 100% is your tune as configured; it does not change the underlying P/I/D/F values."
+        "message": "How hard this axis pushes back against a disturbance. Scales the axis's P, I, D and FF together, live, so you can find the right overall gain (for example on an Adjustments knob) without editing each term. 100% is your tune as configured; it does not change the stored P/I/D/F values."
     },
     "profilesGainCurveColumn": {
         "message": "Curve"
     },
+    "profilesGainCurvesGroup": {
+        "message": "Gain Curves"
+    },
     "profilesGainCurveHelp": {
-        "message": "Optionally scales this axis's Master Gain by stick deflection, using a curve edited on the Curves tab. The curve is evaluated on |stick| (0-100%) and applies the same in both directions. \"-\" means no curve is assigned and Master Gain is used unscaled."
+        "message": "Optionally shapes each axis's Master Gain with a curve from the Curves tab: by stick deflection on Roll, Pitch and Yaw (the same both ways), by throttle on the Throttle row, by GPS speed on the Speed row (0 to the speed curve range, in km/h). \"-\" means no curve, so Master Gain applies as set. Flight Feel shows a CURVE badge on any Master Gain a curve is shaping."
+    },
+    "profilesGainCurveBadge": {
+        "message": "CURVE"
+    },
+    "profilesGainCurveBadgeTitle": {
+        "message": "Master Gain is shaped by Curve $1 (set in Gain Curves, Expert Mode)"
     },
     "profilesEffectivePidGainsHelp": {
         "message": "Read-only preview of the PID gains that are actually used after Master Gain scaling. This helps you see the effective tune while adjusting Master Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100. Boost (B) is shown unchanged because Master Gain does not scale it."
@@ -5434,14 +6373,41 @@
     "profilesCrossAxisRelaxCutoffHelp": {
         "message": "Smoothing cutoff frequency for the yaw setpoint detector used by cross-axis relax."
     },
+    "profilesSnapRelaxGroup": {
+        "message": "Snap relax"
+    },
+    "profilesSnapRelaxStrength": {
+        "message": "Strength"
+    },
+    "profilesSnapRelaxStrengthHelp": {
+        "message": "How much roll and pitch feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation, and yaw, are not touched. 0 turns it off"
+    },
+    "profilesSnapRelaxThreshold": {
+        "message": "Stick threshold"
+    },
+    "profilesSnapRelaxThresholdHelp": {
+        "message": "Stick deflection that roll, pitch and yaw must all reach to count as a snap"
+    },
+    "profilesSnapRelaxWindow": {
+        "message": "Entry window"
+    },
+    "profilesSnapRelaxWindowHelp": {
+        "message": "All three sticks must pass the threshold within this time of each other. A slower build-up of the same inputs, such as a rolling harrier, does not count as a snap"
+    },
+    "profilesSnapRelaxHold": {
+        "message": "Fade-out"
+    },
+    "profilesSnapRelaxHoldHelp": {
+        "message": "Time over which full feedback returns after any of the three sticks drops below the threshold. Reversing the stick against the snap brings full feedback back at once"
+    },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
     },
-    "profilesItermDecayTime": {
-        "message": "I-Term Decay Time [s]"
+    "profilesItermDecayColumn": {
+        "message": "I-Term Decay [s]"
     },
     "profilesItermDecayTimeHelp": {
-        "message": "Time constant for bleeding off accumulated I-term error. Longer decay time gives a more stable hold, but may reduce responsiveness during aggressive maneuvers."
+        "message": "I-Term Decay: how long this axis holds on to a correction after a gust or bump before letting it go. Longer feels more locked in; shorter feels freer and suits 3D flying. Master Gain sets how hard the axis pushes back, I-Term Decay sets for how long. Default 0.60 s, range 0.01-1.00 s."
     },
     "profilesItermDecayLimit": {
         "message": "I-Term Decay Max Rate [&deg;/s]"
@@ -5467,47 +6433,44 @@
     "profilesErrorRotationHelp": {
         "message": "Rotates the current Roll and Pitch Error Terms around Yaw when the craft rotates. This improves piro control and helps the model to travel in a straight line while pirouetting."
     },
-    "profilesItermRelax": {
+    "profilesBouncebackColumn": {
         "message": "I-Term Relax"
     },
-    "profilesItermRelaxHelp": {
-        "message": "Limits the accumulation of I-term when fast movements happen. This helps in the reduction of bounceback at the end of rolls and other fast movements."
+    "profilesBouncebackHelp": {
+        "message": "I-Term Relax, 1-10: how strongly this axis stops a fast roll, loop or snap from bouncing back when you centre the stick. Higher = more relax, so less bounce-back; lower keeps more hold through long, sustained rolls and loops. Default 5; most airframes end up between 5 and 9. If the model bounces back at the end of a manoeuvre, raise it a step at a time."
     },
-    "profilesItermRelaxType": {
-        "message": "I-term Relax Type"
+    "profilesFlightFeelGuideTitle": {
+        "message": "What these do"
     },
-    "profilesItermRelaxTypeHelp": {
-        "message": "Choose the axes in which this is active. <br><strong>RP:</strong> Roll, Pitch <br><strong>RPY:</strong> Roll, Pitch, Yaw."
+    "profilesFlightFeelGuideGain": {
+        "message": "How hard the model fights a gust. Raise it if the model wanders or feels soft; lower it if it wobbles or buzzes."
     },
-    "profilesItermRelaxTypeOptionRP": {
-        "message": "RP"
+    "profilesFlightFeelGuideDecay": {
+        "message": "How long it holds its line after a gust. Longer feels more locked in; shorter feels freer and suits 3D."
     },
-    "profilesItermRelaxTypeOptionRPY": {
-        "message": "RPY"
+    "profilesFlightFeelGuideRelax": {
+        "message": "How firmly it stops at the end of a roll or loop. Raise it if the model bounces back; lower it if long rolls lose rate."
     },
-    "profilesItermRelaxCutoffRoll": {
-        "message": "Cutoff Point for Roll"
+    "profilesFlightFeelGuideThrottle": {
+        "message": "Changes Master Gain with throttle, usually to reduce it at high throttle where surfaces in prop wash gain authority."
     },
-    "profilesItermRelaxCutoffPitch": {
-        "message": "Cutoff Point for Pitch"
+    "profilesFlightFeelGuideSpeed": {
+        "message": "Changes Master Gain with GPS speed, usually to reduce it when fast so a tune that is right at cruise does not wobble in a dive. Needs a GPS and a curve."
     },
-    "profilesItermRelaxCutoffYaw": {
-        "message": "Cutoff Point for Yaw"
+    "profilesItermRelaxLevelGroup": {
+        "message": "I-Term Relax Level"
     },
-    "profilesItermRelaxCutoffHelp": {
-        "message": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small, light aircraft, 10-15 for mid-size, and less than 10 for large, heavy aircraft."
+    "profilesItermRelaxLevelRoll": {
+        "message": "Level for Roll [°/s]"
     },
-    "tvItermRelaxLevelRoll": {
-        "message": "Level for Roll"
+    "profilesItermRelaxLevelPitch": {
+        "message": "Level for Pitch [°/s]"
     },
-    "tvItermRelaxLevelPitch": {
-        "message": "Level for Pitch"
+    "profilesItermRelaxLevelYaw": {
+        "message": "Level for Yaw [°/s]"
     },
-    "tvItermRelaxLevelYaw": {
-        "message": "Level for Yaw"
-    },
-    "tvItermRelaxLevelHelp": {
-        "message": "Setpoint activity, in degrees/s, above which I-term accumulation is fully suppressed. Lower values relax I-term sooner during stick movement."
+    "profilesItermRelaxLevelHelp": {
+        "message": "Stick movement, in °/s, at which I-term build-up is fully suppressed during a fast move. Lower values suppress more strongly. The main setting is I-Term Relax in the Flight Feel panel; leave level at the default (22) unless that is not enough."
     },
     "profilesPidBandwidth": {
         "message": "PID Controller Bandwidth"
@@ -5560,11 +6523,14 @@
     "profilesLevelingSettings": {
         "message": "Auto-leveling Settings"
     },
-    "profilesAcroTrainerGroup": {
-        "message": "Acro Trainer"
+    "profilesRollAngleLimit": {
+        "message": "Bank angle limit (°)"
     },
-    "profilesAutoHoverGroup": {
-        "message": "Auto Hover"
+    "profilesPitchAngleLimit": {
+        "message": "Pitch angle limit (°)"
+    },
+    "profilesAcroTrainerGroup": {
+        "message": "Trainer (angle limits)"
     },
     "profilesAttHoldGroup": {
         "message": "Attitude Hold"
@@ -5573,16 +6539,16 @@
         "message": "Acro Trainer gain"
     },
     "profilesAcroTrainerGainHelp": {
-        "message": "Acro Trainer gain. Acro trainer Mode is not self leveling but does limit the maximum pitch/roll angle. This determines how aggressively the aircraft tilts back to the maximum angle (if exceeded) while in Acro Trainer Mode"
+        "message": "Trainer does not self-level. Gain controls how strongly it corrects back toward the pitch/bank limit when that limit is exceeded."
     },
     "profilesAcroTrainerLimit": {
         "message": "Acro Trainer angle limit"
     },
     "profilesAcroTrainerLimitHelp": {
-        "message": "Acro Trainer angle limit. Acro Trainer mode does not self level (like Angle or Horizon Modes); however, it does limit the maximum angle the aircraft will pitch/roll to"
+        "message": "The same angle limit applies to positive and negative pitch and roll. Inside the limit, Trainer uses normal rate control without self-leveling. Actual attitude can overshoot; this is not stall protection."
     },
-    "profilesAngleHorizonGroup": {
-        "message": "Angle / Horizon Mode"
+    "profilesAngleGroup": {
+        "message": "Angle"
     },
     "profilesAngleModeGain": {
         "message": "Angle Mode leveling gain"
@@ -5590,35 +6556,17 @@
     "profilesAngleModeGainHelp": {
         "message": "Angle Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Angle Mode"
     },
+    "profilesAngleModeDamping": {
+        "message": "Angle Mode damping"
+    },
+    "profilesAngleModeDampingHelp": {
+        "message": "Percent of the measured roll and pitch rate taken off the leveling command. It damps the return to the target angle through the rate PID's feedforward, so it scales with the airframe's tune. Higher values settle with less overshoot but level more slowly. 0 turns it off"
+    },
     "profilesAngleModeLimit": {
         "message": "Angle Mode maximum angle"
     },
     "profilesAngleModeLimitHelp": {
         "message": "Angle Mode maximum angle. The aircraft is limited to this angle when in Angle mode"
-    },
-    "profilesHorizonModeGain": {
-        "message": "Horizon Mode leveling gain"
-    },
-    "profilesHorizonModeGainHelp": {
-        "message": "Horizon Mode leveling gain. This determines how aggressively the aircraft tilts back to level while in Horizon Mode"
-    },
-    "profilesAutoHoverGain": {
-        "message": "Auto Hover gain"
-    },
-    "profilesAutoHoverGainHelp": {
-        "message": "Correction strength back to the held vertical (prop-hang) attitude and heading. Higher values return to vertical more aggressively when the sticks are centred."
-    },
-    "profilesAutoHoverMaxAngle": {
-        "message": "Auto Hover max stick angle"
-    },
-    "profilesAutoHoverMaxAngleHelp": {
-        "message": "Maximum degrees the roll/pitch/yaw sticks may deflect the held attitude away from vertical/heading, same idea as Angle Mode's max angle -- centre the sticks and the aircraft springs back to vertical."
-    },
-    "profilesAutoHoverMaxRate": {
-        "message": "Auto Hover max rate"
-    },
-    "profilesAutoHoverMaxRateHelp": {
-        "message": "Safety clamp (deg/s) on how fast Auto Hover may rotate the aircraft toward the held attitude -- most relevant the instant the mode engages from level flight, since it commands a large, fast attitude change toward vertical. Auto Hover holds attitude and heading only: throttle stays fully manual and it has no awareness of airspeed or whether the aircraft has enough thrust to actually sustain a vertical hover -- if it doesn't, engaging this will command a hard pitch-up and the aircraft will likely stall or tumble rather than hover."
     },
     "profilesAttHoldGain": {
         "message": "Attitude Hold gain"
@@ -6064,8 +7012,14 @@
     "failsafeOffDelayHelp": {
         "message": "Time to stay in landing mode until the motors are turned off and the craft is disarmed"
     },
+    "failsafeRecoveryDelayItem": {
+        "message": "Failsafe Recovery Delay [s]"
+    },
     "failsafeSubTitle1": {
         "message": "Stage 2 - Failsafe Procedure"
+    },
+    "failsafeProcedureItem": {
+        "message": "Procedure"
     },
     "failsafeProcedureItemSelect1": {
         "message": "Land"
@@ -6075,6 +7029,75 @@
     },
     "failsafeProcedureItemSelect4": {
         "message": "GPS Rescue"
+    },
+    "failsafeGpsRescueNavNote": {
+        "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, including Nav Throttle, on the GPS Navigation tab. The throttle value below is used only while landing."
+    },
+    "gpsNavSectionTitle": {
+        "message": "GPS Navigation (RTH / Loiter)"
+    },
+    "gpsNavSectionHelp": {
+        "message": "Tuning for GPS RTH (Return To Home) and Loiter, used by the <strong>GPS RTH</strong> / <strong>GPS Loiter</strong> switches and by the Failsafe Procedure's GPS Rescue option above."
+    },
+    "gpsNavLoiterRadiusItem": {
+        "message": "Loiter Radius"
+    },
+    "gpsNavLoiterDirectionItem": {
+        "message": "Loiter Direction"
+    },
+    "gpsNavLoiterDirectionCw": {
+        "message": "CW"
+    },
+    "gpsNavLoiterDirectionCcw": {
+        "message": "CCW"
+    },
+    "gpsNavRthAltitudeItem": {
+        "message": "RTH Altitude"
+    },
+    "gpsNavMinSatsItem": {
+        "message": "Minimum Satellites"
+    },
+    "gpsNavMaxBankAngleItem": {
+        "message": "Max Bank Angle"
+    },
+    "gpsNavMaxPitchAngleItem": {
+        "message": "Max Pitch Angle"
+    },
+    "gpsNavBearingKpItem": {
+        "message": "Bearing Gain"
+    },
+    "gpsNavBearingKpHelp": {
+        "message": "Bank angle commanded per degree of track error, in hundredths of a degree of bank per degree of error (200 = 2.0° bank per ° of error)."
+    },
+    "gpsNavAltitudeKpItem": {
+        "message": "Altitude Gain"
+    },
+    "gpsNavAltitudeKpHelp": {
+        "message": "Pitch angle commanded per meter of altitude error, in hundredths of a degree of pitch per meter of error (100 = 1.0° pitch per meter of error)."
+    },
+    "gpsNavAltitudeKdItem": {
+        "message": "Altitude Damping"
+    },
+    "gpsNavAltitudeKdHelp": {
+        "message": "Reduces the altitude correction while the aircraft is already climbing or descending toward the target, so it doesn't overshoot. In hundredths of a degree of pitch per m/s of climb rate (200 = 2.0° pitch per m/s)."
+    },
+    "gpsNavThrottleItem": {
+        "message": "Nav Throttle"
+    },
+    "gpsNavThrottleHelp": {
+        "message": "Throttle used while GPS Loiter or GPS RTH is on, and while the GPS Rescue failsafe flies home. It takes over from the throttle stick once the aircraft is flying."
+    },
+    "gpsNavAllowArmingWithoutFixItem": {
+        "message": "Allow arming without GPS fix"
+    },
+    "gpsNavAllowArmingWithoutFixHelp": {
+        "message": "When the GPS Rescue failsafe or a <strong>GPS RTH</strong> switch is set up, the first arm after power-up needs a GPS fix. Turn this on to arm without one, for example when no lock can be had at the field.<br><br><span class=\"message-negative\">Without a fix at arming no home point is recorded for that flight: a failsafe glides down with the motor off instead of flying home, and the GPS RTH switch flies level without turning home.</span>"
+    },
+    "gpsNavTurnCoordinationItem": {
+        "message": "Turn Coordination"
+    },
+    "gpsNavTurnCoordinationHelp": {
+        "message": "Adds rudder into navigation turns so the aircraft turns without skidding. 100% is a fully coordinated turn, 0% turns it off."
     },
     "failsafeGpsRescueItemAngle": {
         "message": "Angle"
@@ -6175,6 +7198,9 @@
     "powerBatteryVoltageMeterTypeFbus": {
         "message": "FrSky Sensor"
     },
+    "powerBatteryVoltageMeterTypeCrsf": {
+        "message": "CRSF Sensor"
+    },
     "powerBatteryCurrentMeterSource": {
         "message": "Battery Current Source"
     },
@@ -6189,6 +7215,9 @@
     },
     "powerBatteryCurrentMeterTypeFbus": {
         "message": "FrSky Sensor"
+    },
+    "powerBatteryCurrentMeterTypeCrsf": {
+        "message": "CRSF Sensor"
     },
     "powerBatteryCurrentMeterTypeMsp": {
         "message": "MSP Sensor"
@@ -6230,7 +7259,13 @@
         "message": "Smart Fuel Sag Gain"
     },
     "powerSmartFuelSagGainHelp": {
-        "message": "Compensates for voltage sag under load. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
+        "message": "Compensates for voltage sag under load. The value is the sag, in volts per cell, expected at full motor power; the compensation scales with the motor output, so a model without a motor gets none. Increase if Smart Fuel is too pessimistic under load; decrease if it is too optimistic. This setting is only used in Voltage and Combined modes."
+    },
+    "powerSmartFuelAlertPercent": {
+        "message": "Smart Fuel Alert Level"
+    },
+    "powerSmartFuelAlertPercentHelp": {
+        "message": "<p>The charge, in percent, you want left in the pack when you land.</p><p>The Wingflight radio suite scales its fuel gauge to this reserve: a full pack reads 100% and the reserve reads 0%, so the gauge shows only the charge you can still use. For example, with a 30% reserve, a pack at 65% shows 50% fuel.</p><p>The flight controller's own low fuel warning is off by default. To use it, enter <code>set use_cbat_alerts = ON</code> in the CLI.</p>"
     },
     "powerBatteryMinimumCellVoltage": {
         "message": "Minimum Cell Voltage"
@@ -6448,272 +7483,11 @@
     "powerBatteryProfile": {
         "message": "Battery $1"
     },
+    "powerBatteryProfileCellCountHelp": {
+        "message": "Number of cells in the battery. Set to 0 to detect the cell count automatically when the battery is connected."
+    },
     "options.show_advanced_firmware_opts.label": {
         "message": "Show advanced firmware flashing options"
-    },
-    "vtxHelp": {
-        "message": "Here you can configure the values for your Video Transmitter (VTX). You can view and change the transmission values, including the VTX Tables, if the flight controller and the VTX support it.<br>To set up your VTX use the following steps:<br>1. Go to <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight/wiki/VTX-tables\">this</a> page;<br>2. Find the appropriate VTX configuration file for your country and your VTX model and download it;<br>3. Click '$t(vtxButtonLoadFile.message)' below, select the VTX configuration file, load it;<br>4. Verify that the settings are correct;<br>5. Click '$t(vtxButtonSave.message)' to store the VTX settings on the flight controller.<br>6. Optionally click '$t(vtxButtonSaveLua.message)' to save a lua configuration file you can use with the betaflight lua scripts (See more <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">here</a>.)",
-        "description": "Introduction message in the VTX tab"
-    },
-    "vtxMessageNotSupported": {
-        "message": "<span class=\"message-negative\">Attention:</span> Your VTX is not configured or not supported. So you can't modify the VTX values from here. This will only be possible if the flight controller is attached to the VTX using some protocol like Tramp or SmartAudio and is correctly configured in the $t(tabPorts.message) tab if needed.",
-        "description": "Message to show when the VTX is not supported in the VTX tab"
-    },
-    "vtxMessageTableNotConfigured": {
-        "message": "<span class=\"message-negative\">Attention:</span> You need to configure and save FIRST the VTX Table at the bottom before you can make use of the $t(vtxSelectedMode.message) fields.",
-        "description": "Message to show when the VTX is not supported in the VTX tab"
-    },
-    "vtxMessageFactoryBandsNotSupported": {
-        "message": "<span class=\"message-negative\">Attention:</span> The selected VTX type does not support the 'factory' setting for bands, but some of your bands have this setting. Click '$t(vtxButtonSave.message)' to fix this.",
-        "description": "Message to show when the configured VTX type does not support factory bands, but one or more of the configured bands are of this type"
-    },
-    "vtxMessageVerifyTable": {
-        "message": "<span class=\"message-negative\">Attention:</span> The values of the VTX Table have been loaded, but not yet stored on the flight controller. You must verify and modify the values to be sure that they are valid and legal in your country and then press the $t(vtxButtonSave.message) button to store them on the flight controller.",
-        "description": "Message to show when the VTX Table has been loaded from a external source"
-    },
-    "vtxFrequencyChannel": {
-        "message": "Enter frequency directly",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxFrequencyChannelHelp": {
-        "message": "If you enable this, the Configurator will let you select a frequency in place of the habitual band/channel. For this to work your VTX must support this feature.",
-        "description": "Help text for the frequency or channel select field of the VTX tab"
-    },
-    "vtxSelectedMode": {
-        "message": "Selected Mode",
-        "description": "Title for the actual mode header of the VTX"
-    },
-    "vtxActualState": {
-        "message": "Current Values",
-        "description": "Title for the actual values header of the VTX"
-    },
-    "vtxType": {
-        "message": "VTX Type",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxType_0": {
-        "message": "Unsupported",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_1": {
-        "message": "RTC607",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_3": {
-        "message": "SmartAudio",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_4": {
-        "message": "Tramp",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxType_255": {
-        "message": "Unknown",
-        "description": "Text for one of the types of the VTX type in VTX tab"
-    },
-    "vtxBand": {
-        "message": "Band",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxBandHelp": {
-        "message": "You can select here the band for your VTX",
-        "description": "Help text for the band field of the VTX tab"
-    },
-    "vtxBand_0": {
-        "message": "None",
-        "description": "Text of one of the options for the band field of the VTX tab"
-    },
-    "vtxBand_X": {
-        "message": "Band {{bandName}}",
-        "description": "Text of one of the options for the band field of the VTX tab"
-    },
-    "vtxChannel_0": {
-        "message": "None",
-        "description": "Text of one of the options for the channel field of the VTX tab"
-    },
-    "vtxChannel_X": {
-        "message": "Channel {{channelName}}",
-        "description": "Text of one of the options for the channel field of the VTX tab"
-    },
-    "vtxPower_0": {
-        "message": "None",
-        "description": "Text of one of the options for the power field of the VTX tab"
-    },
-    "vtxPower_X": {
-        "message": "Level {{powerLevel}}",
-        "description": "Text of one of the options for the power field of the VTX tab"
-    },
-    "vtxChannel": {
-        "message": "Channel",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxChannelHelp": {
-        "message": "You can select here the channel for your VTX",
-        "description": "Help text for the channel field of the VTX tab"
-    },
-    "vtxFrequency": {
-        "message": "Frequency",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxFrequencyHelp": {
-        "message": "You can select here the frequency for your VTX if it is supported",
-        "description": "Help text for the frequency field of the VTX tab"
-    },
-    "vtxDeviceReady": {
-        "message": "Device ready",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPower": {
-        "message": "Power",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPowerHelp": {
-        "message": "This is the power selected for the VTX. It can be modified if the $t(vtxPitMode.message) or the $t(vtxLowPowerDisarm.message) is enabled",
-        "description": "Help text for the power field of the VTX tab"
-    },
-    "vtxPitMode": {
-        "message": "Pit Mode",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPitModeHelp": {
-        "message": "When enabled, the VTX enters in a very low power mode to let the quad be on at the bench without disturbing other pilots. Usually the range of this mode is less than 5m.<br /><br />NOTE: Some protocols, like SmartAudio, can't enable Pit Mode via software after power-up.",
-        "description": "Help text for the pit mode field of the VTX tab"
-    },
-    "vtxPitModeFrequency": {
-        "message": "Pit Mode frequency",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxPitModeFrequencyHelp": {
-        "message": "Frequency at which the Pit Mode changes when enabled.",
-        "description": "Help text for the pit mode field of the VTX tab"
-    },
-    "vtxLowPowerDisarm": {
-        "message": "Low Power Disarm",
-        "description": "Text of one of the fields of the VTX tab"
-    },
-    "vtxLowPowerDisarmHelp": {
-        "message": "When enabled, the VTX uses the lowest available power when disarmed (except if a failsafe has occurred).",
-        "description": "Help text for the low power disarm field of the VTX tab"
-    },
-    "vtxLowPowerDisarmOption_0": {
-        "message": "Off",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxLowPowerDisarmOption_1": {
-        "message": "On",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxLowPowerDisarmOption_2": {
-        "message": "On until first arm",
-        "description": "One of the options for the Low Power Disarm mode of the VTX"
-    },
-    "vtxTable": {
-        "message": "VTX Table",
-        "description": "Text of the header of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevels": {
-        "message": "Number of power levels",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsHelp": {
-        "message": "This defines the number of power levels supported by your VTX",
-        "description": "Help for the number of power levels field of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsTableHelp": {
-        "message": "This table represents the different values of power that can be used for the VTX. They are divided into two: <br><b>- $t(vtxTablePowerLevelsValue.message):</b> each power level requires a value that is defined by the hardware manufacturer. Ask your manufacturer for the correct value or consult the Betaflight wiki of VTX Tables to grab some samples. <br><b>- $t(vtxTablePowerLevelsLabel.message):</b> you can put here the label you want for each power level value. It can be numbers (25, 200, 600, 1.2), letters (OFF, MIN, MAX) or a mix of them. <br /><br />You must configure <b>only</b> the power levels that are legal at your country.",
-        "description": "Help for the table of power levels (value-label) that appears in the VTX tab"
-    },
-    "vtxTablePowerLevelsValue": {
-        "message": "Value",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTablePowerLevelsLabel": {
-        "message": "Label",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBands": {
-        "message": "Number of bands",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableChannels": {
-        "message": "Number of channels by band",
-        "description": "Text of one of the fields of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandsChannelsHelp": {
-        "message": "This defines the number of bands and the number of channels by band that you want for your VTX.",
-        "description": "Help for the number of bands and channels field of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleName": {
-        "message": "Name",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleLetter": {
-        "message": "Letter",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandTitleFactory": {
-        "message": "Factory",
-        "description": "Text of one of the titles of the VTX Table element in the VTX tab"
-    },
-    "vtxTableBandsChannelsTableHelp": {
-        "message": "This table represents all the frequencies that can be used for your VTX. You can have several bands and for each band you must configure:<br><b>- $t(vtxTableBandTitleName.message):</b> Name that you want to assign to this band, like BOSCAM_A, FATSHARK or RACEBAND.<br><b>- $t(vtxTableBandTitleLetter.message):</b> Short letter that references the band.<br><b>- $t(vtxTableBandTitleFactory.message):</b> This indicates if it is a factory band. If enabled Betaflight sends to the VTX a band and channel number. The VTX will then use its built-in frequency table and the frequencies configured here are only to show the value in the OSD and other places. If it is not enabled, then Betaflight will send to the VTX the real frequency configured here.<br><b>- Frequencies:</b> Frequencies for this band.<br /><br />Remember that not all frequencies are legal at your country. You must put a value of <b>zero</b> to each frequency index that you are not allowed to use to disable it.",
-        "description": "Help for the table of bands-channels that appears in the VTX tab"
-    },
-    "vtxSavedFileOk": {
-        "message": "VTX Config file <span class=\"message-positive\">saved</span>",
-        "description": "Message in the GUI log when the VTX Config file is saved"
-    },
-    "vtxSavedFileKo": {
-        "message": "<span class=\"message-negative\">Error</span> while saving the VTX Config file",
-        "description": "Message in the GUI log when the VTX Config file is saved"
-    },
-    "vtxLoadFileOk": {
-        "message": "VTX Config file <span class=\"message-positive\">loaded</span>",
-        "description": "Message in the GUI log when the VTX Config file is loaded"
-    },
-    "vtxLoadFileKo": {
-        "message": "<span class=\"message-negative\">Error</span> while loading the VTX Config file",
-        "description": "Message in the GUI log when the VTX Config file is loaded"
-    },
-    "vtxLoadClipboardOk": {
-        "message": "VTX Config info <span class=\"message-positive\">loaded</span> from clipboard",
-        "description": "Message in the GUI log when the VTX Config file is pasted from clipboard"
-    },
-    "vtxLoadClipboardKo": {
-        "message": "<span class=\"message-negative\">Error</span> while loading the VTX Config info from clipboard. Maybe the contents are not correct",
-        "description": "Message in the GUI log when the VTX Config file is pasted from clipboard"
-    },
-    "vtxButtonSaveFile": {
-        "message": "Save to file",
-        "description": "Save to file button in the VTX tab"
-    },
-    "vtxButtonSaveLua": {
-        "message": "Save Lua Script",
-        "description": "Save Lua script button in the VTX tab"
-    },
-    "vtxLuaFileHelp": {
-        "message": "The '$t(vtxButtonSaveLua.message)' button will allow you to save a <i>craftname</i>.lua file containing the vtx table configuration that can be used with the betaflight lua scripts. (See more <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://github.com/betaflight/betaflight-tx-lua-scripts/\">here</a>.)",
-        "description": "Tooltip message for the Save Lua script button in the VTX tab"
-    },
-    "vtxButtonLoadFile": {
-        "message": "Load from file",
-        "description": "Load to file button in the VTX tab"
-    },
-    "vtxButtonLoadClipboard": {
-        "message": "Load from clipboard",
-        "description": "Paste from clipboard button in the VTX tab"
-    },
-    "vtxButtonSave": {
-        "message": "Save",
-        "description": "Save button in the VTX tab"
-    },
-    "vtxButtonSaved": {
-        "message": "Saved",
-        "description": "Saved action button in the VTX tab"
-    },
-    "vtxSmartAudioUnlocked": {
-        "message": "{{version}} unlocked",
-        "description": "Indicates if SA device is unlocked"
     },
     "mainHelpArmed": {
         "message": "Motor Arming"
@@ -6743,7 +7517,7 @@
         "message": "Accelerometer"
     },
     "configurationAccHardwareHelp": {
-        "message": "Enables the Accelerometer. This is required for all stabilisation modes: Angle, Horizon, Acro Trainer and Rescue."
+        "message": "Enables the Accelerometer. This is required for all stabilisation modes: Angle, Acro Trainer and Rescue."
     },
     "configurationBaroHardware": {
         "message": "Barometer"
@@ -6893,16 +7667,7 @@
         "message": "ANGLE"
     },
     "modeHelp ANGLE": {
-        "message": "Self-levels the aircraft to match your stick input to a bank/pitch angle, and limits how far it can tilt. The easiest mode for beginners."
-    },
-    "mode HORIZON": {
-        "message": "HORIZON"
-    },
-    "modeHelp HORIZON": {
-        "message": "Self-levels near center stick like Angle mode, but hands off to full manual rate control as you move the sticks further, allowing flips and rolls."
-    },
-    "mode ALTHOLD": {
-        "message": "ALTHOLD"
+        "message": "Stick position commands a bank/pitch angle within the configured limit. Centering the sticks commands level flight; holding aileron commands a banked attitude."
     },
     "mode ATT HOLD": {
         "message": "ATTITUDE HOLD"
@@ -6910,17 +7675,35 @@
     "modeHelp ATT HOLD": {
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
     },
+    "mode SETUP": {
+        "message": "SETUP"
+    },
+    "modeHelp SETUP": {
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
+    },
     "mode PASSTHROUGH": {
-        "message": "PASSTHROUGH"
+        "message": "SETUP"
     },
     "modeHelp PASSTHROUGH": {
-        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo - fully manual flying."
+        "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
+    },
+    "mode GYRO OFF": {
+        "message": "GYRO OFF"
+    },
+    "modeHelp GYRO OFF": {
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
     },
     "mode MANUAL": {
-        "message": "MANUAL"
+        "message": "GYRO OFF"
     },
     "modeHelp MANUAL": {
-        "message": "Disables self-leveling and gyro stabilization but keeps normal rates and expo - acro-style flying without flight-controller correction."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
+    },
+    "mode TRADITIONAL": {
+        "message": "TRADITIONAL"
+    },
+    "modeHelp TRADITIONAL": {
+        "message": "Stabilizes rate like normal flight, but feels more like a traditional gyro - the servo snaps back immediately on stick release instead of holding position."
     },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
@@ -6939,9 +7722,6 @@
     },
     "modeHelp LEDLOW": {
         "message": "Turns off the LED strip while active."
-    },
-    "mode CALIB": {
-        "message": "CALIB"
     },
     "mode OSD DISABLE": {
         "message": "OSD DISABLE"
@@ -6976,29 +7756,26 @@
     "modeHelp PREARM": {
         "message": "A safety switch that must be enabled before you can arm, to prevent accidental arming."
     },
-    "mode PARALYZE": {
-        "message": "PARALYZE"
+    "mode GPS LOITER": {
+        "message": "GPS LOITER"
     },
-    "mode GPS RESCUE": {
-        "message": "GPS RESCUE"
+    "modeHelp GPS LOITER": {
+        "message": "Holds position and altitude in a circle around the point where the switch was activated, using GPS. Does not fly toward home."
     },
-    "modeHelp GPS RESCUE": {
-        "message": "Automatically flies the aircraft back toward its recorded home position using GPS."
+    "mode GPS RTH": {
+        "message": "GPS RTH"
+    },
+    "modeHelp GPS RTH": {
+        "message": "Automatically flies the aircraft back toward, and loiters above, its recorded home position using GPS."
     },
     "mode TRAINER": {
         "message": "TRAINER"
     },
     "modeHelp TRAINER": {
-        "message": "Acro Trainer: flies in rate mode but automatically limits how far the aircraft can bank or pitch, without full self-leveling."
+        "message": "Rate control with pitch and bank limits. Centering the sticks does not command level flight. Opposite stick rolls out of a turn; outward commands are limited near the configured angle limit."
     },
     "mode MSP OVERRIDE": {
         "message": "MSP OVERRIDE"
-    },
-    "mode STICK COMMANDS DISABLE": {
-        "message": "STICK COMMANDS DISABLE"
-    },
-    "modeHelp STICK COMMANDS DISABLE": {
-        "message": "Blocks stick-gesture commands (arm/disarm, menu access) while active, to prevent accidental triggers."
     },
     "mode BEEPER MUTE": {
         "message": "BEEPER MUTE"
@@ -7008,12 +7785,6 @@
     },
     "modeHelp GPS BEEP SATELLITE COUNT": {
         "message": "Beeps out the current number of GPS satellites in view while active."
-    },
-    "mode AUTO HOVER": {
-        "message": "AUTO HOVER"
-    },
-    "modeHelp AUTO HOVER": {
-        "message": "Holds a fixed nose-up attitude and heading for hovering, while roll stays free to spin. Overrides Angle, Horizon, Trainer, and Attitude Hold while active."
     },
     "mode GOVERNOR": {
         "message": "GOVERNOR"
@@ -7232,7 +8003,7 @@
     "presetsButtonReview": {
         "message": "Review Selected Presets"
     },
-    "presetsButtonReviewCLI":{
+    "presetsButtonReviewCLI": {
         "message": "Review CLI"
     },
     "presetsButtonApply": {
@@ -7599,5 +8370,14 @@
     },
     "remapFcAllocationDma": {
         "message": "DMA"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Governor RPM"
     }
 }

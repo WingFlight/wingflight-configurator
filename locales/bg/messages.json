@@ -129,9 +129,9 @@
         "english": "Manual Selection"
     },
     "portsSelectVirtual": {
-        "message": "Виртуален режим (експериментален)",
-        "english": "Virtual Mode (Experimental)",
-        "description": "Configure a Virtual Flight Controller without the need of a physical FC."
+        "message": "Виртуален режим (демо)",
+        "english": "Virtual Mode (Demo)",
+        "description": "Demo the configurator against a simulated flight controller - no hardware needed, and nothing is written to a real FC."
     },
     "virtualMSPVersion": {
         "message": "Виртуална версия на фърмуера",
@@ -877,8 +877,8 @@
         "english": "Contributing"
     },
     "defaultContributingText": {
-        "message": "Роторфлайт е проект с отворен код. Всеки може да се включи и да помогне за подобряването му, включително:<br /><ul><li>помощ на други потребители в Wingflight Discord или други онлайн форуми</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">съобщаване</a> за грешки и проблеми, предложения за подобрения</li><li>тестване на нови версии на софтуера, нови функции и корекции; предоставяне на обратна връзка</li><li>участие в дискусии за нови функции</li><li>създаване или актуализиране на съдържание на <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">нашия уебсайт</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">принос</a> към разработката на софтуера - коригиране на грешки, внедряване на нови функции и подобрения</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">превод</a> на Wingflight Configurator на нов език или помощ при поддръжката на съществуващ превод</li></ul>",
-        "english": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://www.wingflight.org/docs/Contributing/intro#translations\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
+        "message": "Роторфлайт е проект с отворен код. Всеки може да се включи и да помогне за подобряването му, включително:<br /><ul><li>помощ на други потребители в Wingflight Discord или други онлайн форуми</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">съобщаване</a> за грешки и проблеми, предложения за подобрения</li><li>тестване на нови версии на софтуера, нови функции и корекции; предоставяне на обратна връзка</li><li>участие в дискусии за нови функции</li><li>създаване или актуализиране на съдържание на <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">нашия уебсайт</a></li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">принос</a> към разработката на софтуера - коригиране на грешки, внедряване на нови функции и подобрения</li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">превод</a> на Wingflight Configurator на нов език или помощ при поддръжката на съществуващ превод</li></ul>",
+        "english": "Wingflight is a open-source community project. Anybody can join in and help to make it better, including:<br /><ul><li>helping other users on Wingflight Discord or other online forums</li><li><a href=\"https://github.com/WingFlight?tab=repositories\" target=\"_blank\" rel=\"noopener noreferrer\">reporting</a> bugs and issues, and suggesting improvements</li><li>testing new software versions, new features and fixes; and providing feedback</li><li>participating in discussions on new features</li><li>create or update content on <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">our Website</a></li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">contributing</a> to the software development - fixing bugs, implementing new features and improvements</li><li><a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">translating</a> Wingflight Configurator into a new language, or helping to maintain an existing translation</li></ul>"
     },
     "defaultDonateHead": {
         "message": "Подкрепа за Роторфлайт",
@@ -905,12 +905,12 @@
         "english": "Wingflight documentation is available in release notes and website.<br /><br />"
     },
     "defaultDocumentation1": {
-        "message": "Ръководствата на уебсайта на Роторфлайт са отличен източник на информация, вижте <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">тук</a>.",
-        "english": "The Wingflight website tutorial is a great resource for information, it can be found <a href=\"https://www.wingflight.org/docs/2.2.0\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "Ръководствата на уебсайта на Роторфлайт са отличен източник на информация, вижте <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">тук</a>.",
+        "english": "The Wingflight documentation is a great resource for information, it can be found <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation2": {
-        "message": "Последните новини могат да бъдат прочетени на страницата с анонси на уебсайта, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">тук</a>.",
-        "english": "The latest news can be read at the Website Announcements page, <a href=\"https://www.wingflight.org/announcement\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
+        "message": "Последните новини могат да бъдат прочетени на страницата с анонси на уебсайта, <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">тук</a>.",
+        "english": "The latest news can be read on the Wingflight website, <a href=\"https://www.wingflight.org\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
     },
     "defaultDocumentation3": {
         "message": "Бележките към версиите на фърмуера могат да бъдат прочетени на страницата с издания в GitHub, <a href=\"https://github.com/WingFlight/wingflight-firmware/releases\" target=\"_blank\" rel=\"noopener noreferrer\">тук</a>.",
@@ -1017,8 +1017,8 @@
         "english": "Arming Allowed"
     },
     "statusArmingDisableFlagsTooltip": {
-        "message": "Списък с причини, които в момента предотвратяват активирането. Преминете с мишката над флага или вижте ръководството на уебсайта <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Флагове за активиране)</a> за повече информация.",
-        "english": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://www.wingflight.org/docs/2.2.0/setup/arming#arming-disable-flags\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
+        "message": "Списък с причини, които в момента предотвратяват активирането. Преминете с мишката над флага или вижте ръководството на уебсайта <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">(Флагове за активиране)</a> за повече информация.",
+        "english": "List of flags indicating why arming is currently not allowed. Pass the mouse over the flag or refer to the Website tutorial <a href=\"https://doc.wingflight.org/\" target=\"_blank\" rel=\"noopener noreferrer\">(Arm Mode flags)</a> for more info."
     },
     "statusArmingDisableFlagsTooltipNO_GYRO": {
         "message": "Не е открит жироскоп",
@@ -2042,7 +2042,7 @@
         "english": "Proportional"
     },
     "profilesProportionalHelp": {
-        "message": "Контролира силата, с която машината следва стиковете (Setpoint) и коригира външни влияния.<br /><br />По-висока стойност (чувствителност) осигурява по-стегнато следване, но може да причини превишаване, ако е твърде висока спрямо деривативната стойност (D-gain). Мислете за P-терма като за пружината на автомобил.",
+        "message": "Контролира силата, с която машината следва стиковете (Setpoint) и коригира външни влияния. По-висока стойност (чувствителност) осигурява по-стегнато следване, но може да причини превишаване, ако е твърде висока спрямо деривативната стойност (D-gain). Мислете за P-терма като за пружината на автомобил.",
         "english": "Controls the strength of how tightly the machine tracks the sticks (the Setpoint) and corrects for external influences.<br /><br />Higher value (gains) provide tighter tracking, but can cause overshoot if too high in proportion to the derivative (D-gain). Think of the P-term as the spring on a car.",
         "description": "Proportional Term helpicon message on PID table titlebar"
     },
@@ -2051,7 +2051,7 @@
         "english": "Integral"
     },
     "profilesIntegralHelp": {
-        "message": "Контролира силата, с която машината задържа общата стойност на зададената скорост на въртене.<br>Подобно на пропорционалния, но за по-дълги отклонения от зададената скорост, както и за постоянни външни влияния, например постоянен вятър или изместване на центъра на тежестта.<br /><br />По-висока чувствителност осигурява по-стегнато следване на зададената стойност (напр. при постоянни флипове и тона), но могат да доведат до невъзможност машината да следва зададената стойност при много бързи входове, което може да доведе до продължаване на въртенето след отпускане на стика. <br>Ако е твърде висока спрямо D-терма, може да причини осцилации.",
+        "message": "Контролира силата, с която машината задържа общата стойност на зададената скорост на въртене. Подобно на пропорционалния, но за по-дълги отклонения от зададената скорост, както и за постоянни външни влияния, например постоянен вятър или изместване на центъра на тежестта. По-висока чувствителност осигурява по-стегнато следване на зададената стойност (напр. при постоянни флипове и тона), но могат да доведат до невъзможност машината да следва зададената стойност при много бързи входове, което може да доведе до продължаване на въртенето след отпускане на стика. Ако е твърде висока спрямо D-терма, може да причини осцилации.",
         "english": "Controls the strength of how tightly the machine holds the overall rotation rate setpoint.<br>Similar to Proportional, but for longer biases on the craft from the rotation rate setpoint, as well as persistent outside influence, for example steady wind or CG offsets.<br /><br />Higher gains provide tighter tracking of the setpoint (i.e. in constant flips and rolls), but can lead to the craft now being able to follow the setpoint on extremely quick inputs, which can lead to it continuing to rotate after the stick is released. <br>If extremely high in proportion to the D-term, can cause oscillations.",
         "description": "Integral Term helpicon message on PID table titlebar"
     },
@@ -2060,7 +2060,7 @@
         "english": "Derivative"
     },
     "profilesDerivativeHelp": {
-        "message": "Контролира силата на заглушаване на всяко ъглово ускорение на машината, независимо дали е от входове на стиковете или външни влияния. За входове на стиковете D-термът заглушава движението, за да предотврати превишаване. За външни влияния (вихри или пориви на вятъра) D-термът заглушава смущенията.<br /><br />По-висока чувствителност осигурява повече заглушаване и намаляват възможното превишаване от високи P-термове.<br>Обаче D-термът е много чувствителен към високочестотни вибрации на жироскопа (шум | усилва се 10x до 100x).<br /><br />Високочестотният шум в контролния цикъл може да причини прекомерно загряване на сервата и да ги изгори, ако шумът не е филтриран правилно (вижте таб Жиро).<br /><br />Мислете за D-терма като за амортисьора на вашия автомобил, но с негативното свойство да усилва високочестотния шум на жироскопа.",
+        "message": "Контролира силата на заглушаване на всяко ъглово ускорение на машината, независимо дали е от входове на стиковете или външни влияния. За входове на стиковете D-термът заглушава движението, за да предотврати превишаване. За външни влияния (вихри или пориви на вятъра) D-термът заглушава смущенията. По-висока чувствителност осигурява повече заглушаване и намаляват възможното превишаване от високи P-термове. Обаче D-термът е много чувствителен към високочестотни вибрации на жироскопа (шум | усилва се 10x до 100x). Високочестотният шум в контролния цикъл може да причини прекомерно загряване на сервата и да ги изгори, ако шумът не е филтриран правилно (вижте таб Жиро). Мислете за D-терма като за амортисьора на вашия автомобил, но с негативното свойство да усилва високочестотния шум на жироскопа.",
         "english": "Controls the strength of damping ANY angular acceleration of the craft, whether from stick inputs or external influences. For stick inputs, the D-term damps the movement to prevent overshooting. For an outside influence (vorticity or wind gust) the D-term damps the disturbance.<br /><br />Higher gains provide more damping and reduce possible overshoot from high P-terms.<br>However, the D-term is VERY sensitive to high frequency gyro vibrations (noise | magnifies by 10x to 100x).<br /><br />High frequency noise in the control loop can cause excessive servo heat and burn out servos if the gyro noise is not filtered properly (see Gyro tab).<br /><br />Think of the D-term as the shock absorber on your car, but with the inherent negative property of magnifying high frequency gyro noise.",
         "description": "Derivative Term helpicon message on PID table titlebar"
     },
@@ -2069,7 +2069,7 @@
         "english": "Feedforward"
     },
     "profilesFeedforwardHelp": {
-        "message": "Това е допълнителен параметър, базиран на входа от стика. FF помага на P-терма да тласне машината при командвани движения на стика, но не реагира на движения на хеликоптера.<br /><br />FF-термът тласка на базата на разликата между зададената стойност (deg/sec). <br /><br />По-високи стойности (чувствителност) водят до по-остър отговор на входа от стика.<br>Твърде високи стойности могат да доведат до превишаване, както и до обратен удар в края на контролните входове.<br>Твърде ниски или нулеви (0) стойности ще доведат до бавен и забавен отговор на входа от стика, както и до продължаващо въртене след отпускане на стика.",
+        "message": "Това е допълнителен параметър, базиран на входа от стика. FF помага на P-терма да тласне машината при командвани движения на стика, но не реагира на движения на хеликоптера. FF-термът тласка на базата на разликата между зададената стойност (deg/sec). По-високи стойности (чувствителност) водят до по-остър отговор на входа от стика. Твърде високи стойности могат да доведат до превишаване, както и до обратен удар в края на контролните входове. Твърде ниски или нулеви (0) стойности ще доведат до бавен и забавен отговор на входа от стика, както и до продължаващо въртене след отпускане на стика.",
         "english": "This is an additional pushing term based on stick input. FF helps the P-term push the craft for commanded stick moves, does not react to any helicopter movements though.<br /><br />The FF-term pushes based on the difference between the commanded Setpoint (deg/sec). <br /><br />Higher values (gains) will result in a sharper response to stick input.<br>Too high of values may result in overshoot, as well as strikeback at the end of control inputs.<br>Too low or zero (0) values will result in a slow and delayed response to stick inputs, as well as continued rotation after the stick is released.",
         "description": "Feedforward Term helpicon message on PID table titlebar"
     },
@@ -2292,14 +2292,6 @@
     "receiverTelemetrySensor_BEC_VOLTAGE": {
         "message": "BEC напрежение",
         "english": "BEC Voltage"
-    },
-    "receiverTelemetrySensor_HEADSPEED": {
-        "message": "Обороти на главата",
-        "english": "Headspeed"
-    },
-    "receiverTelemetrySensor_TAILSPEED": {
-        "message": "Обороти на опашката",
-        "english": "Tailspeed"
     },
     "receiverTelemetrySensor_TEMPERATURE": {
         "message": "Температура на полетния контролер",
@@ -2674,8 +2666,8 @@
         "english": "GPS Altitude"
     },
     "receiverTelemetrySensor_GPS_HEADING": {
-        "message": "GPS направление",
-        "english": "GPS Heading"
+        "message": "GPS курс",
+        "english": "GPS Course"
     },
     "receiverTelemetrySensor_GPS_GROUNDSPEED": {
         "message": "GPS скорост по земя",
@@ -3298,10 +3290,6 @@
         "message": "Говерньор Максимална газ",
         "english": "Governor Max Throttle"
     },
-    "adjustmentsFunctionGovHeadspeed": {
-        "message": "Говерньор обороти на ротора",
-        "english": "Governor Headspeed"
-    },
     "adjustmentsFunctionGovYawFF": {
         "message": "Говерньор FF-коеф. на опашка",
         "english": "Governor Yaw F-gain"
@@ -3363,7 +3351,7 @@
         "english": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "Честота на обновяване на PWM в Hz. За аналогови серво, задайте 50Hz, тъй като по-високи стойности могат да ги повредят. За цифрови серво, типични стойности са от 100Hz до 560Hz. Моля, проверете техническата документация на сервото.<br><b>Забележка</b>: Изберете <i>Запази и рестартирай</i>, за да промените честотата, тъй като тя се инициализира при стартиране.",
+        "message": "Честота на обновяване на PWM в Hz. За аналогови серво, задайте 50Hz, тъй като по-високи стойности могат да ги повредят. За цифрови серво, типични стойности са от 100Hz до 560Hz. Моля, проверете техническата документация на сервото. Забележка: Изберете Запази и рестартирай, за да промените честотата, тъй като тя се инициализира при стартиране.",
         "english": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet.<br><b>Note</b>: Select <i>Save and reboot</i> to actually change the update rate, as the rate is initialised at boot time."
     },
     "servoSource": {
@@ -3379,7 +3367,7 @@
         "english": "Speed [ms]"
     },
     "servoSpeedHelp": {
-        "message": "Ограничава скоростта на движение на сервото. Може да се използва например за прибиращи колесници. Стойност 0 означава без ограничение. Стойности между 1-60000 милисекунди определят времето за 60&deg; завъртане.",
+        "message": "Ограничава скоростта на движение на сервото. Може да се използва например за прибиращи колесници. Стойност 0 означава без ограничение. Стойности между 1-60000 милисекунди определят времето за 60° завъртане.",
         "english": "Limits the servo motion speed. Can be used for e.g. retracts. A value of 0 means no limitation. Values between 1-60000 milliseconds specify the time needed for 60&deg; rotation."
     },
     "servoReverse": {
@@ -6220,7 +6208,7 @@
         "english": "Cutoff Point for Yaw"
     },
     "profilesItermRelaxCutoffHelp": {
-        "message": "По-ниските стойности потискат отскока след движение, по-високите увеличават прецизността при високоскоростни завои.<br>Задайте 15–30 за малки хеликоптери, 10–15 за средни и под 10 за големи.",
+        "message": "По-ниските стойности потискат отскока след движение, по-високите увеличават прецизността при високоскоростни завои. Задайте 15–30 за малки хеликоптери, 10–15 за средни и под 10 за големи.",
         "english": "Lower values suppress bounce-back after movements, high values increase high-rate turn precision.<br>Set to 15-30 for small helis, 10-15 for mid-size, and less than 10 for large."
     },
     "profilesPidBandwidth": {
@@ -8850,5 +8838,17 @@
     "presetsDontShowAgain": {
         "message": "Не показвай повече",
         "english": "Don't show again"
+    },
+    "receiverTelemetrySensor_MOTOR1SPEED": {
+        "message": "Обороти на главата",
+        "english": "Motor 1 RPM"
+    },
+    "receiverTelemetrySensor_MOTOR2SPEED": {
+        "message": "Обороти на опашката",
+        "english": "Motor 2 RPM"
+    },
+    "adjustmentsFunctionGovRPM": {
+        "message": "Говерньор обороти на ротора",
+        "english": "Governor RPM"
     }
 }

@@ -304,19 +304,27 @@
   }
 
   .dec {
-    border-top-left-radius: 2px;
-    border-bottom-left-radius: 2px;
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
     border-right: none;
   }
 
   .inc {
-    border-top-right-radius: 2px;
-    border-bottom-right-radius: 2px;
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
     border-left: none;
+  }
+
+  // The spinner buttons sit flush against the input, so a ring around the
+  // input alone would be clipped by them - lift the whole group instead.
+  .container:focus-within {
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
   }
 
   .container input:focus {
     border-color: var(--color-border-accent);
+    box-shadow: none;
   }
 
   @media only screen and (max-width: 480px) {

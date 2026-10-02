@@ -4,11 +4,13 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import GroupCard from "@/components/GroupCard.svelte";
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import RangeSlider from "@/components/RangeSlider.svelte";
   import Select from "@/components/Select.svelte";
 
-  import { getFunctions, FUNCTION_GROUPS } from "./functions.js";
+  import { getFunctions, getFunctionDescription } from "./functions.js";
   import {
     ALWAYS_ON_CH,
     AUX_MIN,
@@ -16,10 +18,16 @@
     PRIMARY_CHANNEL_COUNT,
     calcAdjValue,
     density,
-    resetToOff,
+    isWithin,
   } from "./util.js";
 
-  let { index, enaChannelOptions, adjChannelOptions, onRemove } = $props();
+  let {
+    index,
+    enaChannelOptions,
+    adjChannelOptions,
+    onChangeFunction,
+    onRemove,
+  } = $props();
 
   const FUNCTIONS = getFunctions();
 
@@ -36,48 +44,16 @@
   );
 
   let adjConfig = $derived(FUNCTIONS[adjRange.adjFunction] ?? FUNCTIONS[0]);
-
-  let valSliderRef;
-
-  function refreshValSlider(cfg) {
-    valSliderRef?.update(
-      {
-        range: { min: cfg.min, max: cfg.max },
-        pips: {
-          mode: "values",
-          values: cfg.pips,
-          density: density(cfg.min, cfg.max, cfg.ticks),
-          stepped: true,
-        },
-      },
-      true,
-    );
-  }
-
-  function goOff() {
-    resetToOff(adjRange);
-    refreshValSlider(FUNCTIONS[0]);
-  }
+  let description = $derived(getFunctionDescription(adjConfig.name));
 
   function setAdjType(newType) {
     adjType = newType;
 
-    if (newType === 0) {
-      goOff();
-    } else if (newType === 1 && adjRange.adjStep > 0) {
+    if (newType === 1 && adjRange.adjStep > 0) {
       adjRange.adjStep = 0;
     } else if (newType === 2 && adjRange.adjStep === 0) {
       adjRange.adjStep = 1;
     }
-  }
-
-  function onFunctionChange(e) {
-    const id = Number(e.target.value);
-    const cfg = FUNCTIONS[id] ?? FUNCTIONS[0];
-    adjRange.adjFunction = id;
-    adjRange.adjMin = cfg.min;
-    adjRange.adjMax = cfg.max;
-    refreshValSlider(cfg);
   }
 
   function onEnaChannelChange(e) {
@@ -166,6 +142,17 @@
     calcAdjValue(adjRange, adjType, enaChannelPos, adjChannelPos, ALWAYS_ON_CH),
   );
 
+  // Whether the enable channel currently lets this adjustment run - drives
+  // the header band's red "live" state, like the Modes tab's cards. Stepped
+  // mode's adjResult.active only goes true while actually stepping, so it
+  // can't be reused here.
+  let isEnabled = $derived(
+    adjType > 0 &&
+      adjRange.adjFunction > 0 &&
+      (adjRange.enaChannel === ALWAYS_ON_CH ||
+        isWithin(enaChannelPos, adjRange.enaRange)),
+  );
+
   let valMarkerPercent = $derived(
     adjType === 1 && adjResult.active
       ? (
@@ -177,8 +164,20 @@
   );
 </script>
 
-<div class="adjustment-card">
-  <div class="card-header">
+<GroupCard live={isEnabled}>
+  {#snippet header()}
+    <button
+      type="button"
+      class="func-title"
+      title={$i18n.t("adjustmentsChangeFunction")}
+      onclick={onChangeFunction}
+    >
+      {$i18n.t("adjustmentsFunction" + adjConfig.name)}
+      <em class="fas fa-pen"></em>
+    </button>
+    {#if description}
+      <HelpIcon>{description}</HelpIcon>
+    {/if}
     <span class="slot-label"
       >{$i18n.t("adjustmentsSlotLabel", { index: index + 1 })}</span
     >
@@ -191,19 +190,10 @@
     >
       <em class="fas fa-trash"></em>
     </button>
-  </div>
+  {/snippet}
 
   <div class="card-body">
     <div class="cell mode">
-      <label class="radio-option">
-        <input
-          type="radio"
-          name="adjType-{index}"
-          checked={adjType === 0}
-          onchange={() => setAdjType(0)}
-        />
-        <span>{$i18n.t("adjustmentsTypeOff")}</span>
-      </label>
       <label class="radio-option">
         <input
           type="radio"
@@ -227,7 +217,12 @@
     <!-- row 1: enable channel -->
     <div class="cell ena-select" class:disabled={adjType === 0}>
       <div class="select-row">
-        <span class="channel-label">{$i18n.t("adjustmentEnableChannel")}</span>
+        <div class="channel-label">
+          <span>{$i18n.t("adjustmentEnableChannel")}</span>
+          <span class="channel-pos"
+            >{enaChannelPos != null ? enaChannelPos + "µs" : "-"}</span
+          >
+        </div>
         <Select
           id="ena-channel-{index}"
           value={adjRange.enaChannel}
@@ -236,17 +231,13 @@
           onchange={onEnaChannelChange}
         />
       </div>
-      <div class="channel-value-line">
-        <span class="value-box"
-          >{enaChannelPos != null ? enaChannelPos + "µs" : "-"}</span
-        >
-      </div>
     </div>
     <div
       class="cell ena-slider slider-wrap"
       class:disabled={adjType === 0 || adjRange.enaChannel === ALWAYS_ON_CH}
     >
       <RangeSlider
+        compact
         opts={rangeSliderOpts}
         bind:start={adjRange.enaRange.start}
         bind:end={adjRange.enaRange.end}
@@ -274,7 +265,12 @@
     <!-- row 2: value channel -->
     <div class="cell ch-select" class:disabled={adjType === 0}>
       <div class="select-row">
-        <span class="channel-label">{$i18n.t("adjustmentValueChannel")}</span>
+        <div class="channel-label">
+          <span>{$i18n.t("adjustmentValueChannel")}</span>
+          <span class="channel-pos"
+            >{adjChannelPos != null ? adjChannelPos + "µs" : "-"}</span
+          >
+        </div>
         <Select
           id="adj-channel-{index}"
           value={adjRange.adjChannel}
@@ -283,15 +279,11 @@
           onchange={onAdjChannelChange}
         />
       </div>
-      <div class="channel-value-line">
-        <span class="value-box"
-          >{adjChannelPos != null ? adjChannelPos + "µs" : "-"}</span
-        >
-      </div>
     </div>
     <div class="cell ch-slider">
       <div class="slider-wrap" class:disabled={adjType === 0}>
         <RangeSlider
+          compact
           opts={rangeSliderOpts}
           bind:start={adjRange.adjRange1.start}
           bind:end={adjRange.adjRange1.end}
@@ -301,6 +293,7 @@
       {#if adjType === 2}
         <div class="slider-wrap">
           <RangeSlider
+            compact
             opts={incSliderOpts}
             bind:start={adjRange.adjRange2.start}
             bind:end={adjRange.adjRange2.end}
@@ -347,29 +340,6 @@
 
     <!-- row 3: function -->
     <div class="cell func" class:disabled={adjType === 0}>
-      <select
-        id="function-{index}"
-        class="function-select"
-        value={adjRange.adjFunction}
-        disabled={adjType === 0}
-        onchange={onFunctionChange}
-      >
-        <option value={0} hidden={FUNCTIONS[0].hide}
-          >{$i18n.t("adjustmentsFunction" + FUNCTIONS[0].name)}</option
-        >
-        {#each FUNCTION_GROUPS as group (group.label)}
-          {#if group.ids.some((id) => !FUNCTIONS[id].hide)}
-            <optgroup label={$i18n.t(group.label)}>
-              {#each group.ids as id (id)}
-                <option value={id} hidden={FUNCTIONS[id].hide}>
-                  {$i18n.t("adjustmentsFunction" + FUNCTIONS[id].name)}
-                </option>
-              {/each}
-            </optgroup>
-          {/if}
-        {/each}
-      </select>
-
       <div class="value-line">
         <span class="value-label">{$i18n.t("adjustmentFunctionValue")}</span>
         <span class="value-box">{adjResult.string}</span>
@@ -385,7 +355,7 @@
     <div class="cell func-slider">
       <div class="slider-wrap" class:disabled={adjType === 0}>
         <RangeSlider
-          bind:this={valSliderRef}
+          compact
           opts={initialValSliderOpts}
           bind:start={adjRange.adjMin}
           bind:end={adjRange.adjMax}
@@ -409,25 +379,43 @@
       />
     </div>
   </div>
-</div>
+</GroupCard>
 
 <style lang="scss">
-  .adjustment-card {
-    border-radius: 4px;
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    overflow: hidden;
-  }
-
-  .card-header {
+  .func-title {
     display: flex;
     align-items: center;
-    padding: 6px 10px;
-    font-weight: 600;
+    gap: 8px;
+    padding: 2px 6px;
+    margin-left: -6px;
+    font: inherit;
+    font-weight: 700;
+    color: inherit;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
 
-    color: var(--color-text-soft);
-    background-color: var(--color-surface-float, var(--color-surface));
-    border-bottom: 1px solid var(--color-border);
+    em {
+      font-size: 0.7em;
+      opacity: 0.6;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-hover);
+
+        em {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .slot-label {
+    margin-left: 10px;
+    font-size: 0.75rem;
+    opacity: 0.7;
   }
 
   .grow {
@@ -439,10 +427,11 @@
     border: none;
     padding: 4px 6px;
     cursor: pointer;
-    color: var(--color-text-soft);
+    color: inherit;
+    opacity: 0.8;
 
     &:hover {
-      color: var(--color-danger, var(--accent));
+      opacity: 1;
     }
   }
 
@@ -453,14 +442,16 @@
   // instead of grouping by column like a form.
   .card-body {
     display: grid;
-    grid-template-columns: 130px 190px minmax(260px, 1fr) 190px;
+    // The range column sizes to its two NumberInputs (which never shrink) so
+    // they can't overflow leftwards underneath the slider's end handle.
+    grid-template-columns: 120px 200px minmax(200px, 1fr) max-content;
     grid-template-areas:
       "mode ena-select   ena-slider  ena-range"
       "mode ch-select    ch-slider   ch-range"
       "func func         func-slider func-range";
     column-gap: 16px;
     align-items: start;
-    padding: 12px 14px;
+    padding: 8px 12px;
   }
 
   .cell.disabled {
@@ -471,7 +462,7 @@
     grid-area: mode;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     padding: 4px 12px 0 0;
     border-right: 1px solid var(--color-border);
   }
@@ -524,7 +515,7 @@
   .func,
   .func-slider,
   .func-range {
-    padding-top: 20px;
+    padding-top: 8px;
     border-top: 1px solid var(--color-border);
   }
 
@@ -542,29 +533,30 @@
 
     // Fixed width so the Enable/Value Channel rows' dropdowns line up
     // regardless of the selected option's text length (e.g. "ALWAYS" vs
-    // "AUX1").
+    // "CH #5").
     :global(select) {
       width: 100px;
     }
   }
 
   .channel-label {
-    min-width: 90px;
+    display: flex;
+    flex-direction: column;
+    min-width: 92px;
     font-size: 0.8rem;
+    line-height: 1.3;
+    white-space: nowrap;
     color: var(--color-text-soft);
   }
 
-  .channel-value-line {
-    display: flex;
-    justify-content: flex-end;
-
-    .value-box {
-      width: 100px;
-    }
+  .channel-pos {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text);
   }
 
   .slider-wrap {
-    margin: 6px 4px 42px;
+    margin: 12px 8px 24px;
 
     &.disabled {
       opacity: 0.5;
@@ -577,15 +569,18 @@
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
-    margin-bottom: 10px;
+    margin: 4px 0;
+
+    // Trim the inputs a little on the multi-column layout so the range
+    // column doesn't squeeze the slider; below 768px it's single-column and
+    // the inputs get their larger touch-size buttons, so leave the default.
+    @media only screen and (min-width: 769px) {
+      --number-input-max-width: 100px;
+    }
   }
 
   .dash {
     padding: 0 2px;
-  }
-
-  .function-select {
-    width: 100%;
   }
 
   .value-line {
@@ -593,7 +588,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin: 8px 0;
+    margin: 4px 0;
   }
 
   .value-box {
@@ -601,7 +596,7 @@
     padding: 2px 6px;
     text-align: right;
     font-family: var(--font-mono);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
 
     color: var(--color-text);
     background-color: var(--color-input-bg);

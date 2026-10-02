@@ -68,8 +68,8 @@ export const TELEMETRY_SENSORS = {
   ALTITUDE: 58,
   VARIOMETER: 59,
 
-  HEADSPEED: 60,
-  TAILSPEED: 61,
+  MOTOR1SPEED: 60,
+  MOTOR2SPEED: 61,
   MOTOR_RPM: 62,
   TRANS_RPM: 63,
 
@@ -103,15 +103,11 @@ export const TELEMETRY_SENSORS = {
 
   MODEL_ID: 88,
   FLIGHT_MODE: 89,
-  ARMING_FLAGS: 90,
+  // 90 free (was arming flags, now in SYSTEM_STATUS)
   ARMING_DISABLE_FLAGS: 91,
-  // 92 reserved (heli rescue removed, do not reuse)
-  // 93, 94 reserved (heli governor removed, do not reuse)
-
-  PID_PROFILE: 95,
-  RATES_PROFILE: 96,
-  BATTERY_PROFILE: 97,
-  LED_PROFILE: 98,
+  // 92 free (was heli rescue)
+  // 93, 94 free (were heli governor)
+  // 95-98 free (were PID/rates/battery/LED profile, now in SYSTEM_CONFIG)
 
   ADJFUNC: 99,
 
@@ -126,6 +122,14 @@ export const TELEMETRY_SENSORS = {
 
   RPM: 108,
   TEMP: 109,
+
+  // 110-117 (FBUS_SENSOR_1..8) not added here yet.
+  // 118 free (was TV profile, now in SYSTEM_CONFIG)
+  // 119 free (was GPS fix type, now in SYSTEM_STATUS)
+
+  // Packed status words, see the firmware's src/main/telemetry/status.h.
+  SYSTEM_STATUS: 120,
+  SYSTEM_CONFIG: 121,
 };
 
 // create reverse mapping

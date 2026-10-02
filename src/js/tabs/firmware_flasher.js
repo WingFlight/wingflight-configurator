@@ -6,6 +6,7 @@ import { PortHandler } from "@/js/port_handler.js";
 import FirmwareFlasher from "@/tabs/firmware_flasher/FirmwareFlasher.svelte";
 import {
   FLASH_MESSAGE_TYPES,
+  requestDfuPermission,
   setFlashingEnabled,
   setFlashingMessage,
   setFlashProgress,
@@ -33,12 +34,25 @@ const tab = {
     setFlashingEnabled(enabled);
   },
 
+  requestDfuPermission(onGranted, onDeclined) {
+    requestDfuPermission(onGranted, onDeclined);
+  },
+
   initialize(callback) {
     const target = document.querySelector("#content");
     target.innerHTML = "";
     this.svelteComponent = mount(FirmwareFlasher, { target });
 
     GUI.content_ready(callback);
+  },
+
+  exit(callback) {
+    if (this.svelteComponent?.requestExit) this.svelteComponent.requestExit(callback);
+    else callback?.();
+  },
+
+  requestClose(callback) {
+    this.exit(callback);
   },
 
   cleanup(callback) {

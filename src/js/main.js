@@ -67,7 +67,10 @@ function closeSerial() {
         bufView[3] = 0x74; // t
         bufView[4] = 0x0D; // enter
 
-        const sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        let sendFn = (serial.connectionType === 'serial' ? chrome.serial.send : chrome.sockets.tcp.send);
+        if (serial.connectionType === 'remote') {
+            sendFn = (_connectionId, data, callback) => serial.send(data, callback);
+        }
         sendFn(connectionId, bufferOut, function () {
             console.log('Send exit');
         });
@@ -105,6 +108,14 @@ function closeSerial() {
 }
 
 function closeHandler() {
+    if (GUI.isNWJS() && GUI.current_tab?.requestClose) {
+        GUI.current_tab.requestClose(() => closeWindow.call(this));
+        return;
+    }
+    closeWindow.call(this);
+}
+
+function closeWindow() {
     if (!GUI.isCordova()) {
         this.hide();
     }
@@ -195,10 +206,11 @@ export function startProcess() {
                 if (GUI.allowedTabs.indexOf(tabName) < 0 && tabName === "firmware_flasher") {
                     if (GUI.connected_to || GUI.connecting_to) {
                         await handleConnectClick.call($('a.connect'));
-                    } else {
-                        self.disconnect();
                     }
-                    $('div.open_firmware_flasher a.flash').click();
+
+                    if (GUI.allowedTabs.indexOf(tabName) < 0) {
+                        return;
+                    }
                 }
 
                 if (GUI.defaultAllowedFCTabsWhenConnected.indexOf(tabName) != -1) {
@@ -207,7 +219,7 @@ export function startProcess() {
 
                 GUI.tab_switch_cleanup(function () {
                     // disable active firmware flasher if it was active
-                    if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
+                    if (tabName !== "firmware_flasher" && $('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
                         $('div#flashbutton a.flash_state').removeClass('active');
                         $('div#flashbutton a.flash').removeClass('active');
                     }
@@ -448,6 +460,7 @@ function notifyOutdatedVersion(releaseData) {
 
 export function updateTabList(features) {
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
+    $('#tabs ul.mode-connected li.tab_gps_nav').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
     $('#tabs ul.mode-connected li.tab_thrust_vector').toggle(features.isEnabled('THRUST_VECTOR'));
 
@@ -461,6 +474,11 @@ export function updateTabList(features) {
         (port) => port.functions.includes('FBUS_OUT') || port.functions.includes('SPORT_MASTER'),
     );
     $('#tabs ul.mode-connected li.tab_fbus_sensors').toggle(fbusMasterActive);
+
+    const hasCrsfSensorsPort = (FC.SERIAL_CONFIG?.ports ?? []).some(
+        (port) => port.functions.includes('CRSF_SENSORS'),
+    );
+    $('#tabs ul.mode-connected li.tab_crsf_sensors').toggle(hasCrsfSensorsPort);
 }
 
 function zeroPad(value, width) {

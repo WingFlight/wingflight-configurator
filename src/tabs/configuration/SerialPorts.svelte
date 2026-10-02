@@ -42,6 +42,10 @@
         continue;
       }
 
+      if (func.hide && func.id !== port.functionMask) {
+        continue;
+      }
+
       options.push({
         value: func.id,
         label: $i18n.t(`portsFunction_${func.name}`),

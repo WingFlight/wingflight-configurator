@@ -73,7 +73,10 @@
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   {#if escState.armed}
-    <p class="armed-warning">{$i18n.t("escProgrammingArmedWarning")}</p>
+    <div class="armed-warning">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>{$i18n.t("escProgrammingArmedWarning")}</p>
+    </div>
   {/if}
 
   {#if escState.view === View.PICKER}
@@ -118,8 +121,27 @@
   }
 
   .armed-warning {
-    padding: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: var(--section-gap);
+    padding: 10px 12px;
+    border-left: 4px solid var(--color-red-500, var(--color-red-900));
+    border-radius: 4px;
+    background-color: color-mix(
+      in srgb,
+      var(--color-red-500, var(--color-red-900)) 14%,
+      transparent
+    );
     font-weight: 600;
-    color: var(--color-red-900);
+
+    i {
+      margin-top: 2px;
+      color: var(--color-red-500, var(--color-red-900));
+    }
+
+    p {
+      margin: 0;
+    }
   }
 </style>

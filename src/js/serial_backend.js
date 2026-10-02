@@ -10,9 +10,14 @@ import { applyVirtualConfig } from "@/js/virtual_fc.js";
 // device chooser immediately on selecting its DFU picker option, rather than
 // waiting for the user to click Flash. Silent (no popup) if a matching device
 // is already authorized, so it's safe to run on every DFU selection.
-async function requestWebUsbDeviceFromPicker() {
+// Exported for selectDfuFromPicker() below, and for the Firmware Flasher's
+// mid-flash DFU permission prompt (see requestDfuPermission() in
+// firmware_flasher/state.svelte.js). Resolves to the authorized device, or
+// null if there's none (cancelled, or no WebUSB at all).
+export async function requestWebUsbDeviceFromPicker() {
     if (!('usb' in navigator)) {
-        return;
+        GUI.log(i18n.getMessage('dfuWebUsbUnsupported'));
+        return null;
     }
 
     try {
@@ -29,11 +34,16 @@ async function requestWebUsbDeviceFromPicker() {
         // nwjs/chrome.usb picker's behavior of relabeling the option with the
         // device name so there's a visible sign the board was actually found.
         GUI.log(i18n.getMessage('usbDeviceOpened', [device.productName || device.serialNumber || 'DFU']));
-        $('div#port-picker #port option[value="DFU"]').text(
-            device.productName ? `DFU - ${device.productName}` : 'DFU',
-        );
+        $('div#port-picker #port option[value="DFU"]')
+            .text(device.productName ? `DFU - ${device.productName}` : 'DFU')
+            // No longer just the "click to request permission" trigger --
+            // see the matching comment in port_handler.js's
+            // updatePortSelect().
+            .removeAttr('data-dfu-pending');
+        return device;
     } catch (error) {
         console.warn('WebUSB DFU permission request failed or was cancelled', error);
+        return null;
     }
 }
 
@@ -91,39 +101,98 @@ function selectRequestedPort(el, ports, entry, cachedPorts, fallbackValue) {
     el.trigger('change');
 }
 
-async function requestWebSerialDeviceFromPicker() {
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// Serial Port" button, offered when it finds no port chosen and isn't DFU --
+// can trigger the exact same flow as picking "Add serial device" from the
+// port-picker dropdown itself: real user gesture in, browser device chooser
+// out, then the global port list/selection are updated the same way either
+// route got there. Keeps there being exactly one place that knows how to
+// adopt a newly-granted Web Serial port app-wide.
+export async function requestWebSerialDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestWebSerialPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
-        });
+        // Awaited (getDevices() itself is callback-only) so that this
+        // function's own promise doesn't resolve until the port list/
+        // selection have actually been updated -- a caller that awaits this
+        // (e.g. the Firmware Flasher wizard's Select Serial Port button)
+        // needs that to be true before it can safely re-check port state.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.webSerialPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Serial permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
     }
 }
 
-async function requestWebBluetoothDeviceFromPicker() {
+// Exported so other UI -- e.g. the Firmware Flasher wizard's own "Select
+// DFU Device" button, offered alongside "Select Serial Port" when it finds
+// no port chosen at all -- can pick DFU the same way the picker's own
+// dropdown does: select the (always-present, web-only) "DFU" option, then
+// run the same WebUSB permission grant/refresh selecting it there would
+// have triggered. The picker's own change handler skips that step for a
+// programmatic .trigger('change') (it checks event.originalEvent, which a
+// synthetic trigger never has), so it has to happen here instead.
+export async function selectDfuFromPicker() {
+    $('div#port-picker #port').val('DFU').trigger('change');
+    await requestWebUsbDeviceFromPicker();
+}
+
+// Exported alongside requestWebSerialDeviceFromPicker/selectDfuFromPicker so
+// the Firmware Flasher wizard's Connect step can offer all three "add a
+// device" actions uniformly.
+export async function requestWebBluetoothDeviceFromPicker() {
     const el = $('div#port-picker #port');
     const fallbackValue = firstNonTriggerPortValue(el);
 
     try {
         const entry = await serial.requestBluetoothPort();
 
-        serial.getDevices((ports) => {
-            selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
-        });
+        // See requestWebSerialDeviceFromPicker() -- same reasoning for
+        // awaiting getDevices() here.
+        const ports = await new Promise((resolve) => serial.getDevices(resolve));
+        selectRequestedPort(el, ports, entry, serial.bluetoothPorts, fallbackValue);
     } catch (error) {
         console.warn('Web Bluetooth permission request failed or was cancelled', error);
         selectFallbackPort(el, fallbackValue);
     }
 }
 
-export async function handleConnectClick() {
+// Resolves once fn calls its callback, or after timeoutMs, whichever is first.
+function callbackOrTimeout(fn, timeoutMs) {
+    return new Promise((resolve) => {
+        const timer = setTimeout(resolve, timeoutMs);
+        fn(() => {
+            clearTimeout(timer);
+            resolve();
+        });
+    });
+}
+
+// Resolves true once the given tab is active and fully initialized, false on
+// timeout.
+function waitForActiveTab(tabName, timeoutMs = 5000) {
+    return new Promise((resolve) => {
+        const started = Date.now();
+        const check = () => {
+            if (GUI.active_tab === tabName && !GUI.tab_switch_in_progress) {
+                resolve(true);
+            } else if (Date.now() - started > timeoutMs) {
+                resolve(false);
+            } else {
+                setTimeout(check, 50);
+            }
+        };
+        check();
+    });
+}
+
+// openLanding: false skips finishClose()'s jump to the landing tab, for a
+// caller that switches to another tab itself right after disconnecting.
+export async function handleConnectClick({ openLanding = true } = {}) {
     if (GUI.connect_lock != true) { // GUI control overrides the user control
 
         const thisElement = $(this);
@@ -166,28 +235,47 @@ export async function handleConnectClick() {
                     serial.connect(portName, {bitrate: selected_baud}, onOpen);
                 }
             } else {
+                // Leaving the CLI sends `exit`, which reboots the FC, and the
+                // resulting device_lost (serial.js errorHandler) or port removal
+                // (PortHandler.removePort) clicks Connect again while this
+                // disconnect is still running. A second disconnect would jump to
+                // the landing tab regardless of openLanding, and its MSP cleanup
+                // drops the callback the first one is awaiting below, leaving it
+                // hung -- so let the one already in flight finish instead.
+                if (GUI.disconnect_in_progress) {
+                    return;
+                }
                 if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
                     $('div#flashbutton a.flash_state').removeClass('active');
                     $('div#flashbutton a.flash').removeClass('active');
                 }
-                // tab_switch_cleanup() kills timeouts/intervals itself, only
-                // once the current tab's own cleanup() has finished — doing
-                // it here first would kill any GUI timer that cleanup()
-                // is still relying on (e.g. a CLI session polling for idle
-                // before exiting), leaving its callback (and this promise)
-                // unresolved forever.
-                await new Promise((resolve) => GUI.tab_switch_cleanup(resolve));
-                GUI.tab_switch_in_progress = false;
+                GUI.disconnect_in_progress = true;
+                try {
+                    // tab_switch_cleanup() kills timeouts/intervals itself, only
+                    // once the current tab's own cleanup() has finished — doing
+                    // it here first would kill any GUI timer that cleanup()
+                    // is still relying on (e.g. a CLI session polling for idle
+                    // before exiting). Both steps talk to an FC that may have just
+                    // rebooted out from under us (CLI `exit`), so neither is
+                    // guaranteed to call back -- don't let that stall the disconnect,
+                    // and kill any leftover timers if cleanup timed out.
+                    await callbackOrTimeout((done) => GUI.tab_switch_cleanup(done), 2000);
+                    GUI.timeout_kill_all();
+                    GUI.interval_kill_all();
+                    GUI.tab_switch_in_progress = false;
 
-                await new Promise((resolve) => globalThis.mspHelper.setArmingEnabled(true, resolve));
+                    await callbackOrTimeout((done) => globalThis.mspHelper.setArmingEnabled(true, done), 1000);
 
-                // Wait for the port to actually finish closing before letting the
-                // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()
-                // used to fire-and-forget serial.disconnect(), so navigating to
-                // Firmware Flasher here would mount the tab (and enable Detect)
-                // while the previous connection's teardown (cancel reader / release
-                // lock / port.close()) was still in flight.
-                await finishClose();
+                    // Wait for the port to actually finish closing before letting the
+                    // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()
+                    // used to fire-and-forget serial.disconnect(), so navigating to
+                    // Firmware Flasher here would mount the tab (and enable Detect)
+                    // while the previous connection's teardown (cancel reader / release
+                    // lock / port.close()) was still in flight.
+                    await finishClose({ openLanding });
+                } finally {
+                    GUI.disconnect_in_progress = false;
+                }
             }
 
             toggleStatus();
@@ -278,15 +366,47 @@ export function initializeSerialBackend() {
       handleConnectClick.call(this);
     });
 
-    $('div.open_firmware_flasher a.flash').on("click", function() {
+    $('div.open_firmware_flasher a.flash').on("click", async function() {
         if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
-            $('div#flashbutton a.flash_state').removeClass('active');
-            $('div#flashbutton a.flash').removeClass('active');
+            // The tab switch clears these indicators after its exit guard allows it.
             $('#tabs ul.mode-disconnected .tab_landing a').trigger("click");
-        } else {
-            $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");
-            $('div#flashbutton a.flash_state').addClass('active');
-            $('div#flashbutton a.flash').addClass('active');
+            return;
+        }
+
+        if (GUI.opening_firmware_flasher) {
+            return;
+        }
+
+        // Still connected (e.g. CLI fallback mode for unsupported firmware):
+        // disconnect as the Disconnect button does, minus its jump to the
+        // landing tab, then go straight to the flasher. The flag keeps
+        // auto-connect from grabbing the FC back as it reboots from the CLI's
+        // `exit` in the meantime.
+        GUI.opening_firmware_flasher = true;
+        try {
+            if (GUI.connected_to || GUI.connecting_to) {
+                await handleConnectClick.call($('div#connectbutton a.connect')[0], { openLanding: false });
+                if (GUI.connected_to || GUI.connecting_to) {
+                    return;
+                }
+            }
+
+            // The Virtual FC is not listed while the flasher owns the port
+            PortHandler.syncVirtualOption();
+
+            // A click can still be dropped if it lands mid-switch, so retry
+            // until the flasher is actually the active tab.
+            for (let attempt = 0; attempt < 3 && GUI.active_tab !== 'firmware_flasher'; attempt++) {
+                $('#tabs ul.mode-disconnected .tab_firmware_flasher a').trigger("click");
+                await waitForActiveTab('firmware_flasher', 2000);
+            }
+
+            if (GUI.active_tab === 'firmware_flasher') {
+                $('div#flashbutton a.flash_state').addClass('active');
+                $('div#flashbutton a.flash').addClass('active');
+            }
+        } finally {
+            GUI.opening_firmware_flasher = false;
         }
     });
 
@@ -365,7 +485,7 @@ export function initializeSerialBackend() {
     PortHandler.initialize(GUI.show_all_ports);
 }
 
-function finishClose() {
+function finishClose({ openLanding = true } = {}) {
     if (GUI.isCordova()) {
         UI_PHONES.reset();
     }
@@ -415,7 +535,9 @@ function finishClose() {
         $('#content').empty();
     }
 
-    $('#tabs .tab_landing a').trigger("click");
+    if (openLanding) {
+        $('#tabs .tab_landing a').trigger("click");
+    }
 
     return disconnected;
 }
@@ -505,7 +627,7 @@ async function onOpen(openInfo) {
         }
     }
     else {
-        GUI.log(i18n.getMessage('serialPortOpenFail'));
+        GUI.log(serial.openFailureMessage());
         console.log('Failed to open serial port');
         abortConnect();
     }
@@ -555,6 +677,11 @@ function onOpenVirtual() {
 }
 
 function abortConnect() {
+    // Left set, this made the app still think a connect was in progress
+    // after it had failed: auto-connect (port_handler.js) refuses to fire
+    // while it's set, so it never retried once the port was freed up.
+    GUI.connecting_to = false;
+
     $('div#connectbutton div.connect_state').text(i18n.getMessage('connect'));
     $('div#connectbutton a.connect').removeClass('active');
 
@@ -730,6 +857,7 @@ async function onConnect() {
         await MSP.promise(MSPCodes.MSP_BATTERY_CONFIG, false);
         await MSP.promise(MSPCodes.MSP_STATUS, false);
         await MSP.promise(MSPCodes.MSP_DATAFLASH_SUMMARY, false);
+        await MSP.promise(MSPCodes.MSP_SDCARD_SUMMARY, false);
         // Needed here (rather than left to each tab's own fetch) so updateTabList can
         // decide whether to show the xact_servo and FBUS Sensors tabs -- both gated
         // on serial port function -- before the nav is first shown.
@@ -868,8 +996,6 @@ export function have_sensor(sensors_detected, sensor_code) {
             return bit_check(sensors_detected, 2);
         case 'gps':
             return bit_check(sensors_detected, 3);
-        case 'sonar':
-            return bit_check(sensors_detected, 4);
         case 'gyro':
             return bit_check(sensors_detected, 5);
     }
@@ -881,6 +1007,8 @@ function startLiveDataRefreshTimer() {
     GUI.timeout_add('data_refresh', function () { update_live_status(); }, 100);
 }
 
+let lastSdcardPoll = 0;
+
 function update_live_status() {
 
     const statuswrapper = $('#quad-status_wrapper');
@@ -891,6 +1019,15 @@ function update_live_status() {
 
     if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets' && GUI.active_tab != 'remap_fc') {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
+
+        // The SD card may still be starting up right after connect/reboot;
+        // keep polling (slowly) until it settles so the header shows capacity.
+        const sdcardSettling = FC.SDCARD.supported
+            && (FC.SDCARD.state === MSP.SDCARD_STATE_CARD_INIT || FC.SDCARD.state === MSP.SDCARD_STATE_FS_INIT);
+        if (sdcardSettling && Date.now() - lastSdcardPoll > 2000) {
+            lastSdcardPoll = Date.now();
+            MSP.promise(MSPCodes.MSP_SDCARD_SUMMARY, false);
+        }
     }
 
     for (let i = 0; i < FC.AUX_CONFIG.length; i++) {
@@ -910,10 +1047,14 @@ function update_live_status() {
         }
     }
 
+    const config = FC.BATTERY_CONFIG;
+    const profile = FC.BATTERY_STATE.batteryProfile;
+    const cellVoltage = (legacy, profiles) => (config.hasProfileCells ? profiles[profile] : legacy);
+
     const cells = FC.BATTERY_STATE.cellCount;
-    const min = FC.BATTERY_CONFIG.vbatmincellvoltage * cells;
-    const max = FC.BATTERY_CONFIG.vbatmaxcellvoltage * cells;
-    const warn = FC.BATTERY_CONFIG.vbatwarningcellvoltage * cells;
+    const min = cellVoltage(config.vbatmincellvoltage, config.vbatmincellvoltages) * cells;
+    const max = cellVoltage(config.vbatmaxcellvoltage, config.vbatmaxcellvoltages) * cells;
+    const warn = cellVoltage(config.vbatwarningcellvoltage, config.vbatwarningcellvoltages) * cells;
 
     const NO_BATTERY_VOLTAGE_MAXIMUM = 1.8;
 
@@ -975,12 +1116,16 @@ export function update_dataflash_global() {
 
         const megabytes = kilobytes / 1024;
 
-        return megabytes.toFixed(1) + "MB";
+        if (megabytes < 1024) {
+            return megabytes.toFixed(1) + "MB";
+        }
+
+        const gigabytes = megabytes / 1024;
+
+        return gigabytes.toFixed(1) + "GB";
     }
 
-    const supportsDataflash = FC.DATAFLASH.totalSize > 0;
-
-    if (supportsDataflash){
+    function showUsage(label, totalBytes, freeBytes) {
         $(".noflash_global").css({
            display: 'none'
         });
@@ -990,19 +1135,53 @@ export function update_dataflash_global() {
         });
 
         $(".dataflash-free_global").css({
-           width: (100-(FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize) / FC.DATAFLASH.totalSize * 100) + "%",
+           width: (100 - freeBytes / totalBytes * 100) + "%",
            display: 'block'
         });
-        $(".dataflash-free_global div").text('Dataflash: free ' + formatFilesize(FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize));
-     } else {
-        $(".noflash_global").css({
+        $(".dataflash-free_global div").text(label + ': free ' + formatFilesize(freeBytes));
+    }
+
+    function showMessage(html) {
+        $(".noflash_global").html(html).css({
            display: 'block'
         });
 
         $(".dataflash-contents_global").css({
            display: 'none'
         });
-     }
+    }
+
+    const supportsDataflash = FC.DATAFLASH.totalSize > 0;
+
+    if (supportsDataflash) {
+        showUsage('Dataflash', FC.DATAFLASH.totalSize, FC.DATAFLASH.totalSize - FC.DATAFLASH.usedSize);
+    } else if (FC.SDCARD.supported) {
+        switch (FC.SDCARD.state) {
+            case MSP.SDCARD_STATE_READY:
+                if (FC.SDCARD.totalSizeKB > 0) {
+                    showUsage('SD card', FC.SDCARD.totalSizeKB * 1024, FC.SDCARD.freeSizeKB * 1024);
+                } else {
+                    showMessage(i18n.getMessage('sdcardStatusReady'));
+                }
+                break;
+            case MSP.SDCARD_STATE_NOT_PRESENT:
+                showMessage(i18n.getMessage('sdcardStatusNoCard'));
+                break;
+            case MSP.SDCARD_STATE_FATAL:
+                showMessage(i18n.getMessage('sdcardStatusReboot'));
+                break;
+            case MSP.SDCARD_STATE_CARD_INIT:
+                showMessage(i18n.getMessage('sdcardStatusStarting'));
+                break;
+            case MSP.SDCARD_STATE_FS_INIT:
+                showMessage(i18n.getMessage('sdcardStatusFileSystem'));
+                break;
+            default:
+                showMessage(i18n.getMessage('sdcardStatusUnknown', [FC.SDCARD.state]));
+        }
+    } else {
+        showMessage(i18n.getMessage('sensorDataFlashNotFound'));
+    }
 }
 
 export function reinitialiseConnection(callback) {

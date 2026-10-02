@@ -26,7 +26,7 @@ export function pushSample(buffer, index, values) {
 }
 
 // Combined min/max across every series in a buffer, for graphs whose y-axis
-// auto-fits the data (altitude/sonar/debug) rather than using a fixed scale.
+// auto-fits the data (altitude/debug) rather than using a fixed scale.
 export function dynamicDomain(buffer) {
   let min = Infinity;
   let max = -Infinity;

@@ -14,7 +14,12 @@
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS"];
+  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+  const MAP_URL =
+    __BACKEND__ === "web"
+      ? `${import.meta.env.BASE_URL}src/tabs/map.html`
+      : "/src/tabs/map.html";
+  const useMapWebview = __BACKEND__ === "nwjs";
 
   // GPS_DATA.chn is a fixed-size channel-tracking array padded with unused
   // zero-filled slots past the actual satellite count - cap how many rows
@@ -95,17 +100,27 @@
   let fbusSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("FBUS"),
   );
+  let crsfSelected = $derived(
+    FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("CRSF"),
+  );
+  // FBUS and CRSF both receive GPS as pushed sensor telemetry instead of
+  // driving a GPS receiver over a serial port of their own.
+  let pushedDataSelected = $derived(fbusSelected || crsfSelected);
+  let fbusSatelliteCountUnknown = $derived(
+    fbusSelected && FC.GPS_DATA?.fix && FC.GPS_DATA?.numSat === 0,
+  );
   let ubloxSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("UBLOX"),
   );
   let autoConfigEnabled = $derived(
-    !fbusSelected && FC.GPS_CONFIG?.auto_config > 0,
+    !pushedDataSelected && FC.GPS_CONFIG?.auto_config > 0,
   );
 
-  // FBUS carries its own GPS link - the auto baud/config knobs and the
-  // sat-signal panel don't apply, matching legacy's refreshGpsProviderUi().
+  // The pushed-data transports carry their own GPS link - the auto
+  // baud/config knobs and the sat-signal panel don't apply, matching
+  // legacy's refreshGpsProviderUi().
   $effect(() => {
-    if (fbusSelected && FC.GPS_CONFIG) {
+    if (pushedDataSelected && FC.GPS_CONFIG) {
       FC.GPS_CONFIG.auto_baud = 0;
       FC.GPS_CONFIG.auto_config = 0;
     }
@@ -126,7 +141,7 @@
   // guaranteeing the attribute is set post-connection.
   $effect(() => {
     if (mapEl) {
-      mapEl.setAttribute("src", "/src/tabs/map.html");
+      mapEl.setAttribute("src", MAP_URL);
     }
   });
 
@@ -234,7 +249,7 @@
         />
       </Field>
 
-      {#if !fbusSelected}
+      {#if !pushedDataSelected}
         {#if autoConfigEnabled && ubloxSelected}
           <Field id="gps-ubx-sbas" label="configurationGPSubxSbas">
             <Select
@@ -285,7 +300,9 @@
           <span class="title">{$i18n.t("gpsHead")}</span>
           <div class="grow"></div>
           <span class="gps-fix">
-            {#if FC.GPS_DATA.fix}
+            {#if fbusSatelliteCountUnknown}
+              <span class="gpsFixTrue">Position</span>
+            {:else if FC.GPS_DATA.fix}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               {@html $i18n.t("gpsFixYes")}
             {:else}
@@ -329,12 +346,11 @@
             <td>{$i18n.t("gpsSpeed")}</td>
             <td>{FC.GPS_DATA.speed} cm/s</td>
           </tr>
-          {#if !fbusSelected}
-            <tr>
-              <td>{$i18n.t("gpsSats")}</td>
-              <td>{FC.GPS_DATA.numSat}</td>
-            </tr>
-          {/if}
+          <tr>
+            <td>{$i18n.t("gpsSats")}</td>
+            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td
+            >
+          </tr>
           <tr>
             <td>{$i18n.t("gpsDistToHome")}</td>
             <td>{FC.GPS_DATA.distanceToHome} m</td>
@@ -343,7 +359,7 @@
       </table>
     </Section>
 
-    {#if !fbusSelected}
+    {#if !pushedDataSelected}
       <Section label="gpsSignalStrHead">
         <table class="cf_table">
           <thead>
@@ -371,18 +387,24 @@
 
   <Section label="gpsMapHead">
     <div class="gps-map">
-      <!-- The webview stays mounted for the component's whole lifetime,
+      <!-- The map frame stays mounted for the component's whole lifetime,
            matching legacy - it initializes asynchronously, so tearing it
            down/recreating it based on fix state (as an {#if} branch would)
            risks racing its readiness and never getting a working
            contentWindow. Connect/waiting are overlays toggled via CSS
            instead. -->
-      <div
-        class="loadmap"
-        class:hidden={!online || (!FC.GPS_DATA.fix && !gpsWasFixed)}
-      >
-        <webview bind:this={mapEl} id="map" class="map" partition="persist:map"
-        ></webview>
+      <div class="loadmap" class:hidden={!online}>
+        {#if useMapWebview}
+          <webview
+            bind:this={mapEl}
+            id="map"
+            class="map"
+            partition="persist:map"
+          ></webview>
+        {:else}
+          <iframe bind:this={mapEl} id="map" class="map" title="GPS map"
+          ></iframe>
+        {/if}
         <div class="controls">
           <button onclick={onZoomIn}>+</button>
           <button onclick={onZoomOut}>–</button>
@@ -440,7 +462,7 @@
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .gps-fix :global(.gpsFixFalse) {
@@ -448,7 +470,7 @@
     color: #fff;
     font-size: 0.7rem;
     padding: 2px 5px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   table.cf_table {
@@ -467,7 +489,7 @@
 
   progress {
     width: 100%;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .gps-map {
@@ -509,6 +531,7 @@
   .map {
     flex: 1;
     width: 100%;
+    border: 0;
   }
 
   .controls {

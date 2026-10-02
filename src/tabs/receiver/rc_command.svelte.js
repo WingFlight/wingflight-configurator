@@ -47,7 +47,7 @@ export const RC_COMMAND = {
   get roll() {
     return getProportional(
       CHANNELS.ROLL,
-      FC.RC_CONFIG.rc_deadband,
+      FC.RC_CONFIG.rc_roll_deadband,
       FC.RC_CONFIG.rc_center,
       FC.RC_CONFIG.rc_deflection,
     );
@@ -55,7 +55,7 @@ export const RC_COMMAND = {
   get pitch() {
     return getProportional(
       CHANNELS.PITCH,
-      FC.RC_CONFIG.rc_deadband,
+      FC.RC_CONFIG.rc_pitch_deadband,
       FC.RC_CONFIG.rc_center,
       FC.RC_CONFIG.rc_deflection,
     );

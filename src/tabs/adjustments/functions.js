@@ -1,3 +1,5 @@
+import { i18n } from '@/js/localization.js';
+
 // `id` must stay positionally aligned with the firmware's adjustmentFunc_e
 // enum (fc/rc_adjustments.h) - this array is indexed directly by that value
 // (FUNCTIONS[adjRange.adjFunction]), so entries are never reordered or
@@ -55,7 +57,7 @@ export function getFunctions() {
         { id: 43,   name: 'RescueAltI',                 min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 44,   name: 'RescueAltD',                 min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 45,   name: 'AngleLevelGain',             min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
-        { id: 46,   name: 'HorizonLevelGain',           min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ] },
+        { id: 46,   name: 'Reserved',                   min: 0,     max: 200,    ticks: 10,   pips: [ 0, 50, 100, 150, 200 ], hide: true },
         { id: 47,   name: 'AcroTrainerGain',            min: 25,    max: 255,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 48,   name: 'GovernorGain',               min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 49,   name: 'GovernorP',                  min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
@@ -89,14 +91,14 @@ export function getFunctions() {
         { id: 77,   name: 'GovAutoThrottle',            min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 78,   name: 'GovMaxThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
         { id: 79,   name: 'GovMinThrottle',             min: 0,     max: 100,    ticks: 5,    pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
-        { id: 80,   name: 'GovHeadspeed',               min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
+        { id: 80,   name: 'GovRPM',                     min: 0,     max: 10000,  ticks: 200,   pips: [ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 ], hide: true },
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 83,   name: 'Reserved',                   min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
         { id: 84,   name: 'MasterGainPitch',            min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
         { id: 85,   name: 'MasterGainRoll',             min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
         { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
-        { id: 87,   name: 'AutoHoverGain',              min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
+        { id: 87,   name: 'Reserved',                   min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 88,   name: 'AttHoldGain',                min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 89,   name: 'ServoTrimRoll',              min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
         { id: 90,   name: 'ServoTrimPitch',             min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
@@ -121,10 +123,39 @@ export function getFunctions() {
         { id: 109,  name: 'TVYawB',                     min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 110,  name: 'TVHoldGain',                 min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 111,  name: 'TVProfile',                  min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
+        // Scales the weight of every mixer rule tagged with a given
+        // mixerRuleRole_e (pg/mixer.h) -- found by tag at runtime
+        // (flight/mixer.c's applyRoleWeight()), not a fixed rule index, so
+        // it keeps working regardless of where those rules end up in the
+        // 32-slot table. The value is applied on top of each tagged rule's
+        // configured sign (the Mixer tab's Reverse checkbox, or a negative
+        // weight via CLI). Both are signed, -1000..1000, so a negative value
+        // flips every tagged rule together -- for DiffThrustYawGain that
+        // keeps both motors' rules opposite signs (a differential, not a
+        // common-mode push) -- see applyRoleWeight()'s own comment. Ranges
+        // match rc_adjustments.c's ADJ_ENTRY.
+        { id: 112,  name: 'FlapCompensationGain',        min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
+        { id: 113,  name: 'DiffThrustYawGain',           min: -1000, max: 1000, ticks: 50,   pips: [ -1000, -500, 0, 500, 1000 ] },
+        // Per-axis I-term decay time in 0.01 s (60 = 0.60 s), range matches
+        // ITERM_DECAY_TIME_MIN/MAX in the firmware's pg/pid.h.
+        { id: 114,  name: 'ItermDecayTimeRoll',          min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 115,  name: 'ItermDecayTimePitch',         min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 116,  name: 'ItermDecayTimeYaw',           min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 117,  name: 'TVItermDecayTimeRoll',        min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 118,  name: 'TVItermDecayTimePitch',       min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        { id: 119,  name: 'TVItermDecayTimeYaw',         min: 1,     max: 100,  ticks: 5,    pips: [ 1, 20, 40, 60, 80, 100 ] },
+        // Per-axis Bounce Back score (1-10, higher = less bounce-back),
+        // range matches BOUNCEBACK_MIN/MAX in pg/pid.h.
+        { id: 120,  name: 'BouncebackRoll',              min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 121,  name: 'BouncebackPitch',             min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 122,  name: 'BouncebackYaw',               min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 123,  name: 'TVBouncebackRoll',            min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 124,  name: 'TVBouncebackPitch',           min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
+        { id: 125,  name: 'TVBouncebackYaw',             min: 1,     max: 10,   ticks: 1,    pips: [ 1, 3, 5, 7, 10 ] },
     ];
 }
 
-// Curates how the "Function" dropdown presents the FUNCTIONS entries: grouped
+// Curates how the function picker presents the FUNCTIONS entries: grouped
 // by what they tune, rather than flat firmware-enum order. This is purely a
 // display concern - `ids` reference FUNCTIONS[id] and each id's <option
 // value> stays equal to that id, so FUNCTIONS itself is never reordered.
@@ -132,7 +163,7 @@ export function getFunctions() {
 // terms - e.g. all P-gains, then all I-gains - stay together.
 //
 // A group is only rendered if at least one of its ids has `hide` falsy
-// (see AdjustmentRow.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
+// (see Adjustments.svelte). Cross Coupling/Rescue/Governor/Yaw Precomp are
 // heli-only concepts (see the FUNCTIONS comment above) whose every id is
 // permanently hidden, so they disappear entirely rather than showing an
 // empty heading.
@@ -145,13 +176,20 @@ export const FUNCTION_GROUPS = [
     { label: 'adjustmentsGroupFilters', ids: [33, 34, 35, 36, 37, 38] },
     { label: 'adjustmentsGroupYawDynamics', ids: [72, 74, 73] },
     { label: 'adjustmentsGroupStability', ids: [47, 45, 46, 87, 88] },
-    { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86] },
+    { label: 'adjustmentsGroupMasterGains', ids: [84, 85, 86, 114, 115, 116, 120, 121, 122] },
     { label: 'adjustmentsGroupAccTrim', ids: [64, 65] },
     { label: 'adjustmentsGroupServoTrims', ids: [89, 90, 91] },
-    { label: 'adjustmentsGroupThrustVector', ids: [95, 100, 105, 96, 101, 106, 97, 102, 107, 98, 103, 108, 99, 104, 109, 92, 93, 94] },
+    { label: 'adjustmentsGroupThrustVector', ids: [95, 100, 105, 96, 101, 106, 97, 102, 107, 98, 103, 108, 99, 104, 109, 92, 93, 94, 117, 118, 119, 123, 124, 125] },
     { label: 'adjustmentsGroupSetpointBoost', ids: [71, 68, 69, 70] },
     { label: 'adjustmentsGroupCrossCoupling', ids: [63, 61, 62] },
     { label: 'adjustmentsGroupYawPrecomp', ids: [32, 27, 26, 30, 31, 29, 28, 67, 66, 75] },
     { label: 'adjustmentsGroupRescue', ids: [44, 43, 42, 39, 41, 40] },
     { label: 'adjustmentsGroupGovernor', ids: [77, 55, 54, 51, 52, 80, 50, 76, 78, 79, 49, 48, 53, 81] },
+    { label: 'adjustmentsGroupMixer', ids: [112, 113] },
 ];
+
+// Short help for a function, shown on its picker tile and card header.
+export function getFunctionDescription(name) {
+    return i18n.existsMessage('adjustmentsFunctionHelp' + name) ?
+        i18n.getMessage('adjustmentsFunctionHelp' + name) : '';
+}

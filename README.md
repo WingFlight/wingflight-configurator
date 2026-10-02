@@ -76,6 +76,14 @@ To add this access right type the following command in a terminal, then log out 
 sudo usermod -aG dialout ${USER}
 ```
 
+#### Remote Support
+
+The desktop configurator can use a flight controller plugged into someone else's computer, for
+flashing, MSP and the CLI, via the
+[Wingflight Remote Support](https://github.com/WingFlight/wingflight-remote-support) tool. Start
+the tool, join the session with the code the pilot gives you, and the pilot's ports appear in the
+port list as `remote:…`.
+
 #### Graphics Issues
 
 If you experience graphics display problems or smudged/dithered fonts display issues in Wingflight Configurator, try invoking the `wingflight-configurator` executable file with the `--disable-gpu` command line switch. This will switch off hardware graphics acceleration. Likewise, setting your graphics card antialiasing option to OFF (e.g. FXAA parameter on NVidia graphics cards) might be a remedy as well.

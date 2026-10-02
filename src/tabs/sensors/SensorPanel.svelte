@@ -79,7 +79,7 @@
 
   .dd {
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     color: #fff;
     font-size: 0.7rem;
     text-align: right;

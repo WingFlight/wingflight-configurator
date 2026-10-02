@@ -18,6 +18,10 @@
   import WizardDialog from "./WizardDialog.svelte";
   import ModelTypePicker from "./ModelTypePicker.svelte";
   import SimplifiedMixerForm from "./SimplifiedMixerForm.svelte";
+  import {
+    MIXER_ROLE_ADJUSTMENT_FUNCTIONS,
+    getAdjustmentState,
+  } from "@/tabs/adjustments/adjustmentState.js";
 
   let loading = $state(true);
   let initialState = $state();
@@ -48,10 +52,22 @@
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP_STATUS);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
+    // Needed so the RC Roll/Pitch/Yaw/Throttle (bypass) input options can
+    // show the pilot's actual physical channel (RuleTable/SimplifiedMixerForm
+    // via Mixer.inputLabel) -- nothing fetches this globally on connect,
+    // only Receiver.svelte does, for its own channel map UI.
+    await MSP.promise(MSPCodes.MSP_RX_MAP);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE);
+    // Needed for the Purpose-tagged rules' ADJ/LIVE badge (RuleTable/
+    // SimplifiedMixerForm) -- Profiles.svelte and Servos.svelte each fetch
+    // this themselves for their own badges too, since nothing fetches it
+    // globally on connect. Without it, FC.ADJUSTMENT_RANGES stays whatever
+    // it was left at (usually empty), so getAdjustmentState() never finds a
+    // match and the badge silently never renders.
+    await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
 
     // Real hardware always reports MIXER_RULE_COUNT (32) rules; pad out the
     // simulator's empty default so the rule editor has slots to add into.
@@ -64,8 +80,31 @@
 
     conditionStatusInterval = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_LOGIC_CONDITIONS_STATUS);
+      await refreshLiveRoleWeights();
     }, 200);
   });
+
+  // A role-tagged rule's weight can be driven live by an RC adjustment range
+  // (ADJUSTMENT_FLAP_COMPENSATION_GAIN etc.) -- re-poll MSP_MIXER_RULES so
+  // the displayed value actually moves with the switch/pot, instead of
+  // staying frozen at whatever it was when the tab loaded. Skipped whenever
+  // there are unsaved edits pending: MSP_MIXER_RULES replaces FC.MIXER_RULES
+  // wholesale (see MSPHelper.js), so refreshing while dirty would silently
+  // discard anything the pilot hasn't saved yet, elsewhere in the table.
+  // Re-baselining initialState afterwards keeps this refresh itself from
+  // being mistaken for an edit that needs saving.
+  async function refreshLiveRoleWeights() {
+    if (dirty) return;
+
+    const anyActive = FC.MIXER_RULES.some((rule) => {
+      const adjFunction = MIXER_ROLE_ADJUSTMENT_FUNCTIONS[rule.role];
+      return adjFunction && getAdjustmentState(adjFunction)?.active;
+    });
+    if (!anyActive) return;
+
+    await MSP.promise(MSPCodes.MSP_MIXER_RULES);
+    initialState = snapshotState();
+  }
 
   onDestroy(() => {
     clearInterval(conditionStatusInterval);

@@ -73,13 +73,14 @@
       "MSP",
       "PARALYZE",
       "GPS",
-      "RESC",
+      "GPS_RTH",
       "RPMFILTER",
       "REBOOT_REQ",
       "DSHOT_BITBANG",
       "ACC_CALIB",
       "MOTOR_PROTO",
       "OVERRIDE",
+      "BACKUP_RX",
       "ARM_SWITCH",
     ];
   }
@@ -97,7 +98,7 @@
   let fastInterval;
   let slowInterval;
 
-  let numChs = $derived(Math.min(FC.RC.active_channels ?? 0, 18));
+  let numChs = $derived(Math.min(FC.RC.active_channels ?? 0, 24));
   let numBars = $derived(Math.max(numChs, 8));
 
   function channelWidth(i) {
@@ -477,7 +478,7 @@
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .content {
@@ -522,7 +523,7 @@
       font-size: 0.65rem;
       color: white;
       padding: 2px 6px;
-      border-radius: 3px;
+      border-radius: var(--radius-xs);
     }
 
     :global(.configBare) {
@@ -563,7 +564,7 @@
     padding: 2px 6px;
     font-size: 0.7rem;
     font-weight: 600;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-status-bad);
     color: white;
   }
@@ -599,7 +600,7 @@
   .model-wrapper {
     position: relative;
     height: 100%;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     border: 1px solid var(--color-border);
   }

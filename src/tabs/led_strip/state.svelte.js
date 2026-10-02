@@ -8,7 +8,6 @@ import {
   areModifiersActive,
   areOverlaysActive,
   buildLedStrip,
-  isVtxActive,
   isWarningActive,
   loadGridFromLedStrip,
   makeCell,
@@ -119,8 +118,6 @@ function overlayAllowed(letter, func) {
       return areOverlaysActive(func);
     case "w":
       return areOverlaysActive(func) && isWarningActive(func);
-    case "v":
-      return areOverlaysActive(func) && isVtxActive(func);
     default:
       return false;
   }

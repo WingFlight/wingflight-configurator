@@ -26,6 +26,7 @@ const tabHelpURLs = {
     tabRates:           `${docsBaseURL}/configurator/tabs/rates/`,
     tabGyro:            `${docsBaseURL}/configurator/tabs/gyro/`,
     tabAuxiliary:       `${docsBaseURL}/configurator/tabs/auxiliary/`,
+    tabGpsNav:          `${docsBaseURL}/configurator/tabs/gps-navigation/`,
     tabAdjustments:     `${docsBaseURL}/configurator/tabs/adjustments/`,
     tabLogic:           `${docsBaseURL}/configurator/tabs/logic/`,
     tabGPS:             `${docsBaseURL}/configurator/tabs/gps/`,
@@ -36,6 +37,7 @@ const tabHelpURLs = {
     tabXactServoProgramming: `${docsBaseURL}/configurator/tabs/xact-servo-programming/`,
     tabBlackbox:        `${docsBaseURL}/configurator/tabs/blackbox/`,
     tabFbusSensors:     `${docsBaseURL}/configurator/tabs/fbus-sensors/`,
+    tabCrsfSensors:     `${docsBaseURL}/configurator/tabs/crsf-sensors/`,
     tabCli:             `${docsBaseURL}/configurator/tabs/cli/`,
 };
 

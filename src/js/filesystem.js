@@ -66,6 +66,7 @@ if (__BACKEND__ === "nwjs" || __BACKEND__ === "web") {
     try {
       await writer.write(new Blob([text], { type: "text/plain" }));
       await writer.close();
+      return true;
     } catch (err) {
       console.log(err);
     }
@@ -211,6 +212,7 @@ if (__BACKEND__ === "cordova") {
         writer.onerror = reject;
         writer.write(new Blob([text], { type: "text/plain" }));
       });
+      return true;
     } catch (err) {
       console.log(err);
     }

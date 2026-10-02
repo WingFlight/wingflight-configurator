@@ -15,7 +15,9 @@
   import PidGains from "./PidGains.svelte";
   import PidSettings from "./PidSettings.svelte";
   import PidBandwidth from "./PidBandwidth.svelte";
+  import GainCurves from "./GainCurves.svelte";
   import LevelingSettings from "./LevelingSettings.svelte";
+  import TrainerSettings from "./TrainerSettings.svelte";
   import MasterGains from "./MasterGains.svelte";
 
   let loading = $state(true);
@@ -56,7 +58,22 @@
   });
 
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
-  let showSettingsColumn = $derived(showPidBoxes && CONFIGURATOR.expertMode);
+  let showExpertSettings = $derived(showPidBoxes && CONFIGURATOR.expertMode);
+
+  // Use configured assignments, not the live switch state.
+  let configuredModes = $derived.by(() => {
+    const ids = [];
+    FC.MODE_RANGES.forEach((entry, index) => {
+      const extra = FC.MODE_RANGES_EXTRA[index];
+      const linked = extra?.id === entry.id && extra.linkedTo > 0;
+      if (entry.range.start < entry.range.end || linked) ids.push(entry.id);
+    });
+    return new Set(
+      FC.AUX_CONFIG.filter((_, index) =>
+        ids.includes(FC.AUX_CONFIG_IDS[index]),
+      ),
+    );
+  });
 
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
@@ -86,6 +103,10 @@
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_PID_TUNING);
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
+    await MSP.promise(MSPCodes.MSP_BOXIDS);
+    await MSP.promise(MSPCodes.MSP_BOXNAMES);
+    await MSP.promise(MSPCodes.MSP_MODE_RANGES);
+    await MSP.promise(MSPCodes.MSP_MODE_RANGES_EXTRA);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
     await updateRuntimeGains();
@@ -247,21 +268,29 @@
     </div>
   {/if}
 
-  <div class="content" class:single-column={!showSettingsColumn}>
+  <div class="content">
     <div>
       {#if showPidBoxes}
         <EffectivePidGains />
         <PidGains />
         <MasterGains />
       {/if}
-      {#if CONFIGURATOR.expertMode}
-        <LevelingSettings />
+      {#if configuredModes.has("TRAINER")}
+        <TrainerSettings />
       {/if}
+      <LevelingSettings {configuredModes} />
     </div>
-    {#if showSettingsColumn}
-      <div>
-        <PidSettings />
-        <PidBandwidth />
+    <!-- Expert Mode panels sit below the main ones rather than in a side
+         column, so Flight Feel keeps the full width for its guide. -->
+    {#if showExpertSettings}
+      <div class="expert-settings">
+        <div>
+          <GainCurves profile={FC.PID_PROFILE} throttle />
+          <PidBandwidth />
+        </div>
+        <div>
+          <PidSettings />
+        </div>
       </div>
     {/if}
   </div>
@@ -382,20 +411,17 @@
   .note {
     margin-bottom: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);
     border: 1px solid var(--color-border-accent);
   }
 
-  // Single column is the default at every width. The PID tables in the
-  // left column need real room before a two-column split is worth it
-  // (the widest, Effective PID Gains, wants ~800px before its own
-  // horizontal scroll goes away), so two columns only kick in once
-  // there's comfortably enough space for both - otherwise a narrow
-  // split just forces every table into its scrollable fallback, which
-  // is worse than stacking full-width.
+  // One column at every width: the PID tables need real room (the widest,
+  // Effective PID Gains, wants ~800px before its own horizontal scroll goes
+  // away) and Flight Feel uses the space beside its table for its guide, so
+  // the Expert Mode panels go below rather than in a side column.
   .content {
     display: grid;
     grid-template-columns: 1fr;
@@ -411,15 +437,27 @@
     }
   }
 
-  @media only screen and (min-width: 1500px) {
-    .content:not(.single-column) {
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  // Expert Mode panels (Gain Curves, PID Bandwidth, PID Controller
+  // Settings) in two columns below the main panels once there is room.
+  .expert-settings {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: var(--section-gap);
+
+    > div {
+      min-width: 0;
+    }
+  }
+
+  @media only screen and (min-width: 1100px) {
+    .expert-settings {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
   }
 
   dialog {
     width: 32em;
-    border-radius: 5px;
+    border-radius: var(--radius-lg);
   }
 
   dialog .buttons {

@@ -134,14 +134,22 @@ export const FirmwareCache = (function () {
             console.debug("Firmware is already cached: " + key);
             return;
         }
-        journal.set(key, true);
-        JournalStorage.persist(journal.toJSON());
         let obj = {};
         obj[withCachePrefix(key)] = {
             release: release,
             hexdata: hexdata,
         };
+        // A multi-MB hex often doesn't fit the web build's localStorage. Store
+        // the data first and only journal it once that succeeded --
+        // journalling first left an entry claiming a cached file that was
+        // never written.
         chrome.storage.local.set(obj, () => {
+            if (chrome.runtime?.lastError) {
+                console.warn("Unable to cache firmware " + key + ": " + chrome.runtime.lastError.message);
+                return;
+            }
+            journal.set(key, true);
+            JournalStorage.persist(journal.toJSON());
             onPutToCache(release);
         });
     }
@@ -166,6 +174,14 @@ export const FirmwareCache = (function () {
             let cached = typeof obj === "object" && obj.hasOwnProperty(cacheKey)
                 ? obj[cacheKey]
                 : null;
+            if (cached === null) {
+                // Journal entry with no data behind it (e.g. left by an
+                // older put() whose write failed) -- forget it so the
+                // release stops being reported as cached.
+                journal.delete(key);
+                JournalStorage.persist(journal.toJSON());
+                onRemoveFromCache(release);
+            }
             callback(cached);
         });
     }

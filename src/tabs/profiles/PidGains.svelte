@@ -20,7 +20,14 @@
     },
     { key: "I", label: "profilesIntegral", help: "profilesIntegralHelp" },
     { key: "D", label: "profilesDerivative", help: "profilesDerivativeHelp" },
-    { key: "F", label: "profilesFeedforward", help: "profilesFeedforwardHelp" },
+    // Firmware floors F at 50 (PID_F_GAIN_MIN): MANUAL mode flies on the F-term
+    // alone, so F = 0 meant no surface movement in MANUAL.
+    {
+      key: "F",
+      label: "profilesFeedforward",
+      help: "profilesFeedforwardHelp",
+      min: 50,
+    },
     { key: "B", label: "profilesBoost", help: "profilesBoostHelp" },
   ];
 
@@ -38,7 +45,7 @@
     title={adjustmentTitle(adjustment)}
   >
     <NumberInput
-      min="0"
+      min={GAINS[gainIndex].min ?? 0}
       max="1000"
       bind:value={FC.PIDS[axisIndex][gainIndex]}
     />
@@ -176,7 +183,7 @@
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-accent, var(--accent));
     color: var(--color-text-inverse, #fff);
     font-size: 0.62rem;

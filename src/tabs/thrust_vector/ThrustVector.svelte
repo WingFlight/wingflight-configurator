@@ -11,6 +11,8 @@
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
     TV_HOLD_GAIN_ADJUSTMENT_FUNCTION,
+    TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS,
+    TV_BOUNCEBACK_ADJUSTMENT_FUNCTIONS,
     adjustmentChannelLabel,
     adjustmentTitle,
     getAdjustmentState,
@@ -18,12 +20,13 @@
 
   import Page from "@/components/Page.svelte";
   import Field from "@/components/Field.svelte";
+  import GainCurves from "@/tabs/profiles/GainCurves.svelte";
+  import FlightFeelGuide from "@/tabs/profiles/FlightFeelGuide.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
   import SubSection from "@/components/SubSection.svelte";
-  import Switch from "@/components/Switch.svelte";
 
   const AXES = ["ROLL", "PITCH", "YAW"];
   const GAINS = [
@@ -43,18 +46,27 @@
       axisClass: "ROLL",
       label: "axisROLL",
       gainKey: "masterGainRoll",
+      curveKey: "gainCurveRoll",
+      decayKey: "itermDecayTimeRoll",
+      bouncebackKey: "bouncebackRoll",
     },
     {
       key: "pitch",
       axisClass: "PITCH",
       label: "axisPITCH",
       gainKey: "masterGainPitch",
+      curveKey: "gainCurvePitch",
+      decayKey: "itermDecayTimePitch",
+      bouncebackKey: "bouncebackPitch",
     },
     {
       key: "yaw",
       axisClass: "YAW",
       label: "axisYAW",
       gainKey: "masterGainYaw",
+      curveKey: "gainCurveYaw",
+      decayKey: "itermDecayTimeYaw",
+      bouncebackKey: "bouncebackYaw",
     },
   ];
 
@@ -71,6 +83,16 @@
   let holdGainAdjustment = $derived(
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
   );
+
+  function decayAdjustmentState(axisIndex) {
+    return getAdjustmentState(
+      TV_ITERM_DECAY_TIME_ADJUSTMENT_FUNCTIONS[axisIndex],
+    );
+  }
+
+  function bouncebackAdjustmentState(axisIndex) {
+    return getAdjustmentState(TV_BOUNCEBACK_ADJUSTMENT_FUNCTIONS[axisIndex]);
+  }
 
   let profileTabs = $derived(
     Array.from({ length: FC.CONFIG.numProfiles }, (_, i) => i),
@@ -105,28 +127,8 @@
   let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
-  // itermRelaxType is 0 when disabled; remember the last non-zero type
-  // locally so re-enabling the switch restores the previous RP/RPY choice
-  let itermRelaxType = $state(1);
-  let itermRelaxEnabled = $derived(FC.TV_PID_PROFILE.itermRelaxType > 0);
-
-  function toggleItermRelax(enabled) {
-    FC.TV_PID_PROFILE.itermRelaxType = enabled ? itermRelaxType : 0;
-  }
-
-  function changeItermRelaxType(value) {
-    itermRelaxType = value;
-    if (itermRelaxEnabled) {
-      FC.TV_PID_PROFILE.itermRelaxType = value;
-    }
-  }
-
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP2_WING_TV_PID_CONFIG);
-
-    if (FC.TV_PID_PROFILE.itermRelaxType > 0) {
-      itermRelaxType = FC.TV_PID_PROFILE.itermRelaxType;
-    }
 
     initialState = snapshotState();
     loading = false;
@@ -338,49 +340,125 @@
   </Section>
 
   <Section label="thrustVectorMasterGainGroup">
-    <div class="table-scroll">
-      <table class="grid">
-        <thead>
-          <tr>
-            <th></th>
-            <th>
-              <span class="header-label">
-                {$i18n.t("profilesMasterGainColumn")}
-                <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
-            {@const adjustment = masterGainAdjustmentState(axisIndex)}
+    <div class="flight-feel-layout">
+      <div class="table-scroll">
+        <table class="grid">
+          <thead>
             <tr>
-              <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
-              <td>
-                <div
-                  class="runtime-control"
-                  class:runtime-controlled={adjustment}
-                  class:runtime-active={adjustment?.active}
-                  title={adjustmentTitle(adjustment)}
-                >
-                  <NumberInput
-                    min="25"
-                    max="1000"
-                    bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
-                  />
-                  {#if adjustment}
-                    <span class="adjustment-badge">
-                      {adjustment.active
-                        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-                        : "ADJ"}
-                    </span>
-                  {/if}
-                </div>
-              </td>
+              <th></th>
+              <th>
+                <span class="header-label">
+                  {$i18n.t("profilesMasterGainColumn")}
+                  <HelpIcon>{$i18n.t("profilesMasterGainHelp")}</HelpIcon>
+                </span>
+              </th>
+              <th>
+                <span class="header-label">
+                  {$i18n.t("profilesItermDecayColumn")}
+                  <HelpIcon>{$i18n.t("profilesItermDecayTimeHelp")}</HelpIcon>
+                </span>
+              </th>
+              <th>
+                <span class="header-label">
+                  {$i18n.t("profilesBouncebackColumn")}
+                  <HelpIcon>{$i18n.t("profilesBouncebackHelp")}</HelpIcon>
+                </span>
+              </th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {#each MASTER_GAIN_AXES as axis, axisIndex (axis.key)}
+              {@const adjustment = masterGainAdjustmentState(axisIndex)}
+              {@const decayAdjustment = decayAdjustmentState(axisIndex)}
+              {@const bouncebackAdjustment =
+                bouncebackAdjustmentState(axisIndex)}
+              <tr>
+                <td class="axis {axis.axisClass}">{$i18n.t(axis.label)}</td>
+                <td>
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={adjustment}
+                    class:runtime-active={adjustment?.active}
+                    title={adjustmentTitle(adjustment)}
+                  >
+                    <NumberInput
+                      min="25"
+                      max="1000"
+                      bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
+                    />
+                    {#if adjustment}
+                      <span class="adjustment-badge">
+                        {adjustment.active
+                          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                    {#if FC.TV_PID_PROFILE[axis.curveKey] > 0}
+                      <span
+                        class="curve-badge"
+                        title={$i18n.t("profilesGainCurveBadgeTitle", {
+                          1: FC.TV_PID_PROFILE[axis.curveKey],
+                        })}>{$i18n.t("profilesGainCurveBadge")}</span
+                      >
+                    {/if}
+                  </div>
+                </td>
+                <td>
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={decayAdjustment}
+                    class:runtime-active={decayAdjustment?.active}
+                    title={adjustmentTitle(decayAdjustment)}
+                  >
+                    <NumberInput
+                      min="0.01"
+                      max="1"
+                      step="0.01"
+                      bind:value={
+                        () => FC.TV_PID_PROFILE[axis.decayKey] / 100,
+                        (v) =>
+                          (FC.TV_PID_PROFILE[axis.decayKey] = Math.round(
+                            v * 100,
+                          ))
+                      }
+                    />
+                    {#if decayAdjustment}
+                      <span class="adjustment-badge">
+                        {decayAdjustment.active
+                          ? (adjustmentChannelLabel(decayAdjustment) ?? "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                </td>
+                <td>
+                  <div
+                    class="runtime-control"
+                    class:runtime-controlled={bouncebackAdjustment}
+                    class:runtime-active={bouncebackAdjustment?.active}
+                    title={adjustmentTitle(bouncebackAdjustment)}
+                  >
+                    <NumberInput
+                      min="1"
+                      max="10"
+                      bind:value={FC.TV_PID_PROFILE[axis.bouncebackKey]}
+                    />
+                    {#if bouncebackAdjustment}
+                      <span class="adjustment-badge">
+                        {bouncebackAdjustment.active
+                          ? (adjustmentChannelLabel(bouncebackAdjustment) ??
+                            "LIVE")
+                          : "ADJ"}
+                      </span>
+                    {/if}
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+      <FlightFeelGuide />
     </div>
   </Section>
 
@@ -440,23 +518,10 @@
   </Section>
 
   {#if CONFIGURATOR.expertMode}
+    <GainCurves profile={FC.TV_PID_PROFILE} idPrefix="tv-" />
+
     <Section label="thrustVectorPidSettings">
       <SubSection label="profilesItermDecayGroup">
-        <Field id="tv-iterm-decay-time" label="profilesItermDecayTime">
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermDecayTimeHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-iterm-decay-time"
-            min="0"
-            max="25"
-            step="0.1"
-            bind:value={
-              () => FC.TV_PID_PROFILE.iterm_decay_time / 10,
-              (v) => (FC.TV_PID_PROFILE.iterm_decay_time = Math.round(v * 10))
-            }
-          />
-        </Field>
         <Field id="tv-iterm-decay-limit" label="profilesItermDecayLimit">
           {#snippet tooltip()}
             {$i18n.t("profilesItermDecayLimitHelp")}
@@ -470,109 +535,40 @@
         </Field>
       </SubSection>
 
-      <SubSection label="profilesItermRelax">
-        <Field id="tv-iterm-relax" label="profilesItermRelax">
+      <SubSection label="profilesItermRelaxLevelGroup">
+        <Field
+          id="tv-iterm-relax-level-roll"
+          label="profilesItermRelaxLevelRoll"
+        >
           {#snippet tooltip()}
-            {$i18n.t("profilesItermRelaxHelp")}
+            {$i18n.t("profilesItermRelaxLevelHelp")}
           {/snippet}
-          <Switch
-            id="tv-iterm-relax"
-            bind:checked={() => itermRelaxEnabled, toggleItermRelax}
+          <NumberInput
+            id="tv-iterm-relax-level-roll"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
           />
         </Field>
-        {#if itermRelaxEnabled}
-          <SubSection>
-            <Field id="tv-iterm-relax-type" label="profilesItermRelaxType">
-              {#snippet tooltip()}
-                {$i18n.t("profilesItermRelaxTypeHelp")}
-              {/snippet}
-              <Select
-                id="tv-iterm-relax-type"
-                options={[
-                  {
-                    value: 1,
-                    label: $i18n.t("profilesItermRelaxTypeOptionRP"),
-                  },
-                  {
-                    value: 2,
-                    label: $i18n.t("profilesItermRelaxTypeOptionRPY"),
-                  },
-                ]}
-                bind:value={() => itermRelaxType, changeItermRelaxType}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-cutoff-roll"
-              label="profilesItermRelaxCutoffRoll"
-            >
-              {#snippet tooltip()}
-                {$i18n.t("profilesItermRelaxCutoffHelp")}
-              {/snippet}
-              <NumberInput
-                id="tv-iterm-relax-cutoff-roll"
-                min="1"
-                max="100"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffRoll}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-cutoff-pitch"
-              label="profilesItermRelaxCutoffPitch"
-            >
-              <NumberInput
-                id="tv-iterm-relax-cutoff-pitch"
-                min="1"
-                max="100"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffPitch}
-              />
-            </Field>
-            {#if itermRelaxType > 1}
-              <Field
-                id="tv-iterm-relax-cutoff-yaw"
-                label="profilesItermRelaxCutoffYaw"
-              >
-                <NumberInput
-                  id="tv-iterm-relax-cutoff-yaw"
-                  min="1"
-                  max="100"
-                  bind:value={FC.TV_PID_PROFILE.itermRelaxCutoffYaw}
-                />
-              </Field>
-            {/if}
-            <Field id="tv-iterm-relax-level-roll" label="tvItermRelaxLevelRoll">
-              {#snippet tooltip()}
-                {$i18n.t("tvItermRelaxLevelHelp")}
-              {/snippet}
-              <NumberInput
-                id="tv-iterm-relax-level-roll"
-                min="10"
-                max="250"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
-              />
-            </Field>
-            <Field
-              id="tv-iterm-relax-level-pitch"
-              label="tvItermRelaxLevelPitch"
-            >
-              <NumberInput
-                id="tv-iterm-relax-level-pitch"
-                min="10"
-                max="250"
-                bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
-              />
-            </Field>
-            {#if itermRelaxType > 1}
-              <Field id="tv-iterm-relax-level-yaw" label="tvItermRelaxLevelYaw">
-                <NumberInput
-                  id="tv-iterm-relax-level-yaw"
-                  min="10"
-                  max="250"
-                  bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
-                />
-              </Field>
-            {/if}
-          </SubSection>
-        {/if}
+        <Field
+          id="tv-iterm-relax-level-pitch"
+          label="profilesItermRelaxLevelPitch"
+        >
+          <NumberInput
+            id="tv-iterm-relax-level-pitch"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
+          />
+        </Field>
+        <Field id="tv-iterm-relax-level-yaw" label="profilesItermRelaxLevelYaw">
+          <NumberInput
+            id="tv-iterm-relax-level-yaw"
+            min="10"
+            max="250"
+            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
+          />
+        </Field>
       </SubSection>
 
       <SubSection label="profilesErrorLimit">
@@ -751,6 +747,14 @@
 </dialog>
 
 <style lang="scss">
+  // Table on the left, plain-language guide in the space to its right.
+  .flight-feel-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
   h1 {
     font-weight: 600;
   }
@@ -771,7 +775,7 @@
     margin-top: var(--section-gap);
     margin-bottom: var(--section-gap);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
     background-color: var(--color-surface);
@@ -898,7 +902,7 @@
     min-width: 2.5rem;
     padding: 1px 5px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-accent, var(--accent));
     color: var(--color-text-inverse, #fff);
     font-size: 0.62rem;
@@ -912,6 +916,20 @@
   .runtime-control:not(.runtime-active) .adjustment-badge {
     background-color: transparent;
     color: var(--color-text-soft);
+  }
+
+  // Outlined like an idle ADJ badge: a curve is configuration, not live.
+  .curve-badge {
+    min-width: 2.5rem;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-soft);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    cursor: help;
   }
 
   .runtime-control.runtime-active :global(.container) {

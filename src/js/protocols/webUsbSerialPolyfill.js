@@ -190,11 +190,13 @@ class WebUsbSerialPort {
 
 // Keyed by the underlying USBDevice so repeated getPorts()/requestPort()
 // calls for the same physical device return the same wrapper instance --
-// WebSerial.js's getStableWebSerialId() keys its id off object identity
-// (mirroring how real navigator.serial.getPorts() reuses SerialPort
-// instances), and a fresh wrapper every poll would mint a new id each time,
-// which in turn keeps re-triggering auto-connect-on-recognized-port as if a
-// new device just appeared.
+// a fresh wrapper every poll would look like a new device each time.
+// (Unlike WebSerial.js's own id scheme, which had to stop relying on this
+// kind of object-identity stability: a SerialPort object doesn't survive a
+// real USB detach/reattach the way a USBDevice from navigator.usb does, so
+// its ids are now derived from VID/PID instead -- see getStableWebSerialId()
+// there. If WebUSB device identity turns out not to survive an FC's reboot
+// either, this cache would need the same treatment.)
 const wrappedPorts = new WeakMap();
 
 function wrapDevice(device) {

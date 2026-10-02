@@ -73,8 +73,27 @@
     return runtimeGains?.fwTpa ?? 100;
   }
 
+  function runtimeSpeedGain() {
+    return runtimeGains?.fwSpa ?? 100;
+  }
+
+  // P/D/F/B scale from TPA and GPS speed attenuation together, percent.
+  // The firmware floors it at 25% so the surfaces always keep some throw.
+  const ATTENUATION_MIN = 25;
+
+  function runtimeAttenuation() {
+    return Math.max(
+      ATTENUATION_MIN,
+      (runtimeThrottleGain() * runtimeSpeedGain()) / 100,
+    );
+  }
+
   function hasRuntimeThrottleDelta() {
-    return Math.abs(runtimeThrottleGain() - 100) >= 0.5;
+    return Math.abs(runtimeAttenuation() - 100) >= 0.5;
+  }
+
+  function hasRuntimeSpeedDelta() {
+    return Math.abs(runtimeSpeedGain() - 100) >= 0.5;
   }
 
   function scaledCurveY(curveY, masterGain, termScale = 100) {
@@ -95,7 +114,7 @@
       profileMasterGain(axisIndex),
       runtimeMasterGain(axisIndex),
     ];
-    const termScales = [100, runtimeThrottleGain()];
+    const termScales = [100, runtimeAttenuation()];
     const maxPoint = Math.max(
       ...masterGains.flatMap((masterGain) =>
         termScales.flatMap((termScale) => [
@@ -251,7 +270,7 @@
           d={curvePath(
             axisIndex,
             runtimeMasterGain(axisIndex),
-            runtimeThrottleGain(),
+            runtimeAttenuation(),
           )}
         ></path>
       {/if}
@@ -269,11 +288,11 @@
           r="3"
         ></circle>
       {/if}
-      {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeThrottleGain())}
+      {#if hasRuntimeThrottleDelta() && curveMarker(axisIndex, runtimeAttenuation())}
         <circle
           class="throttle-marker"
-          cx={curveMarker(axisIndex, runtimeThrottleGain()).x}
-          cy={curveMarker(axisIndex, runtimeThrottleGain()).y}
+          cx={curveMarker(axisIndex, runtimeAttenuation()).x}
+          cy={curveMarker(axisIndex, runtimeAttenuation()).y}
           r="2.4"
         ></circle>
       {/if}
@@ -293,11 +312,16 @@
     {#if hasRuntimeThrottleDelta()}
       <span
         class="curve-throttle-label"
-        class:tpa-higher={runtimeThrottleGain() > 100}
-        class:tpa-lower={runtimeThrottleGain() < 100}
-        title="P/D throttle attenuation"
+        class:tpa-higher={runtimeAttenuation() > 100}
+        class:tpa-lower={runtimeAttenuation() < 100}
+        title="Throttle (TPA) and GPS speed (SPA) attenuation of P, D, F and B"
       >
-        TPA {formatThrottleGain(runtimeThrottleGain())}%
+        {#if Math.abs(runtimeThrottleGain() - 100) >= 0.5 || !hasRuntimeSpeedDelta()}
+          TPA {formatThrottleGain(runtimeThrottleGain())}%
+        {/if}
+        {#if hasRuntimeSpeedDelta()}
+          SPA {formatThrottleGain(runtimeSpeedGain())}%
+        {/if}
       </span>
     {/if}
   </div>
@@ -408,18 +432,14 @@
     padding: 0 8px;
   }
 
-  .effective-pids-header .header-label {
-    color: var(--color-text-alt);
-  }
-
   .curve-expand-button {
     margin-left: auto;
     padding: 0 6px;
     height: 1.4rem;
     border: 0;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background: transparent;
-    color: var(--color-text-alt);
+    color: var(--color-header-fg);
     cursor: pointer;
     line-height: 1.4rem;
   }
@@ -504,7 +524,7 @@
     height: 1.5rem;
     padding: 0 8px;
     border: 1px solid var(--color-border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background-color: var(--color-input-bg-disabled);
     color: var(--color-text-soft);
     text-align: right;
@@ -598,7 +618,7 @@
   .curve-throttle-label {
     position: absolute;
     padding: 0 4px;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
     color: var(--color-text-soft);
     font-size: 0.65rem;
@@ -707,20 +727,6 @@
   // selectors the later rule in the file wins regardless of which one's
   // condition matches - an earlier copy of this block was silently losing
   // to the plain ".grid" rule below it.
-  // %section-header (in _global.scss, shared by every section header in
-  // the app) drops its dark bar entirely at <=480px and switches text to
-  // --color-text to read against the page background that replaces it.
-  // This header force-sets --color-text-alt (white) unconditionally
-  // below, so it needs its own matching swap back to --color-text - but
-  // that has to stay paired with %section-header's own <=480 breakpoint,
-  // not this file's 820px table breakpoint, or the two desync: the bar
-  // stays dark past 480px while the text already went dark-on-dark.
-  @media only screen and (max-width: 480px) {
-    .effective-pids-header .header-label {
-      color: var(--color-text);
-    }
-  }
-
   @media only screen and (max-width: 820px) {
     .desktop-table {
       display: none;

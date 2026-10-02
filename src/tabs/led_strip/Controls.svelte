@@ -10,7 +10,6 @@
     areBlinkersActive,
     areModifiersActive,
     areOverlaysActive,
-    isVtxActive,
     isWarningActive,
   } from "./util.js";
   import {
@@ -79,7 +78,6 @@
   let showBlinkers = $derived(areBlinkersActive(func));
   let showOverlays = $derived(areOverlaysActive(func));
   let showWarning = $derived(showOverlays && isWarningActive(func));
-  let showVtx = $derived(showOverlays && isVtxActive(func));
 
   let remaining = $derived(wiresRemaining());
 </script>
@@ -196,15 +194,6 @@
       />
       <span>{$i18n.t("ledStripIndecatorOverlay")}</span>
     </label>
-    {#if showVtx}
-      <label class="checkbox">
-        <Switch
-          checked={ledState.panel.overlays.v}
-          onchange={(e) => setOverlay("v", e.target.checked)}
-        />
-        <span>{$i18n.t("ledStripVtxOverlay")}</span>
-      </label>
-    {/if}
     <label class="checkbox">
       <Switch
         checked={ledState.panel.overlays.d}
@@ -288,7 +277,7 @@
 
   .label.swatch {
     padding: 2px 8px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     font-size: 0.75rem;
     color: var(--color-text-soft);
     background-color: var(--color-surface-float, var(--color-surface));

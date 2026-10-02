@@ -12,6 +12,8 @@ export const GuiControl = function () {
     this.connecting_to = false;
     this.connected_to = false;
     this.connect_lock = false;
+    this.disconnect_in_progress = false;
+    this.opening_firmware_flasher = false;
     this.zoom_level = 100;
     this.active_tab = null;
     this.current_tab = null;
@@ -35,6 +37,7 @@ export const GuiControl = function () {
         'power',
         'adjustments',
         'auxiliary',
+        'gps_nav',
         'cli',
         'configuration',
         'beepers',
@@ -42,6 +45,7 @@ export const GuiControl = function () {
         'led_strip',
         'blackbox',
         'fbus_sensors',
+        'crsf_sensors',
         'modes',
         'motors',
         'esc_programming',

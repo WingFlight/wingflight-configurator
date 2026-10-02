@@ -68,10 +68,7 @@
   }
 
   .content {
-    padding: 4px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    overflow: hidden;
+    padding: 6px 4px;
     background-color: var(--color-surface);
   }
 
@@ -86,8 +83,12 @@
   }
 
   .summary {
-    padding: 8px;
-    background-color: var(--color-surface);
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    background-color: var(--color-surface-sunken);
+    border-bottom: 1px solid var(--color-border-soft);
   }
 
   .grow {
@@ -97,38 +98,36 @@
   .icon {
     background: none;
     border: none;
-    padding: 8px;
-    margin: 0;
-    font-size: 1rem;
+    padding: 6px;
+    margin: 0 4px 0 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    color: var(--color-neutral-500);
+    transition:
+      color var(--animation-speed),
+      background-color var(--animation-speed);
 
     -webkit-tap-highlight-color: transparent;
 
-    :global(html[data-theme="light"]) & {
+    :global(html[data-theme="dark"]) & {
       color: var(--color-neutral-400);
     }
 
-    :global(html[data-theme="dark"]) & {
-      color: var(--color-neutral-500);
-    }
-
     &:hover {
-      :global(html[data-theme="light"]) & {
-        color: var(--color-neutral-500);
-      }
-
-      :global(html[data-theme="dark"]) & {
-        color: var(--color-neutral-500);
-      }
+      color: var(--color-text);
+      background-color: var(--color-hover);
     }
 
-    &.active {
-      :global(html[data-theme="light"]) & {
-        color: var(--color-yellow-500);
-      }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
 
-      :global(html[data-theme="dark"]) & {
-        color: var(--color-neutral-200);
-      }
+    &.active,
+    &.active:hover {
+      color: var(--color-accent-500);
     }
   }
 
@@ -139,11 +138,6 @@
 
     .summary {
       padding: 8px;
-    }
-
-    .content {
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
     }
 
     .content-wrapper {
