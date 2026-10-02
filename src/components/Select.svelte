@@ -14,6 +14,12 @@
 
 <select {id} bind:value {disabled} {size} onchange={(e) => onchange?.(e)}>
   {#each options as option (option.value)}
-    <option value={option.value}>{option.label}</option>
+    <option
+      value={option.value}
+      disabled={option.disabled}
+      hidden={option.hidden}
+    >
+      {option.label}
+    </option>
   {/each}
 </select>

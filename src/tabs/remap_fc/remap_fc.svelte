@@ -645,13 +645,24 @@
     return hiddenPins.has(pin) || !pinHasTimerCapability(pin);
   }
 
-  // Description shown in a pad's Current Option card. A UART/I2C pad's
-  // own row names its underlying bus resource ("UART RX 2") and a
-  // connector-purpose hint, since "Default" alone (see optionLabel)
-  // doesn't say what that default actually is. A PWM feature currently
-  // sitting on this pad gets its own purpose hint if it has one (see
-  // FEATURE_PURPOSE_KEYS); everything else (an empty pad, or a feature
-  // without a confident hint) gets the generic "choose a feature" blurb.
+  // Description shown in the open card. In "feature" mode (see
+  // cardTitle) this is about the feature sitting on the pad, not the
+  // pad itself, so it always goes straight to the purpose-hint branch
+  // below regardless of what the underlying pad's own identity is --
+  // without this check, a servo remapped onto a plain UART/I2C pad
+  // (e.g. S3 moved onto RX2 via "+ Add") would show RX2's own "this pin
+  // defaults to UART RX 2" blurb when the user clicks "Servo 3" in the
+  // Feature column, even though cardTitle already correctly titled that
+  // same card "Servo 3" -- row.option (RX2) being UART/I2C says nothing
+  // about what mode opened the card.
+  //
+  // In "pin" mode, a UART/I2C pad's own row names its underlying bus
+  // resource ("UART RX 2") and a connector-purpose hint, since
+  // "Default" alone (see optionLabel) doesn't say what that default
+  // actually is. Everything else (a plain PWM pad in pin mode, or any
+  // feature-mode card) gets the PWM feature's own purpose hint if it
+  // has one (see FEATURE_PURPOSE_KEYS), else the generic "choose a
+  // feature" blurb.
   //
   // escapeValue: false -- hint is itself an already-resolved
   // translation being interpolated into another one, and i18next
@@ -662,7 +673,7 @@
   // nothing to protect against and escaping just corrupts the
   // punctuation on screen.
   function cardDescription(row) {
-    if (isUartOrI2cResource(row.option)) {
+    if (openCardSource === "pin" && isUartOrI2cResource(row.option)) {
       // No alternative resource for this pad at all (see
       // hasNoAlternativeResource) skips the repurposing hint entirely
       // -- "can be freely repurposed" would flatly contradict the

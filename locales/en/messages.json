@@ -7447,9 +7447,6 @@
     "remapFcTableOption": {
         "message": "FC Label"
     },
-    "remapFcTableDefaultPin": {
-        "message": "Default Pin"
-    },
     "remapFcTableCurrentOption": {
         "message": "Current Option"
     },
@@ -7458,9 +7455,6 @@
     },
     "remapFcNoneOption": {
         "message": "None"
-    },
-    "remapFcSetOption": {
-        "message": "Set Option"
     },
     "remapFcPinNotRemappable": {
         "message": "This pin is hard-wired and cannot be remapped."
@@ -7534,14 +7528,8 @@
     "remapFcPurposeS4": {
         "message": "Commonly the tail servo, for a mechanical (non-motorised) tail rotor."
     },
-    "remapFcLoadChangesButton": {
-        "message": "Load Changes"
-    },
     "remapFcLoadChangesBlocked": {
         "message": "Resolve the pin conflict below before sending changes"
-    },
-    "remapFcClearChangesButton": {
-        "message": "Clear Changes"
     },
     "remapFcApplying": {
         "message": "Applying..."
@@ -7551,9 +7539,6 @@
     },
     "remapFcShowDetails": {
         "message": "Show details"
-    },
-    "remapFcPendingCommands": {
-        "message": "Pending Commands ({{count}})"
     },
     "remapFcAllocationCalculatedHeading": {
         "message": "Calculated config"
