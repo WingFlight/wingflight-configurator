@@ -156,7 +156,7 @@
       "name": "feature-setup-wizard",
       "path": "./feature-setup-wizard/",
       "branch": "feature/setup-wizard",
-      "date": "2026-10-03T12:51:45Z",
+      "date": "2026-10-03T13:00:52Z",
       "number": 137,
       "title": "Add a Setup Wizard tab for first-time model setup",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/137",
