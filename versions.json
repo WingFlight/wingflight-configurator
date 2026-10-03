@@ -183,11 +183,7 @@
       "name": "feature-wizard-bench-note",
       "path": "./feature-wizard-bench-note/",
       "branch": "feature/wizard-bench-note",
-      "date": "2026-10-03T12:58:33Z",
-      "number": 144,
-      "title": "Explain bench I-term creep in the setup wizard",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/144",
-      "draft": false
+      "date": "2026-10-03T12:58:33Z"
     }
   ]
 }
