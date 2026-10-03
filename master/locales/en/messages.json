@@ -6380,7 +6380,7 @@
         "message": "Strength"
     },
     "profilesSnapRelaxStrengthHelp": {
-        "message": "How much roll and pitch feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation, and yaw, are not touched. 0 turns it off"
+        "message": "How much roll, pitch and yaw feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation is not touched; yaw usually lags the stick, so the rudder is only relaxed if the airframe yaws faster than asked. 0 turns it off"
     },
     "profilesSnapRelaxThreshold": {
         "message": "Stick threshold"
