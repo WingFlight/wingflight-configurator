@@ -34,8 +34,9 @@ const DETECT_RATIO = 2;
 
 // Given each channel's largest movement from its starting value so far,
 // the one channel that clearly moved, or -1 while it isn't clear yet.
-// Channels in `exclude` (already found) are ignored.
-export function movedChannel(peaks, exclude = []) {
+// Channels in `exclude` (already found) are ignored. `minUs` is lower for
+// a radio trim, which moves its channel only a little.
+export function movedChannel(peaks, exclude = [], minUs = DETECT_MIN_US) {
   let best = -1;
   let second = 0;
   for (let channel = 0; channel < peaks.length; channel++) {
@@ -48,6 +49,6 @@ export function movedChannel(peaks, exclude = []) {
       second = Math.max(second, peak);
     }
   }
-  if (best < 0 || peaks[best] < DETECT_MIN_US) return -1;
+  if (best < 0 || peaks[best] < minUs) return -1;
   return peaks[best] >= second * DETECT_RATIO ? best : -1;
 }

@@ -8518,6 +8518,105 @@
     "setupWizardOpenReceiver": {
         "message": "Open the Receiver tab"
     },
+    "setupWizardTrimGainIntro": {
+        "message": "Two things you'll want in the air on the first flights: a way to trim, and a knob to turn the stabilizer gain up or down."
+    },
+    "setupWizardTrimGainFull": {
+        "message": "Every adjustment slot is in use. Free one on the Adjustments tab."
+    },
+    "setupWizardTrimGainChannel": {
+        "message": "CH $1"
+    },
+    "setupWizardTrimGainShared": {
+        "message": "CH $1 is also used by $2. That works, but they will all move together."
+    },
+    "setupWizardTrimUse": {
+        "message": "$1 trim"
+    },
+    "setupWizardGainUse": {
+        "message": "the gain knob"
+    },
+    "setupWizardGainAxisUse": {
+        "message": "$1 gain"
+    },
+    "setupWizardModeUse": {
+        "message": "the $1 switch"
+    },
+    "setupWizardTrimGainDetect": {
+        "message": "Detect"
+    },
+    "setupWizardRecommended": {
+        "message": "Recommended"
+    },
+    "setupWizardTrimTitle": {
+        "message": "Trim"
+    },
+    "setupWizardTrimQuestion": {
+        "message": "Which radio do you fly with?"
+    },
+    "setupWizardTrimRadio_programmable": {
+        "message": "EdgeTX, OpenTX or Ethos"
+    },
+    "setupWizardTrimRadioHelp_programmable": {
+        "message": "Trim from the radio's trim buttons, sent on spare channels."
+    },
+    "setupWizardTrimRadio_other": {
+        "message": "Another radio"
+    },
+    "setupWizardTrimRadioHelp_other": {
+        "message": "Trim with the Auto trim switch."
+    },
+    "setupWizardTrimProgrammable": {
+        "message": "The flight controller needs one spare channel for each trim, moved by the roll, pitch and yaw trim buttons. How you set that up depends on your radio and model; any way works. Then click Detect and press that trim."
+    },
+    "setupWizardTrimSticksOff": {
+        "message": "Turn the trims off on the stick channels themselves. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimPress": {
+        "message": "Press and hold the $1 trim…"
+    },
+    "setupWizardTrimAuto": {
+        "message": "Use Auto trim: you'll give it a switch on the next step. Fly straight and level with it on for a few seconds, then land and disarm to keep the trim."
+    },
+    "setupWizardTrimAutoEveryone": {
+        "message": "Auto trim is on the next step for any radio, to make a trim permanent."
+    },
+    "setupWizardGainTitle": {
+        "message": "Gain"
+    },
+    "setupWizardGainText": {
+        "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Center is 100%."
+    },
+    "setupWizardGainMode_single": {
+        "message": "One knob"
+    },
+    "setupWizardGainModeHelp_single": {
+        "message": "Roll, pitch and yaw together. Simplest for first flights."
+    },
+    "setupWizardGainMode_separate": {
+        "message": "One per axis"
+    },
+    "setupWizardGainModeHelp_separate": {
+        "message": "Roll, pitch and yaw on three knobs."
+    },
+    "setupWizardGainMode_none": {
+        "message": "None"
+    },
+    "setupWizardGainModeHelp_none": {
+        "message": "No in-flight gain adjustment."
+    },
+    "setupWizardGainAllAxes": {
+        "message": "Roll, pitch and yaw"
+    },
+    "setupWizardGainTurn": {
+        "message": "Turn the knob or slider…"
+    },
+    "setupWizardGainCentre": {
+        "message": "Fly the first flight with the knob at center (100%)."
+    },
+    "setupWizardOpenAdjustments": {
+        "message": "Open the Adjustments tab"
+    },
     "setupWizardStep_airframe": {
         "message": "Airframe"
     },
@@ -8544,6 +8643,9 @@
     },
     "setupWizardStep_gyro": {
         "message": "Gyro direction"
+    },
+    "setupWizardStep_trimGain": {
+        "message": "Trim and gain"
     },
     "setupWizardStep_modes": {
         "message": "Mode switches"
@@ -9081,6 +9183,12 @@
     },
     "setupWizardModesHelp_trainer": {
         "message": "Normal rate flying inside bank and pitch limits: the stabilizer stops the model rolling or pitching past them. It doesn't level the wings for you."
+    },
+    "setupWizardModes_autoTrim": {
+        "message": "Auto trim"
+    },
+    "setupWizardModesHelp_autoTrim": {
+        "message": "Fly straight and level with it on for a few seconds, then land and disarm: the servo centers become the trimmed ones. Switch it off before disarming to cancel."
     },
     "setupWizardModesAssigned": {
         "message": "On a switch"

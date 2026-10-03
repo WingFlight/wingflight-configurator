@@ -29,6 +29,8 @@
     },
     { id: 6, key: "attHold", names: ["ATT HOLD"], icon: "fa-lock" },
     { id: 47, key: "trainer", names: ["TRAINER"], icon: "fa-graduation-cap" },
+    // See the Trim and gain step.
+    { id: 60, key: "autoTrim", names: ["AUTO TRIM"], icon: "fa-crosshairs" },
     {
       id: 12,
       key: "setup",

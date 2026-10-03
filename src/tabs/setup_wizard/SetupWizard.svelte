@@ -22,6 +22,7 @@
   import StepThrows from "./StepThrows.svelte";
   import StepTravel from "./StepTravel.svelte";
   import StepGyro from "./StepGyro.svelte";
+  import StepTrimGain from "./StepTrimGain.svelte";
   import StepModes from "./StepModes.svelte";
   import StepStyle from "./StepStyle.svelte";
   import StepFinish from "./StepFinish.svelte";
@@ -42,6 +43,7 @@
     { key: "throws", component: StepThrows },
     { key: "travel", component: StepTravel },
     { key: "gyro", component: StepGyro },
+    { key: "trimGain", component: StepTrimGain },
     { key: "modes", component: StepModes },
     { key: "style", component: StepStyle },
     { key: "finish", component: StepFinish },
@@ -111,6 +113,8 @@
       // Sent live by the Mode switches step.
       MODE_RANGES: FC.MODE_RANGES,
       MODE_RANGES_EXTRA: FC.MODE_RANGES_EXTRA,
+      // Sent live by the Trim and gain step.
+      ADJUSTMENT_RANGES: FC.ADJUSTMENT_RANGES,
     });
   }
 
@@ -125,6 +129,7 @@
     await MSP.promise(MSPCodes.MSP_BOXIDS);
     await MSP.promise(MSPCodes.MSP_MODE_RANGES);
     await MSP.promise(MSPCodes.MSP_MODE_RANGES_EXTRA);
+    await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
@@ -364,6 +369,8 @@
     FC.MODE_RANGES = snapshot.MODE_RANGES;
     FC.MODE_RANGES_EXTRA = snapshot.MODE_RANGES_EXTRA;
     await new Promise((resolve) => mspHelper.sendModeRanges(resolve));
+    FC.ADJUSTMENT_RANGES = snapshot.ADJUSTMENT_RANGES;
+    await new Promise((resolve) => mspHelper.sendAdjustmentRanges(resolve));
     FC.SERVO_CONFIG = snapshot.SERVO_CONFIG;
     FC.MIXER_INPUTS = snapshot.MIXER_INPUTS;
     FC.MIXER_RULES = snapshot.MIXER_RULES;

@@ -1,0 +1,633 @@
+<script>
+  import { getContext, onDestroy, onMount } from "svelte";
+
+  import { FC } from "@/js/fc.svelte.js";
+  import { i18n } from "@/js/i18n.js";
+  import { MSPCodes } from "@/js/msp/MSPCodes.js";
+
+  import { resetToOff } from "@/tabs/adjustments/util.js";
+
+  import AxisIcon from "./AxisIcon.svelte";
+  import KnobArt from "./KnobArt.svelte";
+  import TrimArt from "./TrimArt.svelte";
+  import { movedChannel } from "./receiver.js";
+  import {
+    GAIN_MAX,
+    GAIN_MIN,
+    MASTER_GAIN,
+    SERVO_TRIM,
+    channelOf,
+    gainMode,
+    gainRange,
+    mappedValue,
+    slotFor,
+    trimRange,
+  } from "./trimGain.js";
+
+  // Each control is found by moving it: the AUX channel that clearly moves
+  // most from where it was when Detect was clicked. Ranges are sent as soon
+  // as they are set, so the knob and trims work on the bench straight away;
+  // Save writes them to EEPROM.
+  const wiz = getContext("setupWizard");
+
+  const AXES = ["roll", "pitch", "yaw"];
+  const AUX_OFFSET = 4; // AUX1 is the fifth channel
+  const LISTEN_MS = 15000;
+  // A trim button moves its channel a little at a time; a knob a long way.
+  const MOVE_US = { trim: 40, gain: 250 };
+
+  let poller;
+  let polling = false;
+  let listening = $state(null); // { kind: "trim" | "gain", axis }
+  let start = [];
+  let peaks = [];
+  let listenTimer;
+
+  onMount(() => {
+    poller = setInterval(async () => {
+      if (polling) return;
+      polling = true;
+      await MSP.promise(MSPCodes.MSP_RC);
+      polling = false;
+      if (listening) detect();
+    }, 100);
+  });
+
+  onDestroy(() => {
+    clearInterval(poller);
+    clearTimeout(listenTimer);
+  });
+
+  function auxValues() {
+    return FC.RC.channels.slice(AUX_OFFSET, FC.RC.active_channels);
+  }
+
+  function auxValue(aux) {
+    return aux === null ? null : (FC.RC.channels[AUX_OFFSET + aux] ?? null);
+  }
+
+  function listen(kind, axis = null) {
+    clearTimeout(listenTimer);
+    start = auxValues();
+    peaks = start.map(() => 0);
+    listening = { kind, axis };
+    listenTimer = setTimeout(() => (listening = null), LISTEN_MS);
+  }
+
+  function cancel() {
+    clearTimeout(listenTimer);
+    listening = null;
+  }
+
+  function isListening(kind, axis = null) {
+    return listening?.kind === kind && listening?.axis === axis;
+  }
+
+  async function detect() {
+    const now = auxValues();
+    peaks = peaks.map((p, i) =>
+      Math.max(p, Math.abs((now[i] ?? 0) - (start[i] ?? 0))),
+    );
+    const aux = movedChannel(peaks, [], MOVE_US[listening.kind]);
+    if (aux < 0) return;
+    const { kind, axis } = listening;
+    cancel();
+    if (kind === "trim") {
+      await writeRange(trimRange(axis, aux));
+    } else if (axis) {
+      await writeRange(gainRange(axis, aux));
+    } else {
+      for (const a of AXES) await writeRange(gainRange(a, aux));
+    }
+  }
+
+  //// Adjustment slots.
+
+  let ranges = $derived(FC.ADJUSTMENT_RANGES ?? []);
+  let full = $state(false);
+
+  async function writeRange(range) {
+    const index = slotFor(FC.ADJUSTMENT_RANGES, range.adjFunction);
+    if (index < 0) {
+      full = true;
+      return;
+    }
+    FC.ADJUSTMENT_RANGES[index] = range;
+    await sendSlot(index);
+  }
+
+  async function removeFunction(adjFunction) {
+    const index = FC.ADJUSTMENT_RANGES.findIndex(
+      (r) => r?.adjFunction === adjFunction,
+    );
+    if (index < 0) return;
+    resetToOff(FC.ADJUSTMENT_RANGES[index]);
+    await sendSlot(index);
+  }
+
+  async function sendSlot(index) {
+    await new Promise((resolve) =>
+      mspHelper.sendAdjustmentRange(index, resolve),
+    );
+    wiz.markChanged();
+  }
+
+  function rangeOf(adjFunction) {
+    return ranges.find((r) => r?.adjFunction === adjFunction) ?? null;
+  }
+
+  // Live value of a mapped range, from where its channel is now.
+  function liveValue(adjFunction) {
+    const range = rangeOf(adjFunction);
+    const position = range ? auxValue(range.adjChannel) : null;
+    return position ? mappedValue(range, position) : null;
+  }
+
+  //// Trim.
+
+  let radio = $state(
+    AXES.some(
+      (a) => channelOf(FC.ADJUSTMENT_RANGES ?? [], SERVO_TRIM[a]) !== null,
+    )
+      ? "programmable"
+      : null,
+  );
+
+  async function chooseRadio(value) {
+    radio = value;
+    cancel();
+    // Trims from channels only make sense on a radio that can send them.
+    if (value === "other") {
+      for (const a of AXES) await removeFunction(SERVO_TRIM[a]);
+    }
+  }
+
+  //// Gain.
+
+  let mode = $state(gainMode(FC.ADJUSTMENT_RANGES ?? []));
+
+  async function chooseMode(value) {
+    if (mode === value) return;
+    cancel();
+    const was = mode;
+    mode = value;
+    if (value === "none") {
+      for (const a of AXES) await removeFunction(MASTER_GAIN[a]);
+    } else if (value === "single" && was === "separate") {
+      // Keep the roll knob for all three.
+      const aux = channelOf(FC.ADJUSTMENT_RANGES, MASTER_GAIN.roll);
+      if (aux !== null) {
+        for (const a of AXES) await writeRange(gainRange(a, aux));
+      }
+    }
+  }
+
+  let singleChannel = $derived(channelOf(ranges, MASTER_GAIN.roll));
+
+  //// Shared channels. Allowed (it is the user's radio), but flagged: two
+  //// trims on one channel move together, and a trim or knob on a switch
+  //// channel changes whenever that switch is flicked.
+
+  function axisName(axis) {
+    return $i18n.t(`setupWizardAxis_${axis}`);
+  }
+
+  let users = $derived.by(() => {
+    const list = [];
+    if (radio === "programmable") {
+      for (const axis of AXES) {
+        list.push({
+          key: `trim-${axis}`,
+          label: $i18n.t("setupWizardTrimUse", { 1: axisName(axis) }),
+          aux: channelOf(ranges, SERVO_TRIM[axis]),
+        });
+      }
+    }
+    if (mode === "single") {
+      list.push({
+        key: "gain",
+        label: $i18n.t("setupWizardGainUse"),
+        aux: singleChannel,
+      });
+    } else if (mode === "separate") {
+      for (const axis of AXES) {
+        list.push({
+          key: `gain-${axis}`,
+          label: $i18n.t("setupWizardGainAxisUse", { 1: axisName(axis) }),
+          aux: channelOf(ranges, MASTER_GAIN[axis]),
+        });
+      }
+    }
+    (FC.MODE_RANGES ?? []).forEach((r, i) => {
+      if (!(r.range.start < r.range.end)) return;
+      const box = FC.AUX_CONFIG_IDS?.indexOf(r.id) ?? -1;
+      list.push({
+        key: `mode-${i}`,
+        label: $i18n.t("setupWizardModeUse", {
+          1: box >= 0 ? FC.AUX_CONFIG[box] : r.id,
+        }),
+        aux: r.auxChannelIndex,
+      });
+    });
+    return list.filter((u) => u.aux !== null);
+  });
+
+  // The other things on the same channel as `key`, by name (each once).
+  function sharedWith(key) {
+    const own = users.find((u) => u.key === key);
+    if (!own) return [];
+    const labels = users
+      .filter((u) => u.key !== key && u.aux === own.aux)
+      .map((u) => u.label);
+    return [...new Set(labels)];
+  }
+</script>
+
+{#snippet channelRow(kind, axis, adjFunction, unit)}
+  {@const aux = channelOf(ranges, adjFunction)}
+  {@const value = liveValue(adjFunction)}
+  {@const shared =
+    aux === null ? [] : sharedWith(axis ? `${kind}-${axis}` : kind)}
+  <li
+    class={[
+      "row",
+      isListening(kind, axis) && "listening",
+      shared.length > 0 && "shared",
+    ]}
+  >
+    {#if axis}
+      <AxisIcon {axis} size={28} />
+      <span class="row-name">{$i18n.t(`setupWizardAxis_${axis}`)}</span>
+    {:else}
+      <span class="row-name">{$i18n.t("setupWizardGainAllAxes")}</span>
+    {/if}
+    <span class="row-state">
+      {#if isListening(kind, axis)}
+        <span class="prompt">
+          {kind === "trim"
+            ? $i18n.t("setupWizardTrimPress", {
+                1: $i18n.t(`setupWizardAxis_${axis}`),
+              })
+            : $i18n.t("setupWizardGainTurn")}
+        </span>
+        <button class="btn" onclick={cancel}>{$i18n.t("cancel")}</button>
+      {:else if aux !== null}
+        <span class="assigned">
+          {$i18n.t("setupWizardTrimGainChannel", { 1: aux + 5 })}
+          {#if value !== null}
+            <span class="value"
+              >{value > 0 && unit === "µs" ? "+" : ""}{value}{unit}</span
+            >
+          {/if}
+        </span>
+        <button class="btn" onclick={() => listen(kind, axis)}>
+          {$i18n.t("setupWizardModesChange")}
+        </button>
+      {:else}
+        <span class="muted">{$i18n.t("setupWizardModesNotAssigned")}</span>
+        <button class="btn" onclick={() => listen(kind, axis)}>
+          {$i18n.t("setupWizardTrimGainDetect")}
+        </button>
+      {/if}
+    </span>
+    {#if shared.length > 0 && !isListening(kind, axis)}
+      <span class="shared-text">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+        {$i18n.t("setupWizardTrimGainShared", {
+          1: aux + 5,
+          2: shared.join(", "),
+        })}
+      </span>
+    {/if}
+  </li>
+{/snippet}
+
+<p>{$i18n.t("setupWizardTrimGainIntro")}</p>
+
+{#if full}
+  <div class="note">{$i18n.t("setupWizardTrimGainFull")}</div>
+{/if}
+
+<!-- Trim -->
+<section class="card">
+  <div class="card-head">
+    <TrimArt />
+    <div class="card-text">
+      <h3>{$i18n.t("setupWizardTrimTitle")}</h3>
+      <span class="muted">{$i18n.t("setupWizardTrimQuestion")}</span>
+    </div>
+  </div>
+
+  <div class="tiles" role="radiogroup">
+    {#each ["programmable", "other"] as value (value)}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={radio === value}
+        class={["tile", radio === value && "selected"]}
+        onclick={() => chooseRadio(value)}
+      >
+        <span class="tile-name">
+          {$i18n.t(`setupWizardTrimRadio_${value}`)}
+          {#if radio === value}
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+          {/if}
+        </span>
+        <span class="muted">{$i18n.t(`setupWizardTrimRadioHelp_${value}`)}</span
+        >
+      </button>
+    {/each}
+  </div>
+
+  {#if radio === "programmable"}
+    <p>{$i18n.t("setupWizardTrimProgrammable")}</p>
+    <div class="note">{$i18n.t("setupWizardTrimSticksOff")}</div>
+    <ul class="rows">
+      {#each AXES as axis (axis)}
+        {@render channelRow("trim", axis, SERVO_TRIM[axis], "µs")}
+      {/each}
+    </ul>
+  {:else if radio === "other"}
+    <p>{$i18n.t("setupWizardTrimAuto")}</p>
+  {/if}
+  {#if radio}
+    <p class="muted">{$i18n.t("setupWizardTrimAutoEveryone")}</p>
+  {/if}
+</section>
+
+<!-- Gain -->
+<section class="card">
+  <div class="card-head">
+    <KnobArt
+      value={liveValue(MASTER_GAIN.roll) ?? 100}
+      min={GAIN_MIN}
+      max={GAIN_MAX}
+    />
+    <div class="card-text">
+      <h3>{$i18n.t("setupWizardGainTitle")}</h3>
+      <span class="muted">{$i18n.t("setupWizardGainText")}</span>
+    </div>
+  </div>
+
+  <div class="tiles three" role="radiogroup">
+    {#each ["single", "separate", "none"] as value (value)}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={mode === value}
+        class={["tile", mode === value && "selected"]}
+        onclick={() => chooseMode(value)}
+      >
+        <span class="tile-name">
+          {$i18n.t(`setupWizardGainMode_${value}`)}
+          {#if mode === value}
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+          {/if}
+        </span>
+        {#if value === "single"}
+          <span class="tag">{$i18n.t("setupWizardRecommended")}</span>
+        {/if}
+        <span class="muted">{$i18n.t(`setupWizardGainModeHelp_${value}`)}</span>
+      </button>
+    {/each}
+  </div>
+
+  {#if mode === "single"}
+    <ul class="rows">
+      {@render channelRow("gain", null, MASTER_GAIN.roll, "%")}
+    </ul>
+    {#if singleChannel !== null}
+      <p class="muted">{$i18n.t("setupWizardGainCentre")}</p>
+    {/if}
+  {:else if mode === "separate"}
+    <ul class="rows">
+      {#each AXES as axis (axis)}
+        {@render channelRow("gain", axis, MASTER_GAIN[axis], "%")}
+      {/each}
+    </ul>
+    <p class="muted">{$i18n.t("setupWizardGainCentre")}</p>
+  {/if}
+</section>
+
+<div>
+  <button class="btn" onclick={() => wiz.openTab("adjustments")}>
+    {$i18n.t("setupWizardOpenAdjustments")}
+  </button>
+</div>
+
+<style lang="scss">
+  .btn {
+    @extend %button;
+  }
+
+  p {
+    margin: 0;
+    max-width: 70ch;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+  }
+
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+  }
+
+  .card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 260px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.05em;
+    font-weight: 700;
+  }
+
+  //// Choice tiles.
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+
+    &.three {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed),
+      box-shadow var(--animation-speed);
+
+    &:hover {
+      border-color: var(--color-border);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
+    &.selected {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+
+    i {
+      color: var(--color-accent-500);
+    }
+  }
+
+  .tile-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+  }
+
+  .tag {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent-500);
+    color: var(--color-accent-fg);
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+
+  //// One row per control.
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    transition: border-color var(--animation-speed);
+
+    &.listening {
+      border-color: var(--color-accent-500);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+
+    &.shared:not(.listening) {
+      border-color: var(--color-yellow-500);
+    }
+  }
+
+  // Full width, under the row's name and channel.
+  .shared-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-basis: 100%;
+    color: var(--color-yellow-500);
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+
+  .row-name {
+    min-width: 6em;
+    font-weight: 600;
+  }
+
+  .row-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-left: auto;
+  }
+
+  .assigned {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value {
+    min-width: 5ch;
+    padding: 1px 8px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent-500);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .prompt {
+    font-weight: 600;
+    animation: waiting 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes waiting {
+    from {
+      opacity: 0.45;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prompt {
+      animation: none;
+    }
+  }
+
+  .note {
+    padding: 10px 14px;
+    border: 1px solid var(--color-yellow-500);
+    border-radius: var(--radius-sm);
+    background-color: color-mix(
+      in srgb,
+      var(--color-yellow-500) 10%,
+      transparent
+    );
+  }
+
+  .muted {
+    color: var(--color-text-soft);
+    font-size: 0.9em;
+  }
+</style>
