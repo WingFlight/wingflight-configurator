@@ -8410,6 +8410,114 @@
     "setupWizardStep_sensors": {
         "message": "Sensors and level"
     },
+    "setupWizardStep_receiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverIntro": {
+        "message": "Tell the flight controller where the receiver is plugged in and how it talks, then check every stick reaches it the right way round. Turn the radio on."
+    },
+    "setupWizardReceiverPortTitle": {
+        "message": "Port the receiver is plugged into"
+    },
+    "setupWizardReceiverPortReceiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverPortFree": {
+        "message": "Free"
+    },
+    "setupWizardReceiverPortInUse": {
+        "message": "In use: $1"
+    },
+    "setupWizardReceiverPortNone": {
+        "message": "No port is set for the receiver yet. Choose a free one; ports in use for something else can be changed on the Configuration tab."
+    },
+    "setupWizardReceiverProtocolTitle": {
+        "message": "Protocol"
+    },
+    "setupWizardReceiverProtocolPick": {
+        "message": "Choose a protocol"
+    },
+    "setupWizardReceiverProtocolHelp": {
+        "message": "ExpressLRS and Crossfire use TBS CRSF."
+    },
+    "setupWizardReceiverSignalTitle": {
+        "message": "Signal"
+    },
+    "setupWizardReceiverLinkUp": {
+        "message": "Receiving"
+    },
+    "setupWizardReceiverLinkDown": {
+        "message": "No signal"
+    },
+    "setupWizardReceiverSignalText": {
+        "message": "With the radio on and bound, the receiver should show as receiving. If it doesn't, Detect wiring tries the inverted, half-duplex and pin-swap settings until one works."
+    },
+    "setupWizardReceiverSaveFirst": {
+        "message": "Save and reboot first."
+    },
+    "setupWizardReceiverChannelsTitle": {
+        "message": "Channel order and direction"
+    },
+    "setupWizardReceiverOrder_aetr": {
+        "message": "AETR"
+    },
+    "setupWizardReceiverOrderHelp_aetr": {
+        "message": "Aileron, elevator, throttle, rudder. ExpressLRS, Crossfire, FrSky, Futaba, Jeti."
+    },
+    "setupWizardReceiverOrder_taer": {
+        "message": "TAER"
+    },
+    "setupWizardReceiverOrderHelp_taer": {
+        "message": "Throttle, aileron, elevator, rudder. Spektrum, Graupner, JR."
+    },
+    "setupWizardReceiverOrder_custom": {
+        "message": "Detect"
+    },
+    "setupWizardReceiverOrderHelp_custom": {
+        "message": "Any other order: move each stick in turn and the wizard finds its channel."
+    },
+    "setupWizardReceiverDetectTitle": {
+        "message": "Move each one in turn, all the way, and leave the others still."
+    },
+    "setupWizardReceiverDetect_roll": {
+        "message": "Move roll (aileron)"
+    },
+    "setupWizardReceiverDetect_pitch": {
+        "message": "Move pitch (elevator)"
+    },
+    "setupWizardReceiverDetect_yaw": {
+        "message": "Move yaw (rudder)"
+    },
+    "setupWizardReceiverDetect_throttle": {
+        "message": "Move throttle"
+    },
+    "setupWizardReceiverDetectWaiting": {
+        "message": "Waiting…"
+    },
+    "setupWizardReceiverDetectRestart": {
+        "message": "Start again"
+    },
+    "setupWizardReceiverCheckTitle": {
+        "message": "Put both sticks in the bottom-left corner"
+    },
+    "setupWizardReceiverCheckText": {
+        "message": "Throttle and elevator down, aileron and rudder left. Every bar below should go to the left."
+    },
+    "setupWizardReceiverChannel": {
+        "message": "Ch $1"
+    },
+    "setupWizardReceiverCheckOk": {
+        "message": "All four are the right way round."
+    },
+    "setupWizardReceiverCheckReversed": {
+        "message": "A bar going to the right is reversed. Reverse that channel in your radio, not here."
+    },
+    "setupWizardReceiverCheckWrongBar": {
+        "message": "If moving one stick moves a different bar, choose the other order or use Detect."
+    },
+    "setupWizardOpenReceiver": {
+        "message": "Open the Receiver tab"
+    },
     "setupWizardStep_airframe": {
         "message": "Airframe"
     },

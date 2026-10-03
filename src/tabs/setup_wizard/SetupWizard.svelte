@@ -12,6 +12,7 @@
 
   import { surfacesFromRules, AXES } from "./surfaces.js";
   import StepSensors from "./StepSensors.svelte";
+  import StepReceiver from "./StepReceiver.svelte";
   import StepAirframe from "./StepAirframe.svelte";
   import StepServoType from "./StepServoType.svelte";
   import StepMotor from "./StepMotor.svelte";
@@ -30,6 +31,8 @@
   // throws before the tune). See the "Set Up Your Aircraft" docs page.
   const STEPS = [
     { key: "sensors", component: StepSensors },
+    // Before anything that uses the sticks or the SETUP switch.
+    { key: "receiver", component: StepReceiver },
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
     { key: "motor", component: StepMotor },
@@ -62,8 +65,11 @@
 
   function readStoredStep() {
     try {
-      const value = parseInt(localStorage.getItem(STEP_STORAGE_KEY), 10);
-      return value >= 0 && value < STEPS.length ? value : 0;
+      // Stored by key, so adding a step doesn't move a saved position.
+      const index = STEPS.findIndex(
+        (s) => s.key === localStorage.getItem(STEP_STORAGE_KEY),
+      );
+      return Math.max(index, 0);
     } catch {
       return 0;
     }
@@ -71,7 +77,7 @@
 
   function storeStep(index) {
     try {
-      localStorage.setItem(STEP_STORAGE_KEY, String(index));
+      localStorage.setItem(STEP_STORAGE_KEY, STEPS[index].key);
     } catch {
       // Remembering the step is a convenience only.
     }
