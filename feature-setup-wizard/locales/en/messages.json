@@ -6383,7 +6383,7 @@
         "message": "Strength"
     },
     "profilesSnapRelaxStrengthHelp": {
-        "message": "How much roll and pitch feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation, and yaw, are not touched. 0 turns it off"
+        "message": "How much roll, pitch and yaw feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation is not touched; yaw usually lags the stick, so the rudder is only relaxed if the airframe yaws faster than asked. 0 turns it off"
     },
     "profilesSnapRelaxThreshold": {
         "message": "Stick threshold"
@@ -6402,6 +6402,27 @@
     },
     "profilesSnapRelaxHoldHelp": {
         "message": "Time over which full feedback returns after any of the three sticks drops below the threshold. Reversing the stick against the snap brings full feedback back at once"
+    },
+    "profilesPropHangGroup": {
+        "message": "Prop-hang relax"
+    },
+    "profilesPropHangStrength": {
+        "message": "Strength"
+    },
+    "profilesPropHangStrengthHelp": {
+        "message": "How much the roll I-term is held back in a prop hang, so the prop torque can roll the model instead of the gyro holding it still. P and the stick still work, so you can stop the roll or correct a gust. Roll only. Needs an altitude estimate (a barometer) to tell a hang from an up-line. 0 turns it off"
+    },
+    "profilesPropHangAngle": {
+        "message": "Angle"
+    },
+    "profilesPropHangAngleHelp": {
+        "message": "How far the nose can be from straight up and still count as a hang. The model must also be neither climbing nor sinking faster than 2 m/s, for half a second"
+    },
+    "profilesPropHangFade": {
+        "message": "Fade-out"
+    },
+    "profilesPropHangFadeHelp": {
+        "message": "Time over which the roll I-term comes back after the hang ends"
     },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
