@@ -8,6 +8,11 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 
+import { getAppIdentity } from "./release-channel.mjs";
+
+// Each release line installs as an app of its own; see release-channel.mjs.
+const identity = getAppIdentity(pkg);
+
 const commitHash = child_process
   .execSync("git rev-parse --short HEAD")
   .toString()
@@ -380,6 +385,28 @@ export default defineConfig({
       },
     },
     {
+      // Each deployed directory is an installable app of its own. Name it
+      // after its release line so installed versions can be told apart, and
+      // pin its id to its directory.
+      name: "stamp-manifest",
+      apply: "build",
+      async writeBundle() {
+        if (backend !== "web") {
+          return;
+        }
+
+        const manifestPath = path.resolve("bundle", "manifest.webmanifest");
+        const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+        manifest.id = basePath;
+        manifest.name = identity.productName;
+        manifest.short_name = `${manifest.short_name} ${identity.channel}`;
+        await fs.writeFile(
+          manifestPath,
+          `${JSON.stringify(manifest, undefined, 2)}\n`,
+        );
+      },
+    },
+    {
       name: "rewrite-public-asset-urls",
       apply: "build",
       async writeBundle(_, bundle) {
@@ -444,6 +471,8 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_CHANNEL__: JSON.stringify(identity.channel),
+    __APP_PRODUCT_NAME__: JSON.stringify(identity.productName),
     __BUILD_LABEL__: JSON.stringify(buildLabel),
     __BACKEND__: JSON.stringify(backend),
     __COMMIT_HASH__: JSON.stringify(commitHash),

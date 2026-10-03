@@ -3,20 +3,27 @@
 ; ------------------------------------------
 ; It receives from the command line with /D the parameters:
 ; version
+; channel (the release line, e.g. 2.3, or dev; see release-channel.mjs)
 ; archName
 ; archAllowed
 ; archInstallIn64bit
 ; sourceFolder
 ; targetFolder
 
-#define ApplicationName "Wingflight Configurator"
+; Every release line installs side by side with the others: it has its own
+; AppId, folder and shortcuts, and only replaces an install of the same line.
+#if channel == "dev"
+  #define ApplicationName "Wingflight Configurator (dev)"
+#else
+  #define ApplicationName "Wingflight Configurator " + channel
+#endif
 #define CompanyName "The Wingflight open source project"
 #define CompanyUrl "https://github.com/WingFlight/"
 #define ExecutableFileName "wingflight-configurator.exe"
 #define GroupName "Wingflight"
 #define InstallerFileName "wingflight-configurator-installer_" + version + "_" + archName
 #define SourcePath "..\..\" + sourceFolder
-#define TargetFolderName "Wingflight-Configurator"
+#define TargetFolderName "Wingflight-Configurator-" + channel
 #define UpdatesUrl "https://github.com/WingFlight/wingflight-configurator/releases"
 
 [CustomMessages]
@@ -69,7 +76,7 @@ Filename: "pnputil.exe"; Parameters: "/add-driver ""{tmp}\stm32\STM32Bootloader.
 Filename: {app}\{cm:AppName}.exe; Description: {cm:LaunchProgram,{cm:AppName}}; Flags: nowait postinstall skipifsilent
 
 [Setup]
-AppId=6f661762-2cb0-46b3-9261-596d6eadf7d4
+AppId=wingflight-configurator-{#channel}
 AppName={#ApplicationName}
 AppPublisher={#CompanyName}
 AppPublisherURL={#CompanyUrl}
