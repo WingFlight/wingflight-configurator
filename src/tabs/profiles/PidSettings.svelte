@@ -135,6 +135,45 @@
     </SubSection>
   {/if}
 
+  {#if FC.PID_PROFILE.hasPropHang}
+    <SubSection label="profilesPropHangGroup">
+      <Field id="prop-hang-strength" label="profilesPropHangStrength" unit="%">
+        {#snippet tooltip()}
+          {$i18n.t("profilesPropHangStrengthHelp")}
+        {/snippet}
+        <NumberInput
+          id="prop-hang-strength"
+          min="0"
+          max="100"
+          bind:value={FC.PID_PROFILE.propHangStrength}
+        />
+      </Field>
+      <Field id="prop-hang-angle" label="profilesPropHangAngle" unit="°">
+        {#snippet tooltip()}
+          {$i18n.t("profilesPropHangAngleHelp")}
+        {/snippet}
+        <NumberInput
+          id="prop-hang-angle"
+          min="5"
+          max="45"
+          bind:value={FC.PID_PROFILE.propHangAngle}
+        />
+      </Field>
+      <Field id="prop-hang-fade" label="profilesPropHangFade" unit="ms">
+        {#snippet tooltip()}
+          {$i18n.t("profilesPropHangFadeHelp")}
+        {/snippet}
+        <NumberInput
+          id="prop-hang-fade"
+          min="0"
+          max="2000"
+          step="50"
+          bind:value={FC.PID_PROFILE.propHangFade}
+        />
+      </Field>
+    </SubSection>
+  {/if}
+
   <SubSection label="profilesItermRelaxLevelGroup">
     <Field id="iterm-relax-level-roll" label="profilesItermRelaxLevelRoll">
       {#snippet tooltip()}

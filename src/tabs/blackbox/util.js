@@ -133,6 +133,7 @@ export function getDebugModes() {
     "TVHOLD",
     "GAIN_ATTEN",
     "SNAP_RELAX",
+    "PROP_HANG",
   ];
 }
 
