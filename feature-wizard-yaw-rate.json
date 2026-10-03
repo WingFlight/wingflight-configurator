@@ -1,0 +1,8 @@
+{
+  "branch": "feature/wizard-yaw-rate",
+  "date": "2026-10-03T13:06:07Z",
+  "number": 145,
+  "title": "Give yaw its own rate in the setup wizard's flying styles",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/145",
+  "draft": false
+}
