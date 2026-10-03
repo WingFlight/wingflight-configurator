@@ -183,11 +183,7 @@
       "name": "feature-snap-yaw",
       "path": "./feature-snap-yaw/",
       "branch": "feature/snap-yaw",
-      "date": "2026-10-03T15:54:59Z",
-      "number": 148,
-      "title": "Say snap relax covers yaw in its help text",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/148",
-      "draft": false
+      "date": "2026-10-03T15:54:59Z"
     },
     {
       "type": "branch",
