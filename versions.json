@@ -180,13 +180,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-snap-yaw",
-      "path": "./feature-snap-yaw/",
-      "branch": "feature/snap-yaw",
-      "date": "2026-10-03T15:54:59Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-yaw-rate",
       "path": "./feature-wizard-yaw-rate/",
       "branch": "feature/wizard-yaw-rate",
