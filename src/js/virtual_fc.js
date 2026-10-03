@@ -97,6 +97,11 @@ function defaultPidSlot() {
       snapRelaxThreshold: 60,
       snapRelaxWindow: 400,
       snapRelaxHold: 350,
+      // Prop-hang relax (roll I held back in a prop hang)
+      hasPropHang: true,
+      propHangStrength: 100,
+      propHangAngle: 20,
+      propHangFade: 500,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,
