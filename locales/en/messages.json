@@ -428,10 +428,13 @@
         "message": "Status"
     },
     "tabSetup": {
-        "message": "Setup"
+        "message": "Maintenance"
     },
     "tabSetupWizard": {
         "message": "Setup Wizard"
+    },
+    "tabWizard": {
+        "message": "Wizard"
     },
     "tabConfiguration": {
         "message": "Configuration"
