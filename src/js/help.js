@@ -14,6 +14,7 @@ const tabHelpURLs = {
 
     tabStatus:          `${docsBaseURL}/configurator/tabs/status/`,
     tabSetup:           `${docsBaseURL}/configurator/tabs/setup/`,
+    tabSetupWizard:     `${docsBaseURL}/getting-started/aircraft-setup/`,
     tabConfiguration:   `${docsBaseURL}/configurator/tabs/configuration/`,
     tabPower:           `${docsBaseURL}/configurator/tabs/power/`,
     tabReceiver:        `${docsBaseURL}/configurator/tabs/receiver/`,

@@ -19,6 +19,9 @@ export const GuiControl = function () {
     this.current_tab = null;
     this.tab_switch_in_progress = false;
     this.reboot_in_progress = false;
+    // One-shot: the tab to reopen on the next connect, set by a tab that
+    // reboots the FC and wants the user back where they were.
+    this.tabAfterReboot = null;
     this.operating_system = null;
     this.interval_array = [];
     this.timeout_array = [];
@@ -33,6 +36,7 @@ export const GuiControl = function () {
     this.defaultAllowedFCTabsWhenConnected = [
         'status',
         'setup',
+        'setup_wizard',
         'failsafe',
         'power',
         'adjustments',
@@ -473,7 +477,11 @@ GuiControl.prototype.saveDefaultTab = function(tabName) {
 
 GuiControl.prototype.selectDefaultTabWhenConnected = function() {
     const lastTab = config.get('lastTab');
-    if (config.get('rememberLastTab') && lastTab) {
+    if (this.tabAfterReboot) {
+        const tab = this.tabAfterReboot;
+        this.tabAfterReboot = null;
+        $(`#tabs ul.mode-connected .tab_${tab} a`).click();
+    } else if (config.get('rememberLastTab') && lastTab) {
         $(`#tabs ul.mode-connected .tab_${lastTab} a`).click();
     } else {
         $('#tabs ul.mode-connected .tab_status a').click();

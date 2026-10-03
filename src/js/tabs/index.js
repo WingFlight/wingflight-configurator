@@ -31,5 +31,6 @@ import "./remap_fc.js";
 import "./sensors.js";
 import "./servos.js";
 import "./setup.js";
+import "./setup_wizard.js";
 import "./status.js";
 import "./thrust_vector.js";
