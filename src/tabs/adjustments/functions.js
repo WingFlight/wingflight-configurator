@@ -9,6 +9,11 @@ import { i18n } from '@/js/localization.js';
 // collective/governor/cross-coupling carried over from this firmware's
 // Rotorflight lineage) - selecting one is silently inert, not dangerous,
 // but does nothing on wingflight.
+//
+// `defaultMin`/`defaultMax`, where set, are the value range a newly picked
+// function starts with instead of the full min..max. Master gain spans
+// 25-1000%, so a pot mapped across all of it sits at 512% when centred and
+// multiplies every P and I term by five; 50-150 puts the centre at 100%.
 export function getFunctions() {
     return [
         { id: 0,    name: 'None',                       min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ] },
@@ -95,17 +100,17 @@ export function getFunctions() {
         { id: 81,   name: 'GovYawFF',                   min: 0,     max: 250,    ticks: 10,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 82,   name: 'BatteryProfile',             min: 1,     max: 6,      ticks: 0.25, pips: [ 1, 2, 3, 4, 5, 6 ] },
         { id: 83,   name: 'Reserved',                   min: 0,     max: 100,    ticks: 10,   pips: [ 0, 20, 40, 60, 80, 100 ], hide: true },
-        { id: 84,   name: 'MasterGainPitch',            min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
-        { id: 85,   name: 'MasterGainRoll',             min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
-        { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
+        { id: 84,   name: 'MasterGainPitch',            min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
+        { id: 85,   name: 'MasterGainRoll',             min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
+        { id: 86,   name: 'MasterGainYaw',              min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
         { id: 87,   name: 'Reserved',                   min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ], hide: true },
         { id: 88,   name: 'AttHoldGain',                min: 0,     max: 250,    ticks: 25,   pips: [ 0, 50, 100, 150, 200, 250 ] },
         { id: 89,   name: 'ServoTrimRoll',              min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
         { id: 90,   name: 'ServoTrimPitch',             min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
         { id: 91,   name: 'ServoTrimYaw',               min: -200,  max: 200,    ticks: 10,   pips: [ -200, -100, 0, 100, 200 ] },
-        { id: 92,   name: 'TVMasterGainRoll',           min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
-        { id: 93,   name: 'TVMasterGainPitch',          min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
-        { id: 94,   name: 'TVMasterGainYaw',            min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ] },
+        { id: 92,   name: 'TVMasterGainRoll',           min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
+        { id: 93,   name: 'TVMasterGainPitch',          min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
+        { id: 94,   name: 'TVMasterGainYaw',            min: 25,    max: 1000,   ticks: 50,   pips: [ 25, 200, 400, 600, 800, 1000 ], defaultMin: 50, defaultMax: 150 },
         { id: 95,   name: 'TVRollP',                    min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 96,   name: 'TVRollI',                    min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
         { id: 97,   name: 'TVRollD',                    min: 0,     max: 1000,   ticks: 50,   pips: [ 0, 200, 400, 600, 800, 1000 ] },
