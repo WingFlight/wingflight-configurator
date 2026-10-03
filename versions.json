@@ -118,6 +118,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-adj-gain-range",
+      "path": "./feature-adj-gain-range/",
+      "branch": "feature/adj-gain-range",
+      "date": "2026-10-03T13:38:50Z",
+      "number": 146,
+      "title": "Start master gain adjustments at 50-150% instead of 25-1000%",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/146",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
