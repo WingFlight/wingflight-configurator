@@ -428,10 +428,13 @@
         "message": "Status"
     },
     "tabSetup": {
-        "message": "Setup"
+        "message": "Maintenance"
     },
     "tabSetupWizard": {
         "message": "Setup Wizard"
+    },
+    "tabWizard": {
+        "message": "Wizard"
     },
     "tabConfiguration": {
         "message": "Configuration"
@@ -8407,6 +8410,213 @@
     "setupWizardStep_sensors": {
         "message": "Sensors and level"
     },
+    "setupWizardStep_receiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverIntro": {
+        "message": "Tell the flight controller where the receiver is plugged in and how it talks, then check every stick reaches it the right way round. Turn the radio on."
+    },
+    "setupWizardReceiverPortTitle": {
+        "message": "Port the receiver is plugged into"
+    },
+    "setupWizardReceiverPortReceiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverPortFree": {
+        "message": "Free"
+    },
+    "setupWizardReceiverPortInUse": {
+        "message": "In use: $1"
+    },
+    "setupWizardReceiverPortNone": {
+        "message": "No port is set for the receiver yet. Choose a free one; ports in use for something else can be changed on the Configuration tab."
+    },
+    "setupWizardReceiverProtocolTitle": {
+        "message": "Protocol"
+    },
+    "setupWizardReceiverProtocolPick": {
+        "message": "Choose a protocol"
+    },
+    "setupWizardReceiverProtocolHelp": {
+        "message": "ExpressLRS and Crossfire use TBS CRSF."
+    },
+    "setupWizardReceiverSignalTitle": {
+        "message": "Signal"
+    },
+    "setupWizardReceiverLinkUp": {
+        "message": "Receiving"
+    },
+    "setupWizardReceiverLinkDown": {
+        "message": "No signal"
+    },
+    "setupWizardReceiverSignalText": {
+        "message": "With the radio on and bound, the receiver should show as receiving. If it doesn't, Detect wiring tries the inverted, half-duplex and pin-swap settings until one works."
+    },
+    "setupWizardReceiverSaveFirst": {
+        "message": "Save and reboot first."
+    },
+    "setupWizardReceiverChannelsTitle": {
+        "message": "Channel order and direction"
+    },
+    "setupWizardReceiverOrder_aetr": {
+        "message": "AETR"
+    },
+    "setupWizardReceiverOrderHelp_aetr": {
+        "message": "Aileron, elevator, throttle, rudder. ExpressLRS, Crossfire, FrSky, Futaba, Jeti."
+    },
+    "setupWizardReceiverOrder_taer": {
+        "message": "TAER"
+    },
+    "setupWizardReceiverOrderHelp_taer": {
+        "message": "Throttle, aileron, elevator, rudder. Spektrum, Graupner, JR."
+    },
+    "setupWizardReceiverOrder_custom": {
+        "message": "Detect"
+    },
+    "setupWizardReceiverOrderHelp_custom": {
+        "message": "Any other order: move each stick in turn and the wizard finds its channel."
+    },
+    "setupWizardReceiverDetectTitle": {
+        "message": "Move each one in turn, all the way, and leave the others still."
+    },
+    "setupWizardReceiverDetect_roll": {
+        "message": "Move roll (aileron)"
+    },
+    "setupWizardReceiverDetect_pitch": {
+        "message": "Move pitch (elevator)"
+    },
+    "setupWizardReceiverDetect_yaw": {
+        "message": "Move yaw (rudder)"
+    },
+    "setupWizardReceiverDetect_throttle": {
+        "message": "Move throttle"
+    },
+    "setupWizardReceiverDetectWaiting": {
+        "message": "Waiting…"
+    },
+    "setupWizardReceiverDetectRestart": {
+        "message": "Start again"
+    },
+    "setupWizardReceiverCheckTitle": {
+        "message": "Put both sticks in the bottom-left corner"
+    },
+    "setupWizardReceiverCheckText": {
+        "message": "Throttle and elevator down, aileron and rudder left. Every bar below should go to the left."
+    },
+    "setupWizardReceiverChannel": {
+        "message": "Ch $1"
+    },
+    "setupWizardReceiverCheckOk": {
+        "message": "All four are the right way round."
+    },
+    "setupWizardReceiverCheckReversed": {
+        "message": "A bar going to the right is reversed. Reverse that channel in your radio, not here."
+    },
+    "setupWizardReceiverCheckWrongBar": {
+        "message": "If moving one stick moves a different bar, choose the other order or use Detect."
+    },
+    "setupWizardOpenReceiver": {
+        "message": "Open the Receiver tab"
+    },
+    "setupWizardTrimGainIntro": {
+        "message": "Two things you'll want in the air on the first flights: a way to trim, and a knob to turn the stabilizer gain up or down."
+    },
+    "setupWizardTrimGainFull": {
+        "message": "Every adjustment slot is in use. Free one on the Adjustments tab."
+    },
+    "setupWizardTrimGainChannel": {
+        "message": "CH $1"
+    },
+    "setupWizardTrimGainShared": {
+        "message": "CH $1 is also used by $2. That works, but they will all move together."
+    },
+    "setupWizardTrimUse": {
+        "message": "$1 trim"
+    },
+    "setupWizardGainUse": {
+        "message": "the gain knob"
+    },
+    "setupWizardGainAxisUse": {
+        "message": "$1 gain"
+    },
+    "setupWizardModeUse": {
+        "message": "the $1 switch"
+    },
+    "setupWizardTrimGainDetect": {
+        "message": "Detect"
+    },
+    "setupWizardRecommended": {
+        "message": "Recommended"
+    },
+    "setupWizardTrimTitle": {
+        "message": "Trim"
+    },
+    "setupWizardTrimQuestion": {
+        "message": "Which radio do you fly with?"
+    },
+    "setupWizardTrimRadio_programmable": {
+        "message": "EdgeTX, OpenTX or Ethos"
+    },
+    "setupWizardTrimRadioHelp_programmable": {
+        "message": "Trim from the radio's trim buttons, sent on spare channels."
+    },
+    "setupWizardTrimRadio_other": {
+        "message": "Another radio"
+    },
+    "setupWizardTrimRadioHelp_other": {
+        "message": "Trim with the Auto trim switch."
+    },
+    "setupWizardTrimProgrammable": {
+        "message": "The flight controller needs one spare channel for each trim, moved by the roll, pitch and yaw trim buttons. How you set that up depends on your radio and model; any way works. Then click Detect and press that trim."
+    },
+    "setupWizardTrimSticksOff": {
+        "message": "Turn the trims off on the stick channels themselves. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimPress": {
+        "message": "Press and hold the $1 trim…"
+    },
+    "setupWizardTrimAuto": {
+        "message": "Use Auto trim: you'll give it a switch on the next step. Fly straight and level with it on for a few seconds, then land and disarm to keep the trim."
+    },
+    "setupWizardTrimAutoEveryone": {
+        "message": "Auto trim is on the next step for any radio, to make a trim permanent."
+    },
+    "setupWizardGainTitle": {
+        "message": "Gain"
+    },
+    "setupWizardGainText": {
+        "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Center is 100%."
+    },
+    "setupWizardGainMode_single": {
+        "message": "One knob"
+    },
+    "setupWizardGainModeHelp_single": {
+        "message": "Roll, pitch and yaw together. Simplest for first flights."
+    },
+    "setupWizardGainMode_separate": {
+        "message": "One per axis"
+    },
+    "setupWizardGainModeHelp_separate": {
+        "message": "Roll, pitch and yaw on three knobs."
+    },
+    "setupWizardGainMode_none": {
+        "message": "None"
+    },
+    "setupWizardGainModeHelp_none": {
+        "message": "No in-flight gain adjustment."
+    },
+    "setupWizardGainAllAxes": {
+        "message": "Roll, pitch and yaw"
+    },
+    "setupWizardGainTurn": {
+        "message": "Turn the knob or slider…"
+    },
+    "setupWizardGainCentre": {
+        "message": "Fly the first flight with the knob at center (100%)."
+    },
+    "setupWizardOpenAdjustments": {
+        "message": "Open the Adjustments tab"
+    },
     "setupWizardStep_airframe": {
         "message": "Airframe"
     },
@@ -8433,6 +8643,9 @@
     },
     "setupWizardStep_gyro": {
         "message": "Gyro direction"
+    },
+    "setupWizardStep_trimGain": {
+        "message": "Trim and gain"
     },
     "setupWizardStep_modes": {
         "message": "Mode switches"
@@ -8551,6 +8764,15 @@
     "setupWizardAirframeIntro": {
         "message": "Choose the model type and its options. This decides which servo drives which surface."
     },
+    "setupWizardAirframeCurrent": {
+        "message": "$1: ailerons, tail, flaps and motors are set in its options."
+    },
+    "setupWizardAirframeOptions": {
+        "message": "Change options"
+    },
+    "setupWizardAirframeCustomNow": {
+        "message": "This model uses a custom mix from the Mixer tab. Choose a type above to replace it, or keep it and carry on."
+    },
     "setupWizardAirframeSurfaces": {
         "message": "Control surfaces found:"
     },
@@ -8641,26 +8863,50 @@
     "setupWizardCentreIntro": {
         "message": "The surfaces are held at center. First set each horn and linkage so the surface is close to neutral, then fine-tune the center here."
     },
+    "setupWizardCentreTipHorn": {
+        "message": "Servo horn square to the pushrod"
+    },
+    "setupWizardCentreTipSurface": {
+        "message": "Surface in line with the wing or tail"
+    },
+    "setupWizardCentreFlagNear": {
+        "message": "Near center"
+    },
+    "setupWizardCentreFlagFar": {
+        "message": "Far from center"
+    },
+    "setupWizardCentreOffset": {
+        "message": "$1 µs from center"
+    },
     "setupWizardCentreFarWarning": {
         "message": "Far from the servo's normal center. Move the horn instead, or this side loses travel."
     },
     "setupWizardDirectionIntro": {
         "message": "The wizard moves one axis at a time to half stick. Check that each surface moves as described. Identify wiggles one servo so you can see which surface a row is about."
     },
+    "setupWizardDirectionNoRadio": {
+        "message": "Hands off the radio. On this step the wizard moves the surfaces itself, and your sticks do nothing. Press a button below and watch the model."
+    },
+    "setupWizardDirectionHolding": {
+        "message": "Wizard is holding the surfaces here"
+    },
+    "setupWizardDirectionStop": {
+        "message": "Stop"
+    },
     "setupWizardDirectionMove_pitch": {
-        "message": "Stick back"
+        "message": "Move pitch up"
     },
     "setupWizardDirectionExpect_pitch": {
         "message": "Elevator, elevons and V-tail: trailing edges go up."
     },
     "setupWizardDirectionMove_roll": {
-        "message": "Roll right"
+        "message": "Move roll right"
     },
     "setupWizardDirectionExpect_roll": {
         "message": "The right aileron or elevon goes up and the left one goes down."
     },
     "setupWizardDirectionMove_yaw": {
-        "message": "Yaw right"
+        "message": "Move yaw right"
     },
     "setupWizardDirectionExpect_yaw": {
         "message": "Rudder and V-tail: trailing edges move to the right, seen from behind."
@@ -8698,17 +8944,44 @@
     "setupWizardLimitsStart": {
         "message": "Find limits"
     },
-    "setupWizardLimitsValues": {
-        "message": "Min $1 µs, Max $2 µs"
+    "setupWizardLimitsBothSides": {
+        "message": "Every servo has two limits, one each way. Find limits on each surface and set both Min and Max before pressing Done."
     },
-    "setupWizardLimitsSetHere": {
-        "message": "Set limit here"
+    "setupWizardLimits_min": {
+        "message": "Min $1 µs"
+    },
+    "setupWizardLimits_max": {
+        "message": "Max $1 µs"
+    },
+    "setupWizardLimitsEnd_min": {
+        "message": "Min"
+    },
+    "setupWizardLimitsEnd_max": {
+        "message": "Max"
+    },
+    "setupWizardLimitsTodo_min": {
+        "message": "1 of 2: press the − buttons until the surface binds, back off one step, then press Set Min here."
+    },
+    "setupWizardLimitsTodo_max": {
+        "message": "2 of 2: now the other way. Press the + buttons until the surface binds, back off one step, then press Set Max here."
+    },
+    "setupWizardLimitsBothDone": {
+        "message": "Both sides set. Press Done."
+    },
+    "setupWizardLimitsSetMin": {
+        "message": "Set Min here"
+    },
+    "setupWizardLimitsSetMax": {
+        "message": "Set Max here"
     },
     "setupWizardLimitsFinish": {
         "message": "Done"
     },
     "setupWizardLimitsHowTo": {
-        "message": "Move in small steps until the surface binds, back off one step, then press Set limit here. Do both directions, then press Done."
+        "message": "A side you don't set keeps its old limit."
+    },
+    "setupWizardSetupModeTitle": {
+        "message": "SETUP mode"
     },
     "setupWizardSetupModeOn": {
         "message": "SETUP mode is on. The sticks move the surfaces directly, at full travel, with no gyro."
@@ -8735,7 +9008,7 @@
         "message": "How to do it:"
     },
     "setupWizardThrowsHow_1": {
-        "message": "Check the box above is green: the model is in SETUP mode and your sticks move the surfaces directly."
+        "message": "Check the SETUP mode box above is green with a tick. That means your sticks now move the surfaces directly. If it stays yellow, check your radio is on."
     },
     "setupWizardThrowsHow_2": {
         "message": "Hold one stick at full deflection, for example full right aileron, and watch one of its surfaces on the meter."
@@ -8753,10 +9026,22 @@
         "message": "Every surface on this axis, both directions."
     },
     "setupWizardThrowsFineTitle": {
-        "message": "Fine-tune one surface and direction (servo scale for that side):"
+        "message": "Fine-tune one surface"
+    },
+    "setupWizardThrowsFineHint": {
+        "message": "Optional: only if one surface, or one direction, doesn't match."
+    },
+    "setupWizardThrowsFineWhy": {
+        "message": "Why: Throw above moves every surface on this axis by the same amount, both ways. Fine-tune changes one surface in one direction only. Use it for aileron differential (less down than up, as in the picture), or when two halves of a surface don't move the same."
+    },
+    "setupWizardThrowsFineHow": {
+        "message": "How: hold the stick the way the row shows, measure that one surface, and press − or + until it reads what you want. 100% is the servo's normal travel."
+    },
+    "setupWizardThrowsNow": {
+        "message": "Now:"
     },
     "setupWizardThrowsMixedNote": {
-        "message": "This servo also works another axis; fine-tuning it changes that axis too."
+        "message": "This servo also works another axis (an elevon does pitch and roll). Each row sets one side of the servo's travel, so it also changes that other axis whenever the servo moves to the same side."
     },
     "setupWizardThrowsSideAtLimit": {
         "message": "Full stick reaches the binding limit on this side."
@@ -8788,17 +9073,32 @@
     "setupWizardTravelIntro": {
         "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in SETUP mode, so you can move the sticks into the corners and watch the live positions."
     },
-    "setupWizardTravelSurface": {
-        "message": "Surface"
+    "setupWizardTravelCorners": {
+        "message": "Try every corner: full stick on two axes at once is where a surface that works both (an elevon, a V-tail) runs out of travel first."
+    },
+    "setupWizardTravelKeyLimit": {
+        "message": "Binding limit"
+    },
+    "setupWizardTravelKeyReach": {
+        "message": "Full stick"
+    },
+    "setupWizardTravelKeyOver": {
+        "message": "Past the limit"
+    },
+    "setupWizardTravelKeyNow": {
+        "message": "Now"
+    },
+    "setupWizardTravelFlagOk": {
+        "message": "Inside its limits"
+    },
+    "setupWizardTravelFlagClips": {
+        "message": "Reaches its limit"
     },
     "setupWizardTravelNeg": {
         "message": "− side"
     },
     "setupWizardTravelPos": {
         "message": "+ side"
-    },
-    "setupWizardTravelLive": {
-        "message": "Live"
     },
     "setupWizardTravelValue": {
         "message": "$1% ($2 of $3 µs)"
@@ -8824,26 +9124,71 @@
     "setupWizardGyroWrong": {
         "message": "If a surface was right in the Direction step but is wrong here, the board orientation doesn't match how the board is mounted. Go back to step 1 and run the orientation check again. Don't reverse servos to fix this."
     },
+    "setupWizardGyroLegendMove": {
+        "message": "How you move the model"
+    },
+    "setupWizardGyroLegendReact": {
+        "message": "How the surfaces should answer"
+    },
+    "setupWizardGyroLive": {
+        "message": "Live servo outputs"
+    },
     "setupWizardModesIntro": {
-        "message": "Put these on switches on your radio. For each one, press Assign and flick the switch to the position you want it on. ARM is required; SETUP and GYRO OFF are recommended."
+        "message": "Put modes on switches on your radio: press Assign, then flick the switch to the position that should turn the mode on. Only ARM is required. Everything else is optional, and you can add or change modes later on the Modes tab."
+    },
+    "setupWizardModesGroupRequired": {
+        "message": "Required"
+    },
+    "setupWizardModesGroupOptional": {
+        "message": "Optional"
+    },
+    "setupWizardModesRequired": {
+        "message": "Required"
+    },
+    "setupWizardModesOptional": {
+        "message": "Optional"
+    },
+    "setupWizardModesOptionalHint": {
+        "message": "Add the ones you want. A 3-position switch works well for off / TRAINER / ATT HOLD; if both are on, ATT HOLD wins."
+    },
+    "setupWizardModesArmMissing": {
+        "message": "ARM isn't on a switch yet. Without it the motor can't be armed and the model can't fly."
     },
     "setupWizardModes_arm": {
         "message": "ARM"
     },
     "setupWizardModesHelp_arm": {
-        "message": "Arms the motor."
+        "message": "Arms the motor. Nothing else works without it."
     },
     "setupWizardModes_setup": {
         "message": "SETUP"
     },
     "setupWizardModesHelp_setup": {
-        "message": "Sticks straight to the surfaces at full travel. Use it to check throws on the bench. With the gyro on, a stick held off centre slowly drives the surfaces to full throw, because the model on the bench cannot turn."
+        "message": "A bench tool, not a flight mode: sticks straight to the surfaces at full travel, with no gyro, rates or expo. Use it to check throws without a laptop. Put it on a switch you won't hit in flight."
     },
     "setupWizardModes_gyroOff": {
         "message": "GYRO OFF"
     },
     "setupWizardModesHelp_gyroOff": {
-        "message": "Stabilization off, with your rates kept. A way out if the stabilizer misbehaves."
+        "message": "Stabilization off, with your rates kept. A good bail-out if the stabilizer misbehaves."
+    },
+    "setupWizardModes_attHold": {
+        "message": "ATT HOLD"
+    },
+    "setupWizardModesHelp_attHold": {
+        "message": "Attitude hold: let go of a stick and the model holds the attitude it is in on that axis, at any orientation."
+    },
+    "setupWizardModes_trainer": {
+        "message": "TRAINER"
+    },
+    "setupWizardModesHelp_trainer": {
+        "message": "Normal rate flying inside bank and pitch limits: the stabilizer stops the model rolling or pitching past them. It doesn't level the wings for you."
+    },
+    "setupWizardModes_autoTrim": {
+        "message": "Auto trim"
+    },
+    "setupWizardModesHelp_autoTrim": {
+        "message": "Fly straight and level with it on for a few seconds, then land and disarm: the servo centers become the trimmed ones. Switch it off before disarming to cancel."
     },
     "setupWizardModesAssigned": {
         "message": "On a switch"
@@ -8913,6 +9258,12 @@
     },
     "setupWizardStyleRelax_3d": {
         "message": "I-term held back through big inputs, less bounce-back"
+    },
+    "setupWizardStyleNow": {
+        "message": "What the model has now"
+    },
+    "setupWizardStyleStickAxis": {
+        "message": "stick →"
     },
     "setupWizardStyleRelaxValue": {
         "message": "I-term relax $1"
