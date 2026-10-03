@@ -15,7 +15,22 @@
     relaxOf,
   } from "./styles.js";
 
+  import RateCurve from "./RateCurve.svelte";
+  import StyleArt from "./StyleArt.svelte";
+
   const wiz = getContext("setupWizard");
+
+  // The firmware's expo exponent for an axis: sRates / 16 + 2
+  // (applyWingflightRates() in fc/rc_rates.c); RC_TUNING holds sRates / 100.
+  // The styles leave it alone, so their curves use the current roll shape.
+  function shape(axis) {
+    return ((FC.RC_TUNING[`${axis}_srate`] ?? 0) * 100) / 16 + 2;
+  }
+
+  // One rate scale for every curve on the page, so they compare.
+  let scale = $derived(
+    Math.max(...STYLES.map((s) => s.rate), ...AXES.map((a) => rate(a))),
+  );
 
   let changed = $state(false);
 
@@ -65,34 +80,54 @@
       class={["style", isCurrent(style) && "current"]}
       onclick={() => apply(style)}
     >
-      <strong>{$i18n.t(`setupWizardStyle_${style.key}`)}</strong>
+      <span class="art"><StyleArt style={style.key} /></span>
+      <span class="style-name">
+        {$i18n.t(`setupWizardStyle_${style.key}`)}
+        {#if isCurrent(style)}
+          <i class="fas fa-check-circle" aria-hidden="true"></i>
+        {/if}
+      </span>
       <span class="muted">{$i18n.t(`setupWizardStyleHelp_${style.key}`)}</span>
+      <RateCurve
+        rate={style.rate}
+        expo={style.expo}
+        shape={shape("roll")}
+        {scale}
+        axisLabel={$i18n.t("setupWizardStyleStickAxis")}
+      />
       <span class="numbers">
         {$i18n.t("setupWizardStyleRates", { 1: style.rate, 2: style.expo })}
       </span>
-      <span class="numbers">
+      <span class="relax">
         {$i18n.t(`setupWizardStyleRelax_${style.key}`)}
       </span>
     </button>
   {/each}
 </div>
 
-<table class="now">
-  <tbody>
+<div class="now">
+  <span class="now-title">{$i18n.t("setupWizardStyleNow")}</span>
+  <div class="now-axes">
     {#each AXES as axis (axis)}
-      <tr>
-        <td>{$i18n.t(`setupWizardAxis_${axis}`)}</td>
-        <td
-          >{$i18n.t("setupWizardStyleRates", {
-            1: rate(axis),
-            2: expo(axis),
-          })}</td
-        >
-        <td>{$i18n.t("setupWizardStyleRelaxValue", { 1: relax(axis) })}</td>
-      </tr>
+      <div class="now-axis">
+        <span class="axis-name">{$i18n.t(`setupWizardAxis_${axis}`)}</span>
+        <RateCurve
+          rate={rate(axis)}
+          expo={expo(axis)}
+          shape={shape(axis)}
+          {scale}
+          axisLabel={$i18n.t("setupWizardStyleStickAxis")}
+        />
+        <span class="numbers">
+          {$i18n.t("setupWizardStyleRates", { 1: rate(axis), 2: expo(axis) })}
+        </span>
+        <span class="muted">
+          {$i18n.t("setupWizardStyleRelaxValue", { 1: relax(axis) })}
+        </span>
+      </div>
     {/each}
-  </tbody>
-</table>
+  </div>
+</div>
 
 <p class="muted">{$i18n.t("setupWizardStyleMore")}</p>
 
@@ -103,48 +138,103 @@
   }
 
   .styles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
   }
 
   .style {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
-    width: 220px;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-surface);
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
     color: var(--color-text);
     text-align: left;
     font: inherit;
     cursor: pointer;
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed),
+      box-shadow var(--animation-speed);
 
     &:hover {
-      border-color: var(--color-accent-500);
+      border-color: var(--color-border);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
     }
 
     &.current {
       border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
       box-shadow: inset 0 0 0 1px var(--color-accent-500);
     }
   }
 
+  .art {
+    align-self: center;
+    margin-bottom: 4px;
+  }
+
+  .style-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1em;
+    font-weight: 700;
+
+    i {
+      color: var(--color-accent-500);
+    }
+  }
+
   .numbers {
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 
-  .now {
-    width: auto;
-    border-collapse: collapse;
+  .relax {
+    color: var(--color-text-soft);
+    font-size: 0.85em;
+  }
 
-    td {
-      padding: 2px 16px 2px 0;
-      font-variant-numeric: tabular-nums;
-    }
+  //// What the model has now, per axis, on the same scale.
+
+  .now {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .now-title {
+    color: var(--color-text-soft);
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+
+  .now-axes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px 24px;
+  }
+
+  .now-axis {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .axis-name {
+    font-weight: 600;
   }
 
   .muted {

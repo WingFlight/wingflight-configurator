@@ -6,6 +6,7 @@
   import { servoTravelRange, servoSignalRange } from "@/js/servoLimits.js";
 
   import LivePulse from "./LivePulse.svelte";
+  import SurfaceBothWays from "./SurfaceBothWays.svelte";
 
   const wiz = getContext("setupWizard");
 
@@ -14,6 +15,10 @@
   let current = $state(null);
   let original = $state(null);
   let position = $state(0);
+  // Per servo, which sides have been set on this visit: { min, max }.
+  let sides = $state({});
+
+  let doneSides = $derived(current === null ? {} : (sides[current] ?? {}));
 
   onMount(() => wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0 }));
 
@@ -67,8 +72,15 @@
   }
 
   function setLimitHere() {
-    if (position > 0) original.max = position;
-    if (position < 0) original.min = position;
+    const side = position > 0 ? "max" : "min";
+    original[side] = position;
+    sides[current] = { ...sides[current], [side]: true };
+  }
+
+  // Where a value sits on the explored range, as a percentage for the bar.
+  function percent(value) {
+    const range = openRange(FC.SERVO_CONFIG[current]);
+    return ((value - range.min) / (range.max - range.min)) * 100;
   }
 
   function finish() {
@@ -77,67 +89,104 @@
 </script>
 
 <p>{$i18n.t("setupWizardLimitsIntro")}</p>
+
+<div class="both">
+  <SurfaceBothWays />
+  <span>{$i18n.t("setupWizardLimitsBothSides")}</span>
+</div>
+
 <div class="note">{$i18n.t("setupWizardLimitsHardStop")}</div>
 
-<table class="rows">
-  <tbody>
-    {#each wiz.surfaces as surface (surface.servo)}
-      {@const config = FC.SERVO_CONFIG[surface.servo]}
-      {@const exploring = current === surface.servo}
-      <tr class={exploring && "active"}>
-        <td class="name">{wiz.surfaceLabel(surface)}</td>
-        <td class="limits">
-          {$i18n.t("setupWizardLimitsValues", {
-            1: exploring ? original.min : config.min,
-            2: exploring ? original.max : config.max,
-          })}
-        </td>
-        <td><LivePulse servo={surface.servo} /></td>
-        <td>
-          {#if !exploring}
-            <button class="btn" onclick={() => start(surface.servo)}>
-              {$i18n.t("setupWizardLimitsStart")}
-            </button>
-          {/if}
-        </td>
-      </tr>
+<div class="surfaces">
+  {#each wiz.surfaces as surface (surface.servo)}
+    {@const config = FC.SERVO_CONFIG[surface.servo]}
+    {@const exploring = current === surface.servo}
+    {@const done = sides[surface.servo] ?? {}}
+    <section class={["surface", exploring && "active"]}>
+      <div class="head">
+        <span class="name">{wiz.surfaceLabel(surface)}</span>
+        {#each ["min", "max"] as side (side)}
+          <span class={["chip", done[side] && "set"]}>
+            {#if done[side]}
+              <i class="fas fa-check" aria-hidden="true"></i>
+            {/if}
+            {$i18n.t(`setupWizardLimits_${side}`, {
+              1: exploring ? original[side] : config[side],
+            })}
+          </span>
+        {/each}
+        <LivePulse servo={surface.servo} />
+        <div class="grow"></div>
+        {#if !exploring}
+          <button class="btn" onclick={() => start(surface.servo)}>
+            {$i18n.t("setupWizardLimitsStart")}
+          </button>
+        {/if}
+      </div>
+
       {#if exploring}
-        <tr class="active">
-          <td colspan="4">
-            <div class="explore">
-              <div class="moves">
-                {#each [-50, -10] as delta (delta)}
-                  <button class="btn" onclick={() => move(delta)}
-                    >{delta}</button
-                  >
-                {/each}
-                <span class="position"
-                  >{position >= 0 ? "+" : ""}{position} µs</span
-                >
-                {#each [10, 50] as delta (delta)}
-                  <button class="btn" onclick={() => move(delta)}
-                    >+{delta}</button
-                  >
-                {/each}
-              </div>
-              <button
-                class="btn"
-                disabled={position === 0}
-                onclick={setLimitHere}
-              >
-                {$i18n.t("setupWizardLimitsSetHere")}
-              </button>
-              <button class="btn primary" onclick={finish}>
-                {$i18n.t("setupWizardLimitsFinish")}
-              </button>
-            </div>
-            <span class="muted">{$i18n.t("setupWizardLimitsHowTo")}</span>
-          </td>
-        </tr>
+        <div class="travel">
+          <span class="end">{$i18n.t("setupWizardLimitsEnd_min")}</span>
+          <div class="track">
+            <div
+              class="allowed"
+              style:left="{percent(original.min)}%"
+              style:right="{100 - percent(original.max)}%"
+            ></div>
+            <div class="centre" style:left="{percent(0)}%"></div>
+            <div
+              class={["limit", doneSides.min && "set"]}
+              style:left="{percent(original.min)}%"
+            ></div>
+            <div
+              class={["limit", doneSides.max && "set"]}
+              style:left="{percent(original.max)}%"
+            ></div>
+            <div class="pos" style:left="{percent(position)}%"></div>
+          </div>
+          <span class="end">{$i18n.t("setupWizardLimitsEnd_max")}</span>
+        </div>
+
+        <div class={["prompt", doneSides.min && doneSides.max && "complete"]}>
+          {#if !doneSides.min}
+            {$i18n.t("setupWizardLimitsTodo_min")}
+          {:else if !doneSides.max}
+            {$i18n.t("setupWizardLimitsTodo_max")}
+          {:else}
+            <i class="fas fa-check" aria-hidden="true"></i>
+            {$i18n.t("setupWizardLimitsBothDone")}
+          {/if}
+        </div>
+
+        <div class="explore">
+          <div class="moves">
+            {#each [-50, -10] as delta (delta)}
+              <button class="btn" onclick={() => move(delta)}>{delta}</button>
+            {/each}
+            <span class="position">{position >= 0 ? "+" : ""}{position} µs</span
+            >
+            {#each [10, 50] as delta (delta)}
+              <button class="btn" onclick={() => move(delta)}>+{delta}</button>
+            {/each}
+          </div>
+          <button class="btn" disabled={position === 0} onclick={setLimitHere}>
+            {position > 0
+              ? $i18n.t("setupWizardLimitsSetMax")
+              : $i18n.t("setupWizardLimitsSetMin")}
+          </button>
+          <div class="grow"></div>
+          <button
+            class={["btn", doneSides.min && doneSides.max && "primary"]}
+            onclick={finish}
+          >
+            {$i18n.t("setupWizardLimitsFinish")}
+          </button>
+        </div>
+        <span class="muted">{$i18n.t("setupWizardLimitsHowTo")}</span>
       {/if}
-    {/each}
-  </tbody>
-</table>
+    </section>
+  {/each}
+</div>
 
 <style lang="scss">
   .btn {
@@ -148,41 +197,171 @@
     @extend %button-primary;
   }
 
+  .grow {
+    flex: 1;
+  }
+
   p {
     margin: 0;
     max-width: 70ch;
   }
 
+  .both {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 16px;
+    border: 1px solid var(--color-accent-500);
+    border-radius: var(--radius-md);
+    background-color: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
   .note {
-    padding: 8px 12px;
-    border-left: 3px solid var(--color-yellow-500);
-    background-color: var(--color-surface);
+    padding: 10px 14px;
+    border-left: 4px solid var(--color-yellow-500);
+    background-color: var(--color-surface-sunken);
     border-radius: var(--radius-xs);
     max-width: 70ch;
   }
 
-  .rows {
-    border-collapse: collapse;
+  .surfaces {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-    td {
-      padding: 6px 12px 6px 0;
-      vertical-align: middle;
-    }
+  .surface {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+    transition:
+      border-color var(--animation-speed),
+      box-shadow var(--animation-speed);
 
-    tr.active td {
-      background-color: var(--color-surface);
+    &.active {
+      padding: 12px 16px 14px;
+      border-color: var(--color-accent-500);
+      box-shadow: inset 4px 0 0 var(--color-accent-500);
     }
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
   }
 
   .name {
+    min-width: 11em;
     font-weight: 600;
     white-space: nowrap;
-    padding-left: 8px;
   }
 
-  .limits {
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 10px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    color: var(--color-text-soft);
+    font-size: 0.85em;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+
+    &.set {
+      border-color: var(--color-status-good);
+      color: var(--color-status-good);
+    }
+  }
+
+  //// Travel bar: the explored range, the limits being set and the
+  //// position the servo is held at.
+
+  .travel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .end {
+    flex: none;
+    color: var(--color-text-soft);
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .track {
+    position: relative;
+    flex: 1;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-border-soft);
+  }
+
+  .allowed {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background-color: var(--color-accent-soft);
+  }
+
+  .centre,
+  .limit,
+  .pos {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  .centre {
+    top: -3px;
+    bottom: -3px;
+    width: 1px;
+    background-color: var(--color-text-muted);
+  }
+
+  .limit {
+    top: -5px;
+    bottom: -5px;
+    width: 4px;
+    border-radius: 2px;
+    background-color: var(--color-text-muted);
+
+    &.set {
+      background-color: var(--color-status-good);
+    }
+  }
+
+  .pos {
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    border: 2px solid var(--color-surface);
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    box-shadow: 0 0 0 1px var(--color-accent-500);
+    transition: left var(--animation-speed);
+  }
+
+  .prompt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--color-accent-500);
+
+    &.complete {
+      color: var(--color-status-good);
+    }
   }
 
   .explore {
@@ -190,7 +369,6 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 16px;
-    padding: 4px 8px;
   }
 
   .moves {
@@ -206,9 +384,14 @@
   }
 
   .muted {
-    display: block;
-    padding: 0 8px 4px;
     color: var(--color-text-soft);
     font-size: 0.9em;
+  }
+
+  @media only screen and (max-width: 600px) {
+    .both {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>

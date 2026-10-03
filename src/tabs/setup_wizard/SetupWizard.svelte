@@ -340,12 +340,13 @@
   }
 
   // Steps whose settings only apply after a reboot (servo rate, board
-  // alignment). The Configurator reconnects on its own tab afterwards, so
-  // the wizard remembers to resume at the next step.
+  // alignment). After the reconnect the wizard reopens on the same step, so
+  // the user can check the result before moving on.
   async function saveAndReboot() {
     wantSetup = false;
     await save();
-    storeStep(Math.min(stepIndex + 1, STEPS.length - 1));
+    storeStep(stepIndex);
+    GUI.tabAfterReboot = "setup_wizard";
     MSP.send_message(MSPCodes.MSP_SET_REBOOT);
     GUI.log($i18n.t("deviceRebooting"));
     reinitialiseConnection();
@@ -495,7 +496,13 @@
               aria-current={i === stepIndex ? "step" : undefined}
               onclick={() => goTo(i)}
             >
-              <span class="number">{i + 1}</span>
+              <span class="number">
+                {#if i < stepIndex}
+                  <i class="fas fa-check" aria-hidden="true"></i>
+                {:else}
+                  {i + 1}
+                {/if}
+              </span>
               <span class="label">{$i18n.t(`setupWizardStep_${step.key}`)}</span
               >
             </button>
@@ -512,41 +519,59 @@
         <div class="banner">{$i18n.t("setupWizardNoServos")}</div>
       {/if}
 
-      <h2>
-        {$i18n.t("setupWizardStepCounter", {
-          1: stepIndex + 1,
-          2: STEPS.length,
-        })}
-        · {$i18n.t(`setupWizardStep_${STEPS[stepIndex].key}`)}
-      </h2>
+      <section class="panel">
+        <header class="panel-head">
+          <span class="counter">
+            {$i18n.t("setupWizardStepCounter", {
+              1: stepIndex + 1,
+              2: STEPS.length,
+            })}
+          </span>
+          <h2>{$i18n.t(`setupWizardStep_${STEPS[stepIndex].key}`)}</h2>
+          <div
+            class="progress"
+            role="progressbar"
+            aria-valuemin="1"
+            aria-valuemax={STEPS.length}
+            aria-valuenow={stepIndex + 1}
+          >
+            <div
+              class="progress-fill"
+              style:width="{((stepIndex + 1) / STEPS.length) * 100}%"
+            ></div>
+          </div>
+        </header>
 
-      {#key stepIndex}
-        <div class="step-body">
-          <Current />
-        </div>
-      {/key}
+        {#key stepIndex}
+          <div class="step-body">
+            <Current />
+          </div>
+        {/key}
 
-      <div class="footer">
-        <button
-          class="btn"
-          disabled={stepIndex === 0}
-          onclick={() => goTo(stepIndex - 1)}
-        >
-          {$i18n.t("setupWizardBack")}
-        </button>
-        <div class="grow"></div>
-        <!-- The last step has its own Finish button. -->
-        {#if stepIndex < STEPS.length - 1}
-          {#if pending}
-            <span class="unsaved">{$i18n.t("setupWizardUnsaved")}</span>
-          {/if}
-          <button class="btn primary" disabled={saving} onclick={next}>
-            {pending
-              ? $i18n.t("setupWizardSaveNext")
-              : $i18n.t("setupWizardNext")}
+        <footer class="footer">
+          <button
+            class="btn"
+            disabled={stepIndex === 0}
+            onclick={() => goTo(stepIndex - 1)}
+          >
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            {$i18n.t("setupWizardBack")}
           </button>
-        {/if}
-      </div>
+          <div class="grow"></div>
+          <!-- The last step has its own Finish button. -->
+          {#if stepIndex < STEPS.length - 1}
+            {#if pending}
+              <span class="unsaved">{$i18n.t("setupWizardUnsaved")}</span>
+            {/if}
+            <button class="btn primary" disabled={saving} onclick={next}>
+              {pending
+                ? $i18n.t("setupWizardSaveNext")
+                : $i18n.t("setupWizardNext")}
+              <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </button>
+          {/if}
+        </footer>
+      </section>
     </div>
   </div>
 </Page>
@@ -569,6 +594,18 @@
     grid-template-columns: 220px minmax(0, 1fr);
     gap: var(--section-gap);
     align-items: start;
+    max-width: 1240px;
+    padding-top: var(--section-gap);
+  }
+
+  //// Step list
+
+  .steps {
+    @extend %section-shadow;
+    position: sticky;
+    top: var(--section-gap);
+    padding: 8px;
+    background-color: var(--color-surface);
   }
 
   .steps ol {
@@ -583,7 +620,7 @@
   .step {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
     padding: 6px 8px;
     border: none;
@@ -593,34 +630,56 @@
     text-align: left;
     cursor: pointer;
     font: inherit;
+    transition: background-color var(--animation-speed);
 
     &:hover {
       background-color: var(--color-hover);
     }
 
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
     &.active {
-      background-color: var(--color-surface);
+      background-color: var(--color-accent-soft);
       color: var(--color-text);
       font-weight: 600;
+
+      .number {
+        border-color: var(--color-accent-500);
+        background-color: var(--color-accent-500);
+        color: var(--color-accent-fg);
+      }
     }
 
     &.done .number {
-      background-color: var(--color-accent-500);
-      color: var(--color-neutral-100);
+      border-color: var(--color-accent-500);
+      color: var(--color-accent-500);
     }
   }
 
   .number {
-    flex: 0 0 22px;
-    height: 22px;
+    flex: 0 0 24px;
+    height: 24px;
     border-radius: var(--radius-pill);
     border: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85em;
+    font-size: 0.8em;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--animation-speed),
+      border-color var(--animation-speed);
+
+    i {
+      font-size: 0.85em;
+    }
   }
+
+  //// Step panel
 
   .content {
     display: flex;
@@ -629,38 +688,120 @@
     min-width: 0;
   }
 
+  .panel {
+    @extend %section-shadow;
+    background-color: var(--color-surface);
+  }
+
+  .panel-head {
+    display: grid;
+    gap: 2px;
+    padding: 16px 24px 0;
+  }
+
+  .counter {
+    color: var(--color-accent-500);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
   h2 {
-    margin: 0;
-    font-size: 1.25em;
+    margin: 0 0 12px;
+    font-size: 1.4em;
+    line-height: 1.2;
+  }
+
+  .progress {
+    height: 3px;
+    margin: 0 -24px;
+    background-color: var(--color-border-soft);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background-color: var(--color-accent-500);
+    transition: width var(--animation-speed-slow);
   }
 
   .step-body {
     display: flex;
     flex-direction: column;
-    gap: var(--section-gap);
+    gap: 20px;
+    padding: 20px 24px 24px;
+    line-height: 1.5;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background-color: var(--color-surface-sunken);
+    border-top: 1px solid var(--color-border-soft);
+
+    .btn {
+      height: 2rem;
+      padding: 0 16px;
+    }
   }
 
   .banner {
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-radius: var(--radius-sm);
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
+    border-left-width: 4px;
 
     &.warn {
       border-color: var(--color-yellow-500);
     }
   }
 
-  .footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--color-border);
-  }
-
   .unsaved {
     color: var(--color-text-soft);
     font-size: 0.9em;
+  }
+
+  //// Narrow screens: the step list becomes a scrolling strip of numbers.
+
+  @media only screen and (max-width: 900px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .steps {
+      position: static;
+      overflow-x: auto;
+    }
+
+    .steps ol {
+      flex-direction: row;
+    }
+
+    .step {
+      width: auto;
+
+      .label {
+        display: none;
+      }
+
+      &.active .label {
+        display: inline;
+        white-space: nowrap;
+      }
+    }
+
+    .panel-head,
+    .step-body,
+    .footer {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .progress {
+      margin: 0 -16px;
+    }
   }
 </style>

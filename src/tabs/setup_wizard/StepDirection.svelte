@@ -5,6 +5,7 @@
   import { i18n } from "@/js/i18n.js";
 
   import LivePulse from "./LivePulse.svelte";
+  import RadioIcon from "./RadioIcon.svelte";
   import { primaryAxis, SERVO_FLAG_REVERSE } from "./surfaces.js";
 
   const wiz = getContext("setupWizard");
@@ -20,6 +21,7 @@
   ];
 
   let active = $state(null);
+  let holding = $state(false);
   let answers = $state({});
   let wiggleTimer;
 
@@ -29,7 +31,14 @@
 
   function hold(check) {
     active = check.key;
+    holding = true;
     wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0, [check.axis]: check.value });
+  }
+
+  // Lets the surfaces go but keeps the check open for answering.
+  function stop() {
+    holding = false;
+    wiz.releaseAxes();
   }
 
   function answer(check, surface, correct) {
@@ -68,21 +77,40 @@
   onDestroy(() => clearInterval(wiggleTimer));
 </script>
 
+<div class="no-radio">
+  <RadioIcon />
+  <span>{$i18n.t("setupWizardDirectionNoRadio")}</span>
+</div>
+
 <p>{$i18n.t("setupWizardDirectionIntro")}</p>
 
 {#if wiz.setupModeActive}
   <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
 {/if}
 
-{#each checks as check (check.key)}
+{#each checks as check, n (check.key)}
+  {@const live = active === check.key && holding}
   <section class={["check", active === check.key && "active"]}>
     <div class="check-head">
-      <button class="btn" onclick={() => hold(check)}>
-        {$i18n.t(`setupWizardDirectionMove_${check.key}`)}
-      </button>
+      <span class="index">{n + 1}</span>
       <span class="expect"
         >{$i18n.t(`setupWizardDirectionExpect_${check.key}`)}</span
       >
+      {#if live}
+        <span class="holding">
+          <span class="dot"></span>
+          {$i18n.t("setupWizardDirectionHolding")}
+        </span>
+        <button class="btn" onclick={stop}>
+          <i class="fas fa-stop" aria-hidden="true"></i>
+          {$i18n.t("setupWizardDirectionStop")}
+        </button>
+      {:else}
+        <button class="btn primary" onclick={() => hold(check)}>
+          <i class="fas fa-play" aria-hidden="true"></i>
+          {$i18n.t(`setupWizardDirectionMove_${check.key}`)}
+        </button>
+      {/if}
     </div>
 
     {#if active === check.key}
@@ -154,21 +182,46 @@
     @extend %button;
   }
 
+  .btn.primary {
+    @extend %button-primary;
+  }
+
+  .check-head .btn {
+    height: 2rem;
+    padding: 0 16px;
+  }
+
   p {
     margin: 0;
     max-width: 70ch;
   }
 
+  .no-radio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-accent-500);
+    border-radius: var(--radius-md);
+    background-color: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
   .check {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+    transition:
+      border-color var(--animation-speed),
+      box-shadow var(--animation-speed);
 
     &.active {
       border-color: var(--color-accent-500);
+      box-shadow: inset 4px 0 0 var(--color-accent-500);
     }
   }
 
@@ -176,19 +229,65 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
+    gap: 8px 14px;
+  }
+
+  .index {
+    flex: 0 0 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    font-size: 0.85em;
+    font-weight: 600;
+
+    .active & {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-500);
+      color: var(--color-accent-fg);
+    }
   }
 
   .expect {
+    flex: 1 1 280px;
     max-width: 60ch;
+  }
+
+  .holding {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-accent-500);
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
   }
 
   .rows {
     border-collapse: collapse;
 
     td {
-      padding: 4px 12px 4px 0;
+      padding: 6px 12px 6px 0;
       vertical-align: middle;
+    }
+
+    tr + tr td {
+      border-top: 1px solid var(--color-border-soft);
     }
   }
 

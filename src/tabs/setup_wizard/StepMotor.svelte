@@ -7,6 +7,8 @@
 
   import motorState from "@/tabs/motors/state.svelte.js";
 
+  import MotorArt from "./MotorArt.svelte";
+
   const wiz = getContext("setupWizard");
 
   // The normal choices only. Telemetry, PWM rate, throttle endpoints and the
@@ -91,12 +93,15 @@
   onDestroy(stopSpin);
 </script>
 
-<p>{$i18n.t("setupWizardMotorIntro")}</p>
+<div class="intro">
+  <MotorArt />
+  <p>{$i18n.t("setupWizardMotorIntro")}</p>
+</div>
 
 <fieldset class="choices">
   <legend>{$i18n.t("setupWizardMotorProtocolTitle")}</legend>
   {#each CHOICES as choice (choice.key)}
-    <label>
+    <label class={["choice", selected === choice.key && "selected"]}>
       <input
         type="radio"
         name="motor-protocol"
@@ -104,12 +109,13 @@
         checked={selected === choice.key}
         onchange={() => choose(choice)}
       />
-      <span>
-        <strong>{$i18n.t(`setupWizardMotor_${choice.key}`)}</strong>
-        <span class="muted"
-          >{$i18n.t(`setupWizardMotorHelp_${choice.key}`)}</span
-        >
+      <span class="choice-name">
+        {$i18n.t(`setupWizardMotor_${choice.key}`)}
+        {#if selected === choice.key}
+          <i class="fas fa-check-circle" aria-hidden="true"></i>
+        {/if}
       </span>
+      <span class="muted">{$i18n.t(`setupWizardMotorHelp_${choice.key}`)}</span>
     </label>
   {/each}
 </fieldset>
@@ -125,42 +131,59 @@
     </button>
   </div>
 {:else if current !== "DISABLED" && motorCount > 0}
-  <section class="test">
+  <section class={["test", propOff && "confirmed"]}>
     <strong>{$i18n.t("setupWizardMotorTestTitle")}</strong>
-    <label class="prop">
-      <input type="checkbox" bind:checked={propOff} />
-      {$i18n.t("setupWizardMotorPropOff")}
-    </label>
-    <div class="row">
-      <span>{$i18n.t("setupWizardMotorTestThrottle")}</span>
-      {#each TEST_THROTTLES as t (t)}
-        <label class="throttle">
-          <input
-            type="radio"
-            name="test-throttle"
-            value={t}
-            bind:group={testThrottle}
-            disabled={spinning}
-          />
-          {t}%
-        </label>
-      {/each}
+    <div class="test-body">
+      <div class="art">
+        <MotorArt propOff {spinning} />
+      </div>
+      <!-- In order: prop off, pick a throttle, hold to spin. -->
+      <ol class="steps">
+        <li>
+          <label class="prop">
+            <input type="checkbox" bind:checked={propOff} />
+            {$i18n.t("setupWizardMotorPropOff")}
+          </label>
+        </li>
+        <li>
+          <span class="step-label"
+            >{$i18n.t("setupWizardMotorTestThrottle")}</span
+          >
+          <span class="segments">
+            {#each TEST_THROTTLES as t (t)}
+              <label class={["segment", testThrottle === t && "selected"]}>
+                <input
+                  type="radio"
+                  name="test-throttle"
+                  value={t}
+                  bind:group={testThrottle}
+                  disabled={!propOff || spinning}
+                />
+                {t}%
+              </label>
+            {/each}
+          </span>
+        </li>
+        <li>
+          <button
+            class={["btn", "spin", spinning && "primary"]}
+            disabled={!propOff || wiz.armed}
+            onpointerdown={startSpin}
+            onpointerup={stopSpin}
+            onpointerleave={stopSpin}
+            onpointercancel={stopSpin}
+            onkeydown={(e) =>
+              (e.key === " " || e.key === "Enter") && startSpin()}
+            onkeyup={stopSpin}
+            onblur={stopSpin}
+          >
+            {spinning
+              ? $i18n.t("setupWizardMotorSpinning")
+              : $i18n.t("setupWizardMotorHoldToSpin")}
+          </button>
+        </li>
+      </ol>
     </div>
-    <button
-      class={["btn", spinning && "primary"]}
-      disabled={!propOff || wiz.armed}
-      onpointerdown={startSpin}
-      onpointerup={stopSpin}
-      onpointerleave={stopSpin}
-      onpointercancel={stopSpin}
-      onkeydown={(e) => (e.key === " " || e.key === "Enter") && startSpin()}
-      onkeyup={stopSpin}
-      onblur={stopSpin}
-    >
-      {spinning
-        ? $i18n.t("setupWizardMotorSpinning")
-        : $i18n.t("setupWizardMotorHoldToSpin")}
-    </button>
     <p class="muted">{$i18n.t("setupWizardMotorTestCheck")}</p>
   </section>
 {/if}
@@ -185,28 +208,75 @@
     max-width: 70ch;
   }
 
-  .choices {
+  .intro {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+  }
+
+  //// Protocol tiles: the radio stays for keyboard and screen readers.
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
     border: none;
     margin: 0;
     padding: 0;
+    min-width: 0;
 
     legend {
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+      padding: 0;
+    }
+  }
+
+  .choice {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+    cursor: pointer;
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed),
+      box-shadow var(--animation-speed);
+
+    &:hover {
+      border-color: var(--color-border);
     }
 
-    label {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
+    &:has(input:focus-visible) {
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
     }
 
-    label > span {
-      display: flex;
-      flex-direction: column;
+    &.selected {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .choice-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+
+    i {
+      color: var(--color-accent-500);
     }
   }
 
@@ -217,29 +287,135 @@
     gap: 12px;
   }
 
+  //// Spin test: the picture on the left, the three actions in order on the
+  //// right. The whole panel is a warning until the prop-off box is ticked.
+
   .test {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    max-width: 720px;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid var(--color-status-bad);
+    border-radius: var(--radius-md);
+    background-color: color-mix(
+      in srgb,
+      var(--color-status-bad) 6%,
+      var(--color-surface-sunken)
+    );
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed);
+
+    &.confirmed {
+      border-color: var(--color-border-soft);
+      background-color: var(--color-surface-sunken);
+    }
   }
 
-  .prop,
-  .throttle {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .row {
+  .test-body {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 16px 32px;
+  }
+
+  .art {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      counter-increment: step;
+
+      &::before {
+        content: counter(step);
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--color-border);
+        border-radius: 50%;
+        font-size: 0.8em;
+        font-weight: 600;
+        color: var(--color-text-soft);
+      }
+    }
+  }
+
+  .confirmed .steps li:first-child::before {
+    content: "\2713";
+    border-color: var(--color-status-good);
+    color: var(--color-status-good);
+  }
+
+  .prop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  .step-label {
+    font-weight: 600;
+  }
+
+  // Throttle as a segmented control; the radios stay for the keyboard.
+  .segments {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .segment {
+    position: relative;
+    padding: 4px 14px;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+
+    & + & {
+      border-left: 1px solid var(--color-border);
+    }
+
+    &.selected {
+      background-color: var(--color-accent-500);
+      color: #fff;
+    }
+
+    &:has(input:disabled) {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    &:has(input:focus-visible) {
+      box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+    }
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .spin {
+    min-width: 200px;
+    touch-action: none;
+    user-select: none;
   }
 
   .muted {

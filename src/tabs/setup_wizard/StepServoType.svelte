@@ -4,6 +4,9 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
 
+  import ServoArt from "./ServoArt.svelte";
+  import PulseTrain from "./PulseTrain.svelte";
+
   const wiz = getContext("setupWizard");
 
   // Rates and bands as on the Servos tab. A narrow-band servo (760 us
@@ -56,23 +59,31 @@
   }
 </script>
 
-<p>{$i18n.t("setupWizardServoTypeIntro")}</p>
+<div class="intro">
+  <ServoArt />
+  <p>{$i18n.t("setupWizardServoTypeIntro")}</p>
+</div>
 
 <fieldset class="types">
   {#each TYPES as type (type.key)}
-    <label>
+    <label class={["type", selected === type.key && "selected"]}>
       <input
         type="radio"
         name="servo-type"
         value={type.key}
         bind:group={selected}
       />
-      <span>
-        <strong>{$i18n.t(`setupWizardServoType_${type.key}`)}</strong>
-        <span class="muted"
-          >{$i18n.t(`setupWizardServoTypeHelp_${type.key}`)}</span
-        >
+      <span class="type-name">
+        {$i18n.t(`setupWizardServoType_${type.key}`)}
+        {#if selected === type.key}
+          <i class="fas fa-check-circle" aria-hidden="true"></i>
+        {/if}
       </span>
+      <PulseTrain rate={type.rate} width={BANDS[type.band].mid} />
+      <span class="rate">{type.rate} Hz · {BANDS[type.band].mid} µs</span>
+      <span class="muted"
+        >{$i18n.t(`setupWizardServoTypeHelp_${type.key}`)}</span
+      >
     </label>
   {/each}
 </fieldset>
@@ -109,24 +120,76 @@
     max-width: 70ch;
   }
 
-  .types {
+  .intro {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+  }
+
+  //// Type tiles: the radio stays for keyboard and screen readers.
+
+  .types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
     border: none;
     margin: 0;
     padding: 0;
+    min-width: 0;
+  }
 
-    label {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
+  .type {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+    cursor: pointer;
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed),
+      box-shadow var(--animation-speed);
+
+    &:hover {
+      border-color: var(--color-border);
     }
 
-    label > span {
-      display: flex;
-      flex-direction: column;
+    &:has(input:focus-visible) {
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
     }
+
+    &.selected {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .type-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+
+    i {
+      color: var(--color-accent-500);
+    }
+  }
+
+  .rate {
+    font-size: 0.85em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .muted {

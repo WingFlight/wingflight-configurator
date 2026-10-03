@@ -6,6 +6,11 @@
 
   import LivePulse from "./LivePulse.svelte";
   import SetupModeStatus from "./SetupModeStatus.svelte";
+  import RadioIcon from "./RadioIcon.svelte";
+  import MeasureThrow from "./MeasureThrow.svelte";
+  import AxisIcon from "./AxisIcon.svelte";
+  import StickIcon from "./StickIcon.svelte";
+  import DifferentialIcon from "./DifferentialIcon.svelte";
   import {
     AXES,
     AXIS_GAIN_MIN,
@@ -34,16 +39,16 @@
   // pitch - is stick back, yaw - is right.
   const DIRECTIONS = {
     roll: [
-      { stick: 1, key: "rollRight" },
-      { stick: -1, key: "rollLeft" },
+      { stick: 1, key: "rollRight", x: 1, y: 0 },
+      { stick: -1, key: "rollLeft", x: -1, y: 0 },
     ],
     pitch: [
-      { stick: -1, key: "pitchBack" },
-      { stick: 1, key: "pitchForward" },
+      { stick: -1, key: "pitchBack", x: 0, y: 1 },
+      { stick: 1, key: "pitchForward", x: 0, y: -1 },
     ],
     yaw: [
-      { stick: -1, key: "yawRight" },
-      { stick: 1, key: "yawLeft" },
+      { stick: -1, key: "yawRight", x: 1, y: 0 },
+      { stick: 1, key: "yawLeft", x: -1, y: 0 },
     ],
   };
 
@@ -61,6 +66,22 @@
   // fine-tuned on its main axis's card only.
   function fineTuned(axis) {
     return surfacesOn(axis).filter((s) => primaryAxis(s) === axis);
+  }
+
+  // Servo scale is shown as a percentage of the firmware default
+  // (DEFAULT_SERVO_SCALE in flight/servos.h), so 1% is 5 scale units.
+  const DEFAULT_SCALE = 500;
+  const SCALE_STEP = DEFAULT_SCALE / 100;
+
+  // Open Fine-tune straight away if a surface on this axis already has a
+  // side that isn't the default.
+  let firstFineAxis = $derived(axes.find((a) => fineTuned(a).length > 0));
+
+  function anyTuned(axis) {
+    return fineTuned(axis).some((s) => {
+      const config = FC.SERVO_CONFIG[s.servo];
+      return config.rpos !== DEFAULT_SCALE || config.rneg !== DEFAULT_SCALE;
+    });
   }
 
   function nudgeThrow(axis, delta) {
@@ -114,33 +135,42 @@
 <SetupModeStatus />
 
 <div class="how">
-  <strong>{$i18n.t("setupWizardThrowsHowTitle")}</strong>
-  <ol>
-    {#each [1, 2, 3, 4] as n (n)}
-      <li>
-        <span class="n">{n}.</span>
-        <span>{$i18n.t(`setupWizardThrowsHow_${n}`)}</span>
-      </li>
-    {/each}
-  </ol>
+  <div class="art">
+    <RadioIcon use />
+    <MeasureThrow />
+  </div>
+  <div class="how-text">
+    <span class="how-title">{$i18n.t("setupWizardThrowsHowTitle")}</span>
+    <ol>
+      {#each [1, 2, 3, 4] as n (n)}
+        <li>
+          <span class="n">{n}</span>
+          <span>{$i18n.t(`setupWizardThrowsHow_${n}`)}</span>
+        </li>
+      {/each}
+    </ol>
+  </div>
 </div>
 
 {#each axes as axis (axis)}
   {@const atLimit = limited(axis)}
   <section class="axis">
-    <strong>{$i18n.t(`setupWizardAxis_${axis}`)}</strong>
+    <div class="axis-head">
+      <AxisIcon {axis} />
+      <span class="axis-name">{$i18n.t(`setupWizardAxis_${axis}`)}</span>
+    </div>
 
     <div class="row">
       <span class="label">{$i18n.t("setupWizardThrowsThrow")}</span>
       {#each [-5, -1] as delta (delta)}
         <button class="btn" onclick={() => nudgeThrow(axis, delta)}
-          >{delta}</button
+          >{delta}%</button
         >
       {/each}
       <span class="amount">{wiz.axisGainPercent(axis)}%</span>
       {#each [1, 5] as delta (delta)}
         <button class="btn" onclick={() => nudgeThrow(axis, delta)}
-          >+{delta}</button
+          >+{delta}%</button
         >
       {/each}
       <span class="muted">{$i18n.t("setupWizardThrowsThrowHelp")}</span>
@@ -154,49 +184,82 @@
       </span>
     {/if}
 
-    <div class="fine">
-      <span class="fine-title">{$i18n.t("setupWizardThrowsFineTitle")}</span>
-      {#each fineTuned(axis) as surface (surface.servo)}
-        {@const config = FC.SERVO_CONFIG[surface.servo]}
-        <div class="surface">
-          <div class="surface-head">
-            <span class="name">{wiz.surfaceLabel(surface)}</span>
-            <LivePulse servo={surface.servo} />
-          </div>
-          {#if Object.keys(surface.axes).length > 1}
-            <span class="muted">{$i18n.t("setupWizardThrowsMixedNote")}</span>
+    {#if fineTuned(axis).length > 0}
+      <details class="fine" open={anyTuned(axis)}>
+        <summary>
+          <i class="fas fa-chevron-right chevron" aria-hidden="true"></i>
+          <span class="fine-title">{$i18n.t("setupWizardThrowsFineTitle")}</span
+          >
+          <span class="fine-hint">{$i18n.t("setupWizardThrowsFineHint")}</span>
+        </summary>
+
+        <!-- The why and its picture once, on the first axis; the how on each. -->
+        <div class="fine-why">
+          {#if axis === firstFineAxis}
+            <DifferentialIcon />
           {/if}
-          {#each DIRECTIONS[axis] as direction (direction.key)}
-            {@const side = sideOf(surface, axis, direction)}
-            <div class="row">
-              <span class="direction"
-                >{$i18n.t(`setupWizardThrowsDir_${direction.key}`)}</span
-              >
-              {#each [-25, -5] as delta (delta)}
-                <button
-                  class="btn small"
-                  onclick={() => nudgeSide(surface, axis, direction, delta)}
-                  >{delta}</button
-                >
-              {/each}
-              <span class="amount">{config[side.field]} µs</span>
-              {#each [5, 25] as delta (delta)}
-                <button
-                  class="btn small"
-                  onclick={() => nudgeSide(surface, axis, direction, delta)}
-                  >+{delta}</button
-                >
-              {/each}
-              {#if config[side.field] >= side.max}
-                <span class="warn"
-                  >{$i18n.t("setupWizardThrowsSideAtLimit")}</span
-                >
-              {/if}
-            </div>
-          {/each}
+          <div class="fine-why-text">
+            {#if axis === firstFineAxis}
+              <span>{$i18n.t("setupWizardThrowsFineWhy")}</span>
+            {/if}
+            <span>{$i18n.t("setupWizardThrowsFineHow")}</span>
+          </div>
         </div>
-      {/each}
-    </div>
+
+        {#each fineTuned(axis) as surface (surface.servo)}
+          {@const config = FC.SERVO_CONFIG[surface.servo]}
+          <div class="surface">
+            <div class="surface-head">
+              <span class="name">{wiz.surfaceLabel(surface)}</span>
+              <span class="now">{$i18n.t("setupWizardThrowsNow")}</span>
+              <LivePulse servo={surface.servo} />
+            </div>
+            {#if Object.keys(surface.axes).length > 1}
+              <span class="mixed">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                {$i18n.t("setupWizardThrowsMixedNote")}
+              </span>
+            {/if}
+            {#each DIRECTIONS[axis] as direction (direction.key)}
+              {@const side = sideOf(surface, axis, direction)}
+              {@const percent = Math.round(
+                (config[side.field] / DEFAULT_SCALE) * 100,
+              )}
+              <div class="row">
+                <span class="direction">
+                  <StickIcon x={direction.x} y={direction.y} />
+                  {$i18n.t(`setupWizardThrowsDir_${direction.key}`)}
+                </span>
+                {#each [-5, -1] as delta (delta)}
+                  <button
+                    class="btn"
+                    onclick={() =>
+                      nudgeSide(surface, axis, direction, delta * SCALE_STEP)}
+                    >{delta}%</button
+                  >
+                {/each}
+                <span class={["amount", percent !== 100 && "changed"]}
+                  >{percent}%</span
+                >
+                {#each [1, 5] as delta (delta)}
+                  <button
+                    class="btn"
+                    onclick={() =>
+                      nudgeSide(surface, axis, direction, delta * SCALE_STEP)}
+                    >+{delta}%</button
+                  >
+                {/each}
+                {#if config[side.field] >= side.max}
+                  <span class="warn"
+                    >{$i18n.t("setupWizardThrowsSideAtLimit")}</span
+                  >
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/each}
+      </details>
+    {/if}
   </section>
 {/each}
 
@@ -214,34 +277,79 @@
   }
 
   .how {
-    max-width: 70ch;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    padding: 14px 18px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
 
     ol {
       list-style: none;
-      margin: 4px 0 0;
-      padding-left: 4px;
+      margin: 8px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     li {
       display: flex;
-      gap: 6px;
-      margin-bottom: 2px;
+      align-items: flex-start;
+      gap: 10px;
     }
 
     .n {
-      flex: 0 0 1.2em;
-      font-weight: 600;
+      flex: 0 0 22px;
+      height: 22px;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-accent-500);
+      color: var(--color-accent-fg);
+      font-size: 0.8em;
+      font-weight: 700;
     }
+  }
+
+  .art {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .how-text {
+    flex: 1 1 360px;
+    max-width: 70ch;
+  }
+
+  .how-title {
+    font-weight: 600;
   }
 
   .axis {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    max-width: 760px;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+  }
+
+  .axis-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .axis-name {
+    font-size: 1.1em;
+    font-weight: 600;
   }
 
   .row {
@@ -263,30 +371,108 @@
     font-variant-numeric: tabular-nums;
   }
 
+  //// Fine-tune: optional, folded away unless already in use.
+
   .fine {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-top: 8px;
-    border-top: 1px dotted var(--color-border);
+    border-top: 1px solid var(--color-border-soft);
+    padding-top: 10px;
+
+    &[open] {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .chevron {
+        transform: rotate(90deg);
+      }
+    }
+
+    summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 10px;
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+    }
+  }
+
+  .chevron {
+    width: 1em;
+    font-size: 0.8em;
+    color: var(--color-text-soft);
+    transition: transform var(--animation-speed);
   }
 
   .fine-title {
+    font-weight: 600;
+  }
+
+  .fine-hint {
     color: var(--color-text-soft);
     font-size: 0.9em;
+  }
+
+  .fine-why {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+  }
+
+  .fine-why-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 320px;
+    max-width: 70ch;
   }
 
   .surface {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
   }
 
   .surface-head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px 16px;
+    gap: 4px 10px;
+  }
+
+  .now {
+    margin-left: 12px;
+    color: var(--color-text-soft);
+    font-size: 0.85em;
+  }
+
+  .mixed {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--color-text-soft);
+    font-size: 0.9em;
+    max-width: 75ch;
+
+    i {
+      color: var(--color-accent-500);
+    }
+  }
+
+  .amount.changed {
+    color: var(--color-accent-500);
   }
 
   .name {
@@ -294,7 +480,10 @@
   }
 
   .direction {
-    min-width: 10em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 12em;
     padding-left: 12px;
   }
 

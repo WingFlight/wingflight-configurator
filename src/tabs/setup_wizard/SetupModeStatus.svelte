@@ -16,23 +16,47 @@
   });
 </script>
 
+{#snippet status(kind, icon, text)}
+  <div class={["status", kind]} role="status">
+    <i class={["fas", icon]} aria-hidden="true"></i>
+    <div class="status-text">
+      <span class="status-title">{$i18n.t("setupWizardSetupModeTitle")}</span>
+      <span>{text}</span>
+    </div>
+    {#if kind === "bad"}
+      <button class="btn" onclick={() => wiz.openTab("auxiliary")}>
+        {$i18n.t("setupWizardOpenModes")}
+      </button>
+    {/if}
+  </div>
+{/snippet}
+
 {#if wiz.setupModeActive}
-  <div class="status good">
-    {wiz.setupModeForced
+  {@render status(
+    "good",
+    "fa-check-circle",
+    wiz.setupModeForced
       ? $i18n.t("setupWizardSetupModeForced")
-      : $i18n.t("setupWizardSetupModeOn")}
-  </div>
+      : $i18n.t("setupWizardSetupModeOn"),
+  )}
 {:else if forceFailed && !wiz.setupModeAssigned}
-  <div class="status bad">
-    <span>{$i18n.t("setupWizardSetupModeNotAssigned")}</span>
-    <button class="btn" onclick={() => wiz.openTab("auxiliary")}>
-      {$i18n.t("setupWizardOpenModes")}
-    </button>
-  </div>
+  {@render status(
+    "bad",
+    "fa-times-circle",
+    $i18n.t("setupWizardSetupModeNotAssigned"),
+  )}
 {:else if forceFailed}
-  <div class="status warn">{$i18n.t("setupWizardSetupModeOff")}</div>
+  {@render status(
+    "warn",
+    "fa-exclamation-triangle",
+    $i18n.t("setupWizardSetupModeOff"),
+  )}
 {:else}
-  <div class="status warn">{$i18n.t("setupWizardSetupModeWaiting")}</div>
+  {@render status(
+    "warn",
+    "fa-circle-notch fa-spin",
+    $i18n.t("setupWizardSetupModeWaiting"),
+  )}
 {/if}
 
 <style lang="scss">
@@ -40,28 +64,43 @@
     @extend %button;
   }
 
+  // A tinted box with an icon, so "the green box" in the steps' text is
+  // easy to find: green when SETUP is on, yellow while waiting, red when
+  // the pilot has to do something.
   .status {
+    --tone: var(--color-yellow-500);
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
-    padding: 8px 12px;
-    border-left: 3px solid var(--color-border);
-    border-radius: var(--radius-xs);
-    background-color: var(--color-surface);
-    max-width: 70ch;
-    font-weight: 600;
+    gap: 12px 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--tone);
+    border-radius: var(--radius-md);
+    background-color: color-mix(in srgb, var(--tone) 12%, transparent);
 
     &.good {
-      border-left-color: var(--color-status-good);
-    }
-
-    &.warn {
-      border-left-color: var(--color-yellow-500);
+      --tone: var(--color-status-good);
     }
 
     &.bad {
-      border-left-color: var(--color-status-bad);
+      --tone: var(--color-status-bad);
     }
+
+    > i {
+      flex: none;
+      font-size: 1.6em;
+      color: var(--tone);
+    }
+  }
+
+  .status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    max-width: 75ch;
+  }
+
+  .status-title {
+    font-weight: 700;
   }
 </style>
