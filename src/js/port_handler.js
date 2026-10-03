@@ -192,6 +192,7 @@ PortHandler.rebuildPortPickerOptions = function (dfuText) {
     self.portPickerElement.append($('<option/>', {
         value: 'manual',
         text: i18n.getMessage('portsSelectManual'),
+        i18n: 'portsSelectManual',
         data: {isManual: true},
     }));
     self.syncVirtualOption();
@@ -383,6 +384,7 @@ PortHandler.updatePortSelect = function (ports) {
         this.portPickerElement.append($("<option/>", {
             value: 'manual',
             text: i18n.getMessage('portsSelectManual'),
+            i18n: 'portsSelectManual',
             data: {isManual: true},
         }));
     }
@@ -404,12 +406,14 @@ PortHandler.updatePortSelect = function (ports) {
             $("<option/>", {
                 value: "0",
                 text: i18n.getMessage('portsSelectPleaseSelect'),
+                i18n: 'portsSelectPleaseSelect',
             }),
         );
 
         this.portPickerElement.append($("<option/>", {
             value: "requestserial",
             text: i18n.getMessage('portsSelectAddSerialDevice'),
+            i18n: 'portsSelectAddSerialDevice',
             data: {isRequestSerial: true},
         }));
 
@@ -417,6 +421,7 @@ PortHandler.updatePortSelect = function (ports) {
             this.portPickerElement.append($("<option/>", {
                 value: "requestbluetooth",
                 text: i18n.getMessage('portsSelectAddBluetoothDevice'),
+                i18n: 'portsSelectAddBluetoothDevice',
                 data: {isRequestBluetooth: true},
             }));
         }
@@ -427,6 +432,7 @@ PortHandler.updatePortSelect = function (ports) {
             this.portPickerElement.append($("<option/>", {
                 value: "DFU",
                 text: i18n.getMessage('portsSelectAddDfuDevice'),
+                i18n: 'portsSelectAddDfuDevice',
                 data: {isDFU: true},
                 // also expose as real HTML attributes so non-jQuery consumers
                 // (e.g. the Svelte firmware flasher) can read them via .dataset
@@ -481,6 +487,7 @@ PortHandler.syncVirtualOption = function () {
         this.portPickerElement.append($("<option/>", {
             value: 'virtual',
             text: i18n.getMessage('portsSelectVirtual'),
+            i18n: 'portsSelectVirtual',
             data: {isVirtual: true},
         }));
         this.setPortsInputWidth();
