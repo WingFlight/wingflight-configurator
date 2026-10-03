@@ -177,13 +177,6 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-wizard-yaw-rate",
-      "path": "./feature-wizard-yaw-rate/",
-      "branch": "feature/wizard-yaw-rate",
-      "date": "2026-10-03T13:06:07Z"
     }
   ]
 }
