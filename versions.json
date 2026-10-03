@@ -180,13 +180,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-snap-hold",
-      "path": "./feature-snap-hold/",
-      "branch": "feature/snap-hold",
-      "date": "2026-10-03T15:45:22Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-yaw-rate",
       "path": "./feature-wizard-yaw-rate/",
       "branch": "feature/wizard-yaw-rate",
