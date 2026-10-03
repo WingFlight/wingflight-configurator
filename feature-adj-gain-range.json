@@ -1,8 +1,4 @@
 {
   "branch": "feature/adj-gain-range",
-  "date": "2026-10-03T15:11:12Z",
-  "number": 146,
-  "title": "Limit master gain to 25-200% again",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/146",
-  "draft": false
+  "date": "2026-10-03T15:11:12Z"
 }
