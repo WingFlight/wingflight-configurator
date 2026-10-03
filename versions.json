@@ -118,13 +118,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-adj-gain-range",
-      "path": "./feature-adj-gain-range/",
-      "branch": "feature/adj-gain-range",
-      "date": "2026-10-03T15:11:12Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
