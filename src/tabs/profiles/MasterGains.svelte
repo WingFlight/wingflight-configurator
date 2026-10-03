@@ -179,7 +179,7 @@
                   {:else}
                     <NumberInput
                       min="25"
-                      max={axis.gainMax ?? 1000}
+                      max={axis.gainMax ?? 200}
                       bind:value={FC.PID_PROFILE[axis.gainKey]}
                     />
                   {/if}

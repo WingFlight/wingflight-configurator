@@ -207,8 +207,8 @@
   function setFunction(adjRange, id) {
     const cfg = FUNCTIONS[id];
     adjRange.adjFunction = id;
-    adjRange.adjMin = cfg.defaultMin ?? cfg.min;
-    adjRange.adjMax = cfg.defaultMax ?? cfg.max;
+    adjRange.adjMin = cfg.min;
+    adjRange.adjMax = cfg.max;
   }
 
   function onPickFunction(id) {
