@@ -153,13 +153,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-setup-wizard",
-      "path": "./feature-setup-wizard/",
-      "branch": "feature/setup-wizard",
-      "date": "2026-10-03T22:45:13Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-side-by-side-installs",
       "path": "./feature-side-by-side-installs/",
       "branch": "feature/side-by-side-installs",
