@@ -1,0 +1,8 @@
+{
+  "branch": "feature/snap-hold",
+  "date": "2026-10-03T15:45:22Z",
+  "number": 147,
+  "title": "Raise the default snap relax hold to 350 ms",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/147",
+  "draft": false
+}
