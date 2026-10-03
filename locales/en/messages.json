@@ -8816,7 +8816,7 @@
         "message": "SETUP"
     },
     "setupWizardModesHelp_setup": {
-        "message": "Sticks straight to the surfaces at full travel. Use it to check throws on the bench."
+        "message": "Sticks straight to the surfaces at full travel. Use it to check throws on the bench. With the gyro on, a stick held off centre slowly drives the surfaces to full throw, because the model on the bench cannot turn."
     },
     "setupWizardModes_gyroOff": {
         "message": "GYRO OFF"
@@ -8927,7 +8927,7 @@
         "message": "Fit the propeller and check it is the right way round and tight."
     },
     "setupWizardFinishBefore_2": {
-        "message": "With SETUP mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement."
+        "message": "With SETUP mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in SETUP or GYRO OFF, not here."
     },
     "setupWizardFinishBefore_3": {
         "message": "Do a range check with your radio."
