@@ -71,6 +71,9 @@
         {$i18n.t("setupWizardStyleRates", { 1: style.rate, 2: style.expo })}
       </span>
       <span class="numbers">
+        {$i18n.t("setupWizardStyleYawRate", { 1: style.yawRate })}
+      </span>
+      <span class="numbers">
         {$i18n.t(`setupWizardStyleRelax_${style.key}`)}
       </span>
     </button>

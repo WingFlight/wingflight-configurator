@@ -8884,6 +8884,9 @@
     "setupWizardStyleRates": {
         "message": "$1 °/s, $2% expo"
     },
+    "setupWizardStyleYawRate": {
+        "message": "Rudder $1 °/s"
+    },
     "setupWizardStyleRelax_trainer": {
         "message": "I-term holds trim soon after each input"
     },
