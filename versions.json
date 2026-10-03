@@ -148,13 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-prop-hang",
-      "path": "./feature-prop-hang/",
-      "branch": "feature/prop-hang",
-      "date": "2026-10-03T16:12:17Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
