@@ -645,7 +645,7 @@ class FlightController {
       snapRelaxStrength:          100,
       snapRelaxThreshold:         60,
       snapRelaxWindow:            400,
-      snapRelaxHold:              150,
+      snapRelaxHold:              350,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,
