@@ -177,13 +177,6 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
-    },
-    {
-      "type": "branch",
-      "name": "feature-wizard-bench-note",
-      "path": "./feature-wizard-bench-note/",
-      "branch": "feature/wizard-bench-note",
-      "date": "2026-10-03T12:58:33Z"
     }
   ]
 }
