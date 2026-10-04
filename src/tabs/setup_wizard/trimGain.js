@@ -10,10 +10,11 @@ export const SERVO_TRIM = { roll: 89, pitch: 90, yaw: 91 };
 export const MASTER_GAIN = { roll: 85, pitch: 84, yaw: 86 };
 
 // Values the full channel travel maps to. A trim channel at center adds
-// nothing; a gain knob at center is 100%.
+// nothing. A gain knob covers the full master gain range (25-200%, as on
+// the Profiles tab); the mapping is linear, so its center is about 113%.
 export const TRIM_US = 100;
-export const GAIN_MIN = 50;
-export const GAIN_MAX = 150;
+export const GAIN_MIN = 25;
+export const GAIN_MAX = 200;
 
 const CHANNEL_LOW = 1000;
 const CHANNEL_HIGH = 2000;
