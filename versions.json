@@ -148,13 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-pid-defaults",
-      "path": "./feature-pid-defaults/",
-      "branch": "feature/pid-defaults",
-      "date": "2026-10-04T08:33:56Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
