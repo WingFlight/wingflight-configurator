@@ -1,3 +1,9 @@
+# 0.0.32
+
+Support the 0.0.32 firmware (MSP API 22.13). The firmware update resets every PID, thrust-vector and rate profile to defaults, so note your tune and rates before flashing.
+Give the Setup Wizard's flying styles per-axis rates, pitch and yaw lower than roll: Trainer 150/120/90, Sport 250/200/150 (the firmware defaults), 3D 500/400/300 deg/s. Each card lists all three.
+Narrow the Setup Wizard's gain knob to 0-150% master gain: fully down still turns the stabilizer off, center is 75%.
+
 # 0.0.31
 
 Support the 0.0.31 firmware (MSP API 22.13). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
