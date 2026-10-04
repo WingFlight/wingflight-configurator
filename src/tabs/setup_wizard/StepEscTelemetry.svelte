@@ -288,6 +288,20 @@
     wiz.markChanged();
   }
 
+  // Where the FC takes motor RPM from, in the order rpmSourceInit()
+  // (flight/motors.c) picks it at boot. The RPM pin wins only if one is set
+  // up for the motor, which the configurator can't see, so a pin in use is
+  // only "likely".
+  let rpmSource = $derived(
+    FC.FEATURE_CONFIG.features.FREQ_SENSOR
+      ? "pin"
+      : motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry
+        ? "dshot"
+        : telemetryOn
+          ? "esc"
+          : "none",
+  );
+
   function setBidir(on) {
     FC.MOTOR_CONFIG.use_dshot_telemetry = on;
     changeConnection();
@@ -495,6 +509,14 @@
   <section class="card">
     <h3><span class="num">5</span>{$i18n.t("setupWizardEscRpmTitle")}</h3>
     <p>{$i18n.t("setupWizardEscRpmText")}</p>
+    <p class={["source", rpmSource]}>
+      {$i18n.t("setupWizardEscRpmSource", {
+        1: $i18n.t(`setupWizardEscRpmSource_${rpmSource}`),
+      })}
+    </p>
+    {#if rpmSource === "pin"}
+      <div class="note">{$i18n.t("setupWizardEscRpmPinNote")}</div>
+    {/if}
     <div class="form">
       {#if motorState.isDshot}
         <label for="esc-bidir">{$i18n.t("motorsDshotBidir")}</label>
@@ -734,6 +756,14 @@
   .rpm {
     min-width: 9ch;
     font-variant-numeric: tabular-nums;
+  }
+
+  .source {
+    font-weight: 600;
+
+    &.none {
+      color: var(--color-text-soft);
+    }
   }
 
   .note {
