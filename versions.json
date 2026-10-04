@@ -133,13 +133,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-gain-floor",
-      "path": "./feature-gain-floor/",
-      "branch": "feature/gain-floor",
-      "date": "2026-10-04T08:44:34Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-gps-arm-without-fix",
       "path": "./feature-gps-arm-without-fix/"
     },
