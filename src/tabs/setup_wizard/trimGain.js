@@ -10,16 +10,22 @@ export const SERVO_TRIM = { roll: 89, pitch: 90, yaw: 91 };
 export const MASTER_GAIN = { roll: 85, pitch: 84, yaw: 86 };
 
 // Values the full channel travel maps to. A trim channel at center adds
-// nothing; a gain knob at center is 100%.
+// nothing. A gain knob covers the whole master gain range, so fully down
+// turns the stabilizer off and center is 100%.
 export const TRIM_US = 100;
-export const GAIN_MIN = 50;
-export const GAIN_MAX = 150;
+export const GAIN_MIN = 0;
+export const GAIN_MAX = 200;
 
-const CHANNEL_LOW = 1000;
-const CHANNEL_HIGH = 2000;
+// The channel span mapped onto min-max: 25 us past 1000-2000 at each end
+// (ranges are stored in 25 us steps), so a radio's full travel (about
+// 988-2012 us) stays inside the range and reaches both ends. Centered on
+// 1500, so a centered knob or trim gives the middle value.
+const CHANNEL_LOW = 975;
+const CHANNEL_HIGH = 2025;
 
 // An always-on, mapped ("absolute") range: the position of AUX channel
-// `aux` (0 = AUX1) is the value, from `min` at 1000 us to `max` at 2000 us.
+// `aux` (0 = AUX1) is the value, from `min` at CHANNEL_LOW to `max` at
+// CHANNEL_HIGH.
 // A mapped servo trim is runtime-only in the firmware: it follows the
 // channel and is never saved, so the radio keeps the trim, as with stick
 // trims.

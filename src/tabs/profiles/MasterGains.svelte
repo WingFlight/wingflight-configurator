@@ -60,6 +60,7 @@
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
+      gainMin: 25,
       gainMax: 200,
     },
   ];
@@ -75,6 +76,7 @@
     gainKey: "fwSpaGain",
     curveKey: "fwSpaCurve",
     help: "profilesFwSpaHelp",
+    gainMin: 25,
     gainMax: 200,
   };
 
@@ -178,7 +180,7 @@
                     </div>
                   {:else}
                     <NumberInput
-                      min="25"
+                      min={axis.gainMin ?? 0}
                       max={axis.gainMax ?? 200}
                       bind:value={FC.PID_PROFILE[axis.gainKey]}
                     />
