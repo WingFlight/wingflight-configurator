@@ -8882,7 +8882,7 @@
         "message": "Far from the servo's normal center. Move the horn instead, or this side loses travel."
     },
     "setupWizardDirectionIntro": {
-        "message": "The wizard moves one axis at a time to half stick. Check that each surface moves as described. Identify wiggles one servo so you can see which surface a row is about."
+        "message": "The wizard moves one axis at a time. Start small and increase the movement only if you need more travel to see the direction. Identify wiggles one servo so you can see which surface a row is about."
     },
     "setupWizardDirectionNoRadio": {
         "message": "Hands off the radio. On this step the wizard moves the surfaces itself, and your sticks do nothing. Press a button below and watch the model."
@@ -8892,6 +8892,21 @@
     },
     "setupWizardDirectionStop": {
         "message": "Stop"
+    },
+    "setupWizardDirectionDeflection": {
+        "message": "Test movement"
+    },
+    "setupWizardDirectionDeflectionSmall": {
+        "message": "Small (15%)"
+    },
+    "setupWizardDirectionDeflectionMedium": {
+        "message": "Medium (25%)"
+    },
+    "setupWizardDirectionDeflectionLarge": {
+        "message": "Large (35%)"
+    },
+    "setupWizardDirectionDeflectionHalf": {
+        "message": "Half stick (50%)"
     },
     "setupWizardDirectionMove_pitch": {
         "message": "Move pitch up"
@@ -9110,7 +9125,19 @@
         "message": "Every surface stays inside its limits."
     },
     "setupWizardGyroIntro": {
-        "message": "Overrides are off now, so the stabilizer drives the surfaces. Move the model by hand: the surfaces move only while it is moving, and should push against the movement."
+        "message": "Overrides are off now, so the stabilizer drives the surfaces. The wizard uses ANGLE mode when it can: tilt the model by hand and hold it there, and the surfaces should keep pushing back toward level."
+    },
+    "setupWizardGyroAngleForced": {
+        "message": "ANGLE mode is on for this step. The wizard switches it off again when you leave."
+    },
+    "setupWizardGyroAngleOn": {
+        "message": "ANGLE mode is on. Tilt the model and hold it there to check the correction direction."
+    },
+    "setupWizardGyroAngleWaiting": {
+        "message": "Switching to ANGLE mode… Check your radio is on."
+    },
+    "setupWizardGyroAngleFailed": {
+        "message": "The wizard couldn't switch ANGLE mode on. You can still check gyro direction by moving the model, but the surfaces may only react while it is moving."
     },
     "setupWizardGyroCheck_roll": {
         "message": "Roll the model so the right wing drops: the right aileron or elevon goes down and the left one goes up."
@@ -9221,7 +9248,7 @@
         "message": "Remove"
     },
     "setupWizardModesArmOn": {
-        "message": "The ARM switch is on. Switch it off before you carry on."
+        "message": "The ARM switch is in its on position. The configurator may still block actual arming over MSP, but switch ARM off before you carry on."
     },
     "setupWizardOpenModes": {
         "message": "Open the Modes tab"

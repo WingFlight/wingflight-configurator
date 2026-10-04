@@ -10,18 +10,25 @@
 
   const wiz = getContext("setupWizard");
 
-  // Half deflection in the stick direction each check describes. Signs follow
-  // the stabilized inputs: roll + is right roll, pitch + is stick forward
-  // (nose down), and yaw + is yaw left, since RC yaw is negated once in the
-  // firmware's setpoint.c.
+  // Signs follow the stabilized inputs: roll + is right roll, pitch + is
+  // stick forward (nose down), and yaw + is yaw left, since RC yaw is negated
+  // once in the firmware's setpoint.c.
   const CHECKS = [
-    { axis: "pitch", value: -0.5, key: "pitch" },
-    { axis: "roll", value: 0.5, key: "roll" },
-    { axis: "yaw", value: -0.5, key: "yaw" },
+    { axis: "pitch", sign: -1, key: "pitch" },
+    { axis: "roll", sign: 1, key: "roll" },
+    { axis: "yaw", sign: -1, key: "yaw" },
+  ];
+
+  const DEFLECTION_OPTIONS = [
+    { value: 0.15, label: "setupWizardDirectionDeflectionSmall" },
+    { value: 0.25, label: "setupWizardDirectionDeflectionMedium" },
+    { value: 0.35, label: "setupWizardDirectionDeflectionLarge" },
+    { value: 0.5, label: "setupWizardDirectionDeflectionHalf" },
   ];
 
   let active = $state(null);
   let holding = $state(false);
+  let deflection = $state(0.15);
   let answers = $state({});
   let wiggleTimer;
 
@@ -32,7 +39,19 @@
   function hold(check) {
     active = check.key;
     holding = true;
-    wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0, [check.axis]: check.value });
+    wiz.holdAxes({
+      roll: 0,
+      pitch: 0,
+      yaw: 0,
+      [check.axis]: check.sign * deflection,
+    });
+  }
+
+  function setDeflection(value) {
+    deflection = value;
+    if (!holding || !active) return;
+    const check = checks.find((c) => c.key === active);
+    if (check) hold(check);
   }
 
   // Lets the surfaces go but keeps the check open for answering.
@@ -83,6 +102,24 @@
 </div>
 
 <p>{$i18n.t("setupWizardDirectionIntro")}</p>
+
+<div
+  class="deflection"
+  role="group"
+  aria-label={$i18n.t("setupWizardDirectionDeflection")}
+>
+  <span>{$i18n.t("setupWizardDirectionDeflection")}</span>
+  {#each DEFLECTION_OPTIONS as option (option.value)}
+    <button
+      class={["btn", "step", deflection === option.value && "selected"]}
+      type="button"
+      aria-pressed={deflection === option.value}
+      onclick={() => setDeflection(option.value)}
+    >
+      {$i18n.t(option.label)}
+    </button>
+  {/each}
+</div>
 
 {#if wiz.setupModeActive}
   <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
@@ -189,6 +226,26 @@
   .check-head .btn {
     height: 2rem;
     padding: 0 16px;
+  }
+
+  .deflection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-soft);
+    font-weight: 600;
+
+    .step {
+      height: 2rem;
+      padding: 0 12px;
+
+      &.selected {
+        border-color: var(--color-accent-500);
+        background-color: var(--color-accent-soft);
+        color: var(--color-text);
+      }
+    }
   }
 
   p {
