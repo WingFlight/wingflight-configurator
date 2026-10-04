@@ -29,7 +29,7 @@
 
   // One rate scale for every curve on the page, so they compare.
   let scale = $derived(
-    Math.max(...STYLES.map((s) => s.rate), ...AXES.map((a) => rate(a))),
+    Math.max(...STYLES.map((s) => s.rate.roll), ...AXES.map((a) => rate(a))),
   );
 
   let changed = $state(false);
@@ -89,14 +89,19 @@
       </span>
       <span class="muted">{$i18n.t(`setupWizardStyleHelp_${style.key}`)}</span>
       <RateCurve
-        rate={style.rate}
+        rate={style.rate.roll}
         expo={style.expo}
         shape={shape("roll")}
         {scale}
         axisLabel={$i18n.t("setupWizardStyleStickAxis")}
       />
       <span class="numbers">
-        {$i18n.t("setupWizardStyleRates", { 1: style.rate, 2: style.expo })}
+        {$i18n.t("setupWizardStyleAxisRates", {
+          1: style.rate.roll,
+          2: style.rate.pitch,
+          3: style.rate.yaw,
+          4: style.expo,
+        })}
       </span>
       <span class="relax">
         {$i18n.t(`setupWizardStyleRelax_${style.key}`)}
