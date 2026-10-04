@@ -151,11 +151,7 @@
       "name": "feature-pid-defaults",
       "path": "./feature-pid-defaults/",
       "branch": "feature/pid-defaults",
-      "date": "2026-10-04T08:33:56Z",
-      "number": 153,
-      "title": "Seed the Virtual FC with the new default P and I gains",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/153",
-      "draft": false
+      "date": "2026-10-04T08:33:56Z"
     },
     {
       "type": "branch",
