@@ -438,52 +438,48 @@
     <!-- 4: battery from the ESC. -->
     <section class="card">
       <h3><span class="num">4</span>{$i18n.t("setupWizardEscBatteryTitle")}</h3>
-      <div class="fields">
-        <label class="field" for="esc-voltage-source">
-          <span>{$i18n.t("setupWizardEscUseVoltage")}</span>
-          <Switch
-            id="esc-voltage-source"
-            checked={FC.BATTERY_CONFIG.voltageMeterSource === METER_ESC}
-            onchange={(e) =>
-              setMeterFromEsc("voltageMeterSource", e.target.checked)}
-          />
+      <div class="form">
+        <label for="esc-cells">{$i18n.t("powerBatteryCellCount")}</label>
+        <select
+          id="esc-cells"
+          value={getCells()}
+          onchange={(e) => setCells(e.target.value)}
+        >
+          <option value={0}>{$i18n.t("setupWizardEscCellsAuto")}</option>
+          {#each { length: MAX_CELLS } as _, i (i)}
+            <option value={i + 1}>{i + 1}S</option>
+          {/each}
+        </select>
+
+        <label for="esc-capacity">{$i18n.t("powerBatteryCapacity")}</label>
+        <NumberInput
+          id="esc-capacity"
+          min="0"
+          max="40000"
+          step="10"
+          bind:value={FC.BATTERY_CONFIG.capacities[batteryProfile]}
+          onchange={changeBattery}
+        />
+
+        <label for="esc-voltage-source">
+          {$i18n.t("setupWizardEscUseVoltage")}
         </label>
-        <label class="field" for="esc-current-source">
-          <span>{$i18n.t("setupWizardEscUseCurrent")}</span>
-          <Switch
-            id="esc-current-source"
-            checked={FC.BATTERY_CONFIG.currentMeterSource === METER_ESC}
-            onchange={(e) =>
-              setMeterFromEsc("currentMeterSource", e.target.checked)}
-          />
+        <Switch
+          id="esc-voltage-source"
+          checked={FC.BATTERY_CONFIG.voltageMeterSource === METER_ESC}
+          onchange={(e) =>
+            setMeterFromEsc("voltageMeterSource", e.target.checked)}
+        />
+
+        <label for="esc-current-source">
+          {$i18n.t("setupWizardEscUseCurrent")}
         </label>
-        <label class="field" for="esc-cells">
-          <span>{$i18n.t("powerBatteryCellCount")}</span>
-          <select
-            id="esc-cells"
-            value={getCells()}
-            onchange={(e) => setCells(e.target.value)}
-          >
-            <option value={0}>{$i18n.t("setupWizardEscCellsAuto")}</option>
-            {#each { length: MAX_CELLS } as _, i (i)}
-              <option value={i + 1}>{i + 1}S</option>
-            {/each}
-          </select>
-        </label>
-        <div class="field">
-          <label for="esc-capacity">{$i18n.t("powerBatteryCapacity")}</label>
-          <span class="with-unit">
-            <NumberInput
-              id="esc-capacity"
-              min="0"
-              max="40000"
-              step="10"
-              bind:value={FC.BATTERY_CONFIG.capacities[batteryProfile]}
-              onchange={changeBattery}
-            />
-            mAh
-          </span>
-        </div>
+        <Switch
+          id="esc-current-source"
+          checked={FC.BATTERY_CONFIG.currentMeterSource === METER_ESC}
+          onchange={(e) =>
+            setMeterFromEsc("currentMeterSource", e.target.checked)}
+        />
       </div>
       <p class="muted">
         {$i18n.t("setupWizardEscBatteryNow", {
@@ -499,22 +495,20 @@
   <section class="card">
     <h3><span class="num">5</span>{$i18n.t("setupWizardEscRpmTitle")}</h3>
     <p>{$i18n.t("setupWizardEscRpmText")}</p>
-    <div class="fields">
+    <div class="form">
       {#if motorState.isDshot}
-        <label class="field" for="esc-bidir">
-          <span>{$i18n.t("motorsDshotBidir")}</span>
-          <Switch
-            id="esc-bidir"
-            checked={FC.MOTOR_CONFIG.use_dshot_telemetry}
-            onchange={(e) => setBidir(e.target.checked)}
-          />
-        </label>
+        <label for="esc-bidir">{$i18n.t("motorsDshotBidir")}</label>
+        <Switch
+          id="esc-bidir"
+          checked={FC.MOTOR_CONFIG.use_dshot_telemetry}
+          onchange={(e) => setBidir(e.target.checked)}
+        />
       {/if}
       {#each { length: motorCount } as _, i (i)}
-        <div class="field">
-          <label for={`esc-poles-${i}`}>
-            {$i18n.t("setupWizardEscPoles", { 1: i + 1 })}
-          </label>
+        <label for={`esc-poles-${i}`}>
+          {$i18n.t("setupWizardEscPoles", { 1: i + 1 })}
+        </label>
+        <span class="with-rpm">
           <NumberInput
             id={`esc-poles-${i}`}
             min="2"
@@ -528,7 +522,7 @@
               1: readings[i]?.rpm > 0 ? readings[i].rpm : "–",
             })}
           </span>
-        </div>
+        </span>
       {/each}
     </div>
     <p class="muted">{$i18n.t("setupWizardEscPolesHelp")}</p>
@@ -718,32 +712,28 @@
 
   //// Settings.
 
-  .fields {
+  // Label and control in two columns, so the controls line up.
+  .form {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px 20px;
-  }
-
-  .field {
-    display: flex;
+    grid-template-columns: max-content max-content;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    justify-items: start;
+    gap: 10px 24px;
 
     select {
-      min-width: 90px;
+      min-width: 120px;
     }
+  }
+
+  .with-rpm {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .rpm {
     min-width: 9ch;
     font-variant-numeric: tabular-nums;
-  }
-
-  .with-unit {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
   }
 
   .note {
