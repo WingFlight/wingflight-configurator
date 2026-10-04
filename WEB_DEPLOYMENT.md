@@ -143,6 +143,13 @@ https://cfg.wingflight.org/
   https://cfg.wingflight.org/latest/
   ```
 
+- **Release Lines** (install one as an app to keep it next to other lines)
+  ```
+  https://cfg.wingflight.org/v1.0/
+  ```
+  Follows the line's snapshots until it is released, then its releases;
+  before 1.0, the 0.0.N snapshots are line 1.0. See `release-channel.mjs`.
+
 - **Specific Release Versions**
   ```
   https://cfg.wingflight.org/1.0.0/
