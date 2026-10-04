@@ -16,6 +16,7 @@
   import StepAirframe from "./StepAirframe.svelte";
   import StepServoType from "./StepServoType.svelte";
   import StepMotor from "./StepMotor.svelte";
+  import StepEscTelemetry from "./StepEscTelemetry.svelte";
   import StepCentre from "./StepCentre.svelte";
   import StepDirection from "./StepDirection.svelte";
   import StepLimits from "./StepLimits.svelte";
@@ -37,6 +38,8 @@
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
     { key: "motor", component: StepMotor },
+    // Optional: skipped with Next when the ESC has no telemetry.
+    { key: "escTelemetry", component: StepEscTelemetry },
     { key: "centre", component: StepCentre },
     { key: "direction", component: StepDirection },
     { key: "limits", component: StepLimits },
@@ -139,6 +142,7 @@
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
+    await MSP.promise(MSPCodes.MSP_ESC_SENSOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
