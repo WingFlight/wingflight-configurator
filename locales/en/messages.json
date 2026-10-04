@@ -8585,7 +8585,7 @@
         "message": "Gain"
     },
     "setupWizardGainText": {
-        "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Center is 100%; fully down turns the stabilizer off."
+        "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Fully down turns the stabilizer off, center is 75% and fully up is 150%."
     },
     "setupWizardGainMode_single": {
         "message": "One knob"
@@ -8612,7 +8612,7 @@
         "message": "Turn the knob or slider…"
     },
     "setupWizardGainCentre": {
-        "message": "Fly the first flight with the knob at center (100%)."
+        "message": "Fly the first flight with the knob at center (75%)."
     },
     "setupWizardOpenAdjustments": {
         "message": "Open the Adjustments tab"

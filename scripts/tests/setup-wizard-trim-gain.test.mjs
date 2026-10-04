@@ -22,17 +22,17 @@ test("a centered trim channel adds nothing; the ends give +-100 us", () => {
   assert.equal(range.adjFunction, 89);
   assert.equal(range.adjStep, 0);
   assert.equal(mappedValue(range, 1500), 0);
-  assert.equal(mappedValue(range, 1000), -100);
-  assert.equal(mappedValue(range, 2000), 100);
+  assert.equal(mappedValue(range, 975), -100);
+  assert.equal(mappedValue(range, 2025), 100);
   assert.equal(mappedValue(range, 2100), 100);
 });
 
-test("a centered gain knob is 100%", () => {
+test("a gain knob spans 0-150% and is 75% centered", () => {
   const range = gainRange("pitch", 2);
   assert.equal(range.adjFunction, 84);
-  assert.equal(mappedValue(range, 1500), 100);
-  assert.equal(mappedValue(range, 1000), 50);
-  assert.equal(mappedValue(range, 2000), 150);
+  assert.equal(mappedValue(range, 1500), 75);
+  assert.equal(mappedValue(range, 975), 0);
+  assert.equal(mappedValue(range, 2025), 150);
 });
 
 test("slotFor reuses the function's own slot, else the first free one", () => {

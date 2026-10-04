@@ -10,11 +10,13 @@ export const SERVO_TRIM = { roll: 89, pitch: 90, yaw: 91 };
 export const MASTER_GAIN = { roll: 85, pitch: 84, yaw: 86 };
 
 // Values the full channel travel maps to. A trim channel at center adds
-// nothing. A gain knob covers the whole master gain range, so fully down
-// turns the stabilizer off and center is 100%.
+// nothing. A gain knob covers 0-150% master gain: fully down turns the
+// stabilizer off and center is 75%. Pilots found the default gains too hot
+// much above 100%, so the knob's top end stops at 150% (the firmware
+// allows 200%), leaving finer control over the useful part.
 export const TRIM_US = 100;
 export const GAIN_MIN = 0;
-export const GAIN_MAX = 200;
+export const GAIN_MAX = 150;
 
 // The channel span mapped onto min-max: 25 us past 1000-2000 at each end
 // (ranges are stored in 25 us steps), so a radio's full travel (about
