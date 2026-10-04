@@ -181,13 +181,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-style-rates",
-      "path": "./feature-style-rates/",
-      "branch": "feature/style-rates",
-      "date": "2026-10-04T17:53:09Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-gain-range",
       "path": "./feature-wizard-gain-range/",
       "branch": "feature/wizard-gain-range",
