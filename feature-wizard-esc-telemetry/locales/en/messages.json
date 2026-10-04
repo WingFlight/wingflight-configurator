@@ -8939,7 +8939,7 @@
         "message": "Motor RPM"
     },
     "setupWizardEscRpmText": {
-        "message": "The ESC or DShot reports electrical RPM. The pole count turns it into motor RPM."
+        "message": "Motor RPM comes from the ESC's RPM wire plugged into the flight controller's RPM pin. With DShot, bidirectional DShot can send it on the throttle wire instead. The pole count turns the electrical RPM into motor RPM."
     },
     "setupWizardEscPoles": {
         "message": "Motor $1 poles"
@@ -8965,8 +8965,8 @@
     "setupWizardEscRpmSource_none": {
         "message": "Nothing (no RPM)"
     },
-    "setupWizardEscRpmPinNote": {
-        "message": "The RPM sensor feature is on, so a motor with an RPM pin set up takes its RPM from the pin instead of DShot or ESC telemetry. To use those instead, turn the RPM sensor off on the Motors tab."
+    "setupWizardEscRpmPin": {
+        "message": "RPM from the ESC's RPM wire"
     },
     "setupWizardFinishEscTelemetry": {
         "message": "ESC telemetry"
