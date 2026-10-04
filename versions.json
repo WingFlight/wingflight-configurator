@@ -148,13 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-pid-gains",
-      "path": "./feature-pid-gains/",
-      "branch": "feature/pid-gains",
-      "date": "2026-10-04T09:03:22Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
