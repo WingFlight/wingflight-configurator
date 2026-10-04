@@ -1,0 +1,8 @@
+{
+  "branch": "feature/gain-pot-150",
+  "date": "2026-10-04T17:09:57Z",
+  "number": 156,
+  "title": "Narrow the wizard's gain knob to 0-150% master gain",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/156",
+  "draft": false
+}
