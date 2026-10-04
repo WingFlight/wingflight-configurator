@@ -8807,7 +8807,7 @@
         "message": "Applies to every control-surface servo. Switching between normal and narrow-band also resets that servo's center, limits and scale."
     },
     "setupWizardMotorIntro": {
-        "message": "Choose how the flight controller talks to the ESC, then check the motor runs. Telemetry, throttle range and other settings are on the Motors tab."
+        "message": "Choose how the flight controller talks to the ESC, then check the motor runs. ESC telemetry is the next step; throttle range and other settings are on the Motors tab."
     },
     "setupWizardMotorProtocolTitle": {
         "message": "ESC protocol"
@@ -8859,6 +8859,102 @@
     },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
+    },
+    "setupWizardStep_escTelemetry": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardEscIntro": {
+        "message": "Optional. If your ESC sends telemetry, the flight controller can read the battery voltage, current and motor RPM from it. If it doesn't, or you don't want to use it, press Next."
+    },
+    "setupWizardEscNoMotor": {
+        "message": "No motor is set up on the Motor step, so there is no ESC telemetry to set up. Press Next."
+    },
+    "setupWizardEscProtocolTitle": {
+        "message": "ESC telemetry protocol"
+    },
+    "setupWizardEscProtocolNone": {
+        "message": "None (no ESC telemetry)"
+    },
+    "setupWizardEscProtocolHelp": {
+        "message": "Choose the make of your ESC. Its manual says which telemetry it sends."
+    },
+    "setupWizardEscCastle": {
+        "message": "Castle Link reads telemetry on the throttle wire, so it needs no port."
+    },
+    "setupWizardEscElsewhere": {
+        "message": "ESC telemetry is set to $1, which doesn't use an ESC Telemetry port. Change it on the Motors tab."
+    },
+    "setupWizardEscPortTitle": {
+        "message": "Port the ESC telemetry wire is plugged into"
+    },
+    "setupWizardEscPortNone": {
+        "message": "No port is set for ESC telemetry yet. Choose a free one; ports in use for something else can be changed on the Configuration tab."
+    },
+    "setupWizardEscSignalTitle": {
+        "message": "Check the telemetry"
+    },
+    "setupWizardEscReceiving": {
+        "message": "Receiving"
+    },
+    "setupWizardEscNotReceiving": {
+        "message": "Nothing received"
+    },
+    "setupWizardEscSignalText": {
+        "message": "Plug in the flight battery. The ESC's voltage and temperature should appear below within a few seconds."
+    },
+    "setupWizardEscDetectHelp": {
+        "message": "If nothing arrives, Detect wiring tries the half duplex and pin swap settings for you."
+    },
+    "setupWizardEscVoltage": {
+        "message": "Voltage"
+    },
+    "setupWizardEscCurrent": {
+        "message": "Current"
+    },
+    "setupWizardEscTemperature": {
+        "message": "Temperature"
+    },
+    "setupWizardEscRpm": {
+        "message": "RPM"
+    },
+    "setupWizardEscMotor": {
+        "message": "Motor $1"
+    },
+    "setupWizardEscBatteryTitle": {
+        "message": "Battery"
+    },
+    "setupWizardEscUseVoltage": {
+        "message": "Battery voltage from the ESC"
+    },
+    "setupWizardEscUseCurrent": {
+        "message": "Current and mAh used from the ESC"
+    },
+    "setupWizardEscCellsAuto": {
+        "message": "Auto"
+    },
+    "setupWizardEscBatteryNow": {
+        "message": "Now: $1 V, $2 cells detected. Pack settings go into battery profile $3; more are on the Power tab."
+    },
+    "setupWizardEscRpmTitle": {
+        "message": "Motor RPM"
+    },
+    "setupWizardEscRpmText": {
+        "message": "The ESC reports electrical RPM. The pole count turns it into motor RPM."
+    },
+    "setupWizardEscPoles": {
+        "message": "Motor $1 poles"
+    },
+    "setupWizardEscPolesHelp": {
+        "message": "The pole count is the number of magnets in the motor bell, not the stator windings. The motor's manual usually gives it. With the propeller off, check the RPM shown matches the motor."
+    },
+    "setupWizardEscRpmNow": {
+        "message": "$1 rpm"
+    },
+    "setupWizardFinishEscTelemetry": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardFinishEscTelemetryOff": {
+        "message": "Off"
     },
     "setupWizardCentreIntro": {
         "message": "The surfaces are held at center. First set each horn and linkage so the surface is close to neutral, then fine-tune the center here."

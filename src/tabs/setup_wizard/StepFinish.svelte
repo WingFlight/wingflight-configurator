@@ -32,6 +32,14 @@
     return ESC_LABELS[name] ? $i18n.t(ESC_LABELS[name]) : name;
   });
 
+  let escTelemetry = $derived(
+    motorState.telemEnabled
+      ? motorState.isCastleLink
+        ? "Castle Link"
+        : motorState.telemetryProtocols[FC.ESC_SENSOR_CONFIG.protocol]
+      : $i18n.t("setupWizardFinishEscTelemetryOff"),
+  );
+
   let throws = $derived(
     AXES.filter((a) => wiz.surfaces.some((s) => s.axes[a.key]))
       .map(
@@ -66,6 +74,9 @@
 
   <dt>{$i18n.t("setupWizardFinishEsc")}</dt>
   <dd>{escProtocol}</dd>
+
+  <dt>{$i18n.t("setupWizardFinishEscTelemetry")}</dt>
+  <dd>{escTelemetry}</dd>
 
   <dt>{$i18n.t("setupWizardFinishThrows")}</dt>
   <dd>{throws || "–"}</dd>
