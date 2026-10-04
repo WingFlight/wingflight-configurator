@@ -8939,7 +8939,7 @@
         "message": "Motor RPM"
     },
     "setupWizardEscRpmText": {
-        "message": "The ESC reports electrical RPM. The pole count turns it into motor RPM."
+        "message": "The ESC or DShot reports electrical RPM. The pole count turns it into motor RPM."
     },
     "setupWizardEscPoles": {
         "message": "Motor $1 poles"
@@ -8949,6 +8949,24 @@
     },
     "setupWizardEscRpmNow": {
         "message": "$1 rpm"
+    },
+    "setupWizardEscRpmSource": {
+        "message": "RPM from: $1"
+    },
+    "setupWizardEscRpmSource_pin": {
+        "message": "RPM sensor pin"
+    },
+    "setupWizardEscRpmSource_dshot": {
+        "message": "Bidirectional DShot"
+    },
+    "setupWizardEscRpmSource_esc": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardEscRpmSource_none": {
+        "message": "Nothing (no RPM)"
+    },
+    "setupWizardEscRpmPinNote": {
+        "message": "The RPM sensor feature is on, so a motor with an RPM pin set up takes its RPM from the pin instead of DShot or ESC telemetry. To use those instead, turn the RPM sensor off on the Motors tab."
     },
     "setupWizardFinishEscTelemetry": {
         "message": "ESC telemetry"
