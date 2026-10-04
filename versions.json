@@ -148,6 +148,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-pid-gains",
+      "path": "./feature-pid-gains/",
+      "branch": "feature/pid-gains",
+      "date": "2026-10-04T09:03:22Z",
+      "number": 155,
+      "title": "Seed the Virtual FC with the raised default P and I gains",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/155",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
