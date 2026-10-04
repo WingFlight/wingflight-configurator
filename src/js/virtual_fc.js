@@ -42,9 +42,9 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 // Mirrors the firmware's reset templates (pg/pid.c resetPidProfile(), pg/rates.c,
 // pg/tv_pid.c) so a fresh virtual FC looks like a freshly flashed one.
 const DEFAULT_PIDS = [
-  [50, 16, 0, 75, 35], // roll  P I D F B
-  [50, 16, 0, 75, 35], // pitch
-  [80, 20, 0, 75, 35], // yaw
+  [120, 60, 0, 75, 35], // roll  P I D F B
+  [120, 60, 0, 75, 35], // pitch
+  [250, 60, 0, 75, 35], // yaw
 ];
 
 function defaultPidSlot() {
