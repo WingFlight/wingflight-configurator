@@ -166,6 +166,17 @@
       "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
+    },
+    {
+      "type": "branch",
+      "name": "feature-wizard-esc-telemetry",
+      "path": "./feature-wizard-esc-telemetry/",
+      "branch": "feature/wizard-esc-telemetry",
+      "date": "2026-10-04T06:38:45Z",
+      "number": 151,
+      "title": "Add an ESC telemetry step to the Setup Wizard",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/151",
+      "draft": false
     }
   ]
 }
