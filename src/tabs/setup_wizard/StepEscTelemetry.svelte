@@ -280,8 +280,9 @@
     wiz.markChanged();
   }
 
-  //// 5. Motor: pole count turns the ESC's electrical RPM into motor RPM.
-  //// Bidirectional DShot gives RPM on the throttle wire without a port.
+  //// 5. Motor RPM: the ESC's RPM wire on the FC's RPM pin (the frequency
+  //// sensor), or bidirectional DShot on the throttle wire. The pole count
+  //// turns the electrical RPM into motor RPM.
 
   function changeMotor() {
     motorChanged = true;
@@ -301,6 +302,11 @@
           ? "esc"
           : "none",
   );
+
+  function setRpmPin(on) {
+    FC.FEATURE_CONFIG.features.FREQ_SENSOR = on;
+    changeConnection();
+  }
 
   function setBidir(on) {
     FC.MOTOR_CONFIG.use_dshot_telemetry = on;
@@ -514,10 +520,13 @@
         1: $i18n.t(`setupWizardEscRpmSource_${rpmSource}`),
       })}
     </p>
-    {#if rpmSource === "pin"}
-      <div class="note">{$i18n.t("setupWizardEscRpmPinNote")}</div>
-    {/if}
     <div class="form">
+      <label for="esc-rpm-pin">{$i18n.t("setupWizardEscRpmPin")}</label>
+      <Switch
+        id="esc-rpm-pin"
+        checked={FC.FEATURE_CONFIG.features.FREQ_SENSOR}
+        onchange={(e) => setRpmPin(e.target.checked)}
+      />
       {#if motorState.isDshot}
         <label for="esc-bidir">{$i18n.t("motorsDshotBidir")}</label>
         <Switch
