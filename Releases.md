@@ -1,3 +1,17 @@
+# 0.0.31
+
+Support the 0.0.31 firmware (MSP API 22.13). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
+Add a Setup Wizard tab that walks a new model through sensors and level, receiver, airframe, servo type, motor, ESC telemetry, surface centres, control direction, binding limits, throws, travel, gyro direction, trim and gain knobs, mode switches and flying style.
+Add the Prop-Hang Relax settings (strength, angle, fade-out) under PID Settings, and the PROP_HANG debug mode to the Blackbox list.
+Limit master gain to 0-200% on the Profiles, Thrust Vector and Adjustments tabs (was 25-1000%). 0% turns the stabilizer off on that axis.
+Show the new default P and I gains and snap relax hold in the Virtual FC, and say that snap relax covers yaw.
+Match the firmware's GPS nav defaults: bearing gain 120, throttle 65%.
+Add the Remap FC tab.
+Let the CLI be left with exit or save when connected to the Virtual FC.
+Keep the browser from translating the page back to another language after a language switch.
+
+Group development builds by pull request on the web landing page, and publish previews of pull requests labelled "preview".
+
 # 0.0.30
 
 Support MSP API 22.13 (0.0.30 firmware). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
