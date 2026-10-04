@@ -1,7 +1,7 @@
 <script>
-  // A rotary knob on a 50-150% scale, pointing at `value` (default the
+  // A rotary knob on a `min`-`max` % scale, pointing at `value` (default the
   // center, 100%). Decorative; the value is written next to it.
-  let { value = 100, min = 50, max = 150 } = $props();
+  let { value = 100, min = 0, max = 200 } = $props();
 
   const CX = 50;
   const CY = 48;
