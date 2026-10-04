@@ -98,6 +98,18 @@
     return index >= 0 && bit_check(FC.CONFIG.mode, index);
   }
 
+  function switchInRange(range) {
+    if (!range) return false;
+    const value = auxValue(range.auxChannelIndex);
+    return value >= range.range.start && value <= range.range.end;
+  }
+
+  function displayActive(mode, range) {
+    // ARM cannot become truly active while MSP is connected, so confirm it
+    // from the detected switch direction/range instead.
+    return mode.id === 0 ? switchInRange(range) : isActive(mode);
+  }
+
   function listen(mode) {
     clearTimeout(detectTimer);
     clearTimeout(settleTimer);
@@ -177,11 +189,12 @@
 
 {#snippet modeRow(mode)}
   {@const range = assignment(mode)}
+  {@const active = displayActive(mode, range)}
   <li
     class={[
       listening === mode.id && "listening",
       range && "assigned-mode",
-      range && isActive(mode) && "active",
+      range && active && "active",
     ]}
   >
     <span class="mode-icon">
@@ -211,7 +224,7 @@
             start={range.range.start}
             end={range.range.end}
             value={auxValue(range.auxChannelIndex)}
-            active={isActive(mode)}
+            {active}
           />
           <span class="range-text">
             {$i18n.t("setupWizardModesRange", {
@@ -221,8 +234,8 @@
             })}
           </span>
         </span>
-        <span class={["live", isActive(mode) && "on"]}>
-          {isActive(mode)
+        <span class={["live", active && "on"]}>
+          {active
             ? $i18n.t("setupWizardModesOn")
             : $i18n.t("setupWizardModesOff")}
         </span>
@@ -256,8 +269,8 @@
 
 {#if !assignment(MODES[0])}
   <div class="note warn">{$i18n.t("setupWizardModesArmMissing")}</div>
-{:else if isActive(MODES[0])}
-  <div class="note">{$i18n.t("setupWizardModesArmOn")}</div>
+{:else if displayActive(MODES[0], assignment(MODES[0]))}
+  <div class="note warn">{$i18n.t("setupWizardModesArmOn")}</div>
 {/if}
 
 <h3 class="group">{$i18n.t("setupWizardModesGroupOptional")}</h3>

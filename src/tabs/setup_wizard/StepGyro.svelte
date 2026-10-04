@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
 
   import { i18n } from "@/js/i18n.js";
 
@@ -8,18 +8,48 @@
 
   const wiz = getContext("setupWizard");
 
-  // No overrides here: the stabiliser drives the surfaces (the PID runs
-  // while disarmed too), so they react while the model is being moved.
+  // No overrides here: the stabiliser drives the surfaces (the PID runs while
+  // disarmed too). The wizard tries to put the model in ANGLE mode so the
+  // reaction holds while the model is tilted, making the direction easier to
+  // see on the bench.
   const CHECKS = ["roll", "pitch", "yaw"];
 
   let results = $state({});
+  let angleForceFailed = $state(false);
 
   let checks = $derived(
     CHECKS.filter((axis) => wiz.surfaces.some((s) => s.axes[axis])),
   );
+
+  onMount(() => {
+    let cancelled = false;
+    wiz.forceAngleMode().then((ok) => {
+      if (!cancelled) angleForceFailed = !ok;
+    });
+
+    return () => {
+      cancelled = true;
+      wiz.releaseAngleMode();
+    };
+  });
 </script>
 
 <p>{$i18n.t("setupWizardGyroIntro")}</p>
+
+{#if wiz.angleModeActive}
+  <div class="mode-on good">
+    <i class="fas fa-check" aria-hidden="true"></i>
+    {$i18n.t(
+      wiz.angleModeForced
+        ? "setupWizardGyroAngleForced"
+        : "setupWizardGyroAngleOn",
+    )}
+  </div>
+{:else if angleForceFailed}
+  <div class="mode-on warn">{$i18n.t("setupWizardGyroAngleFailed")}</div>
+{:else}
+  <div class="mode-on">{$i18n.t("setupWizardGyroAngleWaiting")}</div>
+{/if}
 
 <div class="legend">
   <span class="key">
@@ -87,6 +117,27 @@
     background-color: var(--color-surface-sunken);
     max-width: 70ch;
     font-weight: 600;
+  }
+
+  .mode-on {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-left: 4px solid var(--color-accent-500);
+    border-radius: var(--radius-xs);
+    background-color: var(--color-surface-sunken);
+    max-width: 70ch;
+    font-weight: 600;
+
+    &.good {
+      border-left-color: var(--color-status-good);
+      color: var(--color-status-good);
+    }
+
+    &.warn {
+      border-left-color: var(--color-yellow-500);
+    }
   }
 
   .btn {
