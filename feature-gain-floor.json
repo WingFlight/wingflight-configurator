@@ -1,8 +1,4 @@
 {
   "branch": "feature/gain-floor",
-  "date": "2026-10-04T08:44:34Z",
-  "number": 154,
-  "title": "Let gain knobs reach 0% and their full travel",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/154",
-  "draft": false
+  "date": "2026-10-04T08:44:34Z"
 }
