@@ -9391,6 +9391,9 @@
     "setupWizardStyleRates": {
         "message": "$1 °/s, $2% expo"
     },
+    "setupWizardStyleAxisRates": {
+        "message": "Roll $1, pitch $2, yaw $3 °/s, $4% expo"
+    },
     "setupWizardStyleRelax_trainer": {
         "message": "I-term holds trim soon after each input"
     },
