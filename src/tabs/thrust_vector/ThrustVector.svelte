@@ -3,10 +3,10 @@
   import { onMount } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
+  import { defaultTvSlot } from "@/js/virtual_fc.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import {
     TV_PID_ADJUSTMENT_FUNCTIONS,
     TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS,
@@ -195,6 +195,10 @@
   function onClickHelp() {
     window.open(getTabHelpURL("tabThrustVector"), "_system");
   }
+
+  // Firmware defaults (pg/tv_pid.c), so a changed value stays visible
+  // in basic mode. The Virtual FC seeds its profiles from the same values.
+  const TV_DEFAULTS = defaultTvSlot().profile;
 </script>
 
 {#snippet header()}
@@ -517,213 +521,276 @@
     </Field>
   </Section>
 
-  {#if CONFIGURATOR.expertMode}
-    <GainCurves profile={FC.TV_PID_PROFILE} idPrefix="tv-" />
+  <GainCurves profile={FC.TV_PID_PROFILE} idPrefix="tv-" />
 
-    <Section label="thrustVectorPidSettings">
-      <SubSection label="profilesItermDecayGroup">
-        <Field id="tv-iterm-decay-limit" label="profilesItermDecayLimit">
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermDecayLimitHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-iterm-decay-limit"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.iterm_decay_limit}
-          />
-        </Field>
-      </SubSection>
+  <Section label="thrustVectorPidSettings">
+    <SubSection label="profilesItermDecayGroup">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.iterm_decay_limit !==
+          TV_DEFAULTS.iterm_decay_limit}
+        id="tv-iterm-decay-limit"
+        label="profilesItermDecayLimit"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesItermDecayLimitHelp")}
+        {/snippet}
+        <NumberInput
+          id="tv-iterm-decay-limit"
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.iterm_decay_limit}
+        />
+      </Field>
+    </SubSection>
 
-      <SubSection label="profilesItermRelaxLevelGroup">
-        <Field
+    <SubSection label="profilesItermRelaxLevelGroup">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.itermRelaxLevelRoll !==
+          TV_DEFAULTS.itermRelaxLevelRoll}
+        id="tv-iterm-relax-level-roll"
+        label="profilesItermRelaxLevelRoll"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesItermRelaxLevelHelp")}
+        {/snippet}
+        <NumberInput
           id="tv-iterm-relax-level-roll"
-          label="profilesItermRelaxLevelRoll"
-        >
-          {#snippet tooltip()}
-            {$i18n.t("profilesItermRelaxLevelHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-iterm-relax-level-roll"
-            min="10"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
-          />
-        </Field>
-        <Field
+          min="10"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.itermRelaxLevelRoll}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.itermRelaxLevelPitch !==
+          TV_DEFAULTS.itermRelaxLevelPitch}
+        id="tv-iterm-relax-level-pitch"
+        label="profilesItermRelaxLevelPitch"
+      >
+        <NumberInput
           id="tv-iterm-relax-level-pitch"
-          label="profilesItermRelaxLevelPitch"
-        >
-          <NumberInput
-            id="tv-iterm-relax-level-pitch"
-            min="10"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
-          />
-        </Field>
-        <Field id="tv-iterm-relax-level-yaw" label="profilesItermRelaxLevelYaw">
-          <NumberInput
-            id="tv-iterm-relax-level-yaw"
-            min="10"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
-          />
-        </Field>
-      </SubSection>
+          min="10"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.itermRelaxLevelPitch}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.itermRelaxLevelYaw !==
+          TV_DEFAULTS.itermRelaxLevelYaw}
+        id="tv-iterm-relax-level-yaw"
+        label="profilesItermRelaxLevelYaw"
+      >
+        <NumberInput
+          id="tv-iterm-relax-level-yaw"
+          min="10"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.itermRelaxLevelYaw}
+        />
+      </Field>
+    </SubSection>
 
-      <SubSection label="profilesErrorLimit">
-        <Field id="tv-error-limit-roll" label="profilesErrorLimitRoll">
-          {#snippet tooltip()}
-            {$i18n.t("profilesErrorLimitHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-error-limit-roll"
-            min="0"
-            max="180"
-            bind:value={FC.TV_PID_PROFILE.errorLimitRoll}
-          />
-        </Field>
-        <Field id="tv-error-limit-pitch" label="profilesErrorLimitPitch">
-          <NumberInput
-            id="tv-error-limit-pitch"
-            min="0"
-            max="180"
-            bind:value={FC.TV_PID_PROFILE.errorLimitPitch}
-          />
-        </Field>
-        <Field id="tv-error-limit-yaw" label="profilesErrorLimitYaw">
-          <NumberInput
-            id="tv-error-limit-yaw"
-            min="0"
-            max="180"
-            bind:value={FC.TV_PID_PROFILE.errorLimitYaw}
-          />
-        </Field>
-      </SubSection>
+    <SubSection label="profilesErrorLimit">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.errorLimitRoll !==
+          TV_DEFAULTS.errorLimitRoll}
+        id="tv-error-limit-roll"
+        label="profilesErrorLimitRoll"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesErrorLimitHelp")}
+        {/snippet}
+        <NumberInput
+          id="tv-error-limit-roll"
+          min="0"
+          max="180"
+          bind:value={FC.TV_PID_PROFILE.errorLimitRoll}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.errorLimitPitch !==
+          TV_DEFAULTS.errorLimitPitch}
+        id="tv-error-limit-pitch"
+        label="profilesErrorLimitPitch"
+      >
+        <NumberInput
+          id="tv-error-limit-pitch"
+          min="0"
+          max="180"
+          bind:value={FC.TV_PID_PROFILE.errorLimitPitch}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.errorLimitYaw !== TV_DEFAULTS.errorLimitYaw}
+        id="tv-error-limit-yaw"
+        label="profilesErrorLimitYaw"
+      >
+        <NumberInput
+          id="tv-error-limit-yaw"
+          min="0"
+          max="180"
+          bind:value={FC.TV_PID_PROFILE.errorLimitYaw}
+        />
+      </Field>
+    </SubSection>
 
-      <SubSection label="profilesGyroCutoffGroup">
-        <Field
+    <SubSection label="profilesGyroCutoffGroup">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.gyroCutoffRoll !==
+          TV_DEFAULTS.gyroCutoffRoll}
+        id="tv-gyro-cutoff-roll"
+        label="profilesGyroCutoffRoll"
+        unit="Hz"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesGyroCutoffHelp")}
+        {/snippet}
+        <NumberInput
           id="tv-gyro-cutoff-roll"
-          label="profilesGyroCutoffRoll"
-          unit="Hz"
-        >
-          {#snippet tooltip()}
-            {$i18n.t("profilesGyroCutoffHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-gyro-cutoff-roll"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.gyroCutoffRoll}
-          />
-        </Field>
-        <Field
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.gyroCutoffRoll}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.gyroCutoffPitch !==
+          TV_DEFAULTS.gyroCutoffPitch}
+        id="tv-gyro-cutoff-pitch"
+        label="profilesGyroCutoffPitch"
+        unit="Hz"
+      >
+        <NumberInput
           id="tv-gyro-cutoff-pitch"
-          label="profilesGyroCutoffPitch"
-          unit="Hz"
-        >
-          <NumberInput
-            id="tv-gyro-cutoff-pitch"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.gyroCutoffPitch}
-          />
-        </Field>
-        <Field id="tv-gyro-cutoff-yaw" label="profilesGyroCutoffYaw" unit="Hz">
-          <NumberInput
-            id="tv-gyro-cutoff-yaw"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.gyroCutoffYaw}
-          />
-        </Field>
-      </SubSection>
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.gyroCutoffPitch}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.gyroCutoffYaw !== TV_DEFAULTS.gyroCutoffYaw}
+        id="tv-gyro-cutoff-yaw"
+        label="profilesGyroCutoffYaw"
+        unit="Hz"
+      >
+        <NumberInput
+          id="tv-gyro-cutoff-yaw"
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.gyroCutoffYaw}
+        />
+      </Field>
+    </SubSection>
 
-      <SubSection label="profilesDtermCutoffGroup">
-        <Field
+    <SubSection label="profilesDtermCutoffGroup">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.dtermCutoffRoll !==
+          TV_DEFAULTS.dtermCutoffRoll}
+        id="tv-dterm-cutoff-roll"
+        label="profilesDtermCutoffRoll"
+        unit="Hz"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesDtermCutoffHelp")}
+        {/snippet}
+        <NumberInput
           id="tv-dterm-cutoff-roll"
-          label="profilesDtermCutoffRoll"
-          unit="Hz"
-        >
-          {#snippet tooltip()}
-            {$i18n.t("profilesDtermCutoffHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-dterm-cutoff-roll"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.dtermCutoffRoll}
-          />
-        </Field>
-        <Field
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.dtermCutoffRoll}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.dtermCutoffPitch !==
+          TV_DEFAULTS.dtermCutoffPitch}
+        id="tv-dterm-cutoff-pitch"
+        label="profilesDtermCutoffPitch"
+        unit="Hz"
+      >
+        <NumberInput
           id="tv-dterm-cutoff-pitch"
-          label="profilesDtermCutoffPitch"
-          unit="Hz"
-        >
-          <NumberInput
-            id="tv-dterm-cutoff-pitch"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.dtermCutoffPitch}
-          />
-        </Field>
-        <Field
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.dtermCutoffPitch}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.dtermCutoffYaw !==
+          TV_DEFAULTS.dtermCutoffYaw}
+        id="tv-dterm-cutoff-yaw"
+        label="profilesDtermCutoffYaw"
+        unit="Hz"
+      >
+        <NumberInput
           id="tv-dterm-cutoff-yaw"
-          label="profilesDtermCutoffYaw"
-          unit="Hz"
-        >
-          <NumberInput
-            id="tv-dterm-cutoff-yaw"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.dtermCutoffYaw}
-          />
-        </Field>
-      </SubSection>
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.dtermCutoffYaw}
+        />
+      </Field>
+    </SubSection>
 
-      <SubSection label="profilesBtermCutoffGroup">
-        <Field
+    <SubSection label="profilesBtermCutoffGroup">
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.btermCutoffRoll !==
+          TV_DEFAULTS.btermCutoffRoll}
+        id="tv-bterm-cutoff-roll"
+        label="profilesBtermCutoffRoll"
+        unit="Hz"
+      >
+        {#snippet tooltip()}
+          {$i18n.t("profilesBtermCutoffHelp")}
+        {/snippet}
+        <NumberInput
           id="tv-bterm-cutoff-roll"
-          label="profilesBtermCutoffRoll"
-          unit="Hz"
-        >
-          {#snippet tooltip()}
-            {$i18n.t("profilesBtermCutoffHelp")}
-          {/snippet}
-          <NumberInput
-            id="tv-bterm-cutoff-roll"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.btermCutoffRoll}
-          />
-        </Field>
-        <Field
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.btermCutoffRoll}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.btermCutoffPitch !==
+          TV_DEFAULTS.btermCutoffPitch}
+        id="tv-bterm-cutoff-pitch"
+        label="profilesBtermCutoffPitch"
+        unit="Hz"
+      >
+        <NumberInput
           id="tv-bterm-cutoff-pitch"
-          label="profilesBtermCutoffPitch"
-          unit="Hz"
-        >
-          <NumberInput
-            id="tv-bterm-cutoff-pitch"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.btermCutoffPitch}
-          />
-        </Field>
-        <Field
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.btermCutoffPitch}
+        />
+      </Field>
+      <Field
+        expert
+        changed={FC.TV_PID_PROFILE.btermCutoffYaw !==
+          TV_DEFAULTS.btermCutoffYaw}
+        id="tv-bterm-cutoff-yaw"
+        label="profilesBtermCutoffYaw"
+        unit="Hz"
+      >
+        <NumberInput
           id="tv-bterm-cutoff-yaw"
-          label="profilesBtermCutoffYaw"
-          unit="Hz"
-        >
-          <NumberInput
-            id="tv-bterm-cutoff-yaw"
-            min="0"
-            max="250"
-            bind:value={FC.TV_PID_PROFILE.btermCutoffYaw}
-          />
-        </Field>
-      </SubSection>
-    </Section>
-  {/if}
+          min="0"
+          max="250"
+          bind:value={FC.TV_PID_PROFILE.btermCutoffYaw}
+        />
+      </Field>
+    </SubSection>
+  </Section>
 </Page>
 
 <dialog bind:this={copyDialogEl}>

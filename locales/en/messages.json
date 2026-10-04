@@ -197,6 +197,12 @@
     "zoomBoxText": {
         "message": "Zoom:"
     },
+    "expertModeShowAdvanced": {
+        "message": "Show advanced settings ({{count}} hidden)"
+    },
+    "expertModeHideAdvanced": {
+        "message": "Hide advanced settings"
+    },
     "expertMode": {
         "message": "Expert Mode"
     },

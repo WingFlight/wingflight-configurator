@@ -7,12 +7,16 @@
   import Section from "@/components/Section.svelte";
   import Select from "@/components/Select.svelte";
 
-  // Expert Mode panel assigning a gain curve (from the shared pool on the
+  // Panel (expert fields) assigning a gain curve (from the shared pool on the
   // Curves tab) to each axis's Flight Feel Gain. Kept out of the Flight Feel
   // table because curves are an advanced shaping tool; Flight Feel shows a
   // CURVE badge on any Gain a curve is shaping. `profile` is FC.PID_PROFILE
   // or FC.TV_PID_PROFILE; `throttle` adds the Throttle row (main loop only).
   let { profile, throttle = false, idPrefix = "" } = $props();
+
+  // Firmware default (pg/pid.h FW_SPA_SPEED_MAX_DEFAULT), so a changed value
+  // stays visible in basic mode. Every curve defaults to 0 (none).
+  const FW_SPA_SPEED_MAX_DEFAULT = 150;
 
   const AXES = [
     { key: "gainCurveRoll", label: "axisROLL" },
@@ -39,7 +43,12 @@
 
 <Section label="profilesGainCurvesGroup" summary="profilesGainCurveHelp">
   {#each rows as row (row.key)}
-    <Field id="{idPrefix}gain-curve-{row.key}" label={row.label}>
+    <Field
+      expert
+      changed={profile[row.key] !== 0}
+      id="{idPrefix}gain-curve-{row.key}"
+      label={row.label}
+    >
       <Select
         id="{idPrefix}gain-curve-{row.key}"
         {options}
@@ -49,6 +58,8 @@
   {/each}
   {#if throttle && profile.hasFwSpa}
     <Field
+      expert
+      changed={profile.fwSpaSpeedMax !== FW_SPA_SPEED_MAX_DEFAULT}
       id="{idPrefix}gain-curve-speed-max"
       label="profilesFwSpaSpeedMax"
       unit="km/h"

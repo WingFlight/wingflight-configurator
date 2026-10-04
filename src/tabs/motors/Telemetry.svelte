@@ -91,6 +91,8 @@
     wizardInstance?.stop();
     closeWizard();
   }
+
+  // Expert-field defaults: pg/esc_sensor.c (corrections default to 0).
 </script>
 
 {#snippet wiringDetectActions()}
@@ -175,7 +177,13 @@
   {#if motorState.telemEnabled}
     <div transition:slide>
       <SubSection label="motorsSectionSensorCorrection">
-        <Field id="voltage-correction" label="motorsVoltageCorrection" unit="%">
+        <Field
+          expert
+          changed={FC.ESC_SENSOR_CONFIG.voltage_correction !== 0}
+          id="voltage-correction"
+          label="motorsVoltageCorrection"
+          unit="%"
+        >
           {#snippet tooltip()}
             <Tooltip
               help="motorsVoltageCorrectionHelp"
@@ -192,7 +200,13 @@
             bind:value={FC.ESC_SENSOR_CONFIG.voltage_correction}
           />
         </Field>
-        <Field id="current-correction" label="motorsCurrentCorrection" unit="%">
+        <Field
+          expert
+          changed={FC.ESC_SENSOR_CONFIG.current_correction !== 0}
+          id="current-correction"
+          label="motorsCurrentCorrection"
+          unit="%"
+        >
           {#snippet tooltip()}
             <Tooltip
               help="motorsCurrentCorrectionHelp"
@@ -210,6 +224,8 @@
           />
         </Field>
         <Field
+          expert
+          changed={FC.ESC_SENSOR_CONFIG.consumption_correction !== 0}
           id="consumption-correction"
           label="motorsConsumptionCorrection"
           unit="%"

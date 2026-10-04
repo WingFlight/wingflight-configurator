@@ -6,7 +6,6 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
-  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
 
   import Page from "@/components/Page.svelte";
   import Select from "@/components/Select.svelte";
@@ -58,7 +57,6 @@
   });
 
   let showPidBoxes = $derived(FC.PID_PROFILE.pid_mode === 1);
-  let showExpertSettings = $derived(showPidBoxes && CONFIGURATOR.expertMode);
 
   // Use configured assignments, not the live switch state.
   let configuredModes = $derived.by(() => {
@@ -280,9 +278,10 @@
       {/if}
       <LevelingSettings {configuredModes} />
     </div>
-    <!-- Expert Mode panels sit below the main ones rather than in a side
-         column, so Flight Feel keeps the full width for its guide. -->
-    {#if showExpertSettings}
+    <!-- The advanced panels sit below the main ones rather than in a side
+         column, so Flight Feel keeps the full width for its guide. Their
+         settings are expert fields, folded away in basic mode. -->
+    {#if showPidBoxes}
       <div class="expert-settings">
         <div>
           <GainCurves profile={FC.PID_PROFILE} throttle />

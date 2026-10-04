@@ -1,10 +1,34 @@
 <script>
+  import { untrack } from "svelte";
   import { slide } from "svelte/transition";
 
   import { i18n } from "@/js/i18n.js";
+  import Expert from "@/components/Expert.svelte";
   import HoverTooltip from "@/components/HoverTooltip.svelte";
+  import { getExpertSubsection } from "@/js/expert.svelte.js";
 
-  let { id, children, label, tooltip, unit } = $props();
+  // expert: hide the field in basic mode, see Expert.svelte. changed: the
+  // value differs from the firmware default, so show it anyway.
+  let {
+    id,
+    children,
+    label,
+    tooltip,
+    unit,
+    expert = false,
+    changed = false,
+  } = $props();
+
+  // A plain field counts towards its SubSection's items (an expert one is
+  // counted by its <Expert>), so the SubSection knows it has something
+  // showing.
+  const subsection = getExpertSubsection();
+  $effect(() => {
+    if (subsection && !expert) {
+      untrack(() => subsection.items++);
+      return () => untrack(() => subsection.items--);
+    }
+  });
 
   let width = $state(0);
   let mobile = $derived(width <= 480);
@@ -13,45 +37,53 @@
 
 <svelte:window bind:innerWidth={width} />
 
-<div class="container">
-  <div class="content">
-    <label
-      for={id}
-      onclick={(e) => {
-        if (mobile && tooltip) {
-          e.preventDefault();
-          showMobileTooltip = !showMobileTooltip;
-        }
-      }}
-    >
-      {#if typeof label === "string"}
-        <span class="field-label">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t(label)}
-        </span>
-      {:else if typeof label === "function"}
-        {@render label()}
-      {/if}
-      {#if unit}
-        <span class="units">[ {unit} ]</span>
-      {/if}
-    </label>
-    <div class="control">
-      {#if !mobile && tooltip}
-        <HoverTooltip {tooltip}>
+{#snippet field()}
+  <div class="container">
+    <div class="content">
+      <label
+        for={id}
+        onclick={(e) => {
+          if (mobile && tooltip) {
+            e.preventDefault();
+            showMobileTooltip = !showMobileTooltip;
+          }
+        }}
+      >
+        {#if typeof label === "string"}
+          <span class="field-label">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html $i18n.t(label)}
+          </span>
+        {:else if typeof label === "function"}
+          {@render label()}
+        {/if}
+        {#if unit}
+          <span class="units">[ {unit} ]</span>
+        {/if}
+      </label>
+      <div class="control">
+        {#if !mobile && tooltip}
+          <HoverTooltip {tooltip}>
+            {@render children?.()}
+          </HoverTooltip>
+        {:else}
           {@render children?.()}
-        </HoverTooltip>
-      {:else}
-        {@render children?.()}
-      {/if}
+        {/if}
+      </div>
     </div>
+    {#if mobile && tooltip && showMobileTooltip}
+      <div class="tooltip-container" transition:slide>
+        {@render tooltip()}
+      </div>
+    {/if}
   </div>
-  {#if mobile && tooltip && showMobileTooltip}
-    <div class="tooltip-container" transition:slide>
-      {@render tooltip()}
-    </div>
-  {/if}
-</div>
+{/snippet}
+
+{#if expert}
+  <Expert {changed}>{@render field()}</Expert>
+{:else}
+  {@render field()}
+{/if}
 
 <style lang="scss">
   .container {

@@ -47,7 +47,7 @@ const DEFAULT_PIDS = [
   [310, 75, 0, 75, 35], // yaw
 ];
 
-function defaultPidSlot() {
+export function defaultPidSlot() {
   return {
     pids: clone(DEFAULT_PIDS),
     profile: {
@@ -124,7 +124,7 @@ function defaultPidSlot() {
   };
 }
 
-function defaultRateSlot() {
+export function defaultRateSlot() {
   return {
     roll_rc_rate: 0.5,
     pitch_rc_rate: 0.5,
@@ -153,7 +153,7 @@ function defaultRateSlot() {
   };
 }
 
-function defaultTvSlot() {
+export function defaultTvSlot() {
   return {
     pids: clone(DEFAULT_PIDS),
     profile: {
