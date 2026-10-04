@@ -9,7 +9,7 @@
 // its own scope -- never another installed version's offline copy.
 
 const CACHE_PREFIX = `wingflight-configurator@${self.registration.scope}@`;
-const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-baa8d383`;
+const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-16335cac`;
 const APP_SHELL = [
   "./",
   "./index.html",

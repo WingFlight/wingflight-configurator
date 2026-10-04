@@ -1,6 +1,6 @@
 {
-  "name": "Wingflight Configurator 0.0",
-  "short_name": "Wingflight 0.0",
+  "name": "Wingflight Configurator (dev)",
+  "short_name": "Wingflight dev",
   "description": "Configure Wingflight flight controllers from the browser.",
   "start_url": "./",
   "scope": "./",
