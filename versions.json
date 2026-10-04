@@ -138,13 +138,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-gain-pot-150",
-      "path": "./feature-gain-pot-150/",
-      "branch": "feature/gain-pot-150",
-      "date": "2026-10-04T17:09:57Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-gps-arm-without-fix",
       "path": "./feature-gps-arm-without-fix/"
     },
