@@ -143,13 +143,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-flaperons",
-      "path": "./feature-flaperons/",
-      "branch": "feature/flaperons",
-      "date": "2026-10-05T22:11:18Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-gps-arm-without-fix",
       "path": "./feature-gps-arm-without-fix/"
     },
