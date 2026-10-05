@@ -119,7 +119,11 @@
   // stick, so the pilot sees it while setting the throw rather than later.
   function limited(axis) {
     return surfacesOn(axis).filter((surface) => {
-      const alone = { ...surface, axes: { [axis]: surface.axes[axis] } };
+      const alone = {
+        ...surface,
+        axes: { [axis]: surface.axes[axis] },
+        flap: null,
+      };
       const reach = travelReach(
         alone,
         FC.SERVO_CONFIG[surface.servo],

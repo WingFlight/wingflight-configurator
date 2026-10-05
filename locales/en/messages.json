@@ -4619,6 +4619,9 @@
     "mixerWizardFlapServos2": {
         "message": "2 independent servos"
     },
+    "mixerWizardFlaperons": {
+        "message": "No flap servos -- the ailerons droop as flaps (flaperons)"
+    },
     "mixerWizardFlapsCompensationHint": {
         "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
     },
@@ -8697,6 +8700,9 @@
     },
     "setupWizardSurfaceLabel": {
         "message": "Servo $1 · $2"
+    },
+    "setupWizardSurface_flaperon": {
+        "message": "Flaperon"
     },
     "setupWizardSurface_aileron": {
         "message": "Aileron"
