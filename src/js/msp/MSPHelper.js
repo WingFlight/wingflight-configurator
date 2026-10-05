@@ -3207,9 +3207,11 @@ MspHelper.prototype.sendMixerOverride = function(mixerIndex, onCompleteCallback,
     MSP.send_message(MSPCodes.MSP_SET_MIXER_OVERRIDE, buffer, false, onCompleteCallback);
 };
 
-// Forces modes (permanent box ids) on in FC RAM until timeoutMs after the last
-// call; an empty list clears them. Resolves false if the FC refused (armed, a
-// mode that can't be forced, or firmware without MSP2_WING_SET_MODE_OVERRIDE).
+// Holds the FC's setup state with these modes (permanent box ids) forced on, in
+// RAM, until timeoutMs after the last call. An empty list holds the setup state
+// with nothing forced; timeoutMs 0 clears it. Resolves false if the FC refused
+// (armed, a mode that can't be forced, or firmware without
+// MSP2_WING_SET_MODE_OVERRIDE).
 MspHelper.prototype.sendModeOverride = function(permanentIds, timeoutMs)
 {
     const buffer = [];

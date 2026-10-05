@@ -198,7 +198,10 @@
   //// save it, and it blocks arming while active. Each is sent with a
   //// timeout and re-sent every OVERRIDE_REFRESH_MS, so a closed app or a
   //// pulled cable can't leave any of them on: the FC drops them by itself.
-  //// Older firmware has no timeouts: overrides are sent untimed as before,
+  //// The whole wizard runs in the FC's setup state: the mode override is
+  //// held with no mode forced from open to close, and a step that forces
+  //// ANGLE or PASSTHROUGH adds it on top. Radios show SETUP and don't call
+  //// out modes meanwhile. Older firmware has no timeouts: overrides are sent untimed as before,
   //// modes can't be forced (the steps fall back to the pilot's own switch)
   //// and the Limits step widens the stored limits while exploring.
 
@@ -220,7 +223,7 @@
   }
 
   function refreshOverrides() {
-    if (forced) sendModeOverride([forced.id]);
+    sendModeOverride(forced ? [forced.id] : []);
     for (const axis of AXES) {
       if (FC.MIXER_OVERRIDE[axis.input] !== Mixer.OVERRIDE_OFF) {
         mspHelper.sendMixerOverride(axis.input, undefined, OVERRIDE_TIMEOUT_MS);
@@ -237,6 +240,7 @@
   }
 
   if (timedOverrides) {
+    sendModeOverride([]);
     overrideRefresh = setInterval(refreshOverrides, OVERRIDE_REFRESH_MS);
   }
 
@@ -254,6 +258,7 @@
     return true;
   }
 
+  // Drops the forced mode; the setup state stays until the wizard closes.
   async function removeModeForce(id = null) {
     if (!forced || (id !== null && forced.id !== id)) return;
     forced = null;
@@ -299,7 +304,9 @@
     clearInterval(overrideRefresh);
     leaveFn?.();
     releaseAll();
-    removeModeForce();
+    forced = null;
+    // Leaves the setup state (timeout 0 clears the override).
+    if (timedOverrides) mspHelper.sendModeOverride([], 0);
   });
 
   //// Overrides. The FC ignores both kinds while armed (flight/mixer.c
