@@ -22,9 +22,16 @@
 
   onMount(() => wiz.holdAxes({ roll: 0, pitch: 0, yaw: 0 }));
 
-  // Servo override goes through scale and the Min/Max clamp (servoUpdate()
-  // in flight/servos.c), so while exploring, the limits are opened to the
-  // full range this centre allows and the override is set in scale units.
+  // The range a servo can be explored over: as far as its travel and signal
+  // range allow at this centre.
+  //
+  // With timed overrides (API 22.14+) the servo is held by a probe
+  // (MSP2_WING_SET_SERVO_PROBE), which ignores Min/Max, so the stored limits
+  // are never widened and each limit is sent as soon as it is set. Older
+  // firmware only has the servo override, which goes through scale and the
+  // Min/Max clamp (servoUpdate() in flight/servos.c), so there the limits
+  // are opened to this range while exploring and the override is set in
+  // scale units.
   function openRange(config) {
     const travel = servoTravelRange(false);
     const signal = servoSignalRange(false);
@@ -35,6 +42,10 @@
   }
 
   function holdPosition() {
+    if (wiz.canProbe) {
+      wiz.probeServo(current, position);
+      return;
+    }
     const config = FC.SERVO_CONFIG[current];
     const scale = position >= 0 ? config.rpos : config.rneg;
     wiz.holdServo(current, (position / scale) * 1000);
@@ -42,6 +53,11 @@
 
   function restore() {
     if (current === null) return;
+    if (wiz.canProbe) {
+      wiz.releaseProbe(current);
+      current = null;
+      return;
+    }
     const config = FC.SERVO_CONFIG[current];
     config.min = original.min;
     config.max = original.max;
@@ -56,10 +72,12 @@
     restore();
     const config = FC.SERVO_CONFIG[servo];
     original = { min: config.min, max: config.max };
-    const range = openRange(config);
-    config.min = range.min;
-    config.max = range.max;
-    wiz.sendServo(servo);
+    if (!wiz.canProbe) {
+      const range = openRange(config);
+      config.min = range.min;
+      config.max = range.max;
+      wiz.sendServo(servo);
+    }
     current = servo;
     position = 0;
     holdPosition();
@@ -75,6 +93,10 @@
     const side = position > 0 ? "max" : "min";
     original[side] = position;
     sides[current] = { ...sides[current], [side]: true };
+    if (wiz.canProbe) {
+      FC.SERVO_CONFIG[current][side] = position;
+      wiz.sendServo(current);
+    }
   }
 
   // Where a value sits on the explored range, as a percentage for the bar.

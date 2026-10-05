@@ -242,6 +242,9 @@ export const MSPCodes = {
     MSP2_WING_CRSF_SENSORS_STATUS:    0x5F15,
     MSP2_WING_GPS_NAV_CONFIG:         0x5F16,
     MSP2_WING_SET_GPS_NAV_CONFIG:     0x5F17,
+    MSP2_WING_MODE_OVERRIDE:          0x5F1A,
+    MSP2_WING_SET_MODE_OVERRIDE:      0x5F1B,
+    MSP2_WING_SET_SERVO_PROBE:        0x5F1C,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

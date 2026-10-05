@@ -17,14 +17,14 @@
   // Permanent box IDs (wingflight-firmware msp/msp_box.c) and the box names
   // the FC reports for them, before and after the firmware#182 rename. ARM
   // is the only one the model can't fly without; the rest are optional,
-  // flight modes first and the SETUP bench tool last. ATT HOLD and TRAINER
+  // flight modes first and the PASSTHROUGH bench tool last. ATT HOLD and TRAINER
   // need an accelerometer, so the FC only reports them on a board with one.
   const MODES = [
     { id: 0, key: "arm", names: ["ARM"], icon: "fa-power-off", required: true },
     {
       id: 59,
-      key: "gyroOff",
-      names: ["GYRO OFF", "MANUAL"],
+      key: "manual",
+      names: ["MANUAL", "GYRO OFF"],
       icon: "fa-hand-paper",
     },
     { id: 6, key: "attHold", names: ["ATT HOLD"], icon: "fa-lock" },
@@ -33,8 +33,8 @@
     { id: 60, key: "autoTrim", names: ["AUTO TRIM"], icon: "fa-crosshairs" },
     {
       id: 12,
-      key: "setup",
-      names: ["SETUP", "PASSTHROUGH"],
+      key: "passthrough",
+      names: ["PASSTHROUGH", "SETUP"],
       icon: "fa-tools",
     },
   ];

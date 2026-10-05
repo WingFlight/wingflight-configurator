@@ -1,5 +1,8 @@
 <script>
   import { onMount, onDestroy, setContext } from "svelte";
+  import semver from "semver";
+
+  import { API_VERSION_22_14, CONFIGURATOR } from "@/js/configurator.svelte.js";
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
@@ -33,7 +36,7 @@
   // throws before the tune). See the "Set Up Your Aircraft" docs page.
   const STEPS = [
     { key: "sensors", component: StepSensors },
-    // Before anything that uses the sticks or the SETUP switch.
+    // Before anything that uses the sticks or the PASSTHROUGH switch.
     { key: "receiver", component: StepReceiver },
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
@@ -61,9 +64,9 @@
   let pending = $state(false);
   let saving = $state(false);
   let armed = $state(false);
-  let setupModeActive = $state(false);
+  let passthroughActive = $state(false);
   let angleModeActive = $state(false);
-  let setupModeAssigned = $state(false);
+  let passthroughAssigned = $state(false);
   let commitFn = null;
   let leaveFn = null;
   let snapshot = null;
@@ -171,103 +174,139 @@
     }, 200);
   });
 
-  // SETUP is PASSTHROUGH before firmware#182 renamed it; permanent box ID 12.
+  // PASSTHROUGH: named SETUP by firmware 0.0.x up to API 22.13; permanent box ID 12.
   const ANGLE_BOX_ID = 1;
-  const SETUP_BOX_ID = 12;
+  const PASSTHROUGH_BOX_ID = 12;
 
   function updateModes() {
     armed = isArmed();
-    const setupIndex = FC.AUX_CONFIG.findIndex(
-      (name) => name === "SETUP" || name === "PASSTHROUGH",
+    const passthroughIndex = FC.AUX_CONFIG.findIndex(
+      (name) => name === "PASSTHROUGH" || name === "SETUP",
     );
-    setupModeActive = setupIndex >= 0 && bit_check(FC.CONFIG.mode, setupIndex);
+    passthroughActive =
+      passthroughIndex >= 0 && bit_check(FC.CONFIG.mode, passthroughIndex);
     const angleIndex = FC.AUX_CONFIG.indexOf("ANGLE");
     angleModeActive = angleIndex >= 0 && bit_check(FC.CONFIG.mode, angleIndex);
-    setupModeAssigned = FC.MODE_RANGES.some(
-      (r, i) =>
-        i !== forced?.index &&
-        r.id === SETUP_BOX_ID &&
-        r.range.start < r.range.end,
+    passthroughAssigned = FC.MODE_RANGES.some(
+      (r) => r.id === PASSTHROUGH_BOX_ID && r.range.start < r.range.end,
     );
   }
 
-  //// Temporary modes on demand. There is no MSP command to switch a mode, so
-  //// the wizard puts a range covering the whole of AUX1 (875-2125 us, so any
-  //// channel value matches) into a free mode-range slot, and puts the slot
-  //// back afterwards. The range is in RAM only: it is always removed before
-  //// the wizard writes EEPROM, so it can never be saved, and a power cycle
-  //// clears it. The FC ignores modes while in failsafe, so the radio must be
-  //// on, as it is anyway for using the sticks.
+  //// Timed overrides (API 22.14+). Everything the wizard holds on the FC
+  //// for a step (forced modes, servo and mixer overrides, servo probes) is
+  //// RAM only and never part of a parameter group, so no EEPROM write can
+  //// save it, and it blocks arming while active. Each is sent with a
+  //// timeout and re-sent every OVERRIDE_REFRESH_MS, so a closed app or a
+  //// pulled cable can't leave any of them on: the FC drops them by itself.
+  //// The whole wizard runs in the FC's setup state: the mode override is
+  //// held with no mode forced from open to close, and a step that forces
+  //// ANGLE or PASSTHROUGH adds it on top. Radios show SETUP and don't call
+  //// out modes meanwhile. Older firmware has no timeouts: overrides are sent untimed as before,
+  //// modes can't be forced (the steps fall back to the pilot's own switch)
+  //// and the Limits step widens the stored limits while exploring.
 
-  const FULL_RANGE = { start: 875, end: 2125 };
+  const OVERRIDE_TIMEOUT_MS = 3000;
+  const OVERRIDE_REFRESH_MS = 1000;
+  const timedOverrides =
+    CONFIGURATOR.virtualMode ||
+    semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_14);
   let forced = $state(null);
-  let wantForcedMode = null;
+  let probes = {};
+  let overrideRefresh = null;
 
-  async function sendModeRange(index) {
-    await new Promise((resolve) => mspHelper.sendModeRange(index, resolve));
+  function overrideTimeout() {
+    return timedOverrides ? OVERRIDE_TIMEOUT_MS : undefined;
+  }
+
+  function sendModeOverride(ids) {
+    return mspHelper.sendModeOverride(ids, OVERRIDE_TIMEOUT_MS);
+  }
+
+  function refreshOverrides() {
+    sendModeOverride(forced ? [forced.id] : []);
+    for (const axis of AXES) {
+      if (FC.MIXER_OVERRIDE[axis.input] !== Mixer.OVERRIDE_OFF) {
+        mspHelper.sendMixerOverride(axis.input, undefined, OVERRIDE_TIMEOUT_MS);
+      }
+    }
+    for (let i = 0; i < servoCount; i++) {
+      if (FC.SERVO_OVERRIDE[i] !== SERVO_OVERRIDE_OFF) {
+        mspHelper.sendServoOverride(i, undefined, OVERRIDE_TIMEOUT_MS);
+      }
+    }
+    for (const [servo, offset] of Object.entries(probes)) {
+      mspHelper.sendServoProbe(Number(servo), offset, OVERRIDE_TIMEOUT_MS);
+    }
+  }
+
+  if (timedOverrides) {
+    sendModeOverride([]);
+    overrideRefresh = setInterval(refreshOverrides, OVERRIDE_REFRESH_MS);
   }
 
   async function applyModeForce(id) {
-    if (!FC.AUX_CONFIG_IDS.includes(id)) return false;
+    if (!timedOverrides || !FC.AUX_CONFIG_IDS.includes(id)) return false;
     if (forced?.id === id) return true;
-    await removeModeForce();
-    const index = FC.MODE_RANGES.findIndex(
-      (r) => !(r.range.start < r.range.end),
-    );
-    if (index < 0 || !FC.MODE_RANGES_EXTRA[index]) return false;
-    forced = {
-      id,
-      index,
-      range: $state.snapshot(FC.MODE_RANGES[index]),
-      extra: $state.snapshot(FC.MODE_RANGES_EXTRA[index]),
-    };
-    FC.MODE_RANGES[index] = {
-      id,
-      auxChannelIndex: 0,
-      range: { ...FULL_RANGE },
-    };
-    FC.MODE_RANGES_EXTRA[index] = {
-      ...forced.extra,
-      id,
-      modeLogic: 0,
-      linkedTo: 0,
-    };
-    await sendModeRange(index);
+    forced = { id };
+    const ok = await sendModeOverride([id]);
+    // Released or replaced while waiting for the reply.
+    if (forced?.id !== id) return false;
+    if (!ok) {
+      forced = null;
+      return false;
+    }
     return true;
   }
 
+  // Drops the forced mode; the setup state stays until the wizard closes.
   async function removeModeForce(id = null) {
     if (!forced || (id !== null && forced.id !== id)) return;
-    const { index, range, extra } = forced;
     forced = null;
-    FC.MODE_RANGES[index] = range;
-    FC.MODE_RANGES_EXTRA[index] = extra;
-    await sendModeRange(index);
+    await sendModeOverride([]);
+  }
+
+  // Holds a servo at Mid + offsetUs regardless of its Min/Max, for the
+  // Limits step. Only with timed overrides (see canProbe).
+  function probeServo(servo, offsetUs) {
+    probes[servo] = offsetUs;
+    return mspHelper.sendServoProbe(servo, offsetUs, OVERRIDE_TIMEOUT_MS);
+  }
+
+  function releaseProbe(servo) {
+    if (!(servo in probes)) return;
+    delete probes[servo];
+    mspHelper.sendServoProbe(servo, 0, 0);
+  }
+
+  function releaseProbes() {
+    for (const servo of Object.keys(probes)) {
+      releaseProbe(Number(servo));
+    }
   }
 
   // Called by the steps that measure throws.
-  async function forceSetupMode() {
-    wantForcedMode = SETUP_BOX_ID;
-    return applyModeForce(SETUP_BOX_ID);
+  async function forcePassthrough() {
+    return applyModeForce(PASSTHROUGH_BOX_ID);
   }
 
   // Called by the gyro check so the stabilizer holds attitude while the model
   // is tilted, which makes the correction direction easier to see.
   async function forceAngleMode() {
-    wantForcedMode = ANGLE_BOX_ID;
     return applyModeForce(ANGLE_BOX_ID);
   }
 
   async function releaseAngleMode() {
-    if (wantForcedMode === ANGLE_BOX_ID) wantForcedMode = null;
     await removeModeForce(ANGLE_BOX_ID);
   }
 
   onDestroy(() => {
     clearInterval(poller);
+    clearInterval(overrideRefresh);
     leaveFn?.();
     releaseAll();
-    removeModeForce();
+    forced = null;
+    // Leaves the setup state (timeout 0 clears the override).
+    if (timedOverrides) mspHelper.sendModeOverride([], 0);
   });
 
   //// Overrides. The FC ignores both kinds while armed (flight/mixer.c
@@ -277,7 +316,7 @@
     for (const axis of AXES) {
       const value = values[axis.key] ?? 0;
       FC.MIXER_OVERRIDE[axis.input] = Math.round(value * 1000);
-      mspHelper.sendMixerOverride(axis.input);
+      mspHelper.sendMixerOverride(axis.input, undefined, overrideTimeout());
     }
   }
 
@@ -291,7 +330,7 @@
 
   function holdServo(servo, raw) {
     FC.SERVO_OVERRIDE[servo] = Math.max(-2000, Math.min(2000, Math.round(raw)));
-    mspHelper.sendServoOverride(servo);
+    mspHelper.sendServoOverride(servo, undefined, overrideTimeout());
   }
 
   function releaseServo(servo) {
@@ -309,6 +348,7 @@
   function releaseAll() {
     releaseAxes();
     releaseServos();
+    releaseProbes();
   }
 
   //// Live changes. Every edit goes to the FC straight away so the surface
@@ -349,9 +389,6 @@
 
   async function save() {
     saving = true;
-    // Never let a forced wizard mode range reach EEPROM.
-    const reforce = wantForcedMode;
-    await removeModeForce();
     try {
       if (commitFn) {
         await commitFn();
@@ -362,9 +399,6 @@
       takeSnapshot();
     } finally {
       saving = false;
-      if (reforce && wantForcedMode === reforce) {
-        await applyModeForce(reforce);
-      }
     }
   }
 
@@ -372,7 +406,7 @@
   // alignment). After the reconnect the wizard reopens on the same step, so
   // the user can check the result before moving on.
   async function saveAndReboot() {
-    wantForcedMode = null;
+    await removeModeForce();
     await save();
     storeStep(stepIndex);
     GUI.tabAfterReboot = "setup_wizard";
@@ -383,7 +417,6 @@
 
   async function revert() {
     if (!snapshot) return;
-    wantForcedMode = null;
     await removeModeForce();
     FC.MODE_RANGES = snapshot.MODE_RANGES;
     FC.MODE_RANGES_EXTRA = snapshot.MODE_RANGES_EXTRA;
@@ -421,14 +454,14 @@
     get armed() {
       return armed;
     },
-    get setupModeActive() {
-      return setupModeActive;
+    get passthroughActive() {
+      return passthroughActive;
     },
     get angleModeActive() {
       return angleModeActive;
     },
-    get setupModeForced() {
-      return forced?.id === SETUP_BOX_ID;
+    get passthroughForced() {
+      return forced?.id === PASSTHROUGH_BOX_ID;
     },
     get angleModeForced() {
       return forced?.id === ANGLE_BOX_ID;
@@ -440,17 +473,23 @@
       return saving;
     },
     save,
-    forceSetupMode,
+    forcePassthrough,
     forceAngleMode,
     releaseAngleMode,
-    get setupModeAssigned() {
-      return setupModeAssigned;
+    get passthroughAssigned() {
+      return passthroughAssigned;
     },
     holdAxes,
     releaseAxes,
     holdServo,
     releaseServo,
     releaseServos,
+    // Limits step: hold a servo past its stored limits without changing them.
+    get canProbe() {
+      return timedOverrides;
+    },
+    probeServo,
+    releaseProbe,
     sendServo,
     axisGainPercent,
     setAxisGainPercent,
@@ -482,7 +521,6 @@
     leaveFn = null;
     commitFn = null;
     releaseAll();
-    wantForcedMode = null;
     removeModeForce();
     stepIndex = index;
     storeStep(index);

@@ -79,7 +79,7 @@
       "DSHOT_BITBANG",
       "ACC_CALIB",
       "MOTOR_PROTO",
-      "OVERRIDE",
+      "SETUP",
       "BACKUP_RX",
       "ARM_SWITCH",
     ];
