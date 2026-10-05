@@ -1,3 +1,12 @@
+# 0.0.33
+
+Support the 0.0.33 firmware (MSP API 22.14). Flashing keeps your settings.
+Hold the model in the firmware's SETUP state for the whole Setup Wizard on 0.0.33 firmware. Forced ANGLE and PASSTHROUGH, servo overrides and the Limits step's end-stop probe stay in the FC's RAM and lapse within 3 s if the app closes or the cable is pulled, so they can no longer be saved by mistake, and the Limits step no longer widens the stored servo limits. Older firmware keeps the previous behaviour, without forced modes.
+Name the raw-stick mode PASSTHROUGH and GYRO OFF MANUAL, matching the firmware, and show the OVERRIDE arming-disabled reason as SETUP.
+
+Add flaperons as a third flap option in the mixer setup, for conventional airframes with independent ailerons: the AUX1 flap channel droops both ailerons together. The Setup Wizard counts flap travel when it checks a surface for clipping.
+Warn CRSF users on the Receiver tab, the Setup Wizard's receiver step and the mixer setup's Flaps section that ExpressLRS needs the Full Res 16ch Rate/2 switch mode, because Wingflight uses channel 5 (AUX1) as a normal channel.
+
 # 0.0.32
 
 Support the 0.0.32 firmware (MSP API 22.13). The firmware update resets every PID, thrust-vector and rate profile to defaults, so note your tune and rates before flashing.
