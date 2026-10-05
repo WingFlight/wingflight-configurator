@@ -1,4 +1,8 @@
 {
   "branch": "feature/flaperons",
-  "date": "2026-10-05T22:11:18Z"
+  "date": "2026-10-05T22:11:18Z",
+  "number": 159,
+  "title": "Add flaperons to the mixer setup and warn about ExpressLRS switch modes",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/159",
+  "draft": false
 }
