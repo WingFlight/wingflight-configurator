@@ -148,13 +148,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-mode-override",
-      "path": "./feature-mode-override/",
-      "branch": "feature/mode-override",
-      "date": "2026-10-05T10:26:05Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-modes-picker",
       "path": "./feature-modes-picker/"
     },
