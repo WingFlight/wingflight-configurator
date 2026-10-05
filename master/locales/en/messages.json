@@ -1455,8 +1455,8 @@
         "message": "There is no motor throttle protocol selected",
         "description": "Message that pops up to describe the MOTOR_PROTO arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipOVERRIDE": {
-        "message": "Servo Override or Mixer Override is active"
+    "statusArmingDisableFlagsTooltipSETUP": {
+        "message": "A setup tool is holding the model: a forced mode, servo probe, or servo, mixer or motor override (for example the Setup Wizard). Arming works again once it lets go."
     },
     "statusArmingDisableFlagsTooltipBACKUP_RX": {
         "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
@@ -6317,7 +6317,7 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and GYRO OFF mode is not affected."
+        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and MANUAL mode is not affected."
     },
     "profilesFwSpaHelp": {
         "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
@@ -7703,28 +7703,28 @@
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
     },
     "mode SETUP": {
-        "message": "SETUP"
+        "message": "PASSTHROUGH"
     },
     "modeHelp SETUP": {
         "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
     },
     "mode PASSTHROUGH": {
-        "message": "SETUP"
+        "message": "PASSTHROUGH"
     },
     "modeHelp PASSTHROUGH": {
         "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
     },
     "mode GYRO OFF": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp GYRO OFF": {
-        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
     },
     "mode MANUAL": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp MANUAL": {
-        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
     },
     "mode TRADITIONAL": {
         "message": "TRADITIONAL"
@@ -9109,35 +9109,35 @@
     "setupWizardLimitsHowTo": {
         "message": "A side you don't set keeps its old limit."
     },
-    "setupWizardSetupModeTitle": {
-        "message": "SETUP mode"
+    "setupWizardPassthroughTitle": {
+        "message": "PASSTHROUGH mode"
     },
-    "setupWizardSetupModeOn": {
-        "message": "SETUP mode is on. The sticks move the surfaces directly, at full travel, with no gyro."
+    "setupWizardPassthroughOn": {
+        "message": "PASSTHROUGH mode is on. The sticks move the surfaces directly, at full travel, with no gyro."
     },
-    "setupWizardSetupModeForced": {
-        "message": "SETUP mode is on for this step: the sticks move the surfaces directly, at full travel, with no gyro. The wizard switches it off again when you leave the step. Keep your radio on."
+    "setupWizardPassthroughForced": {
+        "message": "PASSTHROUGH mode is on for this step: the sticks move the surfaces directly, at full travel, with no gyro. The wizard switches it off again when you leave the step. Keep your radio on."
     },
-    "setupWizardSetupModeWaiting": {
-        "message": "Switching to SETUP mode… Check your radio is on."
+    "setupWizardPassthroughWaiting": {
+        "message": "Switching to PASSTHROUGH mode… Check your radio is on."
     },
-    "setupWizardSetupModeOff": {
-        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use). Switch your radio to SETUP mode to carry on."
+    "setupWizardPassthroughOff": {
+        "message": "The wizard couldn't switch PASSTHROUGH mode on (this firmware can't, or the model is armed). Switch your radio to PASSTHROUGH mode to carry on."
     },
-    "setupWizardSetupModeNotAssigned": {
-        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use), and SETUP isn't on a switch. Free a slot or assign SETUP on the Modes tab, then come back to this step."
+    "setupWizardPassthroughNotAssigned": {
+        "message": "The wizard couldn't switch PASSTHROUGH mode on (this firmware can't, or the model is armed), and PASSTHROUGH isn't on a switch. Update the firmware or assign PASSTHROUGH on the Modes tab, then come back to this step."
     },
-    "setupWizardSetupModeTurnOff": {
-        "message": "Switch SETUP mode off for this step: in SETUP mode the sticks drive the surfaces directly and the flight controller can't move them."
+    "setupWizardPassthroughTurnOff": {
+        "message": "Switch PASSTHROUGH mode off for this step: in PASSTHROUGH mode the sticks drive the surfaces directly and the flight controller can't move them."
     },
     "setupWizardThrowsIntro": {
-        "message": "Set how far each surface moves at full stick, using the throws from your model's setup guide. You need your radio and a throw meter or ruler on the surface. The wizard puts the model in SETUP mode for this step."
+        "message": "Set how far each surface moves at full stick, using the throws from your model's setup guide. You need your radio and a throw meter or ruler on the surface. The wizard puts the model in PASSTHROUGH mode for this step."
     },
     "setupWizardThrowsHowTitle": {
         "message": "How to do it:"
     },
     "setupWizardThrowsHow_1": {
-        "message": "Check the SETUP mode box above is green with a tick. That means your sticks now move the surfaces directly. If it stays yellow, check your radio is on."
+        "message": "Check the PASSTHROUGH mode box above is green with a tick. That means your sticks now move the surfaces directly. If it stays yellow, check your radio is on."
     },
     "setupWizardThrowsHow_2": {
         "message": "Hold one stick at full deflection, for example full right aileron, and watch one of its surfaces on the meter."
@@ -9200,7 +9200,7 @@
         "message": "Throw is a percentage of the servo's normal travel (Axis Gain on the Mixer tab), shared by every surface on the axis. Fine-tune changes one servo's scale on one side (Servos tab)."
     },
     "setupWizardTravelIntro": {
-        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in SETUP mode, so you can move the sticks into the corners and watch the live positions."
+        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in PASSTHROUGH mode, so you can move the sticks into the corners and watch the live positions."
     },
     "setupWizardTravelCorners": {
         "message": "Try every corner: full stick on two axes at once is where a surface that works both (an elevon, a V-tail) runs out of travel first."
@@ -9301,16 +9301,16 @@
     "setupWizardModesHelp_arm": {
         "message": "Arms the motor. Nothing else works without it."
     },
-    "setupWizardModes_setup": {
-        "message": "SETUP"
+    "setupWizardModes_passthrough": {
+        "message": "PASSTHROUGH"
     },
-    "setupWizardModesHelp_setup": {
+    "setupWizardModesHelp_passthrough": {
         "message": "A bench tool, not a flight mode: sticks straight to the surfaces at full travel, with no gyro, rates or expo. Use it to check throws without a laptop. Put it on a switch you won't hit in flight."
     },
-    "setupWizardModes_gyroOff": {
-        "message": "GYRO OFF"
+    "setupWizardModes_manual": {
+        "message": "MANUAL"
     },
-    "setupWizardModesHelp_gyroOff": {
+    "setupWizardModesHelp_manual": {
         "message": "Stabilization off, with your rates kept. A good bail-out if the stabilizer misbehaves."
     },
     "setupWizardModes_attHold": {
@@ -9443,7 +9443,7 @@
         "message": "Fit the propeller and check it is the right way round and tight."
     },
     "setupWizardFinishBefore_2": {
-        "message": "With SETUP mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in SETUP or GYRO OFF, not here."
+        "message": "With PASSTHROUGH mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in PASSTHROUGH or MANUAL, not here."
     },
     "setupWizardFinishBefore_3": {
         "message": "Do a range check with your radio."
