@@ -1149,7 +1149,7 @@
         "english": "There is no motor throttle protocol selected",
         "description": "Message that pops up to describe the MOTOR_PROTO arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipOVERRIDE": {
+    "statusArmingDisableFlagsTooltipSETUP": {
         "message": "Принудително управление на сервата или миксера е активен",
         "english": "Servo Override or Mixer Override is active"
     },
