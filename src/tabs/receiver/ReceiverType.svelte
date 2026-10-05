@@ -12,7 +12,8 @@
   import SubSection from "@/components/SubSection.svelte";
   import Section from "@/components/Section.svelte";
   import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
-  import { RX_PROTOCOLS } from "./protocols.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import { RX_PROTOCOLS, isCrsfReceiver } from "./protocols.js";
 
   let {
     rxProtoIndex,
@@ -161,6 +162,9 @@
         {/each}
       </select>
     </Field>
+    {#if isCrsfReceiver()}
+      <WarningNote message="receiverElrsFullResWarning" />
+    {/if}
   </SubSection>
   {#if RX_PROTOCOLS[rxProtoIndex]?.feature === "RX_SERIAL"}
     <div transition:slide>

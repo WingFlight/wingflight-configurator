@@ -422,6 +422,8 @@ export const Mixer = {
         // every pitch-controlling surface (both v-tail halves, both
         // elevons, ...), not just a single named "elevator" servo.
         const pitchOutputs = [];
+        // Independent aileron outputs, which flaperons drive as flaps.
+        const aileronOutputs = [];
 
         function rule(oper, src, dst, weight, reverse, role)
         {
@@ -439,8 +441,10 @@ export const Mixer = {
             if (options.ailerons === 'single') {
                 rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
             } else if (options.ailerons === 'independent') {
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000, true));
+                const leftAileron = nextServo++, rightAileron = nextServo++;
+                rules.push(rule(OP_SET, ROLL, leftAileron, 1000));
+                rules.push(rule(OP_SET, ROLL, rightAileron, 1000, true));
+                aileronOutputs.push(leftAileron, rightAileron);
             }
 
             if (options.tailControl === 'elevatorOnly') {
@@ -473,10 +477,27 @@ export const Mixer = {
             }
         }
 
-        if (options.flaps) {
-            rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
-            if (options.flapServos >= 2) {
+        // flapServos 0 means flaperons: no flap servos, the ailerons droop
+        // on the flap channel instead. Only possible with independent
+        // ailerons, so it falls back to no flaps without them.
+        const flaperons = options.flaps && options.flapServos === 0;
+        const flaps = flaperons ? aileronOutputs.length === 2 : options.flaps;
+
+        if (flaps) {
+            if (flaperons) {
+                // Same channel and shape as a flap servo, ADDed onto the
+                // roll mix at half weight so full flap still leaves roll
+                // travel. Same sign on both sides: roll drives the two
+                // ailerons with opposite weights, so once their directions
+                // are set a positive output moves either trailing edge down.
+                aileronOutputs.forEach((output) => {
+                    rules.push(rule(OP_ADD, RC_AUX1, output, 500));
+                });
+            } else {
                 rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+                if (options.flapServos >= 2) {
+                    rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+                }
             }
 
             // Flap-induced pitching moment otherwise gets silently absorbed

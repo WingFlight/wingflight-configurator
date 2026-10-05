@@ -1,6 +1,8 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   let { onApply } = $props();
 
@@ -11,6 +13,7 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  // 1 or 2 flap servos, or 0 for flaperons (the ailerons droop instead).
   let flapServos = $state(1);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
@@ -20,6 +23,15 @@
   let thrustVectorRoll = $state(false);
   let thrustVectorPitch = $state(false);
   let thrustVectorYaw = $state(false);
+
+  // Flaperons need a separate servo on each aileron.
+  let canFlaperon = $derived(
+    layout === "conventional" && ailerons === "independent",
+  );
+
+  $effect(() => {
+    if (!canFlaperon && flapServos === 0) flapServos = 1;
+  });
 
   function reset() {
     layout = "conventional";
@@ -63,7 +75,7 @@
         layers.push("conventional_normal_tail");
       else if (tailControl === "vtail") layers.push("conventional_v_tail");
 
-      if (flaps) layers.push("conventional_flaps");
+      if (flaps && flapServos !== 0) layers.push("conventional_flaps");
       if (motors === 1) layers.push("conventional_one_motor");
       else if (motors === 2) layers.push("conventional_dual_motor");
     }
@@ -182,9 +194,18 @@
             <input type="radio" bind:group={flapServos} value={2} />
             <span>{$i18n.t("mixerWizardFlapServos2")}</span>
           </label>
+          {#if canFlaperon}
+            <label class="wizardOption">
+              <input type="radio" bind:group={flapServos} value={0} />
+              <span>{$i18n.t("mixerWizardFlaperons")}</span>
+            </label>
+          {/if}
           <div class="wizardHint">
             {$i18n.t("mixerWizardFlapsCompensationHint")}
           </div>
+          {#if isCrsfReceiver()}
+            <WarningNote message="mixerWizardFlapsElrsWarning" />
+          {/if}
         {/if}
       </div>
 

@@ -141,6 +141,7 @@
     await MSP.promise(MSPCodes.MSP_BOARD_ALIGNMENT_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_BOARD_MOUNT_TRIM);
     await MSP.promise(MSPCodes.MSP_RX_MAP);
+    await MSP.promise(MSPCodes.MSP_RX_CONFIG);
     await MSP.promise(MSPCodes.MSP_RC_TUNING);
     await MSP.promise(MSPCodes.MSP_PID_PROFILE);
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
