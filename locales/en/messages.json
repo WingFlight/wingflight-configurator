@@ -6317,7 +6317,7 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and GYRO OFF mode is not affected."
+        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and MANUAL mode is not affected."
     },
     "profilesFwSpaHelp": {
         "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
@@ -7715,13 +7715,13 @@
         "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
     },
     "mode GYRO OFF": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp GYRO OFF": {
         "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
     },
     "mode MANUAL": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp MANUAL": {
         "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
@@ -9307,10 +9307,10 @@
     "setupWizardModesHelp_passthrough": {
         "message": "A bench tool, not a flight mode: sticks straight to the surfaces at full travel, with no gyro, rates or expo. Use it to check throws without a laptop. Put it on a switch you won't hit in flight."
     },
-    "setupWizardModes_gyroOff": {
-        "message": "GYRO OFF"
+    "setupWizardModes_manual": {
+        "message": "MANUAL"
     },
-    "setupWizardModesHelp_gyroOff": {
+    "setupWizardModesHelp_manual": {
         "message": "Stabilization off, with your rates kept. A good bail-out if the stabilizer misbehaves."
     },
     "setupWizardModes_attHold": {
@@ -9443,7 +9443,7 @@
         "message": "Fit the propeller and check it is the right way round and tight."
     },
     "setupWizardFinishBefore_2": {
-        "message": "With PASSTHROUGH mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in SETUP or GYRO OFF, not here."
+        "message": "With PASSTHROUGH mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in PASSTHROUGH or MANUAL, not here."
     },
     "setupWizardFinishBefore_3": {
         "message": "Do a range check with your radio."

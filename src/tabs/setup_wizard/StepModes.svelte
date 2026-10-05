@@ -23,8 +23,8 @@
     { id: 0, key: "arm", names: ["ARM"], icon: "fa-power-off", required: true },
     {
       id: 59,
-      key: "gyroOff",
-      names: ["GYRO OFF", "MANUAL"],
+      key: "manual",
+      names: ["MANUAL", "GYRO OFF"],
       icon: "fa-hand-paper",
     },
     { id: 6, key: "attHold", names: ["ATT HOLD"], icon: "fa-lock" },

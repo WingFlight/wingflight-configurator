@@ -738,7 +738,7 @@ export function applyVirtualConfig() {
     "BLACKBOX",
     "BLACKBOX ERASE",
     "GOVERNOR",
-    "GYRO OFF",
+    "MANUAL",
     "AUTO TRIM",
     "TRADITIONAL",
   ];
