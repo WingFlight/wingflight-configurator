@@ -256,3 +256,17 @@ export const EXTERNAL_TELEMETRY_PROTOCOLS = [
     telemetry: { type: TelemetryType.TOGGLE, external: true },
   },
 ];
+
+// Serial RX provider id of TBS CRSF, which ExpressLRS also uses.
+export const CRSF_PROVIDER = 9;
+
+// Whether the receiver is CRSF. ExpressLRS sends channel 5 (AUX1) as a
+// two-position arm switch except in its Full Res switch modes, so screens
+// that rely on channel 5 warn about it only when this is true. Needs
+// MSP_FEATURE_CONFIG and MSP_RX_CONFIG loaded.
+export function isCrsfReceiver() {
+  return (
+    FC.FEATURE_CONFIG.features.isEnabled("RX_SERIAL") &&
+    FC.RX_CONFIG.serialrx_provider === CRSF_PROVIDER
+  );
+}

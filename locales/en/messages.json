@@ -4619,6 +4619,9 @@
     "mixerWizardFlapServos2": {
         "message": "2 independent servos"
     },
+    "mixerWizardFlapsElrsWarning": {
+        "message": "Flaps are driven by channel 5 (AUX1). With ExpressLRS, set the switch mode to <b>Full Res 16ch Rate/2</b>: in the other modes channel 5 is only a two-position arm switch, and the flaps can't be set in between."
+    },
     "mixerWizardFlaperons": {
         "message": "No flap servos -- the ailerons droop as flaps (flaperons)"
     },
@@ -8439,6 +8442,9 @@
     },
     "setupWizardReceiverProtocolPick": {
         "message": "Choose a protocol"
+    },
+    "receiverElrsFullResWarning": {
+        "message": "ExpressLRS: set the switch mode to <b>Full Res 16ch Rate/2</b> (100Hz Full or 333Hz Full packet rate). Wingflight doesn't support the other switch modes, which send channel 5 (AUX1) only as a two-position arm switch. Wingflight uses channel 5 as a normal full-resolution channel, for example for flaps."
     },
     "setupWizardReceiverProtocolHelp": {
         "message": "ExpressLRS and Crossfire use TBS CRSF."

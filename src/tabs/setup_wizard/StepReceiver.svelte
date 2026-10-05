@@ -11,7 +11,8 @@
     VCP_PORT_IDENTIFIER,
     getPortFunc,
   } from "@/tabs/configuration/util.js";
-  import { RX_PROTOCOLS } from "@/tabs/receiver/protocols.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import { RX_PROTOCOLS, isCrsfReceiver } from "@/tabs/receiver/protocols.js";
   import RxWiringDetectWizard from "@/tabs/receiver/RxWiringDetectWizard.svelte";
 
   import ReceiverArt from "./ReceiverArt.svelte";
@@ -362,6 +363,9 @@
       </select>
       <span class="muted">{$i18n.t("setupWizardReceiverProtocolHelp")}</span>
     </div>
+    {#if isCrsfReceiver()}
+      <WarningNote message="receiverElrsFullResWarning" />
+    {/if}
 
     {#if connChanged}
       <div class="actions">

@@ -1,6 +1,8 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   let { onApply } = $props();
 
@@ -201,6 +203,9 @@
           <div class="wizardHint">
             {$i18n.t("mixerWizardFlapsCompensationHint")}
           </div>
+          {#if isCrsfReceiver()}
+            <WarningNote message="mixerWizardFlapsElrsWarning" />
+          {/if}
         {/if}
       </div>
 

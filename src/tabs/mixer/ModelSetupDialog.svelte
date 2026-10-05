@@ -4,6 +4,8 @@
   import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { updateTabList } from "@/js/main.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   // modelType is passed to open() rather than taken as a prop -- callers
   // that let the user pick *which* type to configure (ModelTypePicker,
@@ -211,6 +213,9 @@
         <div class="wizardHint">
           {$i18n.t("mixerWizardFlapsCompensationHint")}
         </div>
+        {#if isCrsfReceiver()}
+          <WarningNote message="mixerWizardFlapsElrsWarning" />
+        {/if}
       {/if}
     </div>
 

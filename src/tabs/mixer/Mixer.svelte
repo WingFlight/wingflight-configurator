@@ -57,6 +57,7 @@
     // via Mixer.inputLabel) -- nothing fetches this globally on connect,
     // only Receiver.svelte does, for its own channel map UI.
     await MSP.promise(MSPCodes.MSP_RX_MAP);
+    await MSP.promise(MSPCodes.MSP_RX_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
