@@ -379,8 +379,32 @@ export function getVirtualResponse(code, requestData) {
     }
     case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
       return decodeVirtualReply(code, encodeEffectivePidGains());
+    case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
+      applyVirtualModeOverride(requestData.slice(3));
+      return new Uint8Array(0);
+    // Acknowledged so the wizard sees it accepted; the servo readout stays
+    // as seeded, as it does for servo overrides.
+    case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
+      return new Uint8Array(0);
     default:
       return getVirtualEscResponse(code, requestData);
+  }
+}
+
+// Like the FC, forced modes show in the MSP_STATUS mode flags (which the
+// virtual FC never rewrites) until the next override replaces them. There is
+// no clock here, so they don't lapse; the wizard clears them when done.
+let virtualForcedModes = [];
+
+function applyVirtualModeOverride(permanentIds) {
+  for (const index of virtualForcedModes) {
+    FC.CONFIG.mode &= ~(1 << index);
+  }
+  virtualForcedModes = permanentIds
+    .map((id) => FC.AUX_CONFIG_IDS.indexOf(id))
+    .filter((index) => index >= 0);
+  for (const index of virtualForcedModes) {
+    FC.CONFIG.mode |= 1 << index;
   }
 }
 

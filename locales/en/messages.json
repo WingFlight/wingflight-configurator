@@ -9122,10 +9122,10 @@
         "message": "Switching to SETUP mode… Check your radio is on."
     },
     "setupWizardSetupModeOff": {
-        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use). Switch your radio to SETUP mode to carry on."
+        "message": "The wizard couldn't switch SETUP mode on (this firmware can't, or the model is armed). Switch your radio to SETUP mode to carry on."
     },
     "setupWizardSetupModeNotAssigned": {
-        "message": "The wizard couldn't switch SETUP mode on (every mode slot is in use), and SETUP isn't on a switch. Free a slot or assign SETUP on the Modes tab, then come back to this step."
+        "message": "The wizard couldn't switch SETUP mode on (this firmware can't, or the model is armed), and SETUP isn't on a switch. Update the firmware or assign SETUP on the Modes tab, then come back to this step."
     },
     "setupWizardSetupModeTurnOff": {
         "message": "Switch SETUP mode off for this step: in SETUP mode the sticks drive the surfaces directly and the flight controller can't move them."

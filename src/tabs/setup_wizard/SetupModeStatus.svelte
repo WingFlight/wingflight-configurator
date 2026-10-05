@@ -5,8 +5,8 @@
 
   // Shown on the steps measured in SETUP mode (full stick is full servo
   // travel, no gyro). Opening the step switches SETUP on through the wizard;
-  // leaving it switches it off again (SetupWizard.svelte). If every mode
-  // slot is taken, the pilot's own SETUP switch is the fallback.
+  // leaving it switches it off again (SetupWizard.svelte). If the firmware
+  // can't force it, the pilot's own SETUP switch is the fallback.
   const wiz = getContext("setupWizard");
 
   let forceFailed = $state(false);
