@@ -62,8 +62,8 @@
   </span>
 </div>
 
-{#if wiz.setupModeActive}
-  <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
+{#if wiz.passthroughActive}
+  <div class="passthrough-on">{$i18n.t("setupWizardPassthroughTurnOff")}</div>
 {/if}
 
 <ol class="checks">
@@ -110,7 +110,7 @@
 </div>
 
 <style lang="scss">
-  .setup-on {
+  .passthrough-on {
     padding: 10px 14px;
     border-left: 4px solid var(--color-status-bad);
     border-radius: var(--radius-xs);

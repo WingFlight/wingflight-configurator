@@ -731,7 +731,7 @@ export function applyVirtualConfig() {
     "TRAINER",
     "ATT HOLD",
     "FAILSAFE",
-    "SETUP",
+    "PASSTHROUGH",
     "PREARM",
     "BEEPER",
     "BEEPER MUTE",

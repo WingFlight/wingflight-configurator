@@ -36,7 +36,7 @@
   // throws before the tune). See the "Set Up Your Aircraft" docs page.
   const STEPS = [
     { key: "sensors", component: StepSensors },
-    // Before anything that uses the sticks or the SETUP switch.
+    // Before anything that uses the sticks or the PASSTHROUGH switch.
     { key: "receiver", component: StepReceiver },
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
@@ -64,9 +64,9 @@
   let pending = $state(false);
   let saving = $state(false);
   let armed = $state(false);
-  let setupModeActive = $state(false);
+  let passthroughActive = $state(false);
   let angleModeActive = $state(false);
-  let setupModeAssigned = $state(false);
+  let passthroughAssigned = $state(false);
   let commitFn = null;
   let leaveFn = null;
   let snapshot = null;
@@ -174,20 +174,21 @@
     }, 200);
   });
 
-  // SETUP is PASSTHROUGH before firmware#182 renamed it; permanent box ID 12.
+  // PASSTHROUGH: named SETUP by firmware 0.0.x up to API 22.13; permanent box ID 12.
   const ANGLE_BOX_ID = 1;
-  const SETUP_BOX_ID = 12;
+  const PASSTHROUGH_BOX_ID = 12;
 
   function updateModes() {
     armed = isArmed();
-    const setupIndex = FC.AUX_CONFIG.findIndex(
-      (name) => name === "SETUP" || name === "PASSTHROUGH",
+    const passthroughIndex = FC.AUX_CONFIG.findIndex(
+      (name) => name === "PASSTHROUGH" || name === "SETUP",
     );
-    setupModeActive = setupIndex >= 0 && bit_check(FC.CONFIG.mode, setupIndex);
+    passthroughActive =
+      passthroughIndex >= 0 && bit_check(FC.CONFIG.mode, passthroughIndex);
     const angleIndex = FC.AUX_CONFIG.indexOf("ANGLE");
     angleModeActive = angleIndex >= 0 && bit_check(FC.CONFIG.mode, angleIndex);
-    setupModeAssigned = FC.MODE_RANGES.some(
-      (r) => r.id === SETUP_BOX_ID && r.range.start < r.range.end,
+    passthroughAssigned = FC.MODE_RANGES.some(
+      (r) => r.id === PASSTHROUGH_BOX_ID && r.range.start < r.range.end,
     );
   }
 
@@ -279,8 +280,8 @@
   }
 
   // Called by the steps that measure throws.
-  async function forceSetupMode() {
-    return applyModeForce(SETUP_BOX_ID);
+  async function forcePassthrough() {
+    return applyModeForce(PASSTHROUGH_BOX_ID);
   }
 
   // Called by the gyro check so the stabilizer holds attitude while the model
@@ -446,14 +447,14 @@
     get armed() {
       return armed;
     },
-    get setupModeActive() {
-      return setupModeActive;
+    get passthroughActive() {
+      return passthroughActive;
     },
     get angleModeActive() {
       return angleModeActive;
     },
-    get setupModeForced() {
-      return forced?.id === SETUP_BOX_ID;
+    get passthroughForced() {
+      return forced?.id === PASSTHROUGH_BOX_ID;
     },
     get angleModeForced() {
       return forced?.id === ANGLE_BOX_ID;
@@ -465,11 +466,11 @@
       return saving;
     },
     save,
-    forceSetupMode,
+    forcePassthrough,
     forceAngleMode,
     releaseAngleMode,
-    get setupModeAssigned() {
-      return setupModeAssigned;
+    get passthroughAssigned() {
+      return passthroughAssigned;
     },
     holdAxes,
     releaseAxes,

@@ -3,16 +3,16 @@
 
   import { i18n } from "@/js/i18n.js";
 
-  // Shown on the steps measured in SETUP mode (full stick is full servo
-  // travel, no gyro). Opening the step switches SETUP on through the wizard;
+  // Shown on the steps measured in PASSTHROUGH mode (full stick is full servo
+  // travel, no gyro). Opening the step switches PASSTHROUGH on through the wizard;
   // leaving it switches it off again (SetupWizard.svelte). If the firmware
-  // can't force it, the pilot's own SETUP switch is the fallback.
+  // can't force it, the pilot's own PASSTHROUGH switch is the fallback.
   const wiz = getContext("setupWizard");
 
   let forceFailed = $state(false);
 
   onMount(async () => {
-    forceFailed = !(await wiz.forceSetupMode());
+    forceFailed = !(await wiz.forcePassthrough());
   });
 </script>
 
@@ -20,7 +20,7 @@
   <div class={["status", kind]} role="status">
     <i class={["fas", icon]} aria-hidden="true"></i>
     <div class="status-text">
-      <span class="status-title">{$i18n.t("setupWizardSetupModeTitle")}</span>
+      <span class="status-title">{$i18n.t("setupWizardPassthroughTitle")}</span>
       <span>{text}</span>
     </div>
     {#if kind === "bad"}
@@ -31,31 +31,31 @@
   </div>
 {/snippet}
 
-{#if wiz.setupModeActive}
+{#if wiz.passthroughActive}
   {@render status(
     "good",
     "fa-check-circle",
-    wiz.setupModeForced
-      ? $i18n.t("setupWizardSetupModeForced")
-      : $i18n.t("setupWizardSetupModeOn"),
+    wiz.passthroughForced
+      ? $i18n.t("setupWizardPassthroughForced")
+      : $i18n.t("setupWizardPassthroughOn"),
   )}
-{:else if forceFailed && !wiz.setupModeAssigned}
+{:else if forceFailed && !wiz.passthroughAssigned}
   {@render status(
     "bad",
     "fa-times-circle",
-    $i18n.t("setupWizardSetupModeNotAssigned"),
+    $i18n.t("setupWizardPassthroughNotAssigned"),
   )}
 {:else if forceFailed}
   {@render status(
     "warn",
     "fa-exclamation-triangle",
-    $i18n.t("setupWizardSetupModeOff"),
+    $i18n.t("setupWizardPassthroughOff"),
   )}
 {:else}
   {@render status(
     "warn",
     "fa-circle-notch fa-spin",
-    $i18n.t("setupWizardSetupModeWaiting"),
+    $i18n.t("setupWizardPassthroughWaiting"),
   )}
 {/if}
 
@@ -65,7 +65,7 @@
   }
 
   // A tinted box with an icon, so "the green box" in the steps' text is
-  // easy to find: green when SETUP is on, yellow while waiting, red when
+  // easy to find: green when PASSTHROUGH is on, yellow while waiting, red when
   // the pilot has to do something.
   .status {
     --tone: var(--color-yellow-500);

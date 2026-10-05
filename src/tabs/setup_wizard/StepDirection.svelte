@@ -121,8 +121,8 @@
   {/each}
 </div>
 
-{#if wiz.setupModeActive}
-  <div class="setup-on">{$i18n.t("setupWizardSetupModeTurnOff")}</div>
+{#if wiz.passthroughActive}
+  <div class="passthrough-on">{$i18n.t("setupWizardPassthroughTurnOff")}</div>
 {/if}
 
 {#each checks as check, n (check.key)}
@@ -206,7 +206,7 @@
 {/each}
 
 <style lang="scss">
-  .setup-on {
+  .passthrough-on {
     padding: 8px 12px;
     border-left: 3px solid var(--color-status-bad);
     border-radius: var(--radius-xs);

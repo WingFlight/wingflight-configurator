@@ -6,7 +6,7 @@
 
   import TravelGauge from "./TravelGauge.svelte";
   import StickCorners from "./StickCorners.svelte";
-  import SetupModeStatus from "./SetupModeStatus.svelte";
+  import PassthroughStatus from "./PassthroughStatus.svelte";
   import { travelReach } from "./surfaces.js";
 
   const wiz = getContext("setupWizard");
@@ -33,7 +33,7 @@
 
 <p>{$i18n.t("setupWizardTravelIntro")}</p>
 
-<SetupModeStatus />
+<PassthroughStatus />
 
 <div class="corners">
   <StickCorners />

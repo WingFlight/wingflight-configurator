@@ -5,7 +5,7 @@
   import { i18n } from "@/js/i18n.js";
 
   import LivePulse from "./LivePulse.svelte";
-  import SetupModeStatus from "./SetupModeStatus.svelte";
+  import PassthroughStatus from "./PassthroughStatus.svelte";
   import RadioIcon from "./RadioIcon.svelte";
   import MeasureThrow from "./MeasureThrow.svelte";
   import AxisIcon from "./AxisIcon.svelte";
@@ -24,9 +24,9 @@
     travelReach,
   } from "./surfaces.js";
 
-  // Throws are set with the radio in SETUP mode, so full stick is exactly
+  // Throws are set with the radio in PASSTHROUGH mode, so full stick is exactly
   // what the pilot's sticks and endpoints give, with no gyro. No overrides
-  // here: in SETUP mode the FC replaces the stabilized inputs with the stick
+  // here: in PASSTHROUGH mode the FC replaces the stabilized inputs with the stick
   // (flight/mixer.c), and Axis Gain and servo scale still apply.
   //
   // Two controls per axis, both used the same way (hold the stick, watch the
@@ -132,7 +132,7 @@
 
 <p>{$i18n.t("setupWizardThrowsIntro")}</p>
 
-<SetupModeStatus />
+<PassthroughStatus />
 
 <div class="how">
   <div class="art">
