@@ -9139,8 +9139,8 @@
     "setupWizardPassthroughNotAssigned": {
         "message": "The wizard couldn't switch PASSTHROUGH mode on (this firmware can't, or the model is armed), and PASSTHROUGH isn't on a switch. Update the firmware or assign PASSTHROUGH on the Modes tab, then come back to this step."
     },
-    "setupWizardPassthroughTurnOff": {
-        "message": "Switch PASSTHROUGH mode off for this step: in PASSTHROUGH mode the sticks drive the surfaces directly and the flight controller can't move them."
+    "setupWizardBypassTurnOff": {
+        "message": "Switch $1 mode off for this step: in $1 mode the sticks drive the surfaces directly and the flight controller may not be able to move them."
     },
     "setupWizardThrowsIntro": {
         "message": "Set how far each surface moves at full stick, using the throws from your model's setup guide. You need your radio and a throw meter or ruler on the surface. The wizard puts the model in PASSTHROUGH mode for this step."
