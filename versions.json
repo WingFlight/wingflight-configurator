@@ -133,13 +133,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-bench-override",
-      "path": "./feature-bench-override/",
-      "branch": "feature/bench-override",
-      "date": "2026-10-06T07:33:43Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
