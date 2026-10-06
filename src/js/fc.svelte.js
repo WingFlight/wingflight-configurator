@@ -650,8 +650,6 @@ class FlightController {
       propHangStrength:           100,
       propHangAngle:              20,
       propHangFade:               500,
-      hasRollYaw:                 false,
-      rollYawCoupling:            0,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,

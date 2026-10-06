@@ -3,7 +3,6 @@ import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
 import { readPropHang, writePropHang } from "@/js/PropHang.js";
-import { readRollYaw, writeRollYaw } from "@/js/RollYaw.js";
 import semver from "semver";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
@@ -1534,7 +1533,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 readLevelDamping(data, FC.PID_PROFILE);
                 readSnapRelax(data, FC.PID_PROFILE);
                 readPropHang(data, FC.PID_PROFILE);
-                readRollYaw(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -2664,7 +2662,6 @@ MspHelper.prototype.crunch = function(code) {
             writeLevelDamping(buffer, FC.PID_PROFILE);
             writeSnapRelax(buffer, FC.PID_PROFILE);
             writePropHang(buffer, FC.PID_PROFILE);
-            writeRollYaw(buffer, FC.PID_PROFILE);
             break;
         }
 
