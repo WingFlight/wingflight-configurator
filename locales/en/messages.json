@@ -8707,6 +8707,9 @@
     "setupWizardNoServos": {
         "message": "No PWM servos found. Check that the board has servo outputs."
     },
+    "setupWizardServosPastCount": {
+        "message": "The mixer uses servo outputs $1, but this flight controller only has $2. Those surfaces won't move, and the wizard can't set them up. Assign more servo outputs on the Remap FC tab, or move those surfaces to servo outputs the board has."
+    },
     "setupWizardRebootNeeded": {
         "message": "These settings take effect after a reboot. Open the Setup Wizard again afterwards to carry on from the next step."
     },

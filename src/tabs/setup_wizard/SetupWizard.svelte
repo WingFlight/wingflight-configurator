@@ -13,7 +13,12 @@
 
   import Page from "@/components/Page.svelte";
 
-  import { surfacesFromRules, AXES, FLAP_INPUT } from "./surfaces.js";
+  import {
+    surfacesFromRules,
+    servosPastCount,
+    AXES,
+    FLAP_INPUT,
+  } from "./surfaces.js";
   import StepSensors from "./StepSensors.svelte";
   import StepReceiver from "./StepReceiver.svelte";
   import StepAirframe from "./StepAirframe.svelte";
@@ -109,6 +114,10 @@
   );
 
   let surfaces = $derived(surfacesFromRules(FC.MIXER_RULES, servoCount));
+  // Mixed servos the board has no output for, which the wizard can't show.
+  let missingServos = $derived(
+    servosPastCount(FC.MIXER_RULES, servoCount, PWM_SERVO_SLOTS),
+  );
 
   let axisGains = $derived(
     Object.fromEntries(
@@ -624,6 +633,14 @@
       {/if}
       {#if servoCount === 0}
         <div class="banner">{$i18n.t("setupWizardNoServos")}</div>
+      {/if}
+      {#if missingServos.length > 0}
+        <div class="banner warn">
+          {$i18n.t("setupWizardServosPastCount", {
+            1: missingServos.join(", "),
+            2: servoCount,
+          })}
+        </div>
       {/if}
 
       <section class="panel">

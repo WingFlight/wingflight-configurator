@@ -73,6 +73,24 @@ export function surfacesFromRules(rules, servoCount) {
     .map((s) => ({ ...s, kind: surfaceKind(s.axes, s.flap, s.base) }));
 }
 
+// Servo numbers (1-based) that the surface mix drives but that are past the
+// board's servo outputs (up to `slots`), so surfacesFromRules() leaves them
+// out. The firmware only counts servo pins with a timer assigned
+// (servoInit() in flight/servos.c), so a flap mixed onto servo 5 of a board
+// with 4 servo pins never moves.
+export function servosPastCount(rules, servoCount, slots) {
+  const servos = new Set();
+  for (const rule of rules) {
+    if (rule.oper !== OP_SET && rule.oper !== OP_ADD) continue;
+    if (!AXES.some((a) => a.input === rule.src) && rule.src !== FLAP_INPUT) {
+      continue;
+    }
+    if (rule.weight === 0 && rule.weightNeg === 0) continue;
+    if (rule.dst > servoCount && rule.dst <= slots) servos.add(rule.dst);
+  }
+  return [...servos].sort((a, b) => a - b);
+}
+
 function moves(w) {
   return !!w && (w.pos !== 0 || w.neg !== 0);
 }
