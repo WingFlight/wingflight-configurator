@@ -62,8 +62,10 @@
   </span>
 </div>
 
-{#if wiz.passthroughActive}
-  <div class="passthrough-on">{$i18n.t("setupWizardPassthroughTurnOff")}</div>
+{#if wiz.bypassMode}
+  <div class="passthrough-on">
+    {$i18n.t("setupWizardBypassTurnOff", { 1: wiz.bypassMode })}
+  </div>
 {/if}
 
 <ol class="checks">
