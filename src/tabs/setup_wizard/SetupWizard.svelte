@@ -65,6 +65,7 @@
   let saving = $state(false);
   let armed = $state(false);
   let passthroughActive = $state(false);
+  let bypassMode = $state(null);
   let angleModeActive = $state(false);
   let passthroughAssigned = $state(false);
   let commitFn = null;
@@ -186,6 +187,19 @@
     );
     passthroughActive =
       passthroughIndex >= 0 && bit_check(FC.CONFIG.mode, passthroughIndex);
+    // PASSTHROUGH and MANUAL both put the sticks on the surfaces instead of
+    // the stabilizer. Firmware before the fix also lets them win over the
+    // wizard's mixer overrides, so the FC can't move the surfaces.
+    const manualIndex = FC.AUX_CONFIG.findIndex(
+      (name) => name === "MANUAL" || name === "GYRO OFF",
+    );
+    const manualActive =
+      manualIndex >= 0 && bit_check(FC.CONFIG.mode, manualIndex);
+    bypassMode = passthroughActive
+      ? FC.AUX_CONFIG[passthroughIndex]
+      : manualActive
+        ? FC.AUX_CONFIG[manualIndex]
+        : null;
     const angleIndex = FC.AUX_CONFIG.indexOf("ANGLE");
     angleModeActive = angleIndex >= 0 && bit_check(FC.CONFIG.mode, angleIndex);
     passthroughAssigned = FC.MODE_RANGES.some(
@@ -457,6 +471,9 @@
     },
     get passthroughActive() {
       return passthroughActive;
+    },
+    get bypassMode() {
+      return bypassMode;
     },
     get angleModeActive() {
       return angleModeActive;
