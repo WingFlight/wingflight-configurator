@@ -18,7 +18,9 @@ const OP_SET = 1;
 const OP_ADD = 2;
 
 // MIXER_IN_RC_CHANNEL_AUX1, the channel the Mixer setup drives flaps from.
-const FLAP_INPUT = 13;
+// The wizard takes channel centre as flaps up and positive as flaps down,
+// the same as the flaperon mix (Mixer.buildWizardRules()).
+export const FLAP_INPUT = 13;
 
 // Servo config flags (SERVO_FLAG_REVERSED).
 export const SERVO_FLAG_REVERSE = 1;
@@ -37,8 +39,9 @@ export const SCALE_MAX = 1000;
 // fractions for positive and negative input. Only SET/ADD rules count; MUL
 // rules and logic conditions are ignored, since the wizard sets up the
 // plain surface mix. The flap channel is kept apart as `flap` (in the same
-// pos/neg form) so travel checks can count it; a servo driven by the flap
-// channel alone is a flap, not a surface the wizard sets up.
+// pos/neg form). `base` is the input of the servo's last SET rule (an axis
+// key or "flap"): the input the servo is built on, which the rest are ADDed
+// onto.
 export function surfacesFromRules(rules, servoCount) {
   const byServo = new Map();
 
@@ -50,7 +53,7 @@ export function surfacesFromRules(rules, servoCount) {
     if (servo < 0 || servo >= servoCount) continue;
 
     if (!byServo.has(servo)) {
-      byServo.set(servo, { servo, axes: {}, flap: null });
+      byServo.set(servo, { servo, axes: {}, flap: null, base: null });
     }
     const entry = byServo.get(servo);
     const prev = (axis ? entry.axes[axis.key] : entry.flap) ?? { pos: 0, neg: 0 };
@@ -61,32 +64,62 @@ export function surfacesFromRules(rules, servoCount) {
     };
     if (axis) entry.axes[axis.key] = next;
     else entry.flap = next;
+    if (set) entry.base = axis ? axis.key : "flap";
   }
 
   return [...byServo.values()]
-    .filter((s) => Object.values(s.axes).some((w) => w.pos !== 0 || w.neg !== 0))
+    .filter((s) => moves(s.flap) || Object.values(s.axes).some(moves))
     .sort((a, b) => a.servo - b.servo)
-    .map((s) => ({ ...s, kind: surfaceKind(s.axes, s.flap) }));
+    .map((s) => ({ ...s, kind: surfaceKind(s.axes, s.flap, s.base) }));
 }
 
-export function surfaceKind(axes, flap) {
-  const has = (k) => axes[k] && (axes[k].pos !== 0 || axes[k].neg !== 0);
-  const roll = has("roll");
-  const pitch = has("pitch");
-  const yaw = has("yaw");
+// Servo numbers (1-based) that the surface mix drives but that are past the
+// board's servo outputs (up to `slots`), so surfacesFromRules() leaves them
+// out. The firmware only counts servo pins with a timer assigned
+// (servoInit() in flight/servos.c), so a flap mixed onto servo 5 of a board
+// with 4 servo pins never moves.
+export function servosPastCount(rules, servoCount, slots) {
+  const servos = new Set();
+  for (const rule of rules) {
+    if (rule.oper !== OP_SET && rule.oper !== OP_ADD) continue;
+    if (!AXES.some((a) => a.input === rule.src) && rule.src !== FLAP_INPUT) {
+      continue;
+    }
+    if (rule.weight === 0 && rule.weightNeg === 0) continue;
+    if (rule.dst > servoCount && rule.dst <= slots) servos.add(rule.dst);
+  }
+  return [...servos].sort((a, b) => a - b);
+}
+
+function moves(w) {
+  return !!w && (w.pos !== 0 || w.neg !== 0);
+}
+
+export function surfaceKind(axes, flap, base = null) {
+  const roll = moves(axes.roll);
+  const pitch = moves(axes.pitch);
+  const yaw = moves(axes.yaw);
+  // A flap servo, alone or with roll ADDed on (flaps that follow the
+  // ailerons).
+  if (moves(flap) && !pitch && !yaw && (!roll || base === "flap")) {
+    return "flap";
+  }
   if (roll && pitch && !yaw) return "elevon";
   if (pitch && yaw && !roll) return "ruddervator";
   if (roll && !pitch && !yaw) {
-    return flap && (flap.pos !== 0 || flap.neg !== 0) ? "flaperon" : "aileron";
+    return moves(flap) ? "flaperon" : "aileron";
   }
   if (pitch && !roll && !yaw) return "elevator";
   if (yaw && !roll && !pitch) return "rudder";
   return "mixed";
 }
 
-// The axis the wizard uses to move a surface on its own.
+// The input the wizard uses to move a surface on its own: an axis key, or
+// "flap" for the flap channel.
 export function primaryAxis(surface) {
   switch (surface.kind) {
+    case "flap":
+      return "flap";
     case "aileron":
     case "flaperon":
       return "roll";
@@ -105,6 +138,14 @@ export function outputForAxis(surface, axisKey, stick, axisGains) {
   const gain = axisGains[axisKey] ?? 1;
   const input = stick * gain;
   return input >= 0 ? input * w.pos : input * w.neg;
+}
+
+// Mixer output for this surface with the flap channel at +1 (full flap) or
+// -1 and every axis at 0.
+export function outputForFlap(surface, stick) {
+  const w = surface.flap;
+  if (!w) return 0;
+  return stick >= 0 ? stick * w.pos : stick * w.neg;
 }
 
 // Servo side ("pos" uses rpos/max, "neg" uses rneg/min) that a mixer output

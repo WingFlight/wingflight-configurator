@@ -13,7 +13,12 @@
 
   import Page from "@/components/Page.svelte";
 
-  import { surfacesFromRules, AXES } from "./surfaces.js";
+  import {
+    surfacesFromRules,
+    servosPastCount,
+    AXES,
+    FLAP_INPUT,
+  } from "./surfaces.js";
   import StepSensors from "./StepSensors.svelte";
   import StepReceiver from "./StepReceiver.svelte";
   import StepAirframe from "./StepAirframe.svelte";
@@ -54,6 +59,10 @@
     { key: "style", component: StepStyle },
     { key: "finish", component: StepFinish },
   ];
+
+  // Mixer inputs the wizard holds with overrides: the stabilized axes, and
+  // the flap channel for the flap direction check.
+  const HELD_INPUTS = [...AXES.map((a) => a.input), FLAP_INPUT];
 
   const STEP_STORAGE_KEY = "setupWizardStep";
   const PWM_SERVO_SLOTS = 8;
@@ -105,6 +114,10 @@
   );
 
   let surfaces = $derived(surfacesFromRules(FC.MIXER_RULES, servoCount));
+  // Mixed servos the board has no output for, which the wizard can't show.
+  let missingServos = $derived(
+    servosPastCount(FC.MIXER_RULES, servoCount, PWM_SERVO_SLOTS),
+  );
 
   let axisGains = $derived(
     Object.fromEntries(
@@ -239,9 +252,9 @@
 
   function refreshOverrides() {
     sendModeOverride(forced ? [forced.id] : []);
-    for (const axis of AXES) {
-      if (FC.MIXER_OVERRIDE[axis.input] !== Mixer.OVERRIDE_OFF) {
-        mspHelper.sendMixerOverride(axis.input, undefined, OVERRIDE_TIMEOUT_MS);
+    for (const input of HELD_INPUTS) {
+      if (FC.MIXER_OVERRIDE[input] !== Mixer.OVERRIDE_OFF) {
+        mspHelper.sendMixerOverride(input, undefined, OVERRIDE_TIMEOUT_MS);
       }
     }
     for (let i = 0; i < servoCount; i++) {
@@ -333,13 +346,19 @@
       FC.MIXER_OVERRIDE[axis.input] = Math.round(value * 1000);
       mspHelper.sendMixerOverride(axis.input, undefined, overrideTimeout());
     }
+    // The flap channel only when asked for: the other steps leave it on the
+    // pilot's switch.
+    if ("flap" in values) {
+      FC.MIXER_OVERRIDE[FLAP_INPUT] = Math.round(values.flap * 1000);
+      mspHelper.sendMixerOverride(FLAP_INPUT, undefined, overrideTimeout());
+    }
   }
 
   function releaseAxes() {
-    for (const axis of AXES) {
-      if (FC.MIXER_OVERRIDE[axis.input] === Mixer.OVERRIDE_OFF) continue;
-      FC.MIXER_OVERRIDE[axis.input] = Mixer.OVERRIDE_OFF;
-      mspHelper.sendMixerOverride(axis.input);
+    for (const input of HELD_INPUTS) {
+      if (FC.MIXER_OVERRIDE[input] === Mixer.OVERRIDE_OFF) continue;
+      FC.MIXER_OVERRIDE[input] = Mixer.OVERRIDE_OFF;
+      mspHelper.sendMixerOverride(input);
     }
   }
 
@@ -614,6 +633,14 @@
       {/if}
       {#if servoCount === 0}
         <div class="banner">{$i18n.t("setupWizardNoServos")}</div>
+      {/if}
+      {#if missingServos.length > 0}
+        <div class="banner warn">
+          {$i18n.t("setupWizardServosPastCount", {
+            1: missingServos.join(", "),
+            2: servoCount,
+          })}
+        </div>
       {/if}
 
       <section class="panel">

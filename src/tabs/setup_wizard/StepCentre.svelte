@@ -102,6 +102,9 @@
       {#if far}
         <p class="warn-text">{$i18n.t("setupWizardCentreFarWarning")}</p>
       {/if}
+      {#if surface.kind === "flap"}
+        <p class="muted">{$i18n.t("setupWizardCentreFlapHint")}</p>
+      {/if}
     </section>
   {/each}
 </div>
@@ -259,6 +262,11 @@
 
   .warn-text {
     color: var(--color-yellow-500);
+    font-size: 0.9em;
+  }
+
+  .muted {
+    color: var(--color-text-soft);
     font-size: 0.9em;
   }
 </style>

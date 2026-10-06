@@ -4,6 +4,12 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { servoTravelRange, servoSignalRange } from "@/js/servoLimits.js";
+  import {
+    outputForFlap,
+    servoSide,
+    maxScale,
+    SERVO_FLAG_REVERSE,
+  } from "./surfaces.js";
 
   import LivePulse from "./LivePulse.svelte";
   import SurfaceBothWays from "./SurfaceBothWays.svelte";
@@ -89,13 +95,40 @@
     holdPosition();
   }
 
+  // A flap's limits are its end points: sets the scale on this side so the
+  // flap channel at its end (full flap, or the other end) lands exactly on
+  // the limit. Returns whether the scale changed.
+  function matchFlapScale(servo, side, limit) {
+    const surface = wiz.surfaces.find((s) => s.servo === servo);
+    if (surface?.kind !== "flap") return false;
+    const config = FC.SERVO_CONFIG[servo];
+    const reversed = (config.flags & SERVO_FLAG_REVERSE) !== 0;
+    for (const stick of [1, -1]) {
+      const output = outputForFlap(surface, stick);
+      if (output === 0) continue;
+      if ((servoSide(output, reversed) === "pos") !== (side === "max"))
+        continue;
+      config[side === "max" ? "rpos" : "rneg"] = maxScale(
+        output,
+        Math.abs(limit),
+      );
+      return true;
+    }
+    return false;
+  }
+
   function setLimitHere() {
     const side = position > 0 ? "max" : "min";
     original[side] = position;
     sides[current] = { ...sides[current], [side]: true };
+    const scaled = matchFlapScale(current, side, position);
     if (wiz.canProbe) {
       FC.SERVO_CONFIG[current][side] = position;
       wiz.sendServo(current);
+    } else if (scaled) {
+      wiz.sendServo(current);
+      // The override is in scale units, so re-send it at the new scale.
+      holdPosition();
     }
   }
 
@@ -205,6 +238,9 @@
           </button>
         </div>
         <span class="muted">{$i18n.t("setupWizardLimitsHowTo")}</span>
+        {#if surface.kind === "flap"}
+          <span class="muted">{$i18n.t("setupWizardLimitsFlapNote")}</span>
+        {/if}
       {/if}
     </section>
   {/each}

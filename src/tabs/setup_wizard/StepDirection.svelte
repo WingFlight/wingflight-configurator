@@ -12,8 +12,12 @@
 
   // Signs follow the stabilized inputs: roll + is right roll, pitch + is
   // stick forward (nose down), and yaw + is yaw left, since RC yaw is negated
-  // once in the firmware's setpoint.c.
+  // once in the firmware's setpoint.c. The flap check moves the flap
+  // channel instead, positive being flaps down (FLAP_INPUT in surfaces.js).
+  // It comes first: flaps that follow the ailerons get their roll direction
+  // from their flap direction.
   const CHECKS = [
+    { axis: "flap", sign: 1, key: "flap" },
     { axis: "pitch", sign: -1, key: "pitch" },
     { axis: "roll", sign: 1, key: "roll" },
     { axis: "yaw", sign: -1, key: "yaw" },
@@ -32,8 +36,18 @@
   let answers = $state({});
   let wiggleTimer;
 
+  // Whether this check moves the surface. The flap check leaves out pitch
+  // surfaces carrying a Flap Compensation rule: that mix is tuned, not
+  // checked here.
+  function movedBy(surface, check) {
+    if (check.axis === "flap") {
+      return surface.kind === "flap" || surface.kind === "flaperon";
+    }
+    return !!surface.axes[check.axis];
+  }
+
   let checks = $derived(
-    CHECKS.filter((c) => wiz.surfaces.some((s) => s.axes[c.axis])),
+    CHECKS.filter((c) => wiz.surfaces.some((s) => movedBy(s, c))),
   );
 
   function hold(check) {
@@ -43,6 +57,8 @@
       roll: 0,
       pitch: 0,
       yaw: 0,
+      // Flaps up for the other checks, so a flap mix doesn't hide them.
+      flap: 0,
       [check.axis]: check.sign * deflection,
     });
   }
@@ -71,7 +87,7 @@
   function invertAxis(check) {
     wiz.invertAxis(check.axis);
     for (const surface of wiz.surfaces) {
-      if (surface.axes[check.axis]) {
+      if (movedBy(surface, check)) {
         answers[`${check.key}:${surface.servo}`] = "fixed";
       }
     }
@@ -155,7 +171,7 @@
     {#if active === check.key}
       <table class="rows">
         <tbody>
-          {#each wiz.surfaces.filter((s) => s.axes[check.axis]) as surface (surface.servo)}
+          {#each wiz.surfaces.filter( (s) => movedBy(s, check), ) as surface (surface.servo)}
             {@const state = answers[`${check.key}:${surface.servo}`]}
             {@const ownAxis = primaryAxis(surface) === check.axis}
             <tr>
@@ -189,7 +205,11 @@
                   >
                 {:else if !ownAxis}
                   <span class="muted"
-                    >{$i18n.t("setupWizardDirectionMixedHint")}</span
+                    >{$i18n.t(
+                      surface.kind === "flap"
+                        ? "setupWizardDirectionFlapFollowHint"
+                        : "setupWizardDirectionMixedHint",
+                    )}</span
                   >
                 {/if}
               </td>
@@ -197,12 +217,16 @@
           {/each}
         </tbody>
       </table>
-      <div class="invert">
-        <span class="muted">{$i18n.t("setupWizardDirectionAllWrong")}</span>
-        <button class="btn" onclick={() => invertAxis(check)}>
-          {$i18n.t(`setupWizardDirectionInvert_${check.key}`)}
-        </button>
-      </div>
+      {#if check.axis === "flap"}
+        <span class="muted">{$i18n.t("setupWizardDirectionFlapRadio")}</span>
+      {:else}
+        <div class="invert">
+          <span class="muted">{$i18n.t("setupWizardDirectionAllWrong")}</span>
+          <button class="btn" onclick={() => invertAxis(check)}>
+            {$i18n.t(`setupWizardDirectionInvert_${check.key}`)}
+          </button>
+        </div>
+      {/if}
     {/if}
   </section>
 {/each}

@@ -493,11 +493,24 @@ export const Mixer = {
                 aileronOutputs.forEach((output) => {
                     rules.push(rule(OP_ADD, RC_AUX1, output, 500));
                 });
+            } else if (options.flapServos >= 2) {
+                const leftFlap = nextServo++, rightFlap = nextServo++;
+                rules.push(rule(OP_SET, RC_AUX1, leftFlap, 1000));
+                rules.push(rule(OP_SET, RC_AUX1, rightFlap, 1000));
+
+                // Flaps that follow the ailerons (a 4-servo wing): roll
+                // ADDed at half weight on top of the flap position, with
+                // the same left/right signs as the aileron rules. The flap
+                // channel's sign already makes a positive output move each
+                // flap down, so the roll mix comes out right once the flap
+                // directions are set. Needs independent ailerons to have a
+                // left and right side to follow.
+                if (options.flapsFollowAilerons && aileronOutputs.length === 2) {
+                    rules.push(rule(OP_ADD, ROLL, leftFlap, 500));
+                    rules.push(rule(OP_ADD, ROLL, rightFlap, 500, true));
+                }
             } else {
                 rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
-                if (options.flapServos >= 2) {
-                    rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
-                }
             }
 
             // Flap-induced pitching moment otherwise gets silently absorbed
