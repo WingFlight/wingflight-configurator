@@ -3,6 +3,7 @@
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
   import WarningNote from "@/components/notes/WarningNote.svelte";
+  import ServoOutputMeter from "./ServoOutputMeter.svelte";
   import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   let { onApply } = $props();
@@ -114,6 +115,9 @@
 
 <dialog bind:this={dialogEl}>
   <h3>{$i18n.t("mixerWizardTitle")}</h3>
+  {#if servoShortfall}
+    <ServoOutputMeter shortfall={servoShortfall} />
+  {/if}
   {#if servoShortfall?.missing.length}
     <WarningNote>
       {$i18n.t("mixerWizardNotEnoughServos", {
@@ -122,13 +126,6 @@
         3: servoShortfall.missing.join(", "),
       })}
     </WarningNote>
-  {:else if servoShortfall}
-    <div class="servoCount">
-      {$i18n.t("mixerWizardServoCount", {
-        1: servoShortfall.needed,
-        2: servoShortfall.available,
-      })}
-    </div>
   {/if}
   <div class="wizardBody">
     <div class="content">
@@ -342,13 +339,6 @@
   .content {
     flex: 1;
     min-width: 0;
-  }
-
-  // Servo outputs used against the board's, shown until the setup needs
-  // more than it has (then the warning takes its place).
-  .servoCount {
-    margin-bottom: 8px;
-    color: var(--color-text-soft);
   }
 
   .wizardSection {
