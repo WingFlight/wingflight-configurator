@@ -1,0 +1,8 @@
+{
+  "branch": "feature/pwm-warning",
+  "date": "2026-10-06T23:05:19Z",
+  "number": 165,
+  "title": "Warn in model setup when the board has too few servo outputs",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/165",
+  "draft": false
+}
