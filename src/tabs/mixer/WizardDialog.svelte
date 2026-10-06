@@ -1,7 +1,9 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { Mixer } from "@/js/Mixer.js";
   import WarningNote from "@/components/notes/WarningNote.svelte";
+  import ServoOutputMeter from "./ServoOutputMeter.svelte";
   import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   let { onApply } = $props();
@@ -86,27 +88,45 @@
     return layers;
   });
 
+  let options = $derived({
+    layout,
+    ailerons,
+    tailControl,
+    wingYaw,
+    flaps,
+    flapServos,
+    flapsFollowAilerons,
+    motors,
+    diffThrustYaw,
+    thrustVectorRoll,
+    thrustVectorPitch,
+    thrustVectorYaw,
+  });
+
+  // Servo outputs these choices need that the board doesn't have, warned
+  // about here while they can still be changed.
+  let servoShortfall = $derived(Mixer.missingServoOutputs(options));
+
   function apply() {
     dialogEl.close();
-    onApply?.({
-      layout,
-      ailerons,
-      tailControl,
-      wingYaw,
-      flaps,
-      flapServos,
-      flapsFollowAilerons,
-      motors,
-      diffThrustYaw,
-      thrustVectorRoll,
-      thrustVectorPitch,
-      thrustVectorYaw,
-    });
+    onApply?.(options);
   }
 </script>
 
 <dialog bind:this={dialogEl}>
   <h3>{$i18n.t("mixerWizardTitle")}</h3>
+  {#if servoShortfall}
+    <ServoOutputMeter shortfall={servoShortfall} />
+  {/if}
+  {#if servoShortfall?.missing.length}
+    <WarningNote>
+      {$i18n.t("mixerWizardNotEnoughServos", {
+        1: servoShortfall.needed,
+        2: servoShortfall.available,
+        3: servoShortfall.missing.join(", "),
+      })}
+    </WarningNote>
+  {/if}
   <div class="wizardBody">
     <div class="content">
       <div class="wizardSection">

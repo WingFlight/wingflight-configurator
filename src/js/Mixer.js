@@ -165,6 +165,48 @@ export const Mixer = {
     MOTOR_OUTPUT_OFFSET: 27,
     HIGH_SERVO_OUTPUT_OFFSET: 31,
 
+    // PWM servo outputs the board has: the servo pins with a timer assigned
+    // (servoInit() in the firmware's flight/servos.c). With an SBUS or F.Bus
+    // output on, the firmware reports PWM servos + bus channels instead
+    // (hasBusServosConfigured() in pg/bus_servo.c). null before MSP_STATUS.
+    pwmServoCount: function ()
+    {
+        const reported = FC.CONFIG.servoCount;
+        if (reported === undefined) {
+            return null;
+        }
+        const busOutputs = FC.MIXER_CONFIG.bus_servo_output_count;
+        const busActive = busOutputs !== undefined ?
+            busOutputs > 0 :
+            reported > this.PWM_SERVO_COUNT;
+        return Math.max(0, Math.min(this.PWM_SERVO_COUNT,
+            busActive ? reported - this.busServoChannels() : reported));
+    },
+
+    // PWM servo outputs a model setup would use that the board doesn't have,
+    // so the surfaces on them would never move. buildWizardRules() numbers
+    // servos from 1, so it's every one past pwmServoCount(). Returns
+    // { needed, available, missing }, or null while the count is unknown.
+    missingServoOutputs: function (options)
+    {
+        const available = this.pwmServoCount();
+        if (available === null) {
+            return null;
+        }
+        const outputs = new Set();
+        for (const rule of this.buildWizardRules(options)) {
+            if (rule.dst >= 1 && !this.isMotorOutput(rule.dst)) {
+                outputs.add(rule.dst);
+            }
+        }
+        const sorted = [...outputs].sort((a, b) => a - b);
+        return {
+            needed: sorted.length,
+            available,
+            missing: sorted.filter((output) => output > available),
+        };
+    },
+
     get outputNames() {
         const highServoCount = this.busServoChannels() - 18;
         return [
