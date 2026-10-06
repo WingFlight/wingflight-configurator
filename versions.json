@@ -195,6 +195,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-wizard-flaps",
+      "path": "./feature-wizard-flaps/",
+      "branch": "feature/wizard-flaps",
+      "date": "2026-10-06T22:16:52Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-wizard-gain-range",
       "path": "./feature-wizard-gain-range/",
       "branch": "feature/wizard-gain-range",
