@@ -15,6 +15,8 @@
   let flaps = $state(false);
   // 1 or 2 flap servos, or 0 for flaperons (the ailerons droop instead).
   let flapServos = $state(1);
+  // Two flap servos that also move with roll (a 4-servo wing).
+  let flapsFollowAilerons = $state(false);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
   // Independent per-axis, since a vectored mount might drive any combination
@@ -40,6 +42,7 @@
     wingYaw = "rudder";
     flaps = false;
     flapServos = 1;
+    flapsFollowAilerons = false;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -92,6 +95,7 @@
       wingYaw,
       flaps,
       flapServos,
+      flapsFollowAilerons,
       motors,
       diffThrustYaw,
       thrustVectorRoll,
@@ -194,6 +198,12 @@
             <input type="radio" bind:group={flapServos} value={2} />
             <span>{$i18n.t("mixerWizardFlapServos2")}</span>
           </label>
+          {#if canFlaperon && flapServos === 2}
+            <label class="wizardOption wizardSubOption">
+              <input type="checkbox" bind:checked={flapsFollowAilerons} />
+              <span>{$i18n.t("mixerWizardFlapsFollowAilerons")}</span>
+            </label>
+          {/if}
           {#if canFlaperon}
             <label class="wizardOption">
               <input type="radio" bind:group={flapServos} value={0} />
@@ -202,6 +212,9 @@
           {/if}
           <div class="wizardHint">
             {$i18n.t("mixerWizardFlapsCompensationHint")}
+          </div>
+          <div class="wizardHint">
+            {$i18n.t("mixerWizardFlapsChannelHint")}
           </div>
           {#if isCrsfReceiver()}
             <WarningNote message="mixerWizardFlapsElrsWarning" />
@@ -332,6 +345,11 @@
       margin-right: 6px;
       vertical-align: middle;
     }
+  }
+
+  // Depends on the option above it.
+  .wizardSubOption {
+    margin-left: 1.6em;
   }
 
   .wizardHint {

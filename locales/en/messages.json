@@ -4619,6 +4619,9 @@
     "mixerWizardFlapServos2": {
         "message": "2 independent servos"
     },
+    "mixerWizardFlapsFollowAilerons": {
+        "message": "Flaps also move with the ailerons (4-servo wing)"
+    },
     "mixerWizardFlapsElrsWarning": {
         "message": "Flaps are driven by channel 5 (AUX1). With ExpressLRS, set the switch mode to <b>Full Res 16ch Rate/2</b>: in the other modes channel 5 is only a two-position arm switch, and the flaps can't be set in between."
     },
@@ -4627,6 +4630,9 @@
     },
     "mixerWizardFlapsCompensationHint": {
         "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
+    },
+    "mixerWizardFlapsChannelHint": {
+        "message": "Set the flap channel on your radio so flaps up is at centre (0) and full flap is +100."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
@@ -8728,6 +8734,9 @@
     "setupWizardSurface_mixed": {
         "message": "Mixed surface"
     },
+    "setupWizardSurface_flap": {
+        "message": "Flap"
+    },
     "setupWizardAxis_roll": {
         "message": "Roll"
     },
@@ -8792,7 +8801,7 @@
         "message": "None yet. Choose a model type."
     },
     "setupWizardAirframeCustomNote": {
-        "message": "The wizard sets up PWM servos 1–8 driven by roll, pitch and yaw. Set up bus servos and flaps on the Servos tab."
+        "message": "The wizard sets up PWM servos 1–8 driven by roll, pitch, yaw and the flap channel. Set up bus servos on the Servos tab."
     },
     "setupWizardServoTypeIntro": {
         "message": "What kind of servos drive the control surfaces?"
@@ -8995,6 +9004,9 @@
     "setupWizardCentreTipSurface": {
         "message": "Surface in line with the wing or tail"
     },
+    "setupWizardCentreFlapHint": {
+        "message": "Flaps are held at flaps up: set them in line with the wing."
+    },
     "setupWizardCentreFlagNear": {
         "message": "Near center"
     },
@@ -9052,6 +9064,12 @@
     "setupWizardDirectionExpect_yaw": {
         "message": "Rudder and V-tail: trailing edges move to the right, seen from behind."
     },
+    "setupWizardDirectionMove_flap": {
+        "message": "Move flaps down"
+    },
+    "setupWizardDirectionExpect_flap": {
+        "message": "Flaps: both trailing edges go down."
+    },
     "setupWizardDirectionCorrect": {
         "message": "Correct"
     },
@@ -9060,6 +9078,9 @@
     },
     "setupWizardDirectionReversed": {
         "message": "Reversed"
+    },
+    "setupWizardDirectionFlapFollowHint": {
+        "message": "The flap check sets this flap's direction. If it moves the wrong way here, reverse its roll rule on the Mixer tab."
     },
     "setupWizardDirectionMixedHint": {
         "message": "This surface also works another axis, so reversing its servo would break that one. If both surfaces are wrong here, invert the axis below. If only one is, change its mix on the Mixer tab."
@@ -9075,6 +9096,9 @@
     },
     "setupWizardDirectionInvert_yaw": {
         "message": "Invert yaw"
+    },
+    "setupWizardDirectionFlapRadio": {
+        "message": "This makes a positive flap channel move the flaps down. If your flap switch works the wrong way round afterwards, reverse the flap channel on your radio."
     },
     "setupWizardLimitsIntro": {
         "message": "Find how far each servo can move before the surface or linkage binds."
@@ -9120,6 +9144,9 @@
     },
     "setupWizardLimitsHowTo": {
         "message": "A side you don't set keeps its old limit."
+    },
+    "setupWizardLimitsFlapNote": {
+        "message": "These are the flap end points: Max is full flap and Min is as far up as the flap may go. The wizard sets the flap travel so the ends of the flap channel land on them."
     },
     "setupWizardPassthroughTitle": {
         "message": "PASSTHROUGH mode"
