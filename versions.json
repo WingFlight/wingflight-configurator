@@ -174,13 +174,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-roll-yaw",
-      "path": "./feature-roll-yaw/",
-      "branch": "feature/roll-yaw",
-      "date": "2026-10-06T20:18:27Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-servo-limit-warn",
       "path": "./feature-servo-limit-warn/"
     },
