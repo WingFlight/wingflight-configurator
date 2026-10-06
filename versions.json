@@ -198,11 +198,7 @@
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
-      "date": "2026-10-06T22:16:52Z",
-      "number": 164,
-      "title": "Set up flaps in the wizard, and let flaps follow the ailerons",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/164",
-      "draft": false
+      "date": "2026-10-06T22:16:52Z"
     },
     {
       "type": "branch",
