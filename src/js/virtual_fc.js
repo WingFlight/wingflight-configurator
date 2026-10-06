@@ -102,6 +102,9 @@ function defaultPidSlot() {
       propHangStrength: 100,
       propHangAngle: 20,
       propHangFade: 500,
+      // Roll-yaw coupling (yaw the airframe makes by itself in a roll)
+      hasRollYaw: true,
+      rollYawCoupling: 0,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,

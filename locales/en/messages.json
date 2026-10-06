@@ -6433,6 +6433,15 @@
     "profilesPropHangFadeHelp": {
         "message": "Time over which the roll I-term comes back after the hang ends"
     },
+    "profilesRollYawGroup": {
+        "message": "Roll-yaw coupling"
+    },
+    "profilesRollYawCoupling": {
+        "message": "Coupling"
+    },
+    "profilesRollYawCouplingHelp": {
+        "message": "How much the model yaws by itself when it rolls, as a percentage of the roll rate. The gyro then leaves that yaw alone instead of fighting it with the rudder, so rolls track like they do in MANUAL and the rudder follows your stick. The stick and gust hold still work. Positive is yaw against the roll, which is the usual case. To find the value, roll with the rudder centred in MANUAL and compare the yaw rate with the roll rate in a log. 0 turns it off"
+    },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
     },
