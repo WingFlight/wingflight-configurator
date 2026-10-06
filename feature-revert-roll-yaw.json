@@ -1,4 +1,8 @@
 {
   "branch": "feature/revert-roll-yaw",
-  "date": "2026-10-06T20:56:36Z"
+  "date": "2026-10-06T20:56:36Z",
+  "number": 163,
+  "title": "Revert the roll-yaw coupling setting",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/163",
+  "draft": false
 }
