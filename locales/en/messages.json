@@ -4634,6 +4634,9 @@
     "mixerWizardFlapsChannelHint": {
         "message": "Set the flap channel on your radio so flaps up is at centre (0) and full flap is +100."
     },
+    "mixerWizardServoCount": {
+        "message": "This setup uses $1 of this flight controller's $2 servo outputs."
+    },
     "mixerWizardNotEnoughServos": {
         "message": "This setup needs $1 servo outputs, but this flight controller only has $2, so the surfaces on servo $3 won't move. Assign more servo outputs on the Remap FC tab, or use fewer servos: one flap servo on a Y-cable, flaperons instead of flap servos, or a single aileron servo."
     },

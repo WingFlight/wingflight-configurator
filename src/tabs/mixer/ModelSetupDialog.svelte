@@ -134,6 +134,22 @@
 
 <dialog bind:this={dialogEl} onclose={handleClose}>
   <h3>{$i18n.t("mixerEditConfigurationTitle")}</h3>
+  {#if servoShortfall?.missing.length}
+    <WarningNote>
+      {$i18n.t("mixerWizardNotEnoughServos", {
+        1: servoShortfall.needed,
+        2: servoShortfall.available,
+        3: servoShortfall.missing.join(", "),
+      })}
+    </WarningNote>
+  {:else if servoShortfall}
+    <div class="servoCount">
+      {$i18n.t("mixerWizardServoCount", {
+        1: servoShortfall.needed,
+        2: servoShortfall.available,
+      })}
+    </div>
+  {/if}
   <div class="wizardBody">
     {#if activeType.ailerons?.options}
       <div class="wizardSection">
@@ -283,16 +299,6 @@
       </div>
     {/if}
 
-    {#if servoShortfall?.missing.length}
-      <WarningNote>
-        {$i18n.t("mixerWizardNotEnoughServos", {
-          1: servoShortfall.needed,
-          2: servoShortfall.available,
-          3: servoShortfall.missing.join(", "),
-        })}
-      </WarningNote>
-    {/if}
-
     <div class="note">
       <p>{$i18n.t("mixerWizardOverwriteWarning")}</p>
     </div>
@@ -317,6 +323,13 @@
 
   h3 {
     margin-bottom: 0.5em;
+  }
+
+  // Servo outputs used against the board's, shown until the setup needs
+  // more than it has (then the warning takes its place).
+  .servoCount {
+    margin-bottom: 8px;
+    color: var(--color-text-soft);
   }
 
   .wizardSection {
