@@ -177,11 +177,7 @@
       "name": "feature-roll-yaw",
       "path": "./feature-roll-yaw/",
       "branch": "feature/roll-yaw",
-      "date": "2026-10-06T20:18:27Z",
-      "number": 162,
-      "title": "Add the roll-yaw coupling setting",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/162",
-      "draft": false
+      "date": "2026-10-06T20:18:27Z"
     },
     {
       "type": "branch",
