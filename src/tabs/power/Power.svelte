@@ -448,6 +448,20 @@
                     step={0.01}
                   />
                 </Field>
+                {#if FC.BATTERY_CONFIG.hasProfileFlights}
+                  <Field id={`power-flights-${i}`} label="powerBatteryFlights">
+                    {#snippet tooltip()}
+                      <Tooltip help="powerBatteryFlightsHelp" />
+                    {/snippet}
+                    <NumberInput
+                      id={`power-flights-${i}`}
+                      bind:value={FC.BATTERY_CONFIG.flights[i]}
+                      min={0}
+                      max={65535}
+                      step={1}
+                    />
+                  </Field>
+                {/if}
               </div>
             {/each}
           </div>

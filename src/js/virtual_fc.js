@@ -561,6 +561,8 @@ export function applyVirtualConfig() {
     vbatmaxcellvoltages: [4, 4, 4, 4, 4, 4],
     vbatfullcellvoltages: [3.9, 3.9, 3.9, 3.9, 3.9, 3.9],
     vbatwarningcellvoltages: [3, 3, 3, 3, 3, 3],
+    hasProfileFlights: true,
+    flights: [0, 0, 0, 0, 0, 0],
     mahWarningPercentage: 35,
   });
 
