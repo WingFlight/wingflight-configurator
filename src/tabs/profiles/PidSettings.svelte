@@ -174,22 +174,6 @@
     </SubSection>
   {/if}
 
-  {#if FC.PID_PROFILE.hasRollYaw}
-    <SubSection label="profilesRollYawGroup">
-      <Field id="roll-yaw-coupling" label="profilesRollYawCoupling" unit="%">
-        {#snippet tooltip()}
-          {$i18n.t("profilesRollYawCouplingHelp")}
-        {/snippet}
-        <NumberInput
-          id="roll-yaw-coupling"
-          min="-100"
-          max="100"
-          bind:value={FC.PID_PROFILE.rollYawCoupling}
-        />
-      </Field>
-    </SubSection>
-  {/if}
-
   <SubSection label="profilesItermRelaxLevelGroup">
     <Field id="iterm-relax-level-roll" label="profilesItermRelaxLevelRoll">
       {#snippet tooltip()}
