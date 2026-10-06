@@ -6,6 +6,7 @@ Name the raw-stick mode PASSTHROUGH and GYRO OFF MANUAL, matching the firmware, 
 
 Add flaperons as a third flap option in the mixer setup, for conventional airframes with independent ailerons: the AUX1 flap channel droops both ailerons together. The Setup Wizard counts flap travel when it checks a surface for clipping.
 Warn CRSF users on the Receiver tab, the Setup Wizard's receiver step and the mixer setup's Flaps section that ExpressLRS needs the Full Res 16ch Rate/2 switch mode, because Wingflight uses channel 5 (AUX1) as a normal channel.
+Warn about MANUAL as well as PASSTHROUGH on the Setup Wizard's direction and gyro steps, naming the mode that is on: on older firmware either one stops the direction check moving the surfaces.
 
 # 0.0.32
 
