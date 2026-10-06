@@ -72,22 +72,26 @@
     dialogEl.showModal();
   }
 
-  async function apply() {
-    const options = {
-      layout: activeType.layout,
-      ailerons: activeType.ailerons?.fixed ?? ailerons,
-      tailControl: activeType.tailControl?.fixed ?? tailControl,
-      wingYaw,
-      flaps,
-      flapServos,
-      flapsFollowAilerons,
-      motors,
-      diffThrustYaw,
-      thrustVectorRoll,
-      thrustVectorPitch,
-      thrustVectorYaw,
-    };
+  let options = $derived({
+    layout: activeType.layout,
+    ailerons: activeType.ailerons?.fixed ?? ailerons,
+    tailControl: activeType.tailControl?.fixed ?? tailControl,
+    wingYaw,
+    flaps,
+    flapServos,
+    flapsFollowAilerons,
+    motors,
+    diffThrustYaw,
+    thrustVectorRoll,
+    thrustVectorPitch,
+    thrustVectorYaw,
+  });
 
+  // Servo outputs these choices need that the board doesn't have, warned
+  // about here while they can still be changed.
+  let servoShortfall = $derived(Mixer.missingServoOutputs(options));
+
+  async function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
 
     // The feature flag isn't part of the staged mixer rules, and the Mixer
@@ -277,6 +281,16 @@
         </label>
         <div class="wizardHint">{$i18n.t("mixerWizardThrustVectorHint")}</div>
       </div>
+    {/if}
+
+    {#if servoShortfall?.missing.length}
+      <WarningNote>
+        {$i18n.t("mixerWizardNotEnoughServos", {
+          1: servoShortfall.needed,
+          2: servoShortfall.available,
+          3: servoShortfall.missing.join(", "),
+        })}
+      </WarningNote>
     {/if}
 
     <div class="note">
