@@ -8627,22 +8627,22 @@
         "message": "Trim"
     },
     "setupWizardTrimQuestion": {
-        "message": "Which radio do you fly with?"
+        "message": "How do you want to trim?"
     },
     "setupWizardTrimRadio_programmable": {
-        "message": "EdgeTX, OpenTX or Ethos"
+        "message": "A channel per trim"
     },
     "setupWizardTrimRadioHelp_programmable": {
-        "message": "A spare channel for each trim, moved by the trim buttons. The radio keeps the trim."
+        "message": "Each trim on its own spare channel, moved by the trim buttons. The radio keeps the trim."
     },
     "setupWizardTrimRadio_buttons": {
         "message": "Trim buttons on one channel"
     },
     "setupWizardTrimRadioHelp_buttons": {
-        "message": "Ethos, EdgeTX or OpenTX: all the trim buttons on one spare channel. The flight controller keeps the trim and saves it when you disarm."
+        "message": "All the trim buttons on one spare channel. The flight controller keeps the trim and saves it when you disarm."
     },
     "setupWizardTrimButtonsIntro": {
-        "message": "Each trim button puts its own value on one spare channel. A press moves the flight controller's trim by $1 µs; hold the button to repeat. The steps below show Ethos; on EdgeTX or OpenTX set up the same mix and weights, with the trim buttons as the switches for each mix line."
+        "message": "Each trim button puts its own value on one spare channel. A press moves the flight controller's trim by $1 µs; hold the button to repeat. The steps below use Ethos as the example; on other radios (EdgeTX, OpenTX, Jeti and so on) set up the same mix and weights, with each trim button as the switch for its mix line."
     },
     "setupWizardTrimButtonsStep1": {
         "message": "<b>Model → Trims</b>: leave the aileron, elevator and rudder trims enabled, with <b>Audio</b> on so each press clicks."
@@ -8693,10 +8693,10 @@
         "message": "No trim button pressed (CH $1 reads $2 µs)."
     },
     "setupWizardTrimRadio_other": {
-        "message": "Another radio"
+        "message": "Auto trim only"
     },
     "setupWizardTrimRadioHelp_other": {
-        "message": "Trim with the Auto trim switch."
+        "message": "No trim channels: trim with the Auto trim switch. For radios that can't send their trims."
     },
     "setupWizardTrimProgrammable": {
         "message": "The flight controller needs one spare channel for each trim, moved by the roll, pitch and yaw trim buttons. How you set that up depends on your radio and model; any way works. Then click Detect and press that trim."
