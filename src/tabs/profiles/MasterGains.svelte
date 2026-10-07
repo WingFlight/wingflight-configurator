@@ -66,7 +66,8 @@
   ];
 
   // GPS speed attenuation (API 22.10): same shape as the throttle row, with
-  // GPS speed in place of throttle. Only shown when the firmware carries it.
+  // GPS speed in place of throttle. Only shown when the firmware carries it
+  // and the GPS feature is on.
   const SPEED_ROW = {
     key: "speed",
     axisClass: "SPEED",
@@ -80,10 +81,12 @@
     gainMax: 200,
   };
 
+  let showSpeed = $derived(
+    FC.PID_PROFILE.hasFwSpa && FC.FEATURE_CONFIG.features.isEnabled("GPS"),
+  );
+
   let rows = $derived(
-    FC.PID_PROFILE.hasFwSpa
-      ? [...MASTER_GAIN_AXES, SPEED_ROW]
-      : MASTER_GAIN_AXES,
+    showSpeed ? [...MASTER_GAIN_AXES, SPEED_ROW] : MASTER_GAIN_AXES,
   );
 
   function masterGainAdjustmentState(axisIndex) {
@@ -262,7 +265,7 @@
         </tbody>
       </table>
     </div>
-    <FlightFeelGuide throttle speed={FC.PID_PROFILE.hasFwSpa} />
+    <FlightFeelGuide throttle speed={showSpeed} />
   </div>
 </Section>
 
