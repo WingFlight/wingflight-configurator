@@ -144,6 +144,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-bus-clip-note",
+      "path": "./feature-bus-clip-note/",
+      "branch": "feature/bus-clip-note",
+      "date": "2026-10-07T16:19:59Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
