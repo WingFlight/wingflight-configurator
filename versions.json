@@ -196,11 +196,7 @@
       "name": "feature-servo-travel-curves",
       "path": "./feature-servo-travel-curves/",
       "branch": "feature/servo-travel-curves",
-      "date": "2026-10-07T11:45:17Z",
-      "number": 171,
-      "title": "Include servo balance curves in the full-stick travel estimate",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/171",
-      "draft": false
+      "date": "2026-10-07T11:45:17Z"
     },
     {
       "type": "branch",
