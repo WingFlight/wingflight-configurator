@@ -6506,7 +6506,7 @@
         "message": "Changes Master Gain with throttle, usually to reduce it at high throttle where surfaces in prop wash gain authority."
     },
     "profilesFlightFeelGuideSpeed": {
-        "message": "Changes Master Gain with GPS speed, usually to reduce it when fast so a tune that is right at cruise does not wobble in a dive. Needs a GPS and a curve."
+        "message": "Lowers gain as GPS speed rises, so a tune that is right at cruise does not wobble in a dive. This percentage does nothing on its own: assign a Speed curve and set its speed range in Gain Curves (Expert Mode). Needs a GPS with a fix."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
