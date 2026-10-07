@@ -164,6 +164,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-mixer-mobile",
+      "path": "./feature-mixer-mobile/",
+      "branch": "feature/mixer-mobile",
+      "date": "2026-10-07T10:49:56Z",
+      "number": 169,
+      "title": "Mixer rules: list and editor layout on narrow screens",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/169",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-mixer-rule-ui",
       "path": "./feature-mixer-rule-ui/",
       "branch": "feature/mixer-rule-ui",
