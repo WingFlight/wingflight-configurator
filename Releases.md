@@ -1,3 +1,15 @@
+# 0.0.34
+
+Support the 0.0.34 firmware (MSP API 22.14). Flashing keeps your settings.
+Show and edit each servo's saved trim in the Servos tab's Trim column (0.0.34 firmware). It is read-only while a Servo Trim adjustment drives it, showing the trim in use, and on bus servos cloned from a PWM servo, which show that servo's trim. Clear trims and Move trims into Center act per table.
+Add a third trim choice to the Setup Wizard: all the radio's trim buttons on one spare channel, read by stepped Servo Trim ranges, with a step-by-step radio guide (Ethos screenshots) and a live check of each button.
+Show full-stick travel against Min/Max on every servo in the Servos tab's Signal column, counting servo balance curves and the saved trim, with a warning on a side that reaches its limit before full stick. A cloned bus servo that stops short says whether its trim or its Scale is the cause.
+Set up flap servos in the Setup Wizard (center, direction and end points), and let flaps follow the ailerons on a 4-servo wing.
+Warn in model setup when the board has too few servo outputs for the chosen layout.
+Rename Axis Gain to Axis Throw on the Mixer tab.
+Lay out the mixer rule list for narrow screens. A rule's Speed now steps by 1 ms, and Reverse is greyed out at zero weight.
+Hide the GPS Speed (SPA) settings while the GPS feature is off, and put the Speed curve and its range on one line.
+
 # 0.0.33
 
 Support the 0.0.33 firmware (MSP API 22.14). Flashing keeps your settings.
