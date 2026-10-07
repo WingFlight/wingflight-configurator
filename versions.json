@@ -133,13 +133,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-axis-throw",
-      "path": "./feature-axis-throw/",
-      "branch": "feature/axis-throw",
-      "date": "2026-10-07T08:18:42Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-battery-flight-counter",
       "path": "./feature-battery-flight-counter/",
       "branch": "feature/battery-flight-counter",
