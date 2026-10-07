@@ -6,14 +6,32 @@
   import { LogicCondition } from "@/js/LogicCondition.js";
   import {
     MIXER_ROLE_ADJUSTMENT_FUNCTIONS,
+    adjustmentChannelLabel,
     getAdjustmentState,
   } from "@/tabs/adjustments/adjustmentState.js";
 
   import RuleRow from "./RuleRow.svelte";
+  import { ruleToDisplay } from "./util.js";
 
   let { onOpenWizard } = $props();
 
   let highlightIndex = $state(-1);
+
+  // The grid below needs ~1064px (see .header-row), which doesn't survive
+  // shrinking to phone width. Below that, show a list of rules you tap into
+  // one at a time, each opening a single-column form -- the same list->editor
+  // pattern ServoConfigTable.svelte uses. Measured rather than a viewport
+  // media query so the sidebar's width is accounted for. containerWidth is
+  // 0 before the first layout pass, which shows the compact list briefly
+  // rather than an overflowing grid.
+  const GRID_MIN_WIDTH = 1080; // .header-row min-width plus its padding
+  let containerWidth = $state(0);
+  let showCompact = $derived(
+    containerWidth === 0 || containerWidth < GRID_MIN_WIDTH,
+  );
+
+  // Index into FC.MIXER_RULES of the rule open in the mobile editor.
+  let selectedIndex = $state(null);
 
   // Full mixer rule editor: every used rule plus one trailing blank slot to
   // add a new one. Rules are evaluated by the FC in array order (SET
@@ -35,6 +53,14 @@
   let displayIndexes = $derived(
     freeIndex !== -1 ? [...visibleIndexes, freeIndex] : visibleIndexes,
   );
+
+  // Drops a selection whose rule went away under it (Revert, the wizard
+  // rebuilding the table, ...).
+  $effect(() => {
+    if (selectedIndex !== null && !visibleIndexes.includes(selectedIndex)) {
+      selectedIndex = null;
+    }
+  });
 
   let hints = $derived.by(() => {
     const outputsSeen = {};
@@ -114,20 +140,43 @@
     return adjFunction ? getAdjustmentState(adjFunction) : null;
   }
 
+  function optionLabel(options, value) {
+    return options.find((option) => option.value === value)?.label ?? "";
+  }
+
+  // Second line of a mobile list row: what feeds the output and how.
+  function ruleSummary(rule) {
+    const parts = [
+      optionLabel(operatorOptions, rule.oper),
+      optionLabel(inputOptions, rule.src),
+    ];
+    if (rule.curve > 0) parts.push(optionLabel(curveOptions, rule.curve));
+    if (rule.condition > 0) {
+      parts.push(optionLabel(conditionOptions, rule.condition));
+    }
+    return parts.join(" · ");
+  }
+
   function move(index, targetPos) {
     const target = displayIndexes[targetPos];
     Mixer.swapRules(FC.MIXER_RULES, index, target);
     highlightIndex = target;
+    if (selectedIndex === index) selectedIndex = target;
   }
 
   function deleteRule(index) {
     FC.MIXER_RULES.splice(index, 1);
     FC.MIXER_RULES.push(Mixer.nullRule());
+    if (selectedIndex === index) selectedIndex = null;
   }
 
   function addRule() {
     const index = Mixer.firstFreeRuleIndex(FC.MIXER_RULES);
     if (index === -1) return;
+
+    // The mobile list has no blank row to type into, so go straight to the
+    // new rule's editor.
+    if (showCompact) selectedIndex = index;
 
     FC.MIXER_RULES[index] = {
       oper: Mixer.OP_SET,
@@ -144,59 +193,168 @@
   }
 </script>
 
-<div class="table">
-  <div class="header-row">
-    <span></span>
-    <span>{$i18n.t("mixerRuleOutput")}</span>
-    <span>{$i18n.t("mixerRuleOperator")}</span>
-    <span>{$i18n.t("mixerRuleInput")}</span>
-    <span>{$i18n.t("mixerRuleCurve")}</span>
-    <span>{$i18n.t("mixerRuleWeight")}</span>
-    <span>{$i18n.t("mixerRuleDifferential")}</span>
-    <span>{$i18n.t("mixerRuleOffset")}</span>
-    <span>{$i18n.t("mixerRuleSpeed")}</span>
-    <span>{$i18n.t("mixerRuleReverse")}</span>
-    <span>{$i18n.t("mixerRuleCondition")}</span>
-    <span>{$i18n.t("mixerRuleRole")}</span>
-    <span></span>
-    <span>{$i18n.t("mixerRuleActionsHeader")}</span>
-    <span></span>
+{#snippet ruleRow(index, pos, stacked)}
+  {@const isBlank = pos === blankIndex}
+  <RuleRow
+    rule={FC.MIXER_RULES[index]}
+    {isBlank}
+    {stacked}
+    label={isBlank ? "" : String(pos + 1)}
+    hint={hints[index]}
+    highlighted={index === highlightIndex}
+    gatedOff={!isBlank && isGatedOff(FC.MIXER_RULES[index])}
+    canMoveUp={pos > 0}
+    canMoveDown={pos < blankIndex - 1}
+    {outputOptions}
+    {operatorOptions}
+    {inputOptions}
+    {curveOptions}
+    {conditionOptions}
+    {roleOptions}
+    adjustment={!isBlank ? ruleAdjustment(FC.MIXER_RULES[index]) : null}
+    onCommit={(newRule) => {
+      FC.MIXER_RULES[index] = newRule;
+    }}
+    onMoveUp={() => move(index, pos - 1)}
+    onMoveDown={() => move(index, pos + 1)}
+    onDelete={() => deleteRule(index)}
+  />
+{/snippet}
+
+<div class="responsive-table" bind:clientWidth={containerWidth}>
+  {#if !showCompact}
+    <div class="table">
+      <div class="header-row">
+        <span></span>
+        <span>{$i18n.t("mixerRuleOutput")}</span>
+        <span>{$i18n.t("mixerRuleOperator")}</span>
+        <span>{$i18n.t("mixerRuleInput")}</span>
+        <span>{$i18n.t("mixerRuleCurve")}</span>
+        <span>{$i18n.t("mixerRuleWeight")}</span>
+        <span>{$i18n.t("mixerRuleDifferential")}</span>
+        <span>{$i18n.t("mixerRuleOffset")}</span>
+        <span>{$i18n.t("mixerRuleSpeed")}</span>
+        <span>{$i18n.t("mixerRuleReverse")}</span>
+        <span>{$i18n.t("mixerRuleCondition")}</span>
+        <span>{$i18n.t("mixerRuleRole")}</span>
+        <span></span>
+        <span>{$i18n.t("mixerRuleActionsHeader")}</span>
+        <span></span>
+      </div>
+
+      {#each displayIndexes as index, pos (index)}
+        {@render ruleRow(index, pos, false)}
+      {/each}
+    </div>
+  {:else if selectedIndex !== null}
+    {@const index = selectedIndex}
+    {@const pos = visibleIndexes.indexOf(index)}
+    <div class="mobile-detail">
+      <button
+        type="button"
+        class="mobile-back"
+        onclick={() => (selectedIndex = null)}
+      >
+        <em class="fas fa-chevron-left"></em>
+        {$i18n.t("mixerRuleListBack")}
+      </button>
+
+      <div class="mobile-detail-title">
+        {$i18n.t("mixerRuleNumber", { 1: pos + 1 })}
+      </div>
+
+      {#if hints[index]}
+        <div class="mobile-hint">
+          <em class="fas fa-exclamation-triangle"></em>
+          {hints[index]}
+        </div>
+      {/if}
+
+      {@render ruleRow(index, pos, true)}
+
+      <div class="mobile-actions">
+        <button
+          type="button"
+          class="btn"
+          disabled={pos <= 0}
+          onclick={() => move(index, pos - 1)}
+        >
+          <em class="fas fa-chevron-up"></em>
+          {$i18n.t("mixerRuleMoveUp")}
+        </button>
+        <button
+          type="button"
+          class="btn"
+          disabled={pos >= blankIndex - 1}
+          onclick={() => move(index, pos + 1)}
+        >
+          <em class="fas fa-chevron-down"></em>
+          {$i18n.t("mixerRuleMoveDown")}
+        </button>
+        <div class="grow"></div>
+        <button type="button" class="btn" onclick={() => deleteRule(index)}>
+          <em class="fas fa-times"></em>
+          {$i18n.t("mixerRuleDelete")}
+        </button>
+      </div>
+    </div>
+  {:else}
+    <div class="mobile-list">
+      {#each visibleIndexes as index, pos (index)}
+        {@const rule = FC.MIXER_RULES[index]}
+        {@const display = ruleToDisplay(rule)}
+        {@const adjustment = ruleAdjustment(rule)}
+        <button
+          type="button"
+          class="mobile-list-row"
+          class:highlighted={index === highlightIndex}
+          class:gated={isGatedOff(rule)}
+          onclick={() => (selectedIndex = index)}
+        >
+          <span class="mobile-row-index">{pos + 1}</span>
+          <span class="mobile-row-main">
+            <span class="mobile-row-output">
+              {optionLabel(outputOptions, rule.dst)}
+            </span>
+            <span class="mobile-row-summary">{ruleSummary(rule)}</span>
+          </span>
+          {#if hints[index]}
+            <em
+              class="fas fa-exclamation-triangle mobile-row-hint"
+              title={hints[index]}
+            ></em>
+          {/if}
+          {#if adjustment}
+            <span
+              class="mobile-row-tag adjustment"
+              class:runtime-active={adjustment.active}
+            >
+              {adjustment.active
+                ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+                : "ADJ"}
+            </span>
+          {/if}
+          {#if display.reverse}
+            <span class="mobile-row-tag">{$i18n.t("mixerRuleReverse")}</span>
+          {/if}
+          <span class="mobile-row-weight">{display.weight}</span>
+          <em class="fas fa-chevron-right mobile-row-chevron"></em>
+        </button>
+      {/each}
+    </div>
+  {/if}
+</div>
+
+{#if !showCompact || selectedIndex === null}
+  <div class="toolbar">
+    <button class="btn" onclick={addRule} disabled={freeIndex === -1}>
+      {$i18n.t("mixerAddRule")}
+    </button>
+    <button class="btn" onclick={onOpenWizard}>
+      {$i18n.t("mixerOpenWizard")}
+    </button>
   </div>
-
-  {#each displayIndexes as index, pos (index)}
-    {@const isBlank = pos === blankIndex}
-    <RuleRow
-      rule={FC.MIXER_RULES[index]}
-      {isBlank}
-      label={isBlank ? "" : String(pos + 1)}
-      hint={hints[index]}
-      highlighted={index === highlightIndex}
-      gatedOff={!isBlank && isGatedOff(FC.MIXER_RULES[index])}
-      canMoveUp={pos > 0}
-      canMoveDown={pos < blankIndex - 1}
-      {outputOptions}
-      {operatorOptions}
-      {inputOptions}
-      {curveOptions}
-      {conditionOptions}
-      {roleOptions}
-      adjustment={!isBlank ? ruleAdjustment(FC.MIXER_RULES[index]) : null}
-      onCommit={(newRule) => {
-        FC.MIXER_RULES[index] = newRule;
-      }}
-      onMoveUp={() => move(index, pos - 1)}
-      onMoveDown={() => move(index, pos + 1)}
-      onDelete={() => deleteRule(index)}
-    />
-  {/each}
-</div>
-
-<div class="toolbar">
-  <button class="btn" onclick={addRule}>{$i18n.t("mixerAddRule")}</button>
-  <button class="btn" onclick={onOpenWizard}>
-    {$i18n.t("mixerOpenWizard")}
-  </button>
-</div>
+{/if}
 
 <style lang="scss">
   .table {
@@ -231,5 +389,179 @@
 
   .btn {
     @extend %button;
+  }
+
+  .grow {
+    flex-grow: 1;
+  }
+
+  .responsive-table {
+    width: 100%;
+  }
+
+  .mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 2px;
+  }
+
+  .mobile-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    color: var(--color-text);
+    background-color: var(--color-surface);
+
+    &.gated {
+      opacity: 0.45;
+    }
+
+    &.highlighted {
+      animation: rowFlash 1.2s ease-out;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-surface-float, var(--color-surface));
+      }
+    }
+  }
+
+  .mobile-row-index {
+    flex-shrink: 0;
+    min-width: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+
+    color: var(--color-text-soft);
+  }
+
+  .mobile-row-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .mobile-row-output,
+  .mobile-row-summary {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-row-output {
+    font-weight: 600;
+  }
+
+  .mobile-row-summary {
+    font-size: 0.75rem;
+
+    color: var(--color-text-soft);
+  }
+
+  .mobile-row-hint {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+
+    color: var(--color-yellow-900, #b8860b);
+  }
+
+  // Same look as RuleRow's adjustment badge and ServoConfigTable's REV tag.
+  .mobile-row-tag {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    font-size: 0.65rem;
+    font-weight: 700;
+
+    color: var(--color-text-soft);
+    background-color: var(--color-surface-float, var(--color-surface));
+
+    &.adjustment {
+      border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+      background-color: transparent;
+    }
+
+    &.runtime-active {
+      color: var(--color-text-inverse, #fff);
+      background-color: var(--color-accent, var(--accent));
+    }
+  }
+
+  .mobile-row-weight {
+    flex-shrink: 0;
+    min-width: 2.8rem;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .mobile-row-chevron {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+
+    color: var(--color-text-soft);
+  }
+
+  .mobile-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 2px;
+  }
+
+  .mobile-back {
+    @extend %button;
+
+    align-self: flex-start;
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .mobile-detail-title {
+    margin: 6px 0 4px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .mobile-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    font-size: 0.8rem;
+
+    color: var(--color-yellow-900, #b8860b);
+  }
+
+  .mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+
+    .btn {
+      gap: 6px;
+    }
+  }
+
+  @keyframes rowFlash {
+    from {
+      background-color: var(--color-yellow-100);
+    }
+    to {
+      background-color: transparent;
+    }
   }
 </style>
