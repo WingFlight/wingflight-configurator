@@ -202,6 +202,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-speed-curve",
+      "path": "./feature-speed-curve/",
+      "branch": "feature/speed-curve",
+      "date": "2026-10-07T07:56:16Z",
+      "number": 166,
+      "title": "Hide GPS Speed without GPS, and put its curve and range on one line",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/166",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
