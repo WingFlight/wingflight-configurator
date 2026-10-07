@@ -4173,7 +4173,7 @@
         "message": "Control Surface Override"
     },
     "mixerOverrideHelp": {
-        "message": "Forces a fixed value into a stabilized axis (Roll/Pitch/Yaw) so you can measure the resulting control surface throw without touching the sticks. Only takes effect while disarmed. Use it together with Axis Gain below: enable an axis, command a known % (e.g. 100%), measure the surface with a protractor, then adjust that axis's gain until the measured angle matches what you want."
+        "message": "Forces a fixed value into a stabilized axis (Roll/Pitch/Yaw) so you can measure the resulting control surface throw without touching the sticks. Only takes effect while disarmed. Use it together with Axis Throw above: enable an axis, command a known % (e.g. 100%), measure the surface with a protractor, then adjust that axis's throw until the measured angle matches what you want."
     },
     "mixerEnableOverrideLabel": {
         "message": "<strong>Enable control surface override</strong>"
@@ -4191,10 +4191,10 @@
         "message": "Value (%)"
     },
     "mixerAxisGainTitle": {
-        "message": "Axis Gain"
+        "message": "Axis Throw"
     },
     "mixerAxisGainHelp": {
-        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is unity gain. Pair this with Control Surface Override below to calibrate a target throw: enable the override, command a known %, measure the surface, and adjust this gain until the measured angle matches what you want."
+        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is the servo's normal travel. Pair this with Control Surface Override below to calibrate a target throw: enable the override, command a known %, measure the surface, and adjust this throw until the measured angle matches what you want."
     },
     "mixerAxisGainRoll": {
         "message": "Roll"
@@ -9254,7 +9254,7 @@
         "message": "$1 reaches its binding limit before full stick at this throw. Lower the throw, or allow more travel in the Binding limits step."
     },
     "setupWizardThrowsRepeat": {
-        "message": "Throw is a percentage of the servo's normal travel (Axis Gain on the Mixer tab), shared by every surface on the axis. Fine-tune changes one servo's scale on one side (Servos tab)."
+        "message": "Throw is a percentage of the servo's normal travel (Axis Throw on the Mixer tab), shared by every surface on the axis. Fine-tune changes one servo's scale on one side (Servos tab)."
     },
     "setupWizardTravelIntro": {
         "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in PASSTHROUGH mode, so you can move the sticks into the corners and watch the live positions."

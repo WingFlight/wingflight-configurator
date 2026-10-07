@@ -27,10 +27,10 @@
   // Throws are set with the radio in PASSTHROUGH mode, so full stick is exactly
   // what the pilot's sticks and endpoints give, with no gyro. No overrides
   // here: in PASSTHROUGH mode the FC replaces the stabilized inputs with the stick
-  // (flight/mixer.c), and Axis Gain and servo scale still apply.
+  // (flight/mixer.c), and Axis Throw and servo scale still apply.
   //
   // Two controls per axis, both used the same way (hold the stick, watch the
-  // surface, press - or +): Throw is the axis's Axis Gain, shared by every
+  // surface, press - or +): Throw is the axis's Axis Throw, shared by every
   // surface and both directions; Fine-tune is one servo's scale on one side,
   // for differential or a surface that comes out different from its pair.
   const wiz = getContext("setupWizard");
