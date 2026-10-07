@@ -16,6 +16,7 @@
   import {
     surfacesFromRules,
     servosPastCount,
+    axisGainsFromInputs,
     AXES,
     FLAP_INPUT,
   } from "./surfaces.js";
@@ -119,11 +120,7 @@
     servosPastCount(FC.MIXER_RULES, servoCount, PWM_SERVO_SLOTS),
   );
 
-  let axisGains = $derived(
-    Object.fromEntries(
-      AXES.map((a) => [a.key, (FC.MIXER_INPUTS[a.input]?.rate ?? 1000) / 1000]),
-    ),
-  );
+  let axisGains = $derived(axisGainsFromInputs(FC.MIXER_INPUTS));
 
   function takeSnapshot() {
     snapshot = $state.snapshot({

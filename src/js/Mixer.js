@@ -234,6 +234,13 @@ export const Mixer = {
         return index >= this.MOTOR_OUTPUT_OFFSET && index < this.MOTOR_OUTPUT_OFFSET + this.MOTOR_OUTPUT_COUNT;
     },
 
+    // Mixer output number (rule dst) for a 0-based servo slot (S1 = 0).
+    servoOutput: function (servoIndex) {
+        return servoIndex < this.SERVO_OUTPUT_COUNT ?
+            servoIndex + 1 :
+            this.HIGH_SERVO_OUTPUT_OFFSET + servoIndex - this.SERVO_OUTPUT_COUNT;
+    },
+
     outputLabel: function (index, i18n) {
         if (index === 0 || this.isMotorOutput(index)) {
             return i18n.getMessage(this.outputNames[index]);

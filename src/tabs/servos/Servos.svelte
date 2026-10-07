@@ -264,6 +264,8 @@
     await MSP.promise(MSPCodes.MSP_RC);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
+    // Axis Throw, for the full-stick travel shown in the Signal column.
+    await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await pollRuntimeTrim();

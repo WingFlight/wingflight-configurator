@@ -17,10 +17,15 @@
     adjustmentTitle,
     getAdjustmentState,
   } from "@/tabs/adjustments/adjustmentState.js";
+  import {
+    axisGainsFromInputs,
+    outputTravelReach,
+  } from "@/tabs/setup_wizard/surfaces.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Switch from "@/components/Switch.svelte";
+  import TravelGauge from "@/tabs/setup_wizard/TravelGauge.svelte";
 
   // pwmServoCount is only meaningful (and only passed) for the bus table -
   // needed to work out whether a given bus channel is actually being
@@ -37,12 +42,13 @@
   // ServoTrimRoll/Pitch/Yaw aren't tied to a fixed servo slot like
   // PID/MasterGain adjustments -- they trim whichever servo(s)
   // FC.MIXER_RULES currently mixes from the corresponding stabilized axis
-  // input (src 1/2/3, see AxisConfig.svelte). dst uses the same 1-based raw
-  // servo slot numbering as servo.mspIndex (dst - 1 === mspIndex) for both
-  // PWM and bus servos.
+  // input (src 1/2/3, see AxisConfig.svelte), matched the same way as the
+  // firmware's axisTrimDirection() (flight/servos.c). dst is a mixer output
+  // number, which isn't mspIndex + 1 past S26 (see Mixer.servoOutput()).
   function axisAffectsServo(axisSrc, mspIndex) {
+    const output = Mixer.servoOutput(mspIndex);
     return (FC.MIXER_RULES ?? []).some(
-      (rule) => rule.src === axisSrc && rule.dst - 1 === mspIndex,
+      (rule) => rule.oper && rule.src === axisSrc && rule.dst === output,
     );
   }
 
@@ -139,8 +145,8 @@
   const REVERSE_COL = 90;
   // No fixed column for the trailing Signal meter (it's the 1fr track), but
   // it still needs *some* room to be legible -- this is roughly its
-  // meter-label plus a usable sliver of the meter bar itself.
-  const SIGNAL_MIN_WIDTH = 90;
+  // meter-label and warning icon plus a usable stretch of the travel gauge.
+  const SIGNAL_MIN_WIDTH = 130;
   const COLUMN_GAP = 4;
 
   let columnWidths = $derived.by(() => {
@@ -213,24 +219,6 @@
     });
   }
 
-  function meterRange(servo) {
-    if (servo.isBusServo) {
-      return { min: 1000, max: 2000 };
-    }
-
-    const mid = FC.SERVO_CONFIG[servo.index].mid;
-    if (mid <= 860) return { min: 375, max: 1145 };
-    if (mid <= 1060) return { min: 460, max: 1460 };
-    return { min: 750, max: 2250 };
-  }
-
-  function meterPercent(servo) {
-    const { min, max } = meterRange(servo);
-    const value = FC.SERVO_DATA[servo.index] ?? min;
-    const percent = (100 * (value - min)) / (max - min);
-    return Math.min(100, Math.max(0, percent));
-  }
-
   function flag(index, mask) {
     return (FC.SERVO_CONFIG[index].flags & mask) !== 0;
   }
@@ -280,6 +268,84 @@
       : $i18n.t("servoCurveActive");
   }
 
+  let axisGains = $derived(axisGainsFromInputs(FC.MIXER_INPUTS));
+
+  // How far full stick on every axis at once takes each side of the servo,
+  // against the Min/Max it can actually use at this center -- the Setup
+  // Wizard's travel check (surfaces.js travelReach()), live as Min/Max and
+  // the scales are edited. Always returns limits and a center, so every row
+  // gets the gauge; the full-stick fill is only there when `estimated`.
+  //
+  // A cloned bus channel sends its PWM servo's finished pulse, clamped to
+  // the bus signal range (sbusOutGetValueMixer(), drivers/sbus_output.c),
+  // and ignores its own Center/Min/Max/scales -- so it shows the PWM servo's
+  // travel, with the bus range as a further limit.
+  function reach(servo) {
+    const cloned = isClonedCurve(servo);
+    const source = cloned
+      ? {
+          index: effectiveCurveIndex(servo),
+          mspIndex: effectiveCurveIndex(servo),
+          isBusServo: false,
+        }
+      : servo;
+    const config = FC.SERVO_CONFIG[source.index];
+    const limits = servoUsableTravel(config, source.isBusServo);
+    if (cloned) {
+      const bus = servoSignalRange(true);
+      limits.min = Math.max(limits.min, bus.min - config.mid);
+      limits.max = Math.min(limits.max, bus.max - config.mid);
+    }
+
+    const r = outputTravelReach(
+      FC.MIXER_RULES ?? [],
+      Mixer.servoOutput(source.mspIndex),
+      { ...config, ...limits },
+      axisGains,
+    );
+    const base = { mid: config.mid, cloned, source: source.index + 1 };
+    if (r?.estimated) return { ...r, ...base, mixed: true };
+
+    const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });
+    return {
+      ...base,
+      estimated: false,
+      mixed: !!r,
+      neg: side(-limits.min),
+      pos: side(limits.max),
+    };
+  }
+
+  function reachClips(r) {
+    return !!r?.estimated && (r.neg.fraction > 1 || r.pos.fraction > 1);
+  }
+
+  function reachSide(side) {
+    return $i18n.t("setupWizardTravelValue", {
+      1: Math.round(side.fraction * 100),
+      2: Math.round(side.us),
+      3: side.limit,
+    });
+  }
+
+  function reachTitle(r) {
+    const lines = [];
+    if (r.cloned) lines.push($i18n.t("servoTravelCloned", { 1: r.source }));
+    if (r.estimated) {
+      const sides =
+        `${$i18n.t("setupWizardTravelNeg")} ${reachSide(r.neg)}, ` +
+        `${$i18n.t("setupWizardTravelPos")} ${reachSide(r.pos)}`;
+      lines.push(
+        reachClips(r)
+          ? `${$i18n.t("servoTravelClips")}: ${sides}`
+          : `${$i18n.t("servoTravelReach")}: ${sides}`,
+      );
+    } else if (r.mixed) {
+      lines.push($i18n.t("servoTravelNotEstimated"));
+    }
+    return lines.length > 0 ? lines.join("\n") : undefined;
+  }
+
   function setFlag(index, mask, enabled) {
     FC.SERVO_CONFIG[index].flags = enabled
       ? FC.SERVO_CONFIG[index].flags | mask
@@ -291,6 +357,23 @@
   <span class="mobile-field-label">
     {$i18n.t(labelKey)}
     {#if helpKey}<HelpIcon>{$i18n.t(helpKey)}</HelpIcon>{/if}
+  </span>
+{/snippet}
+
+{#snippet signal(servo, extraClass)}
+  {@const r = reach(servo)}
+  <span
+    class={["servo-signal", extraClass, reachClips(r) && "clips"]}
+    title={reachTitle(r)}
+  >
+    <span class="gauge">
+      <TravelGauge servo={servo.index} reach={r} mid={r.mid} />
+    </span>
+    {#if reachClips(r)}
+      <em class="fas fa-exclamation-triangle travel-warning" aria-hidden="true"
+      ></em>
+    {/if}
+    <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
   </span>
 {/snippet}
 
@@ -373,7 +456,10 @@
           <span>{$i18n.t("servoReverse")}</span>
           <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
         </span>
-        <span>{$i18n.t("servoSignal")}</span>
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoSignal")}</span>
+          <HelpIcon>{$i18n.t("servoSignalHelp")}</HelpIcon>
+        </span>
       </div>
 
       {#each servos as servo (servo.index)}
@@ -482,13 +568,7 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          <span class="servo-signal">
-            <span class="meter">
-              <span class="meter-fill" style="width: {meterPercent(servo)}%"
-              ></span>
-            </span>
-            <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
-          </span>
+          {@render signal(servo)}
         </div>
       {/each}
     </div>
@@ -638,15 +718,30 @@
           </div>
 
           <div class="mobile-field">
-            {@render fieldLabel("servoSignal", null)}
-            <span class="servo-signal">
-              <span class="meter">
-                <span class="meter-fill" style="width: {meterPercent(servo)}%"
-                ></span>
-              </span>
-              <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
-            </span>
+            {@render fieldLabel("servoSignal", "servoSignalHelp")}
+            {@render signal(servo)}
           </div>
+
+          {#if reach(servo).mixed}
+            {@const r = reach(servo)}
+            <div class="mobile-field">
+              {@render fieldLabel("servoTravelReach", null)}
+              {#if r.estimated}
+                <span class="mobile-reach">
+                  {#each [{ s: r.neg, label: "setupWizardTravelNeg" }, { s: r.pos, label: "setupWizardTravelPos" }] as { s, label } (label)}
+                    <span class={["reach-side", s.fraction > 1 && "clips"]}>
+                      <span class="reach-side-label">{$i18n.t(label)}</span>
+                      {reachSide(s)}
+                    </span>
+                  {/each}
+                </span>
+              {:else}
+                <span class="mobile-reach-none">
+                  {$i18n.t("servoTravelNotEstimatedShort")}
+                </span>
+              {/if}
+            </div>
+          {/if}
         </div>
       {:else}
         <div class="mobile-list">
@@ -664,15 +759,7 @@
                 {servo.label}
                 {#if hasActiveCurve(servo)}{@render curveIconSvg()}{/if}
               </span>
-              <span class="servo-signal mobile-row-signal">
-                <span class="meter">
-                  <span class="meter-fill" style="width: {meterPercent(servo)}%"
-                  ></span>
-                </span>
-                <span class="meter-label"
-                  >{FC.SERVO_DATA[servo.index] ?? 0}</span
-                >
-              </span>
+              {@render signal(servo, "mobile-row-signal")}
               <span class="mobile-row-mid"
                 >{$i18n.t("servoMid")}: {config.mid}</span
               >
@@ -859,26 +946,43 @@
     gap: 6px;
   }
 
-  .meter {
-    position: relative;
-    display: block;
+  // TravelGauge: its live dot and limit marks overhang the bar a little.
+  .gauge {
     flex: 1;
-    height: 10px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-
-    background-color: var(--color-surface-float, var(--color-surface));
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+    min-width: 0;
+    padding: 4px 7px;
   }
 
-  .meter-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: block;
-    height: 100%;
-    border-radius: var(--radius-sm);
-    background-color: var(--color-accent, var(--accent));
+  .travel-warning {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--color-status-bad);
+  }
+
+  .mobile-reach {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reach-side.clips {
+    color: var(--color-status-bad);
+    font-weight: 600;
+  }
+
+  .reach-side-label {
+    margin-right: 6px;
+    color: var(--color-text-soft);
+    font-weight: 600;
+  }
+
+  .mobile-reach-none {
+    font-size: 0.8rem;
+    text-align: right;
+    color: var(--color-text-soft);
   }
 
   .meter-label {
