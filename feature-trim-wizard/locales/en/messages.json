@@ -8677,6 +8677,9 @@
     "setupWizardTrimButtonsImage3": {
         "message": "Ethos TRIM free mix: source Maximum, operation Add, an action per trim button, output CH8"
     },
+    "setupWizardTrimButtonsZoom": {
+        "message": "Click to enlarge or shrink"
+    },
     "setupWizardTrimButtonsUse": {
         "message": "Trim buttons"
     },
