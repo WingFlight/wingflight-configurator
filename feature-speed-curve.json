@@ -1,8 +1,4 @@
 {
   "branch": "feature/speed-curve",
-  "date": "2026-10-07T07:56:16Z",
-  "number": 166,
-  "title": "Hide GPS Speed without GPS, and put its curve and range on one line",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/166",
-  "draft": false
+  "date": "2026-10-07T07:56:16Z"
 }
