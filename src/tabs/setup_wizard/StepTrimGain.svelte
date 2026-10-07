@@ -16,11 +16,16 @@
     GAIN_MIN,
     MASTER_GAIN,
     SERVO_TRIM,
+    STEPPED_TRIM_STEP,
+    TRIM_BUTTONS,
+    buttonAt,
     channelOf,
     gainMode,
     gainRange,
     mappedValue,
     slotFor,
+    steppedTrimRange,
+    trimMode,
     trimRange,
   } from "./trimGain.js";
 
@@ -34,7 +39,8 @@
   const AUX_OFFSET = 4; // AUX1 is the fifth channel
   const LISTEN_MS = 15000;
   // A trim button moves its channel a little at a time; a knob a long way.
-  const MOVE_US = { trim: 40, gain: 250 };
+  // A trim button on the shared trim channel jumps it at least 100 us.
+  const MOVE_US = { trim: 40, buttons: 40, gain: 250 };
 
   let poller;
   let polling = false;
@@ -94,6 +100,8 @@
     cancel();
     if (kind === "trim") {
       await writeRange(trimRange(axis, aux));
+    } else if (kind === "buttons") {
+      for (const a of AXES) await writeRange(steppedTrimRange(a, aux));
     } else if (axis) {
       await writeRange(gainRange(axis, aux));
     } else {
@@ -145,21 +153,31 @@
 
   //// Trim.
 
-  let radio = $state(
-    AXES.some(
-      (a) => channelOf(FC.ADJUSTMENT_RANGES ?? [], SERVO_TRIM[a]) !== null,
-    )
-      ? "programmable"
-      : null,
-  );
+  let radio = $state(trimMode(FC.ADJUSTMENT_RANGES ?? []));
 
   async function chooseRadio(value) {
+    if (radio === value) return;
+    const was = radio;
     radio = value;
     cancel();
-    // Trims from channels only make sense on a radio that can send them.
-    if (value === "other") {
+    // Trims from channels only make sense on a radio that can send them,
+    // and stepped (buttons) and mapped (a channel each) ranges are set up
+    // differently, so switching between them starts again from Detect.
+    if (value === "other" || was !== null) {
       for (const a of AXES) await removeFunction(SERVO_TRIM[a]);
     }
+  }
+
+  // The shared trim channel, and the button it shows now.
+  let buttonsChannel = $derived(channelOf(ranges, SERVO_TRIM.roll));
+  let buttonsPosition = $derived(auxValue(buttonsChannel));
+  let pressed = $derived(buttonAt(buttonsPosition));
+
+  // The guide screenshot shown full size, or null.
+  let enlarged = $state(null);
+
+  function buttonLabel(b) {
+    return `${axisName(b.axis)} ${b.dir > 0 ? "+" : "−"}`;
   }
 
   //// Gain.
@@ -194,7 +212,13 @@
 
   let users = $derived.by(() => {
     const list = [];
-    if (radio === "programmable") {
+    if (radio === "buttons") {
+      list.push({
+        key: "buttons",
+        label: $i18n.t("setupWizardTrimButtonsUse"),
+        aux: buttonsChannel,
+      });
+    } else if (radio === "programmable") {
       for (const axis of AXES) {
         list.push({
           key: `trim-${axis}`,
@@ -242,6 +266,52 @@
     return [...new Set(labels)];
   }
 </script>
+
+<!-- One numbered step of the trim buttons guide. The screenshot is a
+     thumbnail; click it to see it full size. (The global reset removes list
+     markers, so the number is drawn here.) -->
+{#snippet guideStep(number, textKey, image = null, altKey = null, extra = null)}
+  <div class="guide-step">
+    <span class="step-number">{number}</span>
+    <div class="guide-text">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <span>{@html $i18n.t(textKey)}</span>
+      {#if extra}{@render extra()}{/if}
+    </div>
+    {#if image}
+      <button
+        type="button"
+        class={["shot", enlarged === image && "enlarged"]}
+        title={$i18n.t("setupWizardTrimButtonsZoom")}
+        onclick={() => (enlarged = enlarged === image ? null : image)}
+      >
+        <img src="/images/setup_wizard/{image}" alt={$i18n.t(altKey)} />
+      </button>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet weightsTable()}
+  <table class="weights">
+    <thead>
+      <tr>
+        <th>{$i18n.t("setupWizardTrimButtonsButton")}</th>
+        <th>{$i18n.t("setupWizardTrimButtonsWeight")}</th>
+        <th>{$i18n.t("setupWizardTrimButtonsTrims")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each [...TRIM_BUTTONS].reverse() as b (b.button)}
+        <tr>
+          <td>{b.button}</td>
+          <td>{b.weight}%</td>
+          <td>{buttonLabel(b)}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+  <span class="muted">{$i18n.t("setupWizardTrimButtonsLayout")}</span>
+{/snippet}
 
 {#snippet channelRow(kind, axis, adjFunction, unit)}
   {@const aux = channelOf(ranges, adjFunction)}
@@ -318,8 +388,8 @@
     </div>
   </div>
 
-  <div class="tiles" role="radiogroup">
-    {#each ["programmable", "other"] as value (value)}
+  <div class="tiles three" role="radiogroup">
+    {#each ["buttons", "programmable", "other"] as value (value)}
       <button
         type="button"
         role="radio"
@@ -339,7 +409,91 @@
     {/each}
   </div>
 
-  {#if radio === "programmable"}
+  {#if radio === "buttons"}
+    {@const shared = buttonsChannel === null ? [] : sharedWith("buttons")}
+    <p>{$i18n.t("setupWizardTrimButtonsIntro", { 1: STEPPED_TRIM_STEP })}</p>
+    <div class="guide">
+      {@render guideStep(
+        1,
+        "setupWizardTrimButtonsStep1",
+        "ethos_trims_page.png",
+        "setupWizardTrimButtonsImage1",
+      )}
+      {@render guideStep(
+        2,
+        "setupWizardTrimButtonsStep2",
+        "ethos_stick_mix_trim_off.png",
+        "setupWizardTrimButtonsImage2",
+      )}
+      {@render guideStep(
+        3,
+        "setupWizardTrimButtonsStep3",
+        "ethos_trim_mix.png",
+        "setupWizardTrimButtonsImage3",
+        weightsTable,
+      )}
+      {@render guideStep(4, "setupWizardTrimButtonsStep4")}
+    </div>
+
+    <ul class="rows">
+      <li
+        class={[
+          "row",
+          isListening("buttons") && "listening",
+          shared.length > 0 && "shared",
+        ]}
+      >
+        <span class="row-name">{$i18n.t("setupWizardTrimButtonsUse")}</span>
+        <span class="row-state">
+          {#if isListening("buttons")}
+            <span class="prompt">{$i18n.t("setupWizardTrimButtonsPress")}</span>
+            <button class="btn" onclick={cancel}>{$i18n.t("cancel")}</button>
+          {:else if buttonsChannel !== null}
+            <span class="assigned">
+              {$i18n.t("setupWizardTrimGainChannel", { 1: buttonsChannel + 5 })}
+            </span>
+            <button class="btn" onclick={() => listen("buttons")}>
+              {$i18n.t("setupWizardModesChange")}
+            </button>
+          {:else}
+            <span class="muted">{$i18n.t("setupWizardModesNotAssigned")}</span>
+            <button class="btn" onclick={() => listen("buttons")}>
+              {$i18n.t("setupWizardTrimGainDetect")}
+            </button>
+          {/if}
+        </span>
+        {#if shared.length > 0 && !isListening("buttons")}
+          <span class="shared-text">
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            {$i18n.t("setupWizardTrimGainShared", {
+              1: buttonsChannel + 5,
+              2: shared.join(", "),
+            })}
+          </span>
+        {/if}
+      </li>
+    </ul>
+
+    {#if buttonsChannel !== null}
+      <p class="muted">{$i18n.t("setupWizardTrimButtonsCheck")}</p>
+      <div class="buttons-check">
+        {#each [...TRIM_BUTTONS].reverse() as b (b.button)}
+          <span class={["button-chip", pressed === b && "lit"]}>
+            <span class="chip-button">{b.button}</span>
+            <span class="chip-trim">{buttonLabel(b)}</span>
+          </span>
+        {/each}
+      </div>
+      {#if !pressed && buttonsPosition}
+        <p class="muted">
+          {$i18n.t("setupWizardTrimButtonsIdle", {
+            1: buttonsChannel + 5,
+            2: buttonsPosition,
+          })}
+        </p>
+      {/if}
+    {/if}
+  {:else if radio === "programmable"}
     <p>{$i18n.t("setupWizardTrimProgrammable")}</p>
     <div class="note">{$i18n.t("setupWizardTrimSticksOff")}</div>
     <ul class="rows">
@@ -519,6 +673,118 @@
     color: var(--color-accent-fg);
     font-size: 0.75em;
     font-weight: 600;
+  }
+
+  //// Ethos trim buttons guide.
+
+  .guide {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .guide-step {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px 14px;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    color: var(--color-accent-fg);
+    font-size: 0.85em;
+    font-weight: 700;
+  }
+
+  .guide-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 240px;
+    max-width: 60ch;
+  }
+
+  // A thumbnail by default; full size (up to the card width) when clicked.
+  .shot {
+    flex: 0 0 auto;
+    width: 220px;
+    max-width: 100%;
+    padding: 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: none;
+    line-height: 0;
+    cursor: zoom-in;
+
+    &.enlarged {
+      width: 560px;
+      cursor: zoom-out;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  .weights {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+      padding: 3px 14px 3px 0;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--color-text-soft);
+    }
+  }
+
+  .buttons-check {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .button-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 6.5em;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed);
+
+    &.lit {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+  }
+
+  .chip-button {
+    font-weight: 700;
+  }
+
+  .chip-trim {
+    color: var(--color-text-soft);
+    font-size: 0.85em;
   }
 
   //// One row per control.

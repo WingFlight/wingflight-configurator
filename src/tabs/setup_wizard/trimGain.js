@@ -89,3 +89,94 @@ export function mappedValue(range, position) {
     );
   return Math.max(range.adjMin, Math.min(range.adjMax, value));
 }
+
+//// Stepped trim from the trim buttons, all on one channel (Ethos).
+//
+// One free mix on a spare channel: source Maximum, operation Add, and an
+// action per trim button that sets the mix weight while the button is
+// pressed. Each button then puts its own value on the channel, and three
+// stepped ranges tell them apart. A press steps the flight controller's
+// saved trim; the radio itself keeps no trim. The weights are the ones in
+// the guide's screenshots, so what the guide shows is what is detected.
+
+// Trim per press, us. Holding a button repeats.
+export const STEPPED_TRIM_STEP = 2;
+// The furthest a stepped trim may go (the adjustment's own limit; the FC
+// also limits each servo's trim to 20% of its scale).
+export const STEPPED_TRIM_US = 200;
+
+// dir -1 steps the trim down (the range's first sub-range), +1 up.
+export const TRIM_BUTTONS = [
+  { button: "T4 Left", axis: "yaw", dir: -1, weight: 30 },
+  { button: "T4 Right", axis: "yaw", dir: 1, weight: 40 },
+  { button: "T2 Down", axis: "pitch", dir: 1, weight: 50 },
+  { button: "T2 Up", axis: "pitch", dir: -1, weight: 60 },
+  { button: "T1 Left", axis: "roll", dir: -1, weight: 70 },
+  { button: "T1 Right", axis: "roll", dir: 1, weight: 80 },
+];
+
+// Channel value for a mix weight of the Maximum source: 100% is 1500 +
+// 512 us on Ethos.
+export function buttonValue(weight) {
+  return 1500 + weight * 5.12;
+}
+
+// Ranges are stored in 5 us steps (STEP_TO_CHANNEL_VALUE, fc/rc_modes.h).
+function roundToStep(us) {
+  return Math.round(us / 5) * 5;
+}
+
+// The channel window each button's value falls in: from half-way to the
+// button below to half-way to the one above (the same half-gap past the
+// first and last), so neighbouring windows meet without overlapping.
+export function buttonWindow(index) {
+  const values = TRIM_BUTTONS.map((b) => buttonValue(b.weight));
+  const value = values[index];
+  const below = index > 0 ? values[index - 1] : 2 * value - values[index + 1];
+  const above =
+    index < values.length - 1 ? values[index + 1] : 2 * value - values[index - 1];
+  return {
+    start: roundToStep((below + value) / 2),
+    end: roundToStep((value + above) / 2),
+  };
+}
+
+// The button the channel is showing at `position` (us), or null.
+export function buttonAt(position) {
+  if (!(position > 0)) return null;
+  const index = TRIM_BUTTONS.findIndex((_, i) => {
+    const window = buttonWindow(i);
+    return position >= window.start && position < window.end;
+  });
+  return index >= 0 ? TRIM_BUTTONS[index] : null;
+}
+
+// An always-on stepped range for `axis` on AUX channel `aux`: its trim-down
+// button's window steps down, its trim-up button's window steps up.
+export function steppedTrimRange(axis, aux) {
+  const window = (dir) =>
+    buttonWindow(
+      TRIM_BUTTONS.findIndex((b) => b.axis === axis && b.dir === dir),
+    );
+  return {
+    adjFunction: SERVO_TRIM[axis],
+    enaChannel: ALWAYS_ON_CH,
+    enaRange: { start: 1500, end: 1500 },
+    adjChannel: aux,
+    adjRange1: window(-1),
+    adjRange2: window(1),
+    adjMin: -STEPPED_TRIM_US,
+    adjMax: STEPPED_TRIM_US,
+    adjStep: STEPPED_TRIM_STEP,
+  };
+}
+
+// How the trims are set up now: "buttons" (stepped), "programmable"
+// (mapped, a channel each) or null.
+export function trimMode(ranges) {
+  const trims = Object.values(SERVO_TRIM)
+    .map((f) => ranges.find((r) => r?.adjFunction === f))
+    .filter(Boolean);
+  if (trims.length === 0) return null;
+  return trims.some((r) => r.adjStep > 0) ? "buttons" : "programmable";
+}
