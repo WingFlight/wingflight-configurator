@@ -209,13 +209,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-trim-wizard",
-      "path": "./feature-trim-wizard/",
-      "branch": "feature/trim-wizard",
-      "date": "2026-10-07T14:11:06Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
