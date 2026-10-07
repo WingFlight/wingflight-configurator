@@ -34,6 +34,11 @@
     conditionOptions,
     roleOptions,
     adjustment,
+    // Single-column form for narrow screens (see RuleTable's mobile view):
+    // same controls and commit(), one labelled field per line instead of
+    // one grid cell per column. Actions and the hint are RuleTable's job
+    // there, so they're not rendered here.
+    stacked = false,
     onCommit,
     onMoveUp,
     onMoveDown,
@@ -101,125 +106,181 @@
   }
 </script>
 
-<div class="row" class:blank={isBlank} class:highlighted class:gated={gatedOff}>
-  <span class="col-index">{label}</span>
+{#snippet outputControl()}
+  <Select bind:value={dst} options={outputOptions} onchange={commit} />
+{/snippet}
 
-  <span class="col-output">
-    <Select bind:value={dst} options={outputOptions} onchange={commit} />
-  </span>
+{#snippet operControl()}
+  <Select bind:value={oper} options={operatorOptions} onchange={commit} />
+{/snippet}
 
-  <span class="col-oper">
-    <Select bind:value={oper} options={operatorOptions} onchange={commit} />
-  </span>
+{#snippet inputControl()}
+  <Select bind:value={src} options={inputOptions} onchange={commit} />
+{/snippet}
 
-  <span class="col-input">
-    <Select bind:value={src} options={inputOptions} onchange={commit} />
-  </span>
+{#snippet curveControl()}
+  <Select bind:value={curve} options={curveOptions} onchange={commit} />
+{/snippet}
 
-  <span class="col-curve">
-    <Select bind:value={curve} options={curveOptions} onchange={commit} />
-  </span>
+{#snippet weightControl()}
+  <input
+    type="number"
+    min={Mixer.WEIGHT_MIN}
+    max={Mixer.WEIGHT_MAX}
+    step="10"
+    bind:value={weight}
+    disabled={adjustment?.active}
+    onchange={commit}
+  />
+{/snippet}
 
-  <span class="col-weight">
-    <input
-      type="number"
-      min={Mixer.WEIGHT_MIN}
-      max={Mixer.WEIGHT_MAX}
-      step="10"
-      bind:value={weight}
-      disabled={adjustment?.active}
-      onchange={commit}
-    />
-  </span>
+{#snippet differentialControl()}
+  <input
+    type="number"
+    min={DIFFERENTIAL_MIN}
+    max={DIFFERENTIAL_MAX}
+    step="1"
+    bind:value={differential}
+    disabled={adjustment?.active}
+    onchange={commit}
+  />
+{/snippet}
 
-  <span class="col-differential">
-    <input
-      type="number"
-      min={DIFFERENTIAL_MIN}
-      max={DIFFERENTIAL_MAX}
-      step="1"
-      bind:value={differential}
-      disabled={adjustment?.active}
-      onchange={commit}
-    />
-  </span>
+{#snippet offsetControl()}
+  <input
+    type="number"
+    min={Mixer.OFFSET_MIN}
+    max={Mixer.OFFSET_MAX}
+    step="10"
+    bind:value={offset}
+    onchange={commit}
+  />
+{/snippet}
 
-  <span class="col-offset">
-    <input
-      type="number"
-      min={Mixer.OFFSET_MIN}
-      max={Mixer.OFFSET_MAX}
-      step="10"
-      bind:value={offset}
-      onchange={commit}
-    />
-  </span>
+{#snippet speedControl()}
+  <input
+    type="number"
+    min={Mixer.SPEED_MIN}
+    max={Mixer.SPEED_MAX}
+    step="1"
+    bind:value={speed}
+    onchange={commit}
+  />
+{/snippet}
 
-  <span class="col-speed">
-    <input
-      type="number"
-      min={Mixer.SPEED_MIN}
-      max={Mixer.SPEED_MAX}
-      step="1"
-      bind:value={speed}
-      onchange={commit}
-    />
-  </span>
+{#snippet reverseControl()}
+  <Switch bind:checked={reverse} onchange={commit} disabled={reverseLocked} />
+{/snippet}
 
-  <span
-    class="col-reverse"
-    title={reverseLocked ? $i18n.t("mixerRuleReverseNeedsWeight") : ""}
+{#snippet conditionControl()}
+  <Select bind:value={condition} options={conditionOptions} onchange={commit} />
+{/snippet}
+
+{#snippet roleControl()}
+  <Select bind:value={role} options={roleOptions} onchange={commit} />
+{/snippet}
+
+{#snippet adjustmentBadge()}
+  {#if adjustment}
+    <span
+      class="adjustment-badge"
+      class:runtime-active={adjustment.active}
+      title={adjustmentTitle(adjustment)}
+    >
+      {adjustment.active
+        ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
+        : "ADJ"}
+    </span>
+  {/if}
+{/snippet}
+
+{#snippet field(cls, labelKey, control, extra)}
+  <div class="field {cls}">
+    <span class="field-label">
+      {$i18n.t(labelKey)}
+      {#if extra}{@render extra()}{/if}
+    </span>
+    <span class="field-control">{@render control()}</span>
+  </div>
+{/snippet}
+
+{#if stacked}
+  <div class="stacked">
+    {@render field("col-output", "mixerRuleOutput", outputControl)}
+    {@render field("col-oper", "mixerRuleOperator", operControl)}
+    {@render field("col-input", "mixerRuleInput", inputControl)}
+    {@render field("col-curve", "mixerRuleCurve", curveControl)}
+    {@render field(
+      "col-weight",
+      "mixerRuleWeight",
+      weightControl,
+      adjustmentBadge,
+    )}
+    {@render field(
+      "col-differential",
+      "mixerRuleDifferential",
+      differentialControl,
+    )}
+    {@render field("col-offset", "mixerRuleOffset", offsetControl)}
+    {@render field("col-speed", "mixerRuleSpeed", speedControl)}
+    <div
+      class="field col-reverse"
+      title={reverseLocked ? $i18n.t("mixerRuleReverseNeedsWeight") : ""}
+    >
+      <span class="field-label">{$i18n.t("mixerRuleReverse")}</span>
+      <span class="field-control">{@render reverseControl()}</span>
+    </div>
+    {@render field("col-condition", "mixerRuleCondition", conditionControl)}
+    {@render field("col-role", "mixerRuleRole", roleControl)}
+  </div>
+{:else}
+  <div
+    class="row"
+    class:blank={isBlank}
+    class:highlighted
+    class:gated={gatedOff}
   >
-    <Switch bind:checked={reverse} onchange={commit} disabled={reverseLocked} />
-  </span>
+    <span class="col-index">{label}</span>
+    <span class="col-output">{@render outputControl()}</span>
+    <span class="col-oper">{@render operControl()}</span>
+    <span class="col-input">{@render inputControl()}</span>
+    <span class="col-curve">{@render curveControl()}</span>
+    <span class="col-weight">{@render weightControl()}</span>
+    <span class="col-differential">{@render differentialControl()}</span>
+    <span class="col-offset">{@render offsetControl()}</span>
+    <span class="col-speed">{@render speedControl()}</span>
+    <span
+      class="col-reverse"
+      title={reverseLocked ? $i18n.t("mixerRuleReverseNeedsWeight") : ""}
+    >
+      {@render reverseControl()}
+    </span>
+    <span class="col-condition">{@render conditionControl()}</span>
+    <span class="col-role">{@render roleControl()}</span>
+    <span class="col-adjustment">{@render adjustmentBadge()}</span>
 
-  <span class="col-condition">
-    <Select
-      bind:value={condition}
-      options={conditionOptions}
-      onchange={commit}
-    />
-  </span>
+    <span class="col-actions">
+      {#if !isBlank}
+        <button
+          class="icon fas fa-chevron-up"
+          disabled={!canMoveUp}
+          onclick={onMoveUp}
+          aria-label="Move up"
+        ></button>
+        <button
+          class="icon fas fa-chevron-down"
+          disabled={!canMoveDown}
+          onclick={onMoveDown}
+          aria-label="Move down"
+        ></button>
+        <button class="icon fas fa-times" onclick={onDelete} aria-label="Delete"
+        ></button>
+      {/if}
+    </span>
 
-  <span class="col-role">
-    <Select bind:value={role} options={roleOptions} onchange={commit} />
-  </span>
-
-  <span class="col-adjustment">
-    {#if adjustment}
-      <span
-        class="adjustment-badge"
-        class:runtime-active={adjustment.active}
-        title={adjustmentTitle(adjustment)}
-      >
-        {adjustment.active
-          ? (adjustmentChannelLabel(adjustment) ?? "LIVE")
-          : "ADJ"}
-      </span>
-    {/if}
-  </span>
-
-  <span class="col-actions">
-    {#if !isBlank}
-      <button
-        class="icon fas fa-chevron-up"
-        disabled={!canMoveUp}
-        onclick={onMoveUp}
-        aria-label="Move up"
-      ></button>
-      <button
-        class="icon fas fa-chevron-down"
-        disabled={!canMoveDown}
-        onclick={onMoveDown}
-        aria-label="Move down"
-      ></button>
-      <button class="icon fas fa-times" onclick={onDelete} aria-label="Delete"
-      ></button>
-    {/if}
-  </span>
-
-  <span class="col-hint" title={hint ?? ""}>{hint ?? ""}</span>
-</div>
+    <span class="col-hint" title={hint ?? ""}>{hint ?? ""}</span>
+  </div>
+{/if}
 
 <style lang="scss">
   .row {
@@ -355,6 +416,48 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .stacked {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Overrides the col-* cell rules above (centring, zero min-width), which
+  // the stacked fields share so their controls size the same way.
+  .stacked .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .field-label {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .field-control {
+    display: flex;
+    justify-content: flex-end;
+    flex: 0 1 60%;
+    min-width: 0;
+  }
+
+  .field.col-weight,
+  .field.col-differential,
+  .field.col-offset,
+  .field.col-speed {
+    .field-control {
+      flex-basis: 120px;
+    }
   }
 
   @keyframes rowFlash {
