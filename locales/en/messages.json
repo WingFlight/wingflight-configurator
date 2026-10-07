@@ -4481,6 +4481,9 @@
     "mixerRuleReverse": {
         "message": "Reverse"
     },
+    "mixerRuleReverseNeedsWeight": {
+        "message": "Set a weight above 0 to reverse this rule"
+    },
     "mixerRuleCondition": {
         "message": "Condition"
     },

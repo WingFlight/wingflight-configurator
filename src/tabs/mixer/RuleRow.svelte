@@ -1,4 +1,5 @@
 <script>
+  import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
 
   import Select from "@/components/Select.svelte";
@@ -54,6 +55,11 @@
   let weight = $state(0);
   let differential = $state(0);
   let reverse = $state(false);
+
+  // Reverse is stored as the weight's sign, so a zero weight can't hold it.
+  let reverseLocked = $derived(
+    clampInt(weight, Mixer.WEIGHT_MIN, Mixer.WEIGHT_MAX) <= 0,
+  );
 
   $effect(() => {
     dst = rule.dst;
@@ -154,14 +160,17 @@
       type="number"
       min={Mixer.SPEED_MIN}
       max={Mixer.SPEED_MAX}
-      step="100"
+      step="1"
       bind:value={speed}
       onchange={commit}
     />
   </span>
 
-  <span class="col-reverse">
-    <Switch bind:checked={reverse} onchange={commit} />
+  <span
+    class="col-reverse"
+    title={reverseLocked ? $i18n.t("mixerRuleReverseNeedsWeight") : ""}
+  >
+    <Switch bind:checked={reverse} onchange={commit} disabled={reverseLocked} />
   </span>
 
   <span class="col-condition">
