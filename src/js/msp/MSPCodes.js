@@ -245,6 +245,7 @@ export const MSPCodes = {
     MSP2_WING_MODE_OVERRIDE:          0x5F1A,
     MSP2_WING_SET_MODE_OVERRIDE:      0x5F1B,
     MSP2_WING_SET_SERVO_PROBE:        0x5F1C,
+    MSP2_WING_SET_SERVO_TRIM:         0x5F1D,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

@@ -1601,11 +1601,20 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_SERVO_TRIM: {
-                // Count-prefixed, one S16 per servo, same order as MSP_SERVO_CONFIGURATIONS.
+                // Count-prefixed, one S16 per servo of live (runtime) trim, same order as
+                // MSP_SERVO_CONFIGURATIONS. Firmware with saved trims appends one S16 per
+                // servo of saved trim; without it FC.SERVO_SAVED_TRIM stays null.
                 FC.SERVO_RUNTIME_TRIM = [];
                 const trimCount = data.readU8();
                 for (let i = 0; i < trimCount; i++) {
                     FC.SERVO_RUNTIME_TRIM.push(data.read16());
+                }
+                FC.SERVO_SAVED_TRIM = null;
+                if (data.remaining() >= trimCount * 2) {
+                    FC.SERVO_SAVED_TRIM = [];
+                    for (let i = 0; i < trimCount; i++) {
+                        FC.SERVO_SAVED_TRIM.push(data.read16());
+                    }
                 }
                 break;
             }
@@ -1959,6 +1968,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
             case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
+            case MSPCodes.MSP2_WING_SET_SERVO_TRIM:
                 break;
             case MSPCodes.MSP_SET_RC_CONFIG: {
                 console.log('RC controls settings saved');
@@ -3227,6 +3237,19 @@ MspHelper.prototype.sendModeOverride = function(permanentIds, timeoutMs)
             // No response at all: the request was dropped (link lost).
             (response) => resolve(!!response && !response.unsupported && !response.crcError), true);
     });
+};
+
+// Sets the saved trim (us) of servo `servoIndex` (FC.SERVO_CONFIG order) from
+// FC.SERVO_SAVED_TRIM. The FC limits it to SERVO_TRIM_LIMIT_PERCENT of the servo's
+// scale; read MSP_SERVO_TRIM back for the value it kept.
+MspHelper.prototype.sendServoTrim = function(servoIndex)
+{
+    const buffer = [];
+
+    buffer.push8(servoIndex)
+          .push16(FC.SERVO_SAVED_TRIM[servoIndex]);
+
+    return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_TRIM, buffer);
 };
 
 // Holds PWM servo `servo` at Mid + offsetUs, ignoring its Min/Max limits,
