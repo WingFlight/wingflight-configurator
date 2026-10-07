@@ -4559,6 +4559,12 @@
     "mixerRuleDelete": {
         "message": "Delete rule"
     },
+    "mixerRuleListBack": {
+        "message": "Back to Rule List"
+    },
+    "mixerRuleNumber": {
+        "message": "Rule $1"
+    },
     "mixerRuleHintFirstShouldSet": {
         "message": "First rule for this output - usually should be Set"
     },
