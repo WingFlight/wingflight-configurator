@@ -173,6 +173,9 @@
   let buttonsPosition = $derived(auxValue(buttonsChannel));
   let pressed = $derived(buttonAt(buttonsPosition));
 
+  // The guide screenshot shown full size, or null.
+  let enlarged = $state(null);
+
   function buttonLabel(b) {
     return `${axisName(b.axis)} ${b.dir > 0 ? "+" : "−"}`;
   }
@@ -263,6 +266,52 @@
     return [...new Set(labels)];
   }
 </script>
+
+<!-- One numbered step of the trim buttons guide. The screenshot is a
+     thumbnail; click it to see it full size. (The global reset removes list
+     markers, so the number is drawn here.) -->
+{#snippet guideStep(number, textKey, image = null, altKey = null, extra = null)}
+  <div class="guide-step">
+    <span class="step-number">{number}</span>
+    <div class="guide-text">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      <span>{@html $i18n.t(textKey)}</span>
+      {#if extra}{@render extra()}{/if}
+    </div>
+    {#if image}
+      <button
+        type="button"
+        class={["shot", enlarged === image && "enlarged"]}
+        title={$i18n.t("setupWizardTrimButtonsZoom")}
+        onclick={() => (enlarged = enlarged === image ? null : image)}
+      >
+        <img src="/images/setup_wizard/{image}" alt={$i18n.t(altKey)} />
+      </button>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet weightsTable()}
+  <table class="weights">
+    <thead>
+      <tr>
+        <th>{$i18n.t("setupWizardTrimButtonsButton")}</th>
+        <th>{$i18n.t("setupWizardTrimButtonsWeight")}</th>
+        <th>{$i18n.t("setupWizardTrimButtonsTrims")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each [...TRIM_BUTTONS].reverse() as b (b.button)}
+        <tr>
+          <td>{b.button}</td>
+          <td>{b.weight}%</td>
+          <td>{buttonLabel(b)}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+  <span class="muted">{$i18n.t("setupWizardTrimButtonsLayout")}</span>
+{/snippet}
 
 {#snippet channelRow(kind, axis, adjFunction, unit)}
   {@const aux = channelOf(ranges, adjFunction)}
@@ -363,61 +412,28 @@
   {#if radio === "buttons"}
     {@const shared = buttonsChannel === null ? [] : sharedWith("buttons")}
     <p>{$i18n.t("setupWizardTrimButtonsIntro", { 1: STEPPED_TRIM_STEP })}</p>
-    <ol class="guide">
-      <li>
-        <div class="guide-text">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("setupWizardTrimButtonsStep1")}
-        </div>
-        <img
-          src="/images/setup_wizard/ethos_trims_page.png"
-          alt={$i18n.t("setupWizardTrimButtonsImage1")}
-        />
-      </li>
-      <li>
-        <div class="guide-text">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("setupWizardTrimButtonsStep2")}
-        </div>
-        <img
-          src="/images/setup_wizard/ethos_stick_mix_trim_off.png"
-          alt={$i18n.t("setupWizardTrimButtonsImage2")}
-        />
-      </li>
-      <li>
-        <div class="guide-text">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("setupWizardTrimButtonsStep3")}
-          <table class="weights">
-            <thead>
-              <tr>
-                <th>{$i18n.t("setupWizardTrimButtonsButton")}</th>
-                <th>{$i18n.t("setupWizardTrimButtonsWeight")}</th>
-                <th>{$i18n.t("setupWizardTrimButtonsTrims")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each [...TRIM_BUTTONS].reverse() as b (b.button)}
-                <tr>
-                  <td>{b.button}</td>
-                  <td>{b.weight}%</td>
-                  <td>{buttonLabel(b)}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-          <span class="muted">{$i18n.t("setupWizardTrimButtonsLayout")}</span>
-        </div>
-        <img
-          class="tall"
-          src="/images/setup_wizard/ethos_trim_mix.png"
-          alt={$i18n.t("setupWizardTrimButtonsImage3")}
-        />
-      </li>
-      <li>
-        <div class="guide-text">{$i18n.t("setupWizardTrimButtonsStep4")}</div>
-      </li>
-    </ol>
+    <div class="guide">
+      {@render guideStep(
+        1,
+        "setupWizardTrimButtonsStep1",
+        "ethos_trims_page.png",
+        "setupWizardTrimButtonsImage1",
+      )}
+      {@render guideStep(
+        2,
+        "setupWizardTrimButtonsStep2",
+        "ethos_stick_mix_trim_off.png",
+        "setupWizardTrimButtonsImage2",
+      )}
+      {@render guideStep(
+        3,
+        "setupWizardTrimButtonsStep3",
+        "ethos_trim_mix.png",
+        "setupWizardTrimButtonsImage3",
+        weightsTable,
+      )}
+      {@render guideStep(4, "setupWizardTrimButtonsStep4")}
+    </div>
 
     <ul class="rows">
       <li
@@ -664,31 +680,60 @@
   .guide {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin: 0;
-    padding-left: 1.4em;
+    gap: 12px;
+  }
 
-    li {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 10px 20px;
-    }
+  .guide-step {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px 14px;
+  }
 
-    img {
-      width: 300px;
-      max-width: 100%;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-border-soft);
-    }
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    color: var(--color-accent-fg);
+    font-size: 0.85em;
+    font-weight: 700;
   }
 
   .guide-text {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex: 1 1 260px;
+    flex: 1 1 240px;
     max-width: 60ch;
+  }
+
+  // A thumbnail by default; full size (up to the card width) when clicked.
+  .shot {
+    flex: 0 0 auto;
+    width: 220px;
+    max-width: 100%;
+    padding: 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: none;
+    line-height: 0;
+    cursor: zoom-in;
+
+    &.enlarged {
+      width: 560px;
+      cursor: zoom-out;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
   }
 
   .weights {
