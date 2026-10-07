@@ -6346,8 +6346,8 @@
     "profilesFwSpaHelp": {
         "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
     },
-    "profilesFwSpaSpeedMax": {
-        "message": "Speed curve range"
+    "profilesFwSpaCurveTooltip": {
+        "message": "GPS Speed: the curve shapes the Speed gain by GPS speed. Left: the speed at the curve's right edge (10-600 km/h); faster than that uses the curve's last point. Right: the curve, edited on the Curves tab. \"-\" turns GPS Speed off, so its Flight Feel percentage has no effect. Needs a GPS with a fix."
     },
     "profilesMasterGainGroup": {
         "message": "Flight Feel"
