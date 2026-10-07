@@ -3887,6 +3887,9 @@
     "servoTravelCloned": {
         "message": "Copies PWM servo $1, held to the bus range of 1000-2000 µs. This servo's own settings aren't used while it copies."
     },
+    "servoTravelCurveIncluded": {
+        "message": "Includes this servo's balance curve."
+    },
     "servoTravelNotEstimated": {
         "message": "Full-stick travel isn't shown for this servo: its mixer rules use Mul, curves, conditions, offsets, a later Set, or inputs other than the stabilized axes and the flap channel."
     },

@@ -5,7 +5,10 @@
 // servoUpdate()):
 //
 //   input (+-1) * axis throw -> rule weight (input >= 0) / weightNeg (< 0)
-//   -> sum on the output -> servo reverse -> scale rpos/rneg (us) -> min/max
+//   -> sum on the output -> balance curve -> servo reverse
+//   -> scale rpos/rneg (us) -> min/max
+
+import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 
 // Stabilized mixer inputs (MIXER_IN_STABILIZED_ROLL/PITCH/YAW).
 export const AXES = [
@@ -160,27 +163,39 @@ export function servoSide(output, reversed) {
 // surface has one, at whichever end does the same), in us and as a fraction
 // of the side's travel limit. reach > 1 means the surface hits its limit
 // before full stick on every axis at once.
-export function travelReach(surface, servoConfig, axisGains) {
+//
+// `curve` is the servo's balance curve (FC.SERVO_CURVES entry), if it has
+// one. The firmware adds it to the mixer output before reverse and scale
+// (servoUpdate() in flight/servos.c), so it's applied to the extremes here
+// the same way.
+export function travelReach(surface, servoConfig, axisGains, curve = null) {
   const reversed = (servoConfig.flags & SERVO_FLAG_REVERSE) !== 0;
-  let pos = 0;
-  let neg = 0;
+  // Highest and lowest mixer output, before reverse.
+  let hi = 0;
+  let lo = 0;
 
   for (const axisKey of Object.keys(surface.axes)) {
     const up = outputForAxis(surface, axisKey, 1, axisGains);
     const down = outputForAxis(surface, axisKey, -1, axisGains);
-    const a = reversed ? -up : up;
-    const b = reversed ? -down : down;
-    pos += Math.max(a, b, 0);
-    neg += Math.min(a, b, 0);
+    hi += Math.max(up, down, 0);
+    lo += Math.min(up, down, 0);
   }
 
   if (surface.flap) {
     // Flap channel at +1 (weight) and -1 (weightNeg).
-    const up = reversed ? -surface.flap.pos : surface.flap.pos;
-    const down = reversed ? surface.flap.neg : -surface.flap.neg;
-    pos += Math.max(up, down, 0);
-    neg += Math.min(up, down, 0);
+    const up = surface.flap.pos;
+    const down = -surface.flap.neg;
+    hi += Math.max(up, down, 0);
+    lo += Math.min(up, down, 0);
   }
+
+  if (curve) {
+    hi = Math.max(hi + balanceDelta(curve, hi), 0);
+    lo = Math.min(lo + balanceDelta(curve, lo), 0);
+  }
+
+  const pos = reversed ? -lo : hi;
+  const neg = reversed ? -hi : lo;
 
   const posUs = pos * servoConfig.rpos;
   const negUs = -neg * servoConfig.rneg;
@@ -191,6 +206,11 @@ export function travelReach(surface, servoConfig, axisGains) {
     pos: { us: posUs, limit: posLimit, fraction: posLimit > 0 ? posUs / posLimit : 0 },
     neg: { us: negUs, limit: negLimit, fraction: negLimit > 0 ? negUs / negLimit : 0 },
   };
+}
+
+// Balance curve correction at mixer output `output` (+-1 scale).
+function balanceDelta(curve, output) {
+  return ServoBalanceCurve.evaluate(curve, output * 1000) / 1000;
 }
 
 // Axis Throw of each stabilized axis as a multiplier, from FC.MIXER_INPUTS.
@@ -204,10 +224,17 @@ export function axisGainsFromInputs(mixerInputs) {
 // Mixer.servoOutput()), for tabs outside the wizard. Returns null when no rule moves the output, and
 // { estimated: false } when its rules use something travelReach() doesn't
 // model: a MUL rule, a source other than the stabilized axes or the flap
-// channel, a curve, a condition, an offset, or a SET after the first rule
+// channel, a mixer curve, a condition, an offset, or a SET after the first rule
 // (which overwrites what came before rather than adding to it).
-// `servoConfig` should carry the min/max the output can actually use.
-export function outputTravelReach(rules, dst, servoConfig, axisGains) {
+// `servoConfig` should carry the min/max the output can actually use, and
+// `curve` is the balance curve the firmware applies to it (PWM servos only).
+export function outputTravelReach(
+  rules,
+  dst,
+  servoConfig,
+  axisGains,
+  curve = null,
+) {
   const own = rules.filter(
     (rule) =>
       rule.dst === dst &&
@@ -230,7 +257,10 @@ export function outputTravelReach(rules, dst, servoConfig, axisGains) {
   );
   if (!surface) return null;
 
-  return { estimated: true, ...travelReach(surface, servoConfig, axisGains) };
+  return {
+    estimated: true,
+    ...travelReach(surface, servoConfig, axisGains, curve),
+  };
 }
 
 // Largest scale (us) for one servo side at which full stick (mixer output
