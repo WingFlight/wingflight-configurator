@@ -193,13 +193,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-servo-trim",
-      "path": "./feature-servo-trim/",
-      "branch": "feature/servo-trim",
-      "date": "2026-10-07T13:28:54Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-side-by-side-installs",
       "path": "./feature-side-by-side-installs/",
       "branch": "feature/side-by-side-installs",
