@@ -8633,7 +8633,61 @@
         "message": "EdgeTX, OpenTX or Ethos"
     },
     "setupWizardTrimRadioHelp_programmable": {
-        "message": "Trim from the radio's trim buttons, sent on spare channels."
+        "message": "A spare channel for each trim, moved by the trim buttons. The radio keeps the trim."
+    },
+    "setupWizardTrimRadio_buttons": {
+        "message": "Trim buttons on one channel"
+    },
+    "setupWizardTrimRadioHelp_buttons": {
+        "message": "Ethos, EdgeTX or OpenTX: all the trim buttons on one spare channel. The flight controller keeps the trim and saves it when you disarm."
+    },
+    "setupWizardTrimButtonsIntro": {
+        "message": "Each trim button puts its own value on one spare channel. A press moves the flight controller's trim by $1 µs; hold the button to repeat. The steps below show Ethos; on EdgeTX or OpenTX set up the same mix and weights, with the trim buttons as the switches for each mix line."
+    },
+    "setupWizardTrimButtonsStep1": {
+        "message": "<b>Model → Trims</b>: leave the aileron, elevator and rudder trims enabled, with <b>Audio</b> on so each press clicks."
+    },
+    "setupWizardTrimButtonsStep2": {
+        "message": "<b>Model → Mixes</b>: in the Ailerons, Elevator and Rudder mixes, turn <b>Trim</b> OFF. The trim buttons then only drive the TRIM mix below. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimButtonsStep3": {
+        "message": "Add a <b>Free mix</b> named TRIM: <b>Active condition</b> Always on, <b>Source</b> Maximum, <b>Operation</b> Add, <b>Output</b> a spare channel (CH8 here). Then <b>Add a new action</b> for each trim button, with these weights:"
+    },
+    "setupWizardTrimButtonsStep4": {
+        "message": "Click Detect and press any trim button."
+    },
+    "setupWizardTrimButtonsLayout": {
+        "message": "T1, T2 and T4 are the aileron, elevator and rudder trims on this radio. If yours differ, use your own aileron, elevator and rudder trims with the weights shown."
+    },
+    "setupWizardTrimButtonsButton": {
+        "message": "Trim button"
+    },
+    "setupWizardTrimButtonsWeight": {
+        "message": "Weight"
+    },
+    "setupWizardTrimButtonsTrims": {
+        "message": "Trims"
+    },
+    "setupWizardTrimButtonsImage1": {
+        "message": "Ethos Trims page: Trim Rudder with Audio on"
+    },
+    "setupWizardTrimButtonsImage2": {
+        "message": "Ethos Ailerons mix with Trim off"
+    },
+    "setupWizardTrimButtonsImage3": {
+        "message": "Ethos TRIM free mix: source Maximum, operation Add, an action per trim button, output CH8"
+    },
+    "setupWizardTrimButtonsUse": {
+        "message": "Trim buttons"
+    },
+    "setupWizardTrimButtonsPress": {
+        "message": "Press any trim button…"
+    },
+    "setupWizardTrimButtonsCheck": {
+        "message": "Press each trim button: its box lights up. If one doesn't, check its weight in the TRIM mix."
+    },
+    "setupWizardTrimButtonsIdle": {
+        "message": "No trim button pressed (CH $1 reads $2 µs)."
     },
     "setupWizardTrimRadio_other": {
         "message": "Another radio"
