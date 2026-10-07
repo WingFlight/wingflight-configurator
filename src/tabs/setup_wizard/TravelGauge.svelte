@@ -6,7 +6,9 @@
   // limit (red, in the zone outside the marks) and where the servo is now
   // (dot). Each side is drawn against its own limit, so the marks always
   // sit at the same place and 100% means "exactly at the limit".
-  let { servo, reach } = $props();
+  // `mid` defaults to the servo's own Center; the Servos tab passes the
+  // source PWM servo's for a bus channel that clones it.
+  let { servo, reach, mid = undefined } = $props();
 
   // Half the bar is LIMIT_AT of the way to the end: the rest shows overshoot,
   // up to OVER_MAX times the limit.
@@ -18,12 +20,13 @@
     return 50 + side * f * LIMIT_AT * 50;
   }
 
-  let config = $derived(FC.SERVO_CONFIG[servo]);
+  let centre = $derived(mid ?? FC.SERVO_CONFIG[servo]?.mid);
   let pulse = $derived(FC.SERVO_DATA[servo] ?? 0);
+  // Measured against the same limits as the marks.
   let live = $derived.by(() => {
-    if (!(pulse > 0) || !config) return null;
-    const offset = pulse - config.mid;
-    const limit = offset >= 0 ? config.max : -config.min;
+    if (!(pulse > 0) || centre === undefined) return null;
+    const offset = pulse - centre;
+    const limit = offset >= 0 ? reach.pos.limit : reach.neg.limit;
     if (!(limit > 0)) return 50;
     return along(Math.abs(offset) / limit, offset >= 0 ? 1 : -1);
   });
