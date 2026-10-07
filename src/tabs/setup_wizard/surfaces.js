@@ -4,7 +4,7 @@
 // (wingflight-firmware flight/mixer.c mixerUpdateRules() and flight/servos.c
 // servoUpdate()):
 //
-//   input (+-1) * axis gain -> rule weight (input >= 0) / weightNeg (< 0)
+//   input (+-1) * axis throw -> rule weight (input >= 0) / weightNeg (< 0)
 //   -> sum on the output -> servo reverse -> scale rpos/rneg (us) -> min/max
 
 // Stabilized mixer inputs (MIXER_IN_STABILIZED_ROLL/PITCH/YAW).
@@ -25,7 +25,7 @@ export const FLAP_INPUT = 13;
 // Servo config flags (SERVO_FLAG_REVERSED).
 export const SERVO_FLAG_REVERSE = 1;
 
-// Axis Gain range offered by the Mixer tab (percent).
+// Axis Throw range offered by the Mixer tab (percent).
 export const AXIS_GAIN_MIN = 0;
 export const AXIS_GAIN_MAX = 200;
 
