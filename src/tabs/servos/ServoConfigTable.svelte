@@ -359,6 +359,7 @@
       : servo;
     const config = FC.SERVO_CONFIG[source.index];
     const limits = servoUsableTravel(config, source.isBusServo);
+    const ownLimits = { ...limits };
     if (cloned) {
       const bus = servoSignalRange(true);
       limits.min = Math.max(limits.min, bus.min - config.mid);
@@ -385,7 +386,14 @@
       axisGains,
       curved ? curve : null,
     );
-    const base = { mid: config.mid, cloned, source: source.index + 1 };
+    const base = {
+      mid: config.mid,
+      cloned,
+      source: source.index + 1,
+      label: servo.label,
+      trim,
+      ownLimits,
+    };
     if (r?.estimated) return { ...r, ...base, mixed: true, curved };
 
     const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });
@@ -410,9 +418,58 @@
     });
   }
 
+  // Why a cloned bus channel stops short: it sends its PWM servo's pulse,
+  // held to the bus signal range (sbusOutGetValueMixer(),
+  // drivers/sbus_output.c), and full stick plus the trim goes past it. One
+  // line per side, saying whether the trim alone pushes it over (it would
+  // fit without) or the Scale does.
+  function busClipReasons(r) {
+    if (!r.cloned || !r.estimated) return [];
+    const bus = servoSignalRange(true);
+    const sides = [
+      {
+        // Highest pulse: full stick, plus trim, within the PWM servo's own Max.
+        pulse: r.mid + Math.min(r.trim + r.pos.us, r.ownLimits.max),
+        withoutTrim: r.mid + r.pos.us,
+        edge: bus.max,
+        sign: 1,
+      },
+      {
+        pulse: r.mid + Math.max(r.trim - r.neg.us, r.ownLimits.min),
+        withoutTrim: r.mid - r.neg.us,
+        edge: bus.min,
+        sign: -1,
+      },
+    ];
+    return sides
+      .filter((side) => (side.pulse - side.edge) * side.sign > 0)
+      .map((side) => {
+        const params = {
+          1: r.label,
+          2: r.source,
+          3: r.trim > 0 ? `+${r.trim}` : `${r.trim}`,
+          4: Math.round(side.pulse),
+          5: side.edge,
+          6: Math.round(Math.abs(side.pulse - side.edge)),
+        };
+        const trimOnly = (side.withoutTrim - side.edge) * side.sign <= 0;
+        if (trimOnly) return $i18n.t("servoBusClipTrim", params);
+        return $i18n.t(
+          r.trim !== 0 ? "servoBusClipScaleTrim" : "servoBusClipScale",
+          params,
+        );
+      });
+  }
+
+  // Every cloned bus servo in this table that stops short, with the reason.
+  let busClipNotes = $derived(
+    isBusTable ? servos.flatMap((servo) => busClipReasons(reach(servo))) : [],
+  );
+
   function reachTitle(r) {
     const lines = [];
     if (r.cloned) lines.push($i18n.t("servoTravelCloned", { 1: r.source }));
+    lines.push(...busClipReasons(r));
     if (r.estimated) {
       const sides =
         `${$i18n.t("setupWizardTravelNeg")} ${reachSide(r.neg)}, ` +
@@ -560,6 +617,14 @@
     {@render curveIconSvg()}
   </button>
 {/snippet}
+
+{#if busClipNotes.length > 0}
+  <div class="note">
+    {#each busClipNotes as note (note)}
+      <p>{note}</p>
+    {/each}
+  </div>
+{/if}
 
 <div class="responsive-table" bind:clientWidth={containerWidth}>
   {#if !showCompact}
@@ -932,6 +997,23 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+  }
+
+  .note {
+    margin: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-accent);
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 6px;
+    }
   }
 
   .trim-cell {
