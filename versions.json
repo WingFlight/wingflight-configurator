@@ -202,13 +202,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-speed-curve",
-      "path": "./feature-speed-curve/",
-      "branch": "feature/speed-curve",
-      "date": "2026-10-07T07:56:16Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
