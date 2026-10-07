@@ -9,6 +9,7 @@
     servoSignalRange,
     servoTravelLimited,
     servoTravelRange,
+    servoTrimLimit,
     servoUsableTravel,
   } from "@/js/servoLimits.js";
   import {
@@ -30,7 +31,13 @@
   // pwmServoCount is only meaningful (and only passed) for the bus table -
   // needed to work out whether a given bus channel is actually being
   // cloned from a PWM servo right now (see effectiveCurveIndex() below).
-  let { servos, onFieldChange, onRateChange, pwmServoCount = 0 } = $props();
+  let {
+    servos,
+    onFieldChange,
+    onRateChange,
+    onTrimChange,
+    pwmServoCount = 0,
+  } = $props();
 
   const FLAG_REVERSE = 1;
 
@@ -68,16 +75,25 @@
     }).filter(Boolean);
   }
 
-  // While a Stepped ServoTrim adjustment is actively incrementing/
-  // decrementing, the FC persists the change and the polled
-  // MSP_SERVO_CONFIGURATIONS response overwrites Mid with it -- disable
-  // editing to avoid the field fighting with the live value. Mapped
-  // adjustments only bias the runtime servo output and never rewrite the
-  // stored Mid value, so they don't need to block editing.
+  // Saved trims (FC.SERVO_SAVED_TRIM): firmware that has them keeps every
+  // kind of trim apart from Mid.
+  let savedTrimSupported = $derived(Array.isArray(FC.SERVO_SAVED_TRIM));
+
+  // Firmware without saved trims has a Stepped ServoTrim adjustment rewrite
+  // Mid, and the polled MSP_SERVO_CONFIGURATIONS response overwrites the
+  // field with it -- disable editing while one is active, to avoid the field
+  // fighting with the live value.
   function midDisabled(servo) {
-    return servoTrimAdjustments(servo).some(
-      (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
+    return (
+      !savedTrimSupported &&
+      servoTrimAdjustments(servo).some(
+        (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
+      )
     );
+  }
+
+  function savedTrim(servo) {
+    return FC.SERVO_SAVED_TRIM?.[servo.index] ?? 0;
   }
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
@@ -96,12 +112,37 @@
     return value > 0 ? `+${value}` : `${value}`;
   }
 
-  // Only show the Trim column if at least one servo in this table actually
-  // has a ServoTrim adjustment configured for it -- otherwise it's just an
-  // empty column taking up space.
+  // The Trim column holds the saved trim where the FC has it. Without it,
+  // the column only shows ServoTrim adjustment badges, so it is left out
+  // unless at least one servo in this table has one.
   let hasTrimAdjustments = $derived(
     servos.some((servo) => servoTrimAdjustments(servo).length > 0),
   );
+  let showTrimColumn = $derived(savedTrimSupported || hasTrimAdjustments);
+  let trimHelpKey = $derived(
+    savedTrimSupported ? "servoTrimColumnHelp" : "servoTrimBadgesHelp",
+  );
+
+  function hasTrimBadges(servo) {
+    return (
+      servoTrimAdjustments(servo).length > 0 ||
+      (!savedTrimSupported && liveTrim(servo) !== 0)
+    );
+  }
+
+  // While a ServoTrim adjustment covers this servo, the trim comes from the
+  // switch or pot, so the field is read-only and shows the trim in use:
+  // saved (a Stepped adjustment writes it) plus live (a Mapped one), limited
+  // together like the FC's getServoTrim().
+  function trimDriven(servo) {
+    return servoTrimAdjustments(servo).length > 0;
+  }
+
+  function appliedTrim(servo, config) {
+    const limit = servoTrimLimit(config);
+    const trim = savedTrim(servo) + liveTrim(servo);
+    return Math.min(Math.max(trim, -limit), limit);
+  }
 
   // Mobile view (see markup below): the desktop grid has up to 11 columns
   // of tiny inputs, which doesn't survive shrinking to phone width no
@@ -138,6 +179,12 @@
   const INDEX_COL = 44;
   const VALUE_COL = 100;
   const TRIM_COL = 100;
+  // The adjustment badges and the live (Mapped) trim sit beside the trim
+  // value on the same line, so every row keeps the same height and the
+  // fields stay aligned; the column grows by the room they need.
+  // Room for the widest badge, e.g. "Y CH #10".
+  const TRIM_BADGE_COL = 64;
+  const LIVE_TRIM_COL = 36;
   // Wide enough for the Reverse label + help icon on one line for most
   // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
   // below still wraps the icon as a fallback for longer translations (e.g.
@@ -149,9 +196,30 @@
   const SIGNAL_MIN_WIDTH = 130;
   const COLUMN_GAP = 4;
 
+  let trimColumnWidth = $derived.by(() => {
+    const badges = Math.max(
+      0,
+      ...servos.map((servo) => servoTrimAdjustments(servo).length),
+    );
+    // Without saved trims the live trim is shown beside the badges;
+    // otherwise it is part of the value in the field.
+    const mapped =
+      !savedTrimSupported &&
+      servos.some((servo) =>
+        servoTrimAdjustments(servo).some(
+          (trim) => trim.adjustment.adjType === 1,
+        ),
+      );
+    const width =
+      (savedTrimSupported ? TRIM_COL + COLUMN_GAP : 0) +
+      badges * TRIM_BADGE_COL +
+      (mapped ? LIVE_TRIM_COL : 0);
+    return Math.max(TRIM_COL, width);
+  });
+
   let columnWidths = $derived.by(() => {
     const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
-    if (hasTrimAdjustments) cols.push(TRIM_COL);
+    if (showTrimColumn) cols.push(trimColumnWidth);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
       if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
@@ -296,6 +364,12 @@
       limits.min = Math.max(limits.min, bus.min - config.mid);
       limits.max = Math.min(limits.max, bus.max - config.mid);
     }
+    // The saved trim is added before the output is held inside Min/Max
+    // (servoUpdate(), flight/servos.c), so it uses up travel on one side and
+    // gives it on the other.
+    const trim = savedTrim(source);
+    limits.min -= trim;
+    limits.max -= trim;
 
     // Only PWM outputs get a balance curve (servoUpdate(), flight/servos.c);
     // a cloned bus channel carries its PWM servo's, already applied.
@@ -362,6 +436,78 @@
   }
 </script>
 
+{#snippet trimBadges(servo)}
+  <span class="servo-trim-badges">
+    {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+      <span
+        class="adjustment-badge"
+        class:runtime-active={trim.adjustment.active}
+        title={adjustmentTitle(trim.adjustment)}
+      >
+        {trim.axisLabel}
+        {trim.adjustment.active
+          ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/each}
+    {#if !savedTrimSupported && liveTrim(servo) !== 0}
+      <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+        >{signed(liveTrim(servo))}</span
+      >
+    {/if}
+  </span>
+{/snippet}
+
+{#snippet trimField(servo, config)}
+  {@const cloned = isClonedCurve(servo)}
+  <span class="trim-cell">
+    {#if savedTrimSupported}
+      {#if cloned}
+        {@const source = { index: effectiveCurveIndex(servo) }}
+        {@const sourceConfig = FC.SERVO_CONFIG[source.index]}
+        <!-- A cloned bus channel sends its PWM servo's output, trim included,
+             and ignores its own trim: show the PWM servo's trim in use. -->
+        <span
+          class="trim-value"
+          title={$i18n.t("servoTrimClonedHelp", { 1: source.index + 1 })}
+        >
+          <NumberInput
+            min={-servoTrimLimit(sourceConfig)}
+            max={servoTrimLimit(sourceConfig)}
+            value={appliedTrim(source, sourceConfig)}
+            disabled
+          />
+        </span>
+      {:else if trimDriven(servo)}
+        <span
+          class="trim-value"
+          title={$i18n.t("servoTrimDrivenHelp", {
+            1: signed(savedTrim(servo)),
+            2: signed(liveTrim(servo)),
+          })}
+        >
+          <NumberInput
+            min={-servoTrimLimit(config)}
+            max={servoTrimLimit(config)}
+            value={appliedTrim(servo, config)}
+            disabled
+          />
+        </span>
+      {:else}
+        <span class="trim-value">
+          <NumberInput
+            min={-servoTrimLimit(config)}
+            max={servoTrimLimit(config)}
+            bind:value={FC.SERVO_SAVED_TRIM[servo.index]}
+            onchange={() => onTrimChange(servo.index)}
+          />
+        </span>
+      {/if}
+    {/if}
+    {#if !cloned && hasTrimBadges(servo)}{@render trimBadges(servo)}{/if}
+  </span>
+{/snippet}
+
 {#snippet fieldLabel(labelKey, helpKey)}
   <span class="mobile-field-label">
     {$i18n.t(labelKey)}
@@ -424,10 +570,10 @@
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
         </span>
-        {#if hasTrimAdjustments}
+        {#if showTrimColumn}
           <span class="header-label-flex">
             <span>{$i18n.t("servoTrimColumn")}</span>
-            <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
+            <HelpIcon>{$i18n.t(trimHelpKey)}</HelpIcon>
           </span>
         {/if}
         <span class="header-label-flex">
@@ -489,26 +635,8 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          {#if hasTrimAdjustments}
-            <span class="servo-trim-badges">
-              {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-                <span
-                  class="adjustment-badge"
-                  class:runtime-active={trim.adjustment.active}
-                  title={adjustmentTitle(trim.adjustment)}
-                >
-                  {trim.axisLabel}
-                  {trim.adjustment.active
-                    ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-                    : "ADJ"}
-                </span>
-              {/each}
-              {#if liveTrim(servo) !== 0}
-                <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
-                  >{signed(liveTrim(servo))}</span
-                >
-              {/if}
-            </span>
+          {#if showTrimColumn}
+            {@render trimField(servo, config)}
           {/if}
           <span
             class="travel-cell"
@@ -617,28 +745,10 @@
             />
           </div>
 
-          {#if servoTrimAdjustments(servo).length > 0}
+          {#if savedTrimSupported || servoTrimAdjustments(servo).length > 0}
             <div class="mobile-field">
-              {@render fieldLabel("servoTrimColumn", "servoTrimColumnHelp")}
-              <span class="servo-trim-badges">
-                {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-                  <span
-                    class="adjustment-badge"
-                    class:runtime-active={trim.adjustment.active}
-                    title={adjustmentTitle(trim.adjustment)}
-                  >
-                    {trim.axisLabel}
-                    {trim.adjustment.active
-                      ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-                      : "ADJ"}
-                  </span>
-                {/each}
-                {#if liveTrim(servo) !== 0}
-                  <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
-                    >{signed(liveTrim(servo))}</span
-                  >
-                {/if}
-              </span>
+              {@render fieldLabel("servoTrimColumn", trimHelpKey)}
+              {@render trimField(servo, config)}
             </div>
           {/if}
 
@@ -772,6 +882,13 @@
               <span class="mobile-row-mid"
                 >{$i18n.t("servoMid")}: {config.mid}</span
               >
+              {#if savedTrim(servo) !== 0}
+                <span class="mobile-row-mid"
+                  >{$i18n.t("servoTrimColumn")}: {signed(
+                    savedTrim(servo),
+                  )}</span
+                >
+              {/if}
               {#if servoTrimAdjustments(servo).length > 0}
                 <span class="mobile-row-badges">
                   {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
@@ -815,6 +932,25 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+  }
+
+  .trim-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .trim-value {
+    flex: 0 0 100px;
+  }
+
+  .trim-cell .servo-trim-badges {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .trim-cell .adjustment-badge {
+    white-space: nowrap;
   }
 
   .live-trim {

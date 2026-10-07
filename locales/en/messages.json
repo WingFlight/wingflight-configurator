@@ -3183,7 +3183,7 @@
         "message": "How strongly the roll axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimRoll": {
-        "message": "Live trim in µs for servos on the roll axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the roll axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainRoll": {
         "message": "Thrust vector loop: scales roll P, I, D and F together, live, without changing the stored gains."
@@ -3252,7 +3252,7 @@
         "message": "How strongly the pitch axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimPitch": {
-        "message": "Live trim in µs for servos on the pitch axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the pitch axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainPitch": {
         "message": "Thrust vector loop: scales pitch P, I, D and F together, live, without changing the stored gains."
@@ -3321,7 +3321,7 @@
         "message": "How strongly the yaw axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimYaw": {
-        "message": "Live trim in µs for servos on the yaw axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the yaw axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainYaw": {
         "message": "Thrust vector loop: scales yaw P, I, D and F together, live, without changing the stored gains."
@@ -3798,7 +3798,25 @@
         "message": "Trim"
     },
     "servoTrimColumnHelp": {
+        "message": "Saved trim in µs, added on top of Center. Stepped ServoTrim adjustments and Auto Trim set it; it never changes Center or the Min/Max end stops, and the output stays inside Min/Max. Limited to 20% of the larger Scale. While a ServoTrim adjustment covers the servo, the field is read-only and shows the trim in use (saved plus live). A badge shows a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) for this servo's stabilized axis, highlighted when active, with the controlling AUX channel."
+    },
+    "servoTrimBadgesHelp": {
         "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
+    },
+    "servoTrimClonedHelp": {
+        "message": "This bus servo copies PWM servo $1, trim included, so its own trim isn't used. Shows the trim in use on PWM servo $1."
+    },
+    "servoTrimDrivenHelp": {
+        "message": "Set by a ServoTrim adjustment (Adjustments tab), so it can't be edited here. Shows the trim in use: saved $1 µs (Stepped, Auto Trim) plus live $2 µs (Mapped, not saved). Clear trims sets the saved part to 0."
+    },
+    "servoTrimClear": {
+        "message": "Clear trims"
+    },
+    "servoTrimToCenter": {
+        "message": "Move trims into Center"
+    },
+    "servoTrimActionsHelp": {
+        "message": "Clear trims sets every trim in this table to 0. Move trims into Center adds each trim to its Center and sets the trim to 0: the servo stays where it is, but the Min/Max end stops move with the Center."
     },
     "servoMin": {
         "message": "Min"
@@ -7790,7 +7808,7 @@
         "message": "AUTO TRIM"
     },
     "modeHelp AUTO TRIM": {
-        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the new center. Switching off before disarming cancels the change."
+        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the servo trim. The servo centers don't change. Switching off before disarming cancels the change."
     },
     "mode BEEPER": {
         "message": "BEEPER"
@@ -9413,7 +9431,7 @@
         "message": "Auto trim"
     },
     "setupWizardModesHelp_autoTrim": {
-        "message": "Fly straight and level with it on for a few seconds, then land and disarm: the servo centers become the trimmed ones. Switch it off before disarming to cancel."
+        "message": "Fly straight and level with it on for a few seconds, then land and disarm: the trim is saved as the servo trim (see the Servos tab). The servo centers don't change. Switch it off before disarming to cancel."
     },
     "setupWizardModesAssigned": {
         "message": "On a switch"
