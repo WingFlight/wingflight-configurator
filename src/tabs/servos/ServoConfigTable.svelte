@@ -297,14 +297,22 @@
       limits.max = Math.min(limits.max, bus.max - config.mid);
     }
 
+    // Only PWM outputs get a balance curve (servoUpdate(), flight/servos.c);
+    // a cloned bus channel carries its PWM servo's, already applied.
+    const curve = source.isBusServo ? null : FC.SERVO_CURVES?.[source.index];
+    const curved =
+      !!curve &&
+      !ServoBalanceCurve.compareCurve(curve, ServoBalanceCurve.nullCurve());
+
     const r = outputTravelReach(
       FC.MIXER_RULES ?? [],
       Mixer.servoOutput(source.mspIndex),
       { ...config, ...limits },
       axisGains,
+      curved ? curve : null,
     );
     const base = { mid: config.mid, cloned, source: source.index + 1 };
-    if (r?.estimated) return { ...r, ...base, mixed: true };
+    if (r?.estimated) return { ...r, ...base, mixed: true, curved };
 
     const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });
     return {
@@ -340,6 +348,7 @@
           ? `${$i18n.t("servoTravelClips")}: ${sides}`
           : `${$i18n.t("servoTravelReach")}: ${sides}`,
       );
+      if (r.curved) lines.push($i18n.t("servoTravelCurveIncluded"));
     } else if (r.mixed) {
       lines.push($i18n.t("servoTravelNotEstimated"));
     }

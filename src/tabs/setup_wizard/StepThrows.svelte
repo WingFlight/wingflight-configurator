@@ -128,6 +128,7 @@
         alone,
         FC.SERVO_CONFIG[surface.servo],
         wiz.axisGains,
+        FC.SERVO_CURVES?.[surface.servo],
       );
       return reach.pos.fraction > 1 || reach.neg.fraction > 1;
     });
