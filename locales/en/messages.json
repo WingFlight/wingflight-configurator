@@ -3803,6 +3803,15 @@
     "servoTrimBadgesHelp": {
         "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
     },
+    "servoBusClipTrim": {
+        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Without the trim it would fit: reduce it, or Clear trims."
+    },
+    "servoBusClipScale": {
+        "message": "Bus $1 copies PWM servo $2: full stick reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to keep the full throw."
+    },
+    "servoBusClipScaleTrim": {
+        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to leave room for the trim."
+    },
     "servoTrimClonedHelp": {
         "message": "This bus servo copies PWM servo $1, trim included, so its own trim isn't used. Shows the trim in use on PWM servo $1."
     },
