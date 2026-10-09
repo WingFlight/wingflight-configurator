@@ -149,13 +149,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-esc-meters",
-      "path": "./feature-esc-meters/",
-      "branch": "feature/esc-meters",
-      "date": "2026-10-09T09:32:33Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
