@@ -79,6 +79,15 @@ jobs:
           if [ -n "${{ github.event.inputs.deployment_path }}" ]; then
             DEPLOY_PATH="${{ github.event.inputs.deployment_path }}"
             UPDATE_LATEST="false"
+            # A manual deploy to release/<ver> or snapshot/<ver> is that
+            # version, as a tag deploy would be: it gets the version number,
+            # its release line and /latest/.
+            if [[ "$DEPLOY_PATH" =~ ^(release|snapshot)/([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$ ]]; then
+              VERSION="${BASH_REMATCH[2]}"
+              if [[ "$DEPLOY_PATH" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                UPDATE_LATEST="true"
+              fi
+            fi
           elif [ "${{ github.ref_type }}" = "tag" ]; then
             TAG="${{ github.ref_name }}"
             if [[ "$TAG" == release/* ]]; then
@@ -113,6 +122,12 @@ jobs:
             DEPLOY_PATH="${{ github.ref_name }}"
             DEPLOY_PATH="$(echo "$DEPLOY_PATH" | sed -E 's#[^A-Za-z0-9._-]+#-#g')"
             UPDATE_LATEST="false"
+            # A branch can't take a directory the site reserves, such as a
+            # release line's /v2.3/ (a v2.3 branch can still be dispatched).
+            if [[ "$DEPLOY_PATH" =~ ^(latest|release|snapshot|pr|logos|v[0-9]+\.[0-9]+)$ ]]; then
+              echo "Refusing to deploy branch '${{ github.ref_name }}' over reserved path '$DEPLOY_PATH'"
+              exit 1
+            fi
           fi
 
           # Branch deploys (not master, tags or an override) get a
@@ -258,14 +273,14 @@ jobs:
             # a re-run of 2.3.0 after 2.3.1, or a snapshot after the release,
             # take /v2.3/ back. See release_line.mjs.
             if [ "$UPDATE_LATEST" = "true" ] \
-              && [ "$(node ../.github/scripts/release_line.mjs latest)" = "$VERSION" ]; then
+              && [ "$(node ../.github/scripts/release_line.mjs latest)" = "$DEPLOY_PATH" ]; then
               rm -rf latest
               mkdir -p latest
               cp -R ../bundle-latest/. latest/
             fi
 
             if [ -n "$CHANNEL_PATH" ] \
-              && [ "$(node ../.github/scripts/release_line.mjs follows "${CHANNEL_PATH#v}")" = "$VERSION" ]; then
+              && [ "$(node ../.github/scripts/release_line.mjs follows "${CHANNEL_PATH#v}")" = "$DEPLOY_PATH" ]; then
               rm -rf "$CHANNEL_PATH"
               mkdir -p "$CHANNEL_PATH"
               cp -R ../bundle-channel/. "$CHANNEL_PATH/"
@@ -380,11 +395,16 @@ jobs:
 
           # Never let a branch delete wipe the pinned/reserved directories.
           case "$DEPLOY_PATH" in
-            master|latest|release|snapshot|pr|logos|v[0-9]*|""|.|..)
+            master|latest|release|snapshot|pr|logos|""|.|..)
               echo "Refusing to remove reserved path '$DEPLOY_PATH'"
               exit 0
               ;;
           esac
+          # A release line's directory; a branch such as v2-fix is removed.
+          if [[ "$DEPLOY_PATH" =~ ^v[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing to remove release line '$DEPLOY_PATH'"
+            exit 0
+          fi
 
           cd pages
 

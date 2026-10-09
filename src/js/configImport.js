@@ -28,18 +28,18 @@ function compareLines(a, b) {
   return aMajor - bMajor || aMinor - bMinor;
 }
 
-// The newest release line older than this one, or else the newest one at
-// all (e.g. for dev), or else dev.
+// For a release line, the newest line older than it: never a newer one,
+// whose settings it may not understand, nor dev. For dev, the newest release
+// line. Without one, a line starts from the settings saved before the lines
+// existed (web) or from its defaults.
 export function pickSourceLine(own, lines) {
-  const others = lines.filter((line) => line !== own);
-  const releases = others
-    .filter((line) => RELEASE_LINE.test(line))
+  const releases = lines
+    .filter((line) => line !== own && RELEASE_LINE.test(line))
     .sort(compareLines);
   if (RELEASE_LINE.test(own)) {
-    const older = releases.filter((line) => compareLines(line, own) < 0);
-    if (older.length) return older.at(-1);
+    return releases.filter((line) => compareLines(line, own) < 0).at(-1);
   }
-  return releases.at(-1) ?? others.find((line) => line === "dev");
+  return releases.at(-1);
 }
 
 function storageKeys() {
@@ -144,13 +144,11 @@ export function importSettingsOnFirstStart(set) {
     if (Object.keys(readSettings(SETTINGS_NAMESPACE)).length === 0) {
       set(findSettingsToImport());
     }
-  } catch (error) {
-    console.warn("Could not import settings from another version", error);
-  }
-  try {
     globalThis.localStorage.setItem(STARTED_KEY, "1");
-  } catch {
-    //
+  } catch (error) {
+    // Left unmarked, so the next start tries again (until a setting is
+    // saved: a line that has settings keeps them).
+    console.warn("Could not import settings from another version", error);
   }
   mirrorSettings();
 }
