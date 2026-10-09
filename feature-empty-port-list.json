@@ -1,8 +1,4 @@
 {
   "branch": "feature/empty-port-list",
-  "date": "2026-10-09T20:30:39Z",
-  "number": 178,
-  "title": "Don't stop startup when the port list is empty",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/178",
-  "draft": false
+  "date": "2026-10-09T20:30:39Z"
 }
