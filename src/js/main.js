@@ -6,6 +6,7 @@ import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { mountComponents } from "@/js/main.svelte.js";
+import { homeTab, isTabInUserLevel, loadUserLevel, setUserLevel } from "@/js/user_level.js";
 
 globalThis.TABS = {};
 
@@ -349,26 +350,36 @@ export function startProcess() {
         $("#showlog").trigger('click');
     }
 
-    CONFIGURATOR.expertMode = config.get('expertMode') ?? false;
-    $('#expert-mode input')
-        .prop('checked', CONFIGURATOR.expertMode)
-        // .prop() doesn't fire a change event, but GuiControl.switchery()
-        // (called from content_ready, on an independent tab-load timeline)
-        // may have already wrapped this checkbox in a Switchery toggle
-        // widget that only repositions itself on 'change' -- if that race
-        // resolves before this line runs, the visual toggle is left
-        // showing the wrong state. Trigger before binding our own handler
-        // below so this only reaches Switchery's listener (if already
-        // attached), not ours, and doesn't cause a spurious tab reload.
-        .trigger('change')
-        .on('change', function () {
-            CONFIGURATOR.expertMode = this.checked;
-            config.set({'expertMode': this.checked});
+    loadUserLevel();
+    showUserLevel();
+    $('#user-level button').on('click', function () {
+        const level = $(this).data('level');
+        if (level === CONFIGURATOR.userLevel) {
+            return;
+        }
+        const applyLevel = () => {
+            setUserLevel(level);
+            showUserLevel();
+            if (CONFIGURATOR.connectionValid && FC.FEATURE_CONFIG?.features) {
+                updateTabList(FC.FEATURE_CONFIG.features);
+            }
+        };
+        const tabStillShown = !CONFIGURATOR.connectionValid || !GUI.active_tab
+            || isTabInUserLevel(GUI.active_tab, level);
+        if (tabStillShown) {
             // Svelte tabs react to expertMode automatically, but the legacy
             // jQuery tabs (e.g. Modes, Logic) build their DOM once on load
-            // and need a reload to pick up the new expert-mode filtering.
-            GUI.tab_switch_allowed(() => GUI.tab_switch_reload());
-        });
+            // and need a reload to pick up the change.
+            GUI.tab_switch_allowed(() => {
+                applyLevel();
+                GUI.tab_switch_reload();
+            });
+        } else {
+            // The tab click asks about unsaved changes itself.
+            applyLevel();
+            $(`#tabs ul.mode-connected .tab_${homeTab()} a`).click();
+        }
+    });
 
     CliAutoComplete.setEnabled(config.get('cliAutoComplete') ?? true);
 
@@ -458,7 +469,21 @@ function notifyOutdatedVersion(releaseData) {
     }
 }
 
+function showUserLevel() {
+    $('#user-level button').each(function () {
+        const selected = $(this).data('level') === CONFIGURATOR.userLevel;
+        $(this).toggleClass('active', selected).attr('aria-checked', String(selected));
+    });
+}
+
 export function updateTabList(features) {
+    // Start from the tabs this connection allows, so leaving Beginner
+    // brings back the tabs it hid.
+    $('#tabs ul.mode-connected li:not(.tab-group-header)').each(function () {
+        const tabName = tabNameOf(this);
+        $(this).toggle(tabName !== null && GUI.allowedTabs.includes(tabName));
+    });
+
     $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_gps_nav').toggle(features.isEnabled('GPS'));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
@@ -479,6 +504,24 @@ export function updateTabList(features) {
         (port) => port.functions.includes('CRSF_SENSORS'),
     );
     $('#tabs ul.mode-connected li.tab_crsf_sensors').toggle(hasCrsfSensorsPort);
+
+    $('#tabs ul.mode-connected li:not(.tab-group-header)').each(function () {
+        if (!isTabInUserLevel(tabNameOf(this))) {
+            $(this).hide();
+        }
+    });
+
+    // Hide a group header when every tab under it is hidden.
+    $('#tabs ul.mode-connected li.tab-group-header').each(function () {
+        const tabs = $(this).nextUntil('.tab-group-header');
+        const anyShown = tabs.toArray().some((li) => li.style.display !== 'none');
+        $(this).toggle(anyShown);
+    });
+}
+
+function tabNameOf(li) {
+    const tabClass = (li.className.match(/\btab_(\w+)/) ?? [])[1];
+    return tabClass ?? null;
 }
 
 function zeroPad(value, width) {

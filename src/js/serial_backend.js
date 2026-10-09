@@ -3,6 +3,7 @@ import semver from "semver";
 import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
+import { isTabInUserLevel } from "@/js/user_level.js";
 
 // Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
 // connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
@@ -846,7 +847,7 @@ async function onConnect() {
         let found = false;
         $.each(GUI.allowedTabs, (_index, value) => {
                 const tabName = `tab_${value}`;
-                if ($.inArray(tabName, classes) >= 0) {
+                if ($.inArray(tabName, classes) >= 0 && isTabInUserLevel(value)) {
                     found = true;
                 }
             });

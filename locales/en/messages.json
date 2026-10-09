@@ -197,11 +197,26 @@
     "zoomBoxText": {
         "message": "Zoom:"
     },
-    "expertMode": {
-        "message": "Expert Mode"
+    "userLevel": {
+        "message": "How much of the Configurator to show"
     },
-    "permanentExpertMode": {
-        "message": "Permanently enable Expert Mode"
+    "userLevelBeginner": {
+        "message": "Beginner"
+    },
+    "userLevelBeginnerHelp": {
+        "message": "Set up the model with the Setup Wizard. Shows only the tabs the wizard doesn't cover."
+    },
+    "userLevelIntermediate": {
+        "message": "Intermediate"
+    },
+    "userLevelIntermediateHelp": {
+        "message": "Shows every tab, with the detailed settings hidden."
+    },
+    "userLevelAdvanced": {
+        "message": "Advanced"
+    },
+    "userLevelAdvancedHelp": {
+        "message": "Shows every tab and every setting."
     },
     "rememberLastTab": {
         "message": "Reopen last tab on connect"
@@ -6428,7 +6443,7 @@
         "message": "CURVE"
     },
     "profilesGainCurveBadgeTitle": {
-        "message": "Master Gain is shaped by Curve $1 (set in Gain Curves, Expert Mode)"
+        "message": "Master Gain is shaped by Curve $1 (set in Gain Curves, Advanced)"
     },
     "profilesEffectivePidGainsHelp": {
         "message": "Read-only preview of the PID gains that are actually used after Master Gain scaling. This helps you see the effective tune while adjusting Master Gain without changing the stored base PID values. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100. Boost (B) is shown unchanged because Master Gain does not scale it."
@@ -6563,7 +6578,7 @@
         "message": "Changes Master Gain with throttle, usually to reduce it at high throttle where surfaces in prop wash gain authority."
     },
     "profilesFlightFeelGuideSpeed": {
-        "message": "Lowers gain as GPS speed rises, so a tune that is right at cruise does not wobble in a dive. This percentage does nothing on its own: assign a Speed curve and set its speed range in Gain Curves (Expert Mode). Needs a GPS with a fix."
+        "message": "Lowers gain as GPS speed rises, so a tune that is right at cruise does not wobble in a dive. This percentage does nothing on its own: assign a Speed curve and set its speed range in Gain Curves (Advanced). Needs a GPS with a fix."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
