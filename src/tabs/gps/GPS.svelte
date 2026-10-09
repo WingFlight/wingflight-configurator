@@ -348,7 +348,8 @@
           </tr>
           <tr>
             <td>{$i18n.t("gpsSats")}</td>
-            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td>
+            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td
+            >
           </tr>
           <tr>
             <td>{$i18n.t("gpsDistToHome")}</td>
@@ -392,10 +393,7 @@
            risks racing its readiness and never getting a working
            contentWindow. Connect/waiting are overlays toggled via CSS
            instead. -->
-      <div
-        class="loadmap"
-        class:hidden={!online}
-      >
+      <div class="loadmap" class:hidden={!online}>
         {#if useMapWebview}
           <webview
             bind:this={mapEl}

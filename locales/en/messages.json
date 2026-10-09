@@ -428,7 +428,13 @@
         "message": "Status"
     },
     "tabSetup": {
-        "message": "Setup"
+        "message": "Maintenance"
+    },
+    "tabSetupWizard": {
+        "message": "Setup Wizard"
+    },
+    "tabWizard": {
+        "message": "Wizard"
     },
     "tabConfiguration": {
         "message": "Configuration"
@@ -1449,8 +1455,8 @@
         "message": "There is no motor throttle protocol selected",
         "description": "Message that pops up to describe the MOTOR_PROTO arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipOVERRIDE": {
-        "message": "Servo Override or Mixer Override is active"
+    "statusArmingDisableFlagsTooltipSETUP": {
+        "message": "A setup tool is holding the model: a forced mode, servo probe, or servo, mixer or motor override (for example the Setup Wizard). Arming works again once it lets go."
     },
     "statusArmingDisableFlagsTooltipBACKUP_RX": {
         "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
@@ -3177,7 +3183,7 @@
         "message": "How strongly the roll axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimRoll": {
-        "message": "Live trim in µs for servos on the roll axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the roll axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainRoll": {
         "message": "Thrust vector loop: scales roll P, I, D and F together, live, without changing the stored gains."
@@ -3246,7 +3252,7 @@
         "message": "How strongly the pitch axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimPitch": {
-        "message": "Live trim in µs for servos on the pitch axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the pitch axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainPitch": {
         "message": "Thrust vector loop: scales pitch P, I, D and F together, live, without changing the stored gains."
@@ -3315,7 +3321,7 @@
         "message": "How strongly the yaw axis stops a fast manoeuvre bouncing back when you centre the stick. Higher means less bounce-back."
     },
     "adjustmentsFunctionHelpServoTrimYaw": {
-        "message": "Live trim in µs for servos on the yaw axis. Not saved: it starts from zero after a reboot."
+        "message": "Trim in µs for servos on the yaw axis, added on top of the servo Center (never changing it). Mapped: follows the channel, is not saved and starts from zero after a reboot. Stepped: each press of the switch moves the trim one step, holding it repeats; saved on disarm."
     },
     "adjustmentsFunctionHelpTVMasterGainYaw": {
         "message": "Thrust vector loop: scales yaw P, I, D and F together, live, without changing the stored gains."
@@ -3792,7 +3798,34 @@
         "message": "Trim"
     },
     "servoTrimColumnHelp": {
+        "message": "Saved trim in µs, added on top of Center. Stepped ServoTrim adjustments and Auto Trim set it; it never changes Center or the Min/Max end stops, and the output stays inside Min/Max. Limited to 20% of the larger Scale. While a ServoTrim adjustment covers the servo, the field is read-only and shows the trim in use (saved plus live). A badge shows a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) for this servo's stabilized axis, highlighted when active, with the controlling AUX channel."
+    },
+    "servoTrimBadgesHelp": {
         "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
+    },
+    "servoBusClipTrim": {
+        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Without the trim it would fit: reduce it, or Clear trims."
+    },
+    "servoBusClipScale": {
+        "message": "Bus $1 copies PWM servo $2: full stick reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to keep the full throw."
+    },
+    "servoBusClipScaleTrim": {
+        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to leave room for the trim."
+    },
+    "servoTrimClonedHelp": {
+        "message": "This bus servo copies PWM servo $1, trim included, so its own trim isn't used. Shows the trim in use on PWM servo $1."
+    },
+    "servoTrimDrivenHelp": {
+        "message": "Set by a ServoTrim adjustment (Adjustments tab), so it can't be edited here. Shows the trim in use: saved $1 µs (Stepped, Auto Trim) plus live $2 µs (Mapped, not saved). Clear trims sets the saved part to 0."
+    },
+    "servoTrimClear": {
+        "message": "Clear trims"
+    },
+    "servoTrimToCenter": {
+        "message": "Move trims into Center"
+    },
+    "servoTrimActionsHelp": {
+        "message": "Clear trims sets every trim in this table to 0. Move trims into Center adds each trim to its Center and sets the trim to 0: the servo stays where it is, but the Min/Max end stops move with the Center."
     },
     "servoMin": {
         "message": "Min"
@@ -3868,6 +3901,27 @@
     },
     "servoTravelLimitedMinWarning": {
         "message": "<span class=\"message-negative\">Servo $1:</span> at <i>Center</i> $2, <i>Min</i> can only reach $3, because the output can't go below $4 µs. Move the center closer to the middle to use more."
+    },
+    "servoSignalHelp": {
+        "message": "The live output. The marks on the bar are the Min and Max the servo can reach and the dot is where it is now. For a servo moved by the roll, pitch, yaw or flap mix, the bar also shows how far full stick on every axis at once takes each side. Red means that side reaches its limit before full stick, so the stabilizer has no travel left there. The same check as the Setup Wizard's Travel check."
+    },
+    "servoTravelReach": {
+        "message": "Full stick"
+    },
+    "servoTravelClips": {
+        "message": "Reaches its Min or Max before full stick"
+    },
+    "servoTravelCloned": {
+        "message": "Copies PWM servo $1, held to the bus range of 1000-2000 µs. This servo's own settings aren't used while it copies."
+    },
+    "servoTravelCurveIncluded": {
+        "message": "Includes this servo's balance curve."
+    },
+    "servoTravelNotEstimated": {
+        "message": "Full-stick travel isn't shown for this servo: its mixer rules use Mul, curves, conditions, offsets, a later Set, or inputs other than the stabilized axes and the flap channel."
+    },
+    "servoTravelNotEstimatedShort": {
+        "message": "Not estimated for this mix"
     },
     "servoTravelLimitedHelp": {
         "message": "At center $1 this can only reach $2: the output can't go past $3 µs."
@@ -4167,7 +4221,7 @@
         "message": "Control Surface Override"
     },
     "mixerOverrideHelp": {
-        "message": "Forces a fixed value into a stabilized axis (Roll/Pitch/Yaw) so you can measure the resulting control surface throw without touching the sticks. Only takes effect while disarmed. Use it together with Axis Gain below: enable an axis, command a known % (e.g. 100%), measure the surface with a protractor, then adjust that axis's gain until the measured angle matches what you want."
+        "message": "Forces a fixed value into a stabilized axis (Roll/Pitch/Yaw) so you can measure the resulting control surface throw without touching the sticks. Only takes effect while disarmed. Use it together with Axis Throw above: enable an axis, command a known % (e.g. 100%), measure the surface with a protractor, then adjust that axis's throw until the measured angle matches what you want."
     },
     "mixerEnableOverrideLabel": {
         "message": "<strong>Enable control surface override</strong>"
@@ -4185,10 +4239,10 @@
         "message": "Value (%)"
     },
     "mixerAxisGainTitle": {
-        "message": "Axis Gain"
+        "message": "Axis Throw"
     },
     "mixerAxisGainHelp": {
-        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is unity gain. Pair this with Control Surface Override below to calibrate a target throw: enable the override, command a known %, measure the surface, and adjust this gain until the measured angle matches what you want."
+        "message": "Scales every rule reading this stabilized axis by a single percentage -- raise or lower the combined throw of all surfaces assigned to an axis (e.g. two aileron servos) without re-balancing each rule's weight individually. 100% is the servo's normal travel. Pair this with Control Surface Override below to calibrate a target throw: enable the override, command a known %, measure the surface, and adjust this throw until the measured angle matches what you want."
     },
     "mixerAxisGainRoll": {
         "message": "Roll"
@@ -4475,6 +4529,9 @@
     "mixerRuleReverse": {
         "message": "Reverse"
     },
+    "mixerRuleReverseNeedsWeight": {
+        "message": "Set a weight above 0 to reverse this rule"
+    },
     "mixerRuleCondition": {
         "message": "Condition"
     },
@@ -4550,6 +4607,12 @@
     "mixerRuleDelete": {
         "message": "Delete rule"
     },
+    "mixerRuleListBack": {
+        "message": "Back to Rule List"
+    },
+    "mixerRuleNumber": {
+        "message": "Rule $1"
+    },
     "mixerRuleHintFirstShouldSet": {
         "message": "First rule for this output - usually should be Set"
     },
@@ -4613,8 +4676,32 @@
     "mixerWizardFlapServos2": {
         "message": "2 independent servos"
     },
+    "mixerWizardFlapsFollowAilerons": {
+        "message": "Flaps also move with the ailerons (4-servo wing)"
+    },
+    "mixerWizardFlapsElrsWarning": {
+        "message": "Flaps are driven by channel 5 (AUX1). With ExpressLRS, set the switch mode to <b>Full Res 16ch Rate/2</b>: in the other modes channel 5 is only a two-position arm switch, and the flaps can't be set in between."
+    },
+    "mixerWizardFlaperons": {
+        "message": "No flap servos -- the ailerons droop as flaps (flaperons)"
+    },
     "mixerWizardFlapsCompensationHint": {
         "message": "Also adds a Flap Compensation rule onto the elevator/pitch surface(s), starting at zero weight -- flaps often cause a pitching moment as they deploy, tune this in the rule table once you see how yours behaves."
+    },
+    "mixerWizardFlapsChannelHint": {
+        "message": "Set the flap channel on your radio so flaps up is at centre (0) and full flap is +100."
+    },
+    "mixerWizardServoOutputs": {
+        "message": "Servo outputs"
+    },
+    "mixerWizardServoOutputsUsed": {
+        "message": "$1 of $2 used"
+    },
+    "mixerWizardServoOutputsShort": {
+        "message": "$1 needed, $2 available"
+    },
+    "mixerWizardNotEnoughServos": {
+        "message": "This setup needs $1 servo outputs, but this flight controller only has $2, so the surfaces on servo $3 won't move. Assign more servo outputs on the Remap FC tab, or use fewer servos: one flap servo on a Y-cable, flaperons instead of flap servos, or a single aileron servo."
     },
     "mixerWizardMotorsTitle": {
         "message": "Motors"
@@ -6311,13 +6398,13 @@
         "message": "Error Limit for Yaw Axis [&deg;]"
     },
     "profilesFwTpaHelp": {
-        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and GYRO OFF mode is not affected."
+        "message": "Throttle: scales Roll, Pitch and Yaw P, D, F and B with throttle. Surfaces in prop wash gain authority as throttle rises, so this is usually used to reduce gain at high throttle and keep roll and pitch rates the same at any throttle: set a percentage, and optionally a curve (evaluated on throttle, 0-100%). 100% with no curve means no change. Throttle and GPS Speed together never go below 25%, and MANUAL mode is not affected."
     },
     "profilesFwSpaHelp": {
         "message": "GPS Speed: scales Roll, Pitch and Yaw P, D, F and B with GPS speed, on top of Throttle. Surfaces get more effective as speed rises, so this is used to reduce gain when fast, for example in a dive with the throttle closed. Set a percentage and a curve (evaluated on GPS speed, 0 to the speed at the curve's right edge, set in Gain Curves). It needs a GPS with a fix and does nothing without a curve. If the fix is lost it holds for 3 s, then eases back to 100%. GPS speed is not airspeed: wind shifts it."
     },
-    "profilesFwSpaSpeedMax": {
-        "message": "Speed curve range"
+    "profilesFwSpaCurveTooltip": {
+        "message": "GPS Speed: the curve shapes the Speed gain by GPS speed. Left: the speed at the curve's right edge (10-600 km/h); faster than that uses the curve's last point. Right: the curve, edited on the Curves tab. \"-\" turns GPS Speed off, so its Flight Feel percentage has no effect. Needs a GPS with a fix."
     },
     "profilesMasterGainGroup": {
         "message": "Flight Feel"
@@ -6380,7 +6467,7 @@
         "message": "Strength"
     },
     "profilesSnapRelaxStrengthHelp": {
-        "message": "How much roll and pitch feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation, and yaw, are not touched. 0 turns it off"
+        "message": "How much roll, pitch and yaw feedback is taken off when it pushes against a pop top, pinwheel or snap. These start with roll, pitch and yaw slammed in together, and the airframe then rotates faster than the stick asks for, so the gyro would reverse the surfaces against the stick. Feedback that helps the rotation is not touched; yaw usually lags the stick, so the rudder is only relaxed if the airframe yaws faster than asked. 0 turns it off"
     },
     "profilesSnapRelaxThreshold": {
         "message": "Stick threshold"
@@ -6399,6 +6486,27 @@
     },
     "profilesSnapRelaxHoldHelp": {
         "message": "Time over which full feedback returns after any of the three sticks drops below the threshold. Reversing the stick against the snap brings full feedback back at once"
+    },
+    "profilesPropHangGroup": {
+        "message": "Prop-hang relax"
+    },
+    "profilesPropHangStrength": {
+        "message": "Strength"
+    },
+    "profilesPropHangStrengthHelp": {
+        "message": "How much the roll I-term is held back in a prop hang, so the prop torque can roll the model instead of the gyro holding it still. P and the stick still work, so you can stop the roll or correct a gust. Roll only. Needs an altitude estimate (a barometer) to tell a hang from an up-line. 0 turns it off"
+    },
+    "profilesPropHangAngle": {
+        "message": "Angle"
+    },
+    "profilesPropHangAngleHelp": {
+        "message": "How far the nose can be from straight up and still count as a hang. The model must also be neither climbing nor sinking faster than 2 m/s, for half a second"
+    },
+    "profilesPropHangFade": {
+        "message": "Fade-out"
+    },
+    "profilesPropHangFadeHelp": {
+        "message": "Time over which the roll I-term comes back after the hang ends"
     },
     "profilesItermDecayGroup": {
         "message": "I-Term Decay"
@@ -6455,7 +6563,7 @@
         "message": "Changes Master Gain with throttle, usually to reduce it at high throttle where surfaces in prop wash gain authority."
     },
     "profilesFlightFeelGuideSpeed": {
-        "message": "Changes Master Gain with GPS speed, usually to reduce it when fast so a tune that is right at cruise does not wobble in a dive. Needs a GPS and a curve."
+        "message": "Lowers gain as GPS speed rises, so a tune that is right at cruise does not wobble in a dive. This percentage does nothing on its own: assign a Speed curve and set its speed range in Gain Curves (Expert Mode). Needs a GPS with a fix."
     },
     "profilesItermRelaxLevelGroup": {
         "message": "I-Term Relax Level"
@@ -7676,28 +7784,28 @@
         "message": "Holds whatever attitude the aircraft is in when the sticks are centered, even upside down or on its side."
     },
     "mode SETUP": {
-        "message": "SETUP"
+        "message": "PASSTHROUGH"
     },
     "modeHelp SETUP": {
         "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
     },
     "mode PASSTHROUGH": {
-        "message": "SETUP"
+        "message": "PASSTHROUGH"
     },
     "modeHelp PASSTHROUGH": {
         "message": "Sends raw stick input straight to the control surfaces with no stabilization, rates, or expo. Full stick is full servo travel, the limit every mode works within, so use this mode to set and measure surface throws on the bench. Also a raw bail-out in flight."
     },
     "mode GYRO OFF": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp GYRO OFF": {
-        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
     },
     "mode MANUAL": {
-        "message": "GYRO OFF"
+        "message": "MANUAL"
     },
     "modeHelp MANUAL": {
-        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in SETUP mode instead."
+        "message": "Turns stabilization off but keeps your rates and expo. Full-stick throw follows the F gain and rates, so it is less than full travel; set throws in PASSTHROUGH mode instead."
     },
     "mode TRADITIONAL": {
         "message": "TRADITIONAL"
@@ -7709,7 +7817,7 @@
         "message": "AUTO TRIM"
     },
     "modeHelp AUTO TRIM": {
-        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the new center. Switching off before disarming cancels the change."
+        "message": "While armed, records the current control-surface trim over a couple of seconds and saves it as the servo trim. The servo centers don't change. Switching off before disarming cancels the change."
     },
     "mode BEEPER": {
         "message": "BEEPER"
@@ -8185,6 +8293,192 @@
     "presetsDontShowAgain": {
         "message": "Don't show again"
     },
+    "tabRemapFC": {
+        "message": "Remap FC"
+    },
+    "remapFcRunButton": {
+        "message": "Read FC"
+    },
+    "remapFcIntroHeading": {
+        "message": "What this does"
+    },
+    "remapFcIntroDescription": {
+        "message": "Remap FC lets you change servos, motors, and other functions that can connect to your flight controller. Add another motor, extra Aileron servo, Flaps or onboard glow system -- all without touching a soldering iron."
+    },
+    "remapFcRunning": {
+        "message": "Reading FC"
+    },
+    "remapFcRunningProgress": {
+        "message": "Reading FC ({{percent}}%)"
+    },
+    "remapFcLoadingHardware": {
+        "message": "Loading hardware..."
+    },
+    "remapFcError": {
+        "message": "Error reading FC"
+    },
+    "remapFcSaveNoReboot": {
+        "message": "Flight controller did not reboot after Save -- the change may not have been applied. Check the connection and try again."
+    },
+    "remapFcCliEntryTimeout": {
+        "message": "Flight controller did not respond to enter CLI mode. Check the connection and try again."
+    },
+    "remapFcTableOption": {
+        "message": "FC Label"
+    },
+    "remapFcTableCurrentOption": {
+        "message": "Current Option"
+    },
+    "remapFcAddOption": {
+        "message": "+ Add"
+    },
+    "remapFcNoneOption": {
+        "message": "None"
+    },
+    "remapFcPinNotRemappable": {
+        "message": "This pin is hard-wired and cannot be remapped."
+    },
+    "remapFcNoAlternativeFeatures": {
+        "message": "No alternative resource features can be allocated to this port"
+    },
+    "remapFcMcuLabel": {
+        "message": "MCU"
+    },
+    "remapFcMcuUnsupportedHeading": {
+        "message": "Board not supported"
+    },
+    "remapFcMcuUnsupportedMessage": {
+        "message": "This board's MCU ({{mcu}}) isn't currently supported by the remapper, so pin/timer/DMA changes can't be safely calculated."
+    },
+    "remapFcMcuUnknownMessage": {
+        "message": "This board's MCU couldn't be determined, so pin/timer/DMA changes can't be safely calculated."
+    },
+    "remapFcDesignLabel": {
+        "message": "Design"
+    },
+    "remapFcCardDescription": {
+        "message": "Choose what this pin does. Picking a feature moves it here from wherever it's currently assigned; picking the pin's own default puts it back."
+    },
+    "remapFcCardDescriptionUart": {
+        "message": "This pin defaults to {{resource}}.\n\n{{hint}}"
+    },
+    "remapFcCardDescriptionUartNoAlternative": {
+        "message": "This pin defaults to {{resource}}."
+    },
+    "remapFcCardPlaceholder": {
+        "message": "Click on a pin to see the remapping options"
+    },
+    "remapFcCloseCard": {
+        "message": "Close"
+    },
+    "remapFcDefaultOption": {
+        "message": "Default"
+    },
+    "remapFcHintGeneric": {
+        "message": "It can be freely repurposed for a motor, servo, or other feature."
+    },
+    "remapFcHintSbus": {
+        "message": "The SBUS port is the default port used for an SBUS receiver -- enable it by setting this port to serial RX in the Configuration tab and selecting the appropriate serial protocol in the Receiver tab."
+    },
+    "remapFcHintTlm": {
+        "message": "TLM is commonly used for ESC telemetry -- enable it by setting this port's Telemetry Output to \"ESC Telemetry\" in the Configuration tab."
+    },
+    "remapFcPurposeFreq1": {
+        "message": "Commonly the main rotor RPM sensor input, used by the governor."
+    },
+    "remapFcPurposeLed": {
+        "message": "Drives an addressable LED strip (WS2811/WS2812)."
+    },
+    "remapFcPurposeM1": {
+        "message": "Use this port to connect your main ESC, or a throttle servo for a nitro or turbine setup."
+    },
+    "remapFcPurposeM2": {
+        "message": "Connect your tail motor's ESC to this port -- for a motorised (direct-drive) tail."
+    },
+    "remapFcPurposeS1": {
+        "message": "Servo 1. Commonly this is the left side cyclic servo."
+    },
+    "remapFcPurposeS2": {
+        "message": "Servo 2. Commonly this is the right side cyclic servo."
+    },
+    "remapFcPurposeS3": {
+        "message": "Servo 3. Commonly this is the elevator cyclic servo."
+    },
+    "remapFcPurposeS4": {
+        "message": "Commonly the tail servo, for a mechanical (non-motorised) tail rotor."
+    },
+    "remapFcPurposeServoExtra": {
+        "message": "Extra servos can be used for functions such as landing gear, or other PWM devices such as remote glow and battery backups. Set up the channel you wish to control it from using Custom Mixer Rules on the Mixer tab."
+    },
+    "remapFcLoadChangesBlocked": {
+        "message": "Resolve the pin conflict below before sending changes"
+    },
+    "remapFcApplying": {
+        "message": "Applying..."
+    },
+    "remapFcChangesHeading": {
+        "message": "Pending Changes"
+    },
+    "remapFcShowDetails": {
+        "message": "Show details"
+    },
+    "remapFcAllocationCalculatedHeading": {
+        "message": "Calculated config"
+    },
+    "remapFcAllocationInvalidHeading": {
+        "message": "Pin selection not valid"
+    },
+    "remapFcAllocationInvalidWarning": {
+        "message": "The current pin assignment can't work: {{reasons}}. Reallocating timers/DMA on the current pins alone can't resolve it either -- pick a suggestion below to fix the pin assignment itself."
+    },
+    "remapFcAcceptSuggestion": {
+        "message": "Accept Suggestion"
+    },
+    "remapFcSequenceGapBlocked": {
+        "message": "Close the gap in the motor/servo numbering before sending changes"
+    },
+    "remapFcSequenceGapHeading": {
+        "message": "Gap in motor/servo numbering"
+    },
+    "remapFcSequenceGapWarning": {
+        "message": "Nothing is assigned to {{missing}}, which strands {{stranded}}. The flight controller stops at the first unassigned output rather than skipping it, so {{stranded}} would be silently dropped - and a dropped output still reports its centre value, so mixer rules using it look correct while doing nothing. Assign {{missing}}, or move the higher outputs down to close the gap."
+    },
+    "remapFcServoRateHeading": {
+        "message": "Servo frequency groups"
+    },
+    "remapFcServoRateDescription": {
+        "message": "Servos sharing a timer must always be changed together, to the same rate."
+    },
+    "remapFcServoRateDefaultEntry": {
+        "message": "{{rate}}Hz (default)"
+    },
+    "remapFcSuggestionSwap": {
+        "message": "Swap pins for {{feature}} and {{otherFeature}}"
+    },
+    "remapFcSuggestionMove": {
+        "message": "Move {{feature}} to pin {{targetPin}} (currently unassigned)"
+    },
+    "remapFcSuggestionManualFix": {
+        "message": "No automatic fix found for {{feature}}. Reset it to unassigned and choose a different pin."
+    },
+    "remapFcResetToSetOption": {
+        "message": "Reset to Set Option"
+    },
+    "remapFcAllocationUnresolved": {
+        "message": "Could not find a working timer for: {{features}}. Left unchanged rather than broken -- you may need to free up a pin manually."
+    },
+    "remapFcAllocationFeature": {
+        "message": "Feature"
+    },
+    "remapFcAllocationPin": {
+        "message": "Pin"
+    },
+    "remapFcAllocationTimer": {
+        "message": "Timer"
+    },
+    "remapFcAllocationDma": {
+        "message": "DMA"
+    },
     "receiverTelemetrySensor_MOTOR1SPEED": {
         "message": "Motor 1 RPM"
     },
@@ -8193,5 +8487,1166 @@
     },
     "adjustmentsFunctionGovRPM": {
         "message": "Governor RPM"
+    },
+    "setupWizardStep_sensors": {
+        "message": "Sensors and level"
+    },
+    "setupWizardStep_receiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverIntro": {
+        "message": "Tell the flight controller where the receiver is plugged in and how it talks, then check every stick reaches it the right way round. Turn the radio on."
+    },
+    "setupWizardReceiverPortTitle": {
+        "message": "Port the receiver is plugged into"
+    },
+    "setupWizardReceiverPortReceiver": {
+        "message": "Receiver"
+    },
+    "setupWizardReceiverPortFree": {
+        "message": "Free"
+    },
+    "setupWizardReceiverPortInUse": {
+        "message": "In use: $1"
+    },
+    "setupWizardReceiverPortNone": {
+        "message": "No port is set for the receiver yet. Choose a free one; ports in use for something else can be changed on the Configuration tab."
+    },
+    "setupWizardReceiverProtocolTitle": {
+        "message": "Protocol"
+    },
+    "setupWizardReceiverProtocolPick": {
+        "message": "Choose a protocol"
+    },
+    "receiverElrsFullResWarning": {
+        "message": "ExpressLRS: set the switch mode to <b>Full Res 16ch Rate/2</b> (100Hz Full or 333Hz Full packet rate). Wingflight doesn't support the other switch modes, which send channel 5 (AUX1) only as a two-position arm switch. Wingflight uses channel 5 as a normal full-resolution channel, for example for flaps."
+    },
+    "setupWizardReceiverProtocolHelp": {
+        "message": "ExpressLRS and Crossfire use TBS CRSF."
+    },
+    "setupWizardReceiverSignalTitle": {
+        "message": "Signal"
+    },
+    "setupWizardReceiverLinkUp": {
+        "message": "Receiving"
+    },
+    "setupWizardReceiverLinkDown": {
+        "message": "No signal"
+    },
+    "setupWizardReceiverSignalText": {
+        "message": "With the radio on and bound, the receiver should show as receiving. If it doesn't, Detect wiring tries the inverted, half-duplex and pin-swap settings until one works."
+    },
+    "setupWizardReceiverSaveFirst": {
+        "message": "Save and reboot first."
+    },
+    "setupWizardReceiverChannelsTitle": {
+        "message": "Channel order and direction"
+    },
+    "setupWizardReceiverOrder_aetr": {
+        "message": "AETR"
+    },
+    "setupWizardReceiverOrderHelp_aetr": {
+        "message": "Aileron, elevator, throttle, rudder. ExpressLRS, Crossfire, FrSky, Futaba, Jeti."
+    },
+    "setupWizardReceiverOrder_taer": {
+        "message": "TAER"
+    },
+    "setupWizardReceiverOrderHelp_taer": {
+        "message": "Throttle, aileron, elevator, rudder. Spektrum, Graupner, JR."
+    },
+    "setupWizardReceiverOrder_custom": {
+        "message": "Detect"
+    },
+    "setupWizardReceiverOrderHelp_custom": {
+        "message": "Any other order: move each stick in turn and the wizard finds its channel."
+    },
+    "setupWizardReceiverDetectTitle": {
+        "message": "Move each one in turn, all the way, and leave the others still."
+    },
+    "setupWizardReceiverDetect_roll": {
+        "message": "Move roll (aileron)"
+    },
+    "setupWizardReceiverDetect_pitch": {
+        "message": "Move pitch (elevator)"
+    },
+    "setupWizardReceiverDetect_yaw": {
+        "message": "Move yaw (rudder)"
+    },
+    "setupWizardReceiverDetect_throttle": {
+        "message": "Move throttle"
+    },
+    "setupWizardReceiverDetectWaiting": {
+        "message": "Waiting…"
+    },
+    "setupWizardReceiverDetectRestart": {
+        "message": "Start again"
+    },
+    "setupWizardReceiverCheckTitle": {
+        "message": "Put both sticks in the bottom-left corner"
+    },
+    "setupWizardReceiverCheckText": {
+        "message": "Throttle and elevator down, aileron and rudder left. Every bar below should go to the left."
+    },
+    "setupWizardReceiverChannel": {
+        "message": "Ch $1"
+    },
+    "setupWizardReceiverCheckOk": {
+        "message": "All four are the right way round."
+    },
+    "setupWizardReceiverCheckReversed": {
+        "message": "A bar going to the right is reversed. Reverse that channel in your radio, not here."
+    },
+    "setupWizardReceiverCheckWrongBar": {
+        "message": "If moving one stick moves a different bar, choose the other order or use Detect."
+    },
+    "setupWizardOpenReceiver": {
+        "message": "Open the Receiver tab"
+    },
+    "setupWizardTrimGainIntro": {
+        "message": "Two things you'll want in the air on the first flights: a way to trim, and a knob to turn the stabilizer gain up or down."
+    },
+    "setupWizardTrimGainFull": {
+        "message": "Every adjustment slot is in use. Free one on the Adjustments tab."
+    },
+    "setupWizardTrimGainChannel": {
+        "message": "CH $1"
+    },
+    "setupWizardTrimGainShared": {
+        "message": "CH $1 is also used by $2. That works, but they will all move together."
+    },
+    "setupWizardTrimUse": {
+        "message": "$1 trim"
+    },
+    "setupWizardGainUse": {
+        "message": "the gain knob"
+    },
+    "setupWizardGainAxisUse": {
+        "message": "$1 gain"
+    },
+    "setupWizardModeUse": {
+        "message": "the $1 switch"
+    },
+    "setupWizardTrimGainDetect": {
+        "message": "Detect"
+    },
+    "setupWizardRecommended": {
+        "message": "Recommended"
+    },
+    "setupWizardTrimTitle": {
+        "message": "Trim"
+    },
+    "setupWizardTrimQuestion": {
+        "message": "How do you want to trim?"
+    },
+    "setupWizardTrimRadio_programmable": {
+        "message": "A channel per trim"
+    },
+    "setupWizardTrimRadioHelp_programmable": {
+        "message": "Each trim on its own spare channel, moved by the trim buttons. The radio keeps the trim."
+    },
+    "setupWizardTrimRadio_buttons": {
+        "message": "Trim buttons on one channel"
+    },
+    "setupWizardTrimRadioHelp_buttons": {
+        "message": "All the trim buttons on one spare channel. The flight controller keeps the trim and saves it when you disarm."
+    },
+    "setupWizardTrimButtonsIntro": {
+        "message": "Each trim button puts its own value on one spare channel. A press moves the flight controller's trim by $1 µs; hold the button to repeat. The steps below use Ethos as the example; on other radios (EdgeTX, OpenTX, Jeti and so on) set up the same mix and weights, with each trim button as the switch for its mix line."
+    },
+    "setupWizardTrimButtonsStep1": {
+        "message": "<b>Model → Trims</b>: leave the aileron, elevator and rudder trims enabled, with <b>Audio</b> on so each press clicks."
+    },
+    "setupWizardTrimButtonsStep2": {
+        "message": "<b>Model → Mixes</b>: in the Ailerons, Elevator and Rudder mixes, turn <b>Trim</b> OFF. The trim buttons then only drive the TRIM mix below. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimButtonsStep3": {
+        "message": "Add a <b>Free mix</b> named TRIM: <b>Active condition</b> Always on, <b>Source</b> Maximum, <b>Operation</b> Add, <b>Output</b> a spare channel (CH8 here). Then <b>Add a new action</b> for each trim button, with these weights:"
+    },
+    "setupWizardTrimButtonsStep4": {
+        "message": "Click Detect and press any trim button."
+    },
+    "setupWizardTrimButtonsLayout": {
+        "message": "T1, T2 and T4 are the aileron, elevator and rudder trims on this radio. If yours differ, use your own aileron, elevator and rudder trims with the weights shown."
+    },
+    "setupWizardTrimButtonsButton": {
+        "message": "Trim button"
+    },
+    "setupWizardTrimButtonsWeight": {
+        "message": "Weight"
+    },
+    "setupWizardTrimButtonsTrims": {
+        "message": "Trims"
+    },
+    "setupWizardTrimButtonsImage1": {
+        "message": "Ethos Trims page: Trim Rudder with Audio on"
+    },
+    "setupWizardTrimButtonsImage2": {
+        "message": "Ethos Ailerons mix with Trim off"
+    },
+    "setupWizardTrimButtonsImage3": {
+        "message": "Ethos TRIM free mix: source Maximum, operation Add, an action per trim button, output CH8"
+    },
+    "setupWizardTrimButtonsZoom": {
+        "message": "Click to enlarge or shrink"
+    },
+    "setupWizardTrimButtonsUse": {
+        "message": "Trim buttons"
+    },
+    "setupWizardTrimButtonsPress": {
+        "message": "Press any trim button…"
+    },
+    "setupWizardTrimButtonsCheck": {
+        "message": "Press each trim button: its box lights up. If one doesn't, check its weight in the TRIM mix."
+    },
+    "setupWizardTrimButtonsIdle": {
+        "message": "No trim button pressed (CH $1 reads $2 µs)."
+    },
+    "setupWizardTrimRadio_other": {
+        "message": "Auto trim only"
+    },
+    "setupWizardTrimRadioHelp_other": {
+        "message": "No trim channels: trim with the Auto trim switch. For radios that can't send their trims."
+    },
+    "setupWizardTrimProgrammable": {
+        "message": "The flight controller needs one spare channel for each trim, moved by the aileron, elevator and rudder trim buttons. The radio keeps the trim. The steps below use Ethos as the example; on other radios (EdgeTX, OpenTX, Jeti and so on) set up the same mixes, with each trim as the source of its own channel."
+    },
+    "setupWizardTrimChannelsStep1": {
+        "message": "<b>Model → Trims</b>: for the aileron, elevator and rudder trims set <b>Step</b> to Coarse, so each press moves the trim noticeably. Leave <b>Range</b> at 25%."
+    },
+    "setupWizardTrimChannelsStep2": {
+        "message": "<b>Model → Mixes</b>: in the Ailerons, Elevators and Rudders mixes, turn <b>Trim</b> OFF. The trims then only drive the trim channels below. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimChannelsStep3": {
+        "message": "Add a <b>Free mix</b> named ROLL TRIM: <b>Active condition</b> Always on, <b>Source</b> Trims → Trim Aileron, <b>Operation</b> Add, <b>Weight</b> 100%, <b>Output</b> a spare channel (CH9 here)."
+    },
+    "setupWizardTrimChannelsStep4": {
+        "message": "Add PITCH TRIM (source Trim Elevator) and YAW TRIM (source Trim Rudder) the same way, each on its own spare channel (CH10 and CH11 here)."
+    },
+    "setupWizardTrimChannelsStep5": {
+        "message": "Click Detect next to each trim below and press that trim."
+    },
+    "setupWizardTrimChannelsImage1": {
+        "message": "Ethos Trims page: Trim Rudder with Step Coarse and Range 25%"
+    },
+    "setupWizardTrimChannelsImage2": {
+        "message": "Ethos Rudders mix with Trim off"
+    },
+    "setupWizardTrimChannelsImage3": {
+        "message": "Ethos ROLL TRIM free mix: source Trim Aileron, operation Add, weight 100%, output CH9"
+    },
+    "setupWizardTrimChannelsImage4": {
+        "message": "Ethos Mixes list: ROLL, PITCH and YAW TRIM on CH9, CH10 and CH11"
+    },
+    "setupWizardTrimPress": {
+        "message": "Press and hold the $1 trim…"
+    },
+    "setupWizardTrimAuto": {
+        "message": "Use Auto trim: you'll give it a switch on the next step. Fly straight and level with it on for a few seconds, then land and disarm to keep the trim."
+    },
+    "setupWizardTrimAutoEveryone": {
+        "message": "Auto trim is on the next step for any radio, to make a trim permanent."
+    },
+    "setupWizardGainTitle": {
+        "message": "Gain"
+    },
+    "setupWizardGainText": {
+        "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Fully down turns the stabilizer off, center is 75% and fully up is 150%."
+    },
+    "setupWizardGainMode_single": {
+        "message": "One knob"
+    },
+    "setupWizardGainModeHelp_single": {
+        "message": "Roll, pitch and yaw together. Simplest for first flights."
+    },
+    "setupWizardGainMode_separate": {
+        "message": "One per axis"
+    },
+    "setupWizardGainModeHelp_separate": {
+        "message": "Roll, pitch and yaw on three knobs."
+    },
+    "setupWizardGainMode_none": {
+        "message": "None"
+    },
+    "setupWizardGainModeHelp_none": {
+        "message": "No in-flight gain adjustment."
+    },
+    "setupWizardGainAllAxes": {
+        "message": "Roll, pitch and yaw"
+    },
+    "setupWizardGainTurn": {
+        "message": "Turn the knob or slider…"
+    },
+    "setupWizardGainCentre": {
+        "message": "Fly the first flight with the knob at center (75%)."
+    },
+    "setupWizardOpenAdjustments": {
+        "message": "Open the Adjustments tab"
+    },
+    "setupWizardStep_airframe": {
+        "message": "Airframe"
+    },
+    "setupWizardStep_servoType": {
+        "message": "Servo type"
+    },
+    "setupWizardStep_motor": {
+        "message": "Motor"
+    },
+    "setupWizardStep_centre": {
+        "message": "Center"
+    },
+    "setupWizardStep_direction": {
+        "message": "Direction"
+    },
+    "setupWizardStep_limits": {
+        "message": "Binding limits"
+    },
+    "setupWizardStep_throws": {
+        "message": "Throws"
+    },
+    "setupWizardStep_travel": {
+        "message": "Travel check"
+    },
+    "setupWizardStep_gyro": {
+        "message": "Gyro direction"
+    },
+    "setupWizardStep_trimGain": {
+        "message": "Trim and gain"
+    },
+    "setupWizardStep_modes": {
+        "message": "Mode switches"
+    },
+    "setupWizardStep_style": {
+        "message": "Flying style"
+    },
+    "setupWizardStep_finish": {
+        "message": "Finish"
+    },
+    "setupWizardStepCounter": {
+        "message": "Step $1 of $2"
+    },
+    "setupWizardBack": {
+        "message": "Back"
+    },
+    "setupWizardNext": {
+        "message": "Next"
+    },
+    "setupWizardSaveNext": {
+        "message": "Save and continue"
+    },
+    "setupWizardUnsaved": {
+        "message": "Unsaved changes"
+    },
+    "setupWizardApply": {
+        "message": "Apply"
+    },
+    "setupWizardDone": {
+        "message": "Done"
+    },
+    "setupWizardYes": {
+        "message": "Yes"
+    },
+    "setupWizardNo": {
+        "message": "No"
+    },
+    "setupWizardIdentify": {
+        "message": "Identify"
+    },
+    "setupWizardArmedWarning": {
+        "message": "The model is armed. The wizard can only move the surfaces while it is disarmed."
+    },
+    "setupWizardNoServos": {
+        "message": "No PWM servos found. Check that the board has servo outputs."
+    },
+    "setupWizardServosPastCount": {
+        "message": "The mixer uses servo outputs $1, but this flight controller only has $2. Those surfaces won't move, and the wizard can't set them up. Assign more servo outputs on the Remap FC tab, or move those surfaces to servo outputs the board has."
+    },
+    "setupWizardRebootNeeded": {
+        "message": "These settings take effect after a reboot. Open the Setup Wizard again afterwards to carry on from the next step."
+    },
+    "setupWizardSurfaceLabel": {
+        "message": "Servo $1 · $2"
+    },
+    "setupWizardSurface_flaperon": {
+        "message": "Flaperon"
+    },
+    "setupWizardSurface_aileron": {
+        "message": "Aileron"
+    },
+    "setupWizardSurface_elevator": {
+        "message": "Elevator"
+    },
+    "setupWizardSurface_rudder": {
+        "message": "Rudder"
+    },
+    "setupWizardSurface_elevon": {
+        "message": "Elevon"
+    },
+    "setupWizardSurface_ruddervator": {
+        "message": "V-tail"
+    },
+    "setupWizardSurface_mixed": {
+        "message": "Mixed surface"
+    },
+    "setupWizardSurface_flap": {
+        "message": "Flap"
+    },
+    "setupWizardAxis_roll": {
+        "message": "Roll"
+    },
+    "setupWizardAxis_pitch": {
+        "message": "Pitch"
+    },
+    "setupWizardAxis_yaw": {
+        "message": "Yaw"
+    },
+    "setupWizardSensorsIntro": {
+        "message": "The flight controller needs to know how it is mounted and which way is level. Power on with the model still: the gyro calibrates itself at power-up."
+    },
+    "setupWizardSensorsNoAcc": {
+        "message": "No accelerometer found, so the board orientation and level can't be set here."
+    },
+    "setupWizardSensorsTailWheelQuestion": {
+        "message": "Does the model sit on a tail wheel or tail skid?"
+    },
+    "setupWizardSensorsTailWheelNote": {
+        "message": "Prop the tail up until the fuselage is level, as it is in flight, for the accelerometer calibration and the level step. Resting on its tail wheel the model is 10–15° nose-up, and ANGLE, Attitude Hold and failsafe would all level to that."
+    },
+    "setupWizardSensorsAccTitle": {
+        "message": "Calibrate the accelerometer"
+    },
+    "setupWizardSensorsAccText": {
+        "message": "Hold the model level and still."
+    },
+    "setupWizardSensorsAlignTitle": {
+        "message": "Find the board orientation"
+    },
+    "setupWizardSensorsAlignText": {
+        "message": "Place the model flat, press the button, then lift the tail by at least 20°."
+    },
+    "setupWizardSensorsAlignValues": {
+        "message": "Now: roll $1°, pitch $2°, yaw $3°"
+    },
+    "setupWizardSensorsLevelTitle": {
+        "message": "Set level"
+    },
+    "setupWizardSensorsLevelText": {
+        "message": "Hold the model in its flying attitude and keep it still while it measures."
+    },
+    "setupWizardSensorsLevelValues": {
+        "message": "Mounting trim now: roll $1°, pitch $2°"
+    },
+    "setupWizardAirframeIntro": {
+        "message": "Choose the model type and its options. This decides which servo drives which surface."
+    },
+    "setupWizardAirframeCurrent": {
+        "message": "$1: ailerons, tail, flaps and motors are set in its options."
+    },
+    "setupWizardAirframeOptions": {
+        "message": "Change options"
+    },
+    "setupWizardAirframeCustomNow": {
+        "message": "This model uses a custom mix from the Mixer tab. Choose a type above to replace it, or keep it and carry on."
+    },
+    "setupWizardAirframeSurfaces": {
+        "message": "Control surfaces found:"
+    },
+    "setupWizardAirframeNoSurfaces": {
+        "message": "None yet. Choose a model type."
+    },
+    "setupWizardAirframeCustomNote": {
+        "message": "The wizard sets up PWM servos 1–8 driven by roll, pitch, yaw and the flap channel. Set up bus servos on the Servos tab."
+    },
+    "setupWizardServoTypeIntro": {
+        "message": "What kind of servos drive the control surfaces?"
+    },
+    "setupWizardServoType_analog": {
+        "message": "Analog"
+    },
+    "setupWizardServoTypeHelp_analog": {
+        "message": "50 Hz. Works with any standard servo."
+    },
+    "setupWizardServoType_digital": {
+        "message": "Digital"
+    },
+    "setupWizardServoTypeHelp_digital": {
+        "message": "333 Hz. Check that your servos support it."
+    },
+    "setupWizardServoType_narrow": {
+        "message": "Narrow-band (760 µs)"
+    },
+    "setupWizardServoTypeHelp_narrow": {
+        "message": "560 Hz. Only for servos made for a 760 µs center."
+    },
+    "setupWizardServoTypeAllSurfaces": {
+        "message": "Applies to every control-surface servo. Switching between normal and narrow-band also resets that servo's center, limits and scale."
+    },
+    "setupWizardMotorIntro": {
+        "message": "Choose how the flight controller talks to the ESC, then check the motor runs. ESC telemetry is the next step; throttle range and other settings are on the Motors tab."
+    },
+    "setupWizardMotorProtocolTitle": {
+        "message": "ESC protocol"
+    },
+    "setupWizardMotor_pwm": {
+        "message": "Standard PWM"
+    },
+    "setupWizardMotorHelp_pwm": {
+        "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
+    },
+    "setupWizardMotor_dshot300": {
+        "message": "DShot300"
+    },
+    "setupWizardMotorHelp_dshot300": {
+        "message": "Digital, no calibration needed. For BLHeli_32, BLHeli_S, Bluejay and AM32 ESCs."
+    },
+    "setupWizardMotor_dshot600": {
+        "message": "DShot600"
+    },
+    "setupWizardMotorHelp_dshot600": {
+        "message": "Faster DShot, for ESCs that support it."
+    },
+    "setupWizardMotor_none": {
+        "message": "No motor"
+    },
+    "setupWizardMotorHelp_none": {
+        "message": "Gliders, or a motor not driven by the flight controller."
+    },
+    "setupWizardMotorOther": {
+        "message": "Currently set to $1 on the Motors tab. Choosing an option here replaces it."
+    },
+    "setupWizardMotorTestTitle": {
+        "message": "Check the motor"
+    },
+    "setupWizardMotorPropOff": {
+        "message": "The propeller is removed"
+    },
+    "setupWizardMotorTestThrottle": {
+        "message": "Throttle"
+    },
+    "setupWizardMotorHoldToSpin": {
+        "message": "Hold to spin"
+    },
+    "setupWizardMotorSpinning": {
+        "message": "Spinning (release to stop)"
+    },
+    "setupWizardMotorTestCheck": {
+        "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
+    },
+    "setupWizardOpenMotors": {
+        "message": "Open the Motors tab"
+    },
+    "setupWizardStep_escTelemetry": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardEscIntro": {
+        "message": "Optional. If your ESC sends telemetry, the flight controller can read the battery voltage, current and motor RPM from it. If it doesn't, or you don't want to use it, press Next."
+    },
+    "setupWizardEscNoMotor": {
+        "message": "No motor is set up on the Motor step, so there is no ESC telemetry to set up. Press Next."
+    },
+    "setupWizardEscProtocolTitle": {
+        "message": "ESC telemetry protocol"
+    },
+    "setupWizardEscProtocolNone": {
+        "message": "None (no ESC telemetry)"
+    },
+    "setupWizardEscProtocolHelp": {
+        "message": "Choose the make of your ESC. Its manual says which telemetry it sends."
+    },
+    "setupWizardEscCastle": {
+        "message": "Castle Link reads telemetry on the throttle wire, so it needs no port."
+    },
+    "setupWizardEscElsewhere": {
+        "message": "ESC telemetry is set to $1, which doesn't use an ESC Telemetry port. Change it on the Motors tab."
+    },
+    "setupWizardEscPortTitle": {
+        "message": "Port the ESC telemetry wire is plugged into"
+    },
+    "setupWizardEscPortNone": {
+        "message": "No port is set for ESC telemetry yet. Choose a free one; ports in use for something else can be changed on the Configuration tab."
+    },
+    "setupWizardEscSignalTitle": {
+        "message": "Check the telemetry"
+    },
+    "setupWizardEscReceiving": {
+        "message": "Receiving"
+    },
+    "setupWizardEscNotReceiving": {
+        "message": "Nothing received"
+    },
+    "setupWizardEscSignalText": {
+        "message": "Plug in the flight battery. The ESC's voltage and temperature should appear below within a few seconds."
+    },
+    "setupWizardEscDetectHelp": {
+        "message": "If nothing arrives, Detect wiring tries the half duplex and pin swap settings for you."
+    },
+    "setupWizardEscVoltage": {
+        "message": "Voltage"
+    },
+    "setupWizardEscCurrent": {
+        "message": "Current"
+    },
+    "setupWizardEscTemperature": {
+        "message": "Temperature"
+    },
+    "setupWizardEscRpm": {
+        "message": "RPM"
+    },
+    "setupWizardEscMotor": {
+        "message": "Motor $1"
+    },
+    "setupWizardEscBatteryTitle": {
+        "message": "Battery"
+    },
+    "setupWizardEscUseVoltage": {
+        "message": "Battery voltage from the ESC"
+    },
+    "setupWizardEscUseCurrent": {
+        "message": "Current and mAh used from the ESC"
+    },
+    "setupWizardEscCellsAuto": {
+        "message": "Auto"
+    },
+    "setupWizardEscBatteryNow": {
+        "message": "Now: $1 V, $2 cells detected. Pack settings go into battery profile $3; more are on the Power tab."
+    },
+    "setupWizardEscRpmTitle": {
+        "message": "Motor RPM"
+    },
+    "setupWizardEscRpmText": {
+        "message": "Motor RPM comes from the ESC's RPM wire plugged into the flight controller's RPM pin. With DShot, bidirectional DShot can send it on the throttle wire instead. The pole count turns the electrical RPM into motor RPM."
+    },
+    "setupWizardEscPoles": {
+        "message": "Motor $1 poles"
+    },
+    "setupWizardEscPolesHelp": {
+        "message": "The pole count is the number of magnets in the motor bell, not the stator windings. The motor's manual usually gives it. With the propeller off, check the RPM shown matches the motor."
+    },
+    "setupWizardEscRpmNow": {
+        "message": "$1 rpm"
+    },
+    "setupWizardEscRpmSource": {
+        "message": "RPM from: $1"
+    },
+    "setupWizardEscRpmSource_pin": {
+        "message": "RPM sensor pin"
+    },
+    "setupWizardEscRpmSource_dshot": {
+        "message": "Bidirectional DShot"
+    },
+    "setupWizardEscRpmSource_esc": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardEscRpmSource_none": {
+        "message": "Nothing (no RPM)"
+    },
+    "setupWizardEscRpmPin": {
+        "message": "RPM from the ESC's RPM wire"
+    },
+    "setupWizardFinishEscTelemetry": {
+        "message": "ESC telemetry"
+    },
+    "setupWizardFinishEscTelemetryOff": {
+        "message": "Off"
+    },
+    "setupWizardCentreIntro": {
+        "message": "The surfaces are held at center. First set each horn and linkage so the surface is close to neutral, then fine-tune the center here."
+    },
+    "setupWizardCentreTipHorn": {
+        "message": "Servo horn square to the pushrod"
+    },
+    "setupWizardCentreTipSurface": {
+        "message": "Surface in line with the wing or tail"
+    },
+    "setupWizardCentreFlapHint": {
+        "message": "Flaps are held at flaps up: set them in line with the wing."
+    },
+    "setupWizardCentreFlagNear": {
+        "message": "Near center"
+    },
+    "setupWizardCentreFlagFar": {
+        "message": "Far from center"
+    },
+    "setupWizardCentreOffset": {
+        "message": "$1 µs from center"
+    },
+    "setupWizardCentreFarWarning": {
+        "message": "Far from the servo's normal center. Move the horn instead, or this side loses travel."
+    },
+    "setupWizardDirectionIntro": {
+        "message": "The wizard moves one axis at a time. Start small and increase the movement only if you need more travel to see the direction. Identify wiggles one servo so you can see which surface a row is about."
+    },
+    "setupWizardDirectionNoRadio": {
+        "message": "Hands off the radio. On this step the wizard moves the surfaces itself, and your sticks do nothing. Press a button below and watch the model."
+    },
+    "setupWizardDirectionHolding": {
+        "message": "Wizard is holding the surfaces here"
+    },
+    "setupWizardDirectionStop": {
+        "message": "Stop"
+    },
+    "setupWizardDirectionDeflection": {
+        "message": "Test movement"
+    },
+    "setupWizardDirectionDeflectionSmall": {
+        "message": "Small (15%)"
+    },
+    "setupWizardDirectionDeflectionMedium": {
+        "message": "Medium (25%)"
+    },
+    "setupWizardDirectionDeflectionLarge": {
+        "message": "Large (35%)"
+    },
+    "setupWizardDirectionDeflectionHalf": {
+        "message": "Half stick (50%)"
+    },
+    "setupWizardDirectionMove_pitch": {
+        "message": "Move pitch up"
+    },
+    "setupWizardDirectionExpect_pitch": {
+        "message": "Elevator, elevons and V-tail: trailing edges go up."
+    },
+    "setupWizardDirectionMove_roll": {
+        "message": "Move roll right"
+    },
+    "setupWizardDirectionExpect_roll": {
+        "message": "The right aileron or elevon goes up and the left one goes down."
+    },
+    "setupWizardDirectionMove_yaw": {
+        "message": "Move yaw right"
+    },
+    "setupWizardDirectionExpect_yaw": {
+        "message": "Rudder and V-tail: trailing edges move to the right, seen from behind."
+    },
+    "setupWizardDirectionMove_flap": {
+        "message": "Move flaps down"
+    },
+    "setupWizardDirectionExpect_flap": {
+        "message": "Flaps: both trailing edges go down."
+    },
+    "setupWizardDirectionCorrect": {
+        "message": "Correct"
+    },
+    "setupWizardDirectionWrong": {
+        "message": "Wrong way"
+    },
+    "setupWizardDirectionReversed": {
+        "message": "Reversed"
+    },
+    "setupWizardDirectionFlapFollowHint": {
+        "message": "The flap check sets this flap's direction. If it moves the wrong way here, reverse its roll rule on the Mixer tab."
+    },
+    "setupWizardDirectionMixedHint": {
+        "message": "This surface also works another axis, so reversing its servo would break that one. If both surfaces are wrong here, invert the axis below. If only one is, change its mix on the Mixer tab."
+    },
+    "setupWizardDirectionAllWrong": {
+        "message": "Every surface on this axis moved the wrong way?"
+    },
+    "setupWizardDirectionInvert_pitch": {
+        "message": "Invert pitch"
+    },
+    "setupWizardDirectionInvert_roll": {
+        "message": "Invert roll"
+    },
+    "setupWizardDirectionInvert_yaw": {
+        "message": "Invert yaw"
+    },
+    "setupWizardDirectionFlapRadio": {
+        "message": "This makes a positive flap channel move the flaps down. If your flap switch works the wrong way round afterwards, reverse the flap channel on your radio."
+    },
+    "setupWizardLimitsIntro": {
+        "message": "Find how far each servo can move before the surface or linkage binds."
+    },
+    "setupWizardLimitsHardStop": {
+        "message": "These limits are hard stops that protect the servo. Don't use them to set throw: a surface at its limit leaves the stabilizer nothing to work with. Throw is set in a later step."
+    },
+    "setupWizardLimitsStart": {
+        "message": "Find limits"
+    },
+    "setupWizardLimitsBothSides": {
+        "message": "Every servo has two limits, one each way. Find limits on each surface and set both Min and Max before pressing Done."
+    },
+    "setupWizardLimits_min": {
+        "message": "Min $1 µs"
+    },
+    "setupWizardLimits_max": {
+        "message": "Max $1 µs"
+    },
+    "setupWizardLimitsEnd_min": {
+        "message": "Min"
+    },
+    "setupWizardLimitsEnd_max": {
+        "message": "Max"
+    },
+    "setupWizardLimitsTodo_min": {
+        "message": "1 of 2: press the − buttons until the surface binds, back off one step, then press Set Min here."
+    },
+    "setupWizardLimitsTodo_max": {
+        "message": "2 of 2: now the other way. Press the + buttons until the surface binds, back off one step, then press Set Max here."
+    },
+    "setupWizardLimitsBothDone": {
+        "message": "Both sides set. Press Done."
+    },
+    "setupWizardLimitsSetMin": {
+        "message": "Set Min here"
+    },
+    "setupWizardLimitsSetMax": {
+        "message": "Set Max here"
+    },
+    "setupWizardLimitsFinish": {
+        "message": "Done"
+    },
+    "setupWizardLimitsHowTo": {
+        "message": "A side you don't set keeps its old limit."
+    },
+    "setupWizardLimitsFlapNote": {
+        "message": "These are the flap end points: Max is full flap and Min is as far up as the flap may go. The wizard sets the flap travel so the ends of the flap channel land on them."
+    },
+    "setupWizardPassthroughTitle": {
+        "message": "PASSTHROUGH mode"
+    },
+    "setupWizardPassthroughOn": {
+        "message": "PASSTHROUGH mode is on. The sticks move the surfaces directly, at full travel, with no gyro."
+    },
+    "setupWizardPassthroughForced": {
+        "message": "PASSTHROUGH mode is on for this step: the sticks move the surfaces directly, at full travel, with no gyro. The wizard switches it off again when you leave the step. Keep your radio on."
+    },
+    "setupWizardPassthroughWaiting": {
+        "message": "Switching to PASSTHROUGH mode… Check your radio is on."
+    },
+    "setupWizardPassthroughOff": {
+        "message": "The wizard couldn't switch PASSTHROUGH mode on (this firmware can't, or the model is armed). Switch your radio to PASSTHROUGH mode to carry on."
+    },
+    "setupWizardPassthroughNotAssigned": {
+        "message": "The wizard couldn't switch PASSTHROUGH mode on (this firmware can't, or the model is armed), and PASSTHROUGH isn't on a switch. Update the firmware or assign PASSTHROUGH on the Modes tab, then come back to this step."
+    },
+    "setupWizardBypassTurnOff": {
+        "message": "Switch $1 mode off for this step: in $1 mode the sticks drive the surfaces directly and the flight controller may not be able to move them."
+    },
+    "setupWizardThrowsIntro": {
+        "message": "Set how far each surface moves at full stick, using the throws from your model's setup guide. You need your radio and a throw meter or ruler on the surface. The wizard puts the model in PASSTHROUGH mode for this step."
+    },
+    "setupWizardThrowsHowTitle": {
+        "message": "How to do it:"
+    },
+    "setupWizardThrowsHow_1": {
+        "message": "Check the PASSTHROUGH mode box above is green with a tick. That means your sticks now move the surfaces directly. If it stays yellow, check your radio is on."
+    },
+    "setupWizardThrowsHow_2": {
+        "message": "Hold one stick at full deflection, for example full right aileron, and watch one of its surfaces on the meter."
+    },
+    "setupWizardThrowsHow_3": {
+        "message": "Press − or + on that axis's Throw until the surface reaches the throw you want, then check the other direction. If one surface or one direction comes out different, for example for aileron differential, correct just that one under Fine-tune."
+    },
+    "setupWizardThrowsHow_4": {
+        "message": "Repeat for each axis."
+    },
+    "setupWizardThrowsThrow": {
+        "message": "Throw"
+    },
+    "setupWizardThrowsThrowHelp": {
+        "message": "Every surface on this axis, both directions."
+    },
+    "setupWizardThrowsFineTitle": {
+        "message": "Fine-tune one surface"
+    },
+    "setupWizardThrowsFineHint": {
+        "message": "Optional: only if one surface, or one direction, doesn't match."
+    },
+    "setupWizardThrowsFineWhy": {
+        "message": "Why: Throw above moves every surface on this axis by the same amount, both ways. Fine-tune changes one surface in one direction only. Use it for aileron differential (less down than up, as in the picture), or when two halves of a surface don't move the same."
+    },
+    "setupWizardThrowsFineHow": {
+        "message": "How: hold the stick the way the row shows, measure that one surface, and press − or + until it reads what you want. 100% is the servo's normal travel."
+    },
+    "setupWizardThrowsNow": {
+        "message": "Now:"
+    },
+    "setupWizardThrowsMixedNote": {
+        "message": "This servo also works another axis (an elevon does pitch and roll). Each row sets one side of the servo's travel, so it also changes that other axis whenever the servo moves to the same side."
+    },
+    "setupWizardThrowsSideAtLimit": {
+        "message": "Full stick reaches the binding limit on this side."
+    },
+    "setupWizardThrowsDir_rollRight": {
+        "message": "Full right roll"
+    },
+    "setupWizardThrowsDir_rollLeft": {
+        "message": "Full left roll"
+    },
+    "setupWizardThrowsDir_pitchBack": {
+        "message": "Full stick back"
+    },
+    "setupWizardThrowsDir_pitchForward": {
+        "message": "Full stick forward"
+    },
+    "setupWizardThrowsDir_yawRight": {
+        "message": "Full right yaw"
+    },
+    "setupWizardThrowsDir_yawLeft": {
+        "message": "Full left yaw"
+    },
+    "setupWizardThrowsAtLimit": {
+        "message": "$1 reaches its binding limit before full stick at this throw. Lower the throw, or allow more travel in the Binding limits step."
+    },
+    "setupWizardThrowsRepeat": {
+        "message": "Throw is a percentage of the servo's normal travel (Axis Throw on the Mixer tab), shared by every surface on the axis. Fine-tune changes one servo's scale on one side (Servos tab)."
+    },
+    "setupWizardTravelIntro": {
+        "message": "How far each surface goes with full stick on every axis that drives it at once, compared with its limits. Above 100% the surface reaches its limit before full stick, and the stabilizer has no travel left on that side. The model is in PASSTHROUGH mode, so you can move the sticks into the corners and watch the live positions."
+    },
+    "setupWizardTravelCorners": {
+        "message": "Try every corner: full stick on two axes at once is where a surface that works both (an elevon, a V-tail) runs out of travel first."
+    },
+    "setupWizardTravelKeyLimit": {
+        "message": "Binding limit"
+    },
+    "setupWizardTravelKeyReach": {
+        "message": "Full stick"
+    },
+    "setupWizardTravelKeyOver": {
+        "message": "Past the limit"
+    },
+    "setupWizardTravelKeyNow": {
+        "message": "Now"
+    },
+    "setupWizardTravelFlagOk": {
+        "message": "Inside its limits"
+    },
+    "setupWizardTravelFlagClips": {
+        "message": "Reaches its limit"
+    },
+    "setupWizardTravelNeg": {
+        "message": "− side"
+    },
+    "setupWizardTravelPos": {
+        "message": "+ side"
+    },
+    "setupWizardTravelValue": {
+        "message": "$1% ($2 of $3 µs)"
+    },
+    "setupWizardTravelClipping": {
+        "message": "Some surfaces reach their limit. Lower the throw on the axes that share them in the Throws step, or accept it knowingly: full roll with full pitch on elevons is the usual case."
+    },
+    "setupWizardTravelOk": {
+        "message": "Every surface stays inside its limits."
+    },
+    "setupWizardGyroIntro": {
+        "message": "Overrides are off now, so the stabilizer drives the surfaces. The wizard uses ANGLE mode when it can: tilt the model by hand and hold it there, and the surfaces should keep pushing back toward level."
+    },
+    "setupWizardGyroAngleForced": {
+        "message": "ANGLE mode is on for this step. The wizard switches it off again when you leave."
+    },
+    "setupWizardGyroAngleOn": {
+        "message": "ANGLE mode is on. Tilt the model and hold it there to check the correction direction."
+    },
+    "setupWizardGyroAngleWaiting": {
+        "message": "Switching to ANGLE mode… Check your radio is on."
+    },
+    "setupWizardGyroAngleFailed": {
+        "message": "The wizard couldn't switch ANGLE mode on. You can still check gyro direction by moving the model, but the surfaces may only react while it is moving."
+    },
+    "setupWizardGyroCheck_roll": {
+        "message": "Roll the model so the right wing drops: the right aileron or elevon goes down and the left one goes up."
+    },
+    "setupWizardGyroCheck_pitch": {
+        "message": "Lift the nose: elevator, elevons and V-tail trailing edges go down."
+    },
+    "setupWizardGyroCheck_yaw": {
+        "message": "Swing the nose to the right: the rudder trailing edge moves to the left."
+    },
+    "setupWizardGyroWrong": {
+        "message": "If a surface was right in the Direction step but is wrong here, the board orientation doesn't match how the board is mounted. Go back to step 1 and run the orientation check again. Don't reverse servos to fix this."
+    },
+    "setupWizardGyroLegendMove": {
+        "message": "How you move the model"
+    },
+    "setupWizardGyroLegendReact": {
+        "message": "How the surfaces should answer"
+    },
+    "setupWizardGyroLive": {
+        "message": "Live servo outputs"
+    },
+    "setupWizardModesIntro": {
+        "message": "Put modes on switches on your radio: press Assign, then flick the switch to the position that should turn the mode on. Only ARM is required. Everything else is optional, and you can add or change modes later on the Modes tab."
+    },
+    "setupWizardModesGroupRequired": {
+        "message": "Required"
+    },
+    "setupWizardModesGroupOptional": {
+        "message": "Optional"
+    },
+    "setupWizardModesRequired": {
+        "message": "Required"
+    },
+    "setupWizardModesOptional": {
+        "message": "Optional"
+    },
+    "setupWizardModesOptionalHint": {
+        "message": "Add the ones you want. A 3-position switch works well for off / TRAINER / ATT HOLD; if both are on, ATT HOLD wins."
+    },
+    "setupWizardModesArmMissing": {
+        "message": "ARM isn't on a switch yet. Without it the motor can't be armed and the model can't fly."
+    },
+    "setupWizardModes_arm": {
+        "message": "ARM"
+    },
+    "setupWizardModesHelp_arm": {
+        "message": "Arms the motor. Nothing else works without it."
+    },
+    "setupWizardModes_passthrough": {
+        "message": "PASSTHROUGH"
+    },
+    "setupWizardModesHelp_passthrough": {
+        "message": "A bench tool, not a flight mode: sticks straight to the surfaces at full travel, with no gyro, rates or expo. Use it to check throws without a laptop. Put it on a switch you won't hit in flight."
+    },
+    "setupWizardModes_manual": {
+        "message": "MANUAL"
+    },
+    "setupWizardModesHelp_manual": {
+        "message": "Stabilization off, with your rates kept. A good bail-out if the stabilizer misbehaves."
+    },
+    "setupWizardModes_attHold": {
+        "message": "ATT HOLD"
+    },
+    "setupWizardModesHelp_attHold": {
+        "message": "Attitude hold: let go of a stick and the model holds the attitude it is in on that axis, at any orientation."
+    },
+    "setupWizardModes_trainer": {
+        "message": "TRAINER"
+    },
+    "setupWizardModesHelp_trainer": {
+        "message": "Normal rate flying inside bank and pitch limits: the stabilizer stops the model rolling or pitching past them. It doesn't level the wings for you."
+    },
+    "setupWizardModes_autoTrim": {
+        "message": "Auto trim"
+    },
+    "setupWizardModesHelp_autoTrim": {
+        "message": "Fly straight and level with it on for a few seconds, then land and disarm: the trim is saved as the servo trim (see the Servos tab). The servo centers don't change. Switch it off before disarming to cancel."
+    },
+    "setupWizardModesAssigned": {
+        "message": "On a switch"
+    },
+    "setupWizardModesNotAssigned": {
+        "message": "No switch"
+    },
+    "setupWizardModesAssign": {
+        "message": "Assign"
+    },
+    "setupWizardModesFlick": {
+        "message": "Flick the switch to the on position now…"
+    },
+    "setupWizardModesCancel": {
+        "message": "Cancel"
+    },
+    "setupWizardModesRange": {
+        "message": "AUX $1, $2–$3"
+    },
+    "setupWizardModesOn": {
+        "message": "On now"
+    },
+    "setupWizardModesOff": {
+        "message": "Off"
+    },
+    "setupWizardModesChange": {
+        "message": "Change"
+    },
+    "setupWizardModesRemove": {
+        "message": "Remove"
+    },
+    "setupWizardModesArmOn": {
+        "message": "The ARM switch is in its on position. The configurator may still block actual arming over MSP, but switch ARM off before you carry on."
+    },
+    "setupWizardOpenModes": {
+        "message": "Open the Modes tab"
+    },
+    "setupWizardStyleIntro": {
+        "message": "Choose the style closest to how you fly. It sets how fast the model rotates at full stick, and how the stabilizer's I-term behaves while you move the sticks. These are starting points to tune from."
+    },
+    "setupWizardStyle_trainer": {
+        "message": "Trainer"
+    },
+    "setupWizardStyleHelp_trainer": {
+        "message": "Trainers, scale models and first flights."
+    },
+    "setupWizardStyle_sport": {
+        "message": "Sport"
+    },
+    "setupWizardStyleHelp_sport": {
+        "message": "General sport flying and aerobatics."
+    },
+    "setupWizardStyle_3d": {
+        "message": "3D"
+    },
+    "setupWizardStyleHelp_3d": {
+        "message": "Hovering, harriers, snaps and tumbles."
+    },
+    "setupWizardStyleRates": {
+        "message": "$1 °/s, $2% expo"
+    },
+    "setupWizardStyleAxisRates": {
+        "message": "Roll $1, pitch $2, yaw $3 °/s, $4% expo"
+    },
+    "setupWizardStyleRelax_trainer": {
+        "message": "I-term holds trim soon after each input"
+    },
+    "setupWizardStyleRelax_sport": {
+        "message": "Default I-term relax"
+    },
+    "setupWizardStyleRelax_3d": {
+        "message": "I-term held back through big inputs, less bounce-back"
+    },
+    "setupWizardStyleNow": {
+        "message": "What the model has now"
+    },
+    "setupWizardStyleStickAxis": {
+        "message": "stick →"
+    },
+    "setupWizardStyleRelaxValue": {
+        "message": "I-term relax $1"
+    },
+    "setupWizardStyleMore": {
+        "message": "Applies to roll, pitch and yaw in the current rate and PID profiles."
+    },
+    "setupWizardFinishIntro": {
+        "message": "That's the setup done. Here is what the wizard set."
+    },
+    "setupWizardFinishModel": {
+        "message": "Model"
+    },
+    "setupWizardFinishSurfaces": {
+        "message": "Control surfaces"
+    },
+    "setupWizardFinishEsc": {
+        "message": "ESC protocol"
+    },
+    "setupWizardFinishThrows": {
+        "message": "Throw"
+    },
+    "setupWizardFinishStyle": {
+        "message": "Flying style"
+    },
+    "setupWizardFinishStyleCustom": {
+        "message": "Custom"
+    },
+    "setupWizardFinishBeforeTitle": {
+        "message": "Before the first flight:"
+    },
+    "setupWizardFinishBefore_1": {
+        "message": "Fit the propeller and check it is the right way round and tight."
+    },
+    "setupWizardFinishBefore_2": {
+        "message": "With PASSTHROUGH mode off, move the sticks and move the model by hand once more: the surfaces follow the sticks and push against the movement. With the gyro on, a stick held off centre makes the surfaces creep to full throw, because the model cannot turn at the rate the stick asks for. This is normal on the bench: let go and they drift back to centre. Check throws in PASSTHROUGH or MANUAL, not here."
+    },
+    "setupWizardFinishBefore_3": {
+        "message": "Do a range check with your radio."
+    },
+    "setupWizardFinishButton": {
+        "message": "Finish"
+    },
+    "setupWizardFinishDone": {
+        "message": "Setup saved. The model is ready for its first flight."
+    },
+    "setupWizardFinishThrowsTune": {
+        "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
     }
 }

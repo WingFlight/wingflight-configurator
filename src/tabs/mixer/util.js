@@ -81,7 +81,7 @@ export const OVERRIDE_PERCENT_MAX = 100;
 
 // FC.MIXER_OVERRIDE shares the mixer input's own raw scale (1000 = 100%,
 // see mixerSetInput() dividing by 1000.0f in flight/mixer.c) -- the same
-// x10 convention rateToPercent/percentToRate already use for axis gain.
+// x10 convention rateToPercent/percentToRate already use for axis throw.
 export function overridePercentToRaw(percent) {
   return clampInt(percent, OVERRIDE_PERCENT_MIN, OVERRIDE_PERCENT_MAX) * 10;
 }

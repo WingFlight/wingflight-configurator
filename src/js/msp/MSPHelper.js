@@ -2,6 +2,7 @@ import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js"
 import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
+import { readPropHang, writePropHang } from "@/js/PropHang.js";
 import semver from "semver";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
@@ -1531,6 +1532,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 readFwSpa(data, FC.PID_PROFILE);
                 readLevelDamping(data, FC.PID_PROFILE);
                 readSnapRelax(data, FC.PID_PROFILE);
+                readPropHang(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -1599,11 +1601,20 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP_SERVO_TRIM: {
-                // Count-prefixed, one S16 per servo, same order as MSP_SERVO_CONFIGURATIONS.
+                // Count-prefixed, one S16 per servo of live (runtime) trim, same order as
+                // MSP_SERVO_CONFIGURATIONS. Firmware with saved trims appends one S16 per
+                // servo of saved trim; without it FC.SERVO_SAVED_TRIM stays null.
                 FC.SERVO_RUNTIME_TRIM = [];
                 const trimCount = data.readU8();
                 for (let i = 0; i < trimCount; i++) {
                     FC.SERVO_RUNTIME_TRIM.push(data.read16());
+                }
+                FC.SERVO_SAVED_TRIM = null;
+                if (data.remaining() >= trimCount * 2) {
+                    FC.SERVO_SAVED_TRIM = [];
+                    for (let i = 0; i < trimCount; i++) {
+                        FC.SERVO_SAVED_TRIM.push(data.read16());
+                    }
                 }
                 break;
             }
@@ -1954,6 +1965,11 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('Mixer Override set');
                 break;
             }
+
+            case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
+            case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
+            case MSPCodes.MSP2_WING_SET_SERVO_TRIM:
+                break;
             case MSPCodes.MSP_SET_RC_CONFIG: {
                 console.log('RC controls settings saved');
                 break;
@@ -2104,7 +2120,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             dataHandler.callbacks.splice(i, 1);
             if (!crcError || callbackOnError) {
                 // fire callback
-                if (callback) callback({'command': code, 'data': data, 'length': data.byteLength, 'crcError': crcError});
+                if (callback) callback({'command': code, 'data': data, 'length': data.byteLength, 'crcError': crcError, 'unsupported': !!dataHandler.unsupported});
             } else {
                 console.warn(`code: ${code} - crc failed. No callback`);
             }
@@ -2655,6 +2671,7 @@ MspHelper.prototype.crunch = function(code) {
             writeFwSpa(buffer, FC.PID_PROFILE);
             writeLevelDamping(buffer, FC.PID_PROFILE);
             writeSnapRelax(buffer, FC.PID_PROFILE);
+            writePropHang(buffer, FC.PID_PROFILE);
             break;
         }
 
@@ -2924,13 +2941,18 @@ MspHelper.prototype.resetServoOverrides = function(onCompleteCallback)
     this.sendServoOverrides(onCompleteCallback);
 };
 
-MspHelper.prototype.sendServoOverride = function(servoIndex, onCompleteCallback)
+// timeoutMs (API 22.14+): the FC drops the override unless it is re-sent
+// within that time. Without it the override stays until cleared.
+MspHelper.prototype.sendServoOverride = function(servoIndex, onCompleteCallback, timeoutMs)
 {
     const value = FC.SERVO_OVERRIDE[servoIndex];
     const buffer = [];
 
     buffer.push8(servoIndex)
           .push16(value);
+    if (timeoutMs) {
+        buffer.push16(timeoutMs);
+    }
 
     MSP.send_message(MSPCodes.MSP_SET_SERVO_OVERRIDE, buffer, false, onCompleteCallback);
 };
@@ -3180,15 +3202,71 @@ MspHelper.prototype.resetMixerOverrides = function(onCompleteCallback)
     this.sendMixerOverrides(onCompleteCallback);
 };
 
-MspHelper.prototype.sendMixerOverride = function(mixerIndex, onCompleteCallback)
+// timeoutMs (API 22.14+): as for sendServoOverride().
+MspHelper.prototype.sendMixerOverride = function(mixerIndex, onCompleteCallback, timeoutMs)
 {
     const value = FC.MIXER_OVERRIDE[mixerIndex];
     const buffer = [];
 
     buffer.push8(mixerIndex)
           .push16(value);
+    if (timeoutMs) {
+        buffer.push16(timeoutMs);
+    }
 
     MSP.send_message(MSPCodes.MSP_SET_MIXER_OVERRIDE, buffer, false, onCompleteCallback);
+};
+
+// Holds the FC's setup state with these modes (permanent box ids) forced on, in
+// RAM, until timeoutMs after the last call. An empty list holds the setup state
+// with nothing forced; timeoutMs 0 clears it. Resolves false if the FC refused
+// (armed, a mode that can't be forced, or firmware without
+// MSP2_WING_SET_MODE_OVERRIDE).
+MspHelper.prototype.sendModeOverride = function(permanentIds, timeoutMs)
+{
+    const buffer = [];
+
+    buffer.push16(timeoutMs)
+          .push8(permanentIds.length);
+    for (const id of permanentIds) {
+        buffer.push8(id);
+    }
+
+    return new Promise((resolve) => {
+        MSP.send_message(MSPCodes.MSP2_WING_SET_MODE_OVERRIDE, buffer, false,
+            // No response at all: the request was dropped (link lost).
+            (response) => resolve(!!response && !response.unsupported && !response.crcError), true);
+    });
+};
+
+// Sets the saved trim (us) of servo `servoIndex` (FC.SERVO_CONFIG order) from
+// FC.SERVO_SAVED_TRIM. The FC limits it to SERVO_TRIM_LIMIT_PERCENT of the servo's
+// scale; read MSP_SERVO_TRIM back for the value it kept.
+MspHelper.prototype.sendServoTrim = function(servoIndex)
+{
+    const buffer = [];
+
+    buffer.push8(servoIndex)
+          .push16(FC.SERVO_SAVED_TRIM[servoIndex]);
+
+    return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_TRIM, buffer);
+};
+
+// Holds PWM servo `servo` at Mid + offsetUs, ignoring its Min/Max limits,
+// until timeoutMs after the last call (API 22.14+). timeoutMs 0 releases it.
+// Resolves false if the FC refused.
+MspHelper.prototype.sendServoProbe = function(servo, offsetUs, timeoutMs)
+{
+    const buffer = [];
+
+    buffer.push8(servo)
+          .push16(offsetUs)
+          .push16(timeoutMs);
+
+    return new Promise((resolve) => {
+        MSP.send_message(MSPCodes.MSP2_WING_SET_SERVO_PROBE, buffer, false,
+            (response) => resolve(!!response && !response.unsupported && !response.crcError), true);
+    });
 };
 
 MspHelper.prototype.sendMixerOverrides = function(onCompleteCallback)

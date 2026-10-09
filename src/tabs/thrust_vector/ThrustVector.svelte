@@ -382,8 +382,8 @@
                     title={adjustmentTitle(adjustment)}
                   >
                     <NumberInput
-                      min="25"
-                      max="1000"
+                      min="0"
+                      max="200"
                       bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
                     />
                     {#if adjustment}

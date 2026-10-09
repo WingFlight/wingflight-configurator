@@ -4,7 +4,7 @@ import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 import { Mixer } from "@/js/Mixer.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
-import { clampServoConfig } from "@/js/servoLimits.js";
+import { clampServoConfig, servoTrimLimit } from "@/js/servoLimits.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
 
 // MSP_SELECT_SETTING's index offset for "select rate profile N" (see Rates.svelte)
@@ -42,9 +42,9 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 // Mirrors the firmware's reset templates (pg/pid.c resetPidProfile(), pg/rates.c,
 // pg/tv_pid.c) so a fresh virtual FC looks like a freshly flashed one.
 const DEFAULT_PIDS = [
-  [50, 16, 0, 75, 35], // roll  P I D F B
-  [50, 16, 0, 75, 35], // pitch
-  [80, 20, 0, 75, 35], // yaw
+  [150, 75, 0, 75, 35], // roll  P I D F B
+  [150, 75, 0, 75, 35], // pitch
+  [310, 75, 0, 75, 35], // yaw
 ];
 
 function defaultPidSlot() {
@@ -96,7 +96,12 @@ function defaultPidSlot() {
       snapRelaxStrength: 100,
       snapRelaxThreshold: 60,
       snapRelaxWindow: 400,
-      snapRelaxHold: 150,
+      snapRelaxHold: 350,
+      // Prop-hang relax (roll I held back in a prop hang)
+      hasPropHang: true,
+      propHangStrength: 100,
+      propHangAngle: 20,
+      propHangFade: 500,
       masterGainRoll: 100,
       masterGainPitch: 100,
       masterGainYaw: 100,
@@ -292,6 +297,17 @@ function encodeEffectivePidGains() {
   return Uint8Array.from(buffer);
 }
 
+// MSP_SERVO_TRIM: count, live (runtime) trims, then saved trims, one S16 each in
+// FC.SERVO_CONFIG order. No pot is moving in virtual mode, so the live trims stay 0.
+function encodeServoTrim() {
+  const count = FC.SERVO_CONFIG.length;
+  const buffer = [];
+  buffer.push8(count);
+  for (let i = 0; i < count; i++) buffer.push16(0);
+  for (let i = 0; i < count; i++) buffer.push16(FC.SERVO_SAVED_TRIM?.[i] ?? 0);
+  return Uint8Array.from(buffer);
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -374,8 +390,45 @@ export function getVirtualResponse(code, requestData) {
     }
     case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
       return decodeVirtualReply(code, encodeEffectivePidGains());
+    case MSPCodes.MSP_SERVO_TRIM:
+      return decodeVirtualReply(code, encodeServoTrim());
+    // Limited like the FC's setServoSavedTrim(); the next MSP_SERVO_TRIM reads it back.
+    case MSPCodes.MSP2_WING_SET_SERVO_TRIM: {
+      const index = requestData[0];
+      const config = FC.SERVO_CONFIG[index];
+      if (config && FC.SERVO_SAVED_TRIM) {
+        const trim = ((requestData[1] | (requestData[2] << 8)) << 16) >> 16;
+        const limit = servoTrimLimit(config);
+        FC.SERVO_SAVED_TRIM[index] = Math.min(Math.max(trim, -limit), limit);
+      }
+      return new Uint8Array(0);
+    }
+    case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
+      applyVirtualModeOverride(requestData.slice(3));
+      return new Uint8Array(0);
+    // Acknowledged so the wizard sees it accepted; the servo readout stays
+    // as seeded, as it does for servo overrides.
+    case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
+      return new Uint8Array(0);
     default:
       return getVirtualEscResponse(code, requestData);
+  }
+}
+
+// Like the FC, forced modes show in the MSP_STATUS mode flags (which the
+// virtual FC never rewrites) until the next override replaces them. There is
+// no clock here, so they don't lapse; the wizard clears them when done.
+let virtualForcedModes = [];
+
+function applyVirtualModeOverride(permanentIds) {
+  for (const index of virtualForcedModes) {
+    FC.CONFIG.mode &= ~(1 << index);
+  }
+  virtualForcedModes = permanentIds
+    .map((id) => FC.AUX_CONFIG_IDS.indexOf(id))
+    .filter((index) => index >= 0);
+  for (const index of virtualForcedModes) {
+    FC.CONFIG.mode |= 1 << index;
   }
 }
 
@@ -524,8 +577,8 @@ export function applyVirtualConfig() {
     vbatmaxcellvoltage: 4,
     vbatwarningcellvoltage: 3,
     capacity: 10000,
-    voltageMeterSource: 1,
-    currentMeterSource: 1,
+    voltageMeterSource: 2, // ESC, the firmware default
+    currentMeterSource: 2, // ESC, the firmware default
     hasProfileCells: true,
     cellCounts: [3, 4, 0, 0, 0, 0],
     vbatmincellvoltages: [1, 1, 1, 1, 1, 1],
@@ -702,14 +755,14 @@ export function applyVirtualConfig() {
     "TRAINER",
     "ATT HOLD",
     "FAILSAFE",
-    "SETUP",
+    "PASSTHROUGH",
     "PREARM",
     "BEEPER",
     "BEEPER MUTE",
     "BLACKBOX",
     "BLACKBOX ERASE",
     "GOVERNOR",
-    "GYRO OFF",
+    "MANUAL",
     "AUTO TRIM",
     "TRADITIONAL",
   ];
@@ -788,6 +841,10 @@ export function applyVirtualConfig() {
 
   // One balance curve per servo, same count as MSP_SERVO_CONFIGURATIONS
   FC.SERVO_CURVES = FC.SERVO_CONFIG.map(() => ServoBalanceCurve.nullCurve());
+
+  // Live and saved servo trims (MSP_SERVO_TRIM): servoTrims PG default is 0
+  FC.SERVO_RUNTIME_TRIM = FC.SERVO_CONFIG.map(() => 0);
+  FC.SERVO_SAVED_TRIM = FC.SERVO_CONFIG.map(() => 0);
 
   // Failsafe/arming: pg/failsafe.c and pg/arming.c defaults
   Object.assign(FC.FAILSAFE_CONFIG, {

@@ -44,9 +44,9 @@
   // Forces a fixed value into a stabilized axis's mixer input, while the
   // aircraft is disarmed (the FC ignores MIXER_OVERRIDE while armed, see
   // mixerSetInput() in flight/mixer.c). Writes live on every change --
-  // meant to be paired with Axis Gain above: enable an axis, command a
+  // meant to be paired with Axis Throw above: enable an axis, command a
   // known %, measure the resulting surface throw, then adjust that axis's
-  // gain to match.
+  // throw to match.
   function setEnabled(index, enabled) {
     FC.MIXER_OVERRIDE[index] = enabled ? 0 : Mixer.OVERRIDE_OFF;
     mspHelper.sendMixerOverride(index);

@@ -9,6 +9,7 @@
     servoSignalRange,
     servoTravelLimited,
     servoTravelRange,
+    servoTrimLimit,
     servoUsableTravel,
   } from "@/js/servoLimits.js";
   import {
@@ -17,15 +18,26 @@
     adjustmentTitle,
     getAdjustmentState,
   } from "@/tabs/adjustments/adjustmentState.js";
+  import {
+    axisGainsFromInputs,
+    outputTravelReach,
+  } from "@/tabs/setup_wizard/surfaces.js";
 
   import HelpIcon from "@/components/HelpIcon.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import Switch from "@/components/Switch.svelte";
+  import TravelGauge from "@/tabs/setup_wizard/TravelGauge.svelte";
 
   // pwmServoCount is only meaningful (and only passed) for the bus table -
   // needed to work out whether a given bus channel is actually being
   // cloned from a PWM servo right now (see effectiveCurveIndex() below).
-  let { servos, onFieldChange, onRateChange, pwmServoCount = 0 } = $props();
+  let {
+    servos,
+    onFieldChange,
+    onRateChange,
+    onTrimChange,
+    pwmServoCount = 0,
+  } = $props();
 
   const FLAG_REVERSE = 1;
 
@@ -37,12 +49,13 @@
   // ServoTrimRoll/Pitch/Yaw aren't tied to a fixed servo slot like
   // PID/MasterGain adjustments -- they trim whichever servo(s)
   // FC.MIXER_RULES currently mixes from the corresponding stabilized axis
-  // input (src 1/2/3, see AxisConfig.svelte). dst uses the same 1-based raw
-  // servo slot numbering as servo.mspIndex (dst - 1 === mspIndex) for both
-  // PWM and bus servos.
+  // input (src 1/2/3, see AxisConfig.svelte), matched the same way as the
+  // firmware's axisTrimDirection() (flight/servos.c). dst is a mixer output
+  // number, which isn't mspIndex + 1 past S26 (see Mixer.servoOutput()).
   function axisAffectsServo(axisSrc, mspIndex) {
+    const output = Mixer.servoOutput(mspIndex);
     return (FC.MIXER_RULES ?? []).some(
-      (rule) => rule.src === axisSrc && rule.dst - 1 === mspIndex,
+      (rule) => rule.oper && rule.src === axisSrc && rule.dst === output,
     );
   }
 
@@ -62,16 +75,25 @@
     }).filter(Boolean);
   }
 
-  // While a Stepped ServoTrim adjustment is actively incrementing/
-  // decrementing, the FC persists the change and the polled
-  // MSP_SERVO_CONFIGURATIONS response overwrites Mid with it -- disable
-  // editing to avoid the field fighting with the live value. Mapped
-  // adjustments only bias the runtime servo output and never rewrite the
-  // stored Mid value, so they don't need to block editing.
+  // Saved trims (FC.SERVO_SAVED_TRIM): firmware that has them keeps every
+  // kind of trim apart from Mid.
+  let savedTrimSupported = $derived(Array.isArray(FC.SERVO_SAVED_TRIM));
+
+  // Firmware without saved trims has a Stepped ServoTrim adjustment rewrite
+  // Mid, and the polled MSP_SERVO_CONFIGURATIONS response overwrites the
+  // field with it -- disable editing while one is active, to avoid the field
+  // fighting with the live value.
   function midDisabled(servo) {
-    return servoTrimAdjustments(servo).some(
-      (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
+    return (
+      !savedTrimSupported &&
+      servoTrimAdjustments(servo).some(
+        (trim) => trim.adjustment.active && trim.adjustment.adjType === 2,
+      )
     );
+  }
+
+  function savedTrim(servo) {
+    return FC.SERVO_SAVED_TRIM?.[servo.index] ?? 0;
   }
 
   // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
@@ -90,12 +112,37 @@
     return value > 0 ? `+${value}` : `${value}`;
   }
 
-  // Only show the Trim column if at least one servo in this table actually
-  // has a ServoTrim adjustment configured for it -- otherwise it's just an
-  // empty column taking up space.
+  // The Trim column holds the saved trim where the FC has it. Without it,
+  // the column only shows ServoTrim adjustment badges, so it is left out
+  // unless at least one servo in this table has one.
   let hasTrimAdjustments = $derived(
     servos.some((servo) => servoTrimAdjustments(servo).length > 0),
   );
+  let showTrimColumn = $derived(savedTrimSupported || hasTrimAdjustments);
+  let trimHelpKey = $derived(
+    savedTrimSupported ? "servoTrimColumnHelp" : "servoTrimBadgesHelp",
+  );
+
+  function hasTrimBadges(servo) {
+    return (
+      servoTrimAdjustments(servo).length > 0 ||
+      (!savedTrimSupported && liveTrim(servo) !== 0)
+    );
+  }
+
+  // While a ServoTrim adjustment covers this servo, the trim comes from the
+  // switch or pot, so the field is read-only and shows the trim in use:
+  // saved (a Stepped adjustment writes it) plus live (a Mapped one), limited
+  // together like the FC's getServoTrim().
+  function trimDriven(servo) {
+    return servoTrimAdjustments(servo).length > 0;
+  }
+
+  function appliedTrim(servo, config) {
+    const limit = servoTrimLimit(config);
+    const trim = savedTrim(servo) + liveTrim(servo);
+    return Math.min(Math.max(trim, -limit), limit);
+  }
 
   // Mobile view (see markup below): the desktop grid has up to 11 columns
   // of tiny inputs, which doesn't survive shrinking to phone width no
@@ -132,6 +179,12 @@
   const INDEX_COL = 44;
   const VALUE_COL = 100;
   const TRIM_COL = 100;
+  // The adjustment badges and the live (Mapped) trim sit beside the trim
+  // value on the same line, so every row keeps the same height and the
+  // fields stay aligned; the column grows by the room they need.
+  // Room for the widest badge, e.g. "Y CH #10".
+  const TRIM_BADGE_COL = 64;
+  const LIVE_TRIM_COL = 36;
   // Wide enough for the Reverse label + help icon on one line for most
   // locales (English "Reverse", German "Umkehr", ...) -- header-label-narrow
   // below still wraps the icon as a fallback for longer translations (e.g.
@@ -139,13 +192,34 @@
   const REVERSE_COL = 90;
   // No fixed column for the trailing Signal meter (it's the 1fr track), but
   // it still needs *some* room to be legible -- this is roughly its
-  // meter-label plus a usable sliver of the meter bar itself.
-  const SIGNAL_MIN_WIDTH = 90;
+  // meter-label and warning icon plus a usable stretch of the travel gauge.
+  const SIGNAL_MIN_WIDTH = 130;
   const COLUMN_GAP = 4;
+
+  let trimColumnWidth = $derived.by(() => {
+    const badges = Math.max(
+      0,
+      ...servos.map((servo) => servoTrimAdjustments(servo).length),
+    );
+    // Without saved trims the live trim is shown beside the badges;
+    // otherwise it is part of the value in the field.
+    const mapped =
+      !savedTrimSupported &&
+      servos.some((servo) =>
+        servoTrimAdjustments(servo).some(
+          (trim) => trim.adjustment.adjType === 1,
+        ),
+      );
+    const width =
+      (savedTrimSupported ? TRIM_COL + COLUMN_GAP : 0) +
+      badges * TRIM_BADGE_COL +
+      (mapped ? LIVE_TRIM_COL : 0);
+    return Math.max(TRIM_COL, width);
+  });
 
   let columnWidths = $derived.by(() => {
     const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
-    if (hasTrimAdjustments) cols.push(TRIM_COL);
+    if (showTrimColumn) cols.push(trimColumnWidth);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
       if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
@@ -213,24 +287,6 @@
     });
   }
 
-  function meterRange(servo) {
-    if (servo.isBusServo) {
-      return { min: 1000, max: 2000 };
-    }
-
-    const mid = FC.SERVO_CONFIG[servo.index].mid;
-    if (mid <= 860) return { min: 375, max: 1145 };
-    if (mid <= 1060) return { min: 460, max: 1460 };
-    return { min: 750, max: 2250 };
-  }
-
-  function meterPercent(servo) {
-    const { min, max } = meterRange(servo);
-    const value = FC.SERVO_DATA[servo.index] ?? min;
-    const percent = (100 * (value - min)) / (max - min);
-    return Math.min(100, Math.max(0, percent));
-  }
-
   function flag(index, mask) {
     return (FC.SERVO_CONFIG[index].flags & mask) !== 0;
   }
@@ -280,6 +336,156 @@
       : $i18n.t("servoCurveActive");
   }
 
+  let axisGains = $derived(axisGainsFromInputs(FC.MIXER_INPUTS));
+
+  // How far full stick on every axis at once takes each side of the servo,
+  // against the Min/Max it can actually use at this center -- the Setup
+  // Wizard's travel check (surfaces.js travelReach()), live as Min/Max and
+  // the scales are edited. Always returns limits and a center, so every row
+  // gets the gauge; the full-stick fill is only there when `estimated`.
+  //
+  // A cloned bus channel sends its PWM servo's finished pulse, clamped to
+  // the bus signal range (sbusOutGetValueMixer(), drivers/sbus_output.c),
+  // and ignores its own Center/Min/Max/scales -- so it shows the PWM servo's
+  // travel, with the bus range as a further limit.
+  function reach(servo) {
+    const cloned = isClonedCurve(servo);
+    const source = cloned
+      ? {
+          index: effectiveCurveIndex(servo),
+          mspIndex: effectiveCurveIndex(servo),
+          isBusServo: false,
+        }
+      : servo;
+    const config = FC.SERVO_CONFIG[source.index];
+    const limits = servoUsableTravel(config, source.isBusServo);
+    const ownLimits = { ...limits };
+    if (cloned) {
+      const bus = servoSignalRange(true);
+      limits.min = Math.max(limits.min, bus.min - config.mid);
+      limits.max = Math.min(limits.max, bus.max - config.mid);
+    }
+    // The saved trim is added before the output is held inside Min/Max
+    // (servoUpdate(), flight/servos.c), so it uses up travel on one side and
+    // gives it on the other.
+    const trim = savedTrim(source);
+    limits.min -= trim;
+    limits.max -= trim;
+
+    // Only PWM outputs get a balance curve (servoUpdate(), flight/servos.c);
+    // a cloned bus channel carries its PWM servo's, already applied.
+    const curve = source.isBusServo ? null : FC.SERVO_CURVES?.[source.index];
+    const curved =
+      !!curve &&
+      !ServoBalanceCurve.compareCurve(curve, ServoBalanceCurve.nullCurve());
+
+    const r = outputTravelReach(
+      FC.MIXER_RULES ?? [],
+      Mixer.servoOutput(source.mspIndex),
+      { ...config, ...limits },
+      axisGains,
+      curved ? curve : null,
+    );
+    const base = {
+      mid: config.mid,
+      cloned,
+      source: source.index + 1,
+      label: servo.label,
+      trim,
+      ownLimits,
+    };
+    if (r?.estimated) return { ...r, ...base, mixed: true, curved };
+
+    const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });
+    return {
+      ...base,
+      estimated: false,
+      mixed: !!r,
+      neg: side(-limits.min),
+      pos: side(limits.max),
+    };
+  }
+
+  function reachClips(r) {
+    return !!r?.estimated && (r.neg.fraction > 1 || r.pos.fraction > 1);
+  }
+
+  function reachSide(side) {
+    return $i18n.t("setupWizardTravelValue", {
+      1: Math.round(side.fraction * 100),
+      2: Math.round(side.us),
+      3: side.limit,
+    });
+  }
+
+  // Why a cloned bus channel stops short: it sends its PWM servo's pulse,
+  // held to the bus signal range (sbusOutGetValueMixer(),
+  // drivers/sbus_output.c), and full stick plus the trim goes past it. One
+  // line per side, saying whether the trim alone pushes it over (it would
+  // fit without) or the Scale does.
+  function busClipReasons(r) {
+    if (!r.cloned || !r.estimated) return [];
+    const bus = servoSignalRange(true);
+    const sides = [
+      {
+        // Highest pulse: full stick, plus trim, within the PWM servo's own Max.
+        pulse: r.mid + Math.min(r.trim + r.pos.us, r.ownLimits.max),
+        withoutTrim: r.mid + r.pos.us,
+        edge: bus.max,
+        sign: 1,
+      },
+      {
+        pulse: r.mid + Math.max(r.trim - r.neg.us, r.ownLimits.min),
+        withoutTrim: r.mid - r.neg.us,
+        edge: bus.min,
+        sign: -1,
+      },
+    ];
+    return sides
+      .filter((side) => (side.pulse - side.edge) * side.sign > 0)
+      .map((side) => {
+        const params = {
+          1: r.label,
+          2: r.source,
+          3: r.trim > 0 ? `+${r.trim}` : `${r.trim}`,
+          4: Math.round(side.pulse),
+          5: side.edge,
+          6: Math.round(Math.abs(side.pulse - side.edge)),
+        };
+        const trimOnly = (side.withoutTrim - side.edge) * side.sign <= 0;
+        if (trimOnly) return $i18n.t("servoBusClipTrim", params);
+        return $i18n.t(
+          r.trim !== 0 ? "servoBusClipScaleTrim" : "servoBusClipScale",
+          params,
+        );
+      });
+  }
+
+  // Every cloned bus servo in this table that stops short, with the reason.
+  let busClipNotes = $derived(
+    isBusTable ? servos.flatMap((servo) => busClipReasons(reach(servo))) : [],
+  );
+
+  function reachTitle(r) {
+    const lines = [];
+    if (r.cloned) lines.push($i18n.t("servoTravelCloned", { 1: r.source }));
+    lines.push(...busClipReasons(r));
+    if (r.estimated) {
+      const sides =
+        `${$i18n.t("setupWizardTravelNeg")} ${reachSide(r.neg)}, ` +
+        `${$i18n.t("setupWizardTravelPos")} ${reachSide(r.pos)}`;
+      lines.push(
+        reachClips(r)
+          ? `${$i18n.t("servoTravelClips")}: ${sides}`
+          : `${$i18n.t("servoTravelReach")}: ${sides}`,
+      );
+      if (r.curved) lines.push($i18n.t("servoTravelCurveIncluded"));
+    } else if (r.mixed) {
+      lines.push($i18n.t("servoTravelNotEstimated"));
+    }
+    return lines.length > 0 ? lines.join("\n") : undefined;
+  }
+
   function setFlag(index, mask, enabled) {
     FC.SERVO_CONFIG[index].flags = enabled
       ? FC.SERVO_CONFIG[index].flags | mask
@@ -287,10 +493,99 @@
   }
 </script>
 
+{#snippet trimBadges(servo)}
+  <span class="servo-trim-badges">
+    {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
+      <span
+        class="adjustment-badge"
+        class:runtime-active={trim.adjustment.active}
+        title={adjustmentTitle(trim.adjustment)}
+      >
+        {trim.axisLabel}
+        {trim.adjustment.active
+          ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
+          : "ADJ"}
+      </span>
+    {/each}
+    {#if !savedTrimSupported && liveTrim(servo) !== 0}
+      <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
+        >{signed(liveTrim(servo))}</span
+      >
+    {/if}
+  </span>
+{/snippet}
+
+{#snippet trimField(servo, config)}
+  {@const cloned = isClonedCurve(servo)}
+  <span class="trim-cell">
+    {#if savedTrimSupported}
+      {#if cloned}
+        {@const source = { index: effectiveCurveIndex(servo) }}
+        {@const sourceConfig = FC.SERVO_CONFIG[source.index]}
+        <!-- A cloned bus channel sends its PWM servo's output, trim included,
+             and ignores its own trim: show the PWM servo's trim in use. -->
+        <span
+          class="trim-value"
+          title={$i18n.t("servoTrimClonedHelp", { 1: source.index + 1 })}
+        >
+          <NumberInput
+            min={-servoTrimLimit(sourceConfig)}
+            max={servoTrimLimit(sourceConfig)}
+            value={appliedTrim(source, sourceConfig)}
+            disabled
+          />
+        </span>
+      {:else if trimDriven(servo)}
+        <span
+          class="trim-value"
+          title={$i18n.t("servoTrimDrivenHelp", {
+            1: signed(savedTrim(servo)),
+            2: signed(liveTrim(servo)),
+          })}
+        >
+          <NumberInput
+            min={-servoTrimLimit(config)}
+            max={servoTrimLimit(config)}
+            value={appliedTrim(servo, config)}
+            disabled
+          />
+        </span>
+      {:else}
+        <span class="trim-value">
+          <NumberInput
+            min={-servoTrimLimit(config)}
+            max={servoTrimLimit(config)}
+            bind:value={FC.SERVO_SAVED_TRIM[servo.index]}
+            onchange={() => onTrimChange(servo.index)}
+          />
+        </span>
+      {/if}
+    {/if}
+    {#if !cloned && hasTrimBadges(servo)}{@render trimBadges(servo)}{/if}
+  </span>
+{/snippet}
+
 {#snippet fieldLabel(labelKey, helpKey)}
   <span class="mobile-field-label">
     {$i18n.t(labelKey)}
     {#if helpKey}<HelpIcon>{$i18n.t(helpKey)}</HelpIcon>{/if}
+  </span>
+{/snippet}
+
+{#snippet signal(servo, extraClass)}
+  {@const r = reach(servo)}
+  <span
+    class={["servo-signal", extraClass, reachClips(r) && "clips"]}
+    title={reachTitle(r)}
+  >
+    <span class="gauge">
+      <TravelGauge servo={servo.index} reach={r} mid={r.mid} />
+    </span>
+    {#if reachClips(r)}
+      <em class="fas fa-exclamation-triangle travel-warning" aria-hidden="true"
+      ></em>
+    {/if}
+    <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
   </span>
 {/snippet}
 
@@ -323,6 +618,14 @@
   </button>
 {/snippet}
 
+{#if busClipNotes.length > 0}
+  <div class="note">
+    {#each busClipNotes as note (note)}
+      <p>{note}</p>
+    {/each}
+  </div>
+{/if}
+
 <div class="responsive-table" bind:clientWidth={containerWidth}>
   {#if !showCompact}
     <div class="servo-config desktop-table">
@@ -332,10 +635,10 @@
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
         </span>
-        {#if hasTrimAdjustments}
+        {#if showTrimColumn}
           <span class="header-label-flex">
             <span>{$i18n.t("servoTrimColumn")}</span>
-            <HelpIcon>{$i18n.t("servoTrimColumnHelp")}</HelpIcon>
+            <HelpIcon>{$i18n.t(trimHelpKey)}</HelpIcon>
           </span>
         {/if}
         <span class="header-label-flex">
@@ -373,7 +676,10 @@
           <span>{$i18n.t("servoReverse")}</span>
           <HelpIcon>{$i18n.t("servoReverseHelp")}</HelpIcon>
         </span>
-        <span>{$i18n.t("servoSignal")}</span>
+        <span class="header-label-flex">
+          <span>{$i18n.t("servoSignal")}</span>
+          <HelpIcon>{$i18n.t("servoSignalHelp")}</HelpIcon>
+        </span>
       </div>
 
       {#each servos as servo (servo.index)}
@@ -394,26 +700,8 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          {#if hasTrimAdjustments}
-            <span class="servo-trim-badges">
-              {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-                <span
-                  class="adjustment-badge"
-                  class:runtime-active={trim.adjustment.active}
-                  title={adjustmentTitle(trim.adjustment)}
-                >
-                  {trim.axisLabel}
-                  {trim.adjustment.active
-                    ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-                    : "ADJ"}
-                </span>
-              {/each}
-              {#if liveTrim(servo) !== 0}
-                <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
-                  >{signed(liveTrim(servo))}</span
-                >
-              {/if}
-            </span>
+          {#if showTrimColumn}
+            {@render trimField(servo, config)}
           {/if}
           <span
             class="travel-cell"
@@ -482,13 +770,7 @@
               onchange={() => onFieldChange(servo.index)}
             />
           </span>
-          <span class="servo-signal">
-            <span class="meter">
-              <span class="meter-fill" style="width: {meterPercent(servo)}%"
-              ></span>
-            </span>
-            <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
-          </span>
+          {@render signal(servo)}
         </div>
       {/each}
     </div>
@@ -528,28 +810,10 @@
             />
           </div>
 
-          {#if servoTrimAdjustments(servo).length > 0}
+          {#if savedTrimSupported || servoTrimAdjustments(servo).length > 0}
             <div class="mobile-field">
-              {@render fieldLabel("servoTrimColumn", "servoTrimColumnHelp")}
-              <span class="servo-trim-badges">
-                {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
-                  <span
-                    class="adjustment-badge"
-                    class:runtime-active={trim.adjustment.active}
-                    title={adjustmentTitle(trim.adjustment)}
-                  >
-                    {trim.axisLabel}
-                    {trim.adjustment.active
-                      ? (adjustmentChannelLabel(trim.adjustment) ?? "LIVE")
-                      : "ADJ"}
-                  </span>
-                {/each}
-                {#if liveTrim(servo) !== 0}
-                  <span class="live-trim" title={$i18n.t("servoLiveTrimHelp")}
-                    >{signed(liveTrim(servo))}</span
-                  >
-                {/if}
-              </span>
+              {@render fieldLabel("servoTrimColumn", trimHelpKey)}
+              {@render trimField(servo, config)}
             </div>
           {/if}
 
@@ -638,15 +902,30 @@
           </div>
 
           <div class="mobile-field">
-            {@render fieldLabel("servoSignal", null)}
-            <span class="servo-signal">
-              <span class="meter">
-                <span class="meter-fill" style="width: {meterPercent(servo)}%"
-                ></span>
-              </span>
-              <span class="meter-label">{FC.SERVO_DATA[servo.index] ?? 0}</span>
-            </span>
+            {@render fieldLabel("servoSignal", "servoSignalHelp")}
+            {@render signal(servo)}
           </div>
+
+          {#if reach(servo).mixed}
+            {@const r = reach(servo)}
+            <div class="mobile-field">
+              {@render fieldLabel("servoTravelReach", null)}
+              {#if r.estimated}
+                <span class="mobile-reach">
+                  {#each [{ s: r.neg, label: "setupWizardTravelNeg" }, { s: r.pos, label: "setupWizardTravelPos" }] as { s, label } (label)}
+                    <span class={["reach-side", s.fraction > 1 && "clips"]}>
+                      <span class="reach-side-label">{$i18n.t(label)}</span>
+                      {reachSide(s)}
+                    </span>
+                  {/each}
+                </span>
+              {:else}
+                <span class="mobile-reach-none">
+                  {$i18n.t("servoTravelNotEstimatedShort")}
+                </span>
+              {/if}
+            </div>
+          {/if}
         </div>
       {:else}
         <div class="mobile-list">
@@ -664,18 +943,17 @@
                 {servo.label}
                 {#if hasActiveCurve(servo)}{@render curveIconSvg()}{/if}
               </span>
-              <span class="servo-signal mobile-row-signal">
-                <span class="meter">
-                  <span class="meter-fill" style="width: {meterPercent(servo)}%"
-                  ></span>
-                </span>
-                <span class="meter-label"
-                  >{FC.SERVO_DATA[servo.index] ?? 0}</span
-                >
-              </span>
+              {@render signal(servo, "mobile-row-signal")}
               <span class="mobile-row-mid"
                 >{$i18n.t("servoMid")}: {config.mid}</span
               >
+              {#if savedTrim(servo) !== 0}
+                <span class="mobile-row-mid"
+                  >{$i18n.t("servoTrimColumn")}: {signed(
+                    savedTrim(servo),
+                  )}</span
+                >
+              {/if}
               {#if servoTrimAdjustments(servo).length > 0}
                 <span class="mobile-row-badges">
                   {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
@@ -719,6 +997,42 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+  }
+
+  .note {
+    margin: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-accent);
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 6px;
+    }
+  }
+
+  .trim-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .trim-value {
+    flex: 0 0 100px;
+  }
+
+  .trim-cell .servo-trim-badges {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .trim-cell .adjustment-badge {
+    white-space: nowrap;
   }
 
   .live-trim {
@@ -859,26 +1173,43 @@
     gap: 6px;
   }
 
-  .meter {
-    position: relative;
-    display: block;
+  // TravelGauge: its live dot and limit marks overhang the bar a little.
+  .gauge {
     flex: 1;
-    height: 10px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-
-    background-color: var(--color-surface-float, var(--color-surface));
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+    min-width: 0;
+    padding: 4px 7px;
   }
 
-  .meter-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: block;
-    height: 100%;
-    border-radius: var(--radius-sm);
-    background-color: var(--color-accent, var(--accent));
+  .travel-warning {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--color-status-bad);
+  }
+
+  .mobile-reach {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reach-side.clips {
+    color: var(--color-status-bad);
+    font-weight: 600;
+  }
+
+  .reach-side-label {
+    margin-right: 6px;
+    color: var(--color-text-soft);
+    font-weight: 600;
+  }
+
+  .mobile-reach-none {
+    font-size: 0.8rem;
+    text-align: right;
+    color: var(--color-text-soft);
   }
 
   .meter-label {

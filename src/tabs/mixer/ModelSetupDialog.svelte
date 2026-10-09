@@ -4,6 +4,9 @@
   import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { updateTabList } from "@/js/main.js";
+  import WarningNote from "@/components/notes/WarningNote.svelte";
+  import ServoOutputMeter from "./ServoOutputMeter.svelte";
+  import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
 
   // modelType is passed to open() rather than taken as a prop -- callers
   // that let the user pick *which* type to configure (ModelTypePicker,
@@ -23,7 +26,10 @@
   let tailControl = $state("elevatorRudder");
   let wingYaw = $state("rudder");
   let flaps = $state(false);
+  // 1 or 2 flap servos, or 0 for flaperons (the ailerons droop instead).
   let flapServos = $state(1);
+  // Two flap servos that also move with roll (a 4-servo wing).
+  let flapsFollowAilerons = $state(false);
   let motors = $state(1);
   let diffThrustYaw = $state(false);
   // Independent per-axis, since a vectored mount might drive any combination
@@ -32,6 +38,15 @@
   let thrustVectorRoll = $state(false);
   let thrustVectorPitch = $state(false);
   let thrustVectorYaw = $state(false);
+
+  // Flaperons need a separate servo on each aileron.
+  let canFlaperon = $derived(
+    (activeType.ailerons?.fixed ?? ailerons) === "independent",
+  );
+
+  $effect(() => {
+    if (!canFlaperon && flapServos === 0) flapServos = 1;
+  });
 
   export function open(modelType) {
     activeType = modelType;
@@ -48,6 +63,7 @@
     wingYaw = activeType.wingYaw?.default ?? "none";
     flaps = false;
     flapServos = 1;
+    flapsFollowAilerons = false;
     motors = 1;
     diffThrustYaw = false;
     thrustVectorRoll = false;
@@ -57,21 +73,26 @@
     dialogEl.showModal();
   }
 
-  async function apply() {
-    const options = {
-      layout: activeType.layout,
-      ailerons: activeType.ailerons?.fixed ?? ailerons,
-      tailControl: activeType.tailControl?.fixed ?? tailControl,
-      wingYaw,
-      flaps,
-      flapServos,
-      motors,
-      diffThrustYaw,
-      thrustVectorRoll,
-      thrustVectorPitch,
-      thrustVectorYaw,
-    };
+  let options = $derived({
+    layout: activeType.layout,
+    ailerons: activeType.ailerons?.fixed ?? ailerons,
+    tailControl: activeType.tailControl?.fixed ?? tailControl,
+    wingYaw,
+    flaps,
+    flapServos,
+    flapsFollowAilerons,
+    motors,
+    diffThrustYaw,
+    thrustVectorRoll,
+    thrustVectorPitch,
+    thrustVectorYaw,
+  });
 
+  // Servo outputs these choices need that the board doesn't have, warned
+  // about here while they can still be changed.
+  let servoShortfall = $derived(Mixer.missingServoOutputs(options));
+
+  async function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
 
     // The feature flag isn't part of the staged mixer rules, and the Mixer
@@ -114,6 +135,18 @@
 
 <dialog bind:this={dialogEl} onclose={handleClose}>
   <h3>{$i18n.t("mixerEditConfigurationTitle")}</h3>
+  {#if servoShortfall}
+    <ServoOutputMeter shortfall={servoShortfall} />
+  {/if}
+  {#if servoShortfall?.missing.length}
+    <WarningNote>
+      {$i18n.t("mixerWizardNotEnoughServos", {
+        1: servoShortfall.needed,
+        2: servoShortfall.available,
+        3: servoShortfall.missing.join(", "),
+      })}
+    </WarningNote>
+  {/if}
   <div class="wizardBody">
     {#if activeType.ailerons?.options}
       <div class="wizardSection">
@@ -192,9 +225,27 @@
           <input type="radio" bind:group={flapServos} value={2} />
           <span>{$i18n.t("mixerWizardFlapServos2")}</span>
         </label>
+        {#if canFlaperon && flapServos === 2}
+          <label class="wizardOption wizardSubOption">
+            <input type="checkbox" bind:checked={flapsFollowAilerons} />
+            <span>{$i18n.t("mixerWizardFlapsFollowAilerons")}</span>
+          </label>
+        {/if}
+        {#if canFlaperon}
+          <label class="wizardOption">
+            <input type="radio" bind:group={flapServos} value={0} />
+            <span>{$i18n.t("mixerWizardFlaperons")}</span>
+          </label>
+        {/if}
         <div class="wizardHint">
           {$i18n.t("mixerWizardFlapsCompensationHint")}
         </div>
+        <div class="wizardHint">
+          {$i18n.t("mixerWizardFlapsChannelHint")}
+        </div>
+        {#if isCrsfReceiver()}
+          <WarningNote message="mixerWizardFlapsElrsWarning" />
+        {/if}
       {/if}
     </div>
 
@@ -295,6 +346,11 @@
       margin-right: 6px;
       vertical-align: middle;
     }
+  }
+
+  // Depends on the option above it.
+  .wizardSubOption {
+    margin-left: 1.6em;
   }
 
   .wizardHint {

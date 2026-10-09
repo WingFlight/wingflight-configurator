@@ -60,12 +60,14 @@
       gainKey: "fwTpaGain",
       curveKey: "fwTpaCurve",
       help: "profilesFwTpaHelp",
+      gainMin: 25,
       gainMax: 200,
     },
   ];
 
   // GPS speed attenuation (API 22.10): same shape as the throttle row, with
-  // GPS speed in place of throttle. Only shown when the firmware carries it.
+  // GPS speed in place of throttle. Only shown when the firmware carries it
+  // and the GPS feature is on.
   const SPEED_ROW = {
     key: "speed",
     axisClass: "SPEED",
@@ -75,13 +77,16 @@
     gainKey: "fwSpaGain",
     curveKey: "fwSpaCurve",
     help: "profilesFwSpaHelp",
+    gainMin: 25,
     gainMax: 200,
   };
 
+  let showSpeed = $derived(
+    FC.PID_PROFILE.hasFwSpa && FC.FEATURE_CONFIG.features.isEnabled("GPS"),
+  );
+
   let rows = $derived(
-    FC.PID_PROFILE.hasFwSpa
-      ? [...MASTER_GAIN_AXES, SPEED_ROW]
-      : MASTER_GAIN_AXES,
+    showSpeed ? [...MASTER_GAIN_AXES, SPEED_ROW] : MASTER_GAIN_AXES,
   );
 
   function masterGainAdjustmentState(axisIndex) {
@@ -178,8 +183,8 @@
                     </div>
                   {:else}
                     <NumberInput
-                      min="25"
-                      max={axis.gainMax ?? 1000}
+                      min={axis.gainMin ?? 0}
+                      max={axis.gainMax ?? 200}
                       bind:value={FC.PID_PROFILE[axis.gainKey]}
                     />
                   {/if}
@@ -260,7 +265,7 @@
         </tbody>
       </table>
     </div>
-    <FlightFeelGuide throttle speed={FC.PID_PROFILE.hasFwSpa} />
+    <FlightFeelGuide throttle speed={showSpeed} />
   </div>
 </Section>
 

@@ -19,6 +19,9 @@ export const GuiControl = function () {
     this.current_tab = null;
     this.tab_switch_in_progress = false;
     this.reboot_in_progress = false;
+    // One-shot: the tab to reopen on the next connect, set by a tab that
+    // reboots the FC and wants the user back where they were.
+    this.tabAfterReboot = null;
     this.operating_system = null;
     this.interval_array = [];
     this.timeout_array = [];
@@ -33,6 +36,7 @@ export const GuiControl = function () {
     this.defaultAllowedFCTabsWhenConnected = [
         'status',
         'setup',
+        'setup_wizard',
         'failsafe',
         'power',
         'adjustments',
@@ -60,6 +64,7 @@ export const GuiControl = function () {
         'sensors',
         'servos',
         'presets',
+        'remap_fc',
     ];
 
     this.allowedTabs = this.defaultAllowedTabsWhenDisconnected;
@@ -308,23 +313,41 @@ GuiControl.prototype.tab_switch_allowed = function (callback) {
     }
 };
 
+// interval_kill_all()/timeout_kill_all() and MSP.callbacks_cleanup() run
+// only after the outgoing tab's own cleanup() has actually finished (via
+// its callback), not before. A tab's cleanup can itself be asynchronous
+// and rely on GUI intervals/timeouts it started (e.g. polling a CLI
+// session for idle before exiting it) — killing every timer first, as
+// this used to do, could pull the rug out from under that wait and
+// leave it unresolved forever, so cleanup's callback (and therefore the
+// next tab's initialize()) would never fire.
 GuiControl.prototype.tab_switch_reload = function (callback) {
-    MSP.callbacks_cleanup();
-    this.interval_kill_all();
-
     if (this.current_tab) {
-        this.current_tab.cleanup();
-        this.current_tab.initialize(callback);
+        this.current_tab.cleanup(() => {
+            MSP.callbacks_cleanup();
+            this.timeout_kill_all();
+            this.interval_kill_all();
+            this.current_tab.initialize(callback);
+        });
+    } else {
+        MSP.callbacks_cleanup();
+        this.timeout_kill_all();
+        this.interval_kill_all();
     }
 };
 
 GuiControl.prototype.tab_switch_cleanup = function (callback) {
-    MSP.callbacks_cleanup();
-    this.interval_kill_all();
-
     if (this.current_tab) {
-        this.current_tab.cleanup(callback);
+        this.current_tab.cleanup(() => {
+            MSP.callbacks_cleanup();
+            this.timeout_kill_all();
+            this.interval_kill_all();
+            callback?.();
+        });
     } else {
+        MSP.callbacks_cleanup();
+        this.timeout_kill_all();
+        this.interval_kill_all();
         callback?.();
     }
 };
@@ -454,7 +477,11 @@ GuiControl.prototype.saveDefaultTab = function(tabName) {
 
 GuiControl.prototype.selectDefaultTabWhenConnected = function() {
     const lastTab = config.get('lastTab');
-    if (config.get('rememberLastTab') && lastTab) {
+    if (this.tabAfterReboot) {
+        const tab = this.tabAfterReboot;
+        this.tabAfterReboot = null;
+        $(`#tabs ul.mode-connected .tab_${tab} a`).click();
+    } else if (config.get('rememberLastTab') && lastTab) {
         $(`#tabs ul.mode-connected .tab_${lastTab} a`).click();
     } else {
         $('#tabs ul.mode-connected .tab_status a').click();

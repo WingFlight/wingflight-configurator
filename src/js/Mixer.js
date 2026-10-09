@@ -165,6 +165,48 @@ export const Mixer = {
     MOTOR_OUTPUT_OFFSET: 27,
     HIGH_SERVO_OUTPUT_OFFSET: 31,
 
+    // PWM servo outputs the board has: the servo pins with a timer assigned
+    // (servoInit() in the firmware's flight/servos.c). With an SBUS or F.Bus
+    // output on, the firmware reports PWM servos + bus channels instead
+    // (hasBusServosConfigured() in pg/bus_servo.c). null before MSP_STATUS.
+    pwmServoCount: function ()
+    {
+        const reported = FC.CONFIG.servoCount;
+        if (reported === undefined) {
+            return null;
+        }
+        const busOutputs = FC.MIXER_CONFIG.bus_servo_output_count;
+        const busActive = busOutputs !== undefined ?
+            busOutputs > 0 :
+            reported > this.PWM_SERVO_COUNT;
+        return Math.max(0, Math.min(this.PWM_SERVO_COUNT,
+            busActive ? reported - this.busServoChannels() : reported));
+    },
+
+    // PWM servo outputs a model setup would use that the board doesn't have,
+    // so the surfaces on them would never move. buildWizardRules() numbers
+    // servos from 1, so it's every one past pwmServoCount(). Returns
+    // { needed, available, missing }, or null while the count is unknown.
+    missingServoOutputs: function (options)
+    {
+        const available = this.pwmServoCount();
+        if (available === null) {
+            return null;
+        }
+        const outputs = new Set();
+        for (const rule of this.buildWizardRules(options)) {
+            if (rule.dst >= 1 && !this.isMotorOutput(rule.dst)) {
+                outputs.add(rule.dst);
+            }
+        }
+        const sorted = [...outputs].sort((a, b) => a - b);
+        return {
+            needed: sorted.length,
+            available,
+            missing: sorted.filter((output) => output > available),
+        };
+    },
+
     get outputNames() {
         const highServoCount = this.busServoChannels() - 18;
         return [
@@ -190,6 +232,13 @@ export const Mixer = {
 
     isMotorOutput: function (index) {
         return index >= this.MOTOR_OUTPUT_OFFSET && index < this.MOTOR_OUTPUT_OFFSET + this.MOTOR_OUTPUT_COUNT;
+    },
+
+    // Mixer output number (rule dst) for a 0-based servo slot (S1 = 0).
+    servoOutput: function (servoIndex) {
+        return servoIndex < this.SERVO_OUTPUT_COUNT ?
+            servoIndex + 1 :
+            this.HIGH_SERVO_OUTPUT_OFFSET + servoIndex - this.SERVO_OUTPUT_COUNT;
     },
 
     outputLabel: function (index, i18n) {
@@ -422,6 +471,8 @@ export const Mixer = {
         // every pitch-controlling surface (both v-tail halves, both
         // elevons, ...), not just a single named "elevator" servo.
         const pitchOutputs = [];
+        // Independent aileron outputs, which flaperons drive as flaps.
+        const aileronOutputs = [];
 
         function rule(oper, src, dst, weight, reverse, role)
         {
@@ -439,8 +490,10 @@ export const Mixer = {
             if (options.ailerons === 'single') {
                 rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
             } else if (options.ailerons === 'independent') {
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000, true));
+                const leftAileron = nextServo++, rightAileron = nextServo++;
+                rules.push(rule(OP_SET, ROLL, leftAileron, 1000));
+                rules.push(rule(OP_SET, ROLL, rightAileron, 1000, true));
+                aileronOutputs.push(leftAileron, rightAileron);
             }
 
             if (options.tailControl === 'elevatorOnly') {
@@ -473,9 +526,39 @@ export const Mixer = {
             }
         }
 
-        if (options.flaps) {
-            rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
-            if (options.flapServos >= 2) {
+        // flapServos 0 means flaperons: no flap servos, the ailerons droop
+        // on the flap channel instead. Only possible with independent
+        // ailerons, so it falls back to no flaps without them.
+        const flaperons = options.flaps && options.flapServos === 0;
+        const flaps = flaperons ? aileronOutputs.length === 2 : options.flaps;
+
+        if (flaps) {
+            if (flaperons) {
+                // Same channel and shape as a flap servo, ADDed onto the
+                // roll mix at half weight so full flap still leaves roll
+                // travel. Same sign on both sides: roll drives the two
+                // ailerons with opposite weights, so once their directions
+                // are set a positive output moves either trailing edge down.
+                aileronOutputs.forEach((output) => {
+                    rules.push(rule(OP_ADD, RC_AUX1, output, 500));
+                });
+            } else if (options.flapServos >= 2) {
+                const leftFlap = nextServo++, rightFlap = nextServo++;
+                rules.push(rule(OP_SET, RC_AUX1, leftFlap, 1000));
+                rules.push(rule(OP_SET, RC_AUX1, rightFlap, 1000));
+
+                // Flaps that follow the ailerons (a 4-servo wing): roll
+                // ADDed at half weight on top of the flap position, with
+                // the same left/right signs as the aileron rules. The flap
+                // channel's sign already makes a positive output move each
+                // flap down, so the roll mix comes out right once the flap
+                // directions are set. Needs independent ailerons to have a
+                // left and right side to follow.
+                if (options.flapsFollowAilerons && aileronOutputs.length === 2) {
+                    rules.push(rule(OP_ADD, ROLL, leftFlap, 500));
+                    rules.push(rule(OP_ADD, ROLL, rightFlap, 500, true));
+                }
+            } else {
                 rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
             }
 

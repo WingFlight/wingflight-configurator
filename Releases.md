@@ -1,3 +1,45 @@
+# 0.0.34
+
+Support the 0.0.34 firmware (MSP API 22.14). Flashing keeps your settings.
+Show and edit each servo's saved trim in the Servos tab's Trim column (0.0.34 firmware). It is read-only while a Servo Trim adjustment drives it, showing the trim in use, and on bus servos cloned from a PWM servo, which show that servo's trim. Clear trims and Move trims into Center act per table.
+Add a third trim choice to the Setup Wizard: all the radio's trim buttons on one spare channel, read by stepped Servo Trim ranges, with a step-by-step radio guide (Ethos screenshots) and a live check of each button.
+Show full-stick travel against Min/Max on every servo in the Servos tab's Signal column, counting servo balance curves and the saved trim, with a warning on a side that reaches its limit before full stick. A cloned bus servo that stops short says whether its trim or its Scale is the cause.
+Set up flap servos in the Setup Wizard (center, direction and end points), and let flaps follow the ailerons on a 4-servo wing.
+Warn in model setup when the board has too few servo outputs for the chosen layout.
+Rename Axis Gain to Axis Throw on the Mixer tab.
+Lay out the mixer rule list for narrow screens. A rule's Speed now steps by 1 ms, and Reverse is greyed out at zero weight.
+Hide the GPS Speed (SPA) settings while the GPS feature is off, and put the Speed curve and its range on one line.
+
+# 0.0.33
+
+Support the 0.0.33 firmware (MSP API 22.14). Flashing keeps your settings.
+Hold the model in the firmware's SETUP state for the whole Setup Wizard on 0.0.33 firmware. Forced ANGLE and PASSTHROUGH, servo overrides and the Limits step's end-stop probe stay in the FC's RAM and lapse within 3 s if the app closes or the cable is pulled, so they can no longer be saved by mistake, and the Limits step no longer widens the stored servo limits. Older firmware keeps the previous behaviour, without forced modes.
+Name the raw-stick mode PASSTHROUGH and GYRO OFF MANUAL, matching the firmware, and show the OVERRIDE arming-disabled reason as SETUP.
+
+Add flaperons as a third flap option in the mixer setup, for conventional airframes with independent ailerons: the AUX1 flap channel droops both ailerons together. The Setup Wizard counts flap travel when it checks a surface for clipping.
+Warn CRSF users on the Receiver tab, the Setup Wizard's receiver step and the mixer setup's Flaps section that ExpressLRS needs the Full Res 16ch Rate/2 switch mode, because Wingflight uses channel 5 (AUX1) as a normal channel.
+Warn about MANUAL as well as PASSTHROUGH on the Setup Wizard's direction and gyro steps, naming the mode that is on: on older firmware either one stops the direction check moving the surfaces.
+
+# 0.0.32
+
+Support the 0.0.32 firmware (MSP API 22.13). The firmware update resets every PID, thrust-vector and rate profile to defaults, so note your tune and rates before flashing.
+Give the Setup Wizard's flying styles per-axis rates, pitch and yaw lower than roll: Trainer 150/120/90, Sport 250/200/150 (the firmware defaults), 3D 500/400/300 deg/s. Each card lists all three.
+Narrow the Setup Wizard's gain knob to 0-150% master gain: fully down still turns the stabilizer off, center is 75%.
+
+# 0.0.31
+
+Support the 0.0.31 firmware (MSP API 22.13). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.
+Add a Setup Wizard tab that walks a new model through sensors and level, receiver, airframe, servo type, motor, ESC telemetry, surface centres, control direction, binding limits, throws, travel, gyro direction, trim and gain knobs, mode switches and flying style.
+Add the Prop-Hang Relax settings (strength, angle, fade-out) under PID Settings, and the PROP_HANG debug mode to the Blackbox list.
+Limit master gain to 0-200% on the Profiles, Thrust Vector and Adjustments tabs (was 25-1000%). 0% turns the stabilizer off on that axis.
+Show the new default P and I gains and snap relax hold in the Virtual FC, and say that snap relax covers yaw.
+Match the firmware's GPS nav defaults: bearing gain 120, throttle 65%.
+Add the Remap FC tab.
+Let the CLI be left with exit or save when connected to the Virtual FC.
+Keep the browser from translating the page back to another language after a language switch.
+
+Group development builds by pull request on the web landing page, and publish previews of pull requests labelled "preview".
+
 # 0.0.30
 
 Support MSP API 22.13 (0.0.30 firmware). The firmware update resets every PID and thrust-vector profile to defaults, so note your tune before flashing.

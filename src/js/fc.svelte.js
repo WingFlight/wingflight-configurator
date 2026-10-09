@@ -84,6 +84,9 @@ class FlightController {
   // null when the FC does not have it). Read-only, and kept apart from SERVO_CONFIG so it never counts as a
   // change to save.
   SERVO_RUNTIME_TRIM = $state();
+  // Saved per-servo trim in us (MSP_SERVO_TRIM, appended after the live trim; null when
+  // the FC does not have it). Added at the output on top of the center, never changing it.
+  SERVO_SAVED_TRIM = $state();
   SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
@@ -329,6 +332,7 @@ class FlightController {
 
     this.SERVO_CONFIG =             [];
     this.SERVO_RUNTIME_TRIM =       null;
+    this.SERVO_SAVED_TRIM =         null;
     this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
@@ -645,7 +649,11 @@ class FlightController {
       snapRelaxStrength:          100,
       snapRelaxThreshold:         60,
       snapRelaxWindow:            400,
-      snapRelaxHold:              150,
+      snapRelaxHold:              350,
+      hasPropHang:                false,
+      propHangStrength:           100,
+      propHangAngle:              20,
+      propHangFade:               500,
       masterGainRoll:             100,
       masterGainPitch:            100,
       masterGainYaw:              100,

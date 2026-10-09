@@ -58,3 +58,13 @@ export function clampServoConfig(config, isBusServo) {
   config.min = Math.min(Math.max(config.min, -TRAVEL_LIMIT), 0);
   config.max = Math.min(Math.max(config.max, 0), TRAVEL_LIMIT);
 }
+
+// SERVO_TRIM_LIMIT_PERCENT (flight/servos.h): the trim, saved and live
+// together, is limited to this share of the servo's larger scale.
+const TRIM_LIMIT_PERCENT = 20;
+
+export function servoTrimLimit(config) {
+  return Math.trunc(
+    (Math.max(config.rneg, config.rpos) * TRIM_LIMIT_PERCENT) / 100,
+  );
+}

@@ -11,11 +11,13 @@
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
   import {
+    clampServoConfig,
     servoSignalRange,
     servoTravelLimited,
     servoUsableTravel,
   } from "@/js/servoLimits.js";
 
+  import HelpIcon from "@/components/HelpIcon.svelte";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
   import Switch from "@/components/Switch.svelte";
@@ -46,14 +48,19 @@
   let initialBusClonePwm = $state(null);
   // Same idea for the bus output channel counts (also on FC.MIXER_CONFIG).
   let initialBusOutChannels = $state(null);
+  // Saved trims (FC.SERVO_SAVED_TRIM) are also outside FC.SERVO_CONFIG, and
+  // can change from the FC side too (a Stepped ServoTrim adjustment on the
+  // bench), so they get the same dirty/Save/Revert treatment.
+  let initialTrims = $state(null);
   let poller;
   let adjustmentPoller;
 
   let overrideEnabled = $state(false);
 
   // Diff-based (mirrors Profiles.svelte) rather than a manual dirty=true
-  // flag, so Save also enables when a live ServoTrim adjustment shifts a
-  // servo's mid away from its initial value -- not just on direct edits.
+  // flag, so Save also enables when a change comes from the FC side (on
+  // firmware without saved trims, a Stepped ServoTrim adjustment moves Mid)
+  // -- not just on direct edits.
   let changes = $derived.by(() => {
     if (!initialConfig) {
       return [];
@@ -73,8 +80,17 @@
         FC.MIXER_CONFIG.fbus_master_channels !== initialBusOutChannels.fbus),
   );
 
+  // Firmware with saved trims keeps every kind of trim apart from Mid.
+  let savedTrimSupported = $derived(Array.isArray(FC.SERVO_SAVED_TRIM));
+
+  let trimsDirty = $derived(
+    initialTrims !== null &&
+      savedTrimSupported &&
+      FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
+  );
+
   let dirty = $derived(
-    changes.length > 0 || busCloneDirty || busOutChannelsDirty,
+    changes.length > 0 || busCloneDirty || busOutChannelsDirty || trimsDirty,
   );
 
   let hasSbusOut = $derived(
@@ -264,6 +280,8 @@
     await MSP.promise(MSPCodes.MSP_RC);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
+    // Axis Throw, for the full-stick travel shown in the Signal column.
+    await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await pollRuntimeTrim();
@@ -277,6 +295,7 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
+    initialTrims = snapshotTrims();
     overrideEnabled = allServos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -287,12 +306,15 @@
       MSP.send_message(MSPCodes.MSP_SERVO);
     }, 100);
 
-    // Keeps AUX channel positions and the (possibly ServoTrim-adjusted)
-    // servo mids fresh, same 250ms cadence as Profiles.svelte's adjustment
-    // poller.
+    // Keeps AUX channel positions and the trims fresh, same 250ms cadence as
+    // Profiles.svelte's adjustment poller. On firmware without saved trims a
+    // Stepped ServoTrim adjustment moves Mid instead, so the servo configs
+    // are polled too.
     adjustmentPoller = setInterval(async () => {
       await MSP.promise(MSPCodes.MSP_RC);
-      await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+      if (!savedTrimSupported) {
+        await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+      }
       await pollRuntimeTrim();
     }, 250);
   });
@@ -319,6 +341,67 @@
 
   function onFieldChange(index) {
     mspHelper.sendServoConfig(index);
+  }
+
+  // Pushed live like onFieldChange; saved to EEPROM by onSave(). The FC
+  // limits the trim, and the next poll shows the value it kept.
+  function onTrimChange(index) {
+    mspHelper.sendServoTrim(index);
+  }
+
+  function snapshotTrims() {
+    return savedTrimSupported ? [...FC.SERVO_SAVED_TRIM] : null;
+  }
+
+  // A bus channel cloned from its PWM servo sends that servo's output, trim
+  // included, and ignores its own (sbusOutGetValueMixer(),
+  // drivers/sbus_output.c), so the trim actions leave it alone.
+  function isClonedBusServo(servo) {
+    return (
+      servo.isBusServo &&
+      FC.MIXER_CONFIG.bus_servo_clone_pwm === 1 &&
+      servo.mspIndex - BUS_SERVO_OFFSET < pwmServoCount
+    );
+  }
+
+  function trimmableServos(servos) {
+    return servos.filter((servo) => !isClonedBusServo(servo));
+  }
+
+  function hasTrims(servos) {
+    return trimmableServos(servos).some(
+      (servo) => FC.SERVO_SAVED_TRIM?.[servo.index],
+    );
+  }
+
+  async function clearTrims(servos) {
+    for (const servo of trimmableServos(servos)) {
+      if (FC.SERVO_SAVED_TRIM[servo.index]) {
+        FC.SERVO_SAVED_TRIM[servo.index] = 0;
+        await mspHelper.sendServoTrim(servo.index);
+      }
+    }
+  }
+
+  // The servo stays where it is: the trim becomes part of Center (as far as
+  // the signal range lets Center go) and what moved is taken off the trim.
+  // Min/Max are offsets from Center, so the end stops move with it.
+  async function trimsToCenter(servos) {
+    for (const servo of trimmableServos(servos)) {
+      const trim = FC.SERVO_SAVED_TRIM[servo.index];
+      const config = FC.SERVO_CONFIG[servo.index];
+      if (!trim || !config) continue;
+
+      const mid = config.mid;
+      config.mid += trim;
+      clampServoConfig(config, servo.isBusServo);
+      FC.SERVO_SAVED_TRIM[servo.index] = trim - (config.mid - mid);
+
+      await new Promise((resolve) =>
+        mspHelper.sendServoConfig(servo.index, resolve),
+      );
+      await mspHelper.sendServoTrim(servo.index);
+    }
   }
 
   function onRateChange(index) {
@@ -378,11 +461,21 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
+    initialTrims = snapshotTrims();
   }
 
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
+
+    if (trimsDirty) {
+      for (let i = 0; i < initialTrims.length; i++) {
+        if (FC.SERVO_SAVED_TRIM[i] !== initialTrims[i]) {
+          FC.SERVO_SAVED_TRIM[i] = initialTrims[i];
+          await mspHelper.sendServoTrim(i);
+        }
+      }
+    }
 
     if (busCloneDirty || busOutChannelsDirty) {
       FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
@@ -405,6 +498,28 @@
   <button class="btn help-btn" onclick={onClickHelp}>
     {$i18n.t("buttonHelp")}
   </button>
+{/snippet}
+
+{#snippet trimActions(servos)}
+  {#if savedTrimSupported}
+    <div class="trim-actions">
+      <button
+        class="btn"
+        disabled={!hasTrims(servos)}
+        onclick={() => clearTrims(servos)}
+      >
+        {$i18n.t("servoTrimClear")}
+      </button>
+      <button
+        class="btn"
+        disabled={!hasTrims(servos)}
+        onclick={() => trimsToCenter(servos)}
+      >
+        {$i18n.t("servoTrimToCenter")}
+      </button>
+      <HelpIcon>{$i18n.t("servoTrimActionsHelp")}</HelpIcon>
+    </div>
+  {/if}
 {/snippet}
 
 {#snippet toolbar()}
@@ -449,11 +564,14 @@
       </div>
     {/if}
 
+    {@render trimActions(pwmServos)}
+
     <div class="table-scroll">
       <ServoConfigTable
         servos={pwmServos}
         {onFieldChange}
         {onRateChange}
+        {onTrimChange}
         {pwmServoCount}
       />
     </div>
@@ -516,11 +634,14 @@
         </div>
       {/if}
 
+      {@render trimActions(busServos)}
+
       <div class="table-scroll">
         <ServoConfigTable
           servos={busServos}
           {onFieldChange}
           {onRateChange}
+          {onTrimChange}
           {pwmServoCount}
         />
       </div>
@@ -595,6 +716,18 @@
 
   .note p + p {
     margin-top: 6px;
+  }
+
+  .trim-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+
+    .btn {
+      padding: 4px 8px;
+    }
   }
 
   .override-toggle {
