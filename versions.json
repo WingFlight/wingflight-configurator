@@ -213,13 +213,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-user-level",
-      "path": "./feature-user-level/",
-      "branch": "feature/user-level",
-      "date": "2026-10-09T20:31:25Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
