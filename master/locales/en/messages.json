@@ -8708,10 +8708,34 @@
         "message": "No trim channels: trim with the Auto trim switch. For radios that can't send their trims."
     },
     "setupWizardTrimProgrammable": {
-        "message": "The flight controller needs one spare channel for each trim, moved by the roll, pitch and yaw trim buttons. How you set that up depends on your radio and model; any way works. Then click Detect and press that trim."
+        "message": "The flight controller needs one spare channel for each trim, moved by the aileron, elevator and rudder trim buttons. The radio keeps the trim. The steps below use Ethos as the example; on other radios (EdgeTX, OpenTX, Jeti and so on) set up the same mixes, with each trim as the source of its own channel."
     },
-    "setupWizardTrimSticksOff": {
-        "message": "Turn the trims off on the stick channels themselves. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    "setupWizardTrimChannelsStep1": {
+        "message": "<b>Model → Trims</b>: for the aileron, elevator and rudder trims set <b>Step</b> to Coarse, so each press moves the trim noticeably. Leave <b>Range</b> at 25%."
+    },
+    "setupWizardTrimChannelsStep2": {
+        "message": "<b>Model → Mixes</b>: in the Ailerons, Elevators and Rudders mixes, turn <b>Trim</b> OFF. The trims then only drive the trim channels below. A trim left on a stick is read as a small stick input, which the stabilizer holds against."
+    },
+    "setupWizardTrimChannelsStep3": {
+        "message": "Add a <b>Free mix</b> named ROLL TRIM: <b>Active condition</b> Always on, <b>Source</b> Trims → Trim Aileron, <b>Operation</b> Add, <b>Weight</b> 100%, <b>Output</b> a spare channel (CH9 here)."
+    },
+    "setupWizardTrimChannelsStep4": {
+        "message": "Add PITCH TRIM (source Trim Elevator) and YAW TRIM (source Trim Rudder) the same way, each on its own spare channel (CH10 and CH11 here)."
+    },
+    "setupWizardTrimChannelsStep5": {
+        "message": "Click Detect next to each trim below and press that trim."
+    },
+    "setupWizardTrimChannelsImage1": {
+        "message": "Ethos Trims page: Trim Rudder with Step Coarse and Range 25%"
+    },
+    "setupWizardTrimChannelsImage2": {
+        "message": "Ethos Rudders mix with Trim off"
+    },
+    "setupWizardTrimChannelsImage3": {
+        "message": "Ethos ROLL TRIM free mix: source Trim Aileron, operation Add, weight 100%, output CH9"
+    },
+    "setupWizardTrimChannelsImage4": {
+        "message": "Ethos Mixes list: ROLL, PITCH and YAW TRIM on CH9, CH10 and CH11"
     },
     "setupWizardTrimPress": {
         "message": "Press and hold the $1 trim…"
