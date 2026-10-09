@@ -10,6 +10,8 @@
 //   read. Each one also mirrors its settings to <line>.json in a shared
 //   directory, which the next line reads.
 
+import { isStorageCacheKey } from "@/js/chromeStorageShim.js";
+
 export const SETTINGS_NAMESPACE =
   __BACKEND__ === "web" ? `settings:${__APP_CHANNEL__}:` : "";
 
@@ -49,11 +51,12 @@ function storageKeys() {
 }
 
 // config.js saves each setting as { [name]: value } under its name; that
-// tells settings apart from everything else in localStorage.
+// tells settings apart from everything else in localStorage, except the
+// chrome.storage shim's caches, which are saved the same way.
 function readSettings(prefix) {
   const settings = {};
   for (const key of storageKeys()) {
-    if (!key.startsWith(prefix)) continue;
+    if (!key.startsWith(prefix) || isStorageCacheKey(key)) continue;
     const name = key.slice(prefix.length);
     try {
       const value = JSON.parse(globalThis.localStorage.getItem(key));
@@ -108,8 +111,15 @@ function readDesktopLine(line) {
 
 function listDesktopLines() {
   const { fs } = node();
-  return fs
-    .readdirSync(desktopDir())
+  let files;
+  try {
+    files = fs.readdirSync(desktopDir());
+  } catch (error) {
+    // No line has run yet.
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  return files
     .filter((file) => file.endsWith(".json"))
     .map((file) => file.slice(0, -".json".length));
 }

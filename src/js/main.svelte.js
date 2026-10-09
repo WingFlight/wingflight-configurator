@@ -105,6 +105,9 @@ Object.assign(globalThis, {
   usbDevices,
 });
 
+// Names the browser tab (and on desktop the window) after the release line.
+document.title ||= __APP_PRODUCT_NAME__;
+
 // Browser compatibility check for web deployment. This must come after the
 // globals above are assigned: main.js's top-level code (imported as part of
 // the `...main` spread above) registers a jQuery-ready callback that calls
@@ -112,8 +115,6 @@ Object.assign(globalThis, {
 // globals. The dynamic import below is the only thing in this module that
 // awaits, so once it's reached, that ready callback (or any other queued
 // task) can run before the globals exist -- keep it last.
-// Names the browser tab (and on desktop the window) after the release line.
-document.title ||= __APP_PRODUCT_NAME__;
 
 if (__BACKEND__ === "web") {
   const { initBrowserCompat } = await import("@/js/browser-compat.js");
