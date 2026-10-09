@@ -267,7 +267,7 @@
   }
 </script>
 
-<!-- One numbered step of the trim buttons guide. The screenshot is a
+<!-- One numbered step of an Ethos trim guide. The screenshot is a
      thumbnail; click it to see it full size. (The global reset removes list
      markers, so the number is drawn here.) -->
 {#snippet guideStep(number, textKey, image = null, altKey = null, extra = null)}
@@ -495,7 +495,33 @@
     {/if}
   {:else if radio === "programmable"}
     <p>{$i18n.t("setupWizardTrimProgrammable")}</p>
-    <div class="note">{$i18n.t("setupWizardTrimSticksOff")}</div>
+    <div class="guide">
+      {@render guideStep(
+        1,
+        "setupWizardTrimChannelsStep1",
+        "ethos_trims_coarse.png",
+        "setupWizardTrimChannelsImage1",
+      )}
+      {@render guideStep(
+        2,
+        "setupWizardTrimChannelsStep2",
+        "ethos_rudder_mix_trim_off.png",
+        "setupWizardTrimChannelsImage2",
+      )}
+      {@render guideStep(
+        3,
+        "setupWizardTrimChannelsStep3",
+        "ethos_trim_channel_mix.png",
+        "setupWizardTrimChannelsImage3",
+      )}
+      {@render guideStep(
+        4,
+        "setupWizardTrimChannelsStep4",
+        "ethos_trim_channel_mixes.png",
+        "setupWizardTrimChannelsImage4",
+      )}
+      {@render guideStep(5, "setupWizardTrimChannelsStep5")}
+    </div>
     <ul class="rows">
       {#each AXES as axis (axis)}
         {@render channelRow("trim", axis, SERVO_TRIM[axis], "µs")}
@@ -675,7 +701,7 @@
     font-weight: 600;
   }
 
-  //// Ethos trim buttons guide.
+  //// Ethos trim guides.
 
   .guide {
     display: flex;
