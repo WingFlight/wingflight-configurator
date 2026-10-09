@@ -42,5 +42,7 @@ export const CONFIGURATOR = $state({
     "https://github.com/WingFlight/wingflight-configurator/releases",
   allReleasesUrl:
     "https://github.com/WingFlight/wingflight-configurator/releases",
+  // See user_level.js. expertMode is true only on "advanced".
+  userLevel: "intermediate",
   expertMode: false,
 });

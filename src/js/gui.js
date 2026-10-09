@@ -1,4 +1,5 @@
 import * as config from '@/js/config.js';
+import { homeTab, isTabInUserLevel } from '@/js/user_level.js';
 
 const GUI_MODES = {
     NWJS: "NW.js",
@@ -477,14 +478,14 @@ GuiControl.prototype.saveDefaultTab = function(tabName) {
 
 GuiControl.prototype.selectDefaultTabWhenConnected = function() {
     const lastTab = config.get('lastTab');
-    if (this.tabAfterReboot) {
-        const tab = this.tabAfterReboot;
-        this.tabAfterReboot = null;
-        $(`#tabs ul.mode-connected .tab_${tab} a`).click();
-    } else if (config.get('rememberLastTab') && lastTab) {
+    const tabAfterReboot = this.tabAfterReboot;
+    this.tabAfterReboot = null;
+    if (tabAfterReboot && isTabInUserLevel(tabAfterReboot)) {
+        $(`#tabs ul.mode-connected .tab_${tabAfterReboot} a`).click();
+    } else if (config.get('rememberLastTab') && lastTab && isTabInUserLevel(lastTab)) {
         $(`#tabs ul.mode-connected .tab_${lastTab} a`).click();
     } else {
-        $('#tabs ul.mode-connected .tab_status a').click();
+        $(`#tabs ul.mode-connected .tab_${homeTab()} a`).click();
     }
 };
 
