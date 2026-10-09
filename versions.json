@@ -214,13 +214,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-trim-channel-guide",
-      "path": "./feature-trim-channel-guide/",
-      "branch": "feature/trim-channel-guide",
-      "date": "2026-10-09T09:12:59Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-flaps",
       "path": "./feature-wizard-flaps/",
       "branch": "feature/wizard-flaps",
