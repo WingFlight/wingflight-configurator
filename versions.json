@@ -152,11 +152,7 @@
       "name": "feature-esc-meters",
       "path": "./feature-esc-meters/",
       "branch": "feature/esc-meters",
-      "date": "2026-10-09T09:32:33Z",
-      "number": 177,
-      "title": "Virtual FC: seed the battery and current meters as ESC",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/177",
-      "draft": false
+      "date": "2026-10-09T09:32:33Z"
     },
     {
       "type": "branch",
