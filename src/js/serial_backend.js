@@ -207,14 +207,22 @@ export async function handleConnectClick({ openLanding = true } = {}) {
         const selected_baud = parseInt($('div#port-picker #baud').val());
         const selectedPort = $('div#port-picker #port option:selected');
 
+        // The port list can be empty (no ports yet, or the one in use was just
+        // unplugged). There is nothing to connect to then, but a disconnect
+        // must still go ahead.
+        if (!clicks && selectedPort.length === 0) {
+            return;
+        }
+        const portData = selectedPort.data() ?? {};
+
         let portName;
-        if (selectedPort.data().isManual) {
+        if (portData.isManual) {
             portName = $('#port-override').val();
         } else {
             portName = String($('div#port-picker #port').val());
         }
 
-        if (selectedPort.data().isDFU) {
+        if (portData.isDFU) {
             $('#baudselect').hide();
         } else if (portName !== '0') {
             if (!clicks) {
@@ -225,7 +233,7 @@ export async function handleConnectClick({ openLanding = true } = {}) {
                 $('div#port-picker #port, div#port-picker #baud, div#port-picker #delay').prop('disabled', true);
                 $('div.connect_controls div.connect_state').text(i18n.getMessage('connecting'));
 
-                if (selectedPort.data().isVirtual) {
+                if (portData.isVirtual) {
                     CONFIGURATOR.virtualMode = true;
                     CONFIGURATOR.virtualApiVersion = $('#firmware-version-dropdown :selected').val();
                     CONFIGURATOR.virtualFwVersion = $('#firmware-version-dropdown :selected').data('fw');
@@ -285,20 +293,21 @@ export async function handleConnectClick({ openLanding = true } = {}) {
 
 export function initializeSerialBackend() {
     GUI.updateManualPortVisibility = function(){
-        const selected_port = $('div#port-picker #port option:selected');
-        if (selected_port.data().isManual) {
+        // Empty when no port is listed yet; .data() then returns undefined.
+        const portData = $('div#port-picker #port option:selected').data() ?? {};
+        if (portData.isManual) {
             $('#port-override-option').show();
         }
         else {
             $('#port-override-option').hide();
         }
-        if (selected_port.data().isVirtual) {
+        if (portData.isVirtual) {
             $('#firmware-virtual-option').show();
         }
         else {
             $('#firmware-virtual-option').hide();
         }
-        if (selected_port.data().isDFU) {
+        if (portData.isDFU) {
             // Hide the whole #baudselect wrapper, not just the <select> --
             // the wrapping .dropdown.dropdown-dark box still renders its own
             // styled border/arrow even with the <select> inside it hidden,

@@ -206,7 +206,7 @@ PortHandler.finishUsbDeviceCheck = function (callback) {
     if (callback) {
         callback(self.dfu_available);
     }
-    if (!$('option:selected', self.portPickerElement).data().isDFU) {
+    if (!$('option:selected', self.portPickerElement).data()?.isDFU) {
         if (!(GUI.connected_to || GUI.connect_lock)) {
             FC.resetState();
         }
