@@ -11,7 +11,7 @@
 // one origin, so they all share one localStorage. These are caches, and their
 // format can change between versions, so on the web each deployed build keeps
 // its own under "build:<base path>:". Settings (config.js) are not stored
-// here and stay shared.
+// here; they are kept per release line (configImport.js).
 const NAMESPACE =
   __BACKEND__ === "web" ? `build:${import.meta.env?.BASE_URL ?? "/"}:` : "";
 
@@ -27,14 +27,22 @@ const UNNAMESPACED_CACHE_KEYS = [
   "unifiedSourceCache",
 ];
 
+// Whether a localStorage key holds one of these caches, of any build. They
+// are saved in the same { [key]: value } shape as settings, so the settings
+// import (configImport.js) uses this to leave them out.
+export function isStorageCacheKey(storageKey) {
+  return (
+    storageKey.startsWith("build:") ||
+    storageKey.startsWith("cache:") ||
+    UNNAMESPACED_CACHE_KEYS.includes(storageKey)
+  );
+}
+
 function isOtherBuildsCache(storageKey) {
   if (storageKey.startsWith("build:")) {
     return !storageKey.startsWith(NAMESPACE);
   }
-  return (
-    storageKey.startsWith("cache:") ||
-    UNNAMESPACED_CACHE_KEYS.includes(storageKey)
-  );
+  return isStorageCacheKey(storageKey);
 }
 
 // Other builds' caches can always be fetched again, so drop them when this

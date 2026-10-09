@@ -6,6 +6,9 @@
 #
 # Layout recognised on disk:
 #   latest/            -> type "stable" (the site's "recommended" pointer)
+#   v<x.y>/            -> type "line", one entry per release line: the one to
+#                          install as an app (its newest release, or snapshot
+#                          until it has one); v<x.y>.json names the version
 #   master/            -> type "master" (pinned alongside stable)
 #   release/<version>/ -> type "release", one entry per subdirectory
 #   snapshot/<version>/-> type "snapshot", one entry per subdirectory
@@ -22,13 +25,15 @@
 # rather than in it so nothing a build ships can overwrite it.
 #
 # Entries are emitted in the order the front end (index.html) groups them:
-# stable/master pinned first, then release, then snapshot, then branch/pr.
+# stable/master pinned first, then the release lines (newest first), then
+# release, then snapshot, then branch/pr.
 
 import json
 import os
 import re
 
 SKIP_DIRS = {"bundle", "logos", "public", "node_modules", ".git"}
+LINE_DIR = re.compile(r"^v\d+\.\d+$")
 NESTED_KINDS = {
     "release": "release",
     "snapshot": "snapshot",
@@ -80,11 +85,43 @@ def read_info(path):
     }
 
 
+def natural_key(text):
+    return [(0, int(p), "") if p.isdigit() else (1, 0, p) for p in re.split(r"(\d+)", text) if p]
+
+
 def version_sort_key(entry):
     # Best-effort numeric-aware sort (1.10.0 after 1.9.0), falling back to
     # plain string compare for anything that doesn't look like a version.
     parts = re.split(r"(\d+)", entry["name"])
     return [int(p) if p.isdigit() else p for p in parts]
+
+
+def line_entry(line_dir):
+    # deploy-web.yml writes v<x.y>.json beside the line with the version it
+    # holds: a release, or, until the line has one, a snapshot or release
+    # candidate (see release_line.mjs).
+    line = line_dir[1:]
+    entry = {"type": "line", "name": line, "path": f"./{line_dir}/"}
+    try:
+        with open(f"{line_dir}.json", encoding="utf-8") as handle:
+            info = json.load(handle)
+    except (OSError, ValueError):
+        info = {}
+    version = info.get("version") if isinstance(info, dict) else None
+    if isinstance(version, str):
+        entry["tag"] = version
+        if isinstance(info.get("date"), str):
+            entry["date"] = info["date"]
+    released = (
+        isinstance(version, str)
+        and re.fullmatch(r"\d+\.\d+\.\d+", version)
+        and has_index(os.path.join("release", version))
+    )
+    if released:
+        entry["notes"] = f"Follows every {line}.x release. Install it as an app to keep it next to other versions."
+    else:
+        entry["notes"] = f"Snapshots of {line} until it is released, then its releases. Install it as an app to keep it next to other versions."
+    return entry
 
 
 def main():
@@ -106,11 +143,19 @@ def main():
             "notes": "Latest development build",
         })
 
+    line_dirs = sorted(
+        (d for d in os.listdir(".") if LINE_DIR.match(d) and has_index(d)),
+        key=lambda d: natural_key(d[1:]),
+        reverse=True,
+    )
+    for d in line_dirs:
+        entries.append(line_entry(d))
+
     releases = sorted(nested_entries("release", "release"), key=version_sort_key, reverse=True)
     snapshots = sorted(nested_entries("snapshot", "snapshot"), key=version_sort_key, reverse=True)
     prs = sorted(nested_entries("pr", "pr"), key=version_sort_key, reverse=True)
 
-    reserved = SKIP_DIRS | set(NESTED_KINDS) | {"latest", "master"}
+    reserved = SKIP_DIRS | set(NESTED_KINDS) | {"latest", "master"} | set(line_dirs)
     branch_dirs = sorted(
         d for d in os.listdir(".")
         if d not in reserved and has_index(d)
