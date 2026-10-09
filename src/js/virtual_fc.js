@@ -577,8 +577,8 @@ export function applyVirtualConfig() {
     vbatmaxcellvoltage: 4,
     vbatwarningcellvoltage: 3,
     capacity: 10000,
-    voltageMeterSource: 1,
-    currentMeterSource: 1,
+    voltageMeterSource: 2, // ESC, the firmware default
+    currentMeterSource: 2, // ESC, the firmware default
     hasProfileCells: true,
     cellCounts: [3, 4, 0, 0, 0, 0],
     vbatmincellvoltages: [1, 1, 1, 1, 1, 1],
