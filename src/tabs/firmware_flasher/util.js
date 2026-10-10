@@ -199,7 +199,8 @@ export function cleanUnifiedConfigFile(input) {
   input.split(/[\r\n]+/).forEach((rawLine, index) => {
     let line = rawLine;
     if (index === 0 && line.match(/^# [A-Za-z]*flight/)) {
-      if (line.match(/^# Rotorflight/)) fork = "RF";
+      // Wingflight configs carry the same Rotorflight-style serial/feature lines
+      if (line.match(/^# (Rotor|Wing)flight/)) fork = "RF";
     } else {
       line = line
         .replace(/#.*$/, "")
