@@ -231,17 +231,6 @@
       "path": "./feature-wizard-gain-range/",
       "branch": "feature/wizard-gain-range",
       "date": "2026-10-04T07:58:11Z"
-    },
-    {
-      "type": "pr",
-      "name": "182",
-      "path": "./pr/182/",
-      "branch": "feature/effective-gains",
-      "date": "2026-10-11T06:52:18Z",
-      "number": 182,
-      "title": "Profiles: update Effective PID Gains on unsaved edits",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/182",
-      "draft": false
     }
   ]
 }
