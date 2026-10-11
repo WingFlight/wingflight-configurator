@@ -763,6 +763,96 @@
     "tabGroupDiagnostics": {
         "message": "Diagnostics"
     },
+    "tabFbusDeviceUpdate": {
+        "message": "FBUS Device Update"
+    },
+    "fbusUpdateIntro": {
+        "message": "Update the firmware of a FrSky device on the flight controller's FBUS line (FBUS master). The flight controller sends the firmware to the device with the update procedure of the FrSky FBUS protocol. Only devices that support updates over FBUS can be updated this way."
+    },
+    "fbusUpdateUnsupported": {
+        "message": "This firmware cannot update FBUS devices. Update the flight controller firmware first."
+    },
+    "fbusUpdateWarning": {
+        "message": "During the update the flight controller sends no control signal on the FBUS line, so bus servos stop following the sticks. Do this on the bench, disarmed, with the propeller removed. Keep the device powered until the update has finished."
+    },
+    "fbusUpdateSectionDevice": {
+        "message": "Device and firmware"
+    },
+    "fbusUpdatePhysicalId": {
+        "message": "Physical ID"
+    },
+    "fbusUpdatePhysicalIdHelp": {
+        "message": "The FBUS physical ID of the device to update. Devices that the flight controller has found on the FBUS line are listed with their name."
+    },
+    "fbusUpdateNoDevices": {
+        "message": "No FBUS devices found yet. You can still pick the physical ID by hand."
+    },
+    "fbusUpdateFile": {
+        "message": "Firmware file"
+    },
+    "fbusUpdateFileHelp": {
+        "message": "The firmware file for this device (.frk, .frsk or .bin). For .frsk files the FrSky information header is removed before sending, as the radio does."
+    },
+    "fbusUpdateChooseFile": {
+        "message": "Choose file"
+    },
+    "fbusUpdateFileInvalid": {
+        "message": "This file cannot be used: it is empty, too large or its .frsk header doesn't match its size."
+    },
+    "fbusUpdateFileSize": {
+        "message": "{{size}} bytes"
+    },
+    "fbusUpdateFileVersion": {
+        "message": "Version {{version}}, {{family}}"
+    },
+    "fbusUpdateStart": {
+        "message": "Start update"
+    },
+    "fbusUpdateAbort": {
+        "message": "Cancel update"
+    },
+    "fbusUpdateSectionProgress": {
+        "message": "Progress"
+    },
+    "fbusUpdatePhaseStarting": {
+        "message": "Waiting for the device to start its update..."
+    },
+    "fbusUpdatePhaseTransfer": {
+        "message": "Sending firmware..."
+    },
+    "fbusUpdatePhaseEnding": {
+        "message": "Waiting for the device to check the firmware..."
+    },
+    "fbusUpdateProgress": {
+        "message": "{{acked}} of {{size}} bytes ({{percent}}%), {{retries}} frames repeated"
+    },
+    "fbusUpdateDone": {
+        "message": "Update finished. The device has accepted the firmware."
+    },
+    "fbusUpdateAgain": {
+        "message": "New update"
+    },
+    "fbusUpdateErrorStartRefused": {
+        "message": "The flight controller did not start the update. Check that it is disarmed, that the FBUS master is enabled and that no other update is running."
+    },
+    "fbusUpdateErrorNoResponse": {
+        "message": "The device did not answer. Check the physical ID and that the device supports updates over FBUS."
+    },
+    "fbusUpdateErrorTimeout": {
+        "message": "The device stopped answering during the update. Check the wiring and power, then try again."
+    },
+    "fbusUpdateErrorRejected": {
+        "message": "The device did not accept the firmware. Check that the file is meant for this device."
+    },
+    "fbusUpdateErrorStalled": {
+        "message": "The flight controller stopped receiving firmware data from the Configurator."
+    },
+    "fbusUpdateErrorAborted": {
+        "message": "The update was cancelled."
+    },
+    "fbusUpdateLeaveConfirm": {
+        "message": "An FBUS device update is running. Leaving this tab cancels it. Leave anyway?"
+    },
     "tabFbusSensors": {
         "message": "FBUS/S.Port Sensors"
     },

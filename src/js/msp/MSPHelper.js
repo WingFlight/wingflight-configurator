@@ -3,6 +3,7 @@ import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
 import { readPropHang, writePropHang } from "@/js/PropHang.js";
+import { parseStatus as parseFbusOtaStatus } from "@/tabs/fbus_update/protocol.js";
 import semver from "semver";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
@@ -564,6 +565,15 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 FC.FBUS_SENSORS = sensors;
                 break;
             }
+
+            case MSPCodes.MSP2_WING_FBUS_OTA_STATUS:
+                FC.FBUS_OTA_STATUS = parseFbusOtaStatus(data);
+                break;
+
+            case MSPCodes.MSP2_WING_FBUS_OTA_START:
+            case MSPCodes.MSP2_WING_FBUS_OTA_DATA:
+            case MSPCodes.MSP2_WING_FBUS_OTA_ABORT:
+                break;
 
             case MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS: {
                 console.log('Observed FBUS/S.Port sensors cleared');

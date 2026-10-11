@@ -410,9 +410,95 @@ export function getVirtualResponse(code, requestData) {
     // as seeded, as it does for servo overrides.
     case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
       return new Uint8Array(0);
+    case MSPCodes.MSP2_WING_FBUS_OTA_START:
+    case MSPCodes.MSP2_WING_FBUS_OTA_DATA:
+    case MSPCodes.MSP2_WING_FBUS_OTA_ABORT:
+      applyVirtualFbusOta(code, requestData);
+      return new Uint8Array(0);
+    case MSPCodes.MSP2_WING_FBUS_OTA_STATUS:
+      return decodeVirtualReply(code, encodeVirtualFbusOtaStatus());
     default:
       return getVirtualEscResponse(code, requestData);
   }
+}
+
+// FBUS device update (firmware drivers/fbus_ota.c), with a device that takes
+// up to 512 bytes per status poll. States/errors as OtaState/OtaError in
+// src/tabs/fbus_update/protocol.js.
+const VIRTUAL_OTA_BUFFER_SIZE = 1024;
+const virtualOta = {
+  state: 0,
+  error: 0,
+  physicalId: 0,
+  size: 0,
+  acked: 0,
+  received: 0,
+};
+
+function readU32(bytes, offset) {
+  return (
+    (bytes[offset] |
+      (bytes[offset + 1] << 8) |
+      (bytes[offset + 2] << 16) |
+      (bytes[offset + 3] << 24)) >>>
+    0
+  );
+}
+
+function applyVirtualFbusOta(code, requestData) {
+  const active = virtualOta.state >= 1 && virtualOta.state <= 3;
+  if (code === MSPCodes.MSP2_WING_FBUS_OTA_START) {
+    if (!active) {
+      Object.assign(virtualOta, {
+        state: 2,
+        error: 0,
+        physicalId: requestData[0],
+        size: readU32(requestData, 1),
+        acked: 0,
+        received: 0,
+      });
+    }
+  } else if (code === MSPCodes.MSP2_WING_FBUS_OTA_DATA) {
+    const offset = readU32(requestData, 0);
+    const length = requestData.length - 4;
+    if (
+      virtualOta.state === 2 &&
+      offset === virtualOta.received &&
+      offset + length <= virtualOta.size &&
+      virtualOta.received + length - virtualOta.acked <= VIRTUAL_OTA_BUFFER_SIZE
+    ) {
+      virtualOta.received += length;
+    }
+  } else if (active) {
+    virtualOta.state = 5;
+    virtualOta.error = 5;
+  }
+}
+
+function encodeVirtualFbusOtaStatus() {
+  if (virtualOta.state === 2) {
+    virtualOta.acked = Math.min(virtualOta.received, virtualOta.acked + 512);
+    if (virtualOta.acked === virtualOta.size) {
+      virtualOta.state = 4;
+    }
+  }
+  const active = virtualOta.state >= 1 && virtualOta.state <= 3;
+  const free = active
+    ? Math.min(
+        VIRTUAL_OTA_BUFFER_SIZE - (virtualOta.received - virtualOta.acked),
+        virtualOta.size - virtualOta.received,
+      )
+    : 0;
+  const buffer = [];
+  buffer.push8(virtualOta.state);
+  buffer.push8(virtualOta.error);
+  buffer.push8(virtualOta.physicalId);
+  buffer.push32(virtualOta.size);
+  buffer.push32(virtualOta.acked);
+  buffer.push32(virtualOta.received);
+  buffer.push16(free);
+  buffer.push16(0);
+  return Uint8Array.from(buffer);
 }
 
 // Like the FC, forced modes show in the MSP_STATUS mode flags (which the

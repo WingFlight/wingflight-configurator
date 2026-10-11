@@ -25,6 +25,7 @@ class FlightController {
   FAILSAFE_CONFIG = $state();
   FBUS_MASTER_CONFIG = $state();
   FBUS_SENSORS = $state();
+  FBUS_OTA_STATUS = $state();
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
@@ -270,6 +271,7 @@ class FlightController {
 
     this.PID_RUNTIME_GAINS = null;
     this.FBUS_SENSORS = [];
+    this.FBUS_OTA_STATUS = null;
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
     };
