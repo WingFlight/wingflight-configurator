@@ -36,6 +36,7 @@ const tabHelpURLs = {
     tabSensors:         `${docsBaseURL}/configurator/tabs/sensors/`,
     tabEscProgramming:  `${docsBaseURL}/configurator/tabs/esc-programming/`,
     tabXactServoProgramming: `${docsBaseURL}/configurator/tabs/xact-servo-programming/`,
+    tabFbusDeviceUpdate: `${docsBaseURL}/configurator/tabs/fbus-device-update/`,
     tabBlackbox:        `${docsBaseURL}/configurator/tabs/blackbox/`,
     tabFbusSensors:     `${docsBaseURL}/configurator/tabs/fbus-sensors/`,
     tabCrsfSensors:     `${docsBaseURL}/configurator/tabs/crsf-sensors/`,

@@ -9,6 +9,7 @@ import "./curves.js";
 import "./esc_programming.js";
 import "./failsafe.js";
 import "./fbus_sensors.js";
+import "./fbus_update.js";
 import "./firmware_flasher.js";
 import "./gps.js";
 import "./gps_nav.js";

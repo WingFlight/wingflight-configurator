@@ -491,6 +491,8 @@ export function updateTabList(features) {
 
     const hasFbusPort = (FC.SERIAL_CONFIG?.ports ?? []).some((port) => port.functions.includes('FBUS_OUT'));
     $('#tabs ul.mode-connected li.tab_xact_servo').toggle(hasFbusPort);
+    // Device updates go through the FBUS master only (not S.Port master)
+    $('#tabs ul.mode-connected li.tab_fbus_update').toggle(hasFbusPort);
 
     // FBUS/S.Port master mode observes sensors on a UART configured with the
     // FBUS_OUT or SPORT_MASTER serial port function -- there's no dedicated

@@ -55,6 +55,7 @@ export const GuiControl = function () {
         'motors',
         'esc_programming',
         'xact_servo',
+        'fbus_update',
         'mixer',
         'curves',
         'logic',
