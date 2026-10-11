@@ -145,13 +145,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-effective-gains",
-      "path": "./feature-effective-gains/",
-      "branch": "feature/effective-gains",
-      "date": "2026-10-11T06:47:41Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-empty-port-list",
       "path": "./feature-empty-port-list/",
       "branch": "feature/empty-port-list",
