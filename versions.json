@@ -224,17 +224,6 @@
       "path": "./feature-wizard-gain-range/",
       "branch": "feature/wizard-gain-range",
       "date": "2026-10-04T07:58:11Z"
-    },
-    {
-      "type": "pr",
-      "name": "181",
-      "path": "./pr/181/",
-      "branch": "fix/narrow-band-servo-limit-warning",
-      "date": "2026-10-11T06:34:08Z",
-      "number": 181,
-      "title": "Make servo limit and scale warnings specific",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/181",
-      "draft": false
     }
   ]
 }
