@@ -16,20 +16,58 @@
     "masterGainYaw",
   ];
   const GAIN_CURVE_KEYS = ["gainCurveRoll", "gainCurvePitch", "gainCurveYaw"];
+  // `master` and `atten` mirror pidGetRuntimeGains() (flight/pid.c): master
+  // gain scales P, I and D, throttle/speed attenuation scales P, D, F and B.
   const PID_GAINS = [
     {
       key: "P",
       label: "profilesProportional",
       help: "profilesProportionalHelp",
+      master: true,
+      atten: true,
     },
-    { key: "I", label: "profilesIntegral", help: "profilesIntegralHelp" },
-    { key: "D", label: "profilesDerivative", help: "profilesDerivativeHelp" },
-    { key: "F", label: "profilesFeedforward", help: "profilesFeedforwardHelp" },
-    { key: "B", label: "profilesBoost", help: "profilesBoostHelp" },
+    {
+      key: "I",
+      label: "profilesIntegral",
+      help: "profilesIntegralHelp",
+      master: true,
+      atten: false,
+    },
+    {
+      key: "D",
+      label: "profilesDerivative",
+      help: "profilesDerivativeHelp",
+      master: true,
+      atten: true,
+    },
+    {
+      key: "F",
+      label: "profilesFeedforward",
+      help: "profilesFeedforwardHelp",
+      master: false,
+      atten: true,
+    },
+    {
+      key: "B",
+      label: "profilesBoost",
+      help: "profilesBoostHelp",
+      master: false,
+      atten: true,
+    },
   ];
+
+  // The values last loaded from or saved to the FC ({ PIDS, PID_PROFILE }).
+  let { saved = null } = $props();
 
   function isMasterGainAffected(gainIndex) {
     return gainIndex < 4;
+  }
+
+  // The FC reports its live values, which follow adjustment functions but
+  // not unsaved edits on this page. A value edited here wins; an untouched
+  // one follows the FC.
+  function isEdited(local, savedValue) {
+    return savedValue !== undefined && Number(local) !== Number(savedValue);
   }
 
   let runtimeGains = $derived(
@@ -56,10 +94,28 @@
   }
 
   function runtimeMasterGain(axisIndex) {
-    return (
-      runtimeGains?.axes?.[axisIndex]?.masterGain ??
-      profileMasterGain(axisIndex)
-    );
+    const key = MASTER_GAIN_KEYS[axisIndex];
+    const runtime = runtimeGains?.axes?.[axisIndex]?.masterGain;
+    if (
+      !Number.isFinite(runtime) ||
+      isEdited(FC.PID_PROFILE[key], saved?.PID_PROFILE?.[key])
+    ) {
+      return profileMasterGain(axisIndex);
+    }
+    return runtime;
+  }
+
+  function runtimeRawPid(axisIndex, gainIndex) {
+    const local = Number(FC.PIDS[axisIndex][gainIndex]) || 0;
+    const runtime =
+      runtimeGains?.axes?.[axisIndex]?.raw?.[PID_GAINS[gainIndex].key];
+    if (
+      !Number.isFinite(runtime) ||
+      isEdited(local, saved?.PIDS?.[axisIndex]?.[gainIndex])
+    ) {
+      return local;
+    }
+    return runtime;
   }
 
   function profileMasterGain(axisIndex) {
@@ -198,10 +254,17 @@
   }
 
   function realPid(axisIndex, gainIndex) {
-    const gainKey = PID_GAINS[gainIndex].key;
-    const runtimeValue = runtimeGains?.axes?.[axisIndex]?.effective?.[gainKey];
-    if (Number.isFinite(runtimeValue)) {
-      return runtimeValue;
+    // Recomputed from the FC's live scale factors rather than read from its
+    // effective gains, so edits to the gains here show before a save.
+    if (runtimeGains) {
+      const gain = PID_GAINS[gainIndex];
+      const gainCurve =
+        (runtimeGains.axes?.[axisIndex]?.gainCurve ?? 100) / 100;
+      const masterGain = gain.master
+        ? (runtimeMasterGain(axisIndex) / 100) * gainCurve
+        : 1;
+      const atten = gain.atten ? runtimeAttenuation() / 100 : 1;
+      return runtimeRawPid(axisIndex, gainIndex) * masterGain * atten;
     }
 
     const base = Number(FC.PIDS[axisIndex][gainIndex]) || 0;

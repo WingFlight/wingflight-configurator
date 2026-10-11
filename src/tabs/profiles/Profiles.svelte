@@ -271,7 +271,7 @@
   <div class="content">
     <div>
       {#if showPidBoxes}
-        <EffectivePidGains />
+        <EffectivePidGains saved={initialState} />
         <PidGains />
         <MasterGains />
       {/if}
