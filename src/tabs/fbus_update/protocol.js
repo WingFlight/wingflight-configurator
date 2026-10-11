@@ -73,8 +73,13 @@ export function parseFirmwareFile(name, bytes) {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     const info = { name, container: "raw", version: null, family: null };
     let payload = bytes;
+    const hasHeader = bytes.byteLength >= FRSK_HEADER_SIZE && view.getUint32(0, true) === FRSK_FOURCC;
 
-    if (bytes.byteLength >= FRSK_HEADER_SIZE && view.getUint32(0, true) === FRSK_FOURCC) {
+    // A .frsk file without its header is damaged: don't send it as a raw image
+    if (name.toLowerCase().endsWith(".frsk") && !hasHeader) {
+        throw new Error("fbusUpdateFileInvalid");
+    }
+    if (hasHeader) {
         const size = view.getUint32(8, true);
         if (bytes.byteLength !== FRSK_HEADER_SIZE + size) {
             throw new Error("fbusUpdateFileInvalid");
