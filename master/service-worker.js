@@ -10,7 +10,7 @@
 // only ever reads from its own cache.
 
 const CACHE_PREFIX = `wingflight-configurator@${self.registration.scope}@`;
-const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-1dfb2a15`;
+const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-21354ce5`;
 const APP_SHELL = [
   "./",
   "./index.html",
