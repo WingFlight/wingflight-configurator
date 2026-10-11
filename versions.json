@@ -187,13 +187,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-side-by-side-installs",
-      "path": "./feature-side-by-side-installs/",
-      "branch": "feature/side-by-side-installs",
-      "date": "2026-10-09T10:21:29Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-simplification",
       "path": "./feature-simplification/"
     }
