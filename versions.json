@@ -230,9 +230,9 @@
       "name": "181",
       "path": "./pr/181/",
       "branch": "fix/narrow-band-servo-limit-warning",
-      "date": "2026-10-11T06:19:59Z",
+      "date": "2026-10-11T06:34:08Z",
       "number": 181,
-      "title": "Warn on narrow-band servo travel beyond +-250",
+      "title": "Make servo limit and scale warnings specific",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/181",
       "draft": false
     }
