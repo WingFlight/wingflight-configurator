@@ -1,4 +1,8 @@
 {
   "branch": "feature/effective-gains",
-  "date": "2026-10-11T06:47:41Z"
+  "date": "2026-10-11T06:47:41Z",
+  "number": 182,
+  "title": "Profiles: update Effective PID Gains on unsaved edits",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/182",
+  "draft": false
 }
