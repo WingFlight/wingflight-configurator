@@ -148,6 +148,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-fbus-ota",
+      "path": "./feature-fbus-ota/",
+      "branch": "feature/fbus-ota",
+      "date": "2026-10-11T20:53:20Z",
+      "number": 185,
+      "title": "Add FBUS Device Update tab",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/185",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-fclink",
       "path": "./feature-fclink/"
     },
