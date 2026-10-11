@@ -172,13 +172,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-mixer-rule-ui",
-      "path": "./feature-mixer-rule-ui/",
-      "branch": "feature/mixer-rule-ui",
-      "date": "2026-10-07T08:13:57Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-modes-picker",
       "path": "./feature-modes-picker/"
     },
