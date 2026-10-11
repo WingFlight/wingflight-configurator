@@ -145,13 +145,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-empty-port-list",
-      "path": "./feature-empty-port-list/",
-      "branch": "feature/empty-port-list",
-      "date": "2026-10-09T20:30:39Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
