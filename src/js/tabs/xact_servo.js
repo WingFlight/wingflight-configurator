@@ -33,6 +33,9 @@ const tab = {
       unmount(this.svelteComponent);
       this.svelteComponent = null;
     }
+    // An output picked for programming (FBUS mux) goes back to its saved mode. Not
+    // awaited: the firmware also drops the override on its own a few seconds later.
+    xactState.releaseMux().catch((err) => console.error("xact_servo: releasing the FBUS mux failed", err));
     callback?.();
   },
 

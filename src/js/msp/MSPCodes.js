@@ -249,6 +249,7 @@ export const MSPCodes = {
     // 0x5F1E-0x5F21: FBUS OTA (firmware #207)
     MSP2_WING_FBUS_MUX_CONFIG:        0x5F22,
     MSP2_WING_SET_FBUS_MUX_CONFIG:    0x5F23,
+    MSP2_WING_SET_FBUS_MUX_OVERRIDE:  0x5F24,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

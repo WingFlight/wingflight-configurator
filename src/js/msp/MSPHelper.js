@@ -592,6 +592,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
 
             case MSPCodes.MSP2_WING_SET_FBUS_MUX_CONFIG:
+            case MSPCodes.MSP2_WING_SET_FBUS_MUX_OVERRIDE:
                 break;
 
             case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS: {

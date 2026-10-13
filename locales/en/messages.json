@@ -511,6 +511,84 @@
     "xactServoIntro": {
         "message": "Program XACT FBUS servo parameters over telemetry. XACT servos report and are configured over the same S.Port/FBUS wire used for telemetry — no separate programming connection is needed. Scan for connected servos, then select one to edit and write its parameters."
     },
+    "xactServoMuxSection": {
+        "message": "FBUS mux outputs"
+    },
+    "xactServoMuxChannel": {
+        "message": "Program on"
+    },
+    "xactServoMuxChannelHelp": {
+        "message": "This board switches its outputs between PWM and FBUS with an FPGA. Pick one output to put FBUS on it alone, so scans and writes only reach the servo plugged in there, even if several servos share the same IDs. The other outputs stay as saved, except that other FBUS outputs are switched off FBUS meanwhile."
+    },
+    "xactServoMuxAllOutputs": {
+        "message": "All FBUS outputs (as saved)"
+    },
+    "xactServoMuxOutput": {
+        "message": "Output {{number}}"
+    },
+    "xactServoMuxOutputOption": {
+        "message": "{{output}} (saved: {{mode}})"
+    },
+    "xactServoMuxChannelHeld": {
+        "message": "FBUS is on this output only while it is selected. Arming is blocked until you pick \"All FBUS outputs\" or leave this tab."
+    },
+    "xactServoAutoProgramHelp": {
+        "message": "Auto program gives the servo on each output set to FBUS its own Physical ID, App ID and channel, and sets its range to 120°: S1 gets ID 01, 6800 and CH1, S2 02, 6801 and CH2, S3 03, 6802 and CH3, TAIL 04, 6803 and CH4. The ESC output is left alone. Connect one servo per output."
+    },
+    "xactServoAutoProgramButton": {
+        "message": "Auto program"
+    },
+    "xactServoAutoProgramNoFbus": {
+        "message": "No output is set to FBUS. Set the outputs with bus servos to FBUS in the remap tab first."
+    },
+    "xactServoAutoProgramChecking": {
+        "message": "Checking {{output}}..."
+    },
+    "xactServoAutoProgramWriting": {
+        "message": "Programming {{output}}..."
+    },
+    "xactServoAutoProgramOutput": {
+        "message": "Output"
+    },
+    "xactServoAutoProgramFound": {
+        "message": "Found"
+    },
+    "xactServoAutoProgramNew": {
+        "message": "New"
+    },
+    "xactServoAutoProgramApply": {
+        "message": "Program servos"
+    },
+    "xactServoAutoProgramCancel": {
+        "message": "Cancel"
+    },
+    "xactServoAutoProgramClose": {
+        "message": "Close"
+    },
+    "xactServoAutoStatus_program": {
+        "message": "Will be programmed"
+    },
+    "xactServoAutoStatus_unchanged": {
+        "message": "Already set"
+    },
+    "xactServoAutoStatus_notPlanned": {
+        "message": "Not auto-programmed"
+    },
+    "xactServoAutoStatus_noServo": {
+        "message": "No servo found"
+    },
+    "xactServoAutoStatus_multipleServos": {
+        "message": "More than one servo answers here. Connect one servo per output."
+    },
+    "xactServoAutoStatus_idClash": {
+        "message": "Skipped: another device on the bus uses Physical ID {{id}} or this App ID."
+    },
+    "xactServoAutoStatus_programmed": {
+        "message": "Programmed"
+    },
+    "xactServoAutoStatus_failed": {
+        "message": "Failed: the servo did not answer with the new values."
+    },
     "xactServoSingleServoNote": {
         "message": "Every XACT servo on the bus needs a unique Physical ID. Two servos sharing one collide and are tracked as a single entry -- if they also share the same App ID this tool has no way to tell them apart, so double-check factory-default units before connecting them together."
     },

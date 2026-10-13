@@ -1,7 +1,16 @@
 import diff from "microdiff";
 
+import { FC } from "@/js/fc.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
+import {
+    autoProgramValues,
+    buildMuxOverridePayload,
+    fbusChannels,
+    isolateChannelModes,
+    otherDevicePhysicalIds,
+    planAutoProgram,
+} from "./mux_programming.js";
 import { parseServoList, parseServoParams, buildServoParamsPayload } from "./protocol.js";
 
 export const View = {
@@ -36,6 +45,19 @@ const PARAMS_POLL_INTERVAL_MS = 250;
 const LIST_REFRESH_TIMEOUT_MS = 4000;
 const LIST_REFRESH_INTERVAL_MS = 500;
 
+// FBUS mux override (MSP2_WING_SET_FBUS_MUX_OVERRIDE): the firmware drops it this long after
+// the last refresh, so a closed tab or lost link can't leave the outputs switched.
+const MUX_OVERRIDE_TIMEOUT_MS = 3000;
+const MUX_OVERRIDE_REFRESH_MS = 1000;
+
+// Auto-programming steps (see autoProgramSurvey/autoProgramApply)
+export const AutoProgramPhase = {
+    SURVEY: "survey",
+    REVIEW: "review",
+    PROGRAMMING: "programming",
+    DONE: "done",
+};
+
 function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -48,6 +70,15 @@ class State {
     // Servos discovered by the last scan: [{ physicalId, appIdOffset, conflict, ready, channel }]
     servos = $state([]);
     selectedPhysicalId = $state(null);
+
+    // FBUS mux boards only: the output (1-based mux channel) scans and writes go to, with FBUS
+    // put on it alone by a held override; null for every FBUS output together (saved modes).
+    muxChannel = $state(null);
+    #muxOverrideTimer = null;
+    #muxOverrideModes = null;
+
+    // Auto-programming in progress or finished: { phase, current, plan, results }, else null
+    autoProgram = $state(null);
 
     // initialValues must be reactive ($state): `changes` reads it, and a plain field
     // reassignment wouldn't invalidate the derived, leaving isDirty()/the Save toolbar stuck.
@@ -69,6 +100,62 @@ class State {
         this.error = null;
         this.servos = [];
         this.selectedPhysicalId = null;
+        this.autoProgram = null;
+    }
+
+    // Puts the mux in `modes` and keeps it there until endMuxOverride(). Throws if the FC
+    // refuses (armed, FPGA not ready, or the FPGA didn't confirm the modes).
+    async holdMuxOverride(modes) {
+        this.#muxOverrideModes = modes;
+        await this.#sendMuxOverride();
+        if (!this.#muxOverrideTimer) {
+            this.#muxOverrideTimer = setInterval(() => {
+                this.#sendMuxOverride().catch((err) => {
+                    console.error("xact_servo: FBUS mux override refresh failed", err);
+                });
+            }, MUX_OVERRIDE_REFRESH_MS);
+        }
+    }
+
+    async #sendMuxOverride() {
+        const payload = buildMuxOverridePayload(MUX_OVERRIDE_TIMEOUT_MS, this.#muxOverrideModes);
+        const response = await MSP.promise(MSPCodes.MSP2_WING_SET_FBUS_MUX_OVERRIDE, payload);
+        if (!response || response.unsupported) {
+            throw new Error("the FBUS mux refused the output modes");
+        }
+    }
+
+    async endMuxOverride() {
+        clearInterval(this.#muxOverrideTimer);
+        this.#muxOverrideTimer = null;
+        if (this.#muxOverrideModes) {
+            this.#muxOverrideModes = null;
+            await MSP.promise(MSPCodes.MSP2_WING_SET_FBUS_MUX_OVERRIDE, buildMuxOverridePayload(0));
+        }
+    }
+
+    // Scans and writes go to `channel` alone (null: every FBUS output, as saved). The servos
+    // found before are on another output now, so the list starts over.
+    async selectMuxChannel(channel) {
+        this.reset();
+        this.muxChannel = channel;
+        try {
+            if (channel === null) {
+                await this.endMuxOverride();
+            } else {
+                await this.holdMuxOverride(isolateChannelModes(FC.FBUS_MUX, channel));
+            }
+        } catch (err) {
+            this.muxChannel = null;
+            this.error = err?.message ?? String(err);
+            await this.endMuxOverride();
+        }
+    }
+
+    // Leaving the tab: back to the saved modes
+    async releaseMux() {
+        this.muxChannel = null;
+        await this.endMuxOverride();
     }
 
     async fetchServoList() {
@@ -94,23 +181,9 @@ class State {
         this.servos = [];
 
         try {
-            await MSP.promise(MSPCodes.MSP_SET_XACT_SCAN);
-
-            const deadline = Date.now() + SCAN_TIMEOUT_MS;
-            let lastCount = 0;
-            let stableSince = Date.now();
-
-            while (Date.now() < deadline) {
-                await delay(SCAN_POLL_INTERVAL_MS);
-                this.servos = await this.fetchServoList();
-
-                if (this.servos.length !== lastCount) {
-                    lastCount = this.servos.length;
-                    stableSince = Date.now();
-                } else if (lastCount > 0 && Date.now() - stableSince > SCAN_SETTLE_MS) {
-                    break;
-                }
-            }
+            await this.discoverServos((servos) => {
+                this.servos = servos;
+            });
 
             if (this.servos.length === 0) {
                 this.view = View.NOT_FOUND;
@@ -128,6 +201,138 @@ class State {
 
     async rescan() {
         return this.scan();
+    }
+
+    // Restarts discovery and polls the list until it has settled, calling onUpdate with
+    // every poll's list. Returns the final list.
+    async discoverServos(onUpdate = () => {}) {
+        await MSP.promise(MSPCodes.MSP_SET_XACT_SCAN);
+
+        const deadline = Date.now() + SCAN_TIMEOUT_MS;
+        let servos = [];
+        let lastCount = 0;
+        let stableSince = Date.now();
+
+        while (Date.now() < deadline) {
+            await delay(SCAN_POLL_INTERVAL_MS);
+            servos = await this.fetchServoList();
+            onUpdate(servos);
+
+            if (servos.length !== lastCount) {
+                lastCount = servos.length;
+                stableSince = Date.now();
+            } else if (lastCount > 0 && Date.now() - stableSince > SCAN_SETTLE_MS) {
+                break;
+            }
+        }
+        return servos;
+    }
+
+    // A discovered servo's parameters once its read has completed, or null
+    async waitForParams(physicalId) {
+        const deadline = Date.now() + PARAMS_TIMEOUT_MS;
+        let params = await this.fetchParams(physicalId);
+        while (!params.ready && Date.now() < deadline) {
+            await delay(PARAMS_POLL_INTERVAL_MS);
+            params = await this.fetchParams(physicalId);
+        }
+        return params.ready ? params : null;
+    }
+
+    // Auto-programming, step 1: visit every output saved as FBUS on its own and note the
+    // servos (with their parameters) and other FBUS devices there, then plan the changes
+    // (see mux_programming.js planAutoProgram) for the user to review.
+    async autoProgramSurvey() {
+        this.reset();
+        this.autoProgram = { phase: AutoProgramPhase.SURVEY, current: null, plan: [], results: [] };
+
+        try {
+            // Devices seen before (e.g. on an output saved as PWM) won't share the bus, so
+            // only count the ones the survey finds
+            await MSP.promise(MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS);
+
+            const survey = [];
+            for (const channel of fbusChannels(FC.FBUS_MUX)) {
+                this.autoProgram.current = channel;
+                await this.holdMuxOverride(isolateChannelModes(FC.FBUS_MUX, channel));
+
+                const found = await this.discoverServos();
+                const servos = [];
+                for (const servo of found) {
+                    const params = await this.waitForParams(servo.physicalId);
+                    servos.push(params ? { ...servo, ...params } : servo);
+                }
+                survey.push({ channel, servos });
+            }
+
+            await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
+            const plan = planAutoProgram(survey, otherDevicePhysicalIds(FC.FBUS_SENSORS));
+            this.autoProgram = { phase: AutoProgramPhase.REVIEW, current: null, plan, results: [] };
+        } catch (err) {
+            this.error = err?.message ?? String(err);
+            this.autoProgram = null;
+        } finally {
+            await this.endMuxOverride();
+            this.muxChannel = null;
+        }
+    }
+
+    // Auto-programming, step 2: write each planned servo on its own output, then rescan that
+    // output and check the servo answers with the new values.
+    async autoProgramApply() {
+        const plan = this.autoProgram.plan;
+        this.autoProgram = { phase: AutoProgramPhase.PROGRAMMING, current: null, plan, results: [] };
+
+        try {
+            for (const entry of plan) {
+                if (entry.status !== "program") {
+                    this.autoProgram.results.push({ channel: entry.channel, status: entry.status });
+                    continue;
+                }
+
+                this.autoProgram.current = entry.channel;
+                await this.holdMuxOverride(isolateChannelModes(FC.FBUS_MUX, entry.channel));
+                this.autoProgram.results.push({
+                    channel: entry.channel,
+                    status: await this.#programServo(entry),
+                });
+            }
+            this.autoProgram.phase = AutoProgramPhase.DONE;
+            this.autoProgram.current = null;
+        } catch (err) {
+            this.error = err?.message ?? String(err);
+            this.autoProgram.phase = AutoProgramPhase.DONE;
+        } finally {
+            await this.endMuxOverride();
+            this.muxChannel = null;
+        }
+    }
+
+    async #programServo(entry) {
+        // The survey's discovery list was replaced by the next output's, so find it again
+        const found = await this.discoverServos();
+        const servo = found.find((s) => s.physicalId === entry.servo.physicalId);
+        const params = found.length === 1 && servo ? await this.waitForParams(servo.physicalId) : null;
+        if (!params) return "failed";
+
+        const values = autoProgramValues(params, entry.target);
+        const payload = buildServoParamsPayload(servo.physicalId, values);
+        await MSP.promise(MSPCodes.MSP_SET_XACT_PARAMS, Array.from(payload));
+
+        // Read back from the servo itself after a fresh discovery, not the firmware's cache
+        const after = await this.discoverServos();
+        const check = after.length === 1 ? await this.waitForParams(after[0].physicalId) : null;
+        const ok =
+            check &&
+            check.physicalId === values.physicalId &&
+            check.appIdOffset === values.appIdOffset &&
+            check.channel === values.channel &&
+            check.range === values.range;
+        return ok ? "programmed" : "failed";
+    }
+
+    closeAutoProgram() {
+        this.autoProgram = null;
     }
 
     // Keep polling the servo list for a while so rows fill in (e.g. Channel) as the firmware's
@@ -155,14 +360,9 @@ class State {
         this.error = null;
 
         try {
-            const deadline = Date.now() + PARAMS_TIMEOUT_MS;
-            let params = await this.fetchParams(physicalId);
-            while (!params.ready && Date.now() < deadline) {
-                await delay(PARAMS_POLL_INTERVAL_MS);
-                params = await this.fetchParams(physicalId);
-            }
+            const params = await this.waitForParams(physicalId);
 
-            if (params.ready) {
+            if (params) {
                 this.applyFoundParams(physicalId, params);
             } else {
                 this.view = this.servos.length > 1 ? View.LIST : View.NOT_FOUND;
