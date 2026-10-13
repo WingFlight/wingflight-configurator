@@ -8414,16 +8414,16 @@
         "message": "Connect your tail motor's ESC to this port -- for a motorised (direct-drive) tail."
     },
     "remapFcPurposeS1": {
-        "message": "Servo 1. Commonly this is the left side cyclic servo."
+        "message": "Servo 1. Commonly this is the left side Aileron servo."
     },
     "remapFcPurposeS2": {
-        "message": "Servo 2. Commonly this is the right side cyclic servo."
+        "message": "Servo 2. Commonly this is the right side Aileronservo."
     },
     "remapFcPurposeS3": {
-        "message": "Servo 3. Commonly this is the elevator cyclic servo."
+        "message": "Servo 3. Commonly this is the Elevator servo."
     },
     "remapFcPurposeS4": {
-        "message": "Commonly the tail servo, for a mechanical (non-motorised) tail rotor."
+        "message": "Commonly this is used for the Rudder servo."
     },
     "remapFcPurposeServoExtra": {
         "message": "Extra servos can be used for functions such as landing gear, or other PWM devices such as remote glow and battery backups. Set up the channel you wish to control it from using Custom Mixer Rules on the Mixer tab."
