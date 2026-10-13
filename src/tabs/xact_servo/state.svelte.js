@@ -10,6 +10,7 @@ import {
     isolateChannelModes,
     otherDevicePhysicalIds,
     planAutoProgram,
+    servoSettingsMismatch,
 } from "./mux_programming.js";
 import { parseServoList, parseServoParams, buildServoParamsPayload } from "./protocol.js";
 
@@ -319,16 +320,11 @@ class State {
         const payload = buildServoParamsPayload(servo.physicalId, values);
         await MSP.promise(MSPCodes.MSP_SET_XACT_PARAMS, Array.from(payload));
 
-        // Read back from the servo itself after a fresh discovery, not the firmware's cache
+        // Read back from the servo itself after a fresh discovery, not the firmware's cache,
+        // and check every setting, so one the write wasn't meant to touch can't change unseen
         const after = await this.discoverServos();
         const check = after.length === 1 ? await this.waitForParams(after[0].physicalId) : null;
-        const ok =
-            check &&
-            check.physicalId === values.physicalId &&
-            check.appIdOffset === values.appIdOffset &&
-            check.channel === values.channel &&
-            check.range === values.range;
-        return ok ? "programmed" : "failed";
+        return check && servoSettingsMismatch(values, check).length === 0 ? "programmed" : "failed";
     }
 
     closeAutoProgram() {

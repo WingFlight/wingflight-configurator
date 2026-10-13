@@ -8,6 +8,7 @@ import {
     isolateChannelModes,
     otherDevicePhysicalIds,
     planAutoProgram,
+    servoSettingsMismatch,
 } from '../../src/tabs/xact_servo/mux_programming.js';
 
 // FC.FBUS_MUX of an RF007 V3 with S2, S3 and TAIL saved as FBUS and DSHOT on the ESC
@@ -87,4 +88,16 @@ test('the written values change only ID, App ID, channel and range', () => {
     assert.deepEqual(autoProgramValues(params, AUTO_PROGRAM_PLAN[2]), {
         ...params, physicalId: 2, appIdOffset: 1, channel: 1, range: 0,
     });
+});
+
+test('a write counts only if every setting reads back as written', () => {
+    // The servo on TAIL of the bench unit, before and after auto-programming
+    const before = {
+        physicalId: 1, appIdOffset: 0, dataRate: 1000, range: 0, direction: 0, pulseType: 0, channel: 0,
+        center: 0, holdingStrength: 4, operationSmoothing: 1, deadband: 1, workingMode: 0, maxAngle: 0,
+    };
+    const written = autoProgramValues(before, AUTO_PROGRAM_PLAN[4]);
+    const readBack = { ...before, physicalId: 4, appIdOffset: 3, channel: 3, ready: true, firmwareVersion: 0 };
+    assert.deepEqual(servoSettingsMismatch(written, readBack), []);
+    assert.deepEqual(servoSettingsMismatch(written, { ...readBack, center: 5, deadband: 2 }), ['center', 'deadband']);
 });

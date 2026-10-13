@@ -106,6 +106,20 @@ export function planAutoProgram(survey, otherIds) {
     });
 }
 
+// Every setting the servo stores (protocol.js parseServoParams), for checking a write
+const SERVO_SETTINGS = [
+    "physicalId", "appIdOffset", "dataRate", "range", "direction", "pulseType", "channel",
+    "center", "holdingStrength", "operationSmoothing", "deadband", "workingMode", "maxAngle",
+];
+
+/**
+ * Settings the servo read back differently from what was written, including the ones
+ * auto-programming leaves alone. Empty when the write fully took.
+ */
+export function servoSettingsMismatch(written, readBack) {
+    return SERVO_SETTINGS.filter((key) => written[key] !== readBack[key]);
+}
+
 /** The servo's full parameters with the auto-programmed fields replaced. */
 export function autoProgramValues(params, target) {
     return {
