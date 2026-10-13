@@ -44,6 +44,16 @@ export function isolateChannelModes(mux, channel) {
     });
 }
 
+/** Saved modes (fbusMuxMode_e) with `channels` (1-based) set to PWM. */
+export function modesWithPwm(mux, channels) {
+    return mux.channels.map((saved, i) => (channels.includes(i + 1) ? MODE_PWM : MODE_INDEX[saved.mode]));
+}
+
+/** MSP2_WING_SET_FBUS_MUX_CONFIG payload. */
+export function buildMuxConfigPayload(modes) {
+    return [1, modes.length, ...modes];
+}
+
 /** MSP2_WING_SET_FBUS_MUX_OVERRIDE payload; timeout 0 ends the override. */
 export function buildMuxOverridePayload(timeoutMs, modes = []) {
     const payload = [timeoutMs & 0xff, (timeoutMs >> 8) & 0xff];
@@ -66,11 +76,14 @@ export function otherDevicePhysicalIds(sensors) {
 
 /**
  * What auto-programming does with the servos found on each output.
- * @param {{channel: number, servos: Object[]}[]} survey - Per FBUS output, the servos its scan found.
+ * @param {{channel: number, servos: Object[], devices?: number}[]} survey - Per FBUS output, the
+ *   servos its scan found and how many other FBUS devices (e.g. a GPS) answered there.
  * @param {Set<number>} otherIds - otherDevicePhysicalIds of every device found on the bus.
  * @returns {{channel: number, status: string, servo?: Object, target?: Object}[]} status is
- *   "program", "unchanged", "notPlanned" (the ESC output), "noServo", "multipleServos"
- *   (they can't be told apart) or "idClash" (another device has the target Physical ID).
+ *   "program", "unchanged", "notPlanned" (the ESC output), "noServo" (only other devices),
+ *   "empty" (nothing answered: the output floats on FBUS, better set it to PWM),
+ *   "multipleServos" (they can't be told apart) or "idClash" (another device has the target
+ *   Physical ID).
  */
 export function planAutoProgram(survey, otherIds) {
     // Servos on FBUS outputs that keep their IDs share the bus with the programmed ones
@@ -84,8 +97,9 @@ export function planAutoProgram(survey, otherIds) {
         }
     }
 
-    return survey.map(({ channel, servos }) => {
+    return survey.map(({ channel, servos, devices = 0 }) => {
         const target = AUTO_PROGRAM_PLAN[channel];
+        if (servos.length === 0 && devices === 0) return { channel, status: "empty" };
         if (!target) return { channel, status: "notPlanned" };
         if (servos.length === 0) return { channel, status: "noServo" };
         if (servos.length > 1 || servos[0].conflict || servos[0].duplicateAppId) {

@@ -3,9 +3,11 @@ import test from 'node:test';
 import {
     AUTO_PROGRAM_PLAN,
     autoProgramValues,
+    buildMuxConfigPayload,
     buildMuxOverridePayload,
     fbusChannels,
     isolateChannelModes,
+    modesWithPwm,
     otherDevicePhysicalIds,
     planAutoProgram,
     servoSettingsMismatch,
@@ -49,9 +51,9 @@ const factoryServo = (physicalId = 14) => ({
 test('plans the fixed values per output and leaves the ESC alone', () => {
     const plan = planAutoProgram([
         { channel: 1, servos: [factoryServo()] },
-        { channel: 2, servos: [] },
+        { channel: 2, servos: [], devices: 1 },
         { channel: 4, servos: [{ ...factoryServo(), physicalId: 4, appIdOffset: 3, channel: 3, range: 2 }] },
-        { channel: 5, servos: [] },
+        { channel: 5, servos: [], devices: 1 },
     ], new Set());
     assert.deepEqual(plan.map((e) => e.status), ['program', 'noServo', 'unchanged', 'notPlanned']);
     assert.deepEqual(plan[0].target, { physicalId: 1, appIdOffset: 0, channel: 0 });
@@ -100,4 +102,20 @@ test('a write counts only if every setting reads back as written', () => {
     const readBack = { ...before, physicalId: 4, appIdOffset: 3, channel: 3, range: 2, ready: true, firmwareVersion: 0 };
     assert.deepEqual(servoSettingsMismatch(written, readBack), []);
     assert.deepEqual(servoSettingsMismatch(written, { ...readBack, center: 5, deadband: 2 }), ['center', 'deadband']);
+});
+
+test('outputs where nothing answers are empty, the ESC output too', () => {
+    const plan = planAutoProgram([
+        { channel: 2, servos: [], devices: 0 },
+        { channel: 3, servos: [], devices: 1 },  // a GPS only
+        { channel: 4, servos: [factoryServo()] },
+        { channel: 5, servos: [] },
+    ], new Set());
+    assert.deepEqual(plan.map((e) => e.status), ['empty', 'noServo', 'program', 'empty']);
+});
+
+test('empty outputs go to PWM, the rest keeps its saved mode', () => {
+    const modes = modesWithPwm(MUX, [2, 3]);
+    assert.deepEqual(modes, [0, 0, 0, 1, 2]);
+    assert.deepEqual(buildMuxConfigPayload(modes), [1, 5, 0, 0, 0, 1, 2]);
 });

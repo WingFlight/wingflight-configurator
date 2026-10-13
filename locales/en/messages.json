@@ -586,6 +586,15 @@
     "xactServoAutoStatus_idClash": {
         "message": "Skipped: another device on the bus uses Physical ID {{id}} or this App ID."
     },
+    "xactServoAutoStatus_empty": {
+        "message": "Nothing connected"
+    },
+    "xactServoAutoProgramEmptyNote": {
+        "message": "Nothing answered on some outputs set to FBUS. On FBUS a line with nothing connected floats, and if it gets stuck it can disturb the replies of every other device on the bus. Setting these outputs to PWM avoids that."
+    },
+    "xactServoAutoProgramSetPwm": {
+        "message": "Set {{outputs}} to PWM and reboot"
+    },
     "xactServoAutoStatus_programmed": {
         "message": "Programmed"
     },

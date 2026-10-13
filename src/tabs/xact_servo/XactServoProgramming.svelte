@@ -275,6 +275,22 @@
               </tbody>
             </table>
           {/if}
+          {#if (ap.phase === AutoProgramPhase.REVIEW || ap.phase === AutoProgramPhase.DONE) && xactState.emptyChannels().length}
+            <WarningNote message="xactServoAutoProgramEmptyNote" />
+            <div class="auto-program-actions">
+              <button
+                class="btn"
+                onclick={() => xactState.setEmptyOutputsToPwm()}
+              >
+                {$i18n.t("xactServoAutoProgramSetPwm", {
+                  outputs: xactState
+                    .emptyChannels()
+                    .map((ch) => muxOutputLabels[ch])
+                    .join(", "),
+                })}
+              </button>
+            </div>
+          {/if}
           {#if ap.phase === AutoProgramPhase.REVIEW}
             <div class="auto-program-actions">
               <button

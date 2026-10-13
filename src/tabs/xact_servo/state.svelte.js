@@ -1,13 +1,18 @@
 import diff from "microdiff";
+import { get } from "svelte/store";
 
 import { FC } from "@/js/fc.svelte.js";
+import { i18n } from "@/js/i18n.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
+import { reinitialiseConnection } from "@/js/serial_backend.js";
 
 import {
     autoProgramValues,
+    buildMuxConfigPayload,
     buildMuxOverridePayload,
     fbusChannels,
     isolateChannelModes,
+    modesWithPwm,
     otherDevicePhysicalIds,
     planAutoProgram,
     servoSettingsMismatch,
@@ -248,26 +253,28 @@ class State {
         this.autoProgram = { phase: AutoProgramPhase.SURVEY, current: null, plan: [], results: [] };
 
         try {
-            // Devices seen before (e.g. on an output saved as PWM) won't share the bus, so
-            // only count the ones the survey finds
-            await MSP.promise(MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS);
-
             const survey = [];
+            const otherIds = [];
             for (const channel of fbusChannels(FC.FBUS_MUX)) {
                 this.autoProgram.current = channel;
                 await this.holdMuxOverride(isolateChannelModes(FC.FBUS_MUX, channel));
 
+                // Only the devices on this output: forget the ones seen before
+                await MSP.promise(MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS);
                 const found = await this.discoverServos();
                 const servos = [];
                 for (const servo of found) {
                     const params = await this.waitForParams(servo.physicalId);
                     servos.push(params ? { ...servo, ...params } : servo);
                 }
-                survey.push({ channel, servos });
+
+                await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
+                const devices = otherDevicePhysicalIds(FC.FBUS_SENSORS);
+                otherIds.push(...devices);
+                survey.push({ channel, servos, devices: devices.size });
             }
 
-            await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
-            const plan = planAutoProgram(survey, otherDevicePhysicalIds(FC.FBUS_SENSORS));
+            const plan = planAutoProgram(survey, new Set(otherIds));
             this.autoProgram = { phase: AutoProgramPhase.REVIEW, current: null, plan, results: [] };
         } catch (err) {
             this.error = err?.message ?? String(err);
@@ -329,6 +336,28 @@ class State {
 
     closeAutoProgram() {
         this.autoProgram = null;
+    }
+
+    // Outputs saved as FBUS where the survey found nothing at all: on FBUS their line floats
+    // and can disturb the replies of every other device, so they are better set to PWM.
+    emptyChannels() {
+        return (this.autoProgram?.plan ?? []).filter((e) => e.status === "empty").map((e) => e.channel);
+    }
+
+    // Saves PWM for the empty outputs and reboots, like the other tabs' Save
+    async setEmptyOutputsToPwm() {
+        const modes = modesWithPwm(FC.FBUS_MUX, this.emptyChannels());
+        const response = await MSP.promise(MSPCodes.MSP2_WING_SET_FBUS_MUX_CONFIG, buildMuxConfigPayload(modes));
+        if (!response || response.unsupported) {
+            this.error = "the FBUS mux refused the output modes";
+            return;
+        }
+        await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
+        GUI.log(get(i18n).t("eepromSaved"));
+        MSP.send_message(MSPCodes.MSP_SET_REBOOT);
+        GUI.log(get(i18n).t("deviceRebooting"));
+        this.autoProgram = null;
+        reinitialiseConnection();
     }
 
     // Keep polling the servo list for a while so rows fill in (e.g. Channel) as the firmware's
