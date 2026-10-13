@@ -210,6 +210,7 @@
 
         <div class="auto-program">
           <p class="mux-note">{$i18n.t("xactServoAutoProgramHelp")}</p>
+          <WarningNote message="xactServoAutoProgramOneServoNote" />
           <button
             class="btn"
             onclick={() => xactState.autoProgramSurvey()}
