@@ -183,13 +183,6 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
-    },
-    {
-      "type": "branch",
-      "name": "feature-rf007v3-mux-remap",
-      "path": "./feature-rf007v3-mux-remap/",
-      "branch": "feature/rf007v3-mux-remap",
-      "date": "2026-10-13T23:44:21Z"
     }
   ]
 }
