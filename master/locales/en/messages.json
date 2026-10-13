@@ -8417,7 +8417,7 @@
         "message": "Servo 1. Commonly this is the left side Aileron servo."
     },
     "remapFcPurposeS2": {
-        "message": "Servo 2. Commonly this is the right side Aileronservo."
+        "message": "Servo 2. Commonly this is the right side Aileron servo."
     },
     "remapFcPurposeS3": {
         "message": "Servo 3. Commonly this is the Elevator servo."
