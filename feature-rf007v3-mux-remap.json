@@ -1,6 +1,6 @@
 {
   "branch": "feature/rf007v3-mux-remap",
-  "date": "2026-10-13T23:28:39Z",
+  "date": "2026-10-13T23:44:21Z",
   "number": 186,
   "title": "FBUS mux on the RF007 V3: remap tab modes, protected FPGA UART, XACT programming per output",
   "url": "https://github.com/WingFlight/wingflight-configurator/pull/186",
