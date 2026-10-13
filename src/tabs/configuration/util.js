@@ -25,6 +25,8 @@ export const PORT_NAMES_RF2 = {
   F7B4: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Port Ⓔ", 5: "Port Ⓖ" },
   F7B5: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓑ" },
   F7B6: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓖ" },
+  // F7B5 with the FBUS mux FPGA (RF007 V3): UART1 and UART6 go to the FPGA
+  F7B5M: { 0: "FBUS Mux", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "FPGA" },
   F7C1: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "DSM Ⓓ", 5: "Port Ⓑ" },
   F7C2: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "DSM Ⓓ", 5: "Port Ⓖ" },
   F7C3: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "Port Ⓔ", 5: "Port Ⓑ" },

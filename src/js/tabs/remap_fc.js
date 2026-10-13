@@ -14,6 +14,7 @@ import RemapFc from "@/tabs/remap_fc/remap_fc.svelte";
 import { parseHardwareDump, parseMcuType } from "@/js/remap_fc/hardware_parser.js";
 import { isGenericBoardDesign } from "@/js/remap_fc/remap_table.js";
 import { parseServoRates } from "@/js/remap_fc/servo_config_parser.js";
+import { parseFbusMuxPrerequisites } from "@/js/FbusMux.js";
 import {
   parseReservedDmaStreams,
   parseReservedTimers,
@@ -396,6 +397,22 @@ class RemapFcTab {
       this.#servoRates = parseServoRates(servoOutput);
       if (this.#tornDown) return;
 
+      // On an FBUS mux board, what decides whether each output can run in
+      // its selected mode (see FbusMux.js findFbusMuxIssues): the motor
+      // protocol and DShot telemetry for DSHOT, a serial port with the FBUS
+      // master function and the send pin for FBUS. Read with `get` and
+      // `serial` rather than from the diff, which leaves out values equal to
+      // the board's defaults.
+      let fbusMuxPrerequisites = null;
+      if (FC.FBUS_MUX) {
+        let muxOutput = currentDump;
+        for (const command of ["get motor_pwm_protocol", "get dshot_bidir", "serial"]) {
+          muxOutput += await this.#runCommandAndCapture(command);
+          if (this.#tornDown) return;
+        }
+        fbusMuxPrerequisites = parseFbusMuxPrerequisites(muxOutput);
+      }
+
       await this.#runCommandAndCapture("defaults nosave");
       if (this.#tornDown) return;
 
@@ -494,6 +511,7 @@ class RemapFcTab {
         this.#reservedDmaStreams,
         this.#reservedTimers,
         this.#servoRates,
+        fbusMuxPrerequisites,
       );
     } catch (err) {
       console.error("remap_fc: CLI sequence failed", err);

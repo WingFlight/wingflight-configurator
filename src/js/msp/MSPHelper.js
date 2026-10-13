@@ -1,4 +1,5 @@
 import { readAttitudeLimits, writeAttitudeLimits } from "@/js/AttitudeLimits.js";
+import { readFbusMuxConfig } from "@/js/FbusMux.js";
 import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
@@ -585,6 +586,13 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('FBUS master forwarding config saved');
                 break;
             }
+
+            case MSPCodes.MSP2_WING_FBUS_MUX_CONFIG:
+                FC.FBUS_MUX = readFbusMuxConfig(data);
+                break;
+
+            case MSPCodes.MSP2_WING_SET_FBUS_MUX_CONFIG:
+                break;
 
             case MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS: {
                 // Version 2 added the `provider` byte (firmware msp.c) - branch on it

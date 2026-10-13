@@ -785,6 +785,7 @@ async function checkReportProblems() {
 
     await processUid();
     await processName();
+    await processFbusMux();
     await setRtc();
     finishOpen();
 }
@@ -799,6 +800,14 @@ async function processUid() {
 async function processName() {
     await MSP.promise(MSPCodes.MSP_NAME, false);
     GUI.log(i18n.getMessage('craftNameReceived', [FC.CONFIG.name]));
+}
+
+// Only STM32F7X2M builds answer this; on every other build the reply is
+// "unsupported" and FC.FBUS_MUX stays null. The mux modes only change through a
+// save and reboot, which reconnects, so reading it once here keeps it current.
+async function processFbusMux() {
+    FC.FBUS_MUX = null;
+    await MSP.promise(MSPCodes.MSP2_WING_FBUS_MUX_CONFIG, false);
 }
 
 async function setRtc() {

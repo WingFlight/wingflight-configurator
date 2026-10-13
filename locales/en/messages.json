@@ -2190,6 +2190,12 @@
     "portsFunction_FBUS_OUT": {
         "message": "F.BUS"
     },
+    "portsFbusMuxReserved": {
+        "message": "Used by the FBUS mux"
+    },
+    "portsFbusMuxReservedWarning": {
+        "message": "The FBUS mux FPGA needs this port without a function. Set it to Disabled, or the mux stays off and arming is blocked."
+    },
     "portsFunction_CUSTOM": {
         "message": "Custom"
     },
@@ -8460,6 +8466,57 @@
     },
     "remapFcSequenceGapWarning": {
         "message": "Nothing is assigned to {{missing}}, which strands {{stranded}}. The flight controller stops at the first unassigned output rather than skipping it, so {{stranded}} would be silently dropped - and a dropped output still reports its centre value, so mixer rules using it look correct while doing nothing. Assign {{missing}}, or move the higher outputs down to close the gap."
+    },
+    "remapFcMuxHeading": {
+        "message": "FBUS mux"
+    },
+    "remapFcMuxModeLabel": {
+        "message": "Output mode"
+    },
+    "remapFcMuxModeHelp": {
+        "message": "This output reaches its pin through the FBUS mux. PWM passes the signal of the feature assigned here, FBUS puts the FBUS master line on the pin for bus servos, and DShot passes bidirectional DShot from a motor. Keep outputs with nothing connected on PWM: an unconnected FBUS output disturbs the replies on the bus."
+    },
+    "remapFcMuxMode_PWM": {
+        "message": "PWM"
+    },
+    "remapFcMuxMode_FBUS": {
+        "message": "FBUS"
+    },
+    "remapFcMuxMode_DSHOT": {
+        "message": "DShot (bidirectional)"
+    },
+    "remapFcMuxModeInUse": {
+        "message": "The flight controller runs this output as {{mode}} at the moment, because the selected mode's requirements were not met when it started."
+    },
+    "remapFcMuxIssue_fbusNeedsMasterPort": {
+        "message": "FBUS needs a serial port set to F.BUS on the Ports tab. Without one, this output stays on PWM."
+    },
+    "remapFcMuxIssue_fbusNeedsSendPin": {
+        "message": "FBUS needs the FBUS_MASTER_SEND resource. Without it, this output stays on PWM."
+    },
+    "remapFcMuxIssue_dshotNeedsBidirProtocol": {
+        "message": "DShot needs the motor protocol DShot300 or DShot600 with bidirectional DShot on (Motors tab). Until then, this output stays on PWM."
+    },
+    "remapFcMuxIssue_dshotNeedsMotor": {
+        "message": "DShot passes a motor's signal, so assign a motor to this pin. With a servo here there is no DShot signal."
+    },
+    "remapFcMuxStatus": {
+        "message": "The FBUS mux reports: {{status}}."
+    },
+    "remapFcMuxStatus_DISABLED": {
+        "message": "not set up, its pins are not assigned"
+    },
+    "remapFcMuxStatus_RESOURCE_ERROR": {
+        "message": "a pin, SPI bus or serial port it needs is missing or in use. Arming is blocked"
+    },
+    "remapFcMuxStatus_LOAD_FAILED": {
+        "message": "the FPGA did not accept its bitstream. Arming is blocked"
+    },
+    "remapFcMuxStatus_NO_CONFIG_ECHO": {
+        "message": "the FPGA did not confirm the output modes. Arming is blocked"
+    },
+    "remapFcMuxUndocumented": {
+        "message": "This board has an FBUS mux, but its board design does not say which pins go through it. Set the output modes in the CLI with fbus_mux_ch1_mode to fbus_mux_ch5_mode."
     },
     "remapFcServoRateHeading": {
         "message": "Servo frequency groups"
