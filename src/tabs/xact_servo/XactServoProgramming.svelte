@@ -275,6 +275,13 @@
               </tbody>
             </table>
           {/if}
+          {#if ap.clashes?.length}
+            <p class="status error">
+              {$i18n.t("xactServoAutoProgramBusClash", {
+                outputs: ap.clashes.map((ch) => muxOutputLabels[ch]).join(", "),
+              })}
+            </p>
+          {/if}
           {#if (ap.phase === AutoProgramPhase.REVIEW || ap.phase === AutoProgramPhase.DONE) && xactState.emptyChannels().length}
             <WarningNote message="xactServoAutoProgramEmptyNote" />
             <div class="auto-program-actions">

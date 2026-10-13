@@ -592,6 +592,12 @@
     "xactServoAutoProgramEmptyNote": {
         "message": "Nothing answered on some outputs set to FBUS. On FBUS a line with nothing connected floats, and if it gets stuck it can disturb the replies of every other device on the bus. Setting these outputs to PWM avoids that."
     },
+    "xactServoAutoProgramMuxLost": {
+        "message": "Stopped: FBUS was no longer on the selected output alone."
+    },
+    "xactServoAutoProgramBusClash": {
+        "message": "{{outputs}}: these servos now have the same Physical ID or App ID, because not every servo took its new values. Run auto-programming again before using these outputs on FBUS together."
+    },
     "xactServoAutoProgramSetPwm": {
         "message": "Set {{outputs}} to PWM and reboot"
     },

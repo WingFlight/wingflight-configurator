@@ -5,6 +5,7 @@ import {
     autoProgramValues,
     buildMuxConfigPayload,
     buildMuxOverridePayload,
+    busIdClashes,
     fbusChannels,
     isolateChannelModes,
     modesWithPwm,
@@ -118,4 +119,19 @@ test('empty outputs go to PWM, the rest keeps its saved mode', () => {
     const modes = modesWithPwm(MUX, [2, 3]);
     assert.deepEqual(modes, [0, 0, 0, 1, 2]);
     assert.deepEqual(buildMuxConfigPayload(modes), [1, 5, 0, 0, 0, 1, 2]);
+});
+
+test('a servo that kept its IDs clashes with one programmed to them', () => {
+    const plan = planAutoProgram([
+        { channel: 1, servos: [{ ...factoryServo(), physicalId: 7, appIdOffset: 7 }] },
+        { channel: 4, servos: [{ ...factoryServo(), physicalId: 1, appIdOffset: 0 }] },
+    ], new Set());
+    assert.deepEqual(busIdClashes(plan, [
+        { channel: 1, status: 'programmed' },
+        { channel: 4, status: 'failed' },
+    ]), [1, 4]);
+    assert.deepEqual(busIdClashes(plan, [
+        { channel: 1, status: 'programmed' },
+        { channel: 4, status: 'programmed' },
+    ]), []);
 });

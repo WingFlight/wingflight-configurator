@@ -120,6 +120,25 @@ export function planAutoProgram(survey, otherIds) {
     });
 }
 
+/**
+ * Outputs whose servo shares its Physical ID or App ID with another output's servo once
+ * programming has ended. A servo that was not programmed keeps the IDs the survey found,
+ * which another servo may just have been given.
+ * @returns {number[]} 1-based channels.
+ */
+export function busIdClashes(plan, results) {
+    const ids = plan
+        .filter((entry) => entry.servo)
+        .map((entry) => {
+            const programmed = results.find((r) => r.channel === entry.channel)?.status === "programmed";
+            const { physicalId, appIdOffset } = programmed ? entry.target : entry.servo;
+            return { channel: entry.channel, physicalId, appIdOffset };
+        });
+    return ids
+        .filter((a) => ids.some((b) => b !== a && (b.physicalId === a.physicalId || b.appIdOffset === a.appIdOffset)))
+        .map((a) => a.channel);
+}
+
 // Every setting the servo stores (protocol.js parseServoParams), for checking a write
 const SERVO_SETTINGS = [
     "physicalId", "appIdOffset", "dataRate", "range", "direction", "pulseType", "channel",

@@ -8,6 +8,7 @@ import { reinitialiseConnection } from "@/js/serial_backend.js";
 
 import {
     autoProgramValues,
+    busIdClashes,
     buildMuxConfigPayload,
     buildMuxOverridePayload,
     fbusChannels,
@@ -82,8 +83,13 @@ class State {
     muxChannel = $state(null);
     #muxOverrideTimer = null;
     #muxOverrideModes = null;
+    // A refresh failed, so the firmware may have dropped the override
+    #muxOverrideLost = false;
+    // Counts releaseMux() calls, so auto-programming stops once the tab is left
+    #muxRun = 0;
 
-    // Auto-programming in progress or finished: { phase, current, plan, results }, else null
+    // Auto-programming in progress or finished: { phase, current, plan, results, clashes },
+    // else null
     autoProgram = $state(null);
 
     // initialValues must be reactive ($state): `changes` reads it, and a plain field
@@ -114,9 +120,11 @@ class State {
     async holdMuxOverride(modes) {
         this.#muxOverrideModes = modes;
         await this.#sendMuxOverride();
+        this.#muxOverrideLost = false;
         if (!this.#muxOverrideTimer) {
             this.#muxOverrideTimer = setInterval(() => {
                 this.#sendMuxOverride().catch((err) => {
+                    this.#muxOverrideLost = true;
                     console.error("xact_servo: FBUS mux override refresh failed", err);
                 });
             }, MUX_OVERRIDE_REFRESH_MS);
@@ -158,8 +166,9 @@ class State {
         }
     }
 
-    // Leaving the tab: back to the saved modes
+    // Leaving the tab: back to the saved modes, and auto-programming stops
     async releaseMux() {
+        this.#muxRun++;
         this.muxChannel = null;
         await this.endMuxOverride();
     }
@@ -209,6 +218,14 @@ class State {
         return this.scan();
     }
 
+    // Auto-programming only talks to the servo on one output while FBUS is on that output
+    // alone: stops if an override refresh failed or the tab was left since `run` started.
+    #checkMuxHeld(run) {
+        if (this.#muxOverrideLost || run !== this.#muxRun) {
+            throw new Error(get(i18n).t("xactServoAutoProgramMuxLost"));
+        }
+    }
+
     // Restarts discovery and polls the list until it has settled, calling onUpdate with
     // every poll's list. Returns the final list.
     async discoverServos(onUpdate = () => {}) {
@@ -251,6 +268,7 @@ class State {
     async autoProgramSurvey() {
         this.reset();
         this.autoProgram = { phase: AutoProgramPhase.SURVEY, current: null, plan: [], results: [] };
+        const run = this.#muxRun;
 
         try {
             const survey = [];
@@ -269,6 +287,7 @@ class State {
                 }
 
                 await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
+                this.#checkMuxHeld(run);
                 const devices = otherDevicePhysicalIds(FC.FBUS_SENSORS);
                 otherIds.push(...devices);
                 survey.push({ channel, servos, devices: devices.size });
@@ -290,6 +309,7 @@ class State {
     async autoProgramApply() {
         const plan = this.autoProgram.plan;
         this.autoProgram = { phase: AutoProgramPhase.PROGRAMMING, current: null, plan, results: [] };
+        const run = this.#muxRun;
 
         try {
             for (const entry of plan) {
@@ -302,7 +322,7 @@ class State {
                 await this.holdMuxOverride(isolateChannelModes(FC.FBUS_MUX, entry.channel));
                 this.autoProgram.results.push({
                     channel: entry.channel,
-                    status: await this.#programServo(entry),
+                    status: await this.#programServo(entry, run),
                 });
             }
             this.autoProgram.phase = AutoProgramPhase.DONE;
@@ -311,17 +331,19 @@ class State {
             this.error = err?.message ?? String(err);
             this.autoProgram.phase = AutoProgramPhase.DONE;
         } finally {
+            this.autoProgram.clashes = busIdClashes(plan, this.autoProgram.results);
             await this.endMuxOverride();
             this.muxChannel = null;
         }
     }
 
-    async #programServo(entry) {
+    async #programServo(entry, run) {
         // The survey's discovery list was replaced by the next output's, so find it again
         const found = await this.discoverServos();
         const servo = found.find((s) => s.physicalId === entry.servo.physicalId);
         const params = found.length === 1 && servo ? await this.waitForParams(servo.physicalId) : null;
         if (!params) return "failed";
+        this.#checkMuxHeld(run);
 
         const values = autoProgramValues(params, entry.target);
         const payload = buildServoParamsPayload(servo.physicalId, values);
@@ -331,6 +353,7 @@ class State {
         // and check every setting, so one the write wasn't meant to touch can't change unseen
         const after = await this.discoverServos();
         const check = after.length === 1 ? await this.waitForParams(after[0].physicalId) : null;
+        this.#checkMuxHeld(run);
         return check && servoSettingsMismatch(values, check).length === 0 ? "programmed" : "failed";
     }
 
