@@ -70,6 +70,13 @@ function findUsagesByFamily(referenceDesigns, boardDesign) {
  * @returns {?Object} The matched entry's usages object, or null if no manufacturer design's key is a case-insensitive prefix of boardName.
  */
 export function findUsagesByName(referenceDesigns, boardName) {
+  const entry = findManufacturerEntry(referenceDesigns, boardName);
+  return entry ? usagesOf(entry) : null;
+}
+
+// The raw manufacturer_designs.json entry findUsagesByName matches, flags
+// (keys starting with "_", e.g. "_replacesFamily") included.
+function findManufacturerEntry(referenceDesigns, boardName) {
   if (!referenceDesigns || !boardName) return null;
   const lowerName = boardName.toLowerCase();
 
@@ -87,6 +94,14 @@ export function findUsagesByName(referenceDesigns, boardName) {
   return nameKey ? referenceDesigns[nameKey] : null;
 }
 
+// An entry's usages without its "_" flags, so every caller can treat each
+// value as a list of pin entries.
+function usagesOf(entry) {
+  return Object.fromEntries(
+    Object.entries(entry).filter(([key]) => !key.startsWith("_")),
+  );
+}
+
 // Resolves the connected board's full usages picture -- see this
 // file's own header comment for how the two sources are matched and
 // why they're merged rather than one exclusively replacing the other.
@@ -99,9 +114,19 @@ export function findUsagesByName(referenceDesigns, boardName) {
 // reference design documents (every reserved gyro/baro/flash pin a
 // manufacturer entry never repeats) is left untouched. null only when
 // neither source matched at all.
+//
+// A manufacturer entry flagged `"_replacesFamily": true` documents the
+// board's complete pin picture and is used on its own. That is for a board
+// whose design shares a family prefix but not its pinout, like the RF007 V3
+// ("F7B5M"), whose ESC, TAIL and gyro interrupt moved and whose UART1/UART6
+// go to the FBUS mux FPGA -- merging the F7B family would label those pins
+// wrongly and reserve its ESC pin as "Gyro INT".
 function findUsages(referenceDesigns, boardDesign, boardName) {
-  const familyUsages = findUsagesByFamily(referenceDesigns, boardDesign);
-  const nameUsages = findUsagesByName(referenceDesigns, boardName);
+  const entry = findManufacturerEntry(referenceDesigns, boardName);
+  const nameUsages = entry ? usagesOf(entry) : null;
+  const familyUsages = entry?._replacesFamily
+    ? null
+    : findUsagesByFamily(referenceDesigns, boardDesign);
   if (!familyUsages && !nameUsages) return null;
   return { ...familyUsages, ...nameUsages };
 }
@@ -368,6 +393,25 @@ export function buildDesignOrder(referenceDesigns, boardDesign, boardName, defau
     }
   }
   return order;
+}
+
+/**
+ * The pins routed through an FBUS mux FPGA, from a usage entry's
+ * `"muxChannel"` (1-based, the firmware's fbus_mux_chN_mode numbering).
+ * Only a manufacturer design can document these, since the routing is
+ * fixed by one board's PCB.
+ * @param {Object} referenceDesigns - The parsed contents of manufacturer_designs.json (merged with reference_designs.json).
+ * @param {?string} boardName - e.g. "VANTAC_RF007V3", from FC.CONFIG.boardName.
+ * @returns {Object.<number, string>} mux channel -> pin (e.g. 5 -> "A08"); empty when the board documents none.
+ */
+export function buildMuxChannelPins(referenceDesigns, boardName) {
+  const channelPins = {};
+  for (const entries of Object.values(findUsagesByName(referenceDesigns, boardName) ?? {})) {
+    for (const entry of entries) {
+      if (entry.muxChannel) channelPins[entry.muxChannel] = normalizePin(entry.pin);
+    }
+  }
+  return channelPins;
 }
 
 // The full word for an option key's own CLI shorthand prefix -- used
