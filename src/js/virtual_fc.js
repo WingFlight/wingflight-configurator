@@ -485,6 +485,9 @@ export function applyVirtualConfig() {
     pid_process_denom: 2,
   });
 
+  // Not an FBUS mux build (STM32F7X2M): MSP2_WING_FBUS_MUX_CONFIG is unsupported there
+  FC.FBUS_MUX = null;
+
   // Status
   Object.assign(FC.FLIGHT_STATS, {
     stats_total_flights: 7,

@@ -44,6 +44,7 @@
     buildDesignOrder,
     buildHiddenPins,
     buildManufacturerNamedConnectorPins,
+    buildMuxChannelPins,
     buildNamedConnectorPins,
     buildReferenceLabels,
     buildReservedPins,
@@ -53,6 +54,12 @@
     loadManufacturerDesigns,
     loadReferenceDesigns,
   } from "@/js/remap_fc/reference_design_source.js";
+  import {
+    FBUS_MUX_MODES,
+    fbusMuxModeCommands,
+    findFbusMuxIssues,
+    isDshotChannel,
+  } from "@/js/FbusMux.js";
   import mcuAllData from "@/tabs/remap_fc/MCU-all.json";
   import manufacturerDesignsLocal from "@/tabs/remap_fc/manufacturer_designs.json";
   import referenceDesignsLocal from "@/tabs/remap_fc/reference_designs.json";
@@ -143,6 +150,14 @@
   // is shared across every channel on it).
   /** @type {Object.<string, number>} */
   let servoRates = $state({});
+
+  // FBUS mux FPGA boards only (FC.FBUS_MUX, read over MSP at connect):
+  // the selected mode per mux channel (index 0 = channel 1), the baseline
+  // they were read as, and what remap_fc.js read in the CLI to check them
+  // (see FbusMux.js parseFbusMuxPrerequisites).
+  let workingMuxModes = $state([]);
+  let originalMuxModes = $state([]);
+  let fbusMuxPrerequisites = $state(null);
   // Option keys with a row in the table, seeded on read and grown via
   // "+ Add". Picking "None" removes the row again.
   /** @type {string[]} */
@@ -479,6 +494,28 @@
       FC.CONFIG.boardDesign,
       FC.CONFIG.boardName,
     ),
+  );
+
+  // Mux channel -> pin and back, for the outputs this board routes
+  // through its FBUS mux FPGA (the manufacturer design's "muxChannel").
+  // Empty on every board without a mux.
+  let muxChannelPins = $derived(
+    FC.FBUS_MUX
+      ? buildMuxChannelPins(referenceDesigns, FC.CONFIG.boardName)
+      : {},
+  );
+  let muxChannelOfPin = $derived(
+    Object.fromEntries(
+      Object.entries(muxChannelPins).map(([channel, pin]) => [
+        pin,
+        Number(channel),
+      ]),
+    ),
+  );
+  // A mux board whose design documents no mux channels: the modes can
+  // only be set in the CLI.
+  let muxUndocumented = $derived(
+    !!FC.FBUS_MUX && Object.keys(muxChannelPins).length === 0,
   );
 
   // Pins the reference design names as a specific connector (AUX,
@@ -900,8 +937,26 @@
   // changes, timer/DMA changes, or both. Drives the "Load Changes"
   // button/preview panel, which needs to appear even when the only
   // thing staged is a timer/DMA fix with no resource edits alongside it.
+  let muxCommands = $derived(
+    fbusMuxModeCommands(originalMuxModes, workingMuxModes),
+  );
+
+  // Why a channel would not run in its selected mode (the firmware falls
+  // back to PWM). Warnings only: the motor protocol and serial ports are
+  // set on other tabs, possibly after this.
+  let muxIssues = $derived(
+    fbusMuxPrerequisites
+      ? findFbusMuxIssues(
+          workingMuxModes,
+          muxChannelPins,
+          workingCurrent,
+          fbusMuxPrerequisites,
+        )
+      : [],
+  );
+
   let hasStagedCommands = $derived(
-    hasPendingChanges || timerDmaCommands.length > 0,
+    hasPendingChanges || timerDmaCommands.length > 0 || muxCommands.length > 0,
   );
 
   // The rate a freshly assigned/moved servo will actually come up at
@@ -990,6 +1045,7 @@
     ...DSHOT_SETTING_COMMANDS,
     ...pendingCommands,
     ...timerDmaCommands,
+    ...muxCommands,
     "save",
   ]);
 
@@ -1022,6 +1078,7 @@
    * @param {Set<string>} [reservedDma] - See remap_fc.js's #reservedDmaStreams.
    * @param {Set<string>} [reservedTmr] - See remap_fc.js's #reservedTimers.
    * @param {Object.<string, number>} [servoRts] - See remap_fc.js's #servoRates.
+   * @param {?Object} [muxPrerequisites] - See FbusMux.js parseFbusMuxPrerequisites; null without a mux.
    */
   export function setHardware(
     current,
@@ -1030,8 +1087,13 @@
     reservedDma = new Set(),
     reservedTmr = new Set(),
     servoRts = {},
+    muxPrerequisites = null,
   ) {
     rawDefaultHardware = defaultHw;
+    fbusMuxPrerequisites = muxPrerequisites;
+    originalMuxModes =
+      FC.FBUS_MUX?.channels.map((channel) => channel.mode) ?? [];
+    workingMuxModes = [...originalMuxModes];
 
     // A manufacturer design's own named connector can be physically
     // wired to a pin this board's compiled defaults leave completely
@@ -1142,6 +1204,7 @@
 
     workingCurrent = next;
     originalCurrent = { ...next };
+    originalMuxModes = [...workingMuxModes];
   }
 
   export function reset() {
@@ -1156,6 +1219,9 @@
     reservedDmaStreams = new Set();
     reservedTimers = new Set();
     servoRates = {};
+    workingMuxModes = [];
+    originalMuxModes = [];
+    fbusMuxPrerequisites = null;
     visibleOptions = [];
     unsetOptions = [];
     selectedAddOption = "";
@@ -1239,7 +1305,11 @@
   // stops being recreated -- which would lose the "Default" placeholder
   // for a connector like Flydragon Pro's AUX after Revert, showing it
   // as a plain "None" instead.
+  // The mux baseline is kept the same way: setHardware would reset it to
+  // FC.FBUS_MUX, the read from connect, which markApplied may have moved on
+  // from.
   function handleClearChanges() {
+    const muxBaseline = [...originalMuxModes];
     setHardware(
       originalCurrent,
       rawDefaultHardware,
@@ -1247,7 +1317,30 @@
       reservedDmaStreams,
       reservedTimers,
       servoRates,
+      fbusMuxPrerequisites,
     );
+    originalMuxModes = muxBaseline;
+    workingMuxModes = [...muxBaseline];
+  }
+
+  function handleMuxModeChange(channel, e) {
+    workingMuxModes[channel - 1] = e.target.value;
+  }
+
+  // PWM and FBUS on every mux channel, DSHOT only where the bitstream has
+  // a DShot bridge (the firmware refuses it elsewhere).
+  function muxModeOptions(channel) {
+    return FBUS_MUX_MODES.filter(
+      (mode) => mode !== "DSHOT" || isDshotChannel(FC.FBUS_MUX, channel),
+    ).map((mode) => ({
+      value: mode,
+      label: $i18n.t(`remapFcMuxMode_${mode}`),
+    }));
+  }
+
+  function muxChannelLabel(channel) {
+    const pin = muxChannelPins[channel];
+    return referenceLabels[pin] ?? pin;
   }
 
   // Fires when a row's Current Option changes: frees whoever occupied
@@ -1567,6 +1660,13 @@
                 >
                   <img class="pin-icon" src="/images/remap_fc/PIN.svg" alt="" />
                   <span class="pin-row-text">{pinColumnLabel(row.option)}</span>
+                  {#if muxChannelOfPin[row.defaultPin]}
+                    <span class="mux-badge"
+                      >{workingMuxModes[
+                        muxChannelOfPin[row.defaultPin] - 1
+                      ]}</span
+                    >
+                  {/if}
                 </button>
               {/each}
               {#if hasRealAddableOptions}
@@ -1755,6 +1855,41 @@
                       />
                     {/key}
                   {/if}
+                  {#if isPinCard && muxChannelOfPin[cardRow.defaultPin]}
+                    {@const channel = muxChannelOfPin[cardRow.defaultPin]}
+                    {@const reported = FC.FBUS_MUX.channels[channel - 1]}
+                    <!-- The output reaches its header pin through the FBUS
+                         mux FPGA, which can also put the FBUS master line
+                         or a DShot bridge on it. Keyed by pin, not by the
+                         feature on it: the FPGA channel is wired to the pin. -->
+                    <div class="mux-mode">
+                      <span class="mux-mode-label"
+                        >{$i18n.t("remapFcMuxModeLabel")}</span
+                      >
+                      <Select
+                        value={workingMuxModes[channel - 1]}
+                        onchange={(e) => handleMuxModeChange(channel, e)}
+                        options={muxModeOptions(channel)}
+                      />
+                    </div>
+                    <p class="option-card-description">
+                      {$i18n.t("remapFcMuxModeHelp")}
+                    </p>
+                    {#each muxIssues.filter((i) => i.channel === channel) as issue (issue.issue)}
+                      <p class="allocation-warning">
+                        {$i18n.t(`remapFcMuxIssue_${issue.issue}`)}
+                      </p>
+                    {/each}
+                    {#if reported && reported.activeMode !== reported.mode && workingMuxModes[channel - 1] === reported.mode}
+                      <p class="allocation-warning">
+                        {$i18n.t("remapFcMuxModeInUse", {
+                          mode: $i18n.t(
+                            `remapFcMuxMode_${reported.activeMode}`,
+                          ),
+                        })}
+                      </p>
+                    {/if}
+                  {/if}
                 </div>
               {:else}
                 <div class="option-card option-card-placeholder">
@@ -1829,6 +1964,43 @@
         </Section>
       </div>
     {/if}
+  {/if}
+
+  <!-- FBUS mux: the FPGA's own state when it isn't ready, a mux the
+       board design doesn't document, and why a selected mode would fall
+       back to PWM. Doesn't block "Load Changes" (see muxIssues). -->
+  {#if mcuSupported && hasRead && FC.FBUS_MUX && (FC.FBUS_MUX.status !== "READY" || muxUndocumented || muxIssues.length)}
+    <div class="pin-conflict-card">
+      <Section>
+        {#snippet header()}
+          <div class="header">
+            <span class="title warning-title"
+              >{$i18n.t("remapFcMuxHeading")}</span
+            >
+          </div>
+        {/snippet}
+
+        {#if FC.FBUS_MUX.status !== "READY"}
+          <p class="allocation-warning">
+            {$i18n.t("remapFcMuxStatus", {
+              status: $i18n.t(`remapFcMuxStatus_${FC.FBUS_MUX.status}`, {
+                defaultValue: FC.FBUS_MUX.status,
+              }),
+            })}
+          </p>
+        {/if}
+        {#if muxUndocumented}
+          <p class="allocation-warning">{$i18n.t("remapFcMuxUndocumented")}</p>
+        {/if}
+        {#each muxIssues as issue (`${issue.channel}-${issue.issue}`)}
+          <p class="allocation-warning">
+            {muxChannelLabel(issue.channel)}: {$i18n.t(
+              `remapFcMuxIssue_${issue.issue}`,
+            )}
+          </p>
+        {/each}
+      </Section>
+    </div>
   {/if}
 
   <!-- A motor/servo left stranded above a hole in its own numbering.
@@ -2426,6 +2598,28 @@
      that would otherwise spill past the row. min-width: 0 lets a flex
      child actually shrink below its content's natural width, which a
      plain overflow/text-overflow pair alone won't do. */
+  .mux-badge {
+    margin-left: auto;
+    padding: 0 4px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    font-size: 0.65rem;
+    line-height: 1.4;
+    opacity: 0.8;
+  }
+
+  .mux-mode {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .mux-mode-label {
+    white-space: nowrap;
+    font-weight: bold;
+  }
+
   .pin-row-text {
     min-width: 0;
     overflow: hidden;

@@ -2,6 +2,7 @@
   import semver from "semver";
 
   import { FC } from "@/js/fc.svelte.js";
+  import { isFbusMuxSerialPort } from "@/js/FbusMux.js";
   import { i18n } from "@/js/i18n.js";
 
   import {
@@ -116,16 +117,31 @@
           <div class="uartid">{portUartLabel(port)}</div>
         </td>
         <td>
-          <select
-            value={port.functionMask}
-            onchange={(e) => onFunctionChange(port, e.target.value)}
-          >
-            {#each functionOptionsFor(port) as opt (opt.value)}
-              <option value={opt.value} disabled={opt.disabled}
-                >{opt.label}</option
-              >
-            {/each}
-          </select>
+          <!-- The FBUS mux FPGA's configuration port must stay without a
+               function, or the mux stays off at the next boot. Locked
+               while free; with a function on it, it stays editable so
+               the function can be removed. -->
+          {#if isFbusMuxSerialPort(FC.FBUS_MUX, port) && !port.functionMask}
+            <select disabled>
+              <option>{$i18n.t("portsFbusMuxReserved")}</option>
+            </select>
+          {:else}
+            <select
+              value={port.functionMask}
+              onchange={(e) => onFunctionChange(port, e.target.value)}
+            >
+              {#each functionOptionsFor(port) as opt (opt.value)}
+                <option value={opt.value} disabled={opt.disabled}
+                  >{opt.label}</option
+                >
+              {/each}
+            </select>
+            {#if isFbusMuxSerialPort(FC.FBUS_MUX, port)}
+              <div class="mux-warning">
+                {$i18n.t("portsFbusMuxReservedWarning")}
+              </div>
+            {/if}
+          {/if}
         </td>
         <td>
           <select
@@ -174,5 +190,11 @@
 
   select {
     width: 100%;
+  }
+
+  .mux-warning {
+    margin-top: 3px;
+    font-size: 0.75rem;
+    color: var(--color-status-bad);
   }
 </style>

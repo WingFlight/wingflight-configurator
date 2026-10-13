@@ -24,6 +24,7 @@ class FlightController {
   ESC_SENSOR_CONFIG = $state();
   FAILSAFE_CONFIG = $state();
   FBUS_MASTER_CONFIG = $state();
+  FBUS_MUX = $state();
   FBUS_SENSORS = $state();
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
@@ -273,6 +274,8 @@ class FlightController {
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
     };
+    // FBUS mux FPGA (src/js/FbusMux.js), null on builds without one
+    this.FBUS_MUX = null;
     this.PID_NAMES =                [];
     this.PIDS_ACTIVE = Array.from({length: 3});
     this.PIDS = Array.from({length: 3});

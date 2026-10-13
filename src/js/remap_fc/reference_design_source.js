@@ -51,7 +51,9 @@ async function fetchDesignFile(filename, localData) {
     }
 
     console.log(`remap_fc: loaded ${filename} from GitHub`);
-    return data;
+    // Keep bundled entries GitHub doesn't have yet (a board added in this
+    // build but not merged), with GitHub's copy winning for every other one.
+    return { ...localData, ...data };
   } catch (err) {
     console.log(
       `remap_fc: could not fetch latest ${filename}, using the bundled copy`,

@@ -8,9 +8,17 @@
   import WarningNote from "@/components/notes/WarningNote.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
   import { getTabHelpURL } from "@/js/help";
+  import { FC } from "@/js/fc.svelte.js";
+  import {
+    buildMuxChannelPins,
+    buildReferenceLabels,
+  } from "@/js/remap_fc/reference_design_labels.js";
+  import manufacturerDesigns from "@/tabs/remap_fc/manufacturer_designs.json";
+  import referenceDesigns from "@/tabs/remap_fc/reference_designs.json";
 
-  import xactState, { View } from "./state.svelte.js";
+  import xactState, { AutoProgramPhase, View } from "./state.svelte.js";
   import { FBUS_SERVO_DATA_BASE } from "./protocol.js";
+  import { AUTO_PROGRAM_RANGE, fbusChannels } from "./mux_programming.js";
 
   let loading = $state(false);
   let showToolbar = $derived(
@@ -40,6 +48,60 @@
         s.appIdOffset === xactState.values.appIdOffset,
     ),
   );
+
+  // FBUS mux boards: name of each mux output (e.g. "S1", "TAIL") from the board's design,
+  // falling back to its number.
+  const designs = { ...referenceDesigns, ...manufacturerDesigns };
+  let muxOutputLabels = $derived.by(() => {
+    if (!FC.FBUS_MUX) return {};
+    const pins = buildMuxChannelPins(designs, FC.CONFIG.boardName);
+    const labels = buildReferenceLabels(
+      designs,
+      FC.CONFIG.boardDesign,
+      FC.CONFIG.boardName,
+    );
+    return Object.fromEntries(
+      FC.FBUS_MUX.channels.map((_, i) => [
+        i + 1,
+        labels[pins[i + 1]] ?? $i18n.t("xactServoMuxOutput", { number: i + 1 }),
+      ]),
+    );
+  });
+  let autoProgramChannels = $derived(fbusChannels(FC.FBUS_MUX));
+  let autoProgramBusy = $derived(
+    xactState.autoProgram?.phase === AutoProgramPhase.SURVEY ||
+      xactState.autoProgram?.phase === AutoProgramPhase.PROGRAMMING,
+  );
+  let busy = $derived(xactState.view === View.SCANNING || autoProgramBusy);
+  let muxChannelOptions = $derived([
+    { value: "", label: $i18n.t("xactServoMuxAllOutputs") },
+    ...(FC.FBUS_MUX?.channels ?? []).map((channel, i) => ({
+      value: String(i + 1),
+      label: $i18n.t("xactServoMuxOutputOption", {
+        output: muxOutputLabels[i + 1],
+        mode: channel.mode,
+      }),
+    })),
+  ]);
+
+  function onMuxChannelChange(e) {
+    xactState.selectMuxChannel(
+      e.target.value === "" ? null : Number(e.target.value),
+    );
+  }
+
+  function servoSummary(servo) {
+    return [
+      `${$i18n.t("xactServoPhysicalId")} ${hex(servo.physicalId, 2)}`,
+      hex(FBUS_SERVO_DATA_BASE + servo.appIdOffset, 4),
+      `CH${servo.channel + 1}`,
+      rangeOptions.find((o) => o.value === servo.range)?.label ?? "",
+    ].join(" · ");
+  }
+
+  function targetSummary(target) {
+    return servoSummary({ ...target, range: AUTO_PROGRAM_RANGE });
+  }
 
   function hex(value, digits) {
     return value.toString(16).toUpperCase().padStart(digits, "0");
@@ -106,11 +168,7 @@
 {#snippet header()}
   <h1>{$i18n.t("tabXactServoProgramming")}</h1>
   <div class="grow"></div>
-  <button
-    class="btn"
-    onclick={onClickScan}
-    disabled={xactState.view === View.SCANNING}
-  >
+  <button class="btn" onclick={onClickScan} disabled={busy}>
     {$i18n.t("xactServoScanButton")}
   </button>
   <button class="btn help-btn" onclick={onClickHelp}>
@@ -126,6 +184,147 @@
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
   <p class="intro">{$i18n.t("xactServoIntro")}</p>
   <WarningNote message="xactServoSingleServoNote" />
+
+  <!-- FBUS mux boards: pick the output to program on (FBUS put on it alone), and
+       auto-programming over every output saved as FBUS. -->
+  {#if FC.FBUS_MUX}
+    <div class="mux-card">
+      <Section label="xactServoMuxSection">
+        <Field id="muxChannel" label="xactServoMuxChannel">
+          {#snippet tooltip()}
+            <Tooltip help="xactServoMuxChannelHelp" />
+          {/snippet}
+          <Select
+            id="muxChannel"
+            value={xactState.muxChannel === null
+              ? ""
+              : String(xactState.muxChannel)}
+            options={muxChannelOptions}
+            disabled={busy}
+            onchange={onMuxChannelChange}
+          />
+        </Field>
+        {#if xactState.muxChannel !== null}
+          <p class="mux-note">{$i18n.t("xactServoMuxChannelHeld")}</p>
+        {/if}
+
+        <div class="auto-program">
+          <p class="mux-note">{$i18n.t("xactServoAutoProgramHelp")}</p>
+          <WarningNote message="xactServoAutoProgramOneServoNote" />
+          <button
+            class="btn"
+            onclick={() => xactState.autoProgramSurvey()}
+            disabled={busy || autoProgramChannels.length === 0}
+          >
+            {$i18n.t("xactServoAutoProgramButton")}
+          </button>
+          {#if autoProgramChannels.length === 0}
+            <p class="status error">{$i18n.t("xactServoAutoProgramNoFbus")}</p>
+          {/if}
+        </div>
+
+        {#if xactState.autoProgram}
+          {@const ap = xactState.autoProgram}
+          {#if ap.current !== null}
+            <p class="status">
+              {$i18n.t(
+                ap.phase === AutoProgramPhase.SURVEY
+                  ? "xactServoAutoProgramChecking"
+                  : "xactServoAutoProgramWriting",
+                { output: muxOutputLabels[ap.current] },
+              )}
+            </p>
+          {/if}
+          {#if ap.plan.length}
+            <table class="auto-program-table">
+              <thead>
+                <tr>
+                  <th>{$i18n.t("xactServoAutoProgramOutput")}</th>
+                  <th>{$i18n.t("xactServoAutoProgramFound")}</th>
+                  <th>{$i18n.t("xactServoAutoProgramNew")}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each ap.plan as entry (entry.channel)}
+                  {@const result = ap.results.find(
+                    (r) => r.channel === entry.channel,
+                  )}
+                  <tr>
+                    <td>{muxOutputLabels[entry.channel]}</td>
+                    <td>{entry.servo ? servoSummary(entry.servo) : "-"}</td>
+                    <td>{entry.target ? targetSummary(entry.target) : "-"}</td>
+                    <td
+                      class:error={[
+                        "failed",
+                        "idClash",
+                        "multipleServos",
+                      ].includes(result?.status ?? entry.status)}
+                    >
+                      {$i18n.t(
+                        `xactServoAutoStatus_${result?.status ?? entry.status}`,
+                        {
+                          id: entry.target
+                            ? hex(entry.target.physicalId, 2)
+                            : "",
+                        },
+                      )}
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          {/if}
+          {#if ap.clashes?.length}
+            <p class="status error">
+              {$i18n.t("xactServoAutoProgramBusClash", {
+                outputs: ap.clashes.map((ch) => muxOutputLabels[ch]).join(", "),
+              })}
+            </p>
+          {/if}
+          {#if (ap.phase === AutoProgramPhase.REVIEW || ap.phase === AutoProgramPhase.DONE) && xactState.emptyChannels().length}
+            <WarningNote message="xactServoAutoProgramEmptyNote" />
+            <div class="auto-program-actions">
+              <button
+                class="btn"
+                onclick={() => xactState.setEmptyOutputsToPwm()}
+              >
+                {$i18n.t("xactServoAutoProgramSetPwm", {
+                  outputs: xactState
+                    .emptyChannels()
+                    .map((ch) => muxOutputLabels[ch])
+                    .join(", "),
+                })}
+              </button>
+            </div>
+          {/if}
+          {#if ap.phase === AutoProgramPhase.REVIEW}
+            <div class="auto-program-actions">
+              <button
+                class="btn"
+                onclick={() => xactState.autoProgramApply()}
+                disabled={!ap.plan.some((e) => e.status === "program")}
+              >
+                {$i18n.t("xactServoAutoProgramApply")}
+              </button>
+              <button class="btn" onclick={() => xactState.closeAutoProgram()}>
+                {$i18n.t("xactServoAutoProgramCancel")}
+              </button>
+            </div>
+          {:else if ap.phase === AutoProgramPhase.DONE}
+            <div class="auto-program-actions">
+              <button class="btn" onclick={() => xactState.closeAutoProgram()}>
+                {$i18n.t("xactServoAutoProgramClose")}
+              </button>
+            </div>
+          {/if}
+        {/if}
+        {#if xactState.error}
+          <p class="status error">{xactState.error}</p>
+        {/if}
+      </Section>
+    </div>
+  {/if}
 
   {#if xactState.view === View.IDLE}
     <p class="status">{$i18n.t("xactServoIdle")}</p>
@@ -407,6 +606,56 @@
 
   .status.error {
     color: var(--color-red-900);
+  }
+
+  .mux-card {
+    max-width: 760px;
+    margin-bottom: 8px;
+  }
+
+  .mux-note {
+    padding: 4px 8px;
+    color: var(--color-text-soft);
+  }
+
+  .auto-program {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-top: 8px;
+
+    .btn {
+      margin-left: 8px;
+    }
+  }
+
+  .auto-program-table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+
+    th,
+    td {
+      padding: 4px 8px;
+      text-align: left;
+    }
+
+    tr + tr td,
+    tbody tr:first-child td {
+      border-top: 1px dotted var(--color-border);
+    }
+
+    td.error {
+      color: var(--color-red-900);
+    }
+  }
+
+  .auto-program-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
   }
 
   .pages {

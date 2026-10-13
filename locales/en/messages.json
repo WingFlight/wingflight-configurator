@@ -511,6 +511,102 @@
     "xactServoIntro": {
         "message": "Program XACT FBUS servo parameters over telemetry. XACT servos report and are configured over the same S.Port/FBUS wire used for telemetry — no separate programming connection is needed. Scan for connected servos, then select one to edit and write its parameters."
     },
+    "xactServoMuxSection": {
+        "message": "FBUS mux outputs"
+    },
+    "xactServoMuxChannel": {
+        "message": "Program on"
+    },
+    "xactServoMuxChannelHelp": {
+        "message": "This board switches its outputs between PWM and FBUS with an FPGA. Pick one output to put FBUS on it alone, so scans and writes only reach the servo plugged in there, even if several servos share the same IDs. The other outputs stay as saved, except that other FBUS outputs are switched off FBUS meanwhile."
+    },
+    "xactServoMuxAllOutputs": {
+        "message": "All FBUS outputs (as saved)"
+    },
+    "xactServoMuxOutput": {
+        "message": "Output {{number}}"
+    },
+    "xactServoMuxOutputOption": {
+        "message": "{{output}} (saved: {{mode}})"
+    },
+    "xactServoMuxChannelHeld": {
+        "message": "FBUS is on this output only while it is selected. Arming is blocked until you pick \"All FBUS outputs\" or leave this tab."
+    },
+    "xactServoAutoProgramHelp": {
+        "message": "Auto program gives the servo on each output set to FBUS its own Physical ID, App ID and channel, and sets its range to 180°: S1 gets ID 01, 6800 and CH1, S2 02, 6801 and CH2, S3 03, 6802 and CH3, TAIL 04, 6803 and CH4. The ESC output is left alone."
+    },
+    "xactServoAutoProgramOneServoNote": {
+        "message": "Auto program only works with one servo connected to each output. If several servos are connected to the same output, they can't be told apart: program them one by one instead, with only one of them connected at a time, or pick their output under \"Program on\" and program each one in the form below."
+    },
+    "xactServoAutoProgramButton": {
+        "message": "Auto program"
+    },
+    "xactServoAutoProgramNoFbus": {
+        "message": "No output is set to FBUS. Set the outputs with bus servos to FBUS in the remap tab first."
+    },
+    "xactServoAutoProgramChecking": {
+        "message": "Checking {{output}}..."
+    },
+    "xactServoAutoProgramWriting": {
+        "message": "Programming {{output}}..."
+    },
+    "xactServoAutoProgramOutput": {
+        "message": "Output"
+    },
+    "xactServoAutoProgramFound": {
+        "message": "Found"
+    },
+    "xactServoAutoProgramNew": {
+        "message": "New"
+    },
+    "xactServoAutoProgramApply": {
+        "message": "Program servos"
+    },
+    "xactServoAutoProgramCancel": {
+        "message": "Cancel"
+    },
+    "xactServoAutoProgramClose": {
+        "message": "Close"
+    },
+    "xactServoAutoStatus_program": {
+        "message": "Will be programmed"
+    },
+    "xactServoAutoStatus_unchanged": {
+        "message": "Already set"
+    },
+    "xactServoAutoStatus_notPlanned": {
+        "message": "Not auto-programmed"
+    },
+    "xactServoAutoStatus_noServo": {
+        "message": "No servo found"
+    },
+    "xactServoAutoStatus_multipleServos": {
+        "message": "More than one servo answers here. Connect one servo per output."
+    },
+    "xactServoAutoStatus_idClash": {
+        "message": "Skipped: another device on the bus uses Physical ID {{id}} or this App ID."
+    },
+    "xactServoAutoStatus_empty": {
+        "message": "Nothing connected"
+    },
+    "xactServoAutoProgramEmptyNote": {
+        "message": "Nothing answered on some outputs set to FBUS. On FBUS a line with nothing connected floats, and if it gets stuck it can disturb the replies of every other device on the bus. Setting these outputs to PWM avoids that."
+    },
+    "xactServoAutoProgramMuxLost": {
+        "message": "Stopped: FBUS was no longer on the selected output alone."
+    },
+    "xactServoAutoProgramBusClash": {
+        "message": "{{outputs}}: these servos now have the same Physical ID or App ID, because not every servo took its new values. Run auto-programming again before using these outputs on FBUS together."
+    },
+    "xactServoAutoProgramSetPwm": {
+        "message": "Set {{outputs}} to PWM and reboot"
+    },
+    "xactServoAutoStatus_programmed": {
+        "message": "Programmed"
+    },
+    "xactServoAutoStatus_failed": {
+        "message": "Failed: the servo did not answer with the new values."
+    },
     "xactServoSingleServoNote": {
         "message": "Every XACT servo on the bus needs a unique Physical ID. Two servos sharing one collide and are tracked as a single entry -- if they also share the same App ID this tool has no way to tell them apart, so double-check factory-default units before connecting them together."
     },
@@ -2189,6 +2285,12 @@
     },
     "portsFunction_FBUS_OUT": {
         "message": "F.BUS"
+    },
+    "portsFbusMuxReserved": {
+        "message": "Used by the FBUS mux"
+    },
+    "portsFbusMuxReservedWarning": {
+        "message": "The FBUS mux FPGA needs this port without a function. Set it to Disabled, or the mux stays off and arming is blocked."
     },
     "portsFunction_CUSTOM": {
         "message": "Custom"
@@ -8460,6 +8562,57 @@
     },
     "remapFcSequenceGapWarning": {
         "message": "Nothing is assigned to {{missing}}, which strands {{stranded}}. The flight controller stops at the first unassigned output rather than skipping it, so {{stranded}} would be silently dropped - and a dropped output still reports its centre value, so mixer rules using it look correct while doing nothing. Assign {{missing}}, or move the higher outputs down to close the gap."
+    },
+    "remapFcMuxHeading": {
+        "message": "FBUS mux"
+    },
+    "remapFcMuxModeLabel": {
+        "message": "Output mode"
+    },
+    "remapFcMuxModeHelp": {
+        "message": "This output reaches its pin through the FBUS mux. PWM passes the signal of the feature assigned here, FBUS puts the FBUS master line on the pin for bus servos, and DShot passes bidirectional DShot from a motor. Keep outputs with nothing connected on PWM: an unconnected FBUS output disturbs the replies on the bus."
+    },
+    "remapFcMuxMode_PWM": {
+        "message": "PWM"
+    },
+    "remapFcMuxMode_FBUS": {
+        "message": "FBUS"
+    },
+    "remapFcMuxMode_DSHOT": {
+        "message": "DShot (bidirectional)"
+    },
+    "remapFcMuxModeInUse": {
+        "message": "The flight controller runs this output as {{mode}} at the moment, because the selected mode's requirements were not met when it started."
+    },
+    "remapFcMuxIssue_fbusNeedsMasterPort": {
+        "message": "FBUS needs a serial port set to F.BUS on the Ports tab. Without one, this output stays on PWM."
+    },
+    "remapFcMuxIssue_fbusNeedsSendPin": {
+        "message": "FBUS needs the FBUS_MASTER_SEND resource. Without it, this output stays on PWM."
+    },
+    "remapFcMuxIssue_dshotNeedsBidirProtocol": {
+        "message": "DShot needs the motor protocol DShot300 or DShot600 with bidirectional DShot on (Motors tab). Until then, this output stays on PWM."
+    },
+    "remapFcMuxIssue_dshotNeedsMotor": {
+        "message": "DShot passes a motor's signal, so assign a motor to this pin. With a servo here there is no DShot signal."
+    },
+    "remapFcMuxStatus": {
+        "message": "The FBUS mux reports: {{status}}."
+    },
+    "remapFcMuxStatus_DISABLED": {
+        "message": "not set up, its pins are not assigned"
+    },
+    "remapFcMuxStatus_RESOURCE_ERROR": {
+        "message": "a pin, SPI bus or serial port it needs is missing or in use. Arming is blocked"
+    },
+    "remapFcMuxStatus_LOAD_FAILED": {
+        "message": "the FPGA did not accept its bitstream. Arming is blocked"
+    },
+    "remapFcMuxStatus_NO_CONFIG_ECHO": {
+        "message": "the FPGA did not confirm the output modes. Arming is blocked"
+    },
+    "remapFcMuxUndocumented": {
+        "message": "This board has an FBUS mux, but its board design does not say which pins go through it. Set the output modes in the CLI with fbus_mux_ch1_mode to fbus_mux_ch5_mode."
     },
     "remapFcServoRateHeading": {
         "message": "Servo frequency groups"

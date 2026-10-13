@@ -2,6 +2,7 @@
   import { getContext, mount, onDestroy, onMount, unmount } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
+  import { isFbusMuxSerialPort } from "@/js/FbusMux.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
@@ -166,6 +167,7 @@
 
   function choosePort(port) {
     if (port === escPort || maskOf(port) !== 0) return;
+    if (isFbusMuxSerialPort(FC.FBUS_MUX, port)) return;
     if (escPort) escPort.functionMask = maskOf(escPort) & ~ESC_SENSOR_FUNCTION;
     port.functionMask = ESC_SENSOR_FUNCTION;
     changeConnection();
@@ -356,7 +358,8 @@
         <div class="ports" role="radiogroup">
           {#each ports as port (port.identifier)}
             {@const isEsc = port === escPort}
-            {@const free = maskOf(port) === 0}
+            {@const free =
+              maskOf(port) === 0 && !isFbusMuxSerialPort(FC.FBUS_MUX, port)}
             <button
               type="button"
               role="radio"
