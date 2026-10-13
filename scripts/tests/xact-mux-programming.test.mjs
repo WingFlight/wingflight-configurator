@@ -50,7 +50,7 @@ test('plans the fixed values per output and leaves the ESC alone', () => {
     const plan = planAutoProgram([
         { channel: 1, servos: [factoryServo()] },
         { channel: 2, servos: [] },
-        { channel: 4, servos: [{ ...factoryServo(), physicalId: 4, appIdOffset: 3, channel: 3, range: 0 }] },
+        { channel: 4, servos: [{ ...factoryServo(), physicalId: 4, appIdOffset: 3, channel: 3, range: 2 }] },
         { channel: 5, servos: [] },
     ], new Set());
     assert.deepEqual(plan.map((e) => e.status), ['program', 'noServo', 'unchanged', 'notPlanned']);
@@ -86,7 +86,7 @@ test('a servo that keeps its IDs on the ESC output blocks the same IDs', () => {
 test('the written values change only ID, App ID, channel and range', () => {
     const params = { ...factoryServo(), dataRate: 1000, direction: 1, center: -5, holdingStrength: 4 };
     assert.deepEqual(autoProgramValues(params, AUTO_PROGRAM_PLAN[2]), {
-        ...params, physicalId: 2, appIdOffset: 1, channel: 1, range: 0,
+        ...params, physicalId: 2, appIdOffset: 1, channel: 1, range: 2,
     });
 });
 
@@ -97,7 +97,7 @@ test('a write counts only if every setting reads back as written', () => {
         center: 0, holdingStrength: 4, operationSmoothing: 1, deadband: 1, workingMode: 0, maxAngle: 0,
     };
     const written = autoProgramValues(before, AUTO_PROGRAM_PLAN[4]);
-    const readBack = { ...before, physicalId: 4, appIdOffset: 3, channel: 3, ready: true, firmwareVersion: 0 };
+    const readBack = { ...before, physicalId: 4, appIdOffset: 3, channel: 3, range: 2, ready: true, firmwareVersion: 0 };
     assert.deepEqual(servoSettingsMismatch(written, readBack), []);
     assert.deepEqual(servoSettingsMismatch(written, { ...readBack, center: 5, deadband: 2 }), ['center', 'deadband']);
 });

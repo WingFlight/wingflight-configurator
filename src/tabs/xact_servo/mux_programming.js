@@ -18,8 +18,8 @@ export const AUTO_PROGRAM_PLAN = {
     4: { physicalId: 4, appIdOffset: 3, channel: 3 }, // TAIL
 };
 
-// Range every auto-programmed servo gets (protocol.js / XACT_FIELD_RANGE: 0 = 120°)
-export const AUTO_PROGRAM_RANGE = 0;
+// Range every auto-programmed servo gets (XACT_FIELD_RANGE: 0 = 120°, 1 = 90°, 2 = 180°)
+export const AUTO_PROGRAM_RANGE = 2;
 
 const MODE_PWM = 0;
 const MODE_FBUS = 1;

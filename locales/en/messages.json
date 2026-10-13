@@ -533,7 +533,7 @@
         "message": "FBUS is on this output only while it is selected. Arming is blocked until you pick \"All FBUS outputs\" or leave this tab."
     },
     "xactServoAutoProgramHelp": {
-        "message": "Auto program gives the servo on each output set to FBUS its own Physical ID, App ID and channel, and sets its range to 120°: S1 gets ID 01, 6800 and CH1, S2 02, 6801 and CH2, S3 03, 6802 and CH3, TAIL 04, 6803 and CH4. The ESC output is left alone. Connect one servo per output."
+        "message": "Auto program gives the servo on each output set to FBUS its own Physical ID, App ID and channel, and sets its range to 180°: S1 gets ID 01, 6800 and CH1, S2 02, 6801 and CH2, S3 03, 6802 and CH3, TAIL 04, 6803 and CH4. The ESC output is left alone. Connect one servo per output."
     },
     "xactServoAutoProgramButton": {
         "message": "Auto program"
