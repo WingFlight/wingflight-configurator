@@ -33,7 +33,10 @@ export function readFbusMuxConfig(data) {
         });
     }
 
-    return { dshotMask, serialPort, status, modeWord, channels };
+    // Held by MSP2_WING_SET_FBUS_MUX_OVERRIDE; the modes in use are then its modes
+    const overrideActive = data.remaining() >= 1 && data.readU8() !== 0;
+
+    return { dshotMask, serialPort, status, modeWord, channels, overrideActive };
 }
 
 /** MSP_SERIAL_CONFIG identifier (UART1 = 0) of the port the FPGA needs free, or null. */

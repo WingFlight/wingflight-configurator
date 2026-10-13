@@ -32,7 +32,7 @@ function reader(bytes) {
 }
 
 // MSP2_WING_FBUS_MUX_CONFIG as read from an RF007 V3 with ch2-4 on FBUS
-const RF007V3_REPLY = [1, 5, 0x18, 6, 4, 0x01, 0x01, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0];
+const RF007V3_REPLY = [1, 5, 0x18, 6, 4, 0x01, 0x01, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0];
 
 test('decodes the mux config reply', () => {
     const mux = readFbusMuxConfig(reader(RF007V3_REPLY));
@@ -48,10 +48,17 @@ test('decodes the mux config reply', () => {
             { mode: 'FBUS', activeMode: 'FBUS' },
             { mode: 'PWM', activeMode: 'PWM' },
         ],
+        overrideActive: false,
     });
     assert.equal(isDshotChannel(mux, 4), true);
     assert.equal(isDshotChannel(mux, 5), true);
     assert.equal(isDshotChannel(mux, 1), false);
+});
+
+test('reports a held override, and none on a reply without the flag', () => {
+    const held = [...RF007V3_REPLY.slice(0, 19), 1];
+    assert.equal(readFbusMuxConfig(reader(held)).overrideActive, true);
+    assert.equal(readFbusMuxConfig(reader(RF007V3_REPLY.slice(0, 19))).overrideActive, false);
 });
 
 test('an empty or short reply means no mux', () => {
