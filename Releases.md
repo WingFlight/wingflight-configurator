@@ -1,3 +1,18 @@
+# 0.0.35
+
+Support the 0.0.35 firmware (MSP API 22.14). Flashing keeps your settings.
+Set the FBUS mux output modes (PWM, FBUS, DShot) in the Remap tab on STM32F7X2M boards such as the RF007 V3, with a warning where the firmware would fall back to PWM. The Ports tab and Setup Wizard lock the UART the mux uses.
+Program XACT servos one FBUS mux output at a time, without rewiring: pick an output in the XACT tab, or Auto program every FBUS output to fixed IDs and channels with a 180° range. Each write is read back in full, outputs whose servos now share an ID are shown, and outputs with nothing connected can be set to PWM.
+Give the RF007 V3 its own pinout in the Remap tab.
+Fix flashing a Wingflight target config dropping its serial port and receiver setup.
+Replace Expert Mode with Beginner, Intermediate and Advanced levels. Beginner makes the Setup Wizard the main tool with a short tab list; Intermediate and Advanced match Expert Mode off and on. Existing settings carry over; fresh installs start on Beginner.
+Install each release line side by side on desktop, Android and the web; snapshots keep replacing one another until 1.0. Web builds work offline and can be installed again.
+Update the Profiles tab's Effective PID Gains as you edit, before saving.
+Name the servo, its type and the value to set in the Servos tab's Limits and Scales warnings, and warn on 760 us servo travel beyond +-250.
+Add an Ethos guide with screenshots to the Setup Wizard's "A channel per trim" choice.
+Describe servos 1-4 as aileron, elevator and rudder servos instead of helicopter cyclic and tail servos.
+Fix startup stopping, with Connect never working, when the port list is empty.
+
 # 0.0.34
 
 Support the 0.0.34 firmware (MSP API 22.14). Flashing keeps your settings.
