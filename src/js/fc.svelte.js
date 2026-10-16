@@ -60,6 +60,7 @@ class FlightController {
   PID_NAMES = $state();
   PID_PROFILE = $state();
   PID_RUNTIME_GAINS = $state();
+  TV_PID_RUNTIME_GAINS = $state();
   PILOT_CONFIG = $state();
   RC = $state();
   RC_COMMAND = $state();
@@ -270,6 +271,7 @@ class FlightController {
     };
 
     this.PID_RUNTIME_GAINS = null;
+    this.TV_PID_RUNTIME_GAINS = null;
     this.FBUS_SENSORS = [];
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],

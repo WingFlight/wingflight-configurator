@@ -55,13 +55,27 @@
       atten: true,
     },
   ];
+  // The thrust vector loop, after tvPidGetRuntimeGains() (flight/tv_pid.c):
+  // master gain scales P, I, D and F, B is unscaled, and nothing is
+  // attenuated by throttle or speed.
+  const TV_PID_GAINS = PID_GAINS.map((gain) => ({
+    ...gain,
+    master: gain.key !== "B",
+    atten: false,
+  }));
 
-  // The values last loaded from or saved to the FC ({ PIDS, PID_PROFILE }).
-  let { saved = null } = $props();
+  // `thrustVector` shows the thrust vector loop instead of the main loop.
+  // `saved` holds the values last loaded from or saved to the FC
+  // ({ PIDS, PID_PROFILE }, or { TV_PIDS, TV_PID_PROFILE } for the TV loop).
+  let { saved = null, thrustVector = false } = $props();
 
-  function isMasterGainAffected(gainIndex) {
-    return gainIndex < 4;
-  }
+  let gains = $derived(thrustVector ? TV_PID_GAINS : PID_GAINS);
+  let pids = $derived(thrustVector ? FC.TV_PIDS : FC.PIDS);
+  let profile = $derived(thrustVector ? FC.TV_PID_PROFILE : FC.PID_PROFILE);
+  let savedPids = $derived(thrustVector ? saved?.TV_PIDS : saved?.PIDS);
+  let savedProfile = $derived(
+    thrustVector ? saved?.TV_PID_PROFILE : saved?.PID_PROFILE,
+  );
 
   // The FC reports its live values, which follow adjustment functions but
   // not unsaved edits on this page. A value edited here wins; an untouched
@@ -70,9 +84,10 @@
     return savedValue !== undefined && Number(local) !== Number(savedValue);
   }
 
-  let runtimeGains = $derived(
-    FC.PID_RUNTIME_GAINS?.version >= 1 ? FC.PID_RUNTIME_GAINS : null,
-  );
+  let runtimeGains = $derived.by(() => {
+    const live = thrustVector ? FC.TV_PID_RUNTIME_GAINS : FC.PID_RUNTIME_GAINS;
+    return live?.version >= 1 ? live : null;
+  });
   let curveExpanded = $state(false);
 
   function curvePreviewHeight() {
@@ -80,12 +95,12 @@
   }
 
   function curveForAxis(axisIndex) {
-    const curveIndex = Number(FC.PID_PROFILE[GAIN_CURVE_KEYS[axisIndex]]) || 0;
+    const curveIndex = Number(profile[GAIN_CURVE_KEYS[axisIndex]]) || 0;
     return curveIndex > 0 ? FC.GAIN_CURVES?.[curveIndex - 1] : null;
   }
 
   function curveLabel(axisIndex) {
-    const curveIndex = Number(FC.PID_PROFILE[GAIN_CURVE_KEYS[axisIndex]]) || 0;
+    const curveIndex = Number(profile[GAIN_CURVE_KEYS[axisIndex]]) || 0;
     return curveIndex > 0 ? `Curve ${curveIndex}` : "Flat";
   }
 
@@ -98,7 +113,7 @@
     const runtime = runtimeGains?.axes?.[axisIndex]?.masterGain;
     if (
       !Number.isFinite(runtime) ||
-      isEdited(FC.PID_PROFILE[key], saved?.PID_PROFILE?.[key])
+      isEdited(profile[key], savedProfile?.[key])
     ) {
       return profileMasterGain(axisIndex);
     }
@@ -106,12 +121,12 @@
   }
 
   function runtimeRawPid(axisIndex, gainIndex) {
-    const local = Number(FC.PIDS[axisIndex][gainIndex]) || 0;
+    const local = Number(pids[axisIndex][gainIndex]) || 0;
     const runtime =
-      runtimeGains?.axes?.[axisIndex]?.raw?.[PID_GAINS[gainIndex].key];
+      runtimeGains?.axes?.[axisIndex]?.raw?.[gains[gainIndex].key];
     if (
       !Number.isFinite(runtime) ||
-      isEdited(local, saved?.PIDS?.[axisIndex]?.[gainIndex])
+      isEdited(local, savedPids?.[axisIndex]?.[gainIndex])
     ) {
       return local;
     }
@@ -119,9 +134,7 @@
   }
 
   function profileMasterGain(axisIndex) {
-    const profileMasterGain = Number(
-      FC.PID_PROFILE[MASTER_GAIN_KEYS[axisIndex]],
-    );
+    const profileMasterGain = Number(profile[MASTER_GAIN_KEYS[axisIndex]]);
     return Number.isFinite(profileMasterGain) ? profileMasterGain : 100;
   }
 
@@ -257,7 +270,7 @@
     // Recomputed from the FC's live scale factors rather than read from its
     // effective gains, so edits to the gains here show before a save.
     if (runtimeGains) {
-      const gain = PID_GAINS[gainIndex];
+      const gain = gains[gainIndex];
       const gainCurve =
         (runtimeGains.axes?.[axisIndex]?.gainCurve ?? 100) / 100;
       const masterGain = gain.master
@@ -267,13 +280,12 @@
       return runtimeRawPid(axisIndex, gainIndex) * masterGain * atten;
     }
 
-    const base = Number(FC.PIDS[axisIndex][gainIndex]) || 0;
-    if (!isMasterGainAffected(gainIndex)) {
+    const base = Number(pids[axisIndex][gainIndex]) || 0;
+    if (!gains[gainIndex].master) {
       return base;
     }
 
-    const masterGain =
-      Number(FC.PID_PROFILE[MASTER_GAIN_KEYS[axisIndex]]) || 100;
+    const masterGain = Number(profile[MASTER_GAIN_KEYS[axisIndex]]) || 100;
     return (base * masterGain) / 100;
   }
 
@@ -394,7 +406,13 @@
   <div class="effective-pids-header">
     <span class="header-label">
       Effective PID Gains
-      <HelpIcon>{$i18n.t("profilesEffectivePidGainsHelp")}</HelpIcon>
+      <HelpIcon>
+        {$i18n.t(
+          thrustVector
+            ? "thrustVectorEffectivePidGainsHelp"
+            : "profilesEffectivePidGainsHelp",
+        )}
+      </HelpIcon>
     </span>
     <button
       type="button"
@@ -414,7 +432,7 @@
       <thead>
         <tr>
           <th></th>
-          {#each PID_GAINS as gain (gain.key)}
+          {#each gains as gain (gain.key)}
             <th>
               <span class="header-label">
                 {$i18n.t(gain.label)}
@@ -434,7 +452,7 @@
         {#each PID_AXES as axis, axisIndex (axis)}
           <tr>
             <td class="axis {axis}">{$i18n.t(`axis${axis}`)}</td>
-            {#each PID_GAINS as gain, gainIndex (gain.key)}
+            {#each gains as gain, gainIndex (gain.key)}
               <td>{@render valueCell(axisIndex, gainIndex)}</td>
             {/each}
             <td class="curve-cell">{@render curveCell(axisIndex)}</td>
@@ -460,7 +478,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each PID_GAINS as gain, gainIndex (gain.key)}
+        {#each gains as gain, gainIndex (gain.key)}
           <tr>
             <td class="term-label">
               <span class="header-label">
