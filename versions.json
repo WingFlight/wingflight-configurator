@@ -196,13 +196,6 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
-    },
-    {
-      "type": "branch",
-      "name": "feature-tv-gains",
-      "path": "./feature-tv-gains/",
-      "branch": "feature/tv-gains",
-      "date": "2026-10-16T22:29:05Z"
     }
   ]
 }
