@@ -1,8 +1,4 @@
 {
   "branch": "feature/tv-gains",
-  "date": "2026-10-16T22:29:05Z",
-  "number": 189,
-  "title": "Show Effective PID Gains on the Thrust Vector tab",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/189",
-  "draft": false
+  "date": "2026-10-16T22:29:05Z"
 }
