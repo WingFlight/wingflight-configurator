@@ -6469,6 +6469,9 @@
     "thrustVectorPidGains": {
         "message": "Thrust Vector PID Gains"
     },
+    "thrustVectorEffectivePidGainsHelp": {
+        "message": "Read-only preview of the gains the thrust vector loop actually uses, following live adjustments from your transmitter. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100 * Gain Curve. Boost (B) is shown unchanged because Master Gain does not scale it. Unlike the main loop, throttle (TPA) and GPS speed attenuation do not apply here."
+    },
     "thrustVectorMasterGainGroup": {
         "message": "Flight Feel"
     },

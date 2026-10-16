@@ -534,6 +534,45 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            // Same per-axis layout as MSP2_WING_EFFECTIVE_PID_GAINS v2, with no
+            // throttle or speed attenuation (the TV loop never applies them).
+            case MSPCodes.MSP2_WING_TV_EFFECTIVE_PID_GAINS: {
+                const gains = ["P", "I", "D", "F", "B"];
+                const runtimeGains = {
+                    version: data.readU8(),
+                    tvProfile: data.readU8(),
+                    axes: [],
+                };
+
+                for (let axis = 0; axis < 3; axis++) {
+                    const raw = {};
+                    const effective = {};
+
+                    for (const gain of gains) {
+                        raw[gain] = data.readU16();
+                    }
+
+                    const masterGain = data.readU16();
+                    const gainCurve = data.readU32() / 100;
+                    const gainCurvePosition = data.readU32() / 100;
+
+                    for (const gain of gains) {
+                        effective[gain] = data.readU32() / 100;
+                    }
+
+                    runtimeGains.axes.push({
+                        raw,
+                        masterGain,
+                        gainCurve,
+                        gainCurvePosition,
+                        effective,
+                    });
+                }
+
+                FC.TV_PID_RUNTIME_GAINS = runtimeGains;
+                break;
+            }
+
             case MSPCodes.MSP2_WING_FBUS_SENSORS: {
                 const count = data.readU8();
                 const sensors = [];

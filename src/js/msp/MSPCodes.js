@@ -250,6 +250,7 @@ export const MSPCodes = {
     MSP2_WING_FBUS_MUX_CONFIG:        0x5F22,
     MSP2_WING_SET_FBUS_MUX_CONFIG:    0x5F23,
     MSP2_WING_SET_FBUS_MUX_OVERRIDE:  0x5F24,
+    MSP2_WING_TV_EFFECTIVE_PID_GAINS: 0x5F26,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

@@ -297,6 +297,41 @@ function encodeEffectivePidGains() {
   return Uint8Array.from(buffer);
 }
 
+// Mirrors tvPidGetRuntimeGains() (flight/tv_pid.c) for the active TV profile's saved
+// values, at rest like encodeEffectivePidGains(). Master gain (with its curve) scales
+// P, I, D and F, B is unscaled, and the TV loop has no throttle or speed attenuation.
+function encodeTvEffectivePidGains() {
+  const { pids, profile } = tvSlots[FC.CONFIG.tvProfile];
+  const curveScale = (index, x) => {
+    const curve = FC.GAIN_CURVES[index - 1];
+    return index > 0 && curve ? GainCurve.evaluate(curve, x) / 100 : 1;
+  };
+  const centi = (value) => Math.round(Math.max(0, value) * 100);
+
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer.push8(FC.CONFIG.tvProfile);
+
+  ["Roll", "Pitch", "Yaw"].forEach((axis, i) => {
+    const [P, I, D, F, B] = pids[i];
+    const masterGainRaw = profile[`masterGain${axis}`];
+    const gainCurve = curveScale(profile[`gainCurve${axis}`], 0);
+    const masterGain = (masterGainRaw / 100) * gainCurve;
+
+    [P, I, D, F, B].forEach((value) => buffer.push16(value));
+    buffer.push16(masterGainRaw);
+    buffer.push32(centi(gainCurve * 100));
+    buffer.push32(0); // gain curve position: stick centred
+    buffer.push32(centi(P * masterGain));
+    buffer.push32(centi(I * masterGain));
+    buffer.push32(centi(D * masterGain));
+    buffer.push32(centi(F * masterGain));
+    buffer.push32(centi(B));
+  });
+
+  return Uint8Array.from(buffer);
+}
+
 // MSP_SERVO_TRIM: count, live (runtime) trims, then saved trims, one S16 each in
 // FC.SERVO_CONFIG order. No pot is moving in virtual mode, so the live trims stay 0.
 function encodeServoTrim() {
@@ -390,6 +425,8 @@ export function getVirtualResponse(code, requestData) {
     }
     case MSPCodes.MSP2_WING_EFFECTIVE_PID_GAINS:
       return decodeVirtualReply(code, encodeEffectivePidGains());
+    case MSPCodes.MSP2_WING_TV_EFFECTIVE_PID_GAINS:
+      return decodeVirtualReply(code, encodeTvEffectivePidGains());
     case MSPCodes.MSP_SERVO_TRIM:
       return decodeVirtualReply(code, encodeServoTrim());
     // Limited like the FC's setServoSavedTrim(); the next MSP_SERVO_TRIM reads it back.

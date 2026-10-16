@@ -1,6 +1,6 @@
 <script>
   import diff from "microdiff";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
@@ -20,6 +20,7 @@
 
   import Page from "@/components/Page.svelte";
   import Field from "@/components/Field.svelte";
+  import EffectivePidGains from "@/tabs/profiles/EffectivePidGains.svelte";
   import GainCurves from "@/tabs/profiles/GainCurves.svelte";
   import FlightFeelGuide from "@/tabs/profiles/FlightFeelGuide.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
@@ -127,11 +128,40 @@
   let dirty = $derived(changes.length > 0);
   let showToolbar = $derived(!loading && dirty);
 
+  // Firmware without MSP2_WING_TV_EFFECTIVE_PID_GAINS replies empty: polling
+  // stops and Effective PID Gains works from this page's values alone.
+  let runtimeGainsSupported = true;
+  let pollerInterval;
+
+  async function updateRuntimeGains() {
+    if (!runtimeGainsSupported) {
+      return;
+    }
+
+    const response = await MSP.promise(
+      MSPCodes.MSP2_WING_TV_EFFECTIVE_PID_GAINS,
+    );
+    if (!response || response.length === 0) {
+      runtimeGainsSupported = false;
+      FC.TV_PID_RUNTIME_GAINS = null;
+    }
+  }
+
   onMount(async () => {
     await MSP.promise(MSPCodes.MSP2_WING_TV_PID_CONFIG);
+    await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
+    await updateRuntimeGains();
 
     initialState = snapshotState();
     loading = false;
+
+    if (runtimeGainsSupported) {
+      pollerInterval = setInterval(updateRuntimeGains, 250);
+    }
+  });
+
+  onDestroy(() => {
+    clearInterval(pollerInterval);
   });
 
   export async function onSave() {
@@ -233,6 +263,8 @@
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <p>{@html $i18n.t("thrustVectorIntroNote")}</p>
   </div>
+
+  <EffectivePidGains thrustVector saved={initialState} />
 
   <Section label="thrustVectorPidGains">
     <!-- Desktop: axes as rows, gain terms as columns. -->
