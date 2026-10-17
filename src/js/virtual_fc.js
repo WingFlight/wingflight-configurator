@@ -47,6 +47,13 @@ const DEFAULT_PIDS = [
   [310, 75, 0, 75, 35], // yaw
 ];
 
+// pg/tv_pid.c resetTvPidProfile(): nozzle defaults, the same on every axis.
+const DEFAULT_TV_PIDS = [
+  [150, 15, 0, 30, 35], // roll  P I D F B
+  [150, 15, 0, 30, 35], // pitch
+  [150, 15, 0, 30, 35], // yaw
+];
+
 function defaultPidSlot() {
   return {
     pids: clone(DEFAULT_PIDS),
@@ -155,7 +162,7 @@ function defaultRateSlot() {
 
 function defaultTvSlot() {
   return {
-    pids: clone(DEFAULT_PIDS),
+    pids: clone(DEFAULT_TV_PIDS),
     profile: {
       masterGainRoll: 100,
       masterGainPitch: 100,
@@ -163,19 +170,19 @@ function defaultTvSlot() {
       gainCurveRoll: 0,
       gainCurvePitch: 0,
       gainCurveYaw: 0,
-      itermDecayTimeRoll: 60,
-      itermDecayTimePitch: 60,
-      itermDecayTimeYaw: 60,
-      iterm_decay_limit: 35,
+      itermDecayTimeRoll: 30,
+      itermDecayTimePitch: 30,
+      itermDecayTimeYaw: 30,
+      iterm_decay_limit: 0,
       itermRelaxLevelRoll: 22,
       itermRelaxLevelPitch: 22,
       itermRelaxLevelYaw: 22,
       bouncebackRoll: 5,
       bouncebackPitch: 5,
       bouncebackYaw: 5,
-      errorLimitRoll: 45,
-      errorLimitPitch: 45,
-      errorLimitYaw: 60,
+      errorLimitRoll: 25,
+      errorLimitPitch: 25,
+      errorLimitYaw: 25,
       dtermCutoffRoll: 15,
       dtermCutoffPitch: 15,
       dtermCutoffYaw: 20,
@@ -185,7 +192,7 @@ function defaultTvSlot() {
       gyroCutoffRoll: 50,
       gyroCutoffPitch: 50,
       gyroCutoffYaw: 100,
-      tvHoldGain: 40,
+      tvHoldGain: 25,
       tvHoldDeadband: 5,
       tvHoldMaxRate: 300,
     },
