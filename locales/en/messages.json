@@ -6485,7 +6485,7 @@
         "message": "Attitude / Heading Hold"
     },
     "thrustVectorHoldIntroNote": {
-        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged. Axes with no <strong>Stabilized TV</strong> mixer rule are left free: on a pitch/yaw nozzle the hold keeps the direction the thrust points, and torque roll in a hang no longer upsets it."
     },
     "thrustVectorHoldGain": {
         "message": "Hold gain"
