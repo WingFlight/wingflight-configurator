@@ -202,11 +202,7 @@
       "name": "feature-tv-hang",
       "path": "./feature-tv-hang/",
       "branch": "feature/tv-hang",
-      "date": "2026-10-17T19:09:57Z",
-      "number": 190,
-      "title": "Match new firmware thrust vector defaults",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/190",
-      "draft": false
+      "date": "2026-10-17T19:09:57Z"
     }
   ]
 }
