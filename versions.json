@@ -196,6 +196,17 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
+    },
+    {
+      "type": "branch",
+      "name": "feature-tv-hang",
+      "path": "./feature-tv-hang/",
+      "branch": "feature/tv-hang",
+      "date": "2026-10-17T19:09:57Z",
+      "number": 190,
+      "title": "Match new firmware thrust vector defaults",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/190",
+      "draft": false
     }
   ]
 }
