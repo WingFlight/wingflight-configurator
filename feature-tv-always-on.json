@@ -1,8 +1,4 @@
 {
   "branch": "feature/tv-always-on",
-  "date": "2026-10-18T13:44:13Z",
-  "number": 194,
-  "title": "Always show Thrust Vector, drop its feature switch",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/194",
-  "draft": false
+  "date": "2026-10-18T13:44:13Z"
 }
