@@ -196,17 +196,6 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
-    },
-    {
-      "type": "branch",
-      "name": "feature-servo-timers",
-      "path": "./feature-servo-timers/",
-      "branch": "feature/servo-timers",
-      "date": "2026-10-18T08:30:01Z",
-      "number": 191,
-      "title": "Link servo rates that share a hardware timer",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/191",
-      "draft": false
     }
   ]
 }

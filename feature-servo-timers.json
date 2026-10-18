@@ -1,8 +1,0 @@
-{
-  "branch": "feature/servo-timers",
-  "date": "2026-10-18T08:30:01Z",
-  "number": 191,
-  "title": "Link servo rates that share a hardware timer",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/191",
-  "draft": false
-}
