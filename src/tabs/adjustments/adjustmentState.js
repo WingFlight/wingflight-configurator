@@ -22,7 +22,7 @@ export const MASTER_GAIN_ADJUSTMENT_FUNCTIONS = [85, 84, 86]; // Roll/Pitch/Yaw
 // the affected servo(s) themselves (see Servos tab).
 export const SERVO_TRIM_ADJUSTMENT_FUNCTIONS = [89, 90, 91]; // Roll/Pitch/Yaw
 
-// Thrust Vector's own independent PID loop (FEATURE_THRUST_VECTOR) -- same
+// Thrust Vector's own independent PID loop -- same
 // shape as PID_ADJUSTMENT_FUNCTIONS/MASTER_GAIN_ADJUSTMENT_FUNCTIONS above,
 // but a separate table since these tune FC.TV_PIDS/TV_PID_PROFILE, not the
 // main loop's FC.PIDS/PID_PROFILE.

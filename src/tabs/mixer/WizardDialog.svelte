@@ -1,5 +1,4 @@
 <script>
-  import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
   import WarningNote from "@/components/notes/WarningNote.svelte";
@@ -270,7 +269,7 @@
         </div>
       {/if}
 
-      {#if motors >= 1 && FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")}
+      {#if motors >= 1}
         <div class="wizardSection">
           <div class="wizardSectionTitle">
             {$i18n.t("mixerWizardThrustVectorTitle")}
