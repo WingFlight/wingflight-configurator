@@ -3972,7 +3972,7 @@
         "message": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time."
+        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time. Servos that share a hardware timer always run at the same rate."
     },
     "servoSource": {
         "message": "Source"
@@ -4009,6 +4009,12 @@
     },
     "servoCurveEdit": {
         "message": "Edit balance curve on the Curves tab"
+    },
+    "servoSharedTimerNote": {
+        "message": "Servos $1 share a hardware timer, so they run at one <i>Rate</i>. Changing it on one changes it on all of them."
+    },
+    "servoRunRateNote": {
+        "message": "<span class=\"message-negative\">Servo $1</span> runs at $2 Hz, not the $3 Hz set. Servos on one timer run at the lowest <i>Rate</i> among them, and long pulses (<i>Center</i> + <i>Max</i>) lower the rate further."
     },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
