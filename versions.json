@@ -201,6 +201,17 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
+    },
+    {
+      "type": "pr",
+      "name": "192",
+      "path": "./pr/192/",
+      "branch": "fix/esc-4way-msp-retry",
+      "date": "2026-10-18T11:40:02Z",
+      "number": 192,
+      "title": "Fix ESC 4-way target select timing out",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/192",
+      "draft": false
     }
   ]
 }
