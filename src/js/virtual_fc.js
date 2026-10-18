@@ -4,7 +4,11 @@ import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 import { Mixer } from "@/js/Mixer.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
-import { clampServoConfig, servoTrimLimit } from "@/js/servoLimits.js";
+import {
+  clampServoConfig,
+  servoTrimLimit,
+  servoUsableTravel,
+} from "@/js/servoLimits.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
 
 // MSP_SELECT_SETTING's index offset for "select rate profile N" (see Rates.svelte)
@@ -350,6 +354,34 @@ function encodeServoTrim() {
   return Uint8Array.from(buffer);
 }
 
+// Hardware timer of each virtual PWM servo: S1-S3 share one, as on many
+// boards, and S4 has its own.
+const VIRTUAL_SERVO_TIMERS = [0, 0, 0, 1];
+
+// MSP2_WING_SERVO_TIMING: count, then per PWM servo the rate it runs at and
+// the first servo on its timer. Like servoInit() (flight/servos.c), a servo
+// runs at the lowest rate on its timer, capped by each one's longest pulse.
+// The FC works this out at boot; here it follows the config at once.
+function encodeServoTiming() {
+  const count = Math.min(FC.CONFIG.servoCount, VIRTUAL_SERVO_TIMERS.length);
+  const buffer = [];
+  buffer.push8(count);
+  for (let i = 0; i < count; i++) {
+    let rate = FC.SERVO_CONFIG[i].rate;
+    let group = i;
+    for (let j = 0; j < count; j++) {
+      if (VIRTUAL_SERVO_TIMERS[j] !== VIRTUAL_SERVO_TIMERS[i]) continue;
+      group = Math.min(group, j);
+      const config = FC.SERVO_CONFIG[j];
+      const maxPulse = config.mid + servoUsableTravel(config, false).max;
+      rate = Math.min(rate, config.rate, Math.floor(950000 / maxPulse));
+    }
+    buffer.push16(Math.min(Math.max(rate, 25), 5000));
+    buffer.push8(group);
+  }
+  return Uint8Array.from(buffer);
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -436,6 +468,8 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeTvEffectivePidGains());
     case MSPCodes.MSP_SERVO_TRIM:
       return decodeVirtualReply(code, encodeServoTrim());
+    case MSPCodes.MSP2_WING_SERVO_TIMING:
+      return decodeVirtualReply(code, encodeServoTiming());
     // Limited like the FC's setServoSavedTrim(); the next MSP_SERVO_TRIM reads it back.
     case MSPCodes.MSP2_WING_SET_SERVO_TRIM: {
       const index = requestData[0];
