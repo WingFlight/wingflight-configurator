@@ -1,3 +1,11 @@
+# 0.0.36
+
+Support the 0.0.36 firmware (MSP API 22.14). Flashing keeps your settings, except the Thrust Vector profiles, which reset to the new defaults.
+Show Effective PID Gains on the Thrust Vector tab, following live adjustments on 0.0.36 firmware.
+Show the live Master Gain on the Thrust Vector tab while an adjustment drives it, and stop the adjustment badges overlapping the next column.
+Link the servo Rate across servos that share a hardware timer: changing one sets all of them, and notes name the shared servos and any servo running at another rate than set. Remove the old S1-S3 rate warning.
+Match the Virtual FC's Thrust Vector profiles to the new firmware defaults.
+
 # 0.0.35
 
 Support the 0.0.35 firmware (MSP API 22.14). Flashing keeps your settings.
