@@ -3972,7 +3972,7 @@
         "message": "Rate [Hz]"
     },
     "servoRateHelp": {
-        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time."
+        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time. Servos that share a hardware timer always run at the same rate."
     },
     "servoSource": {
         "message": "Source"
@@ -4009,6 +4009,12 @@
     },
     "servoCurveEdit": {
         "message": "Edit balance curve on the Curves tab"
+    },
+    "servoSharedTimerNote": {
+        "message": "Servos $1 share a hardware timer, so they run at one <i>Rate</i>. Changing it on one changes it on all of them."
+    },
+    "servoRunRateNote": {
+        "message": "<span class=\"message-negative\">Servo $1</span> runs at $2 Hz, not the $3 Hz set. Servos on one timer run at the lowest <i>Rate</i> among them, and long pulses (<i>Center</i> + <i>Max</i>) lower the rate further."
     },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
@@ -6469,6 +6475,9 @@
     "thrustVectorPidGains": {
         "message": "Thrust Vector PID Gains"
     },
+    "thrustVectorEffectivePidGainsHelp": {
+        "message": "Read-only preview of the gains the thrust vector loop actually uses, following live adjustments from your transmitter. Calculation: Effective P/I/D/F = Base P/I/D/F * Axis Master Gain / 100 * Gain Curve. Boost (B) is shown unchanged because Master Gain does not scale it. Unlike the main loop, throttle (TPA) and GPS speed attenuation do not apply here."
+    },
     "thrustVectorMasterGainGroup": {
         "message": "Flight Feel"
     },
@@ -6482,7 +6491,7 @@
         "message": "Attitude / Heading Hold"
     },
     "thrustVectorHoldIntroNote": {
-        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged."
+        "message": "Engaged by its own switch (<strong>THRUST VECTOR ATTITUDE HOLD</strong>), independent of the main Angle/Auto Hover/Attitude Hold modes -- this lets the thrust-vectoring actuators hold heading/attitude on their own while your control surfaces stay in plain rate/acro under the stick. Only takes effect while <strong>THRUST VECTOR</strong> is also engaged. Axes with no <strong>Stabilized TV</strong> mixer rule are left free: on a pitch/yaw nozzle the hold keeps the direction the thrust points, and torque roll in a hang no longer upsets it."
     },
     "thrustVectorHoldGain": {
         "message": "Hold gain"
