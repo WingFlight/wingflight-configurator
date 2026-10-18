@@ -201,6 +201,17 @@
       "path": "./feature-pwm-warning/",
       "branch": "feature/pwm-warning",
       "date": "2026-10-06T23:05:19Z"
+    },
+    {
+      "type": "branch",
+      "name": "feature-tv-always-on",
+      "path": "./feature-tv-always-on/",
+      "branch": "feature/tv-always-on",
+      "date": "2026-10-18T13:44:13Z",
+      "number": 194,
+      "title": "Always show Thrust Vector, drop its feature switch",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/194",
+      "draft": false
     }
   ]
 }
