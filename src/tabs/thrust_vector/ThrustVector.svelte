@@ -81,6 +81,17 @@
     return getAdjustmentState(TV_MASTER_GAIN_ADJUSTMENT_FUNCTIONS[axisIndex]);
   }
 
+  // While an adjustment drives Master Gain, show the FC's live value: the
+  // stored one is only what the tab loaded.
+  function runtimeMasterGain(axisIndex) {
+    const value = FC.TV_PID_RUNTIME_GAINS?.axes?.[axisIndex]?.masterGain;
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function showRuntimeMasterGain(axisIndex, adjustment) {
+    return adjustment?.active && runtimeMasterGain(axisIndex) != null;
+  }
+
   let holdGainAdjustment = $derived(
     getAdjustmentState(TV_HOLD_GAIN_ADJUSTMENT_FUNCTION),
   );
@@ -133,7 +144,10 @@
   let runtimeGainsSupported = true;
   let pollerInterval;
 
+  // MSP_RC keeps the adjustment badges' active state current.
   async function updateRuntimeGains() {
+    await MSP.promise(MSPCodes.MSP_RC);
+
     if (!runtimeGainsSupported) {
       return;
     }
@@ -155,9 +169,7 @@
     initialState = snapshotState();
     loading = false;
 
-    if (runtimeGainsSupported) {
-      pollerInterval = setInterval(updateRuntimeGains, 250);
-    }
+    pollerInterval = setInterval(updateRuntimeGains, 250);
   });
 
   onDestroy(() => {
@@ -374,7 +386,7 @@
   <Section label="thrustVectorMasterGainGroup">
     <div class="flight-feel-layout">
       <div class="table-scroll">
-        <table class="grid">
+        <table class="grid flight-feel-grid">
           <thead>
             <tr>
               <th></th>
@@ -413,11 +425,21 @@
                     class:runtime-active={adjustment?.active}
                     title={adjustmentTitle(adjustment)}
                   >
-                    <NumberInput
-                      min="0"
-                      max="200"
-                      bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
-                    />
+                    {#if showRuntimeMasterGain(axisIndex, adjustment)}
+                      <div class="runtime-value-field">
+                        <span class="step-button fas fa-minus"></span>
+                        <span class="runtime-value"
+                          >{runtimeMasterGain(axisIndex)}</span
+                        >
+                        <span class="step-button fas fa-plus"></span>
+                      </div>
+                    {:else}
+                      <NumberInput
+                        min="0"
+                        max="200"
+                        bind:value={FC.TV_PID_PROFILE[axis.gainKey]}
+                      />
+                    {/if}
                     {#if adjustment}
                       <span class="adjustment-badge">
                         {adjustment.active
@@ -943,6 +965,62 @@
     text-align: center;
     letter-spacing: 0;
     white-space: nowrap;
+  }
+
+  // Flight Feel columns are narrow and their cells left-aligned (like
+  // Profiles/MasterGains.svelte), so there the badge stays in flow beside
+  // the input instead of hanging over the next column.
+  .flight-feel-grid {
+    width: auto;
+
+    th,
+    td {
+      padding: 4px 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .runtime-control {
+      gap: 8px;
+    }
+
+    .adjustment-badge {
+      position: static;
+      margin-left: 0;
+    }
+  }
+
+  .runtime-value-field {
+    display: flex;
+    max-width: 120px;
+  }
+
+  .step-button,
+  .runtime-value {
+    height: 1.5rem;
+    line-height: 1.5rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-input-bg-disabled);
+    color: var(--color-text-soft);
+    font-size: 0.8rem;
+  }
+
+  .step-button {
+    width: 2rem;
+    text-align: center;
+  }
+
+  .runtime-value {
+    width: 100%;
+    min-width: 4.5rem;
+    padding: 0 8px;
+    text-align: right;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .runtime-control.runtime-active .runtime-value-field {
+    opacity: 0.62;
   }
 
   .runtime-control:not(.runtime-active) .adjustment-badge {
