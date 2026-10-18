@@ -676,7 +676,7 @@ class FlightController {
       gainCurveYaw:               0,
     };
 
-    // Independent Thrust Vector PID loop (FEATURE_THRUST_VECTOR). One of
+    // Independent Thrust Vector PID loop. One of
     // numProfiles independently-switchable profiles (mirrors FC.PID_PROFILE) --
     // see MSP2_WING_TV_PID_CONFIG / MSP2_WING_SELECT_TV_PROFILE. TV_PIDS/
     // TV_PID_PROFILE always reflect whichever profile is currently active.

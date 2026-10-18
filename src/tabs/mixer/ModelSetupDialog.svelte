@@ -2,8 +2,6 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
-  import { MSPCodes } from "@/js/msp/MSPCodes.js";
-  import { updateTabList } from "@/js/main.js";
   import WarningNote from "@/components/notes/WarningNote.svelte";
   import ServoOutputMeter from "./ServoOutputMeter.svelte";
   import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
@@ -92,31 +90,8 @@
   // about here while they can still be changed.
   let servoShortfall = $derived(Mixer.missingServoOutputs(options));
 
-  async function apply() {
+  function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
-
-    // The feature flag isn't part of the staged mixer rules, and the Mixer
-    // tab's own Save only pushes MIXER_CONFIG/MIXER_INPUTS/MIXER_RULES -- so
-    // commit it immediately here rather than leaving it as unsaved FC state
-    // that a later tab visit (which re-fetches MSP_FEATURE_CONFIG on mount)
-    // could silently discard.
-    const thrustVectorEnabled =
-      thrustVectorRoll || thrustVectorPitch || thrustVectorYaw;
-    if (
-      thrustVectorEnabled !==
-      FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")
-    ) {
-      FC.FEATURE_CONFIG.features.setFeature(
-        "THRUST_VECTOR",
-        thrustVectorEnabled,
-      );
-      await MSP.promise(
-        MSPCodes.MSP_SET_FEATURE_CONFIG,
-        mspHelper.crunch(MSPCodes.MSP_SET_FEATURE_CONFIG),
-      );
-      await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
-      updateTabList(FC.FEATURE_CONFIG.features);
-    }
 
     applied = true;
     dialogEl.close();
@@ -275,7 +250,7 @@
       </div>
     {/if}
 
-    {#if motors >= 1 && FC.FEATURE_CONFIG.features.isEnabled("THRUST_VECTOR")}
+    {#if motors >= 1}
       <div class="wizardSection">
         <div class="wizardSectionTitle">
           {$i18n.t("mixerWizardThrustVectorTitle")}

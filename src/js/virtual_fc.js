@@ -196,7 +196,7 @@ function defaultTvSlot() {
       gyroCutoffRoll: 50,
       gyroCutoffPitch: 50,
       gyroCutoffYaw: 100,
-      tvHoldGain: 25,
+      tvHoldGain: 45,
       tvHoldDeadband: 5,
       tvHoldMaxRate: 300,
     },
