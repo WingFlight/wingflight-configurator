@@ -1727,9 +1727,6 @@
     "feature_GPS": {
         "message": "GPS"
     },
-    "feature_THRUST_VECTOR": {
-        "message": "Thrust vectoring"
-    },
     "feature_TELEMETRY": {
         "message": "Transmitter telemetry"
     },
@@ -1780,9 +1777,6 @@
     },
     "featureTip_GPS": {
         "message": "Enables GPS telemetry and GPS navigation (RTH, Loiter, and the Failsafe Procedure's GPS Rescue option). Adds the <i>GPS</i> tab for configuration."
-    },
-    "featureTip_THRUST_VECTOR": {
-        "message": "Enables a second, independent PID loop for thrust-vectoring actuators, tuned separately from the main roll/pitch/yaw loop. Adds the <i>Thrust Vector</i> tab, and TV Roll/Pitch/Yaw mixer input sources on the <i>Mixer</i> tab."
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
@@ -4860,7 +4854,7 @@
         "message": "Yaw"
     },
     "mixerWizardThrustVectorHint": {
-        "message": "Check whichever axes your vectored mount can actually drive -- adds a Stabilized TV servo rule for each one checked, and enables Thrust Vectoring: a second PID loop tuned independently from the main Roll/Pitch/Yaw loop (see the new Thrust Vector tab)."
+        "message": "Check whichever axes your vectored mount can actually drive -- adds a Stabilized TV servo rule for each one checked. These are driven by a second PID loop, tuned independently from the main Roll/Pitch/Yaw loop on the Thrust Vector tab, while the THRUST VECTOR mode is active."
     },
     "mixerWizardOverwriteWarning": {
         "message": "Applying the wizard replaces all current mixer rules."
@@ -6485,7 +6479,7 @@
         "message": "Thrust Vector PID Settings"
     },
     "thrustVectorIntroNote": {
-        "message": "This is a second, independent PID loop for thrust-vectoring actuators -- it targets the same stick setpoint as the main Roll/Pitch/Yaw loop but is tuned separately. Its output only reaches your aircraft once you assign the <strong>Stabilized TV Roll/Pitch/Yaw</strong> mixer input sources to an output on the <i>Mixer</i> tab."
+        "message": "This is a second, independent PID loop for thrust-vectoring actuators -- it targets the same stick setpoint as the main Roll/Pitch/Yaw loop but is tuned separately. Its output only reaches your aircraft once you assign the <strong>Stabilized TV Roll/Pitch/Yaw</strong> mixer input sources to an output on the <i>Mixer</i> tab, and only while the <strong>THRUST VECTOR</strong> mode is active (<i>Modes</i> tab)."
     },
     "thrustVectorHoldGroup": {
         "message": "Attitude / Heading Hold"
