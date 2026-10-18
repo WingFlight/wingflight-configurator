@@ -124,7 +124,7 @@
 
   // FC.CONFIG.servoCount includes bus servos once FBUS/SBUS is active, so it
   // can't be used directly to bound "PWM-only" logic (unusual-value
-  // warnings, the legacy servoCount-based consistency checks) -- this is the
+  // warnings, timer groups) -- this is the
   // actual PWM servo count either way.
   let pwmServoCount = $derived(
     busActive
@@ -170,10 +170,7 @@
   // thresholds are calibrated for analog PWM pulse-width ranges (mirrors
   // process_warnings() in the legacy tab) and don't mean anything for bus/
   // digital servos, which use a completely different scale (rneg/rpos
-  // default to 1000, well outside any of these PWM-oriented bounds). The
-  // 2-/3-servo consistency check is a heli swashplate assumption (fixed-
-  // pitch/collective-pitch) that doesn't generalize to a bus servo bank
-  // either, so it stays PWM-only too.
+  // default to 1000, well outside any of these PWM-oriented bounds).
   // Usual setup for each PWM servo type, told apart by the center. A 760us
   // (narrow-band) servo covers about 510-1010us (760 +-250), so travel past
   // +-250 drives it into its end stops.
@@ -260,17 +257,6 @@
       typeNotes.push(...servoTypeNotes(servo, `${index + 1}`));
     }
 
-    if (pwmServoCount === 2 && SERVOS[0] && SERVOS[1]) {
-      if (SERVOS[0].rate !== SERVOS[1].rate) unusualRate = true;
-    } else if (pwmServoCount >= 3 && SERVOS[0] && SERVOS[1] && SERVOS[2]) {
-      if (
-        SERVOS[0].rate !== SERVOS[1].rate ||
-        SERVOS[1].rate !== SERVOS[2].rate ||
-        SERVOS[0].rate !== SERVOS[2].rate
-      )
-        unusualRate = true;
-    }
-
     return { typeNotes, unusualRate };
   });
 
@@ -323,6 +309,10 @@
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_ADJUSTMENT_RANGES);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    // Firmware without it answers "unsupported" and leaves this null; the
+    // rates are then shown as set, with no timer grouping.
+    FC.SERVO_TIMING = null;
+    await MSP.promise(MSPCodes.MSP2_WING_SERVO_TIMING);
     await pollRuntimeTrim();
     // Read-only here (edited on the Curves tab) - just for the balance
     // curve indicator badge in ServoConfigTable. Not guaranteed populated
@@ -443,9 +433,58 @@
     }
   }
 
+  // PWM servos that share a hardware timer, from MSP2_WING_SERVO_TIMING: one
+  // list of servo indices per timer driving more than one servo.
+  let sharedTimerGroups = $derived.by(() => {
+    const groups = {};
+    (FC.SERVO_TIMING ?? []).slice(0, pwmServoCount).forEach((timing, index) => {
+      (groups[timing.group] ??= []).push(index);
+    });
+    return Object.values(groups).filter((group) => group.length > 1);
+  });
+
+  function servoList(indices) {
+    return indices.map((index) => `${index + 1}`).join(", ");
+  }
+
+  let timerNotes = $derived.by(() => {
+    const notes = sharedTimerGroups.map((group) =>
+      $i18n.t("servoSharedTimerNote", { 1: servoList(group) }),
+    );
+
+    // The FC sets its rates at boot, so after a change these are stale
+    // until the reboot.
+    if (!needReboot) {
+      (FC.SERVO_TIMING ?? [])
+        .slice(0, pwmServoCount)
+        .forEach((timing, index) => {
+          const rate = FC.SERVO_CONFIG[index]?.rate;
+          if (timing.rate && rate && timing.rate !== rate) {
+            notes.push(
+              $i18n.t("servoRunRateNote", {
+                1: index + 1,
+                2: timing.rate,
+                3: rate,
+              }),
+            );
+          }
+        });
+    }
+
+    return notes;
+  });
+
+  // Servos on one timer can only run at one rate, so a new rate is set on
+  // every servo sharing the timer.
   function onRateChange(index) {
     needReboot = true;
-    onFieldChange(index);
+    const group = sharedTimerGroups.find((g) => g.includes(index)) ?? [index];
+    for (const member of group) {
+      if (member !== index) {
+        FC.SERVO_CONFIG[member].rate = FC.SERVO_CONFIG[index].rate;
+      }
+      onFieldChange(member);
+    }
   }
 
   function onToggleOverrideEnabled(checked) {
@@ -586,6 +625,15 @@
     {#if pwmLimitNotes.length > 0}
       <div class="note">
         {#each pwmLimitNotes as note (note)}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <p>{@html note}</p>
+        {/each}
+      </div>
+    {/if}
+
+    {#if timerNotes.length > 0}
+      <div class="note">
+        {#each timerNotes as note (note)}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <p>{@html note}</p>
         {/each}

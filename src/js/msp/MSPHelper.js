@@ -1667,6 +1667,21 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_SERVO_TIMING: {
+                // Per PWM servo: the rate it really runs at (Hz) and the first
+                // servo on its hardware timer. Servos sharing a timer run at
+                // the lowest rate set among them.
+                FC.SERVO_TIMING = [];
+                const timingCount = data.readU8();
+                for (let i = 0; i < timingCount; i++) {
+                    FC.SERVO_TIMING.push({
+                        rate: data.readU16(),
+                        group: data.readU8(),
+                    });
+                }
+                break;
+            }
+
             case MSPCodes.MSP_SERVO_CURVES: {
                 // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
                 // physical servo, not a fixed pool like mixer/gain curves).
