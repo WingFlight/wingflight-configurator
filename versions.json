@@ -207,11 +207,7 @@
       "name": "feature-serial-send-error",
       "path": "./feature-serial-send-error/",
       "branch": "feature/serial-send-error",
-      "date": "2026-10-19T11:28:44Z",
-      "number": 196,
-      "title": "Disconnect on an undefined native serial send result",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/196",
-      "draft": false
+      "date": "2026-10-19T11:28:44Z"
     }
   ]
 }
