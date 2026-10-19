@@ -218,7 +218,7 @@
       "name": "195",
       "path": "./pr/195/",
       "branch": "feature/diy-board-flash",
-      "date": "2026-10-19T09:43:03Z",
+      "date": "2026-10-19T11:22:00Z",
       "number": 195,
       "title": "Flash DIY boards with no published target from the flasher wizard",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/195",
