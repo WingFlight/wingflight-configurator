@@ -156,13 +156,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-diy-board-flash",
-      "path": "./feature-diy-board-flash/",
-      "branch": "feature/diy-board-flash",
-      "date": "2026-10-19T11:21:23Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
