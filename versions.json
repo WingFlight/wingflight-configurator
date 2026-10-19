@@ -214,6 +214,13 @@
       "date": "2026-10-06T23:05:19Z"
     },
     {
+      "type": "branch",
+      "name": "feature-serial-send-error",
+      "path": "./feature-serial-send-error/",
+      "branch": "feature/serial-send-error",
+      "date": "2026-10-19T11:28:44Z"
+    },
+    {
       "type": "pr",
       "name": "195",
       "path": "./pr/195/",
