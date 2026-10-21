@@ -382,6 +382,35 @@ function encodeServoTiming() {
   return Uint8Array.from(buffer);
 }
 
+// Per-motor PWM endpoints the virtual FC holds, as MSP2_WING_MOTOR_ENDPOINTS
+// reports them: off, min and max throttle in us. Kept apart from FC so an
+// unsaved edit on the Servos tab isn't read back as stored.
+const virtualMotorEndpoints = Array.from({ length: 4 }, () => [
+  1000, 1070, 2000,
+]);
+
+function encodeMotorEndpoints() {
+  const buffer = [];
+  buffer.push8(virtualMotorEndpoints.length);
+  for (const ends of virtualMotorEndpoints) {
+    ends.forEach((value) => buffer.push16(value));
+  }
+  return Uint8Array.from(buffer);
+}
+
+// MSP2_WING_SET_MOTOR_ENDPOINTS: count, then off, min, max (U16) per motor,
+// limited to 50-2250us as on the FC.
+function storeMotorEndpoints(requestData) {
+  const count = Math.min(requestData[0], virtualMotorEndpoints.length);
+  for (let i = 0; i < count; i++) {
+    for (let j = 0; j < 3; j++) {
+      const at = 1 + (i * 3 + j) * 2;
+      const value = requestData[at] | (requestData[at + 1] << 8);
+      virtualMotorEndpoints[i][j] = Math.min(Math.max(value, 50), 2250);
+    }
+  }
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -470,6 +499,11 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeServoTrim());
     case MSPCodes.MSP2_WING_SERVO_TIMING:
       return decodeVirtualReply(code, encodeServoTiming());
+    case MSPCodes.MSP2_WING_MOTOR_ENDPOINTS:
+      return decodeVirtualReply(code, encodeMotorEndpoints());
+    case MSPCodes.MSP2_WING_SET_MOTOR_ENDPOINTS:
+      storeMotorEndpoints(requestData);
+      return undefined;
     // Limited like the FC's setServoSavedTrim(); the next MSP_SERVO_TRIM reads it back.
     case MSPCodes.MSP2_WING_SET_SERVO_TRIM: {
       const index = requestData[0];

@@ -22,6 +22,7 @@
   import Section from "@/components/Section.svelte";
   import Switch from "@/components/Switch.svelte";
 
+  import MotorEndpointsTable from "./MotorEndpointsTable.svelte";
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
@@ -52,6 +53,10 @@
   // can change from the FC side too (a Stepped ServoTrim adjustment on the
   // bench), so they get the same dirty/Save/Revert treatment.
   let initialTrims = $state(null);
+  // Per-motor PWM endpoints (FC.MOTOR_ENDPOINTS) are sent on Save only, not
+  // live like the servo fields: the FC uses a new Off value at once, even
+  // disarmed, and on an ESC that can start the motor.
+  let initialMotorEndpoints = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -89,8 +94,29 @@
       FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
   );
 
+  let motorEndpointsDirty = $derived.by(() => {
+    if (initialMotorEndpoints === null) {
+      return false;
+    }
+    const current = $state.snapshot(FC.MOTOR_ENDPOINTS);
+    return diff(initialMotorEndpoints, current).length > 0;
+  });
+
   let dirty = $derived(
-    changes.length > 0 || busCloneDirty || busOutChannelsDirty || trimsDirty,
+    changes.length > 0 ||
+      busCloneDirty ||
+      busOutChannelsDirty ||
+      trimsDirty ||
+      motorEndpointsDirty,
+  );
+
+  // Analog PWM throttle protocols (PWM, ONESHOT125, ONESHOT42, MULTISHOT):
+  // their motor outputs are servo-style pulses with editable endpoints.
+  const ANALOG_MOTOR_PROTOCOL_MAX = 3;
+  let showMotorEndpoints = $derived(
+    Array.isArray(FC.MOTOR_ENDPOINTS) &&
+      FC.CONFIG.motorCount > 0 &&
+      FC.MOTOR_CONFIG.motor_pwm_protocol <= ANALOG_MOTOR_PROTOCOL_MAX,
   );
 
   let hasSbusOut = $derived(
@@ -313,6 +339,11 @@
     // rates are then shown as set, with no timer grouping.
     FC.SERVO_TIMING = null;
     await MSP.promise(MSPCodes.MSP2_WING_SERVO_TIMING);
+    // Motor protocol, and per-motor endpoints where the firmware has them
+    // (null otherwise, which hides the motor section).
+    await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
+    FC.MOTOR_ENDPOINTS = null;
+    await MSP.promise(MSPCodes.MSP2_WING_MOTOR_ENDPOINTS);
     await pollRuntimeTrim();
     // Read-only here (edited on the Curves tab) - just for the balance
     // curve indicator badge in ServoConfigTable. Not guaranteed populated
@@ -325,6 +356,7 @@
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialMotorEndpoints = $state.snapshot(FC.MOTOR_ENDPOINTS);
     overrideEnabled = allServos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -523,6 +555,12 @@
 
   export async function onSave() {
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
+    if (motorEndpointsDirty) {
+      await MSP.promise(
+        MSPCodes.MSP2_WING_SET_MOTOR_ENDPOINTS,
+        mspHelper.crunch(MSPCodes.MSP2_WING_SET_MOTOR_ENDPOINTS),
+      );
+    }
     // Already pushed live by onToggleBusClone / onBusOutChannelsChange when
     // changed -- EEPROM_WRITE below persists them along with everything else,
     // no need to resend.
@@ -540,10 +578,15 @@
     initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialMotorEndpoints = $state.snapshot(FC.MOTOR_ENDPOINTS);
   }
 
   export async function onRevert() {
     FC.SERVO_CONFIG = initialConfig;
+    // Never sent before Save, so the FC still has these
+    if (initialMotorEndpoints !== null) {
+      FC.MOTOR_ENDPOINTS = structuredClone(initialMotorEndpoints);
+    }
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
 
     if (trimsDirty) {
@@ -727,6 +770,14 @@
           {onTrimChange}
           {pwmServoCount}
         />
+      </div>
+    </Section>
+  {/if}
+
+  {#if showMotorEndpoints}
+    <Section label="servoConfigurationMotors">
+      <div class="table-scroll">
+        <MotorEndpointsTable motorCount={FC.CONFIG.motorCount} />
       </div>
     </Section>
   {/if}
