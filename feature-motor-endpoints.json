@@ -1,0 +1,8 @@
+{
+  "branch": "feature/motor-endpoints",
+  "date": "2026-10-21T19:52:00Z",
+  "number": 197,
+  "title": "Add per-motor PWM endpoints and reversing to the Servos tab",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/197",
+  "draft": false
+}
