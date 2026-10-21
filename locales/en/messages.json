@@ -3890,6 +3890,45 @@
     "servoConfigurationBus": {
         "message": "Bus Servo Configuration"
     },
+    "servoConfigurationMotors": {
+        "message": "PWM Motor Outputs"
+    },
+    "servoMotorEndpointsWarning": {
+        "message": "These set each motor output's pulse widths. Changes are sent when you press Save and take effect straight away, even disarmed. <strong>Remove the propeller before changing them.</strong>"
+    },
+    "servoMotorNumber": {
+        "message": "Motor"
+    },
+    "servoMotorOff": {
+        "message": "Off"
+    },
+    "servoMotorOffHelp": {
+        "message": "Pulse (μs) sent when the motor is stopped or the flight controller is disarmed."
+    },
+    "servoMotorMin": {
+        "message": "Low"
+    },
+    "servoMotorMinHelp": {
+        "message": "Pulse (μs) at the lowest running throttle."
+    },
+    "servoMotorMax": {
+        "message": "High"
+    },
+    "servoMotorMaxHelp": {
+        "message": "Pulse (μs) at full throttle."
+    },
+    "servoMotorReverseHelp": {
+        "message": "Reverse this output, e.g. for a throttle servo that moves the wrong way. Mirrors Off, Low and High about 1500μs. On when Low is above High."
+    },
+    "servoMotorReverseConfirmTitle": {
+        "message": "Reverse motor $1?"
+    },
+    "servoMotorReverseConfirmText": {
+        "message": "This swaps the Off pulse to the other end of the range. On an ESC that is not set up for a reversed signal, that is <strong>full throttle</strong> as soon as you press Save. Only reverse an ESC with the propeller removed."
+    },
+    "servoMotorReverseConfirm": {
+        "message": "Reverse"
+    },
     "servoNumber": {
         "message": "Servo"
     },
@@ -5152,6 +5191,9 @@
     },
     "motorsThrottleEndpointsWarning": {
         "message": "Incorrectly configuring the throttle range parameters can cause the motor to run even when the throttle is off and the flight controller is disarmed."
+    },
+    "motorsThrottleEndpointsPerMotorNote": {
+        "message": "These show motor 1's values, and a change here is set on every motor. To set motors one at a time, or reverse one, use <strong>PWM Motor Outputs</strong> on the Servos tab."
     },
     "motorsThrottleEndpointRealtime": {
         "message": "Live Update"

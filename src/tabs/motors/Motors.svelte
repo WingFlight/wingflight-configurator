@@ -74,6 +74,9 @@
     await MSP.promise(MSPCodes.MSP_FEATURE_CONFIG);
     await MSP.promise(MSPCodes.MSP_MIXER_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
+    // Only to tell whether the FC has per-motor endpoints (Servos tab)
+    FC.MOTOR_ENDPOINTS = null;
+    await MSP.promise(MSPCodes.MSP2_WING_MOTOR_ENDPOINTS);
     await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_ESC_SENSOR_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_GOVERNOR_CONFIG);

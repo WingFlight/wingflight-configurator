@@ -49,6 +49,10 @@ class FlightController {
   MODE_RANGES = $state();
   MODE_RANGES_EXTRA = $state();
   MOTOR_CONFIG = $state();
+  // Per-motor analog PWM endpoints in us, [{ mincommand, minthrottle, maxthrottle }]
+  // (MSP2_WING_MOTOR_ENDPOINTS; null when the FC does not have it). A minthrottle
+  // above maxthrottle reverses that motor.
+  MOTOR_ENDPOINTS = $state();
   MOTOR_DATA = $state();
   MOTOR_OUTPUT_ORDER = $state();
   MOTOR_OVERRIDE = $state();
@@ -431,6 +435,8 @@ class FlightController {
       motor1_gear_ratio:          [ 1, 1 ],
       motor2_gear_ratio:          [ 1, 1 ],
     };
+
+    this.MOTOR_ENDPOINTS = null;
 
     this.GOVERNOR_CONFIG = {
       governor_mode:          0,

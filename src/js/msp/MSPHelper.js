@@ -1682,6 +1682,20 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_MOTOR_ENDPOINTS: {
+                // Per motor: off (min_command), min and max throttle in us.
+                FC.MOTOR_ENDPOINTS = [];
+                const endpointCount = data.readU8();
+                for (let i = 0; i < endpointCount; i++) {
+                    FC.MOTOR_ENDPOINTS.push({
+                        mincommand: data.readU16(),
+                        minthrottle: data.readU16(),
+                        maxthrottle: data.readU16(),
+                    });
+                }
+                break;
+            }
+
             case MSPCodes.MSP_SERVO_CURVES: {
                 // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
                 // physical servo, not a fixed pool like mixer/gain curves).
@@ -2030,6 +2044,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             }
 
             case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
+            case MSPCodes.MSP2_WING_SET_MOTOR_ENDPOINTS:
             case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
             case MSPCodes.MSP2_WING_SET_SERVO_TRIM:
                 break;
@@ -2375,6 +2390,16 @@ MspHelper.prototype.crunch = function(code) {
                 buffer.push16(FC.MOTOR_CONFIG.motor1_gear_ratio[i]);
             for (let i = 0; i < 2; i++)
                 buffer.push16(FC.MOTOR_CONFIG.motor2_gear_ratio[i]);
+            break;
+        }
+
+        case MSPCodes.MSP2_WING_SET_MOTOR_ENDPOINTS: {
+            buffer.push8(FC.MOTOR_ENDPOINTS.length);
+            for (const motor of FC.MOTOR_ENDPOINTS) {
+                buffer.push16(motor.mincommand)
+                    .push16(motor.minthrottle)
+                    .push16(motor.maxthrottle);
+            }
             break;
         }
 

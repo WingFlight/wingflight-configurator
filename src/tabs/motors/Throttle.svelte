@@ -11,6 +11,7 @@
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
+  import InfoNote from "@/components/notes/InfoNote.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
 
   import motorState from "./state.svelte.js";
@@ -97,6 +98,9 @@
       <SubSection label="motorsThrottleEndpoints">
         <div class="warning-container">
           <WarningNote message="motorsThrottleEndpointsWarning" />
+          {#if Array.isArray(FC.MOTOR_ENDPOINTS)}
+            <InfoNote message="motorsThrottleEndpointsPerMotorNote" />
+          {/if}
         </div>
         <Field
           id="throttle-endpoint-realtime"
