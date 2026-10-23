@@ -79,10 +79,13 @@ export const RX_PROTOCOLS = [
       return getSmartportTelemetry();
     },
   },
+  // The firmware detects FBUS or F.Port2 speed on either id, so only FBUS is
+  // offered. Id 16 (old FPORT2) stays hidden and shows as FBUS if stored.
   {
-    name: "FrSky F.PORT2",
+    name: "FrSky FBUS",
     id: 16,
     feature: "RX_SERIAL",
+    hide: true,
     get telemetry() {
       return getSmartportTelemetry();
     },
