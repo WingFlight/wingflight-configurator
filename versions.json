@@ -166,6 +166,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-fbus-auto",
+      "path": "./feature-fbus-auto/",
+      "branch": "feature/fbus-auto",
+      "date": "2026-10-23T20:47:11Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-fbus-ota",
       "path": "./feature-fbus-ota/",
       "branch": "feature/fbus-ota",
