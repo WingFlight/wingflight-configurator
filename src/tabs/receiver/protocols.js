@@ -80,9 +80,9 @@ export const RX_PROTOCOLS = [
     },
   },
   // The firmware detects FBUS or F.Port2 speed on either id, so only FBUS is
-  // offered. F.PORT2 stays hidden so a stored 16 still shows its name.
+  // offered. Id 16 (old FPORT2) stays hidden and shows as FBUS if stored.
   {
-    name: "FrSky F.PORT2",
+    name: "FrSky FBUS",
     id: 16,
     feature: "RX_SERIAL",
     hide: true,
@@ -91,7 +91,7 @@ export const RX_PROTOCOLS = [
     },
   },
   {
-    name: "FrSky FBUS / F.PORT2",
+    name: "FrSky FBUS",
     id: 17,
     feature: "RX_SERIAL",
     get telemetry() {

@@ -313,13 +313,13 @@
   const RX_INPUT_BACKUP_PROVIDER_NAMES = [
     "None",
     "Futaba S.BUS",
-    "FrSky FBUS / F.PORT2",
+    "FrSky FBUS",
     "FrSky F.PORT",
-    "FrSky F.PORT2",
+    "FrSky FBUS",
     "Jeti EXBUS",
     "TBS CRSF",
   ];
-  // FBUS also detects F.Port2 speed; F.PORT2 shows only if already stored
+  // Index 4 (old FPORT2) also detects the speed; it shows only if stored
   const RX_INPUT_BACKUP_PROVIDER_FPORT2 = 4;
 
   let extTelemProto = $derived.by(() => {
@@ -569,7 +569,7 @@
                 id="backup-rx-provider"
                 bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
               >
-                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (name)}
+                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (i)}
                   {#if i !== RX_INPUT_BACKUP_PROVIDER_FPORT2 || FC.RX_INPUT_BACKUP_CONFIG.provider === i}
                     <option value={i}>{name}</option>
                   {/if}
