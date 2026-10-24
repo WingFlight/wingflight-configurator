@@ -7,10 +7,18 @@ import { RemoteSupport, VIEW_DATA, VIEW_REQUEST } from '@/js/protocols/RemoteSup
 
     The supporter's configurator records its own DOM with rrweb (a snapshot
     plus every change, input, scroll and pointer move) and sends the events
-    to the pilot's configurator through the remote support tool, end to end
-    encrypted like the rest of the session. The pilot's configurator replays
+    to the pilot's configurator over the remote support session, end to end
+    encrypted like the rest of it. The pilot's configurator replays
     them in a read-only window. Nothing the pilot does there can reach the
     supporter or the flight controller.
+
+    Canvases (the 3D model, graphs) are not recorded by rrweb itself: its
+    canvas replay needs a script-enabled, same-origin iframe, which would let
+    a supporter run code in the pilot's configurator (and through NW.js, on
+    their computer). Instead the supporter sends each visible canvas as a
+    small image a few times a second when it changed (an rrweb custom
+    event), and the viewer draws it onto the replayed canvas from outside the
+    script-free iframe.
 
     The pilot starts and stops the stream (VIEW_REQUEST), so nothing is
     recorded or sent unless someone is watching. The supporter's dialog shows
@@ -23,13 +31,16 @@ import { RemoteSupport, VIEW_DATA, VIEW_REQUEST } from '@/js/protocols/RemoteSup
 */
 
 const FRAGMENT_SIZE = 16000;
-// The tool's socket buffer is small; sending the fragments of a large
-// snapshot back to back would overflow it.
+// When a separate tool carries the session, its UDP socket buffer is small;
+// sending the fragments of a large snapshot back to back would overflow it.
 const FRAGMENT_INTERVAL = 2;
 // If the link can't keep up, start over with a fresh snapshot instead of
 // falling further and further behind.
 const MAX_QUEUED_FRAGMENTS = 600;
 const REQUEST_RETRY_INTERVAL = 2000;
+const CANVAS_EVENT = 'wingflight-canvas';
+const CANVAS_INTERVAL = 200;
+const CANVAS_MAX_WIDTH = 640;
 
 const KIND = { WHOLE: 0, FIRST: 1, MIDDLE: 2, LAST: 3 };
 const REQUEST = { START: 1, STOP: 2 };
@@ -39,7 +50,6 @@ const textDecoder = new TextDecoder();
 
 /** What the remote support dialog shows. */
 export const remote = $state({
-    toolRunning: false,
     relayConnected: false,
     role: null,
     code: '',
@@ -56,7 +66,7 @@ export const remote = $state({
 
 function sync() {
     const { session } = RemoteSupport;
-    remote.toolRunning = RemoteSupport.toolRunning;
+    const peerJoined = RemoteSupport.peerConnected && !remote.peerConnected;
     remote.relayConnected = RemoteSupport.relayConnected;
     remote.role = session.role ?? null;
     remote.code = session.code ?? '';
@@ -70,6 +80,9 @@ function sync() {
     }
     if (!remote.peerConnected) {
         remote.hasFrame = false;
+    }
+    if (remote.watching && peerJoined) {
+        sendRequest(REQUEST.START);
     }
 }
 
@@ -90,6 +103,36 @@ export function stopSession() {
 let stopRecord = null;
 const outbox = [];
 let outboxTimer = null;
+let canvasTimer = null;
+// The last image sent per canvas (by rrweb node ID), to send only changes.
+let canvasFrames = {};
+let canvasScratch = null;
+
+function captureCanvases() {
+    canvasScratch ??= document.createElement('canvas');
+    const context = canvasScratch.getContext('2d');
+    for (const canvas of document.querySelectorAll('canvas')) {
+        const rect = canvas.getBoundingClientRect();
+        const id = record.mirror.getId(canvas);
+        if (id < 0 || !rect.width || !rect.height || !canvas.width || !canvas.height) {
+            continue;
+        }
+        const scale = Math.min(1, CANVAS_MAX_WIDTH / rect.width);
+        canvasScratch.width = Math.round(rect.width * scale);
+        canvasScratch.height = Math.round(rect.height * scale);
+        context.clearRect(0, 0, canvasScratch.width, canvasScratch.height);
+        try {
+            context.drawImage(canvas, 0, 0, canvasScratch.width, canvasScratch.height);
+        } catch {
+            continue;
+        }
+        const data = canvasScratch.toDataURL('image/webp', 0.6);
+        if (canvasFrames[id] !== data) {
+            canvasFrames[id] = data;
+            record.addCustomEvent(CANVAS_EVENT, { id, data });
+        }
+    }
+}
 
 function pump() {
     if (outboxTimer !== null || !outbox.length) {
@@ -131,6 +174,8 @@ function sendEvent(event) {
 }
 
 function startRecording() {
+    // A fresh snapshot has empty canvases; send them all again.
+    canvasFrames = {};
     if (stopRecord) {
         // The pilot (re)started watching: give them a fresh picture.
         record.takeFullSnapshot(true);
@@ -145,6 +190,7 @@ function startRecording() {
             recordCanvas: false,
             maskInputOptions: { password: true },
         });
+        canvasTimer = setInterval(captureCanvases, CANVAS_INTERVAL);
     }
     remote.beingWatched = true;
 }
@@ -152,6 +198,9 @@ function startRecording() {
 function stopRecording() {
     stopRecord?.();
     stopRecord = null;
+    clearInterval(canvasTimer);
+    canvasTimer = null;
+    canvasFrames = {};
     outbox.length = 0;
     remote.beingWatched = false;
 }
@@ -208,6 +257,11 @@ export function startWatching(container) {
         viewerSize = size;
         fit();
     });
+    replayer.on('custom-event', (event) => {
+        if (event.data?.tag === CANVAS_EVENT) {
+            drawCanvasFrame(event.data.payload);
+        }
+    });
     replayer.startLive();
     resizeObserver = new ResizeObserver(fit);
     resizeObserver.observe(container);
@@ -239,6 +293,25 @@ export function stopWatching() {
     partial = null;
     remote.watching = false;
     remote.hasFrame = false;
+}
+
+function drawCanvasFrame({ id, data } = {}) {
+    if (typeof data !== 'string' || !data.startsWith('data:image/')) {
+        return;
+    }
+    const canvas = replayer?.getMirror().getNode(id);
+    if (canvas?.nodeName !== 'CANVAS') {
+        return;
+    }
+    const image = new Image();
+    image.onload = () => {
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        }
+    };
+    image.src = data;
 }
 
 function addEvent(event) {

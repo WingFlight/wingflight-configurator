@@ -6,6 +6,7 @@ import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { releaseOverrides, waitUntilQuiet } from "@/js/msp/release_overrides.js";
+import { RemoteSupport } from "@/js/protocols/RemoteSupport.js";
 import { mountComponents } from "@/js/main.svelte.js";
 import { homeTab, isTabInUserLevel, loadUserLevel, setUserLevel } from "@/js/user_level.js";
 
@@ -98,8 +99,9 @@ function closeWindow() {
     }
 
     // Closing the window ends this script, so wait (hidden) until the FC got
-    // its stop sequence.
-    const closed = closeSerial();
+    // its stop sequence: our own connection's, and, while sharing it in a
+    // remote support session, the shared one's.
+    const closed = Promise.allSettled([closeSerial(), RemoteSupport.shutdown()]);
     const timeout = new Promise((resolve) => setTimeout(resolve, CLOSE_TIMEOUT));
     Promise.race([closed, timeout]).finally(() => {
         if (!GUI.isCordova()) {

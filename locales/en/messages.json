@@ -9869,14 +9869,11 @@
     "remoteSupportButton": {
         "message": "Remote support"
     },
-    "remoteSupportToolMissing": {
-        "message": "The Wingflight Remote Support tool is not running on this computer. Start it first (it can run in the background with --headless), then open this dialog again."
-    },
     "remoteSupportShareTitle": {
         "message": "I need help"
     },
     "remoteSupportShareHint": {
-        "message": "Disconnect from the flight controller here first, so the tool can use it. Then give the supporter the session code."
+        "message": "This configurator lets go of the flight controller so the supporter can use it, and shows the supporter's screen until the session ends."
     },
     "remoteSupportShare": {
         "message": "Share my flight controller"
@@ -9911,17 +9908,41 @@
     "remoteSupportNotWatched": {
         "message": "The pilot is not watching your screen. Nothing is sent unless they do."
     },
-    "remoteSupportWatch": {
-        "message": "Watch the supporter's screen"
-    },
     "remoteSupportWatching": {
-        "message": "You are watching the supporter's screen (read-only)."
+        "message": "Supporter's screen (read-only)"
     },
     "remoteSupportWatchWaiting": {
-        "message": "Waiting for the supporter's screen..."
+        "message": "The supporter is connected. Waiting for their screen..."
     },
-    "remoteSupportStopWatch": {
-        "message": "Stop watching"
+    "remoteSupportFrameWaiting": {
+        "message": "Remote support: waiting for the supporter",
+        "description": "Banner on the frame around the pilot's window while sharing, before a supporter has joined"
+    },
+    "remoteSupportFrameConnected": {
+        "message": "Remote support session in progress",
+        "description": "Banner on the frame around the pilot's window while a supporter is connected"
+    },
+    "remoteSupportSafetyPilot": {
+        "message": "Remove the propellers and secure the model before you share it. Start an audio call with the supporter and keep it open for the whole session, so you can tell them at once about any unexpected movement or danger. Kill connection ends the session at any time: motors are stopped and actuators are returned to neutral.",
+        "description": "Safety note shown to the pilot before sharing their flight controller"
+    },
+    "remoteSupportSafetySupporter": {
+        "message": "You are working on a real model on someone else's bench, and you are responsible for it. Never spin up motors, and move actuators only after the pilot has confirmed it is safe. Start an audio call with the pilot and keep it open for the whole session, so they can report any unexpected movement or danger right away.",
+        "description": "Safety note shown to the supporter before joining a session"
+    },
+    "remoteSupportSafetyAck": {
+        "message": "I have read this and will follow it"
+    },
+    "remoteSupportSafetyReminder": {
+        "message": "Never spin up motors. Keep the audio call with the pilot open.",
+        "description": "Reminder shown to the supporter during a session"
+    },
+    "remoteSupportSafetyReminderPilot": {
+        "message": "Keep the audio call open and report anything unexpected at once.",
+        "description": "Reminder in the bar of the pilot's view of the supporter's screen"
+    },
+    "remoteSupportViewerCodeHint": {
+        "message": "Give the supporter this session code:"
     },
     "remoteSupportKill": {
         "message": "Kill connection"
