@@ -28,6 +28,59 @@
   let pollerInterval;
 
   let sensors = $derived(FC.FBUS_SENSORS ?? []);
+  let status = $derived(FC.FBUS_SENSORS_STATUS ?? {});
+  let statusSupported = $state(true);
+
+  // App ID ranges each decoded block comes from (drivers/fbus_sensor.h). A
+  // card shows when an observed sensor sends one of its app IDs, or when its
+  // block has data.
+  const CARD_APP_ID_RANGES = {
+    gps: [[0x0800, 0x086f]],
+    current: [[0x0200, 0x022f]],
+    cells: [[0x0300, 0x030f]],
+    esc: [
+      [0x0400, 0x041f],
+      [0x0500, 0x050f],
+      [0x0b50, 0x0b7f],
+    ],
+    servo: [[0x6800, 0x680f]],
+  };
+
+  function cardObserved(card) {
+    return sensors.some((sensor) =>
+      sensor.appIds.some((appId) =>
+        CARD_APP_ID_RANGES[card].some(([lo, hi]) => appId >= lo && appId <= hi),
+      ),
+    );
+  }
+
+  let visibleCards = $derived(
+    statusSupported
+      ? Object.keys(CARD_APP_ID_RANGES).filter(
+          (card) => !!status[card] || cardObserved(card),
+        )
+      : [],
+  );
+
+  const NONE = "—";
+
+  function fixed(value, scale, digits, unit) {
+    return `${(value / scale).toFixed(digits)} ${unit}`;
+  }
+
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  // FrSky GPS speed is knots * 1000
+  function gpsSpeed(milliKnots) {
+    return `${((milliKnots / 1000) * 0.514444).toFixed(1)} m/s`;
+  }
+
+  function cellSpread(cells) {
+    const values = cells.cellVoltageCentiVolts;
+    return `${(Math.max(...values) - Math.min(...values)) * 10} mV`;
+  }
 
   // Forwarding relays sensor data back out over the receiver link's own
   // telemetry return channel (rx/fbus.c), which only exists for FrSky-family
@@ -81,12 +134,27 @@
     return `${sensor.source}-${sensor.physicalId}`;
   }
 
-  async function refresh() {
+  async function refreshSensors() {
     const response = await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
     // Older firmware without this command simply won't populate any data.
     if (!response || response.length === 0) {
       supported = false;
     }
+  }
+
+  async function refreshStatus() {
+    if (!statusSupported) {
+      return;
+    }
+    const response = await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS);
+    // Firmware without decoded readings: show the sensor list only.
+    if (!response || response.length === 0) {
+      statusSupported = false;
+    }
+  }
+
+  async function refresh() {
+    await Promise.all([refreshSensors(), refreshStatus()]);
   }
 
   async function refreshForwardConfig() {
@@ -230,6 +298,210 @@
         </table>
       </div>
     {/if}
+
+    {#if visibleCards.length > 0}
+      <h2 class="readings-title">{$i18n.t("fbusSensorsReadingsTitle")}</h2>
+    {/if}
+
+    {#snippet sectionHeader(titleKey, badgeUp)}
+      <div class="section-header">
+        <span class="title">{$i18n.t(titleKey)}</span>
+        <div class="grow"></div>
+        <span class="badge" class:up={badgeUp} class:down={!badgeUp}>
+          {badgeUp
+            ? $i18n.t("fbusSensorsBadgeReceiving")
+            : $i18n.t("fbusSensorsBadgeNoData")}
+        </span>
+      </div>
+    {/snippet}
+
+    {#snippet stat(labelKey, value)}
+      <div class="stat">
+        <span class="stat-label">{$i18n.t(labelKey)}</span>
+        <span class="stat-value">{value}</span>
+      </div>
+    {/snippet}
+
+    {#snippet noData()}
+      <p class="empty">{$i18n.t("fbusSensorsNoData")}</p>
+    {/snippet}
+
+    {#if visibleCards.includes("gps")}
+      {@const gps = status.gps}
+      <div class="card">
+        {@render sectionHeader("fbusSensorsGpsTitle", !!gps)}
+        {#if gps}
+          <div class="stats">
+            {@render stat(
+              "fbusSensorsGpsLat",
+              gps.hasPosition ? (gps.latitude / 1e7).toFixed(6) : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsLon",
+              gps.hasPosition ? (gps.longitude / 1e7).toFixed(6) : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsAlt",
+              gps.hasAltitude ? fixed(gps.altitudeCm, 100, 1, "m") : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsSpeed",
+              gps.hasSpeed ? gpsSpeed(gps.speedMilliKnots) : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsCourse",
+              gps.hasCourse ? fixed(gps.courseDeg10, 10, 1, "°") : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsSats",
+              gps.hasSatellites ? gps.satellites : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsTime",
+              gps.hasTime
+                ? `${pad2(gps.hours)}:${pad2(gps.minutes)}:${pad2(gps.seconds)}`
+                : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsGpsDate",
+              gps.hasDate
+                ? `${gps.year}-${pad2(gps.month)}-${pad2(gps.day)}`
+                : NONE,
+            )}
+          </div>
+        {:else}
+          {@render noData()}
+        {/if}
+      </div>
+    {/if}
+
+    {#if visibleCards.includes("current")}
+      {@const current = status.current}
+      <div class="card">
+        {@render sectionHeader("fbusSensorsCurrentTitle", !!current)}
+        {#if current}
+          <div class="stats">
+            {@render stat(
+              "fbusSensorsVoltage",
+              current.hasVoltage
+                ? fixed(current.voltageCentiVolts, 100, 2, "V")
+                : NONE,
+            )}
+            {@render stat(
+              "fbusSensorsCurrent",
+              current.hasCurrent
+                ? fixed(current.currentDeciAmps, 10, 1, "A")
+                : NONE,
+            )}
+            {#if current.hasHighPrecisionCurrent}
+              {@render stat(
+                "fbusSensorsCurrentFine",
+                fixed(current.currentMilliAmps, 1000, 3, "A"),
+              )}
+            {/if}
+          </div>
+        {:else}
+          {@render noData()}
+        {/if}
+      </div>
+    {/if}
+
+    {#if visibleCards.includes("cells")}
+      {@const cells = status.cells}
+      <div class="card">
+        {@render sectionHeader("fbusSensorsCellsTitle", !!cells)}
+        {#if cells && cells.cellCount > 0}
+          <div class="stats">
+            {@render stat("fbusSensorsCellsCount", cells.cellCount)}
+            {@render stat(
+              "fbusSensorsCellsTotal",
+              fixed(cells.totalVoltageCentiVolts, 100, 2, "V"),
+            )}
+            {@render stat(
+              "fbusSensorsCellsLowest",
+              fixed(Math.min(...cells.cellVoltageCentiVolts), 100, 2, "V"),
+            )}
+            {@render stat("fbusSensorsCellsSpread", cellSpread(cells))}
+          </div>
+          <div class="cell-list">
+            {#each cells.cellVoltageCentiVolts as cellVoltage, i (i)}
+              <span class="cell-chip">
+                {$i18n.t("fbusSensorsCellsChip", { 1: i + 1 })}:
+                {fixed(cellVoltage, 100, 2, "V")}
+              </span>
+            {/each}
+          </div>
+        {:else}
+          {@render noData()}
+        {/if}
+      </div>
+    {/if}
+
+    {#if visibleCards.includes("esc")}
+      {@const esc = status.esc}
+      <div class="card">
+        {@render sectionHeader("fbusSensorsEscTitle", !!esc)}
+        {#if esc}
+          <div class="stats">
+            {#if esc.hasPower}
+              {@render stat(
+                "fbusSensorsVoltage",
+                fixed(esc.voltageCentiVolts, 100, 2, "V"),
+              )}
+              {@render stat(
+                "fbusSensorsCurrent",
+                fixed(esc.currentCentiAmps, 100, 2, "A"),
+              )}
+            {/if}
+            {@render stat(
+              "fbusSensorsEscRpm",
+              esc.hasRpm ? `${esc.rpm} RPM` : NONE,
+            )}
+            {#if esc.hasConsumption}
+              {@render stat(
+                "fbusSensorsEscConsumption",
+                `${esc.consumptionMah} mAh`,
+              )}
+            {/if}
+            {@render stat(
+              "fbusSensorsTemperature",
+              esc.hasTemperature ? `${esc.temperature1} °C` : NONE,
+            )}
+            {#if esc.hasTemperature && esc.temperature2 > 0}
+              {@render stat(
+                "fbusSensorsTemperature2",
+                `${esc.temperature2} °C`,
+              )}
+            {/if}
+          </div>
+        {:else}
+          {@render noData()}
+        {/if}
+      </div>
+    {/if}
+
+    {#if visibleCards.includes("servo")}
+      {@const servo = status.servo}
+      <div class="card">
+        {@render sectionHeader("fbusSensorsServoTitle", !!servo)}
+        {#if servo}
+          <div class="stats">
+            {@render stat(
+              "fbusSensorsVoltage",
+              fixed(servo.voltageDeciVolts, 10, 1, "V"),
+            )}
+            {@render stat(
+              "fbusSensorsCurrent",
+              fixed(servo.currentDeciAmps, 10, 1, "A"),
+            )}
+            {@render stat("fbusSensorsTemperature", `${servo.temperature} °C`)}
+          </div>
+          <p class="caveat">{$i18n.t("fbusSensorsServoCaveat")}</p>
+        {:else}
+          {@render noData()}
+        {/if}
+      </div>
+    {/if}
   {/if}
 </Page>
 
@@ -337,5 +609,116 @@
   .app-ids {
     color: var(--color-text-soft);
     font-variant-numeric: tabular-nums;
+  }
+
+  // Card styles match the CRSF Sensors tab.
+  .readings-title {
+    margin: var(--section-gap) 0 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .card {
+    @extend %section-shadow;
+
+    margin-bottom: var(--section-gap);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+
+    color: var(--color-text-alt);
+    background-color: var(--color-surface-alt);
+    border-bottom: 1px solid var(--color-border);
+
+    .title {
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+  }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+
+    &.up {
+      color: var(--color-border-accent);
+      border-color: var(--color-border-accent);
+    }
+
+    &.down {
+      color: var(--color-danger, var(--color-border-accent));
+      border-color: var(--color-danger, var(--color-border-accent));
+    }
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  // Lines drawn per cell, so a part-filled last row has no grey filler
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 12px;
+    box-shadow: inset -1px -1px 0 var(--color-border);
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--color-text-soft);
+    white-space: nowrap;
+  }
+
+  .stat-value {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .empty {
+    padding: 12px;
+    margin: 0;
+    color: var(--color-text-soft);
+    font-size: 0.85rem;
+  }
+
+  .cell-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px 12px;
+  }
+
+  .cell-chip {
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+  }
+
+  .caveat {
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--color-text-soft);
   }
 </style>

@@ -610,6 +610,88 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            // Latest decoded value per sensor type (drivers/fbus_sensor.c). Each
+            // block opens with a flags byte; 0 means no fresh data, and the
+            // block's fields are then zero.
+            case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS: {
+                data.readU8(); // payload version, unused for now
+
+                const gpsFlags = data.readU8();
+                const gpsData = {
+                    hasPosition: (gpsFlags & 0x01) !== 0,
+                    hasAltitude: (gpsFlags & 0x02) !== 0,
+                    hasSpeed: (gpsFlags & 0x04) !== 0,
+                    hasCourse: (gpsFlags & 0x08) !== 0,
+                    hasSatellites: (gpsFlags & 0x10) !== 0,
+                    hasTime: (gpsFlags & 0x20) !== 0,
+                    hasDate: (gpsFlags & 0x40) !== 0,
+                    latitude: data.read32(),
+                    longitude: data.read32(),
+                    altitudeCm: data.read32(),
+                    speedMilliKnots: data.readU32(),
+                    courseDeg10: data.readU16(),
+                    satellites: data.readU8(),
+                    hours: data.readU8(),
+                    minutes: data.readU8(),
+                    seconds: data.readU8(),
+                    day: data.readU8(),
+                    month: data.readU8(),
+                    year: data.readU16(),
+                };
+
+                const currentFlags = data.readU8();
+                const currentData = {
+                    hasCurrent: (currentFlags & 0x01) !== 0,
+                    hasVoltage: (currentFlags & 0x02) !== 0,
+                    hasHighPrecisionCurrent: (currentFlags & 0x04) !== 0,
+                    currentDeciAmps: data.readU32(),
+                    voltageCentiVolts: data.readU32(),
+                    currentMilliAmps: data.readU16(),
+                };
+
+                const cellsFlags = data.readU8();
+                const cellCount = data.readU8();
+                const cellVoltageCentiVolts = [];
+                for (let i = 0; i < cellCount; i++) {
+                    cellVoltageCentiVolts.push(data.readU16());
+                }
+                const cellsData = {
+                    cellCount,
+                    cellVoltageCentiVolts,
+                    totalVoltageCentiVolts: data.readU32(),
+                };
+
+                const escFlags = data.readU8();
+                const escData = {
+                    hasPower: (escFlags & 0x01) !== 0,
+                    hasRpm: (escFlags & 0x02) !== 0,
+                    hasConsumption: (escFlags & 0x04) !== 0,
+                    hasTemperature: (escFlags & 0x08) !== 0,
+                    voltageCentiVolts: data.readU16(),
+                    currentCentiAmps: data.readU16(),
+                    rpm: data.readU32(),
+                    consumptionMah: data.readU16(),
+                    temperature1: data.readU8(),
+                    temperature2: data.readU8(),
+                };
+
+                const servoFlags = data.readU8();
+                const servoData = {
+                    currentDeciAmps: data.readU16(),
+                    voltageDeciVolts: data.readU16(),
+                    temperature: data.readU16(),
+                };
+
+                FC.FBUS_SENSORS_STATUS = {
+                    gps: gpsFlags ? gpsData : null,
+                    current: currentFlags ? currentData : null,
+                    cells: cellsFlags ? cellsData : null,
+                    esc: escFlags ? escData : null,
+                    servo: servoFlags ? servoData : null,
+                };
+                break;
+            }
+
             case MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG: {
                 data.readU8(); // payload version, unused for now
                 const forwardedSensors = [];
