@@ -9862,5 +9862,68 @@
     },
     "setupWizardFinishThrowsTune": {
         "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
+    },
+    "remoteSupportTitle": {
+        "message": "Remote support"
+    },
+    "remoteSupportButton": {
+        "message": "Remote support"
+    },
+    "remoteSupportToolMissing": {
+        "message": "The Wingflight Remote Support tool is not running on this computer. Start it first (it can run in the background with --headless), then open this dialog again."
+    },
+    "remoteSupportShareTitle": {
+        "message": "I need help"
+    },
+    "remoteSupportShareHint": {
+        "message": "Disconnect from the flight controller here first, so the tool can use it. Then give the supporter the session code."
+    },
+    "remoteSupportShare": {
+        "message": "Share my flight controller"
+    },
+    "remoteSupportJoinTitle": {
+        "message": "I'm helping someone"
+    },
+    "remoteSupportCodePlaceholder": {
+        "message": "Session code, e.g. 123 456 789 - 0427"
+    },
+    "remoteSupportJoin": {
+        "message": "Join"
+    },
+    "remoteSupportCode": {
+        "message": "Session code"
+    },
+    "remoteSupportWaitingSupporter": {
+        "message": "Waiting for the supporter..."
+    },
+    "remoteSupportSupporterConnected": {
+        "message": "The supporter is connected."
+    },
+    "remoteSupportConnectedPilot": {
+        "message": "Connected to the pilot's computer. Choose the remote port in the port list and connect."
+    },
+    "remoteSupportDevice": {
+        "message": "Device in use: $1"
+    },
+    "remoteSupportBeingWatched": {
+        "message": "The pilot is watching your screen."
+    },
+    "remoteSupportNotWatched": {
+        "message": "The pilot is not watching your screen. Nothing is sent unless they do."
+    },
+    "remoteSupportWatch": {
+        "message": "Watch the supporter's screen"
+    },
+    "remoteSupportWatching": {
+        "message": "You are watching the supporter's screen (read-only)."
+    },
+    "remoteSupportWatchWaiting": {
+        "message": "Waiting for the supporter's screen..."
+    },
+    "remoteSupportStopWatch": {
+        "message": "Stop watching"
+    },
+    "remoteSupportKill": {
+        "message": "Kill connection"
     }
 }

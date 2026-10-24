@@ -13,6 +13,10 @@ import * as config from '@/js/config.js';
     - stm32usbdfu.js drives remote DFU devices through RemoteUsbDevice, which
       implements the part of the WebUSB USBDevice interface it uses.
 
+    The same client also starts and ends sessions in the tool (SESSION_*),
+    reports the tool's status for the remote support dialog, and carries the
+    screen mirroring messages used by RemoteView.js.
+
     The wire format is described in PROTOCOL.md in the tool's repository. The
     tool encrypts everything it forwards end to end; this local UDP leg is
     plain. Only the nwjs backend has chrome.sockets.udp, so this is inert in
@@ -20,6 +24,8 @@ import * as config from '@/js/config.js';
 */
 
 export const REMOTE_PORT_PREFIX = 'remote:';
+export const VIEW_DATA = 0x50;
+export const VIEW_REQUEST = 0x51;
 
 const DEFAULT_UDP_PORT = 5763;
 const PROTOCOL_VERSION = 1;
@@ -34,6 +40,9 @@ const SERIAL_WRITE_CHUNK = 8192;
 const MSG = {
     HELLO:          0x01,
     STATUS:         0x02,
+    SESSION_JOIN:   0x03,
+    SESSION_SHARE:  0x04,
+    SESSION_STOP:   0x05,
     LIST_DEVICES:   0x10,
     DEVICE_LIST:    0x11,
     SERIAL_OPEN:    0x20,
@@ -49,11 +58,14 @@ const MSG = {
     USB_CTRL_IN:    0x35,
     USB_CTRL_OUT:   0x36,
     RESULT:         0x40,
+    VIEW_DATA:      0x50,
+    VIEW_REQUEST:   0x51,
 };
 
 const RESULT_OK = 0;
 const RESULT_STALL = 1;
 
+const STATUS_RELAY_CONNECTED = 0x01;
 const STATUS_HOST_CONNECTED = 0x02;
 
 const REQUEST_TYPES = { standard: 0x00, class: 0x20, vendor: 0x40 };
@@ -191,6 +203,15 @@ class RemoteSupportClient {
         this.udpPort = DEFAULT_UDP_PORT;
         this.lastStatus = 0;
         this.hostConnected = false;
+        this.relayConnected = false;
+        this.peerConnected = false;
+        // What the tool reports about its session: { role, code, device,
+        // message, error }, role being 'share', 'join' or null.
+        this.session = { role: null };
+        // Called when the status above changes, and with each screen
+        // mirroring message.
+        this.onChange = null;
+        this.onView = null;
         this.serialPorts = [];
         this.dfuDevices = [];
         this.pending = new Map();
@@ -200,9 +221,14 @@ class RemoteSupportClient {
         this.onSerialClosed = null;
     }
 
-    /** True while the tool is running and connected to a device host. */
+    /** True while the tool is running (it answers hello). */
+    get toolRunning() {
+        return this.started && Date.now() - this.lastStatus < TOOL_TIMEOUT;
+    }
+
+    /** True while the tool is joined to a pilot's flight controller. */
     get available() {
-        return this.hostConnected && Date.now() - this.lastStatus < TOOL_TIMEOUT;
+        return this.hostConnected && this.session.role === 'join' && this.toolRunning;
     }
 
     start() {
@@ -247,9 +273,15 @@ class RemoteSupportClient {
     }
 
     sayHello() {
-        if (this.hostConnected && !this.available) {
+        if (!this.toolRunning && this.session.role !== null) {
             console.log('Remote support: tool stopped answering');
             this.linkDown();
+            this.session = { role: null };
+            this.peerConnected = false;
+        }
+        if (this.toolRunning !== this.wasRunning) {
+            this.wasRunning = this.toolRunning;
+            this.onChange?.();
         }
         this.send(Uint8Array.of(MSG.HELLO, PROTOCOL_VERSION));
     }
@@ -279,17 +311,30 @@ class RemoteSupportClient {
         switch (data[0]) {
             case MSG.STATUS: {
                 this.lastStatus = Date.now();
+                this.relayConnected = data.length >= 3 && (data[2] & STATUS_RELAY_CONNECTED) !== 0;
                 const hostConnected = data.length >= 3 && (data[2] & STATUS_HOST_CONNECTED) !== 0;
-                if (hostConnected && !this.hostConnected) {
+                const previous = JSON.stringify(this.session) + this.peerConnected;
+                this.session = this.parseSessionInfo(data.subarray(3));
+                const isJoin = this.session.role === 'join';
+                if (hostConnected && isJoin && !this.hostConnected) {
                     console.log('Remote support: connected to remote device host');
                     this.hostConnected = true;
                     this.refreshDevices().catch(() => {});
-                } else if (!hostConnected && this.hostConnected) {
+                } else if (!(hostConnected && isJoin) && this.hostConnected) {
                     console.log('Remote support: remote device host disconnected');
                     this.linkDown();
                 }
+                this.peerConnected = hostConnected;
+                if (previous !== JSON.stringify(this.session) + this.peerConnected || this.toolRunning !== this.wasRunning) {
+                    this.wasRunning = this.toolRunning;
+                    this.onChange?.();
+                }
                 break;
             }
+            case MSG.VIEW_DATA:
+            case MSG.VIEW_REQUEST:
+                this.onView?.(data[0], data.subarray(1));
+                break;
             case MSG.DEVICE_LIST: {
                 if (data.length < 5) {
                     break;
@@ -317,6 +362,34 @@ class RemoteSupportClient {
                 }
                 break;
         }
+    }
+
+    parseSessionInfo(bytes) {
+        if (!bytes.length) {
+            return { role: null };
+        }
+        try {
+            return { role: null, ...JSON.parse(textDecoder.decode(bytes)) };
+        } catch {
+            return { role: null };
+        }
+    }
+
+    joinSession(code) {
+        this.send(concat(Uint8Array.of(MSG.SESSION_JOIN), textEncoder.encode(code)));
+    }
+
+    shareSession() {
+        this.send(Uint8Array.of(MSG.SESSION_SHARE));
+    }
+
+    stopSession() {
+        this.send(Uint8Array.of(MSG.SESSION_STOP));
+    }
+
+    /** Sends a screen mirroring message (`type` is VIEW_DATA or VIEW_REQUEST). */
+    sendView(type, bytes) {
+        this.send(concat(Uint8Array.of(type), bytes));
     }
 
     resolve(req, result) {

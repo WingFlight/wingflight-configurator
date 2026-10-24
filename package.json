@@ -54,6 +54,7 @@
     "jquery-touchswipe": "^1.6.19",
     "jquery-ui-npm": "^1.12.0",
     "lru_map": "^0.3.3",
+    "rrweb": "2.1.7",
     "select2": "^4.0.13",
     "switchery-latest": "^0.8.2"
   },
