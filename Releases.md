@@ -1,3 +1,14 @@
+# 0.0.37
+
+Support the 0.0.37 firmware (MSP API 22.14). Flashing keeps your settings, except the Thrust Vector profiles, which reset to the new defaults.
+Always show the Thrust Vector tab and the mixer wizard's Thrust Vector options, and stop the wizards setting the old THRUST_VECTOR feature. The Virtual FC's TV Hold gain matches the new default of 45.
+Show FBUS and F.Port2 as one receiver option, FrSky FBUS, for the receiver and the backup RX. The firmware finds the speed itself.
+
+Flash DIY boards with no published target from the flasher wizard: Detect picks the MCU's entry in a new Custom group, and "Read hardware config from board" takes the board's hardware setup from its CLI.
+Keep the AM32 30° timing advance in ESC Programming: it showed as 22.5° and saving lowered it. Fix the Timing field showing blank and saving 0°.
+Fix the ESC 4-way target select timing out.
+Fix the Configurator hanging, for example in the flasher backup, after a failed serial send. It now disconnects.
+
 # 0.0.36
 
 Support the 0.0.36 firmware (MSP API 22.14). Flashing keeps your settings, except the Thrust Vector profiles, which reset to the new defaults.
