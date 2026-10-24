@@ -46,13 +46,31 @@
     servo: [[0x6800, 0x680f]],
   };
 
-  function cardObserved(card) {
+  function appIdSeen(ranges) {
     return sensors.some((sensor) =>
       sensor.appIds.some((appId) =>
-        CARD_APP_ID_RANGES[card].some(([lo, hi]) => appId >= lo && appId <= hi),
+        ranges.some(([lo, hi]) => appId >= lo && appId <= hi),
       ),
     );
   }
+
+  function cardObserved(card) {
+    return appIdSeen(CARD_APP_ID_RANGES[card]);
+  }
+
+  // The ESC card's speed comes from FrSky ESCs (ESC_R&C 0x0B60, eRPM) or the
+  // FrSky RPM sensor (0x0500, RPM); label it by which one is on the bus.
+  let rpmLabelKey = $derived.by(() => {
+    const fromEsc = appIdSeen([[0x0b60, 0x0b6f]]);
+    const fromRpmSensor = appIdSeen([[0x0500, 0x050f]]);
+    if (fromEsc && !fromRpmSensor) {
+      return "fbusSensorsEscErpm";
+    }
+    if (fromRpmSensor && !fromEsc) {
+      return "fbusSensorsEscRpm";
+    }
+    return "fbusSensorsEscRpmOrErpm";
+  });
 
   let visibleCards = $derived(
     statusSupported
@@ -453,10 +471,7 @@
                 fixed(esc.currentCentiAmps, 100, 2, "A"),
               )}
             {/if}
-            {@render stat(
-              "fbusSensorsEscRpm",
-              esc.hasRpm ? `${esc.rpm} RPM` : NONE,
-            )}
+            {@render stat(rpmLabelKey, esc.hasRpm ? esc.rpm : NONE)}
             {#if esc.hasConsumption}
               {@render stat(
                 "fbusSensorsEscConsumption",
