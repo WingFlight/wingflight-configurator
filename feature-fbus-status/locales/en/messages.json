@@ -985,6 +985,12 @@
     "fbusSensorsEscRpm": {
         "message": "RPM"
     },
+    "fbusSensorsEscErpm": {
+        "message": "eRPM"
+    },
+    "fbusSensorsEscRpmOrErpm": {
+        "message": "RPM / eRPM"
+    },
     "fbusSensorsEscConsumption": {
         "message": "Consumption"
     },
