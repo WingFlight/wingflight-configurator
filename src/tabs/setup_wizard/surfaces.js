@@ -8,7 +8,9 @@
 //   -> sum on the output -> balance curve -> servo reverse
 //   -> scale rpos/rneg (us) -> min/max
 
-import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+// Relative, not "@/js/...": scripts/tests/setup-wizard-surfaces.test.mjs
+// loads this file in plain Node, which doesn't know Vite's alias.
+import { ServoBalanceCurve } from "../../js/ServoBalanceCurve.js";
 
 // Stabilized mixer inputs (MIXER_IN_STABILIZED_ROLL/PITCH/YAW).
 export const AXES = [
