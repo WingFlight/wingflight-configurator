@@ -4,6 +4,12 @@
   import { FC } from "@/js/fc.svelte.js";
   import { MSP } from "@/js/msp.svelte.js";
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+  import { remote } from "@/js/protocols/RemoteView.svelte.js";
+  import RemoteSupportDialog from "@/components/RemoteSupportDialog.svelte";
+
+  // Only the desktop configurator can reach the remote support tool.
+  const remoteSupportSupported = __BACKEND__ === "nwjs";
+  let remoteDialog;
 
   let showFwVersion = $derived(
     FC.CONFIG.buildVersion && FC.CONFIG.flightControllerIdentifier,
@@ -31,6 +37,21 @@
   <span>{$i18n.t("statusbar_cpu_load")} {FC.CONFIG.cpuLoad}%</span>
 
   <div class="grow"></div>
+
+  {#if remoteSupportSupported}
+    <button
+      class="remote-support"
+      class:active={remote.role !== null}
+      onclick={() => remoteDialog.open()}
+    >
+      <span class="fas fa-headset"></span>
+      {$i18n.t("remoteSupportButton")}
+      {#if remote.role !== null}
+        · {remote.peerConnected ? "●" : "○"}
+      {/if}
+    </button>
+    <RemoteSupportDialog bind:this={remoteDialog} />
+  {/if}
 
   {#if showFwVersion}
     <span
@@ -80,6 +101,21 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+  }
+
+  .remote-support {
+    flex-shrink: 0;
+    padding: 0 12px;
+    border: 0;
+    border-left: 1px solid var(--chrome-border);
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &.active {
+      color: var(--color-status-good);
     }
   }
 
