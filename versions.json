@@ -185,7 +185,11 @@
       "name": "feature-fbus-status",
       "path": "./feature-fbus-status/",
       "branch": "feature/fbus-status",
-      "date": "2026-10-24T13:51:18Z"
+      "date": "2026-10-24T13:51:18Z",
+      "number": 200,
+      "title": "Show live FBUS/S.Port sensor readings",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/200",
+      "draft": false
     },
     {
       "type": "branch",
