@@ -9306,7 +9306,7 @@
         "message": "DShot150"
     },
     "setupWizardMotorHelp_dshot150": {
-        "message": "Digital, and the most tolerant of long ESC leads. No calibration needed."
+        "message": "Digital, and the most tolerant of long ESC leads. No calibration needed. No bidirectional DShot RPM telemetry."
     },
     "setupWizardMotor_dshot300": {
         "message": "DShot300"
@@ -9319,6 +9319,9 @@
     },
     "setupWizardMotorHelp_none": {
         "message": "Gliders, or a motor not driven by the flight controller."
+    },
+    "setupWizardMotorDshot150NoRpm": {
+        "message": "DShot150 can't report motor RPM. For anything that needs motor RPM, use DShot300 with bidirectional DShot, or an RPM sensor or ESC telemetry."
     },
     "setupWizardMotorOther": {
         "message": "Other"
@@ -9433,6 +9436,9 @@
     },
     "setupWizardEscRpmNow": {
         "message": "$1 rpm"
+    },
+    "setupWizardEscBidirDshot150": {
+        "message": "DShot150 has no bidirectional DShot RPM. For RPM over the throttle wire, switch to DShot300 on the Motor step."
     },
     "setupWizardEscRpmSource": {
         "message": "RPM from: $1"
