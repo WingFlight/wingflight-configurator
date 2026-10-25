@@ -1,8 +1,4 @@
 {
   "branch": "feature/wizard-motor-dshot150",
-  "date": "2026-10-25T10:39:04Z",
-  "number": 201,
-  "title": "Setup Wizard: PWM, DShot150 and DShot300 as the ESC protocol tiles",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/201",
-  "draft": false
+  "date": "2026-10-25T10:39:04Z"
 }
