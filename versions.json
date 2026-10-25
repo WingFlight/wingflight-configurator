@@ -228,13 +228,6 @@
       "title": "Remote support built into the configurator, with screen mirroring and a safety stop",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/199",
       "draft": false
-    },
-    {
-      "type": "branch",
-      "name": "feature-wizard-dshot150-no-bidir",
-      "path": "./feature-wizard-dshot150-no-bidir/",
-      "branch": "feature/wizard-dshot150-no-bidir",
-      "date": "2026-10-25T11:11:30Z"
     }
   ]
 }
