@@ -1177,7 +1177,7 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                 var erase_pages = [];
                 // The Wingflight loader has no mass erase and erases 64 KB
                 // blocks only, so "erase chip" means the blocks this hex
-                // touches there.
+                // touches there, plus a request to wipe the firmware's config.
                 const erase_all = self.options.erase_chip && !self.isLoaderLayout;
                 for (let i = 0; i < self.flash_layout.sectors.length; i++) {
                     for (var j = 0; j < self.flash_layout.sectors[i].num_pages; j++) {
@@ -1203,6 +1203,12 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                         }
                     }
                   }
+                }
+
+                // The firmware's config is on another flash than the one the loader exposes. An erase
+                // just past the end of the exposed flash asks the firmware to wipe it at its next start.
+                if (self.options.erase_chip && self.isLoaderLayout && erase_pages.length > 0) {
+                    erase_pages.push({'address': self.flash_layout.start_address + self.flash_layout.total_size});
                 }
 
                 if (erase_pages.length === 0) {
@@ -1233,12 +1239,18 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                 };
 
                 var erase_page = function() {
-                    var page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
-                            self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                    var page_addr;
+                    if (erase_pages[page].address !== undefined) {
+                        page_addr = erase_pages[page].address;
+                        console.log('Erasing config request @ 0x' + page_addr.toString(16));
+                    } else {
+                        page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
+                                self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                        total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
+                        console.log('Erasing. sector ' + erase_pages[page].sector +
+                                    ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
+                    }
                     var cmd = [0x41, page_addr & 0xff, (page_addr >> 8) & 0xff, (page_addr >> 16) & 0xff, (page_addr >> 24) & 0xff];
-                    total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
-                    console.log('Erasing. sector ' + erase_pages[page].sector +
-                                ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
 
                     self.controlTransfer('out', self.request.DNLOAD, 0, 0, 0, cmd, function () {
                         self.controlTransfer('in', self.request.GETSTATUS, 0, 0, 6, 0, function (data) {
