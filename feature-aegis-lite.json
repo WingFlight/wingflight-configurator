@@ -1,4 +1,8 @@
 {
   "branch": "feature/aegis-lite",
-  "date": "2026-10-25T17:41:08Z"
+  "date": "2026-10-25T21:59:44Z",
+  "number": 204,
+  "title": "Wipe the config on erase chip with the Wingflight loader",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/204",
+  "draft": false
 }
