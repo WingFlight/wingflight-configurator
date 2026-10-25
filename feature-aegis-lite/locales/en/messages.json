@@ -1288,24 +1288,6 @@
     "stm32UnprotectInitFailed": {
         "message": "Failed to initiate unprotect routine"
     },
-    "apBootLoaderNotFound": {
-        "message": "The board's boot loader was not found. Unplug the board, plug it back in and press Flash Firmware within 5 seconds."
-    },
-    "apBootLoaderUnknownBoard": {
-        "message": "The boot loader reports board ID $1, which this firmware is not made for. Programming: FAILED"
-    },
-    "apBootLoaderFirmwareTooLarge": {
-        "message": "The firmware ($1 bytes) does not fit into the board's external flash ($2 bytes). Programming: FAILED"
-    },
-    "apBootLoaderNoDfu": {
-        "message": "This firmware is written through the board's own boot loader, not over DFU. Unplug the board, plug it back in, select its serial port and flash again."
-    },
-    "apBootLoaderPermissionNeeded": {
-        "message": "Your board has restarted in its boot loader. Your browser needs permission to access it before flashing can continue. Click <strong>Allow Boot Loader Access</strong> and select the ArduPilot device."
-    },
-    "apBootLoaderPermissionGrant": {
-        "message": "Allow Boot Loader Access"
-    },
     "noConfigurationReceived": {
         "message": "No configuration received within <span class=\"message-negative\">10 seconds</span>, communication <span class=\"message-negative\">failed</span>"
     },

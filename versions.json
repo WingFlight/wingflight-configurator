@@ -164,9 +164,9 @@
       "name": "feature-aegis-lite",
       "path": "./feature-aegis-lite/",
       "branch": "feature/aegis-lite",
-      "date": "2026-10-25T16:01:26Z",
+      "date": "2026-10-25T16:07:26Z",
       "number": 203,
-      "title": "Flash and remap the FrSky Aegis Lite (STM32H730)",
+      "title": "Custom defaults and remap tab for the FrSky Aegis Lite (STM32H730)",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/203",
       "draft": false
     },
