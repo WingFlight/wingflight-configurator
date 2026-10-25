@@ -1,8 +1,10 @@
 export const ConfigInserter = function () {
 };
 
-// Internal flash, or the external flash for firmware executing in place from it (STM32H730)
-const CUSTOM_DEFAULTS_POINTER_ADDRESSES = [0x08002800, 0x90002800];
+// The external flash for firmware executing in place from it (STM32H730), or
+// internal flash. External first: the STM32H730 hex also holds the Wingflight
+// loader in internal flash, whose code covers 0x08002800.
+const CUSTOM_DEFAULTS_POINTER_ADDRESSES = [0x90002800, 0x08002800];
 const BLOCK_SIZE = 16384;
 
 function seek(firmware, address) {
