@@ -283,8 +283,9 @@
   }
 
   //// 5. Motor RPM: the ESC's RPM wire on the FC's RPM pin (the frequency
-  //// sensor), or bidirectional DShot on the throttle wire. The pole count
-  //// turns the electrical RPM into motor RPM.
+  //// sensor), or bidirectional DShot on the throttle wire (not DShot150,
+  //// which has no bidirectional telemetry). The pole count turns the
+  //// electrical RPM into motor RPM.
 
   function changeMotor() {
     motorChanged = true;
@@ -298,7 +299,7 @@
   let rpmSource = $derived(
     FC.FEATURE_CONFIG.features.FREQ_SENSOR
       ? "pin"
-      : motorState.isDshot && FC.MOTOR_CONFIG.use_dshot_telemetry
+      : motorState.bidirCapable && FC.MOTOR_CONFIG.use_dshot_telemetry
         ? "dshot"
         : telemetryOn
           ? "esc"
@@ -530,13 +531,18 @@
         checked={FC.FEATURE_CONFIG.features.FREQ_SENSOR}
         onchange={(e) => setRpmPin(e.target.checked)}
       />
-      {#if motorState.isDshot}
+      {#if motorState.bidirCapable}
         <label for="esc-bidir">{$i18n.t("motorsDshotBidir")}</label>
         <Switch
           id="esc-bidir"
           checked={FC.MOTOR_CONFIG.use_dshot_telemetry}
           onchange={(e) => setBidir(e.target.checked)}
         />
+      {:else if motorState.isDshot}
+        <span>{$i18n.t("motorsDshotBidir")}</span>
+        <span class="muted no-bidir">
+          {$i18n.t("setupWizardEscBidirDshot150")}
+        </span>
       {/if}
       {#each { length: motorCount } as _, i (i)}
         <label for={`esc-poles-${i}`}>
@@ -763,6 +769,10 @@
     display: inline-flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .no-bidir {
+    max-width: 45ch;
   }
 
   .rpm {

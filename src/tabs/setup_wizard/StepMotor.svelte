@@ -57,6 +57,12 @@
   function setProtocol(index) {
     if (index < 0 || index === FC.MOTOR_CONFIG.motor_pwm_protocol) return;
     FC.MOTOR_CONFIG.motor_pwm_protocol = index;
+    // DShot150 has no bidirectional RPM telemetry, and an ESC that doesn't
+    // answer bidirectional requests may not arm, so turn it off. It goes out
+    // with MSP_SET_MOTOR_CONFIG on commit.
+    if (motorState.isDshot && !motorState.bidirCapable) {
+      FC.MOTOR_CONFIG.use_dshot_telemetry = false;
+    }
     changed = true;
     wiz.markChanged();
   }
@@ -135,6 +141,8 @@
 </div>
 {#if current === "DISABLED"}
   <p class="muted">{$i18n.t("setupWizardMotorHelp_none")}</p>
+{:else if motorState.isDshot && !motorState.bidirCapable}
+  <p class="muted">{$i18n.t("setupWizardMotorDshot150NoRpm")}</p>
 {/if}
 
 {#if changed}
