@@ -9302,17 +9302,17 @@
     "setupWizardMotorHelp_pwm": {
         "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
     },
+    "setupWizardMotor_dshot150": {
+        "message": "DShot150"
+    },
+    "setupWizardMotorHelp_dshot150": {
+        "message": "Digital, and the most tolerant of long ESC leads. No calibration needed."
+    },
     "setupWizardMotor_dshot300": {
         "message": "DShot300"
     },
     "setupWizardMotorHelp_dshot300": {
         "message": "Digital, no calibration needed. For BLHeli_32, BLHeli_S, Bluejay and AM32 ESCs."
-    },
-    "setupWizardMotor_dshot600": {
-        "message": "DShot600"
-    },
-    "setupWizardMotorHelp_dshot600": {
-        "message": "Faster DShot, for ESCs that support it."
     },
     "setupWizardMotor_none": {
         "message": "No motor"
@@ -9321,7 +9321,7 @@
         "message": "Gliders, or a motor not driven by the flight controller."
     },
     "setupWizardMotorOther": {
-        "message": "Currently set to $1 on the Motors tab. Choosing an option here replaces it."
+        "message": "Other"
     },
     "setupWizardMotorTestTitle": {
         "message": "Check the motor"
