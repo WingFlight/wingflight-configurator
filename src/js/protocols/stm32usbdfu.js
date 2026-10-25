@@ -12,8 +12,11 @@ const NEXT_STAGE_POLL_ATTEMPTS = 30;
 // their id across a re-enumeration).
 const NEXT_STAGE_SAME_DEVICE_ATTEMPTS = 10;
 // Web: an unauthorized device never shows up in getDevices(), so ask for
-// permission after this many polls.
-const NEXT_STAGE_WEB_PERMISSION_ATTEMPTS = 6;
+// permission after this many polls. The loader takes about 5 s from the ROM
+// DFU's leave to enumerate (it resets once); it has the ROM DFU's VID, PID
+// and serial number, so a browser that may use the one usually finds it
+// without asking.
+const NEXT_STAGE_WEB_PERMISSION_ATTEMPTS = 16;
 
 /*
     USB DFU uses:
