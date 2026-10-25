@@ -79,6 +79,10 @@ const MCU_ALIASES = {
   // Wingflight's FBUS mux FPGA build of the STM32F7X2 unified target
   // (board designs ending in M, e.g. F7B5M) -- same chip, same pins.
   STM32F7X2M: "STM32F7X2",
+  // The firmware builds the H730 with the H743's timer table
+  // (timer_stm32h7xx.c), and the FrSky Aegis Lite's timer lines all
+  // match STM32H743 here (e.g. A03 AF2 TIM5 CH4, A09 AF1 TIM1 CH2).
+  STM32H730: "STM32H743",
 };
 
 // Resolves a raw reported MCU string to whichever MCU-all.json key
