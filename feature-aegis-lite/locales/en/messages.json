@@ -1261,6 +1261,12 @@
     "stm32ProgrammingSuccessful": {
         "message": "Programming: SUCCESSFUL"
     },
+    "stm32WaitingForWingflightLoader": {
+        "message": "Waiting for the Wingflight loader ..."
+    },
+    "stm32WingflightLoaderNotFound": {
+        "message": "The Wingflight loader was written, but its USB DFU device did not appear. Unplug and replug the board, then flash again."
+    },
     "stm32ProgrammingFailed": {
         "message": "Programming: FAILED"
     },
@@ -1432,6 +1438,9 @@
     },
     "dfu_error_image_size": {
         "message": "<span class=\"message-negative\">Error</span>: Supplied image is larger then flash available on the chip! Image: $1 KiB, limit = $2 KiB"
+    },
+    "dfu_skipping_block": {
+        "message": "Skipping $1 KiB at 0x$2, not writable through this DFU device"
     },
     "eeprom_saved_ok": {
         "message": "EEPROM <span class=\"message-positive\">saved</span>"
