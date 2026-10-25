@@ -234,7 +234,11 @@
       "name": "feature-wizard-dshot150-no-bidir",
       "path": "./feature-wizard-dshot150-no-bidir/",
       "branch": "feature/wizard-dshot150-no-bidir",
-      "date": "2026-10-25T11:11:30Z"
+      "date": "2026-10-25T11:11:30Z",
+      "number": 202,
+      "title": "Wizard: DShot150 is not a bidirectional DShot RPM source",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/202",
+      "draft": false
     }
   ]
 }
