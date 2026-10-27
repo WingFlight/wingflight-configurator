@@ -1267,6 +1267,9 @@
     "stm32WingflightLoaderNotFound": {
         "message": "The Wingflight loader was written, but its USB DFU device did not appear. Unplug and replug the board, then flash again."
     },
+    "stm32WingflightLoaderOutdated": {
+        "message": "The Wingflight loader on this board can't wipe the config. Flash the board through the ST ROM DFU to update the loader, then flash again."
+    },
     "stm32ProgrammingFailed": {
         "message": "Programming: FAILED"
     },
