@@ -1330,10 +1330,6 @@
         "message": "Softwarebasierte serielle Anschlüsse aktivieren",
         "english": "Enable Software Serial ports"
     },
-    "feature_GPS": {
-        "message": "GPS für Telemetrie",
-        "english": "GPS for telemetry"
-    },
     "feature_SONAR": {
         "message": "Sonar Höhenmessung",
         "english": "Sonar altitude radar"
@@ -1405,10 +1401,6 @@
     "configurationFeatures": {
         "message": "Funktionen",
         "english": "Features"
-    },
-    "featureTip_GPS": {
-        "message": "Ermöglicht die Unterstützung der GPS-Telemetrie. Fügt die Registerkarte <i> GPS </i> für die spezifische Konfiguration hinzu.",
-        "english": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_LED_STRIP": {
         "message": "Ermöglicht die Unterstützung von WS2811/2812 LED-Streifen. Fügt die Registerkarte <i> LED-Streifen </i> für die spezifische Konfiguration hinzu.",
