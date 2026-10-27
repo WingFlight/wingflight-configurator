@@ -920,52 +920,58 @@
     ]
   },
   "AEGISLITE": {
-    "Out 1": [
+    "S1": [
       {
         "pin": "PA3",
         "function": "T5CH4"
       }
     ],
-    "Out 2": [
+    "S2": [
       {
         "pin": "PA2",
         "function": "T5CH3"
       }
     ],
-    "Out 3": [
+    "S3": [
       {
         "pin": "PA1",
         "function": "T5CH2"
       }
     ],
-    "Out 4": [
+    "S4": [
       {
         "pin": "PA0",
         "function": "T5CH1"
       }
     ],
-    "Out 5": [
+    "S5": [
       {
         "pin": "PC8",
         "function": "T3CH3"
       }
     ],
-    "Out 6": [
+    "S6": [
       {
         "pin": "PC7",
         "function": "T3CH2"
       }
     ],
-    "Out 7": [
+    "S7": [
       {
         "pin": "PA10",
         "function": "T1CH3"
       }
     ],
-    "Out 8": [
+    "S8": [
       {
         "pin": "PA9",
         "function": "T1CH2"
+      }
+    ],
+    "S9(TLM)": [
+      {
+        "pin": "PE8",
+        "function": "TX7"
       }
     ],
     "RX": [
@@ -978,17 +984,17 @@
         "function": "RX3"
       }
     ],
-    "SBUS Out": [
+    "C1": [
       {
-        "pin": "PE8",
-        "function": "TX7"
+        "pin": "PD1",
+        "function": "TX4"
       },
       {
-        "pin": "PE7",
-        "function": "RX7"
+        "pin": "PD0",
+        "function": "RX4"
       }
     ],
-    "GPS": [
+    "C2": [
       {
         "pin": "PE3",
         "function": "TX10"

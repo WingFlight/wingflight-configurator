@@ -38,6 +38,8 @@ export const PORT_NAMES_RF2 = {
   F7C4: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Port Ⓔ", 5: "Port Ⓖ" },
   F7C5: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓑ" },
   F7C6: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓖ" },
+  // FrSky Aegis Lite (STM32H730): UART3 RX, UART4 C1, UART7 TX on S9 (TLM), UART10 C2
+  H7A1: { 2: "RX", 3: "C1", 6: "S9(TLM)", 9: "C2" },
 };
 
 export const PORT_TYPES = {
