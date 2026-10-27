@@ -228,6 +228,17 @@
       "title": "Remote support built into the configurator, with screen mirroring and a safety stop",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/199",
       "draft": false
+    },
+    {
+      "type": "branch",
+      "name": "feature-serialdebug",
+      "path": "./feature-serialdebug/",
+      "branch": "feature/serialdebug",
+      "date": "2026-10-27T14:14:15Z",
+      "number": 209,
+      "title": "Add a GPS Diagnostics panel from MSP2_WING_SERIAL_STATUS",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/209",
+      "draft": false
     }
   ]
 }
