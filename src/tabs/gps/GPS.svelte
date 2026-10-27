@@ -2,6 +2,7 @@
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
 
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -412,70 +413,153 @@
       </Field>
     </Section>
 
-    <Section label="gpsHead" header={statusHeader}>
-      {#snippet statusHeader()}
-        <div class="status-header">
-          <span class="title">{$i18n.t("gpsHead")}</span>
-          <div class="grow"></div>
-          <span class="gps-fix">
-            {#if fbusSatelliteCountUnknown}
-              <span class="gpsFixTrue">Position</span>
-            {:else if FC.GPS_DATA.fix}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("gpsFixYes")}
-            {:else}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("gpsFixNo")}
+    <div class="status-col">
+      <Section label="gpsHead" header={statusHeader}>
+        {#snippet statusHeader()}
+          <div class="status-header">
+            <span class="title">{$i18n.t("gpsHead")}</span>
+            <div class="grow"></div>
+            <span class="gps-fix">
+              {#if fbusSatelliteCountUnknown}
+                <span class="gpsFixTrue">Position</span>
+              {:else if FC.GPS_DATA.fix}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("gpsFixYes")}
+              {:else}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("gpsFixNo")}
+              {/if}
+            </span>
+          </div>
+        {/snippet}
+        <table class="cf_table">
+          <tbody>
+            <tr>
+              <td>{$i18n.t("gpsAltitude")}</td>
+              <td>{FC.GPS_DATA.alt} m</td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsLat")}</td>
+              <td>
+                <a
+                  href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {(FC.GPS_DATA.lat / 10000000).toFixed(4)} deg
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsLon")}</td>
+              <td>
+                <a
+                  href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {(FC.GPS_DATA.lon / 10000000).toFixed(4)} deg
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsSpeed")}</td>
+              <td>{FC.GPS_DATA.speed} cm/s</td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsSats")}</td>
+              <td
+                >{fbusSatelliteCountUnknown
+                  ? "Unknown"
+                  : FC.GPS_DATA.numSat}</td
+              >
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsDistToHome")}</td>
+              <td>{FC.GPS_DATA.distanceToHome} m</td>
+            </tr>
+          </tbody>
+        </table>
+      </Section>
+      {#if showDiagnostics}
+        <Section label="gpsDiagHead" header={diagHeader}>
+          {#snippet diagHeader()}
+            <div class="status-header">
+              <span class="title">{$i18n.t("gpsDiagHead")}</span>
+              <div class="grow"></div>
+              {#if diagHint}
+                <span class="diag-badge {diagHint.level}"
+                  >{$i18n.t(diagHint.key.replace("Hint", "Badge"))}</span
+                >
+              {/if}
+            </div>
+          {/snippet}
+          <div class="diag">
+            <!-- The badge says all when it is fine; otherwise say what to do -->
+            {#if diagHint && diagHint.level !== "good"}
+              <p class="hint {diagHint.level}">{$i18n.t(diagHint.key)}</p>
             {/if}
-          </span>
-        </div>
-      {/snippet}
-      <table class="cf_table">
-        <tbody>
-          <tr>
-            <td>{$i18n.t("gpsAltitude")}</td>
-            <td>{FC.GPS_DATA.alt} m</td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsLat")}</td>
-            <td>
-              <a
-                href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {(FC.GPS_DATA.lat / 10000000).toFixed(4)} deg
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsLon")}</td>
-            <td>
-              <a
-                href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {(FC.GPS_DATA.lon / 10000000).toFixed(4)} deg
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsSpeed")}</td>
-            <td>{FC.GPS_DATA.speed} cm/s</td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsSats")}</td>
-            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td
-            >
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsDistToHome")}</td>
-            <td>{FC.GPS_DATA.distanceToHome} m</td>
-          </tr>
-        </tbody>
-      </table>
-    </Section>
+            {#if diagPort}
+              <table class="cf_table">
+                <tbody>
+                  <tr>
+                    <td>{$i18n.t("gpsDiagPort")}</td>
+                    <td>
+                      {UART_NAMES[diagPort.identifier] ?? diagPort.identifier}
+                      (RX {pinName(diagPort.rxPin)}, TX {pinName(
+                        diagPort.txPin,
+                      )})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>{$i18n.t("gpsDiagOpen")}</td>
+                    <td>
+                      {#if diagPort.open}
+                        {$i18n.t("gpsDiagOpenYes", { baud: diagPort.baudRate })}
+                      {:else}
+                        {$i18n.t("gpsDiagOpenNo")}
+                      {/if}
+                    </td>
+                  </tr>
+                  {#if diagGps}
+                    <tr>
+                      <td>{$i18n.t("gpsDiagState")}</td>
+                      <td>
+                        {GPS_STATE_NAMES[diagGps.state] ?? diagGps.state},
+                        {$i18n.t("gpsDiagLastMessage", {
+                          ms: diagGps.lastMessageAgeMs,
+                        })}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{$i18n.t("gpsDiagCounters")}</td>
+                      <td>
+                        {$i18n.t("gpsDiagCountersValue", {
+                          bytes: diagGps.rxBytes,
+                          packets: diagGps.packets,
+                          errors: diagGps.errors,
+                          timeouts: diagGps.timeouts,
+                        })}
+                      </td>
+                    </tr>
+                    {#if CONFIGURATOR.expertMode}
+                      <tr>
+                        <td colspan="2">
+                          {$i18n.t("gpsDiagRecent")}
+                          <pre class="recent">{diagGps.recentBytes.length
+                              ? recentBytesText(diagGps.recentBytes)
+                              : $i18n.t("gpsDiagRecentNone")}</pre>
+                        </td>
+                      </tr>
+                    {/if}
+                  {/if}
+                </tbody>
+              </table>
+            {/if}
+          </div>
+        </Section>
+      {/if}
+    </div>
 
     {#if !pushedDataSelected}
       <Section label="gpsSignalStrHead">
@@ -502,69 +586,6 @@
       </Section>
     {/if}
   </div>
-
-  {#if showDiagnostics}
-    <Section label="gpsDiagHead">
-      <div class="diag">
-        {#if diagHint}
-          <p class="hint {diagHint.level}">{$i18n.t(diagHint.key)}</p>
-        {/if}
-        {#if diagPort}
-          <table class="cf_table">
-            <tbody>
-              <tr>
-                <td>{$i18n.t("gpsDiagPort")}</td>
-                <td>
-                  {UART_NAMES[diagPort.identifier] ?? diagPort.identifier}
-                  (RX {pinName(diagPort.rxPin)}, TX {pinName(diagPort.txPin)})
-                </td>
-              </tr>
-              <tr>
-                <td>{$i18n.t("gpsDiagOpen")}</td>
-                <td>
-                  {#if diagPort.open}
-                    {$i18n.t("gpsDiagOpenYes", { baud: diagPort.baudRate })}
-                  {:else}
-                    {$i18n.t("gpsDiagOpenNo")}
-                  {/if}
-                </td>
-              </tr>
-              {#if diagGps}
-                <tr>
-                  <td>{$i18n.t("gpsDiagState")}</td>
-                  <td>
-                    {GPS_STATE_NAMES[diagGps.state] ?? diagGps.state},
-                    {$i18n.t("gpsDiagLastMessage", {
-                      ms: diagGps.lastMessageAgeMs,
-                    })}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{$i18n.t("gpsDiagCounters")}</td>
-                  <td>
-                    {$i18n.t("gpsDiagCountersValue", {
-                      bytes: diagGps.rxBytes,
-                      packets: diagGps.packets,
-                      errors: diagGps.errors,
-                      timeouts: diagGps.timeouts,
-                    })}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{$i18n.t("gpsDiagRecent")}</td>
-                  <td>
-                    <pre class="recent">{diagGps.recentBytes.length
-                        ? recentBytesText(diagGps.recentBytes)
-                        : $i18n.t("gpsDiagRecentNone")}</pre>
-                  </td>
-                </tr>
-              {/if}
-            </tbody>
-          </table>
-        {/if}
-      </div>
-    </Section>
-  {/if}
 
   <Section label="gpsMapHead">
     <div class="gps-map">
@@ -673,13 +694,24 @@
     border-radius: var(--radius-xs);
   }
 
+  .diag-badge {
+    padding: 2px 5px;
+    border-radius: var(--radius-xs);
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
   .diag .hint {
     margin: 0 8px 8px;
     padding: 6px 8px;
     border-radius: var(--radius-xs);
     font-size: 0.8rem;
     color: #fff;
+  }
 
+  .diag-badge,
+  .diag .hint {
     &.good {
       background-color: var(--color-status-good);
     }
@@ -691,8 +723,25 @@
     }
   }
 
+  .status-col {
+    min-width: 0;
+  }
+
+  .diag {
+    font-size: 0.8rem;
+
+    :global(td) {
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+  }
+
+  .diag td[colspan] {
+    text-align: left;
+  }
+
   .diag .recent {
-    margin: 0;
+    margin: 2px 0 0;
     max-height: 6em;
     overflow: auto;
     white-space: pre-wrap;
