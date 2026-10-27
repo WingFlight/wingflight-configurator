@@ -1012,7 +1012,14 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
 
                 GUI.log(i18n.getMessage('dfu_device_flash_info', (self.flash_layout.total_size / 1024).toString()));
 
-                if (self.hex.bytes_total > self.available_flash_size) {
+                // A block that starts in this layout but runs past its end can't be written by this device
+                const layoutEnd = self.flash_layout.start_address + self.flash_layout.total_size;
+                const crossesLayout = self.hex.data.some((block) =>
+                    block.address >= self.flash_layout.start_address &&
+                    block.address < layoutEnd &&
+                    block.address + block.bytes > layoutEnd);
+
+                if (crossesLayout || self.hex.bytes_total > self.available_flash_size) {
                     GUI.log(i18n.getMessage('dfu_error_image_size',
                         [(self.hex.bytes_total / 1024.0).toFixed(1),
                         (self.available_flash_size / 1024.0).toFixed(1)]));
@@ -1238,6 +1245,17 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                     }
                 };
 
+                var erase_failed = function (reason) {
+                    // A loader without the config wipe request rejects its address
+                    if (erase_pages[page].address !== undefined) {
+                        const message = i18n.getMessage('stm32WingflightLoaderOutdated');
+                        GUI.log(message);
+                        TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+                    }
+                    console.log(reason);
+                    self.cleanup();
+                };
+
                 var erase_page = function() {
                     var page_addr;
                     if (erase_pages[page].address !== undefined) {
@@ -1278,22 +1296,19 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                                                     if (data[4] == self.state.dfuIDLE) {
                                                         erase_page_next();
                                                     } else {
-                                                        console.log('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
-                                                        self.cleanup();
+                                                        erase_failed('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
                                                     }
                                                 });
                                             });
                                         } else if (data[4] == self.state.dfuDNLOAD_IDLE) {
                                             erase_page_next();
                                         } else {
-                                            console.log('Failed to erase page 0x' + page_addr.toString(16));
-                                            self.cleanup();
+                                            erase_failed('Failed to erase page 0x' + page_addr.toString(16));
                                         }
                                     });
                                 }, delay);
                             } else {
-                                console.log('Failed to initiate page erase, page 0x' + page_addr.toString(16));
-                                self.cleanup();
+                                erase_failed('Failed to initiate page erase, page 0x' + page_addr.toString(16));
                             }
                         });
                     });
