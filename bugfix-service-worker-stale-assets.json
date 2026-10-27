@@ -1,8 +1,4 @@
 {
   "branch": "bugfix/service-worker-stale-assets",
-  "date": "2026-10-27T09:23:39Z",
-  "number": 207,
-  "title": "Don't cache the previous build's files under a new web deploy",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/207",
-  "draft": false
+  "date": "2026-10-27T09:23:39Z"
 }
