@@ -2385,6 +2385,9 @@
     "portsFunction_FBUS_OUT": {
         "message": "F.BUS"
     },
+    "portsFunctionFeatureOff": {
+        "message": "{{function}} (enable the {{feature}} feature)"
+    },
     "portsFbusMuxReserved": {
         "message": "Used by the FBUS mux"
     },

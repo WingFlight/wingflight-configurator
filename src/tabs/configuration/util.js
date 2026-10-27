@@ -64,10 +64,11 @@ export const BAUD_RATE_OPTIONS = {
 
 // hide: not compiled into Wingflight firmware. Listed only for a port that is
 // still set to it, so it shows its real name instead of "Custom".
+// feature: only assignable while this feature is enabled.
 export const PORT_FUNCTIONS = [
   { id: 0, excl: 0, name: "DISABLED", type: PORT_TYPES.DISABLED },
   { id: 1, excl: 1, name: "MSP", type: PORT_TYPES.MSP },
-  { id: 2, excl: 2, name: "GPS", type: PORT_TYPES.GPS },
+  { id: 2, excl: 2, name: "GPS", type: PORT_TYPES.GPS, feature: "GPS" },
   { id: 64, excl: 64, name: "RX_SERIAL", type: PORT_TYPES.AUTO },
   { id: 1024, excl: 1024, name: "ESC_SENSOR", type: PORT_TYPES.AUTO },
   { id: 128, excl: 128, name: "BLACKBOX", type: PORT_TYPES.BLACKBOX },
