@@ -1,0 +1,8 @@
+{
+  "branch": "feature/gps-bauds",
+  "date": "2026-10-27T18:11:09Z",
+  "number": 212,
+  "title": "Offer only the GPS baud rates the firmware supports",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/212",
+  "draft": false
+}
