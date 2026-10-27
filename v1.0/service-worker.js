@@ -10,7 +10,7 @@
 // only ever reads from its own cache.
 
 const CACHE_PREFIX = `wingflight-configurator@${self.registration.scope}@`;
-const CACHE_VERSION = `${CACHE_PREFIX}0.0.37-4187ec21`;
+const CACHE_VERSION = `${CACHE_PREFIX}0.0.38-fbd19d37`;
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -19,9 +19,21 @@ const APP_SHELL = [
   "./images/favicon/favicon-512.png",
 ];
 
+// GitHub Pages lets the browser keep files for 10 minutes, and the asset
+// names carry no hash. A plain fetch() right after a deploy can return the
+// previous build's file from the HTTP cache, which would then be stored under
+// this build's cache for good. Always ask the server instead.
+function fetchFresh(request) {
+  return fetch(request, { cache: "no-cache" });
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)),
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) =>
+        cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: "no-cache" }))),
+      ),
   );
   self.skipWaiting();
 });
@@ -64,7 +76,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetchFresh(request)
         .then((response) => {
           const responseCopy = response.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(request, responseCopy));
@@ -75,13 +87,34 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Translations keep their file names from build to build. On the first
+  // load after a deploy the previous build's worker is still in charge: it
+  // fetches the page (and so the new code) fresh, but would answer these
+  // from its own cache, leaving every new string showing as its key until
+  // the next reload. So ask the server first, like for the page, and fall
+  // back to the cache offline.
+  if (requestUrl.pathname.includes("/locales/")) {
+    event.respondWith(
+      fetchFresh(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseCopy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, responseCopy));
+          }
+          return response;
+        })
+        .catch(() => matchOwn(request)),
+    );
+    return;
+  }
+
   event.respondWith(
     matchOwn(request).then((cached) => {
       if (cached) {
         return cached;
       }
 
-      return fetch(request).then((response) => {
+      return fetchFresh(request).then((response) => {
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }

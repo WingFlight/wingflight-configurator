@@ -436,6 +436,10 @@
     "tabHelp": {
         "message": "Documentation & Support"
     },
+    "remoteSupportMenu": {
+        "message": "Remote Support",
+        "description": "Left menu entry that opens the remote support panel"
+    },
     "tabOptions": {
         "message": "Options"
     },
@@ -866,7 +870,7 @@
         "message": "Serial RX #2"
     },
     "fbusSensorsDescription": {
-        "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master."
+        "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master, with live readings from the sensor types the firmware decodes."
     },
     "fbusSensorsEmpty": {
         "message": "No FBUS/S.Port sensors observed yet"
@@ -903,6 +907,102 @@
     },
     "fbusSensorsColPackets": {
         "message": "Packets"
+    },
+    "fbusSensorsReadingsTitle": {
+        "message": "Live readings"
+    },
+    "fbusSensorsBadgeReceiving": {
+        "message": "Receiving"
+    },
+    "fbusSensorsBadgeNoData": {
+        "message": "No data"
+    },
+    "fbusSensorsNoData": {
+        "message": "No reading in the last second."
+    },
+    "fbusSensorsVoltage": {
+        "message": "Voltage"
+    },
+    "fbusSensorsCurrent": {
+        "message": "Current"
+    },
+    "fbusSensorsTemperature": {
+        "message": "Temperature"
+    },
+    "fbusSensorsTemperature2": {
+        "message": "Temperature 2"
+    },
+    "fbusSensorsGpsTitle": {
+        "message": "GPS"
+    },
+    "fbusSensorsGpsLat": {
+        "message": "Latitude"
+    },
+    "fbusSensorsGpsLon": {
+        "message": "Longitude"
+    },
+    "fbusSensorsGpsAlt": {
+        "message": "Altitude"
+    },
+    "fbusSensorsGpsSpeed": {
+        "message": "Ground speed"
+    },
+    "fbusSensorsGpsCourse": {
+        "message": "Course"
+    },
+    "fbusSensorsGpsSats": {
+        "message": "Satellites"
+    },
+    "fbusSensorsGpsTime": {
+        "message": "UTC time"
+    },
+    "fbusSensorsGpsDate": {
+        "message": "UTC date"
+    },
+    "fbusSensorsCurrentTitle": {
+        "message": "Current sensor (FAS)"
+    },
+    "fbusSensorsCurrentFine": {
+        "message": "Current (mA resolution)"
+    },
+    "fbusSensorsCellsTitle": {
+        "message": "Cells (FLVSS)"
+    },
+    "fbusSensorsCellsCount": {
+        "message": "Cells"
+    },
+    "fbusSensorsCellsTotal": {
+        "message": "Pack voltage"
+    },
+    "fbusSensorsCellsLowest": {
+        "message": "Lowest cell"
+    },
+    "fbusSensorsCellsSpread": {
+        "message": "Cell spread"
+    },
+    "fbusSensorsCellsChip": {
+        "message": "Cell $1"
+    },
+    "fbusSensorsEscTitle": {
+        "message": "ESC / RPM sensor"
+    },
+    "fbusSensorsEscRpm": {
+        "message": "RPM"
+    },
+    "fbusSensorsEscErpm": {
+        "message": "eRPM"
+    },
+    "fbusSensorsEscRpmOrErpm": {
+        "message": "RPM / eRPM"
+    },
+    "fbusSensorsEscConsumption": {
+        "message": "Consumption"
+    },
+    "fbusSensorsServoTitle": {
+        "message": "XACT servo"
+    },
+    "fbusSensorsServoCaveat": {
+        "message": "With several XACT servos on the bus, this shows whichever one answered last."
     },
     "tabCrsfSensors": {
         "message": "CRSF Sensors"
@@ -1165,6 +1265,15 @@
     "stm32ProgrammingSuccessful": {
         "message": "Programming: SUCCESSFUL"
     },
+    "stm32WaitingForWingflightLoader": {
+        "message": "Waiting for the Wingflight loader ..."
+    },
+    "stm32WingflightLoaderNotFound": {
+        "message": "The Wingflight loader was written, but its USB DFU device did not appear. Unplug and replug the board, then flash again."
+    },
+    "stm32WingflightLoaderOutdated": {
+        "message": "The Wingflight loader on this board can't wipe the config. Flash the board through the ST ROM DFU to update the loader, then flash again."
+    },
     "stm32ProgrammingFailed": {
         "message": "Programming: FAILED"
     },
@@ -1336,6 +1445,9 @@
     },
     "dfu_error_image_size": {
         "message": "<span class=\"message-negative\">Error</span>: Supplied image is larger then flash available on the chip! Image: $1 KiB, limit = $2 KiB"
+    },
+    "dfu_skipping_block": {
+        "message": "Skipping $1 KiB at 0x$2, not writable through this DFU device"
     },
     "eeprom_saved_ok": {
         "message": "EEPROM <span class=\"message-positive\">saved</span>"
@@ -1655,6 +1767,15 @@
     "initialSetupButtonRebootText": {
         "message": "Reboot and reinitialize the system."
     },
+    "initialSetupButtonRemoteSupport": {
+        "message": "Remote support"
+    },
+    "defaultRemoteSupportText": {
+        "message": "Stuck, or can't connect to your flight controller? Someone can help you over the internet: you share your flight controller and give them a session code, and they work on it from their own configurator. Helping someone? Join their session here."
+    },
+    "initialSetupRemoteSupportText": {
+        "message": "Let someone help you over the internet. They see and change your flight controller's settings from their own configurator while you watch their screen. You give them a session code to join."
+    },
     "initialSetupBackupSuccess": {
         "message": "Backup saved <span class=\"message-positive\">successfully</span>"
     },
@@ -1724,9 +1845,6 @@
     "feature_SOFTSERIAL": {
         "message": "Enable Software Serial ports"
     },
-    "feature_GPS": {
-        "message": "GPS"
-    },
     "feature_TELEMETRY": {
         "message": "Transmitter telemetry"
     },
@@ -1774,9 +1892,6 @@
     },
     "configurationFeatures": {
         "message": "Features"
-    },
-    "featureTip_GPS": {
-        "message": "Enables GPS telemetry and GPS navigation (RTH, Loiter, and the Failsafe Procedure's GPS Rescue option). Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
@@ -4918,6 +5033,99 @@
     },
     "gpsDistToHome": {
         "message": "Dist to Home:"
+    },
+    "gpsDiagHead": {
+        "message": "Diagnostics"
+    },
+    "gpsDiagPort": {
+        "message": "Port"
+    },
+    "gpsDiagOpen": {
+        "message": "Open"
+    },
+    "gpsDiagOpenYes": {
+        "message": "Yes, {{baud}} baud"
+    },
+    "gpsDiagOpenNo": {
+        "message": "No"
+    },
+    "gpsDiagState": {
+        "message": "State"
+    },
+    "gpsDiagLastMessage": {
+        "message": "last valid message {{ms}} ms ago"
+    },
+    "gpsDiagCounters": {
+        "message": "Counters"
+    },
+    "gpsDiagCountersValue": {
+        "message": "{{bytes}} bytes, {{packets}} packets, {{errors}} errors, {{timeouts}} timeouts"
+    },
+    "gpsDiagRecent": {
+        "message": "Last bytes"
+    },
+    "gpsDiagRecentNone": {
+        "message": "(nothing received)"
+    },
+    "gpsDiagHintNoPort": {
+        "message": "No port is set to GPS. Set one on the Configuration tab, then save."
+    },
+    "gpsDiagHintNoPins": {
+        "message": "The GPS port has no pins assigned (see resource SERIAL_RX / SERIAL_TX in the CLI)."
+    },
+    "gpsDiagHintPinConflict": {
+        "message": "A pin of the GPS port is used by something else; see resource show in the CLI."
+    },
+    "gpsDiagHintInactive": {
+        "message": "GPS is not running. The port or protocol changed since boot: save and reboot."
+    },
+    "gpsDiagHintOtherPort": {
+        "message": "GPS is set on more than one port and another one comes first, so this port is not used."
+    },
+    "gpsDiagHintNotOpen": {
+        "message": "The GPS port did not open. Run serialdebug in the CLI."
+    },
+    "gpsDiagHintNoBytes": {
+        "message": "Nothing received from the module. Check its TX goes to the port's RX pin, and its power and ground."
+    },
+    "gpsDiagHintNoPackets": {
+        "message": "Data is arriving but no valid messages: wrong baud rate or protocol. Try Auto Baud, or serialdebug scan in the CLI."
+    },
+    "gpsDiagHintQuiet": {
+        "message": "The module answered before but has gone quiet."
+    },
+    "gpsDiagHintOk": {
+        "message": "Receiving valid GPS data."
+    },
+    "gpsDiagBadgeNoPort": {
+        "message": "No GPS port"
+    },
+    "gpsDiagBadgeNoPins": {
+        "message": "No pins"
+    },
+    "gpsDiagBadgePinConflict": {
+        "message": "Pin conflict"
+    },
+    "gpsDiagBadgeInactive": {
+        "message": "Not running"
+    },
+    "gpsDiagBadgeOtherPort": {
+        "message": "Other port"
+    },
+    "gpsDiagBadgeNotOpen": {
+        "message": "Port closed"
+    },
+    "gpsDiagBadgeNoBytes": {
+        "message": "No data"
+    },
+    "gpsDiagBadgeNoPackets": {
+        "message": "Bad data"
+    },
+    "gpsDiagBadgeQuiet": {
+        "message": "Gone quiet"
+    },
+    "gpsDiagBadgeOk": {
+        "message": "Receiving"
     },
     "gpsSignalStrHead": {
         "message": "Signal Strength"
@@ -9206,17 +9414,17 @@
     "setupWizardMotorHelp_pwm": {
         "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
     },
+    "setupWizardMotor_dshot150": {
+        "message": "DShot150"
+    },
+    "setupWizardMotorHelp_dshot150": {
+        "message": "Digital, and the most tolerant of long ESC leads. No calibration needed. No bidirectional DShot RPM telemetry."
+    },
     "setupWizardMotor_dshot300": {
         "message": "DShot300"
     },
     "setupWizardMotorHelp_dshot300": {
         "message": "Digital, no calibration needed. For BLHeli_32, BLHeli_S, Bluejay and AM32 ESCs."
-    },
-    "setupWizardMotor_dshot600": {
-        "message": "DShot600"
-    },
-    "setupWizardMotorHelp_dshot600": {
-        "message": "Faster DShot, for ESCs that support it."
     },
     "setupWizardMotor_none": {
         "message": "No motor"
@@ -9224,8 +9432,11 @@
     "setupWizardMotorHelp_none": {
         "message": "Gliders, or a motor not driven by the flight controller."
     },
+    "setupWizardMotorDshot150NoRpm": {
+        "message": "DShot150 can't report motor RPM. For anything that needs motor RPM, use DShot300 with bidirectional DShot, or an RPM sensor or ESC telemetry."
+    },
     "setupWizardMotorOther": {
-        "message": "Currently set to $1 on the Motors tab. Choosing an option here replaces it."
+        "message": "Other"
     },
     "setupWizardMotorTestTitle": {
         "message": "Check the motor"
@@ -9337,6 +9548,9 @@
     },
     "setupWizardEscRpmNow": {
         "message": "$1 rpm"
+    },
+    "setupWizardEscBidirDshot150": {
+        "message": "DShot150 has no bidirectional DShot RPM. For RPM over the throttle wire, switch to DShot300 on the Motor step."
     },
     "setupWizardEscRpmSource": {
         "message": "RPM from: $1"
@@ -9862,5 +10076,147 @@
     },
     "setupWizardFinishThrowsTune": {
         "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
+    },
+    "remoteSupportTitle": {
+        "message": "Remote support"
+    },
+    "remoteSupportShareTitle": {
+        "message": "I need help"
+    },
+    "remoteSupportShareChoice": {
+        "message": "Share your flight controller with someone who helps you.",
+        "description": "Subtitle of the 'I need help' choice in the remote support panel"
+    },
+    "remoteSupportJoinChoice": {
+        "message": "Join a session with the code the pilot gives you.",
+        "description": "Subtitle of the 'I'm helping someone' choice in the remote support panel"
+    },
+    "remoteSupportShareStep1": {
+        "message": "This configurator lets go of the flight controller, and the supporter uses it from theirs."
+    },
+    "remoteSupportShareStep2": {
+        "message": "You watch the supporter's screen until the session ends."
+    },
+    "remoteSupportBeforeShare": {
+        "message": "Before you share",
+        "description": "Heading of the safety note shown to the pilot"
+    },
+    "remoteSupportBeforeJoin": {
+        "message": "Before you join",
+        "description": "Heading of the safety note shown to the supporter"
+    },
+    "remoteSupportShare": {
+        "message": "Share my flight controller"
+    },
+    "remoteSupportJoinTitle": {
+        "message": "I'm helping someone"
+    },
+    "remoteSupportCodePlaceholder": {
+        "message": "Session code, e.g. 123 456 789 - 0427"
+    },
+    "remoteSupportJoin": {
+        "message": "Join"
+    },
+    "remoteSupportCode": {
+        "message": "Session code"
+    },
+    "remoteSupportWaitingSupporter": {
+        "message": "Waiting for the supporter..."
+    },
+    "remoteSupportSupporterConnected": {
+        "message": "The supporter is connected."
+    },
+    "remoteSupportConnectedPilot": {
+        "message": "Connected to the pilot's computer. Choose the remote port in the port list and connect."
+    },
+    "remoteSupportDevice": {
+        "message": "Device in use: $1"
+    },
+    "remoteSupportBeingWatched": {
+        "message": "The pilot is watching your screen."
+    },
+    "remoteSupportNotWatched": {
+        "message": "The pilot is not watching your screen. Nothing is sent unless they do."
+    },
+    "remoteSupportWatching": {
+        "message": "Supporter's screen (read-only)"
+    },
+    "remoteSupportWatchWaiting": {
+        "message": "The supporter is connected. Waiting for their screen..."
+    },
+    "remoteSupportFrameWaiting": {
+        "message": "Remote support: waiting for the supporter",
+        "description": "Banner on the frame around the pilot's window while sharing, before a supporter has joined"
+    },
+    "remoteSupportFrameConnected": {
+        "message": "Remote support session in progress",
+        "description": "Banner on the frame around the pilot's window while a supporter is connected"
+    },
+    "remoteSupportSafetyPilot1": {
+        "message": "Remove the propellers and secure the model.",
+        "description": "Safety note shown to the pilot before sharing their flight controller, first point"
+    },
+    "remoteSupportSafetyPilot2": {
+        "message": "Start an audio call with the supporter and keep it open the whole time, so you can tell them at once about any unexpected movement or danger."
+    },
+    "remoteSupportSafetyPilot3": {
+        "message": "Kill connection ends the session at any time: motors are stopped and actuators return to neutral."
+    },
+    "remoteSupportSafetySupporter1": {
+        "message": "You are working on a real model on someone else's bench, and you are responsible for it.",
+        "description": "Safety note shown to the supporter before joining a session, first point"
+    },
+    "remoteSupportSafetySupporter2": {
+        "message": "Never spin up motors."
+    },
+    "remoteSupportSafetySupporter3": {
+        "message": "Move actuators only after the pilot has confirmed it is safe."
+    },
+    "remoteSupportSafetySupporter4": {
+        "message": "Start an audio call with the pilot and keep it open the whole time, so they can report any unexpected movement or danger right away."
+    },
+    "remoteSupportSafetyAck": {
+        "message": "I have read this and will follow it"
+    },
+    "remoteSupportSafetyReminder": {
+        "message": "Never spin up motors. Keep the audio call with the pilot open.",
+        "description": "Reminder shown to the supporter during a session"
+    },
+    "remoteSupportSafetyReminderPilot": {
+        "message": "Keep the audio call open and report anything unexpected at once.",
+        "description": "Reminder in the bar of the pilot's view of the supporter's screen"
+    },
+    "remoteSupportViewerCodeHint": {
+        "message": "Give the supporter this session code:"
+    },
+    "remoteSupportKill": {
+        "message": "Kill connection"
+    },
+    "remoteSupportShareUnsupported": {
+        "message": "Needs Chrome, Edge or the desktop configurator; this browser can't reach the flight controller.",
+        "description": "Subtitle of the disabled 'I need help' choice in browsers without Web Serial or WebUSB"
+    },
+    "remoteSupportWebShareHint": {
+        "message": "The browser asks which port to share. The supporter can only use what you allow, and you can allow more during the session.",
+        "description": "Extra point for pilots sharing from the web configurator"
+    },
+    "remoteSupportAllowPort": {
+        "message": "Allow a port...",
+        "description": "Button for the pilot to grant the browser access to another serial port during a session"
+    },
+    "remoteSupportAllowDfu": {
+        "message": "Allow a DFU device...",
+        "description": "Button for the pilot to grant the browser access to a board in bootloader mode during a session"
+    },
+    "remoteSupportAllowedPorts": {
+        "message": "Ports the browser may share",
+        "description": "Heading of the list of serial ports the pilot has granted the web configurator access to"
+    },
+    "remoteSupportNoAllowedPorts": {
+        "message": "None yet. The browser asks for one when you share."
+    },
+    "remoteSupportFrameJoined": {
+        "message": "Remote support: working on the pilot's flight controller",
+        "description": "Banner on the frame around the supporter's window while joined to a session"
     }
 }
