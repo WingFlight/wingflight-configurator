@@ -228,13 +228,6 @@
       "title": "Remote support built into the configurator, with screen mirroring and a safety stop",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/199",
       "draft": false
-    },
-    {
-      "type": "branch",
-      "name": "feature-tv-tab",
-      "path": "./feature-tv-tab/",
-      "branch": "feature/tv-tab",
-      "date": "2026-10-27T17:50:15Z"
     }
   ]
 }
