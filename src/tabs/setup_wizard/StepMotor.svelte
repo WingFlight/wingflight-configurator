@@ -11,13 +11,14 @@
 
   const wiz = getContext("setupWizard");
 
-  // The normal choices only. Telemetry, PWM rate, throttle endpoints and the
-  // rarer protocols (OneShot, SRXL2, ...) stay on the Motors tab.
+  // The usual protocols as tiles; anything else (no motor, OneShot, ...) from
+  // the Other list. DShot600 is in the list: it is fussy about long, noisy
+  // ESC leads. Telemetry, PWM rate and throttle endpoints stay on the Motors
+  // tab.
   const CHOICES = [
     { key: "pwm", protocol: "PWM" },
+    { key: "dshot150", protocol: "DSHOT150" },
     { key: "dshot300", protocol: "DSHOT300" },
-    { key: "dshot600", protocol: "DSHOT600" },
-    { key: "none", protocol: "DISABLED" },
   ];
 
   // Spin test throttle choices (percent), all low: this is a direction and
@@ -35,7 +36,11 @@
   let currentChoice = $derived(
     CHOICES.find((c) => c.protocol === current)?.key ?? null,
   );
-  let selected = $state(null);
+  let protocols = $derived(
+    motorState.throttleProtocols
+      .map((name, index) => ({ name, index }))
+      .filter((p) => p.name),
+  );
   let changed = $state(false);
 
   let propOff = $state(false);
@@ -45,15 +50,19 @@
 
   let motorCount = $derived(FC.CONFIG.motorCount ?? 0);
 
-  $effect(() => {
-    if (selected === null) selected = currentChoice;
-  });
-
   function choose(choice) {
-    selected = choice.key;
-    const index = indexOf(choice.protocol);
+    setProtocol(indexOf(choice.protocol));
+  }
+
+  function setProtocol(index) {
     if (index < 0 || index === FC.MOTOR_CONFIG.motor_pwm_protocol) return;
     FC.MOTOR_CONFIG.motor_pwm_protocol = index;
+    // DShot150 has no bidirectional RPM telemetry, and an ESC that doesn't
+    // answer bidirectional requests may not arm, so turn it off. It goes out
+    // with MSP_SET_MOTOR_CONFIG on commit.
+    if (motorState.isDshot && !motorState.bidirCapable) {
+      FC.MOTOR_CONFIG.use_dshot_telemetry = false;
+    }
     changed = true;
     wiz.markChanged();
   }
@@ -101,17 +110,17 @@
 <fieldset class="choices">
   <legend>{$i18n.t("setupWizardMotorProtocolTitle")}</legend>
   {#each CHOICES as choice (choice.key)}
-    <label class={["choice", selected === choice.key && "selected"]}>
+    <label class={["choice", currentChoice === choice.key && "selected"]}>
       <input
         type="radio"
         name="motor-protocol"
         value={choice.key}
-        checked={selected === choice.key}
+        checked={currentChoice === choice.key}
         onchange={() => choose(choice)}
       />
       <span class="choice-name">
         {$i18n.t(`setupWizardMotor_${choice.key}`)}
-        {#if selected === choice.key}
+        {#if currentChoice === choice.key}
           <i class="fas fa-check-circle" aria-hidden="true"></i>
         {/if}
       </span>
@@ -119,8 +128,21 @@
     </label>
   {/each}
 </fieldset>
-{#if !currentChoice && current}
-  <p class="muted">{$i18n.t("setupWizardMotorOther", { 1: current })}</p>
+<div class="actions">
+  <span class="muted">{$i18n.t("setupWizardMotorOther")}</span>
+  <select
+    value={FC.MOTOR_CONFIG.motor_pwm_protocol}
+    onchange={(e) => setProtocol(Number(e.target.value))}
+  >
+    {#each protocols as p (p.index)}
+      <option value={p.index}>{p.name}</option>
+    {/each}
+  </select>
+</div>
+{#if current === "DISABLED"}
+  <p class="muted">{$i18n.t("setupWizardMotorHelp_none")}</p>
+{:else if motorState.isDshot && !motorState.bidirCapable}
+  <p class="muted">{$i18n.t("setupWizardMotorDshot150NoRpm")}</p>
 {/if}
 
 {#if changed}

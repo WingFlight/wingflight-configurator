@@ -2,11 +2,17 @@
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
 
+  import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend.js";
+  import {
+    GPS_PROVIDERS,
+    UART_NAMES,
+    syncLegacyGpsFeature,
+  } from "@/tabs/configuration/util.js";
 
   import Field from "@/components/Field.svelte";
   import Page from "@/components/Page.svelte";
@@ -14,7 +20,7 @@
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+  const GPS_PROTOCOLS = GPS_PROVIDERS;
   const MAP_URL =
     __BACKEND__ === "web"
       ? `${import.meta.env.BASE_URL}src/tabs/map.html`
@@ -38,6 +44,109 @@
   let mapEl = $state();
   let online = $state(navigator.onLine);
   let gpsWasFixed = $state(false);
+
+  // Serial diagnostics (MSP2_WING_SERIAL_STATUS), null on firmware without it
+  let diagInterval;
+  let diagSupported = $state(true);
+  const GPS_FUNCTION_MASK = 2;
+  const GPS_STATE_NAMES = [
+    "UNKNOWN",
+    "INITIALIZING",
+    "INITIALIZED",
+    "CHANGE_BAUD",
+    "CONFIGURE",
+    "RECEIVING_DATA",
+    "LOST_COMMUNICATION",
+  ];
+  const GPS_STATE_RECEIVING = 5;
+
+  let gpsPortId = $derived(
+    FC.SERIAL_CONFIG?.ports?.find((p) => p.functionMask & GPS_FUNCTION_MASK)
+      ?.identifier ?? null,
+  );
+  let diagPort = $derived(
+    FC.SERIAL_STATUS?.ports?.find((p) => p.identifier === gpsPortId) ?? null,
+  );
+  let diagGps = $derived(
+    FC.SERIAL_STATUS?.detail?.identifier === gpsPortId
+      ? FC.SERIAL_STATUS.detail.gps
+      : null,
+  );
+  let showDiagnostics = $derived(
+    diagSupported && !pushedDataSelected && FC.SERIAL_STATUS != null,
+  );
+
+  // DEFIO tag: ((gpio + 1) << 4) | pin
+  function pinName(tag) {
+    if (!tag) {
+      return "-";
+    }
+    const port = String.fromCharCode(64 + (tag >> 4));
+    return `${port}${String(tag & 0x0f).padStart(2, "0")}`;
+  }
+
+  function recentBytesText(bytes) {
+    return bytes
+      .map((b) => {
+        if (b === 0x0a) return "\n";
+        if (b === 0x0d) return "";
+        if (b >= 0x20 && b < 0x7f) return String.fromCharCode(b);
+        return `<${b.toString(16).toUpperCase().padStart(2, "0")}>`;
+      })
+      .join("");
+  }
+
+  // Mirrors the hints the CLI's `serialdebug <port>` prints
+  let diagHint = $derived.by(() => {
+    if (gpsPortId == null) {
+      return { level: "bad", key: "gpsDiagHintNoPort" };
+    }
+    if (!diagPort) {
+      return null;
+    }
+    if (diagPort.noPins) {
+      return { level: "bad", key: "gpsDiagHintNoPins" };
+    }
+    if (diagPort.pinConflict) {
+      return { level: "bad", key: "gpsDiagHintPinConflict" };
+    }
+    if (!diagGps) {
+      return null;
+    }
+    if (!diagGps.active) {
+      return { level: "bad", key: "gpsDiagHintInactive" };
+    }
+    if (!diagGps.isGpsPort) {
+      return { level: "bad", key: "gpsDiagHintOtherPort" };
+    }
+    if (!diagGps.portOpen) {
+      return { level: "bad", key: "gpsDiagHintNotOpen" };
+    }
+    if (diagGps.rxBytes === 0) {
+      return { level: "bad", key: "gpsDiagHintNoBytes" };
+    }
+    if (diagGps.packets === 0) {
+      return { level: "warn", key: "gpsDiagHintNoPackets" };
+    }
+    if (diagGps.state !== GPS_STATE_RECEIVING) {
+      return { level: "warn", key: "gpsDiagHintQuiet" };
+    }
+    return { level: "good", key: "gpsDiagHintOk" };
+  });
+
+  async function refreshDiagnostics() {
+    if (!diagSupported) {
+      return;
+    }
+    const response = await MSP.promise(
+      MSPCodes.MSP2_WING_SERIAL_STATUS,
+      gpsPortId == null ? [] : [gpsPortId],
+    );
+    // Firmware without the message answers with nothing
+    if (!response || response.length === 0) {
+      diagSupported = false;
+    }
+  }
 
   function snapshotState() {
     return $state.snapshot({ GPS_CONFIG: FC.GPS_CONFIG });
@@ -192,17 +301,27 @@
     statusInterval = setInterval(() => {
       MSP.promise(MSPCodes.MSP_STATUS);
     }, 250);
+
+    await refreshDiagnostics();
+    diagInterval = setInterval(refreshDiagnostics, 500);
   });
 
   onDestroy(() => {
     clearInterval(pollerInterval);
     clearInterval(statusInterval);
+    clearInterval(diagInterval);
   });
 
   export async function onSave() {
     await MSP.promise(
       MSPCodes.MSP_SET_GPS_CONFIG,
       mspHelper.crunch(MSPCodes.MSP_SET_GPS_CONFIG),
+    );
+    // The source decides whether GPS runs on older firmware too
+    syncLegacyGpsFeature();
+    await MSP.promise(
+      MSPCodes.MSP_SET_FEATURE_CONFIG,
+      mspHelper.crunch(MSPCodes.MSP_SET_FEATURE_CONFIG),
     );
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -294,70 +413,153 @@
       </Field>
     </Section>
 
-    <Section label="gpsHead" header={statusHeader}>
-      {#snippet statusHeader()}
-        <div class="status-header">
-          <span class="title">{$i18n.t("gpsHead")}</span>
-          <div class="grow"></div>
-          <span class="gps-fix">
-            {#if fbusSatelliteCountUnknown}
-              <span class="gpsFixTrue">Position</span>
-            {:else if FC.GPS_DATA.fix}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("gpsFixYes")}
-            {:else}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("gpsFixNo")}
+    <div class="status-col">
+      <Section label="gpsHead" header={statusHeader}>
+        {#snippet statusHeader()}
+          <div class="status-header">
+            <span class="title">{$i18n.t("gpsHead")}</span>
+            <div class="grow"></div>
+            <span class="gps-fix">
+              {#if fbusSatelliteCountUnknown}
+                <span class="gpsFixTrue">Position</span>
+              {:else if FC.GPS_DATA.fix}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("gpsFixYes")}
+              {:else}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("gpsFixNo")}
+              {/if}
+            </span>
+          </div>
+        {/snippet}
+        <table class="cf_table">
+          <tbody>
+            <tr>
+              <td>{$i18n.t("gpsAltitude")}</td>
+              <td>{FC.GPS_DATA.alt} m</td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsLat")}</td>
+              <td>
+                <a
+                  href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {(FC.GPS_DATA.lat / 10000000).toFixed(4)} deg
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsLon")}</td>
+              <td>
+                <a
+                  href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {(FC.GPS_DATA.lon / 10000000).toFixed(4)} deg
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsSpeed")}</td>
+              <td>{FC.GPS_DATA.speed} cm/s</td>
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsSats")}</td>
+              <td
+                >{fbusSatelliteCountUnknown
+                  ? "Unknown"
+                  : FC.GPS_DATA.numSat}</td
+              >
+            </tr>
+            <tr>
+              <td>{$i18n.t("gpsDistToHome")}</td>
+              <td>{FC.GPS_DATA.distanceToHome} m</td>
+            </tr>
+          </tbody>
+        </table>
+      </Section>
+      {#if showDiagnostics}
+        <Section label="gpsDiagHead" header={diagHeader}>
+          {#snippet diagHeader()}
+            <div class="status-header">
+              <span class="title">{$i18n.t("gpsDiagHead")}</span>
+              <div class="grow"></div>
+              {#if diagHint}
+                <span class="diag-badge {diagHint.level}"
+                  >{$i18n.t(diagHint.key.replace("Hint", "Badge"))}</span
+                >
+              {/if}
+            </div>
+          {/snippet}
+          <div class="diag">
+            <!-- The badge says all when it is fine; otherwise say what to do -->
+            {#if diagHint && diagHint.level !== "good"}
+              <p class="hint {diagHint.level}">{$i18n.t(diagHint.key)}</p>
             {/if}
-          </span>
-        </div>
-      {/snippet}
-      <table class="cf_table">
-        <tbody>
-          <tr>
-            <td>{$i18n.t("gpsAltitude")}</td>
-            <td>{FC.GPS_DATA.alt} m</td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsLat")}</td>
-            <td>
-              <a
-                href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {(FC.GPS_DATA.lat / 10000000).toFixed(4)} deg
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsLon")}</td>
-            <td>
-              <a
-                href={`https://maps.google.com/?q=${FC.GPS_DATA.lat / 10000000},${FC.GPS_DATA.lon / 10000000}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {(FC.GPS_DATA.lon / 10000000).toFixed(4)} deg
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsSpeed")}</td>
-            <td>{FC.GPS_DATA.speed} cm/s</td>
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsSats")}</td>
-            <td>{fbusSatelliteCountUnknown ? "Unknown" : FC.GPS_DATA.numSat}</td
-            >
-          </tr>
-          <tr>
-            <td>{$i18n.t("gpsDistToHome")}</td>
-            <td>{FC.GPS_DATA.distanceToHome} m</td>
-          </tr>
-        </tbody>
-      </table>
-    </Section>
+            {#if diagPort}
+              <table class="cf_table">
+                <tbody>
+                  <tr>
+                    <td>{$i18n.t("gpsDiagPort")}</td>
+                    <td>
+                      {UART_NAMES[diagPort.identifier] ?? diagPort.identifier}
+                      (RX {pinName(diagPort.rxPin)}, TX {pinName(
+                        diagPort.txPin,
+                      )})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>{$i18n.t("gpsDiagOpen")}</td>
+                    <td>
+                      {#if diagPort.open}
+                        {$i18n.t("gpsDiagOpenYes", { baud: diagPort.baudRate })}
+                      {:else}
+                        {$i18n.t("gpsDiagOpenNo")}
+                      {/if}
+                    </td>
+                  </tr>
+                  {#if diagGps}
+                    <tr>
+                      <td>{$i18n.t("gpsDiagState")}</td>
+                      <td>
+                        {GPS_STATE_NAMES[diagGps.state] ?? diagGps.state},
+                        {$i18n.t("gpsDiagLastMessage", {
+                          ms: diagGps.lastMessageAgeMs,
+                        })}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{$i18n.t("gpsDiagCounters")}</td>
+                      <td>
+                        {$i18n.t("gpsDiagCountersValue", {
+                          bytes: diagGps.rxBytes,
+                          packets: diagGps.packets,
+                          errors: diagGps.errors,
+                          timeouts: diagGps.timeouts,
+                        })}
+                      </td>
+                    </tr>
+                    {#if CONFIGURATOR.expertMode}
+                      <tr>
+                        <td colspan="2">
+                          {$i18n.t("gpsDiagRecent")}
+                          <pre class="recent">{diagGps.recentBytes.length
+                              ? recentBytesText(diagGps.recentBytes)
+                              : $i18n.t("gpsDiagRecentNone")}</pre>
+                        </td>
+                      </tr>
+                    {/if}
+                  {/if}
+                </tbody>
+              </table>
+            {/if}
+          </div>
+        </Section>
+      {/if}
+    </div>
 
     {#if !pushedDataSelected}
       <Section label="gpsSignalStrHead">
@@ -490,6 +692,62 @@
   progress {
     width: 100%;
     border-radius: var(--radius-xs);
+  }
+
+  .diag-badge {
+    padding: 2px 5px;
+    border-radius: var(--radius-xs);
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .diag .hint {
+    margin: 0 8px 8px;
+    padding: 6px 8px;
+    border-radius: var(--radius-xs);
+    font-size: 0.8rem;
+    color: #fff;
+  }
+
+  .diag-badge,
+  .diag .hint {
+    &.good {
+      background-color: var(--color-status-good);
+    }
+    &.warn {
+      background-color: var(--color-status-warn, #c90);
+    }
+    &.bad {
+      background-color: var(--color-status-bad);
+    }
+  }
+
+  .status-col {
+    min-width: 0;
+  }
+
+  .diag {
+    font-size: 0.8rem;
+
+    :global(td) {
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+  }
+
+  .diag td[colspan] {
+    text-align: left;
+  }
+
+  .diag .recent {
+    margin: 2px 0 0;
+    max-height: 6em;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
   }
 
   .gps-map {

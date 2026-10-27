@@ -26,9 +26,11 @@ class FlightController {
   FBUS_MASTER_CONFIG = $state();
   FBUS_MUX = $state();
   FBUS_SENSORS = $state();
+  FBUS_SENSORS_STATUS = $state();
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
+  SERIAL_STATUS = $state();
   GAIN_CURVES = $state();
   GOVERNOR_CONFIG = $state();
   GPS_CONFIG = $state();
@@ -274,6 +276,15 @@ class FlightController {
     this.PID_RUNTIME_GAINS = null;
     this.TV_PID_RUNTIME_GAINS = null;
     this.FBUS_SENSORS = [];
+    this.FBUS_SENSORS_STATUS = {
+      gps:                        null,
+      current:                    null,
+      cells:                      null,
+      esc:                        null,
+      servo:                      null,
+    };
+    // MSP2_WING_SERIAL_STATUS, null until read or on firmware without it
+    this.SERIAL_STATUS = null;
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
     };

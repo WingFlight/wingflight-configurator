@@ -9,6 +9,7 @@ import { releaseOverrides, waitUntilQuiet } from "@/js/msp/release_overrides.js"
 import { RemoteSupport } from "@/js/protocols/RemoteSupport.js";
 import { mountComponents } from "@/js/main.svelte.js";
 import { homeTab, isTabInUserLevel, loadUserLevel, setUserLevel } from "@/js/user_level.js";
+import { isGpsActive, showGpsTab } from "@/tabs/configuration/util.js";
 
 globalThis.TABS = {};
 
@@ -466,8 +467,10 @@ export function updateTabList(features) {
         $(this).toggle(tabName !== null && GUI.allowedTabs.includes(tabName));
     });
 
-    $('#tabs ul.mode-connected li.tab_gps').toggle(features.isEnabled('GPS'));
-    $('#tabs ul.mode-connected li.tab_gps_nav').toggle(features.isEnabled('GPS'));
+    const gpsPorts = FC.SERIAL_CONFIG?.ports;
+    const gpsProvider = FC.GPS_CONFIG?.provider;
+    $('#tabs ul.mode-connected li.tab_gps').toggle(showGpsTab(gpsPorts, gpsProvider));
+    $('#tabs ul.mode-connected li.tab_gps_nav').toggle(isGpsActive(gpsPorts, gpsProvider));
     $('#tabs ul.mode-connected li.tab_led_strip').toggle(features.isEnabled('LED_STRIP'));
 
     const hasFbusPort = (FC.SERIAL_CONFIG?.ports ?? []).some((port) => port.functions.includes('FBUS_OUT'));

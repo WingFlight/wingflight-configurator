@@ -58,6 +58,12 @@ class State {
       this.throttleProtocols[FC.MOTOR_CONFIG.motor_pwm_protocol];
     return protoName.startsWith("DSHOT") || protoName === "PROSHOT";
   });
+  // Whether the throttle protocol can carry bidirectional DShot RPM
+  // telemetry. DShot150 has none, so it never counts as an RPM source.
+  bidirCapable = $derived(
+    this.isDshot &&
+      this.throttleProtocols[FC.MOTOR_CONFIG.motor_pwm_protocol] !== "DSHOT150",
+  );
   isCastleLink = $derived(
     this.throttleProtocols[FC.MOTOR_CONFIG.motor_pwm_protocol] === "CASTLE",
   );

@@ -1,4 +1,22 @@
 import { RemoteSupport } from '@/js/protocols/RemoteSupport.js';
+import { lowestAddress, planDfuStage } from '@/js/protocols/dfu_hex_split.js';
+
+// Waiting for the DFU device of the next stage (the Wingflight loader, after
+// the ROM DFU wrote it and left): poll every NEXT_STAGE_POLL_MS for up to
+// NEXT_STAGE_POLL_ATTEMPTS polls, after NEXT_STAGE_FIRST_POLL_MS.
+const NEXT_STAGE_FIRST_POLL_MS = 1000;
+const NEXT_STAGE_POLL_MS = 500;
+const NEXT_STAGE_POLL_ATTEMPTS = 30;
+// A device that is still listed under the same identity as the one we left
+// is taken for the new one after this many polls (remote devices may keep
+// their id across a re-enumeration).
+const NEXT_STAGE_SAME_DEVICE_ATTEMPTS = 10;
+// Web: an unauthorized device never shows up in getDevices(), so ask for
+// permission after this many polls. The loader takes about 5 s from the ROM
+// DFU's leave to enumerate (it resets once); it has the ROM DFU's VID, PID
+// and serial number, so a browser that may use the one usually finds it
+// without asking.
+const NEXT_STAGE_WEB_PERMISSION_ATTEMPTS = 16;
 
 /*
     USB DFU uses:
@@ -18,6 +36,10 @@ var STM32DFU_protocol = function () {
     this.verify_hex = [];
 
     this.handle = null; // connection handle
+    this.device = null; // the device behind the handle
+    this.deviceFilters = null;
+    this.pendingHex = null; // blocks for the next stage (another DFU device), see planDfuStage()
+    this.stage = 1;
     this.useWebUsb = __BACKEND__ === "web"; // WebUSB-style handle (web backend, or a remote device)
 
     this.request = {
@@ -72,6 +94,9 @@ STM32DFU_protocol.prototype.connect = function (device, hex, options, callback) 
     var self = this;
     self.hex = hex;
     self.callback = callback;
+    self.deviceFilters = device;
+    self.pendingHex = null;
+    self.stage = 1;
 
     self.options = {
         erase_chip: false,
@@ -163,6 +188,8 @@ STM32DFU_protocol.prototype.connectWebUsb = async function (device) {
 STM32DFU_protocol.prototype.openDevice = function (device) {
     var self = this;
 
+    self.device = device;
+
     if (this.useWebUsb) {
         self.openWebUsbDevice(device);
         return;
@@ -215,7 +242,7 @@ STM32DFU_protocol.prototype.openWebUsbDevice = async function (device) {
     }
 };
 
-STM32DFU_protocol.prototype.closeDevice = function () {
+STM32DFU_protocol.prototype.closeDevice = function (callback) {
     var self = this;
 
     if (this.useWebUsb) {
@@ -228,6 +255,7 @@ STM32DFU_protocol.prototype.closeDevice = function () {
                 GUI.log(i18n.getMessage('usbDeviceClosed'));
                 console.log('Device closed');
                 self.handle = null;
+                callback?.();
             });
         return;
     }
@@ -242,6 +270,7 @@ STM32DFU_protocol.prototype.closeDevice = function () {
         console.log('Device closed with Handle ID: ' + self.handle.handle);
 
         self.handle = null;
+        callback?.();
     });
 };
 
@@ -309,7 +338,7 @@ STM32DFU_protocol.prototype.claimInterfaceWebUsb = async function (interfaceNumb
     }
 };
 
-STM32DFU_protocol.prototype.releaseInterface = function (interfaceNumber) {
+STM32DFU_protocol.prototype.releaseInterface = function (interfaceNumber, callback) {
     var self = this;
 
     if (this.useWebUsb) {
@@ -317,15 +346,17 @@ STM32DFU_protocol.prototype.releaseInterface = function (interfaceNumber) {
             .catch((err) => console.log('Failed to release USB interface! ' + err.message))
             .then(() => {
                 console.log('Released interface: ' + interfaceNumber);
-                self.closeDevice();
+                self.closeDevice(callback);
             });
         return;
     }
 
     chrome.usb.releaseInterface(this.handle, interfaceNumber, function released() {
+        // The device may already be gone (e.g. after leaving DFU)
+        checkChromeRuntimeError();
         console.log('Released interface: ' + interfaceNumber);
 
-        self.closeDevice();
+        self.closeDevice(callback);
     });
 };
 
@@ -929,61 +960,79 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                 if (resultCode != 0 || typeof chipInfo === "undefined") {
                     console.log('Failed to detect chip info, resultCode: ' + resultCode);
                     self.cleanup();
+                    return;
+                }
+
+                const isExternal = typeof chipInfo.internal_flash === "undefined" && typeof chipInfo.external_flash !== "undefined";
+                if (typeof chipInfo.internal_flash === "undefined" && !isExternal) {
+                    console.log('Failed to detect internal or external flash');
+                    self.cleanup();
+                    return;
+                }
+
+                if (self.stage > 1 && !isExternal) {
+                    // Expected the Wingflight loader (external flash only),
+                    // got something else, e.g. the ROM DFU again.
+                    console.log('Next stage device does not expose the external flash');
+                    self.failNextStage();
+                    return;
+                }
+
+                self.chipInfo = chipInfo;
+                self.flash_layout = isExternal ? chipInfo.external_flash : chipInfo.internal_flash;
+
+                // Only write what this device exposes; on an internal flash
+                // device, blocks for the external flash are kept for the
+                // Wingflight loader (next stage).
+                const plan = planDfuStage(self.hex, self.flash_layout, isExternal);
+                self.hex = plan.hex;
+                self.pendingHex = plan.next;
+                for (const block of plan.skipped) {
+                    const message = i18n.getMessage('dfu_skipping_block', [(block.bytes / 1024).toFixed(1), block.address.toString(16)]);
+                    console.log(message);
+                    GUI.log(message);
+                }
+                if (plan.next) {
+                    console.log('Writing ' + plan.hex.bytes_total + ' bytes now, ' + plan.next.bytes_total + ' bytes in the next stage');
+                }
+
+                // SPRacing H7 EXST: flash, config, firmware, ... partitions,
+                // firmware goes to the 3rd one. The Wingflight loader
+                // exposes the external flash as one group, written as a whole.
+                self.isLoaderLayout = isExternal && self.flash_layout.sectors.length < 3;
+
+                if (!isExternal) {
+                    self.available_flash_size = self.flash_layout.total_size - (self.hex.start_linear_address - self.flash_layout.start_address);
+                } else if (self.isLoaderLayout) {
+                    self.available_flash_size = self.flash_layout.total_size - (lowestAddress(self.hex) - self.flash_layout.start_address);
                 } else {
-                    if (typeof chipInfo.internal_flash !== "undefined") {
-                        // internal flash
-                        self.chipInfo = chipInfo;
+                    const firmware_partition_index = 2;
+                    self.available_flash_size = self.flash_layout.sectors[firmware_partition_index].total_size;
+                }
 
-                        self.flash_layout = chipInfo.internal_flash;
-                        self.available_flash_size = self.flash_layout.total_size - (self.hex.start_linear_address - self.flash_layout.start_address);
+                GUI.log(i18n.getMessage('dfu_device_flash_info', (self.flash_layout.total_size / 1024).toString()));
 
-                        GUI.log(i18n.getMessage('dfu_device_flash_info', (self.flash_layout.total_size / 1024).toString()));
+                // A block that starts in this layout but runs past its end can't be written by this device
+                const layoutEnd = self.flash_layout.start_address + self.flash_layout.total_size;
+                const crossesLayout = self.hex.data.some((block) =>
+                    block.address >= self.flash_layout.start_address &&
+                    block.address < layoutEnd &&
+                    block.address + block.bytes > layoutEnd);
 
-                        if (self.hex.bytes_total > self.available_flash_size) {
-                            GUI.log(i18n.getMessage('dfu_error_image_size',
-                                [(self.hex.bytes_total / 1024.0).toFixed(1),
-                                (self.available_flash_size / 1024.0).toFixed(1)]));
-                            self.cleanup();
-                        } else {
-                            self.getFunctionalDescriptor(0, function (descriptor, resultCode) {
-                                self.transferSize = resultCode ? 2048 : descriptor.wTransferSize;
-                                console.log('Using transfer size: ' + self.transferSize);
-                                self.clearStatus(function () {
-                                    self.upload_procedure(1);
-                                });
-                            });
-                        }
-                    } else if (typeof chipInfo.external_flash !== "undefined") {
-                        // external flash, flash to the 3rd partition.
-                        self.chipInfo = chipInfo;
-                        self.flash_layout = chipInfo.external_flash;
-
-                        var firmware_partition_index = 2;
-                        var firmware_sectors = self.flash_layout.sectors[firmware_partition_index];
-                        var firmware_partition_size = firmware_sectors.total_size;
-
-                        self.available_flash_size = firmware_partition_size;
-
-                        GUI.log(i18n.getMessage('dfu_device_flash_info', (self.flash_layout.total_size / 1024).toString()));
-
-                        if (self.hex.bytes_total > self.available_flash_size) {
-                            GUI.log(i18n.getMessage('dfu_error_image_size',
-                                [(self.hex.bytes_total / 1024.0).toFixed(1),
-                                (self.available_flash_size / 1024.0).toFixed(1)]));
-                            self.cleanup();
-                        } else {
-                            self.getFunctionalDescriptor(0, function (descriptor, resultCode) {
-                                self.transferSize = resultCode ? 2048 : descriptor.wTransferSize;
-                                console.log('Using transfer size: ' + self.transferSize);
-                                self.clearStatus(function () {
-                                    self.upload_procedure(2); // no option bytes to deal with
-                                });
-                            });
-                        }
-                    } else {
-                        console.log('Failed to detect internal or external flash');
-                        self.cleanup();
-                    }
+                if (crossesLayout || self.hex.bytes_total > self.available_flash_size) {
+                    GUI.log(i18n.getMessage('dfu_error_image_size',
+                        [(self.hex.bytes_total / 1024.0).toFixed(1),
+                        (self.available_flash_size / 1024.0).toFixed(1)]));
+                    self.cleanup();
+                } else {
+                    self.getFunctionalDescriptor(0, function (descriptor, resultCode) {
+                        self.transferSize = resultCode ? 2048 : descriptor.wTransferSize;
+                        console.log('Using transfer size: ' + self.transferSize);
+                        self.clearStatus(function () {
+                            // external flash: no option bytes to deal with
+                            self.upload_procedure(isExternal ? 2 : 1);
+                        });
+                    });
                 }
             });
             break;
@@ -1133,9 +1182,13 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
             // erase
                 // find out which pages to erase
                 var erase_pages = [];
+                // The Wingflight loader has no mass erase, so "erase chip"
+                // erases all of its 64 KB blocks, plus a request that wipes
+                // the rest of the board's flash (see below).
+                const erase_all = self.options.erase_chip;
                 for (let i = 0; i < self.flash_layout.sectors.length; i++) {
                     for (var j = 0; j < self.flash_layout.sectors[i].num_pages; j++) {
-                        if (self.options.erase_chip) {
+                        if (erase_all) {
                             // full chip erase
                             erase_pages.push({'sector': i, 'page': j});
                         } else {
@@ -1157,6 +1210,13 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                         }
                     }
                   }
+                }
+
+                // An erase just past the end of the exposed flash makes the loader erase the block after
+                // it, and asks the firmware to wipe its config and blackbox flash at its next start.
+                // Sent first, so a loader that rejects it fails before any firmware page is erased.
+                if (self.options.erase_chip && self.isLoaderLayout && erase_pages.length > 0) {
+                    erase_pages.unshift({'address': self.flash_layout.start_address + self.flash_layout.total_size});
                 }
 
                 if (erase_pages.length === 0) {
@@ -1186,13 +1246,30 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                     }
                 };
 
+                var erase_failed = function (reason) {
+                    // A loader without the config wipe request rejects its address
+                    if (erase_pages[page].address !== undefined) {
+                        const message = i18n.getMessage('stm32WingflightLoaderOutdated');
+                        GUI.log(message);
+                        TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+                    }
+                    console.log(reason);
+                    self.cleanup();
+                };
+
                 var erase_page = function() {
-                    var page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
-                            self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                    var page_addr;
+                    if (erase_pages[page].address !== undefined) {
+                        page_addr = erase_pages[page].address;
+                        console.log('Erasing config request @ 0x' + page_addr.toString(16));
+                    } else {
+                        page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
+                                self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                        total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
+                        console.log('Erasing. sector ' + erase_pages[page].sector +
+                                    ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
+                    }
                     var cmd = [0x41, page_addr & 0xff, (page_addr >> 8) & 0xff, (page_addr >> 16) & 0xff, (page_addr >> 24) & 0xff];
-                    total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
-                    console.log('Erasing. sector ' + erase_pages[page].sector +
-                                ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
 
                     self.controlTransfer('out', self.request.DNLOAD, 0, 0, 0, cmd, function () {
                         self.controlTransfer('in', self.request.GETSTATUS, 0, 0, 6, 0, function (data) {
@@ -1220,22 +1297,19 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                                                     if (data[4] == self.state.dfuIDLE) {
                                                         erase_page_next();
                                                     } else {
-                                                        console.log('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
-                                                        self.cleanup();
+                                                        erase_failed('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
                                                     }
                                                 });
                                             });
                                         } else if (data[4] == self.state.dfuDNLOAD_IDLE) {
                                             erase_page_next();
                                         } else {
-                                            console.log('Failed to erase page 0x' + page_addr.toString(16));
-                                            self.cleanup();
+                                            erase_failed('Failed to erase page 0x' + page_addr.toString(16));
                                         }
                                     });
                                 }, delay);
                             } else {
-                                console.log('Failed to initiate page erase, page 0x' + page_addr.toString(16));
-                                self.cleanup();
+                                erase_failed('Failed to initiate page erase, page 0x' + page_addr.toString(16));
                             }
                         });
                     });
@@ -1389,7 +1463,14 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                             if (!verify) break;
                         }
 
-                        if (verify) {
+                        if (verify && self.pendingHex) {
+                            // More to write through the Wingflight loader this
+                            // just wrote: leave DFU, which starts it.
+                            console.log('Programming stage ' + self.stage + ': SUCCESSFUL');
+                            self.leave(function () {
+                                self.waitForNextStage();
+                            });
+                        } else if (verify) {
                             console.log('Programming: SUCCESSFUL');
                             // update progress bar
                             TABS.firmware_flasher.flashingMessage(i18n.getMessage('stm32ProgrammingSuccessful'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.VALID);
@@ -1412,7 +1493,8 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
     }
 };
 
-STM32DFU_protocol.prototype.leave = function () {
+// onLeft: continue with the next stage instead of finishing the attempt
+STM32DFU_protocol.prototype.leave = function (onLeft) {
     // leave DFU
 
     const self = this;
@@ -1430,15 +1512,160 @@ STM32DFU_protocol.prototype.leave = function () {
             // 'downloading' 0 bytes to the program start address followed by a GETSTATUS is used to trigger DFU exit on STM32
             self.controlTransfer('out', self.request.DNLOAD, 0, 0, 0, 0, function () {
                 self.controlTransfer('in', self.request.GETSTATUS, 0, 0, 6, 0, function () {
-                    self.cleanup();
+                    if (onLeft) {
+                        self.releaseInterface(0, onLeft);
+                    } else {
+                        self.cleanup();
+                    }
                 });
             });
         });
     });
 };
 
+// The device that was left is gone (or going); find the DFU device that
+// comes up instead (the Wingflight loader) and write the remaining blocks.
+STM32DFU_protocol.prototype.waitForNextStage = function () {
+    const self = this;
+
+    self.hex = self.pendingHex;
+    self.pendingHex = null;
+    self.stage++;
+    // The ROM DFU wrote a new loader, so whatever ran before (e.g. ArduPilot)
+    // may have left data behind on the external flashes: always wipe them.
+    if (!self.options.exitDfu) {
+        self.options.erase_chip = true;
+    }
+    self.verify_hex = [];
+    self._webUsbConfigDescriptor = null;
+    self._webUsbLangId = undefined;
+
+    const previous = self.device;
+    self.device = null;
+
+    const message = i18n.getMessage('stm32WaitingForWingflightLoader');
+    GUI.log(message);
+    TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.NEUTRAL).flashProgress(0);
+
+    let attempt = 0;
+    let previousGone = false;
+    let permissionAsked = false;
+
+    const poll = function () {
+        attempt++;
+        self.listDfuDevices(function (candidates) {
+            const fresh = candidates.find((candidate) => !isSameDevice(candidate.device, previous));
+            const same = candidates.find((candidate) => isSameDevice(candidate.device, previous));
+            if (!same) {
+                previousGone = true;
+            }
+            const found = fresh ?? ((same && (previousGone || attempt >= NEXT_STAGE_SAME_DEVICE_ATTEMPTS)) ? same : null);
+
+            if (found) {
+                console.log('Next stage DFU device found: ' + (found.device.productName || found.device.id || found.device.device || ''));
+                self.useWebUsb = __BACKEND__ === "web" || found.remote;
+                self.openDevice(found.device);
+            } else if (__BACKEND__ === "web" && !permissionAsked && attempt >= NEXT_STAGE_WEB_PERMISSION_ATTEMPTS
+                    && 'usb' in navigator && TABS.firmware_flasher.requestDfuPermission) {
+                // Not authorized for this device yet, see requestDfuPermission()
+                permissionAsked = true;
+                TABS.firmware_flasher.flashingMessage(i18n.getMessage('firmwareFlasherDfuPermissionNeeded'), TABS.firmware_flasher.FLASH_MESSAGE_TYPES.ACTION);
+                TABS.firmware_flasher.requestDfuPermission(function () {
+                    TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.NEUTRAL);
+                    // Start counting again, the user may have taken a while
+                    attempt = 0;
+                    poll();
+                }, function () {
+                    self.failNextStage();
+                });
+            } else if (attempt < NEXT_STAGE_POLL_ATTEMPTS) {
+                setTimeout(poll, NEXT_STAGE_POLL_MS);
+            } else {
+                self.failNextStage();
+            }
+        });
+    };
+
+    setTimeout(poll, NEXT_STAGE_FIRST_POLL_MS);
+};
+
+function isSameDevice(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    if (a === b) {
+        return true;
+    }
+    // RemoteUsbDevice (a new object for every lookup)
+    if (a.id !== undefined && a.id === b.id) {
+        return true;
+    }
+    // chrome.usb device, its id changes when it re-enumerates
+    return a.device !== undefined && a.device === b.device;
+}
+
+// callback([{ device, remote }]): the DFU devices matching deviceFilters,
+// remote ones first (as in connect()).
+STM32DFU_protocol.prototype.listDfuDevices = function (callback) {
+    const self = this;
+    const filters = self.deviceFilters.filters;
+    const isMatch = (d) => filters.some((f) => d.vendorId === f.vendorId && d.productId === f.productId);
+
+    const listLocal = function (remote) {
+        if (__BACKEND__ === "web") {
+            if (!('usb' in navigator)) {
+                callback(remote);
+                return;
+            }
+            navigator.usb.getDevices()
+                .then((devices) => callback(remote.concat(devices.filter(isMatch).map((device) => ({ device, remote: false })))))
+                .catch(() => callback(remote));
+            return;
+        }
+
+        chrome.usb.getDevices(self.deviceFilters, function (result) {
+            checkChromeRuntimeError();
+            callback(remote.concat((result ?? []).map((device) => ({ device, remote: false }))));
+        });
+    };
+
+    if (RemoteSupport.available) {
+        RemoteSupport.refreshDevices().catch(() => {}).then(() => {
+            const remoteDevice = RemoteSupport.findDfuDevice(filters);
+            listLocal(remoteDevice ? [{ device: remoteDevice, remote: true }] : []);
+        });
+        return;
+    }
+
+    listLocal([]);
+};
+
+// The next stage device didn't come up (or isn't the Wingflight loader); the
+// attempt ends here.
+STM32DFU_protocol.prototype.failNextStage = function () {
+    const self = this;
+
+    const message = i18n.getMessage('stm32WingflightLoaderNotFound');
+    console.log('Wingflight loader not found');
+    GUI.log(message);
+    TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+
+    if (self.handle) {
+        self.cleanup();
+        return;
+    }
+
+    // The previous stage's device is already closed
+    self.pendingHex = null;
+    GUI.connect_lock = false;
+    console.log('Script finished after: ' + ((new Date().getTime() - self.upload_time_start) / 1000) + ' seconds');
+    self.callback?.();
+};
+
 STM32DFU_protocol.prototype.cleanup = function () {
     const self = this;
+
+    self.pendingHex = null;
 
     self.releaseInterface(0);
 

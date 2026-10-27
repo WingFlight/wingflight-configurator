@@ -24,7 +24,11 @@
 
   import BoardAlignment from "./BoardAlignment.svelte";
   import SerialPorts from "./SerialPorts.svelte";
-  import { gyroFrequencyLabel, pidDenomOptions } from "./util.js";
+  import {
+    gyroFrequencyLabel,
+    pidDenomOptions,
+    syncLegacyGpsFeature,
+  } from "./util.js";
 
   const DEG2RAD = 0.017453292519943295;
 
@@ -184,6 +188,8 @@
     }
 
     FC.CONFIG.name = FC.CONFIG.name.trim();
+
+    syncLegacyGpsFeature();
 
     await save(MSPCodes.MSP_SET_NAME);
     await save(MSPCodes.MSP_SET_FEATURE_CONFIG);

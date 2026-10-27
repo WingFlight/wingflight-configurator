@@ -22,7 +22,7 @@
   const ESC_LABELS = {
     PWM: "setupWizardMotor_pwm",
     DSHOT300: "setupWizardMotor_dshot300",
-    DSHOT600: "setupWizardMotor_dshot600",
+    DSHOT150: "setupWizardMotor_dshot150",
     DISABLED: "setupWizardMotor_none",
   };
 

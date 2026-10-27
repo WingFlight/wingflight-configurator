@@ -889,6 +889,8 @@ async function onConnect() {
         // decide whether to show the xact_servo and FBUS Sensors tabs -- both gated
         // on serial port function -- before the nav is first shown.
         await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG, false);
+        // The GPS tabs follow the GPS source as well as the ports
+        await MSP.promise(MSPCodes.MSP_GPS_CONFIG, false);
         updateTabList(FC.FEATURE_CONFIG.features);
 
         if (FC.CONFIG.boardType == 0 || FC.CONFIG.boardType == 2) {
@@ -1035,6 +1037,8 @@ function startLiveDataRefreshTimer() {
 }
 
 let lastSdcardPoll = 0;
+let lastStatusPoll = 0;
+const STATUS_POLL_INTERVAL_MS = 2000;
 
 function update_live_status() {
 
@@ -1046,6 +1050,13 @@ function update_live_status() {
 
     if (GUI.active_tab != 'cli' && GUI.active_tab != 'presets' && GUI.active_tab != 'remap_fc') {
         MSP.promise(MSPCodes.MSP_BATTERY_STATE, false);
+
+        // Sensors such as GPS come up some time after boot, so the header sensor
+        // icons need MSP_STATUS refreshed even on tabs that never poll it.
+        if (Date.now() - lastStatusPoll > STATUS_POLL_INTERVAL_MS) {
+            lastStatusPoll = Date.now();
+            MSP.promise(MSPCodes.MSP_STATUS, false);
+        }
 
         // The SD card may still be starting up right after connect/reboot;
         // keep polling (slowly) until it settles so the header shows capacity.

@@ -1649,11 +1649,6 @@
         "english": "Enable Software Serial ports",
         "status": "New entry. Please translate!"
     },
-    "feature_GPS": {
-        "message": "GPS for telemetry",
-        "english": "GPS for telemetry",
-        "status": "New entry. Please translate!"
-    },
     "feature_SONAR": {
         "message": "Sonar altitude radar",
         "english": "Sonar altitude radar",
@@ -1742,11 +1737,6 @@
     "configurationFeatures": {
         "message": "Features",
         "english": "Features",
-        "status": "New entry. Please translate!"
-    },
-    "featureTip_GPS": {
-        "message": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration.",
-        "english": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration.",
         "status": "New entry. Please translate!"
     },
     "featureTip_LED_STRIP": {

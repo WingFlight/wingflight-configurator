@@ -1,7 +1,10 @@
 export const ConfigInserter = function () {
 };
 
-const CUSTOM_DEFAULTS_POINTER_ADDRESS = 0x08002800;
+// The external flash for firmware executing in place from it (STM32H730), or
+// internal flash. External first: the STM32H730 hex also holds the Wingflight
+// loader in internal flash, whose code covers 0x08002800.
+const CUSTOM_DEFAULTS_POINTER_ADDRESSES = [0x90002800, 0x08002800];
 const BLOCK_SIZE = 16384;
 
 function seek(firmware, address) {
@@ -29,15 +32,18 @@ function readUint32(firmware, index) {
         }
     }
 
-    return result;
+    // Unsigned: the external flash addresses (0x90000000) have the top bit set
+    return result >>> 0;
 }
 
 function getCustomDefaultsArea(firmware) {
     const result = {};
 
-    const index = seek(firmware, CUSTOM_DEFAULTS_POINTER_ADDRESS);
+    const index = CUSTOM_DEFAULTS_POINTER_ADDRESSES
+        .map((address) => seek(firmware, address))
+        .find((candidate) => candidate.byteIndex !== undefined);
 
-    if (index.byteIndex === undefined) {
+    if (!index) {
         return;
     }
 

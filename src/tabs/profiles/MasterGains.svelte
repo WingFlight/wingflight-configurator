@@ -1,6 +1,7 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { isGpsActive } from "@/tabs/configuration/util.js";
 
   import FlightFeelGuide from "./FlightFeelGuide.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
@@ -67,7 +68,7 @@
 
   // GPS speed attenuation (API 22.10): same shape as the throttle row, with
   // GPS speed in place of throttle. Only shown when the firmware carries it
-  // and the GPS feature is on.
+  // and GPS is active.
   const SPEED_ROW = {
     key: "speed",
     axisClass: "SPEED",
@@ -82,7 +83,8 @@
   };
 
   let showSpeed = $derived(
-    FC.PID_PROFILE.hasFwSpa && FC.FEATURE_CONFIG.features.isEnabled("GPS"),
+    FC.PID_PROFILE.hasFwSpa &&
+      isGpsActive(FC.SERIAL_CONFIG.ports, FC.GPS_CONFIG.provider),
   );
 
   let rows = $derived(

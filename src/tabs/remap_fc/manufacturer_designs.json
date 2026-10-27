@@ -918,5 +918,220 @@
         "default": false
       }
     ]
+  },
+  "AEGISLITE": {
+    "S1": [
+      {
+        "pin": "PA3",
+        "function": "T5CH4"
+      }
+    ],
+    "S2": [
+      {
+        "pin": "PA2",
+        "function": "T5CH3"
+      }
+    ],
+    "S3": [
+      {
+        "pin": "PA1",
+        "function": "T5CH2"
+      }
+    ],
+    "S4": [
+      {
+        "pin": "PA0",
+        "function": "T5CH1"
+      }
+    ],
+    "S5": [
+      {
+        "pin": "PC8",
+        "function": "T3CH3"
+      }
+    ],
+    "S6": [
+      {
+        "pin": "PC7",
+        "function": "T3CH2"
+      }
+    ],
+    "S7": [
+      {
+        "pin": "PA10",
+        "function": "T1CH3"
+      }
+    ],
+    "S8": [
+      {
+        "pin": "PA9",
+        "function": "T1CH2"
+      }
+    ],
+    "S9(TLM)": [
+      {
+        "pin": "PE8",
+        "function": "TX7"
+      }
+    ],
+    "RX": [
+      {
+        "pin": "PD8",
+        "function": "TX3"
+      },
+      {
+        "pin": "PD9",
+        "function": "RX3"
+      }
+    ],
+    "C1": [
+      {
+        "pin": "PD1",
+        "function": "TX4"
+      },
+      {
+        "pin": "PD0",
+        "function": "RX4"
+      }
+    ],
+    "C2": [
+      {
+        "pin": "PE3",
+        "function": "TX10"
+      },
+      {
+        "pin": "PE2",
+        "function": "RX10"
+      }
+    ],
+    "Gyro CS": [
+      {
+        "pin": "PB12",
+        "function": "SPI2 NSS"
+      }
+    ],
+    "Gyro SCK": [
+      {
+        "pin": "PD3",
+        "function": "SPI2 SCK"
+      }
+    ],
+    "Gyro SDO": [
+      {
+        "pin": "PC2",
+        "function": "SPI2 MISO"
+      }
+    ],
+    "Gyro SDI": [
+      {
+        "pin": "PC3",
+        "function": "SPI2 MOSI"
+      }
+    ],
+    "Gyro INT": [
+      {
+        "pin": "PD7",
+        "function": "EXTI"
+      }
+    ],
+    "Baro": [
+      {
+        "pin": "PA8",
+        "function": "SCL3"
+      },
+      {
+        "pin": "PC9",
+        "function": "SDA3"
+      }
+    ],
+    "Flash": [
+      {
+        "pin": "PA4",
+        "function": "SPI6 NSS"
+      },
+      {
+        "pin": "PC12",
+        "function": "SPI6 SCK"
+      },
+      {
+        "pin": "PB4",
+        "function": "SPI6 MISO"
+      },
+      {
+        "pin": "PA7",
+        "function": "SPI6 MOSI"
+      }
+    ],
+    "Vbat": [
+      {
+        "pin": "PC4",
+        "function": "ADC"
+      }
+    ],
+    "Vext": [
+      {
+        "pin": "PC5",
+        "function": "ADC"
+      }
+    ],
+    "LED": [
+      {
+        "pin": "PE10",
+        "function": "GPIO",
+        "default": false
+      }
+    ],
+    "EEPROM": [
+      {
+        "pin": "PB8",
+        "function": "SCL1",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PB9",
+        "function": "SDA1",
+        "default": false,
+        "hide": true
+      }
+    ],
+    "Firmware Flash": [
+      {
+        "pin": "PD11",
+        "function": "OCTOSPI IO0",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PD12",
+        "function": "OCTOSPI IO1",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PB13",
+        "function": "OCTOSPI IO2",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PD13",
+        "function": "OCTOSPI IO3",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PE11",
+        "function": "OCTOSPI NCS",
+        "default": false,
+        "hide": true
+      },
+      {
+        "pin": "PB2",
+        "function": "OCTOSPI CLK",
+        "default": false,
+        "hide": true
+      }
+    ]
   }
 }

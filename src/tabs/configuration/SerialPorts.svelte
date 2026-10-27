@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { isFbusMuxSerialPort } from "@/js/FbusMux.js";
   import { i18n } from "@/js/i18n.js";
+  import { updateTabList } from "@/js/main.js";
 
   import {
     BAUD_RATE_OPTIONS,
@@ -88,6 +89,8 @@
 
   function onFunctionChange(port, value) {
     port.functionMask = Number(value);
+    // The GPS tabs follow the ports
+    updateTabList(FC.FEATURE_CONFIG.features);
   }
 
   function onBaudrateChange(port, value) {

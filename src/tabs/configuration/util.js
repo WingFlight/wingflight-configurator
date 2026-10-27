@@ -1,3 +1,8 @@
+import semver from "semver";
+
+import { API_VERSION_22_15 } from "@/js/configurator.svelte.js";
+import { FC } from "@/js/fc.svelte.js";
+
 export const UART_NAMES = {
   0: "UART1",
   1: "UART2",
@@ -33,6 +38,8 @@ export const PORT_NAMES_RF2 = {
   F7C4: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Port Ⓔ", 5: "Port Ⓖ" },
   F7C5: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓒ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓑ" },
   F7C6: { 0: "S.BUS", 1: "TELEM", 2: "Port Ⓖ", 3: "Port Ⓐ", 4: "Int.Rx", 5: "Port Ⓖ" },
+  // FrSky Aegis Lite (STM32H730): UART3 RX, UART4 C1, UART7 TX on S9 (TLM), UART10 C2
+  H7A1: { 2: "RX", 3: "C1", 6: "S9(TLM)", 9: "C2" },
 };
 
 export const PORT_TYPES = {
@@ -51,7 +58,9 @@ export const BAUD_RATE_OPTIONS = {
   [PORT_TYPES.MSP]: [
     "9600", "19200", "38400", "57600", "115200", "230400", "250000", "460800", "500000", "921600", "1000000",
   ],
-  [PORT_TYPES.GPS]: ["AUTO", "9600", "19200", "38400", "57600", "115200", "230400", "460800"],
+  // Only the rates gpsInit() supports; the firmware runs any other at 115200.
+  // Auto baud is the switch on the GPS tab.
+  [PORT_TYPES.GPS]: ["9600", "19200", "38400", "57600", "115200"],
   [PORT_TYPES.MAVLINK]: ["AUTO", "9600", "19200", "38400", "57600", "115200", "230400", "460800"],
   [PORT_TYPES.TELEM]: ["AUTO"],
   [PORT_TYPES.BLACKBOX]: [
@@ -86,6 +95,59 @@ export const PORT_FUNCTIONS = [
 ];
 
 export const VCP_PORT_IDENTIFIER = 20;
+
+// GPS sources (FC.GPS_CONFIG.provider), in firmware order.
+export const GPS_PROVIDERS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+
+// The ports each GPS source needs. MSP needs none.
+const GPS_PROVIDER_PORTS = {
+  NMEA: ["GPS"],
+  UBLOX: ["GPS"],
+  FBUS: ["FBUS_OUT", "SPORT_MASTER"],
+  CRSF: ["CRSF_SENSORS"],
+};
+
+function portsMask(names) {
+  return PORT_FUNCTIONS.filter((f) => names.includes(f.name)).reduce(
+    (mask, f) => mask | f.id,
+    0,
+  );
+}
+
+function hasPort(ports, mask) {
+  return (ports ?? []).some((port) => port.functionMask & mask);
+}
+
+// There is no GPS feature switch. GPS runs when the GPS source has its port,
+// matching the firmware's gpsIsEnabled().
+export function isGpsActive(ports, provider) {
+  const name = GPS_PROVIDERS[provider];
+  if (name === "MSP") {
+    return true;
+  }
+  const portNames = GPS_PROVIDER_PORTS[name];
+  return !!portNames && hasPort(ports, portsMask(portNames));
+}
+
+// The GPS tab, where the source is picked, shows whenever a port could carry
+// GPS, even before the source matches it.
+const ANY_GPS_PORT_MASK = portsMask(Object.values(GPS_PROVIDER_PORTS).flat());
+
+export function showGpsTab(ports, provider) {
+  return hasPort(ports, ANY_GPS_PORT_MASK) || isGpsActive(ports, provider);
+}
+
+// Before API 22.15 the firmware runs GPS only with the GPS feature bit set.
+// Keep the bit in line with the setup before saving. 22.15+ has no bit.
+export function syncLegacyGpsFeature() {
+  if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_15)) {
+    return;
+  }
+  FC.FEATURE_CONFIG.features.setFeature(
+    "GPS",
+    isGpsActive(FC.SERIAL_CONFIG.ports, FC.GPS_CONFIG.provider),
+  );
+}
 
 export function getPortFunc(funcId) {
   return PORT_FUNCTIONS.find((f) => f.id == funcId);

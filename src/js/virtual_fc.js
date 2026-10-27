@@ -382,6 +382,180 @@ function encodeServoTiming() {
   return Uint8Array.from(buffer);
 }
 
+// Sensors on the virtual FBUS bus, as fbusSensorGetName() names them. A
+// real sensor answers its poll a few times a second; packet counts grow with
+// time from connect (or the last clear) so the page looks live.
+const VIRTUAL_FBUS_SENSORS = [
+  { physicalId: 0x01, name: "FLVSS", appIds: [0x0300], rate: 4 },
+  {
+    physicalId: 0x03,
+    name: "GPS",
+    appIds: [0x0800, 0x0820, 0x0830, 0x0840, 0x0850, 0x0860],
+    rate: 6,
+  },
+  {
+    physicalId: 0x07,
+    name: "FAS_150S",
+    appIds: [0x0200, 0x0210, 0x0220],
+    rate: 5,
+  },
+  { physicalId: 0x0a, name: "ESC", appIds: [0x0b50, 0x0b60, 0x0b70], rate: 5 },
+];
+
+let virtualFbusClearedAt = Date.now();
+
+// MSP2_WING_FBUS_SENSORS: count, then per sensor physical ID, source,
+// forwarded, packet count, name and app IDs.
+function encodeFbusSensors() {
+  const seconds = (Date.now() - virtualFbusClearedAt) / 1000;
+  const forwarded = FC.FBUS_MASTER_CONFIG?.forwardedSensors ?? [];
+  const buffer = [];
+  buffer.push8(VIRTUAL_FBUS_SENSORS.length);
+  for (const sensor of VIRTUAL_FBUS_SENSORS) {
+    buffer.push8(sensor.physicalId);
+    buffer.push8(0); // source: FBUS
+    buffer.push8(forwarded.includes(sensor.physicalId) ? 1 : 0);
+    buffer.push32(Math.floor(seconds * sensor.rate * sensor.appIds.length));
+    buffer.push8(sensor.name.length);
+    for (const char of sensor.name) buffer.push8(char.charCodeAt(0));
+    buffer.push8(sensor.appIds.length);
+    for (const appId of sensor.appIds) buffer.push16(appId);
+  }
+  return Uint8Array.from(buffer);
+}
+
+// MSP2_WING_SERIAL_STATUS: VCP, a serial receiver on UART3 and an NMEA GPS on
+// UART7 that is receiving data. The byte count grows so the live view moves.
+function encodeSerialStatus(requestData) {
+  const t = Date.now();
+  const ports = [
+    { id: 20, mask: 1, rx: 0, tx: 0, flags: 0x01, baud: 0, options: 0x0c },
+    {
+      id: 2,
+      mask: 64,
+      rx: 0x59,
+      tx: 0x58,
+      flags: 0x03,
+      baud: 115200,
+      options: 0x0c,
+    }, // D09 / D08
+    {
+      id: 6,
+      mask: 2,
+      rx: 0x67,
+      tx: 0x68,
+      flags: 0x01,
+      baud: 57600,
+      options: 0x0c,
+    }, // E07 / E08
+    { id: 9, mask: 0, rx: 0x62, tx: 0x63, flags: 0x00, baud: 0, options: 0 }, // E02 / E03
+  ];
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer.push8(ports.length);
+  for (const port of ports) {
+    buffer.push8(port.id);
+    buffer.push32(port.mask);
+    buffer.push8(port.rx);
+    buffer.push8(port.tx);
+    buffer.push8(port.flags);
+    buffer.push32(port.baud);
+    buffer.push8(port.options);
+  }
+  const detailId = requestData?.[0] ?? 0xff;
+  const detail = ports.find((p) => p.id === detailId);
+  if (!detail) {
+    buffer.push8(0xff);
+    return Uint8Array.from(buffer);
+  }
+  buffer.push8(detailId);
+  buffer.push32(115200);
+  buffer.push32(57600);
+  buffer.push32(0);
+  buffer.push32(115200);
+  if (!(detail.mask & 2)) {
+    buffer.push8(0);
+    return Uint8Array.from(buffer);
+  }
+  const sentence = `$GNGGA,${new Date(t).toISOString().slice(11, 19).replaceAll(":", "")}.00,4807.038,N,01131.000,E,1,11,0.9,545.4,M,46.9,M,,*47
+`;
+  const recent = Array.from(sentence.slice(-64), (c) => c.charCodeAt(0));
+  const gps = [];
+  gps.push8(0x1f); // active, configured, fix, is the GPS port, open
+  gps.push8(0); // NMEA
+  gps.push32(57600);
+  gps.push8(5); // RECEIVING_DATA
+  gps.push32(t % 100);
+  gps.push32((Math.floor(t / 1000) % 1000000) * 600);
+  gps.push32((Math.floor(t / 1000) % 1000000) * 10);
+  gps.push32(0);
+  gps.push32(0);
+  gps.push8(11);
+  gps.push8(recent.length);
+  for (const b of recent) gps.push8(b);
+  buffer.push8(1); // one block
+  buffer.push32(2); // FUNCTION_GPS
+  buffer.push8(gps.length);
+  buffer.push(...gps);
+  return Uint8Array.from(buffer);
+}
+
+// MSP2_WING_FBUS_SENSORS_STATUS, for the sensors above: a 6S pack on a
+// FAS-150S and FLVSS, a GPS with a fix and an idling ESC. Values drift a
+// little so the page shows them updating. The XACT servo block reports no data.
+function encodeFbusSensorsStatus() {
+  const now = new Date();
+  const t = now.getTime() / 1000;
+  const wobble = (amplitude, period) =>
+    Math.round(amplitude * Math.sin((2 * Math.PI * t) / period));
+  const cells = [415, 414, 416, 415, 413, 415].map(
+    (cell, i) => cell + wobble(1, 7 + i),
+  );
+  const pack = cells.reduce((sum, cell) => sum + cell, 0);
+
+  const buffer = [];
+  buffer.push8(1); // payload version
+
+  buffer.push8(0x7f); // GPS: position, altitude, speed, course, sats, time, date
+  buffer.push32(-337_867_000 + wobble(20, 11)); // latitude, deg * 1e7
+  buffer.push32(1_511_234_000 + wobble(20, 13)); // longitude, deg * 1e7
+  buffer.push32(4_520 + wobble(30, 9)); // altitude, cm
+  buffer.push32(1_200 + wobble(300, 5)); // speed, knots * 1000
+  buffer.push16(1_850 + wobble(20, 8)); // course, deg * 10
+  buffer.push8(12);
+  buffer.push8(now.getUTCHours());
+  buffer.push8(now.getUTCMinutes());
+  buffer.push8(now.getUTCSeconds());
+  buffer.push8(now.getUTCDate());
+  buffer.push8(now.getUTCMonth() + 1);
+  buffer.push16(now.getUTCFullYear());
+
+  buffer.push8(0x07); // current: current, voltage, high-precision current
+  buffer.push32(35 + wobble(3, 4)); // 0.1 A
+  buffer.push32(pack - 4); // 0.01 V, a little under the cells' sum
+  buffer.push16(3_480 + wobble(250, 4)); // 0.001 A
+
+  buffer.push8(0x01); // FLVSS
+  buffer.push8(cells.length);
+  for (const cell of cells) buffer.push16(cell);
+  buffer.push32(pack);
+
+  buffer.push8(0x0f); // ESC: power, RPM, consumption, temperature
+  buffer.push16(pack - 10); // 0.01 V
+  buffer.push16(340 + wobble(25, 4)); // 0.01 A
+  buffer.push32(4_200 + wobble(50, 6)); // RPM
+  buffer.push16(127); // mAh
+  buffer.push8(38);
+  buffer.push8(0);
+
+  buffer.push8(0); // XACT servo: no data
+  buffer.push16(0);
+  buffer.push16(0);
+  buffer.push16(0);
+
+  return Uint8Array.from(buffer);
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -470,6 +644,16 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeServoTrim());
     case MSPCodes.MSP2_WING_SERVO_TIMING:
       return decodeVirtualReply(code, encodeServoTiming());
+    case MSPCodes.MSP2_WING_FBUS_SENSORS:
+      return decodeVirtualReply(code, encodeFbusSensors());
+    case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS:
+      return decodeVirtualReply(code, encodeFbusSensorsStatus());
+    case MSPCodes.MSP2_WING_SERIAL_STATUS:
+      return decodeVirtualReply(code, encodeSerialStatus(requestData));
+    // The sensors keep answering, so they show again at once with fresh counts
+    case MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS:
+      virtualFbusClearedAt = Date.now();
+      return new Uint8Array(0);
     // Limited like the FC's setServoSavedTrim(); the next MSP_SERVO_TRIM reads it back.
     case MSPCodes.MSP2_WING_SET_SERVO_TRIM: {
       const index = requestData[0];
@@ -600,6 +784,16 @@ export function applyVirtualConfig() {
   FC.SERIAL_CONFIG.ports[1].functionMask = 64; // RX_SERIAL
   FC.SERIAL_CONFIG.ports[2].functionMask = 1024; // ESC_SENSOR
   FC.SERIAL_CONFIG.ports[3].functionMask = 2; // GPS
+
+  // GPS source (pg/gps.c defaults). With the GPS port above, GPS is active.
+  Object.assign(FC.GPS_CONFIG, {
+    provider: 0, // NMEA
+    ublox_sbas: 0,
+    auto_config: 1,
+    auto_baud: 0,
+    home_point_once: 0,
+    ublox_use_galileo: 0,
+  });
 
   // Receiver
   FC.FEATURE_CONFIG.features.RX_SERIAL = true;
