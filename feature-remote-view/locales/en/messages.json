@@ -436,6 +436,10 @@
     "tabHelp": {
         "message": "Documentation & Support"
     },
+    "remoteSupportMenu": {
+        "message": "Remote Support",
+        "description": "Left menu entry that opens the remote support panel"
+    },
     "tabOptions": {
         "message": "Options"
     },
@@ -1762,6 +1766,15 @@
     },
     "initialSetupButtonRebootText": {
         "message": "Reboot and reinitialize the system."
+    },
+    "initialSetupButtonRemoteSupport": {
+        "message": "Remote support"
+    },
+    "defaultRemoteSupportText": {
+        "message": "Stuck, or can't connect to your flight controller? Someone can help you over the internet: you share your flight controller and give them a session code, and they work on it from their own configurator. Helping someone? Join their session here."
+    },
+    "initialSetupRemoteSupportText": {
+        "message": "Let someone help you over the internet. They see and change your flight controller's settings from their own configurator while you watch their screen. You give them a session code to join."
     },
     "initialSetupBackupSuccess": {
         "message": "Backup saved <span class=\"message-positive\">successfully</span>"
@@ -10065,9 +10078,6 @@
         "message": "The stabilizer's output is a share of the throws you set. If you change the throws later, the tune changes with them, so set throws first and tune afterwards."
     },
     "remoteSupportTitle": {
-        "message": "Remote support"
-    },
-    "remoteSupportButton": {
         "message": "Remote support"
     },
     "remoteSupportShareTitle": {

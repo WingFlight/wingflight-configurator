@@ -223,7 +223,7 @@
       "name": "feature-remote-view",
       "path": "./feature-remote-view/",
       "branch": "feature/remote-view",
-      "date": "2026-10-27T18:19:15Z",
+      "date": "2026-10-27T18:39:32Z",
       "number": 199,
       "title": "Remote support built into the configurator, with screen mirroring and a safety stop",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/199",
