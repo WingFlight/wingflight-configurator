@@ -58,7 +58,9 @@ export const BAUD_RATE_OPTIONS = {
   [PORT_TYPES.MSP]: [
     "9600", "19200", "38400", "57600", "115200", "230400", "250000", "460800", "500000", "921600", "1000000",
   ],
-  [PORT_TYPES.GPS]: ["AUTO", "9600", "19200", "38400", "57600", "115200", "230400", "460800"],
+  // Only the rates gpsInit() supports; the firmware runs any other at 115200.
+  // Auto baud is the switch on the GPS tab.
+  [PORT_TYPES.GPS]: ["9600", "19200", "38400", "57600", "115200"],
   [PORT_TYPES.MAVLINK]: ["AUTO", "9600", "19200", "38400", "57600", "115200", "230400", "460800"],
   [PORT_TYPES.TELEM]: ["AUTO"],
   [PORT_TYPES.BLACKBOX]: [
