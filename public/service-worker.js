@@ -19,9 +19,21 @@ const APP_SHELL = [
   "./images/favicon/favicon-512.png",
 ];
 
+// GitHub Pages lets the browser keep files for 10 minutes, and the asset
+// names carry no hash. A plain fetch() right after a deploy can return the
+// previous build's file from the HTTP cache, which would then be stored under
+// this build's cache for good. Always ask the server instead.
+function fetchFresh(request) {
+  return fetch(request, { cache: "no-cache" });
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)),
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) =>
+        cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: "no-cache" }))),
+      ),
   );
   self.skipWaiting();
 });
@@ -64,7 +76,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetchFresh(request)
         .then((response) => {
           const responseCopy = response.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(request, responseCopy));
@@ -81,7 +93,7 @@ self.addEventListener("fetch", (event) => {
         return cached;
       }
 
-      return fetch(request).then((response) => {
+      return fetchFresh(request).then((response) => {
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }
