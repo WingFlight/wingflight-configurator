@@ -7,7 +7,6 @@ import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { releaseOverrides, waitUntilQuiet } from "@/js/msp/release_overrides.js";
 import { REMOTE_SUPPORT_AVAILABLE, RemoteSupport } from "@/js/protocols/RemoteSupport.js";
-import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
 import { mountComponents } from "@/js/main.svelte.js";
 import { homeTab, isTabInUserLevel, loadUserLevel, setUserLevel } from "@/js/user_level.js";
 import { isGpsActive, showGpsTab } from "@/tabs/configuration/util.js";
@@ -168,21 +167,13 @@ export function startProcess() {
 
     const ui_tabs = $('#tabs > ul');
 
-    // Remote support opens a panel, not a tab.
-    const remoteSupportItem = $('#tabs li.remote-support-menu');
-    if (REMOTE_SUPPORT_AVAILABLE) {
-        $('a', remoteSupportItem).on('click', (e) => {
-            e.preventDefault();
-            openRemoteSupport(e.currentTarget);
-        });
-    } else {
-        remoteSupportItem.hide();
+    // The Remote Support tab sits in the menu's mode-always list, usable
+    // connected or not. Hidden where remote support can't run.
+    if (!REMOTE_SUPPORT_AVAILABLE) {
+        $('#tabs li.tab_remote_support').hide();
     }
 
     $('a', ui_tabs).click(function () {
-        if ($(this).parent().hasClass('menu-action')) {
-            return;
-        }
         if ($(this).parent().hasClass('active') === false && !GUI.tab_switch_in_progress) { // only initialize when the tab isn't already active
             const self = this;
 

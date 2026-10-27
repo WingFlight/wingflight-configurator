@@ -10091,9 +10091,6 @@
         "message": "Join a session with the code the pilot gives you.",
         "description": "Subtitle of the 'I'm helping someone' choice in the remote support panel"
     },
-    "remoteSupportBack": {
-        "message": "Back"
-    },
     "remoteSupportShareStep1": {
         "message": "This configurator lets go of the flight controller, and the supporter uses it from theirs."
     },
@@ -10210,5 +10207,16 @@
     "remoteSupportAllowDfu": {
         "message": "Allow a DFU device...",
         "description": "Button for the pilot to grant the browser access to a board in bootloader mode during a session"
+    },
+    "remoteSupportAllowedPorts": {
+        "message": "Ports the browser may share",
+        "description": "Heading of the list of serial ports the pilot has granted the web configurator access to"
+    },
+    "remoteSupportNoAllowedPorts": {
+        "message": "None yet. The browser asks for one when you share."
+    },
+    "remoteSupportFrameJoined": {
+        "message": "Remote support: working on the pilot's flight controller",
+        "description": "Banner on the frame around the supporter's window while joined to a session"
     }
 }

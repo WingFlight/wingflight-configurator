@@ -1,7 +1,7 @@
 <script>
   import { i18n } from "@/js/i18n.js";
   import { i18n as legacyI18n } from "@/js/localization.js";
-  import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
+  import { openRemoteSupportTab } from "@/js/protocols/RemoteView.svelte.js";
   import { REMOTE_SUPPORT_AVAILABLE as remoteSupportSupported } from "@/js/protocols/RemoteSupport.js";
 
   let selectedLanguage = $state(legacyI18n.selectedLanguage);
@@ -63,10 +63,7 @@
         <section>
           <h2>{$i18n.t("remoteSupportTitle")}</h2>
           <p>{$i18n.t("defaultRemoteSupportText")}</p>
-          <button
-            class="btn remote-btn"
-            onclick={(e) => openRemoteSupport(e.currentTarget)}
-          >
+          <button class="btn remote-btn" onclick={openRemoteSupportTab}>
             <span class="fas fa-headset"></span>
             {$i18n.t("initialSetupButtonRemoteSupport")}
           </button>

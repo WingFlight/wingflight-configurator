@@ -62,7 +62,7 @@ import "@/css/select2_custom.css";
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
-import RemoteSupportDialog from "@/components/RemoteSupportDialog.svelte";
+import RemoteSupportOverlay from "@/components/RemoteSupportOverlay.svelte";
 import { REMOTE_SUPPORT_AVAILABLE } from "@/js/protocols/RemoteSupport.js";
 import { remote } from "@/js/protocols/RemoteView.svelte.js";
 
@@ -149,14 +149,14 @@ export function mountComponents() {
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
 
-  // Remote support is opened from the left menu. The menu entry stays lit
-  // while a session runs.
+  // What a remote support session shows on every tab. The menu entry of
+  // the Remote Support tab stays lit while a session runs.
   if (REMOTE_SUPPORT_AVAILABLE) {
-    mount(RemoteSupportDialog, { target: document.body });
+    mount(RemoteSupportOverlay, { target: document.body });
     $effect.root(() => {
       $effect(() => {
         document
-          .querySelector("#tabs li.remote-support-menu")
+          .querySelector("#tabs li.tab_remote_support a")
           ?.classList.toggle("remote-support-active", remote.role !== null);
       });
     });

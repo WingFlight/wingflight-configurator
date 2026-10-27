@@ -1,5 +1,6 @@
 import { record, Replayer } from 'rrweb';
 import { RemoteSupport, VIEW_DATA, VIEW_REQUEST } from '@/js/protocols/RemoteSupport.js';
+import { serial } from '@/js/serial.js';
 
 /*
     Screen mirroring for remote support: the person getting help (pilot) sees
@@ -98,17 +99,28 @@ export function stopSession() {
     RemoteSupport.stopSession();
 }
 
-// The remote support panel registers how to show itself, so other places
-// (the Maintenance tab) can open it.
-let showPanel = null;
-
-export function setPanelOpener(fn) {
-    showPanel = fn;
+/** Switches to the Remote Support tab (from the Welcome and Maintenance tabs). */
+export function openRemoteSupportTab() {
+    document.querySelector('#tabs li.tab_remote_support a')?.click();
 }
 
-/** Shows the panel next to `anchor`, the element that asked for it. */
-export function openPanel(anchor) {
-    showPanel?.(anchor);
+/**
+ * Ends the session from either side. A supporter connected to the pilot's
+ * board disconnects first, while the link is still up, so the board gets
+ * its motors stopped and its overrides released by the normal disconnect.
+ * The pilot's side does the same again once the session is gone.
+ */
+export async function killSession() {
+    if (remote.role === 'join' && serial.connectionType === 'remote') {
+        if (GUI.connected_to || GUI.connecting_to) {
+            document.querySelector('div#connectbutton a.connect')?.click();
+        }
+        const deadline = Date.now() + 4000;
+        while ((GUI.connected_to || GUI.disconnect_in_progress) && Date.now() < deadline) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+    }
+    stopSession();
 }
 
 // ---- supporter: record and send -------------------------------------------

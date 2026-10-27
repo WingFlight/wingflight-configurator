@@ -6,7 +6,7 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { have_sensor, reinitialiseConnection } from "@/js/serial_backend.js";
-  import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
+  import { openRemoteSupportTab } from "@/js/protocols/RemoteView.svelte.js";
   import { REMOTE_SUPPORT_AVAILABLE as remoteSupportSupported } from "@/js/protocols/RemoteSupport.js";
 
   import Page from "@/components/Page.svelte";
@@ -232,7 +232,7 @@
   {#if remoteSupportSupported}
     <div class="row">
       <div class="action">
-        <button class="btn" onclick={(e) => openRemoteSupport(e.currentTarget)}>
+        <button class="btn" onclick={openRemoteSupportTab}>
           {$i18n.t("initialSetupButtonRemoteSupport")}
         </button>
       </div>

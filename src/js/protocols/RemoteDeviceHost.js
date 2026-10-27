@@ -34,7 +34,7 @@ import {
     board, which clears everything.
 
     The configurator's own connection is closed while sharing (see
-    RemoteSupportDialog.svelte), so it never sees this traffic.
+    RemoteSupportOverlay.svelte), so it never sees this traffic.
 */
 
 const POLL_INTERVAL = 500;
