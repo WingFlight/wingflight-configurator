@@ -47,10 +47,22 @@
         continue;
       }
 
+      // A port already set to it stays editable, so the function can be removed
+      const featureOff =
+        func.feature &&
+        func.id !== port.functionMask &&
+        !FC.FEATURE_CONFIG.features.isEnabled(func.feature);
+      const label = $i18n.t(`portsFunction_${func.name}`);
+
       options.push({
         value: func.id,
-        label: $i18n.t(`portsFunction_${func.name}`),
-        disabled: !!(func.id & exclFuncs),
+        label: featureOff
+          ? $i18n.t("portsFunctionFeatureOff", {
+              function: label,
+              feature: func.feature,
+            })
+          : label,
+        disabled: featureOff || !!(func.id & exclFuncs),
       });
     }
 
