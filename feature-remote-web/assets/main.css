@@ -1658,8 +1658,12 @@ li.active .ic_help {
     background-image: url(/feature-remote-web/images/icons/cf_icon_support_white.svg);
 }
 
+li.active .ic_support {
+    background-image: url(/feature-remote-web/images/icons/cf_icon_support_white.svg);
+}
+
 /* Remote support session running: the menu entry stays lit. */
-li.remote-support-active .ic_support {
+#tabs li a.remote-support-active.ic_support {
     background-image: url(/feature-remote-web/images/icons/cf_icon_support_active.svg);
     color: var(--color-status-good);
 }
