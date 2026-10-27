@@ -38,6 +38,37 @@ export const MANUFACTURER_BRAND_IMAGES = {
   MTKS: { file: "MATEKSYS_BRAND.svg", aspect: 300 / 70 },
 };
 
+// Boards whose branding isn't their manufacturer's default, matched on
+// FC.CONFIG.boardName (case-insensitive prefix, as in
+// reference_design_labels.js's findUsages). Each entry replaces the
+// manufacturer's name, artwork and colours for that board:
+//   name    the brand printed on the board
+//   model   the model name shown under it (default: the board name)
+//   image   brand artwork as in MANUFACTURER_BRAND_IMAGES, or null to set
+//           `name` in plain type instead
+//   colors  as in MANUFACTURER_BOARD_COLORS (default: the manufacturer's)
+//
+// The Aegis Lite reports manufacturer FRSK like the Vantac RF007 boards,
+// but it is FrSky's own board, not a Vantac/Rotorflight one, so it must not
+// get the Vantac artwork.
+export const BOARD_BRANDING = [
+  {
+    boardName: "AEGISLITE",
+    name: "FrSky",
+    model: "AEGIS LITE",
+    image: null,
+    colors: { bezel: "#2b2d31", body: "#101113" },
+  },
+];
+
+/** The BOARD_BRANDING entry for a reported board name, or null. */
+export function findBoardBranding(boardName) {
+  const name = (boardName ?? "").toUpperCase();
+  return (
+    BOARD_BRANDING.find((entry) => name.startsWith(entry.boardName)) ?? null
+  );
+}
+
 // Body/bezel colours for the board diagram -- grey is the generic
 // fallback; manufacturers with a real reference diagram get their own
 // real case colours instead.

@@ -17,6 +17,7 @@
     MANUFACTURER_BOARD_NAMES,
     MANUFACTURER_BRAND_IMAGES,
     MANUFACTURER_BOARD_COLORS,
+    findBoardBranding,
   } from "@/js/remap_fc/manufacturer_branding.js";
   import Page from "@/components/Page.svelte";
   import Section from "@/components/Section.svelte";
@@ -383,8 +384,14 @@
   const DIAGRAM_ASPECT_RATIO = 1;
   let diagramWidth = $derived(diagramHeight * DIAGRAM_ASPECT_RATIO);
 
+  // A board with its own branding (e.g. FrSky's Aegis Lite, which reports
+  // the same manufacturer as the Vantac boards) overrides its
+  // manufacturer's; see BOARD_BRANDING.
+  let boardBranding = $derived(findBoardBranding(FC.CONFIG.boardName));
+
   let boardBrandName = $derived(
-    MANUFACTURER_BOARD_NAMES[FC.CONFIG.manufacturerId] ??
+    boardBranding?.name ??
+      MANUFACTURER_BOARD_NAMES[FC.CONFIG.manufacturerId] ??
       FC.CONFIG.manufacturerId,
   );
 
@@ -392,7 +399,9 @@
   const BRAND_IMAGE_Y = 109; // 55 + 10% of the board's own 540-tall height
   const BRAND_IMAGE_WIDTH = 400;
   let boardBrandImage = $derived(
-    MANUFACTURER_BRAND_IMAGES[FC.CONFIG.manufacturerId],
+    boardBranding
+      ? boardBranding.image
+      : MANUFACTURER_BRAND_IMAGES[FC.CONFIG.manufacturerId],
   );
 
   // The board's own model text, shown under the brand image -- e.g.
@@ -401,6 +410,9 @@
   // insensitively. A board name that doesn't start with the brand
   // (e.g. "NEXUS_XR") is shown exactly as reported, unstripped.
   let boardModelName = $derived.by(() => {
+    if (boardBranding?.model) {
+      return boardBranding.model;
+    }
     const raw = FC.CONFIG.boardName ?? "";
     const prefix = `${boardBrandName}_`;
     return raw.slice(0, prefix.length).toUpperCase() === prefix.toUpperCase()
@@ -452,12 +464,12 @@
   // Betaflight-target defaults.
   let isGenericBoard = $derived(isGenericBoardDesign(FC.CONFIG.boardDesign));
 
-  let boardBezelColor = $derived(
-    MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId]?.bezel ?? "#9ba3ac",
+  let boardColors = $derived(
+    boardBranding?.colors ??
+      MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId],
   );
-  let boardBodyColor = $derived(
-    MANUFACTURER_BOARD_COLORS[FC.CONFIG.manufacturerId]?.body ?? "#4b5561",
-  );
+  let boardBezelColor = $derived(boardColors?.bezel ?? "#9ba3ac");
+  let boardBodyColor = $derived(boardColors?.body ?? "#4b5561");
 
   // Pin -> board's own silkscreen name (e.g. "ESC", "TAIL") from the
   // matching reference design (official family match or a
@@ -1597,15 +1609,29 @@
                  following that image's own aspect ratio. A new
                  manufacturer only ever needs its own image file dropped
                  in plus one line added to MANUFACTURER_BRAND_IMAGES. -->
-                {#if boardBrandImage}
-                  <image
-                    href="/images/remap_fc/{boardBrandImage.file}"
-                    x={BRAND_IMAGE_X}
-                    y={BRAND_IMAGE_Y}
-                    width={BRAND_IMAGE_WIDTH}
-                    height={BRAND_IMAGE_WIDTH / boardBrandImage.aspect}
-                    preserveAspectRatio="xMinYMin meet"
-                  />
+                {#if boardBrandImage || boardBranding}
+                  {#if boardBrandImage}
+                    <image
+                      href="/images/remap_fc/{boardBrandImage.file}"
+                      x={BRAND_IMAGE_X}
+                      y={BRAND_IMAGE_Y}
+                      width={BRAND_IMAGE_WIDTH}
+                      height={BRAND_IMAGE_WIDTH / boardBrandImage.aspect}
+                      preserveAspectRatio="xMinYMin meet"
+                    />
+                  {:else}
+                    <!-- A board with its own branding but no artwork: its
+                     brand name in plain type, where the artwork would be. -->
+                    <text
+                      x={BRAND_IMAGE_X}
+                      y={BRAND_IMAGE_Y + 110}
+                      font-family="Arial, sans-serif"
+                      font-weight="700"
+                      font-size="110"
+                      letter-spacing="4"
+                      fill="#ffffff">{boardBrandName}</text
+                    >
+                  {/if}
                   <g
                     transform="translate({BRAND_IMAGE_X} 440) scale({boardModelTextScale})"
                   >
