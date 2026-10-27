@@ -1,27 +1,62 @@
 import * as config from '@/js/config.js';
+import { SIDE } from '@/js/protocols/RemoteCrypto.js';
+import { RemoteDeviceHost, releaseAbandonedSerialConnections } from '@/js/protocols/RemoteDeviceHost.js';
+import { WebRemoteDeviceHost } from '@/js/protocols/WebRemoteDeviceHost.js';
+import { RemoteSession } from '@/js/protocols/RemoteSession.js';
+import { getSerialProvider } from '@/js/protocols/WebSerial.js';
 
 /*
-    Client for the Wingflight remote support tool
-    (https://github.com/WingFlight/wingflight-remote-support). The supporter
-    runs the tool in "join" mode next to the
-    configurator; the tool listens on UDP 127.0.0.1:5763 and tunnels to the
-    computer the flight controller is plugged into. This module makes that
-    remote computer's serial ports and DFU devices usable like local ones:
+    Remote support: a supporter works on the flight controller plugged into
+    the pilot's computer, from their own configurator, through the relay
+    (wss://remote.wingflight.org). This module makes the pilot's serial ports
+    and DFU devices usable like local ones on the supporter's side:
 
     - serial.js connects to ports whose path starts with REMOTE_PORT_PREFIX
       through openSerial()/writeSerial()/closeSerial().
     - stm32usbdfu.js drives remote DFU devices through RemoteUsbDevice, which
       implements the part of the WebUSB USBDevice interface it uses.
 
+    Sessions started from the remote support panel run inside the
+    configurator (RemoteSession.js), in the desktop app and in the browser.
+    The pilot's side is a device host: RemoteDeviceHost.js (chrome.serial and
+    chrome.usb) in the desktop app, WebRemoteDeviceHost.js (Web Serial and
+    WebUSB) in the browser. Joining needs no device access, so a supporter
+    can use any browser; sharing needs Web Serial or WebUSB, which Chrome and
+    Edge have and Firefox and Safari don't (see canShareDevices()).
+
+    The desktop app also still talks to the separate remote support tool
+    (https://github.com/WingFlight/wingflight-remote-support) over UDP
+    127.0.0.1:5763: a session started in the tool works as before, and the
+    panel shows it. Either way the messages are the same; only the transport
+    differs. The client also carries the screen mirroring messages used by
+    RemoteView.svelte.js.
+
     The wire format is described in PROTOCOL.md in the tool's repository. The
-    tool encrypts everything it forwards end to end; this local UDP leg is
-    plain. Only the nwjs backend has chrome.sockets.udp, so this is inert in
-    the web and cordova builds.
+    session encrypts everything it forwards end to end; the local UDP leg is
+    plain. Only the nwjs backend has chrome.sockets.udp, so that part is
+    inert in the browser.
 */
 
 export const REMOTE_PORT_PREFIX = 'remote:';
 
+// Where remote support runs: the desktop app and the browser.
+export const REMOTE_SUPPORT_AVAILABLE = __BACKEND__ === 'nwjs' || __BACKEND__ === 'web';
+
+/**
+ * Whether this configurator can share a flight controller: the desktop app
+ * always can; a browser needs Web Serial or WebUSB.
+ */
+export function canShareDevices() {
+    if (__BACKEND__ === 'nwjs') {
+        return true;
+    }
+    return __BACKEND__ === 'web' && getSerialProvider() !== null;
+}
+export const VIEW_DATA = 0x50;
+export const VIEW_REQUEST = 0x51;
+
 const DEFAULT_UDP_PORT = 5763;
+const DEFAULT_RELAY_URL = 'wss://remote.wingflight.org';
 const PROTOCOL_VERSION = 1;
 const HELLO_INTERVAL = 1000;
 // No STATUS reply for this long means the tool is gone.
@@ -34,6 +69,9 @@ const SERIAL_WRITE_CHUNK = 8192;
 const MSG = {
     HELLO:          0x01,
     STATUS:         0x02,
+    SESSION_JOIN:   0x03,
+    SESSION_SHARE:  0x04,
+    SESSION_STOP:   0x05,
     LIST_DEVICES:   0x10,
     DEVICE_LIST:    0x11,
     SERIAL_OPEN:    0x20,
@@ -49,11 +87,14 @@ const MSG = {
     USB_CTRL_IN:    0x35,
     USB_CTRL_OUT:   0x36,
     RESULT:         0x40,
+    VIEW_DATA:      0x50,
+    VIEW_REQUEST:   0x51,
 };
 
 const RESULT_OK = 0;
 const RESULT_STALL = 1;
 
+const STATUS_RELAY_CONNECTED = 0x01;
 const STATUS_HOST_CONNECTED = 0x02;
 
 const REQUEST_TYPES = { standard: 0x00, class: 0x20, vendor: 0x40 };
@@ -191,6 +232,22 @@ class RemoteSupportClient {
         this.udpPort = DEFAULT_UDP_PORT;
         this.lastStatus = 0;
         this.hostConnected = false;
+        this.relayConnected = false;
+        this.peerConnected = false;
+        this.wasRunning = false;
+        // The session running inside the configurator, if any, and what
+        // settles once it is over and the board has been made safe.
+        this.embedded = null;
+        this.embeddedDone = Promise.resolve();
+        // chrome.usb filters for the DFU devices a shared board may show up as.
+        this.dfuFilters = [];
+        // The current session: { role, code, device, message, error }, role
+        // being 'share', 'join' or null.
+        this.session = { role: null };
+        // Called when the status above changes, and with each screen
+        // mirroring message.
+        this.onChange = null;
+        this.onView = null;
         this.serialPorts = [];
         this.dfuDevices = [];
         this.pending = new Map();
@@ -200,12 +257,22 @@ class RemoteSupportClient {
         this.onSerialClosed = null;
     }
 
-    /** True while the tool is running and connected to a device host. */
-    get available() {
-        return this.hostConnected && Date.now() - this.lastStatus < TOOL_TIMEOUT;
+    /** True while the tool is running (it answers hello). */
+    get toolRunning() {
+        return this.started && Date.now() - this.lastStatus < TOOL_TIMEOUT;
     }
 
-    start() {
+    /** True while this configurator is joined to a pilot's flight controller. */
+    get available() {
+        return this.hostConnected && this.session.role === 'join' && (this.embedded !== null || this.toolRunning);
+    }
+
+    /** `dfuFilters`: chrome.usb filters for DFU devices (port_handler.js's usbDevices). */
+    start({ dfuFilters = [] } = {}) {
+        this.dfuFilters = dfuFilters;
+        if (__BACKEND__ === 'nwjs' && globalThis.chrome?.serial && !this.started) {
+            releaseAbandonedSerialConnections();
+        }
         if (this.started || __BACKEND__ !== 'nwjs' || !globalThis.chrome?.sockets?.udp) {
             return;
         }
@@ -238,7 +305,17 @@ class RemoteSupportClient {
         });
     }
 
+    /** Sends a message to the other side of the session. */
     send(bytes) {
+        if (this.embedded) {
+            this.embedded.send(bytes);
+        } else {
+            this.sendToTool(bytes);
+        }
+    }
+
+    /** Sends a datagram to the tool on this computer. */
+    sendToTool(bytes) {
         if (this.socketId === null) {
             return;
         }
@@ -247,11 +324,17 @@ class RemoteSupportClient {
     }
 
     sayHello() {
-        if (this.hostConnected && !this.available) {
+        if (!this.embedded && !this.toolRunning && this.session.role !== null) {
             console.log('Remote support: tool stopped answering');
             this.linkDown();
+            this.session = { role: null };
+            this.peerConnected = false;
         }
-        this.send(Uint8Array.of(MSG.HELLO, PROTOCOL_VERSION));
+        if (this.toolRunning !== this.wasRunning) {
+            this.wasRunning = this.toolRunning;
+            this.onChange?.();
+        }
+        this.sendToTool(Uint8Array.of(MSG.HELLO, PROTOCOL_VERSION));
     }
 
     linkDown() {
@@ -274,22 +357,54 @@ class RemoteSupportClient {
         if (!data.length) {
             return;
         }
-        const view = new DataView(data.buffer);
+        if (data[0] === MSG.STATUS) {
+            this.lastStatus = Date.now();
+            // While our own session runs, a tool's status is not ours.
+            if (!this.embedded) {
+                this.applyStatus(
+                    data.length >= 3 && (data[2] & STATUS_RELAY_CONNECTED) !== 0,
+                    data.length >= 3 && (data[2] & STATUS_HOST_CONNECTED) !== 0,
+                    this.parseSessionInfo(data.subarray(3)),
+                );
+            }
+        } else if (!this.embedded) {
+            this.handleMessage(data);
+        }
+    }
+
+    /** Takes over a session's status, from the tool or our own session. */
+    applyStatus(relayConnected, hostConnected, session) {
+        this.relayConnected = relayConnected;
+        const previous = JSON.stringify(this.session) + this.peerConnected;
+        this.session = session;
+        const isJoin = session.role === 'join';
+        if (hostConnected && isJoin && !this.hostConnected) {
+            console.log('Remote support: connected to remote device host');
+            this.hostConnected = true;
+            this.refreshDevices().catch(() => {});
+        } else if (!(hostConnected && isJoin) && this.hostConnected) {
+            console.log('Remote support: remote device host disconnected');
+            this.linkDown();
+        }
+        this.peerConnected = hostConnected;
+        if (previous !== JSON.stringify(this.session) + this.peerConnected || this.toolRunning !== this.wasRunning) {
+            this.wasRunning = this.toolRunning;
+            this.onChange?.();
+        }
+    }
+
+    /** A message from the other side of the session. */
+    handleMessage(data) {
+        if (!data.length) {
+            return;
+        }
+        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
         switch (data[0]) {
-            case MSG.STATUS: {
-                this.lastStatus = Date.now();
-                const hostConnected = data.length >= 3 && (data[2] & STATUS_HOST_CONNECTED) !== 0;
-                if (hostConnected && !this.hostConnected) {
-                    console.log('Remote support: connected to remote device host');
-                    this.hostConnected = true;
-                    this.refreshDevices().catch(() => {});
-                } else if (!hostConnected && this.hostConnected) {
-                    console.log('Remote support: remote device host disconnected');
-                    this.linkDown();
-                }
+            case MSG.VIEW_DATA:
+            case MSG.VIEW_REQUEST:
+                this.onView?.(data[0], data.subarray(1));
                 break;
-            }
             case MSG.DEVICE_LIST: {
                 if (data.length < 5) {
                     break;
@@ -317,6 +432,110 @@ class RemoteSupportClient {
                 }
                 break;
         }
+    }
+
+    parseSessionInfo(bytes) {
+        if (!bytes.length) {
+            return { role: null };
+        }
+        try {
+            return { role: null, ...JSON.parse(textDecoder.decode(bytes)) };
+        } catch {
+            return { role: null };
+        }
+    }
+
+    joinSession(code) {
+        this.startSession(SIDE.JOIN, code);
+    }
+
+    shareSession() {
+        this.startSession(SIDE.SHARE);
+    }
+
+    stopSession() {
+        if (this.embedded) {
+            this.embedded.stop();
+        } else {
+            this.sendToTool(Uint8Array.of(MSG.SESSION_STOP));
+        }
+    }
+
+    /** Starts a session inside the configurator, unless one is running here or in the tool. */
+    startSession(role, code) {
+        if (!REMOTE_SUPPORT_AVAILABLE || this.embedded || this.session.role !== null) {
+            return;
+        }
+        if (role === SIDE.SHARE && !canShareDevices()) {
+            return;
+        }
+        let lastStatus = { sessionId: null, peerConnected: false, code: null };
+        let device = null;
+        const report = () => {
+            this.applyStatus(lastStatus.sessionId !== null, lastStatus.peerConnected, {
+                role,
+                code: lastStatus.code,
+                device,
+                message: null,
+                error: false,
+            });
+        };
+        const session = new RemoteSession({
+            relayUrl: config.get('remoteSupportRelayUrl') || DEFAULT_RELAY_URL,
+            role,
+            code,
+            onStatus: (status) => {
+                lastStatus = status;
+                report();
+            },
+            onMessage: (message) => {
+                if (message[0] === MSG.VIEW_DATA || message[0] === MSG.VIEW_REQUEST) {
+                    this.onView?.(message[0], message.subarray(1));
+                } else if (host) {
+                    host.handle(message);
+                } else {
+                    this.handleMessage(message);
+                }
+            },
+            onPeerJoined: () => host?.peerJoined(),
+        });
+        // Sharing: this computer's serial ports and DFU devices, for the supporter.
+        const hostOptions = {
+            send: (message) => session.send(message),
+            onDevice: (name) => {
+                device = name;
+                report();
+            },
+            dfuFilters: this.dfuFilters,
+        };
+        let host = null;
+        if (role === SIDE.SHARE) {
+            host = __BACKEND__ === 'web' ? new WebRemoteDeviceHost(hostOptions) : new RemoteDeviceHost(hostOptions);
+        }
+        host?.start();
+
+        this.embedded = session;
+        this.applyStatus(false, false, { role, code: null, device: null, message: null, error: false });
+        this.embeddedDone = session.run().then(async ({ message, error }) => {
+            // Make the board safe and let go of it before saying the session is over.
+            await host?.shutdown();
+            this.embedded = null;
+            this.applyStatus(false, false, { role: null, code: null, device: null, message, error });
+        });
+    }
+
+    /**
+     * Ends a session running in the configurator and waits until it is over
+     * (and a shared board has been made safe), e.g. before the app closes.
+     */
+    shutdown() {
+        this.embedded?.stop();
+        return this.embeddedDone;
+    }
+
+    /** Sends a screen mirroring message (`type` is VIEW_DATA or VIEW_REQUEST). */
+    sendView(type, bytes) {
+        this.send(concat(Uint8Array.of(type), bytes));
     }
 
     resolve(req, result) {

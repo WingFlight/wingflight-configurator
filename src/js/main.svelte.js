@@ -62,6 +62,9 @@ import "@/css/select2_custom.css";
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
+import RemoteSupportOverlay from "@/components/RemoteSupportOverlay.svelte";
+import { REMOTE_SUPPORT_AVAILABLE } from "@/js/protocols/RemoteSupport.js";
+import { remote } from "@/js/protocols/RemoteView.svelte.js";
 
 // FirmwareCache/release_checker/FirmwareFlasher all persist via
 // chrome.storage.local unconditionally, which only exists under the
@@ -145,6 +148,19 @@ export function mountComponents() {
   mount(StatusBar, { target: document.querySelector("#status-bar") });
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
+
+  // What a remote support session shows on every tab. The menu entry of
+  // the Remote Support tab stays lit while a session runs.
+  if (REMOTE_SUPPORT_AVAILABLE) {
+    mount(RemoteSupportOverlay, { target: document.body });
+    $effect.root(() => {
+      $effect(() => {
+        document
+          .querySelector("#tabs li.tab_remote_support a")
+          ?.classList.toggle("remote-support-active", remote.role !== null);
+      });
+    });
+  }
 }
 
 if (__BACKEND__ === "cordova") {

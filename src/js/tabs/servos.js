@@ -1,6 +1,7 @@
 import { mount, unmount } from "svelte";
 
 import Servos from "@/tabs/servos/Servos.svelte";
+import { releaseOverrides } from "@/js/msp/release_overrides.js";
 
 const tab = {
     tabName: "servos",
@@ -23,7 +24,9 @@ const tab = {
             unmount(this.svelteComponent);
             this.svelteComponent = null;
         }
-        callback?.();
+        // The servo overrides set here have no timeout: release them, or the
+        // servos stay where the tab left them and arming stays blocked.
+        releaseOverrides().finally(() => callback?.());
     },
 
     save(callback) {

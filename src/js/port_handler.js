@@ -36,7 +36,7 @@ PortHandler.initialize = function (showAllPorts) {
     this.showingAllPorts = showAllPorts;
 
     // Start looking for the remote support tool (nwjs only, no-op elsewhere).
-    RemoteSupport.start();
+    RemoteSupport.start({ dfuFilters: usbDevices.filters });
 
     // fill dropdown with version numbers
     generateVirtualApiVersions();
@@ -160,6 +160,12 @@ PortHandler.check_usb_devices = function (callback) {
 PortHandler.check_web_usb_devices = async function (callback) {
     const self = this;
 
+    // As in check_usb_devices(): an explicit check can't make do with the
+    // remote device list the pilot last pushed.
+    if (callback && RemoteSupport.available) {
+        await RemoteSupport.refreshDevices().catch(() => {});
+    }
+
     let matched = [];
     if ('usb' in navigator) {
         try {
@@ -172,7 +178,8 @@ PortHandler.check_web_usb_devices = async function (callback) {
         }
     }
 
-    self.dfu_available = matched.length > 0;
+    // STM32DFU.connect() prefers a remote DFU device over a local one.
+    self.dfu_available = matched.length > 0 || RemoteSupport.findDfuDevice(usbDevices.filters) !== null;
     self.finishUsbDeviceCheck(callback);
 };
 
@@ -289,13 +296,24 @@ PortHandler.detectPort = function(currentPorts) {
         }
 
         // Neither auto-connect nor a reappearing port may reconnect while the
-        // flasher owns the port.
-        const flasherOwns = flasherOwnsPort();
+        // flasher owns the port, or while remote support shares the board.
+        const flasherOwns = flasherOwnsPort() || RemoteSupport.session.role === 'share';
+
+        // While joined to a remote support session, only the pilot's board is
+        // worked on: a board plugged in here must not take over by itself.
+        const joined = RemoteSupport.session.role === 'join';
+        const newRemotePort = newPorts.find(p => p.path.startsWith(REMOTE_PORT_PREFIX));
+        if (joined && newRemotePort) {
+            self.portPickerElement.val(newRemotePort.path);
+        }
+        const localOnlyWhileJoined = joined && !newRemotePort;
 
         // auto-connect if enabled - improved logic for reconnection after device reboot
-        const shouldAutoConnect = GUI.auto_connect && !GUI.connecting_to && !GUI.connected_to && !flasherOwns;
+        const shouldAutoConnect = GUI.auto_connect && !GUI.connecting_to && !GUI.connected_to && !flasherOwns
+            && !localOnlyWhileJoined;
         const isLastConnectedPortReappearing = self.lastConnectedPort && !flasherOwns
-            && newPorts.some(p => p.path === self.lastConnectedPort);
+            && newPorts.some(p => p.path === self.lastConnectedPort)
+            && (!joined || self.lastConnectedPort.startsWith(REMOTE_PORT_PREFIX));
         
         if (shouldAutoConnect || isLastConnectedPortReappearing) {
             // Clear the tracked port since we're attempting to reconnect

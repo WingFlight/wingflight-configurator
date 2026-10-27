@@ -4,6 +4,7 @@ import * as config from "@/js/config.js";
 import { portUsage } from "@/js/port_usage.svelte.js";
 import { applyVirtualConfig } from "@/js/virtual_fc.js";
 import { isTabInUserLevel } from "@/js/user_level.js";
+import { releaseOverrides } from "@/js/msp/release_overrides.js";
 
 // Same getDevices()-first-else-requestDevice() fallback stm32usbdfu.js's
 // connectWebUsb uses at flash time, run here purely to grant/refresh WebUSB
@@ -273,7 +274,14 @@ export async function handleConnectClick({ openLanding = true } = {}) {
                     GUI.interval_kill_all();
                     GUI.tab_switch_in_progress = false;
 
-                    await callbackOrTimeout((done) => globalThis.mspHelper.setArmingEnabled(true, done), 1000);
+                    // Whatever the tab left behind: stop the motors and
+                    // release every override before letting go of the FC.
+                    await releaseOverrides();
+                    // No mspHelper yet if the connection never got that far.
+                    await callbackOrTimeout(
+                        (done) => (globalThis.mspHelper ? globalThis.mspHelper.setArmingEnabled(true, done) : done()),
+                        1000,
+                    );
 
                     // Wait for the port to actually finish closing before letting the
                     // caller (e.g. the firmware flasher tab switch) proceed -- finishClose()

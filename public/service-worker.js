@@ -87,6 +87,27 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Translations keep their file names from build to build. On the first
+  // load after a deploy the previous build's worker is still in charge: it
+  // fetches the page (and so the new code) fresh, but would answer these
+  // from its own cache, leaving every new string showing as its key until
+  // the next reload. So ask the server first, like for the page, and fall
+  // back to the cache offline.
+  if (requestUrl.pathname.includes("/locales/")) {
+    event.respondWith(
+      fetchFresh(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseCopy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, responseCopy));
+          }
+          return response;
+        })
+        .catch(() => matchOwn(request)),
+    );
+    return;
+  }
+
   event.respondWith(
     matchOwn(request).then((cached) => {
       if (cached) {
