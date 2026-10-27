@@ -1182,10 +1182,10 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
             // erase
                 // find out which pages to erase
                 var erase_pages = [];
-                // The Wingflight loader has no mass erase and erases 64 KB
-                // blocks only, so "erase chip" means the blocks this hex
-                // touches there, plus a request to wipe the firmware's config.
-                const erase_all = self.options.erase_chip && !self.isLoaderLayout;
+                // The Wingflight loader has no mass erase, so "erase chip"
+                // erases all of its 64 KB blocks, plus a request that wipes
+                // the rest of the board's flash (see below).
+                const erase_all = self.options.erase_chip;
                 for (let i = 0; i < self.flash_layout.sectors.length; i++) {
                     for (var j = 0; j < self.flash_layout.sectors[i].num_pages; j++) {
                         if (erase_all) {
@@ -1212,8 +1212,8 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                   }
                 }
 
-                // The firmware's config is on another flash than the one the loader exposes. An erase
-                // just past the end of the exposed flash asks the firmware to wipe it at its next start.
+                // An erase just past the end of the exposed flash makes the loader erase the block after
+                // it, and asks the firmware to wipe its config and blackbox flash at its next start.
                 // Sent first, so a loader that rejects it fails before any firmware page is erased.
                 if (self.options.erase_chip && self.isLoaderLayout && erase_pages.length > 0) {
                     erase_pages.unshift({'address': self.flash_layout.start_address + self.flash_layout.total_size});
@@ -1531,6 +1531,11 @@ STM32DFU_protocol.prototype.waitForNextStage = function () {
     self.hex = self.pendingHex;
     self.pendingHex = null;
     self.stage++;
+    // The ROM DFU wrote a new loader, so whatever ran before (e.g. ArduPilot)
+    // may have left data behind on the external flashes: always wipe them.
+    if (!self.options.exitDfu) {
+        self.options.erase_chip = true;
+    }
     self.verify_hex = [];
     self._webUsbConfigDescriptor = null;
     self._webUsbLangId = undefined;
