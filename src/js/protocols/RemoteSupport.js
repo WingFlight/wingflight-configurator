@@ -1,35 +1,57 @@
 import * as config from '@/js/config.js';
 import { SIDE } from '@/js/protocols/RemoteCrypto.js';
 import { RemoteDeviceHost, releaseAbandonedSerialConnections } from '@/js/protocols/RemoteDeviceHost.js';
+import { WebRemoteDeviceHost } from '@/js/protocols/WebRemoteDeviceHost.js';
 import { RemoteSession } from '@/js/protocols/RemoteSession.js';
+import { getSerialProvider } from '@/js/protocols/WebSerial.js';
 
 /*
-    Client for the Wingflight remote support tool
-    (https://github.com/WingFlight/wingflight-remote-support). The supporter
-    runs the tool in "join" mode next to the
-    configurator; the tool listens on UDP 127.0.0.1:5763 and tunnels to the
-    computer the flight controller is plugged into. This module makes that
-    remote computer's serial ports and DFU devices usable like local ones:
+    Remote support: a supporter works on the flight controller plugged into
+    the pilot's computer, from their own configurator, through the relay
+    (wss://remote.wingflight.org). This module makes the pilot's serial ports
+    and DFU devices usable like local ones on the supporter's side:
 
     - serial.js connects to ports whose path starts with REMOTE_PORT_PREFIX
       through openSerial()/writeSerial()/closeSerial().
     - stm32usbdfu.js drives remote DFU devices through RemoteUsbDevice, which
       implements the part of the WebUSB USBDevice interface it uses.
 
-    Sessions started from the remote support dialog run inside the
-    configurator (RemoteSession.js), so no separate program is needed. The
-    client still talks to a running tool over UDP: a session started in the
-    tool works as before, and the dialog shows it. Either way the messages
-    are the same; only the transport differs. The client also carries the
-    screen mirroring messages used by RemoteView.js.
+    Sessions started from the remote support panel run inside the
+    configurator (RemoteSession.js), in the desktop app and in the browser.
+    The pilot's side is a device host: RemoteDeviceHost.js (chrome.serial and
+    chrome.usb) in the desktop app, WebRemoteDeviceHost.js (Web Serial and
+    WebUSB) in the browser. Joining needs no device access, so a supporter
+    can use any browser; sharing needs Web Serial or WebUSB, which Chrome and
+    Edge have and Firefox and Safari don't (see canShareDevices()).
+
+    The desktop app also still talks to the separate remote support tool
+    (https://github.com/WingFlight/wingflight-remote-support) over UDP
+    127.0.0.1:5763: a session started in the tool works as before, and the
+    panel shows it. Either way the messages are the same; only the transport
+    differs. The client also carries the screen mirroring messages used by
+    RemoteView.svelte.js.
 
     The wire format is described in PROTOCOL.md in the tool's repository. The
-    tool encrypts everything it forwards end to end; this local UDP leg is
-    plain. Only the nwjs backend has chrome.sockets.udp, so this is inert in
-    the web and cordova builds.
+    session encrypts everything it forwards end to end; the local UDP leg is
+    plain. Only the nwjs backend has chrome.sockets.udp, so that part is
+    inert in the browser.
 */
 
 export const REMOTE_PORT_PREFIX = 'remote:';
+
+// Where remote support runs: the desktop app and the browser.
+export const REMOTE_SUPPORT_AVAILABLE = __BACKEND__ === 'nwjs' || __BACKEND__ === 'web';
+
+/**
+ * Whether this configurator can share a flight controller: the desktop app
+ * always can; a browser needs Web Serial or WebUSB.
+ */
+export function canShareDevices() {
+    if (__BACKEND__ === 'nwjs') {
+        return true;
+    }
+    return __BACKEND__ === 'web' && getSerialProvider() !== null;
+}
 export const VIEW_DATA = 0x50;
 export const VIEW_REQUEST = 0x51;
 
@@ -441,10 +463,10 @@ class RemoteSupportClient {
 
     /** Starts a session inside the configurator, unless one is running here or in the tool. */
     startSession(role, code) {
-        // Remote support is a desktop feature: only there can the pilot's
-        // side reach the flight controller, and only the desktop app is
-        // installed and run by the person themselves.
-        if (__BACKEND__ !== 'nwjs' || this.embedded || this.session.role !== null) {
+        if (!REMOTE_SUPPORT_AVAILABLE || this.embedded || this.session.role !== null) {
+            return;
+        }
+        if (role === SIDE.SHARE && !canShareDevices()) {
             return;
         }
         let lastStatus = { sessionId: null, peerConnected: false, code: null };
@@ -478,16 +500,18 @@ class RemoteSupportClient {
             onPeerJoined: () => host?.peerJoined(),
         });
         // Sharing: this computer's serial ports and DFU devices, for the supporter.
-        const host = role === SIDE.SHARE
-            ? new RemoteDeviceHost({
-                send: (message) => session.send(message),
-                onDevice: (name) => {
-                    device = name;
-                    report();
-                },
-                dfuFilters: this.dfuFilters,
-            })
-            : null;
+        const hostOptions = {
+            send: (message) => session.send(message),
+            onDevice: (name) => {
+                device = name;
+                report();
+            },
+            dfuFilters: this.dfuFilters,
+        };
+        let host = null;
+        if (role === SIDE.SHARE) {
+            host = __BACKEND__ === 'web' ? new WebRemoteDeviceHost(hostOptions) : new RemoteDeviceHost(hostOptions);
+        }
         host?.start();
 
         this.embedded = session;

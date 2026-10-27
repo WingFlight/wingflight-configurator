@@ -4,6 +4,8 @@
 
   import { i18n } from "@/js/i18n.js";
   import { serial } from "@/js/serial.js";
+  import { usbDevices } from "@/js/port_handler.js";
+  import { canShareDevices } from "@/js/protocols/RemoteSupport.js";
   import {
     remote,
     startSession,
@@ -14,12 +16,11 @@
     setPanelOpener,
   } from "@/js/protocols/RemoteView.svelte.js";
 
-  // The remote support panel (desktop configurator only): start or end a
-  // session. It doesn't block the configurator: the supporter works with it
-  // open. While sharing, the pilot's window shows the supporter's screen
-  // instead of their own configurator, which lets go of the flight
-  // controller so the supporter can use it. See RemoteSupport.js and
-  // RemoteView.svelte.js.
+  // The remote support panel: start or end a session. It doesn't block the
+  // configurator: the supporter works with it open. While sharing, the
+  // pilot's window shows the supporter's screen instead of their own
+  // configurator, which lets go of the flight controller so the supporter
+  // can use it. See RemoteSupport.js and RemoteView.svelte.js.
   let dialogEl;
   let viewerEl = $state();
   let viewerOpen = $state(false);
@@ -27,6 +28,11 @@
   // Both sides confirm the safety notes before a session can start.
   let shareAcknowledged = $state(false);
   let joinAcknowledged = $state(false);
+
+  // In the browser, sharing needs Web Serial or WebUSB; joining doesn't.
+  const isWeb = __BACKEND__ === "web";
+  const canShare = canShareDevices();
+  const hasWebUsb = isWeb && "usb" in navigator;
 
   // Fixed positioning is relative to the nearest transformed ancestor, and
   // #content carries a (no-op) transform, so live under <body> instead.
@@ -65,9 +71,58 @@
     }
   });
 
+  if (isWeb) {
+    // Leaving the page would drop a shared board without its stop sequence,
+    // so warn first; if they leave anyway, end the session as best we can.
+    window.addEventListener("beforeunload", (event) => {
+      if (remote.role !== null) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    });
+    window.addEventListener("pagehide", () => {
+      if (remote.role !== null) {
+        stopSession();
+      }
+    });
+  }
+
   function join() {
     if (joinAcknowledged) {
       startSession(joinCode);
+    }
+  }
+
+  async function share() {
+    if (!shareAcknowledged) {
+      return;
+    }
+    if (isWeb) {
+      // The browser only hands out ports the pilot has allowed. Ask for
+      // one now if none is, while the click still counts as a gesture.
+      await allowPort({ onlyIfNone: true });
+    }
+    startSharing();
+  }
+
+  /** Lets the pilot grant the browser access to a serial port. */
+  async function allowPort({ onlyIfNone = false } = {}) {
+    try {
+      if (onlyIfNone && (await serial.loadWebSerialPorts()).length) {
+        return;
+      }
+      await serial.requestWebSerialPort();
+    } catch (err) {
+      console.warn("Remote support: no port allowed", err);
+    }
+  }
+
+  /** Lets the pilot grant the browser access to a board in bootloader (DFU) mode. */
+  async function allowDfu() {
+    try {
+      await navigator.usb.requestDevice({ filters: usbDevices.filters });
+    } catch (err) {
+      console.warn("Remote support: no DFU device allowed", err);
     }
   }
 
@@ -150,24 +205,27 @@
       {/if}
       <section>
         <h4>{$i18n.t("remoteSupportShareTitle")}</h4>
-        <p>{$i18n.t("remoteSupportShareHint")}</p>
-        <div class="safety">
-          <p>
-            <span class="fas fa-exclamation-triangle"></span>
-            {$i18n.t("remoteSupportSafetyPilot")}
-          </p>
-          <label>
-            <input type="checkbox" bind:checked={shareAcknowledged} />
-            {$i18n.t("remoteSupportSafetyAck")}
-          </label>
-        </div>
-        <button
-          class="btn"
-          disabled={!shareAcknowledged}
-          onclick={startSharing}
-        >
-          {$i18n.t("remoteSupportShare")}
-        </button>
+        {#if canShare}
+          <p>{$i18n.t("remoteSupportShareHint")}</p>
+          {#if isWeb}
+            <p>{$i18n.t("remoteSupportWebShareHint")}</p>
+          {/if}
+          <div class="safety">
+            <p>
+              <span class="fas fa-exclamation-triangle"></span>
+              {$i18n.t("remoteSupportSafetyPilot")}
+            </p>
+            <label>
+              <input type="checkbox" bind:checked={shareAcknowledged} />
+              {$i18n.t("remoteSupportSafetyAck")}
+            </label>
+          </div>
+          <button class="btn" disabled={!shareAcknowledged} onclick={share}>
+            {$i18n.t("remoteSupportShare")}
+          </button>
+        {:else}
+          <p class="note">{$i18n.t("remoteSupportShareUnsupported")}</p>
+        {/if}
       </section>
       <section>
         <h4>{$i18n.t("remoteSupportJoinTitle")}</h4>
@@ -259,6 +317,17 @@
         <span class="fas fa-exclamation-triangle"></span>
         {$i18n.t("remoteSupportSafetyReminderPilot")}
       </span>
+      {#if isWeb}
+        <!-- The supporter only sees what the browser was allowed to share. -->
+        <button class="btn" onclick={() => allowPort()}>
+          {$i18n.t("remoteSupportAllowPort")}
+        </button>
+        {#if hasWebUsb}
+          <button class="btn" onclick={allowDfu}>
+            {$i18n.t("remoteSupportAllowDfu")}
+          </button>
+        {/if}
+      {/if}
       <button class="btn danger" onclick={kill}>
         {$i18n.t("remoteSupportKill")}
       </button>

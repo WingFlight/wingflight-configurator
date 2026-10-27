@@ -10157,5 +10157,21 @@
     },
     "remoteSupportKill": {
         "message": "Kill connection"
+    },
+    "remoteSupportShareUnsupported": {
+        "message": "Sharing a flight controller needs a browser that can reach it, such as Chrome or Edge, or the desktop configurator. You can still join a session to help someone.",
+        "description": "Shown in place of the share section in browsers without Web Serial or WebUSB"
+    },
+    "remoteSupportWebShareHint": {
+        "message": "The browser asks which port to share. The supporter can only use ports and devices you have allowed; you can allow more during the session.",
+        "description": "Extra note for pilots sharing from the web configurator"
+    },
+    "remoteSupportAllowPort": {
+        "message": "Allow a port...",
+        "description": "Button for the pilot to grant the browser access to another serial port during a session"
+    },
+    "remoteSupportAllowDfu": {
+        "message": "Allow a DFU device...",
+        "description": "Button for the pilot to grant the browser access to a board in bootloader mode during a session"
     }
 }

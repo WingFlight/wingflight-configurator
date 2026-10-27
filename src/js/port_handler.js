@@ -160,6 +160,12 @@ PortHandler.check_usb_devices = function (callback) {
 PortHandler.check_web_usb_devices = async function (callback) {
     const self = this;
 
+    // As in check_usb_devices(): an explicit check can't make do with the
+    // remote device list the pilot last pushed.
+    if (callback && RemoteSupport.available) {
+        await RemoteSupport.refreshDevices().catch(() => {});
+    }
+
     let matched = [];
     if ('usb' in navigator) {
         try {
@@ -172,7 +178,8 @@ PortHandler.check_web_usb_devices = async function (callback) {
         }
     }
 
-    self.dfu_available = matched.length > 0;
+    // STM32DFU.connect() prefers a remote DFU device over a local one.
+    self.dfu_available = matched.length > 0 || RemoteSupport.findDfuDevice(usbDevices.filters) !== null;
     self.finishUsbDeviceCheck(callback);
 };
 

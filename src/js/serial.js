@@ -428,7 +428,11 @@ export const serial = {
 
             Promise.all([serialPorts, bluetoothPorts])
                 .then(([sPorts, btPorts]) =>
-                    callback([...sPorts, ...btPorts].map((p) => ({ path: p.path, displayName: p.displayName }))),
+                    callback([
+                        ...[...sPorts, ...btPorts].map((p) => ({ path: p.path, displayName: p.displayName })),
+                        // The pilot's ports, while joined to a remote support session.
+                        ...RemoteSupport.getSerialPorts(),
+                    ]),
                 )
                 .catch(() => callback([]));
             return;

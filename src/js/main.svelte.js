@@ -63,6 +63,7 @@ import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
 import RemoteSupportDialog from "@/components/RemoteSupportDialog.svelte";
+import { REMOTE_SUPPORT_AVAILABLE } from "@/js/protocols/RemoteSupport.js";
 import { remote } from "@/js/protocols/RemoteView.svelte.js";
 
 // FirmwareCache/release_checker/FirmwareFlasher all persist via
@@ -148,9 +149,9 @@ export function mountComponents() {
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
 
-  // Remote support (desktop only) is opened from the left menu. The menu
-  // entry stays lit while a session runs.
-  if (__BACKEND__ === "nwjs") {
+  // Remote support is opened from the left menu. The menu entry stays lit
+  // while a session runs.
+  if (REMOTE_SUPPORT_AVAILABLE) {
     mount(RemoteSupportDialog, { target: document.body });
     $effect.root(() => {
       $effect(() => {

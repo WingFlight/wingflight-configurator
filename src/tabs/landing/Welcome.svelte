@@ -2,9 +2,7 @@
   import { i18n } from "@/js/i18n.js";
   import { i18n as legacyI18n } from "@/js/localization.js";
   import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
-
-  // Only the desktop configurator can reach the remote support tool.
-  const remoteSupportSupported = __BACKEND__ === "nwjs";
+  import { REMOTE_SUPPORT_AVAILABLE as remoteSupportSupported } from "@/js/protocols/RemoteSupport.js";
 
   let selectedLanguage = $state(legacyI18n.selectedLanguage);
   const languages = legacyI18n.getLanguagesAvailables();

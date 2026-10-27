@@ -7,9 +7,7 @@
   import { getTabHelpURL } from "@/js/help";
   import { have_sensor, reinitialiseConnection } from "@/js/serial_backend.js";
   import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
-
-  // Only the desktop configurator can reach the remote support tool.
-  const remoteSupportSupported = __BACKEND__ === "nwjs";
+  import { REMOTE_SUPPORT_AVAILABLE as remoteSupportSupported } from "@/js/protocols/RemoteSupport.js";
 
   import Page from "@/components/Page.svelte";
 

@@ -6,7 +6,7 @@ import { FC } from "@/js/fc.svelte.js";
 import { i18n } from "@/js/localization.js";
 import { handleConnectClick } from "@/js/serial_backend.js";
 import { releaseOverrides, waitUntilQuiet } from "@/js/msp/release_overrides.js";
-import { RemoteSupport } from "@/js/protocols/RemoteSupport.js";
+import { REMOTE_SUPPORT_AVAILABLE, RemoteSupport } from "@/js/protocols/RemoteSupport.js";
 import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
 import { mountComponents } from "@/js/main.svelte.js";
 import { homeTab, isTabInUserLevel, loadUserLevel, setUserLevel } from "@/js/user_level.js";
@@ -168,9 +168,9 @@ export function startProcess() {
 
     const ui_tabs = $('#tabs > ul');
 
-    // Remote support opens a panel, not a tab, and only the desktop app has it.
+    // Remote support opens a panel, not a tab.
     const remoteSupportItem = $('#tabs li.remote-support-menu');
-    if (__BACKEND__ === 'nwjs') {
+    if (REMOTE_SUPPORT_AVAILABLE) {
         $('a', remoteSupportItem).on('click', (e) => {
             e.preventDefault();
             openRemoteSupport(e.currentTarget);
