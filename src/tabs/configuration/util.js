@@ -1,3 +1,6 @@
+import semver from "semver";
+
+import { API_VERSION_22_15 } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 
 export const UART_NAMES = {
@@ -130,9 +133,12 @@ export function showGpsTab(ports, provider) {
   return hasPort(ports, ANY_GPS_PORT_MASK) || isGpsActive(ports, provider);
 }
 
-// Older firmware still runs GPS only with the GPS feature bit set. Newer
-// firmware ignores the bit, so keep it in line with the setup before saving.
+// Before API 22.15 the firmware runs GPS only with the GPS feature bit set.
+// Keep the bit in line with the setup before saving. 22.15+ has no bit.
 export function syncLegacyGpsFeature() {
+  if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_15)) {
+    return;
+  }
   FC.FEATURE_CONFIG.features.setFeature(
     "GPS",
     isGpsActive(FC.SERIAL_CONFIG.ports, FC.GPS_CONFIG.provider),

@@ -3,8 +3,8 @@ export class Features {
     RX_PPM: 0,
     RX_SERIAL: 3,
     SOFTSERIAL: 6,
-    // Retired in firmware: GPS follows the serial ports. Still set on save
-    // for older firmware, see Configuration.svelte.
+    // Retired in API 22.15: GPS follows the serial ports. Still set on save
+    // for older firmware, see syncLegacyGpsFeature().
     GPS: 7,
     TELEMETRY: 10,
     RX_PARALLEL_PWM: 13,
