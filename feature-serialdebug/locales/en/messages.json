@@ -5084,6 +5084,36 @@
     "gpsDiagHintOk": {
         "message": "Receiving valid GPS data."
     },
+    "gpsDiagBadgeNoPort": {
+        "message": "No GPS port"
+    },
+    "gpsDiagBadgeNoPins": {
+        "message": "No pins"
+    },
+    "gpsDiagBadgePinConflict": {
+        "message": "Pin conflict"
+    },
+    "gpsDiagBadgeInactive": {
+        "message": "Not running"
+    },
+    "gpsDiagBadgeOtherPort": {
+        "message": "Other port"
+    },
+    "gpsDiagBadgeNotOpen": {
+        "message": "Port closed"
+    },
+    "gpsDiagBadgeNoBytes": {
+        "message": "No data"
+    },
+    "gpsDiagBadgeNoPackets": {
+        "message": "Bad data"
+    },
+    "gpsDiagBadgeQuiet": {
+        "message": "Gone quiet"
+    },
+    "gpsDiagBadgeOk": {
+        "message": "Receiving"
+    },
     "gpsSignalStrHead": {
         "message": "Signal Strength"
     },
