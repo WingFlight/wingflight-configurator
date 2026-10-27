@@ -1,8 +1,4 @@
 {
   "branch": "feature/gps-port-needs-feature",
-  "date": "2026-10-27T08:41:50Z",
-  "number": 206,
-  "title": "Only allow GPS on a serial port when the GPS feature is enabled",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/206",
-  "draft": false
+  "date": "2026-10-27T08:41:50Z"
 }
