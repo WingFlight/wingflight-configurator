@@ -161,13 +161,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-aegis-lite",
-      "path": "./feature-aegis-lite/",
-      "branch": "feature/aegis-lite",
-      "date": "2026-10-27T08:49:23Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
