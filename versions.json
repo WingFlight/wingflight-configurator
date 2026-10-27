@@ -164,7 +164,7 @@
       "name": "feature-aegis-lite",
       "path": "./feature-aegis-lite/",
       "branch": "feature/aegis-lite",
-      "date": "2026-10-27T08:36:45Z",
+      "date": "2026-10-27T08:49:23Z",
       "number": 204,
       "title": "Wipe the config on erase chip with the Wingflight loader",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/204",
