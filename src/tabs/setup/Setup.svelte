@@ -6,6 +6,10 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { have_sensor, reinitialiseConnection } from "@/js/serial_backend.js";
+  import { openPanel as openRemoteSupport } from "@/js/protocols/RemoteView.svelte.js";
+
+  // Only the desktop configurator can reach the remote support tool.
+  const remoteSupportSupported = __BACKEND__ === "nwjs";
 
   import Page from "@/components/Page.svelte";
 
@@ -226,6 +230,19 @@
       {@html $i18n.t("initialSetupButtonRebootText")}
     </div>
   </div>
+
+  {#if remoteSupportSupported}
+    <div class="row">
+      <div class="action">
+        <button class="btn" onclick={(e) => openRemoteSupport(e.currentTarget)}>
+          {$i18n.t("initialSetupButtonRemoteSupport")}
+        </button>
+      </div>
+      <div class="description">
+        {$i18n.t("initialSetupRemoteSupportText")}
+      </div>
+    </div>
+  {/if}
 </Page>
 
 <dialog bind:this={resetDialogEl}>

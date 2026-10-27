@@ -98,6 +98,19 @@ export function stopSession() {
     RemoteSupport.stopSession();
 }
 
+// The remote support panel registers how to show itself, so other places
+// (the Maintenance tab) can open it.
+let showPanel = null;
+
+export function setPanelOpener(fn) {
+    showPanel = fn;
+}
+
+/** Shows the panel next to `anchor`, the element that asked for it. */
+export function openPanel(anchor) {
+    showPanel?.(anchor);
+}
+
 // ---- supporter: record and send -------------------------------------------
 
 let stopRecord = null;

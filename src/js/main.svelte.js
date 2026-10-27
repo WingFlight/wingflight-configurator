@@ -62,6 +62,8 @@ import "@/css/select2_custom.css";
 import BatteryLegend from "@/components/BatteryLegend.svelte";
 import Logo from "@/components/Logo.svelte";
 import StatusBar from "@/components/StatusBar.svelte";
+import RemoteSupportDialog from "@/components/RemoteSupportDialog.svelte";
+import { remote } from "@/js/protocols/RemoteView.svelte.js";
 
 // FirmwareCache/release_checker/FirmwareFlasher all persist via
 // chrome.storage.local unconditionally, which only exists under the
@@ -145,6 +147,19 @@ export function mountComponents() {
   mount(StatusBar, { target: document.querySelector("#status-bar") });
   mount(Logo, { target: document.querySelector("#logo-desktop") });
   mount(Logo, { target: document.querySelector("#logo-mobile") });
+
+  // Remote support (desktop only) is opened from the left menu. The menu
+  // entry stays lit while a session runs.
+  if (__BACKEND__ === "nwjs") {
+    mount(RemoteSupportDialog, { target: document.body });
+    $effect.root(() => {
+      $effect(() => {
+        document
+          .querySelector("#tabs li.remote-support-menu")
+          ?.classList.toggle("remote-support-active", remote.role !== null);
+      });
+    });
+  }
 }
 
 if (__BACKEND__ === "cordova") {

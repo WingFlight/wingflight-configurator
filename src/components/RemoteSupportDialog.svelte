@@ -11,6 +11,7 @@
     stopSession,
     startWatching,
     stopWatching,
+    setPanelOpener,
   } from "@/js/protocols/RemoteView.svelte.js";
 
   // The remote support panel (desktop configurator only): start or end a
@@ -38,14 +39,31 @@
     };
   }
 
-  /** Shows the panel, or hides it if it is already open. */
-  export function open() {
-    if (dialogEl.open) {
-      dialogEl.close();
-    } else {
-      dialogEl.show();
+  // Opens next to the button that asked for it: to its right if the panel
+  // fits there (the left menu), otherwise below it, kept inside the window.
+  // Without a button it stays where it was last shown.
+  function placeNear(anchor) {
+    const gap = 8;
+    const margin = 12;
+    const a = anchor.getBoundingClientRect();
+    const d = dialogEl.getBoundingClientRect();
+    const maxLeft = window.innerWidth - margin - d.width;
+    const maxTop = window.innerHeight - margin - d.height;
+    let left = a.left;
+    let top = a.bottom + gap;
+    if (a.right + gap + d.width <= window.innerWidth - margin) {
+      left = a.right + gap;
+      top = a.top;
     }
+    dialogEl.style.inset = `${Math.max(margin, Math.min(top, maxTop))}px auto auto ${Math.max(margin, Math.min(left, maxLeft))}px`;
   }
+
+  setPanelOpener((anchor) => {
+    dialogEl.show();
+    if (anchor) {
+      placeNear(anchor);
+    }
+  });
 
   function join() {
     if (joinAcknowledged) {
@@ -265,17 +283,21 @@
   // A floating panel above the status bar, not a modal: the configurator
   // stays usable while it is open.
   dialog {
+    // Centred until opened from a button, which moves it next to that
+    // button (see placeNear()).
     position: fixed;
-    inset: auto 12px 32px auto;
+    inset: 0;
     z-index: 9000;
     width: 30em;
     max-width: calc(100vw - 24px);
-    margin: 0;
+    max-height: calc(100vh - 24px);
+    margin: auto;
     padding: 0;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: 0 8px 24px var(--color-shadow);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .head {
