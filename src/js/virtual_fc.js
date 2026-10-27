@@ -424,6 +424,82 @@ function encodeFbusSensors() {
   return Uint8Array.from(buffer);
 }
 
+// MSP2_WING_SERIAL_STATUS: VCP, a serial receiver on UART3 and an NMEA GPS on
+// UART7 that is receiving data. The byte count grows so the live view moves.
+function encodeSerialStatus(requestData) {
+  const t = Date.now();
+  const ports = [
+    { id: 20, mask: 1, rx: 0, tx: 0, flags: 0x01, baud: 0, options: 0x0c },
+    {
+      id: 2,
+      mask: 64,
+      rx: 0x59,
+      tx: 0x58,
+      flags: 0x03,
+      baud: 115200,
+      options: 0x0c,
+    }, // D09 / D08
+    {
+      id: 6,
+      mask: 2,
+      rx: 0x67,
+      tx: 0x68,
+      flags: 0x01,
+      baud: 57600,
+      options: 0x0c,
+    }, // E07 / E08
+    { id: 9, mask: 0, rx: 0x62, tx: 0x63, flags: 0x00, baud: 0, options: 0 }, // E02 / E03
+  ];
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer.push8(ports.length);
+  for (const port of ports) {
+    buffer.push8(port.id);
+    buffer.push32(port.mask);
+    buffer.push8(port.rx);
+    buffer.push8(port.tx);
+    buffer.push8(port.flags);
+    buffer.push32(port.baud);
+    buffer.push8(port.options);
+  }
+  const detailId = requestData?.[0] ?? 0xff;
+  const detail = ports.find((p) => p.id === detailId);
+  if (!detail) {
+    buffer.push8(0xff);
+    return Uint8Array.from(buffer);
+  }
+  buffer.push8(detailId);
+  buffer.push32(115200);
+  buffer.push32(57600);
+  buffer.push32(0);
+  buffer.push32(115200);
+  if (!(detail.mask & 2)) {
+    buffer.push8(0);
+    return Uint8Array.from(buffer);
+  }
+  const sentence = `$GNGGA,${new Date(t).toISOString().slice(11, 19).replaceAll(":", "")}.00,4807.038,N,01131.000,E,1,11,0.9,545.4,M,46.9,M,,*47
+`;
+  const recent = Array.from(sentence.slice(-64), (c) => c.charCodeAt(0));
+  const gps = [];
+  gps.push8(0x1f); // active, configured, fix, is the GPS port, open
+  gps.push8(0); // NMEA
+  gps.push32(57600);
+  gps.push8(5); // RECEIVING_DATA
+  gps.push32(t % 100);
+  gps.push32((Math.floor(t / 1000) % 1000000) * 600);
+  gps.push32((Math.floor(t / 1000) % 1000000) * 10);
+  gps.push32(0);
+  gps.push32(0);
+  gps.push8(11);
+  gps.push8(recent.length);
+  for (const b of recent) gps.push8(b);
+  buffer.push8(1); // one block
+  buffer.push32(2); // FUNCTION_GPS
+  buffer.push8(gps.length);
+  buffer.push(...gps);
+  return Uint8Array.from(buffer);
+}
+
 // MSP2_WING_FBUS_SENSORS_STATUS, for the sensors above: a 6S pack on a
 // FAS-150S and FLVSS, a GPS with a fix and an idling ESC. Values drift a
 // little so the page shows them updating. The XACT servo block reports no data.
@@ -572,6 +648,8 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeFbusSensors());
     case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS:
       return decodeVirtualReply(code, encodeFbusSensorsStatus());
+    case MSPCodes.MSP2_WING_SERIAL_STATUS:
+      return decodeVirtualReply(code, encodeSerialStatus(requestData));
     // The sensors keep answering, so they show again at once with fresh counts
     case MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS:
       virtualFbusClearedAt = Date.now();

@@ -9,6 +9,7 @@
   import { reinitialiseConnection } from "@/js/serial_backend.js";
   import {
     GPS_PROVIDERS,
+    UART_NAMES,
     syncLegacyGpsFeature,
   } from "@/tabs/configuration/util.js";
 
@@ -42,6 +43,109 @@
   let mapEl = $state();
   let online = $state(navigator.onLine);
   let gpsWasFixed = $state(false);
+
+  // Serial diagnostics (MSP2_WING_SERIAL_STATUS), null on firmware without it
+  let diagInterval;
+  let diagSupported = $state(true);
+  const GPS_FUNCTION_MASK = 2;
+  const GPS_STATE_NAMES = [
+    "UNKNOWN",
+    "INITIALIZING",
+    "INITIALIZED",
+    "CHANGE_BAUD",
+    "CONFIGURE",
+    "RECEIVING_DATA",
+    "LOST_COMMUNICATION",
+  ];
+  const GPS_STATE_RECEIVING = 5;
+
+  let gpsPortId = $derived(
+    FC.SERIAL_CONFIG?.ports?.find((p) => p.functionMask & GPS_FUNCTION_MASK)
+      ?.identifier ?? null,
+  );
+  let diagPort = $derived(
+    FC.SERIAL_STATUS?.ports?.find((p) => p.identifier === gpsPortId) ?? null,
+  );
+  let diagGps = $derived(
+    FC.SERIAL_STATUS?.detail?.identifier === gpsPortId
+      ? FC.SERIAL_STATUS.detail.gps
+      : null,
+  );
+  let showDiagnostics = $derived(
+    diagSupported && !pushedDataSelected && FC.SERIAL_STATUS != null,
+  );
+
+  // DEFIO tag: ((gpio + 1) << 4) | pin
+  function pinName(tag) {
+    if (!tag) {
+      return "-";
+    }
+    const port = String.fromCharCode(64 + (tag >> 4));
+    return `${port}${String(tag & 0x0f).padStart(2, "0")}`;
+  }
+
+  function recentBytesText(bytes) {
+    return bytes
+      .map((b) => {
+        if (b === 0x0a) return "\n";
+        if (b === 0x0d) return "";
+        if (b >= 0x20 && b < 0x7f) return String.fromCharCode(b);
+        return `<${b.toString(16).toUpperCase().padStart(2, "0")}>`;
+      })
+      .join("");
+  }
+
+  // Mirrors the hints the CLI's `serialdebug <port>` prints
+  let diagHint = $derived.by(() => {
+    if (gpsPortId == null) {
+      return { level: "bad", key: "gpsDiagHintNoPort" };
+    }
+    if (!diagPort) {
+      return null;
+    }
+    if (diagPort.noPins) {
+      return { level: "bad", key: "gpsDiagHintNoPins" };
+    }
+    if (diagPort.pinConflict) {
+      return { level: "bad", key: "gpsDiagHintPinConflict" };
+    }
+    if (!diagGps) {
+      return null;
+    }
+    if (!diagGps.active) {
+      return { level: "bad", key: "gpsDiagHintInactive" };
+    }
+    if (!diagGps.isGpsPort) {
+      return { level: "bad", key: "gpsDiagHintOtherPort" };
+    }
+    if (!diagGps.portOpen) {
+      return { level: "bad", key: "gpsDiagHintNotOpen" };
+    }
+    if (diagGps.rxBytes === 0) {
+      return { level: "bad", key: "gpsDiagHintNoBytes" };
+    }
+    if (diagGps.packets === 0) {
+      return { level: "warn", key: "gpsDiagHintNoPackets" };
+    }
+    if (diagGps.state !== GPS_STATE_RECEIVING) {
+      return { level: "warn", key: "gpsDiagHintQuiet" };
+    }
+    return { level: "good", key: "gpsDiagHintOk" };
+  });
+
+  async function refreshDiagnostics() {
+    if (!diagSupported) {
+      return;
+    }
+    const response = await MSP.promise(
+      MSPCodes.MSP2_WING_SERIAL_STATUS,
+      gpsPortId == null ? [] : [gpsPortId],
+    );
+    // Firmware without the message answers with nothing
+    if (!response || response.length === 0) {
+      diagSupported = false;
+    }
+  }
 
   function snapshotState() {
     return $state.snapshot({ GPS_CONFIG: FC.GPS_CONFIG });
@@ -196,11 +300,15 @@
     statusInterval = setInterval(() => {
       MSP.promise(MSPCodes.MSP_STATUS);
     }, 250);
+
+    await refreshDiagnostics();
+    diagInterval = setInterval(refreshDiagnostics, 500);
   });
 
   onDestroy(() => {
     clearInterval(pollerInterval);
     clearInterval(statusInterval);
+    clearInterval(diagInterval);
   });
 
   export async function onSave() {
@@ -395,6 +503,69 @@
     {/if}
   </div>
 
+  {#if showDiagnostics}
+    <Section label="gpsDiagHead">
+      <div class="diag">
+        {#if diagHint}
+          <p class="hint {diagHint.level}">{$i18n.t(diagHint.key)}</p>
+        {/if}
+        {#if diagPort}
+          <table class="cf_table">
+            <tbody>
+              <tr>
+                <td>{$i18n.t("gpsDiagPort")}</td>
+                <td>
+                  {UART_NAMES[diagPort.identifier] ?? diagPort.identifier}
+                  (RX {pinName(diagPort.rxPin)}, TX {pinName(diagPort.txPin)})
+                </td>
+              </tr>
+              <tr>
+                <td>{$i18n.t("gpsDiagOpen")}</td>
+                <td>
+                  {#if diagPort.open}
+                    {$i18n.t("gpsDiagOpenYes", { baud: diagPort.baudRate })}
+                  {:else}
+                    {$i18n.t("gpsDiagOpenNo")}
+                  {/if}
+                </td>
+              </tr>
+              {#if diagGps}
+                <tr>
+                  <td>{$i18n.t("gpsDiagState")}</td>
+                  <td>
+                    {GPS_STATE_NAMES[diagGps.state] ?? diagGps.state},
+                    {$i18n.t("gpsDiagLastMessage", {
+                      ms: diagGps.lastMessageAgeMs,
+                    })}
+                  </td>
+                </tr>
+                <tr>
+                  <td>{$i18n.t("gpsDiagCounters")}</td>
+                  <td>
+                    {$i18n.t("gpsDiagCountersValue", {
+                      bytes: diagGps.rxBytes,
+                      packets: diagGps.packets,
+                      errors: diagGps.errors,
+                      timeouts: diagGps.timeouts,
+                    })}
+                  </td>
+                </tr>
+                <tr>
+                  <td>{$i18n.t("gpsDiagRecent")}</td>
+                  <td>
+                    <pre class="recent">{diagGps.recentBytes.length
+                        ? recentBytesText(diagGps.recentBytes)
+                        : $i18n.t("gpsDiagRecentNone")}</pre>
+                  </td>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        {/if}
+      </div>
+    </Section>
+  {/if}
+
   <Section label="gpsMapHead">
     <div class="gps-map">
       <!-- The map frame stays mounted for the component's whole lifetime,
@@ -500,6 +671,34 @@
   progress {
     width: 100%;
     border-radius: var(--radius-xs);
+  }
+
+  .diag .hint {
+    margin: 0 8px 8px;
+    padding: 6px 8px;
+    border-radius: var(--radius-xs);
+    font-size: 0.8rem;
+    color: #fff;
+
+    &.good {
+      background-color: var(--color-status-good);
+    }
+    &.warn {
+      background-color: var(--color-status-warn, #c90);
+    }
+    &.bad {
+      background-color: var(--color-status-bad);
+    }
+  }
+
+  .diag .recent {
+    margin: 0;
+    max-height: 6em;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
   }
 
   .gps-map {

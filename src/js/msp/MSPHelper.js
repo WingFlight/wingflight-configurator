@@ -692,6 +692,80 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            // Serial port diagnostics, like the CLI's serialdebug: every port,
+            // then a detail block for the port asked for, with a sub-block per
+            // function on it that reports state (GPS for now).
+            case MSPCodes.MSP2_WING_SERIAL_STATUS: {
+                data.readU8(); // payload version, unused for now
+                const portCount = data.readU8();
+                const ports = [];
+                for (let i = 0; i < portCount; i++) {
+                    const port = {
+                        identifier: data.readU8(),
+                        functionMask: data.readU32(),
+                        rxPin: data.readU8(), // DEFIO tag: ((gpio + 1) << 4) | pin, 0 = none
+                        txPin: data.readU8(),
+                        flags: data.readU8(),
+                        baudRate: data.readU32(),
+                    };
+                    const options = data.readU8();
+                    port.open = (port.flags & 0x01) !== 0;
+                    port.rxCallback = (port.flags & 0x02) !== 0;
+                    port.txOnly = (port.flags & 0x04) !== 0;
+                    port.pinConflict = (port.flags & 0x08) !== 0;
+                    port.noPins = (port.flags & 0x10) !== 0;
+                    port.inverted = (options & 0x01) !== 0;
+                    port.halfDuplex = (options & 0x02) !== 0;
+                    ports.push(port);
+                }
+                let detail = null;
+                const detailId = data.readU8();
+                if (detailId !== 0xff) {
+                    detail = {
+                        identifier: detailId,
+                        mspBaud: data.readU32(),
+                        gpsBaud: data.readU32(),
+                        telemetryBaud: data.readU32(),
+                        blackboxBaud: data.readU32(),
+                        gps: null,
+                    };
+                    const blockCount = data.readU8();
+                    for (let i = 0; i < blockCount; i++) {
+                        const fn = data.readU32();
+                        const length = data.readU8();
+                        const end = data.offset + length;
+                        if (fn === 2) { // FUNCTION_GPS
+                            const flags = data.readU8();
+                            const gps = {
+                                active: (flags & 0x01) !== 0,
+                                configured: (flags & 0x02) !== 0,
+                                fix: (flags & 0x04) !== 0,
+                                isGpsPort: (flags & 0x08) !== 0,
+                                portOpen: (flags & 0x10) !== 0,
+                                provider: data.readU8(),
+                                baudRate: data.readU32(),
+                                state: data.readU8(),
+                                lastMessageAgeMs: data.readU32(),
+                                rxBytes: data.readU32(),
+                                packets: data.readU32(),
+                                errors: data.readU32(),
+                                timeouts: data.readU32(),
+                                numSat: data.readU8(),
+                                recentBytes: [],
+                            };
+                            const recentCount = data.readU8();
+                            for (let j = 0; j < recentCount; j++) {
+                                gps.recentBytes.push(data.readU8());
+                            }
+                            detail.gps = gps;
+                        }
+                        data.offset = end; // skip blocks this version doesn't know
+                    }
+                }
+                FC.SERIAL_STATUS = { ports, detail };
+                break;
+            }
+
             case MSPCodes.MSP2_WING_FBUS_MASTER_CONFIG: {
                 data.readU8(); // payload version, unused for now
                 const forwardedSensors = [];

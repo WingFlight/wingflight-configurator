@@ -5021,6 +5021,69 @@
     "gpsDistToHome": {
         "message": "Dist to Home:"
     },
+    "gpsDiagHead": {
+        "message": "Diagnostics"
+    },
+    "gpsDiagPort": {
+        "message": "Port"
+    },
+    "gpsDiagOpen": {
+        "message": "Open"
+    },
+    "gpsDiagOpenYes": {
+        "message": "Yes, {{baud}} baud"
+    },
+    "gpsDiagOpenNo": {
+        "message": "No"
+    },
+    "gpsDiagState": {
+        "message": "State"
+    },
+    "gpsDiagLastMessage": {
+        "message": "last valid message {{ms}} ms ago"
+    },
+    "gpsDiagCounters": {
+        "message": "Counters"
+    },
+    "gpsDiagCountersValue": {
+        "message": "{{bytes}} bytes, {{packets}} packets, {{errors}} errors, {{timeouts}} timeouts"
+    },
+    "gpsDiagRecent": {
+        "message": "Last bytes"
+    },
+    "gpsDiagRecentNone": {
+        "message": "(nothing received)"
+    },
+    "gpsDiagHintNoPort": {
+        "message": "No port is set to GPS. Set one on the Configuration tab, then save."
+    },
+    "gpsDiagHintNoPins": {
+        "message": "The GPS port has no pins assigned (see resource SERIAL_RX / SERIAL_TX in the CLI)."
+    },
+    "gpsDiagHintPinConflict": {
+        "message": "A pin of the GPS port is used by something else; see resource show in the CLI."
+    },
+    "gpsDiagHintInactive": {
+        "message": "GPS is not running. The port or protocol changed since boot: save and reboot."
+    },
+    "gpsDiagHintOtherPort": {
+        "message": "GPS is set on more than one port and another one comes first, so this port is not used."
+    },
+    "gpsDiagHintNotOpen": {
+        "message": "The GPS port did not open. Run serialdebug in the CLI."
+    },
+    "gpsDiagHintNoBytes": {
+        "message": "Nothing received from the module. Check its TX goes to the port's RX pin, and its power and ground."
+    },
+    "gpsDiagHintNoPackets": {
+        "message": "Data is arriving but no valid messages: wrong baud rate or protocol. Try Auto Baud, or serialdebug scan in the CLI."
+    },
+    "gpsDiagHintQuiet": {
+        "message": "The module answered before but has gone quiet."
+    },
+    "gpsDiagHintOk": {
+        "message": "Receiving valid GPS data."
+    },
     "gpsSignalStrHead": {
         "message": "Signal Strength"
     },

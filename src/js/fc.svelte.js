@@ -30,6 +30,7 @@ class FlightController {
   FEATURE_CONFIG = $state();
   FILTER_CONFIG = $state();
   FLIGHT_STATS = $state();
+  SERIAL_STATUS = $state();
   GAIN_CURVES = $state();
   GOVERNOR_CONFIG = $state();
   GPS_CONFIG = $state();
@@ -282,6 +283,8 @@ class FlightController {
       esc:                        null,
       servo:                      null,
     };
+    // MSP2_WING_SERIAL_STATUS, null until read or on firmware without it
+    this.SERIAL_STATUS = null;
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
     };
