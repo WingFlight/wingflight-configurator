@@ -10,7 +10,7 @@
 // only ever reads from its own cache.
 
 const CACHE_PREFIX = `wingflight-configurator@${self.registration.scope}@`;
-const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-6980c49e`;
+const CACHE_VERSION = `${CACHE_PREFIX}0.0.0-4891ef9e`;
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -83,6 +83,27 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => matchOwn(request).then((cached) => cached || matchOwn("./index.html"))),
+    );
+    return;
+  }
+
+  // Translations keep their file names from build to build. On the first
+  // load after a deploy the previous build's worker is still in charge: it
+  // fetches the page (and so the new code) fresh, but would answer these
+  // from its own cache, leaving every new string showing as its key until
+  // the next reload. So ask the server first, like for the page, and fall
+  // back to the cache offline.
+  if (requestUrl.pathname.includes("/locales/")) {
+    event.respondWith(
+      fetchFresh(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseCopy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, responseCopy));
+          }
+          return response;
+        })
+        .catch(() => matchOwn(request)),
     );
     return;
   }
