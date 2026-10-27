@@ -59,6 +59,7 @@ export const GuiControl = function () {
         'curves',
         'logic',
         'profiles',
+        'thrust_vector',
         'rates',
         'gyro',
         'receiver',
