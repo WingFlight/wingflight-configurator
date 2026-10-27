@@ -1,3 +1,18 @@
+# 0.0.38
+
+Support the 0.0.38 firmware (MSP API 22.15).
+Add remote support: someone can help you with your flight controller from their own configurator, for settings, the CLI and flashing. Open Remote Support at the bottom of the menu. Share and give them the session code, and watch their screen until the session ends; or join with a pilot's code and connect to their port, listed as "Remote - ...". It works in the desktop and web app; sharing from the web app needs Chrome or Edge. Sessions are end-to-end encrypted, and Kill connection ends them at any time.
+Stop the motors and release every servo and mixer override when the Servos or Mixer tab closes, on Disconnect and when the app closes. Overrides left behind used to hold the servos where the tab left them and block arming.
+Flash and remap the FrSky Aegis Lite: the flasher writes the Wingflight loader and the firmware in two DFU stages and explains when the loader needs updating, erase chip wipes the board's whole flash and config, Remap FC and the Ports tab name its ports (S1-S8, S9 (TLM), C1, C2), and Remap FC shows it as an FrSky board.
+Remove the GPS feature switch: the GPS tab shows whenever a port can carry GPS, and GPS Nav and the GPS speed rows show when the GPS source matches its port. Saving still sets the old feature bit for older firmware.
+Add GPS diagnostics to the GPS tab: port, pins, state, counters and a hint, with a short status badge (0.0.38 firmware).
+Offer only the GPS baud rates the firmware supports (9600 to 115200).
+Show live FBUS/S.Port sensor readings (GPS, current, cells, ESC/RPM, XACT servos) on the FBUS Sensors tab.
+Show the Thrust Vector tab again on Intermediate and Advanced.
+Setup Wizard: offer PWM, DShot150 and DShot300 on the Motor step, with every other protocol under Other. DShot150 is no longer treated as a bidirectional DShot RPM source, and choosing it turns bidirectional DShot off.
+Keep the header sensor icons up to date while connected.
+Fix the web app running the previous build's code, or showing new text as raw keys, right after an update.
+
 # 0.0.37
 
 Support the 0.0.37 firmware (MSP API 22.14). Flashing keeps your settings, except the Thrust Vector profiles, which reset to the new defaults.
