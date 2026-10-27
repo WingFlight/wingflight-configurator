@@ -192,13 +192,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-gps-no-feature",
-      "path": "./feature-gps-no-feature/",
-      "branch": "feature/gps-no-feature",
-      "date": "2026-10-27T13:07:35Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-modes-picker",
       "path": "./feature-modes-picker/"
     },
