@@ -1,8 +1,4 @@
 {
   "branch": "feature/gps-no-feature",
-  "date": "2026-10-27T13:07:35Z",
-  "number": 208,
-  "title": "Remove the GPS feature switch: GPS follows the ports",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/208",
-  "draft": false
+  "date": "2026-10-27T13:07:35Z"
 }
