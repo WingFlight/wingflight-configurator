@@ -28,6 +28,15 @@
   // Both sides confirm the safety notes before a session can start.
   let shareAcknowledged = $state(false);
   let joinAcknowledged = $state(false);
+  // Which role's page is open before a session: null is the choice between
+  // them, which is also where the panel reopens after a session ends.
+  let mode = $state(null);
+
+  $effect(() => {
+    if (remote.role !== null) {
+      mode = null;
+    }
+  });
 
   // In the browser, sharing needs Web Serial or WebUSB; joining doesn't.
   const isWeb = __BACKEND__ === "web";
@@ -199,41 +208,87 @@
   </div>
 
   <div class="body">
-    {#if remote.role === null}
+    {#if remote.role === null && mode === null}
       {#if remote.message}
         <p class="note" class:error={remote.error}>{remote.message}</p>
       {/if}
+      <div class="choices">
+        <button
+          class="choice"
+          disabled={!canShare}
+          onclick={() => (mode = "share")}
+        >
+          <span class="fas fa-plane"></span>
+          <span class="text">
+            <strong>{$i18n.t("remoteSupportShareTitle")}</strong>
+            <span>
+              {canShare
+                ? $i18n.t("remoteSupportShareChoice")
+                : $i18n.t("remoteSupportShareUnsupported")}
+            </span>
+          </span>
+          <span class="fas fa-chevron-right"></span>
+        </button>
+        <button class="choice" onclick={() => (mode = "join")}>
+          <span class="fas fa-headset"></span>
+          <span class="text">
+            <strong>{$i18n.t("remoteSupportJoinTitle")}</strong>
+            <span>{$i18n.t("remoteSupportJoinChoice")}</span>
+          </span>
+          <span class="fas fa-chevron-right"></span>
+        </button>
+      </div>
+    {:else if remote.role === null && mode === "share"}
+      <button class="back" onclick={() => (mode = null)}>
+        <span class="fas fa-chevron-left"></span>
+        {$i18n.t("remoteSupportBack")}
+      </button>
       <section>
         <h4>{$i18n.t("remoteSupportShareTitle")}</h4>
-        {#if canShare}
-          <p>{$i18n.t("remoteSupportShareHint")}</p>
+        <ul class="steps">
+          <li>{$i18n.t("remoteSupportShareStep1")}</li>
+          <li>{$i18n.t("remoteSupportShareStep2")}</li>
           {#if isWeb}
-            <p>{$i18n.t("remoteSupportWebShareHint")}</p>
+            <li>{$i18n.t("remoteSupportWebShareHint")}</li>
           {/if}
-          <div class="safety">
-            <p>
-              <span class="fas fa-exclamation-triangle"></span>
-              {$i18n.t("remoteSupportSafetyPilot")}
-            </p>
-            <label>
-              <input type="checkbox" bind:checked={shareAcknowledged} />
-              {$i18n.t("remoteSupportSafetyAck")}
-            </label>
-          </div>
-          <button class="btn" disabled={!shareAcknowledged} onclick={share}>
-            {$i18n.t("remoteSupportShare")}
-          </button>
-        {:else}
-          <p class="note">{$i18n.t("remoteSupportShareUnsupported")}</p>
-        {/if}
+        </ul>
+        <div class="safety">
+          <h5>
+            <span class="fas fa-exclamation-triangle"></span>
+            {$i18n.t("remoteSupportBeforeShare")}
+          </h5>
+          <ul>
+            <li>{$i18n.t("remoteSupportSafetyPilot1")}</li>
+            <li>{$i18n.t("remoteSupportSafetyPilot2")}</li>
+            <li>{$i18n.t("remoteSupportSafetyPilot3")}</li>
+          </ul>
+          <label>
+            <input type="checkbox" bind:checked={shareAcknowledged} />
+            {$i18n.t("remoteSupportSafetyAck")}
+          </label>
+        </div>
+        <button class="btn" disabled={!shareAcknowledged} onclick={share}>
+          {$i18n.t("remoteSupportShare")}
+        </button>
       </section>
+    {:else if remote.role === null}
+      <button class="back" onclick={() => (mode = null)}>
+        <span class="fas fa-chevron-left"></span>
+        {$i18n.t("remoteSupportBack")}
+      </button>
       <section>
         <h4>{$i18n.t("remoteSupportJoinTitle")}</h4>
         <div class="safety">
-          <p>
+          <h5>
             <span class="fas fa-exclamation-triangle"></span>
-            {$i18n.t("remoteSupportSafetySupporter")}
-          </p>
+            {$i18n.t("remoteSupportBeforeJoin")}
+          </h5>
+          <ul>
+            <li>{$i18n.t("remoteSupportSafetySupporter1")}</li>
+            <li>{$i18n.t("remoteSupportSafetySupporter2")}</li>
+            <li>{$i18n.t("remoteSupportSafetySupporter3")}</li>
+            <li>{$i18n.t("remoteSupportSafetySupporter4")}</li>
+          </ul>
           <label>
             <input type="checkbox" bind:checked={joinAcknowledged} />
             {$i18n.t("remoteSupportSafetyAck")}
@@ -397,11 +452,96 @@
   }
 
   section h4 {
-    margin: 0 0 6px;
+    margin: 0 0 8px;
   }
 
   p {
     margin: 0 0 8px;
+  }
+
+  // The first step: which side of the session this is.
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 12px 14px;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+
+    > .fas:first-child {
+      font-size: 1.4em;
+      color: var(--color-accent-500);
+    }
+
+    .text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        font-size: 1.05em;
+      }
+
+      span {
+        color: var(--color-text-soft);
+        font-size: 0.9em;
+      }
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-accent-500);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+
+      > .fas:first-child {
+        color: var(--color-text-soft);
+      }
+    }
+  }
+
+  .back {
+    align-self: flex-start;
+    padding: 0;
+    color: var(--color-accent-500);
+    font: inherit;
+    font-weight: 600;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    .fas {
+      font-size: 0.8em;
+      margin-right: 4px;
+    }
+  }
+
+  ul {
+    margin: 0 0 10px;
+    padding-left: 1.3em;
+
+    li {
+      margin: 0 0 4px;
+      line-height: 1.4;
+    }
+  }
+
+  .steps {
+    color: var(--color-text-soft);
   }
 
   .row {
@@ -426,6 +566,12 @@
     border-left: 4px solid var(--color-yellow-500);
     border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--color-yellow-500) 12%, transparent);
+
+    h5 {
+      margin: 0 0 6px;
+      font-size: 1em;
+      font-weight: 600;
+    }
 
     p {
       margin: 0 0 6px;
