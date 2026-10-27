@@ -1,3 +1,5 @@
+import { FC } from "@/js/fc.svelte.js";
+
 export const UART_NAMES = {
   0: "UART1",
   1: "UART2",
@@ -64,11 +66,10 @@ export const BAUD_RATE_OPTIONS = {
 
 // hide: not compiled into Wingflight firmware. Listed only for a port that is
 // still set to it, so it shows its real name instead of "Custom".
-// feature: only assignable while this feature is enabled.
 export const PORT_FUNCTIONS = [
   { id: 0, excl: 0, name: "DISABLED", type: PORT_TYPES.DISABLED },
   { id: 1, excl: 1, name: "MSP", type: PORT_TYPES.MSP },
-  { id: 2, excl: 2, name: "GPS", type: PORT_TYPES.GPS, feature: "GPS" },
+  { id: 2, excl: 2, name: "GPS", type: PORT_TYPES.GPS },
   { id: 64, excl: 64, name: "RX_SERIAL", type: PORT_TYPES.AUTO },
   { id: 1024, excl: 1024, name: "ESC_SENSOR", type: PORT_TYPES.AUTO },
   { id: 128, excl: 128, name: "BLACKBOX", type: PORT_TYPES.BLACKBOX },
@@ -87,6 +88,56 @@ export const PORT_FUNCTIONS = [
 ];
 
 export const VCP_PORT_IDENTIFIER = 20;
+
+// GPS sources (FC.GPS_CONFIG.provider), in firmware order.
+export const GPS_PROVIDERS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+
+// The ports each GPS source needs. MSP needs none.
+const GPS_PROVIDER_PORTS = {
+  NMEA: ["GPS"],
+  UBLOX: ["GPS"],
+  FBUS: ["FBUS_OUT", "SPORT_MASTER"],
+  CRSF: ["CRSF_SENSORS"],
+};
+
+function portsMask(names) {
+  return PORT_FUNCTIONS.filter((f) => names.includes(f.name)).reduce(
+    (mask, f) => mask | f.id,
+    0,
+  );
+}
+
+function hasPort(ports, mask) {
+  return (ports ?? []).some((port) => port.functionMask & mask);
+}
+
+// There is no GPS feature switch. GPS runs when the GPS source has its port,
+// matching the firmware's gpsIsEnabled().
+export function isGpsActive(ports, provider) {
+  const name = GPS_PROVIDERS[provider];
+  if (name === "MSP") {
+    return true;
+  }
+  const portNames = GPS_PROVIDER_PORTS[name];
+  return !!portNames && hasPort(ports, portsMask(portNames));
+}
+
+// The GPS tab, where the source is picked, shows whenever a port could carry
+// GPS, even before the source matches it.
+const ANY_GPS_PORT_MASK = portsMask(Object.values(GPS_PROVIDER_PORTS).flat());
+
+export function showGpsTab(ports, provider) {
+  return hasPort(ports, ANY_GPS_PORT_MASK) || isGpsActive(ports, provider);
+}
+
+// Older firmware still runs GPS only with the GPS feature bit set. Newer
+// firmware ignores the bit, so keep it in line with the setup before saving.
+export function syncLegacyGpsFeature() {
+  FC.FEATURE_CONFIG.features.setFeature(
+    "GPS",
+    isGpsActive(FC.SERIAL_CONFIG.ports, FC.GPS_CONFIG.provider),
+  );
+}
 
 export function getPortFunc(funcId) {
   return PORT_FUNCTIONS.find((f) => f.id == funcId);

@@ -1354,10 +1354,6 @@
         "message": "Активирай софтуерни серийни портове",
         "english": "Enable Software Serial ports"
     },
-    "feature_GPS": {
-        "message": "GPS за телеметрия",
-        "english": "GPS for telemetry"
-    },
     "feature_SONAR": {
         "message": "Сонар за измерване на височина",
         "english": "Sonar altitude radar"
@@ -1429,10 +1425,6 @@
     "configurationFeatures": {
         "message": "Функции",
         "english": "Features"
-    },
-    "featureTip_GPS": {
-        "message": "Позволява поддръжка на GPS телеметрия. Добавя раздела <i>GPS</i> за конфигуриране.",
-        "english": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_LED_STRIP": {
         "message": "Позволява поддръжка на WS2811/2812 LED ленти. Добавя раздела <i>LED лента</i> за конфигуриране.",

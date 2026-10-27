@@ -7,6 +7,10 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend.js";
+  import {
+    GPS_PROVIDERS,
+    syncLegacyGpsFeature,
+  } from "@/tabs/configuration/util.js";
 
   import Field from "@/components/Field.svelte";
   import Page from "@/components/Page.svelte";
@@ -14,7 +18,7 @@
   import Select from "@/components/Select.svelte";
   import Switch from "@/components/Switch.svelte";
 
-  const GPS_PROTOCOLS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
+  const GPS_PROTOCOLS = GPS_PROVIDERS;
   const MAP_URL =
     __BACKEND__ === "web"
       ? `${import.meta.env.BASE_URL}src/tabs/map.html`
@@ -203,6 +207,12 @@
     await MSP.promise(
       MSPCodes.MSP_SET_GPS_CONFIG,
       mspHelper.crunch(MSPCodes.MSP_SET_GPS_CONFIG),
+    );
+    // The source decides whether GPS runs on older firmware too
+    syncLegacyGpsFeature();
+    await MSP.promise(
+      MSPCodes.MSP_SET_FEATURE_CONFIG,
+      mspHelper.crunch(MSPCodes.MSP_SET_FEATURE_CONFIG),
     );
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));

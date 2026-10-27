@@ -881,6 +881,8 @@ async function onConnect() {
         // decide whether to show the xact_servo and FBUS Sensors tabs -- both gated
         // on serial port function -- before the nav is first shown.
         await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG, false);
+        // The GPS tabs follow the GPS source as well as the ports
+        await MSP.promise(MSPCodes.MSP_GPS_CONFIG, false);
         updateTabList(FC.FEATURE_CONFIG.features);
 
         if (FC.CONFIG.boardType == 0 || FC.CONFIG.boardType == 2) {

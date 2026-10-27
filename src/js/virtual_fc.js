@@ -707,6 +707,16 @@ export function applyVirtualConfig() {
   FC.SERIAL_CONFIG.ports[2].functionMask = 1024; // ESC_SENSOR
   FC.SERIAL_CONFIG.ports[3].functionMask = 2; // GPS
 
+  // GPS source (pg/gps.c defaults). With the GPS port above, GPS is active.
+  Object.assign(FC.GPS_CONFIG, {
+    provider: 0, // NMEA
+    ublox_sbas: 0,
+    auto_config: 1,
+    auto_baud: 0,
+    home_point_once: 0,
+    ublox_use_galileo: 0,
+  });
+
   // Receiver
   FC.FEATURE_CONFIG.features.RX_SERIAL = true;
   FC.FEATURE_CONFIG.features.TELEMETRY = true;

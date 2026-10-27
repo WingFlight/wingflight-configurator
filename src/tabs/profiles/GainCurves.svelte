@@ -2,6 +2,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { GainCurve } from "@/js/GainCurve.js";
+  import { isGpsActive } from "@/tabs/configuration/util.js";
 
   import Field from "@/components/Field.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
@@ -13,11 +14,13 @@
   // table because curves are an advanced shaping tool; Flight Feel shows a
   // CURVE badge on any Gain a curve is shaping. `profile` is FC.PID_PROFILE
   // or FC.TV_PID_PROFILE; `throttle` adds the Throttle row (main loop only),
-  // and the GPS Speed curve and range, on one line, when the GPS feature is on.
+  // and the GPS Speed curve and range, on one line, when GPS is active.
   let { profile, throttle = false, idPrefix = "" } = $props();
 
   let showSpeed = $derived(
-    throttle && profile.hasFwSpa && FC.FEATURE_CONFIG.features.isEnabled("GPS"),
+    throttle &&
+      profile.hasFwSpa &&
+      isGpsActive(FC.SERIAL_CONFIG.ports, FC.GPS_CONFIG.provider),
   );
 
   const AXES = [

@@ -3,6 +3,8 @@ export class Features {
     RX_PPM: 0,
     RX_SERIAL: 3,
     SOFTSERIAL: 6,
+    // Retired in firmware: GPS follows the serial ports. Still set on save
+    // for older firmware, see Configuration.svelte.
     GPS: 7,
     TELEMETRY: 10,
     RX_PARALLEL_PWM: 13,
@@ -19,7 +21,7 @@ export class Features {
 
   static GROUPS = {
     RX_PROTO: ["RX_PPM", "RX_SERIAL", "RX_PARALLEL_PWM", "RX_MSP", "RX_SPI"],
-    OTHER: ["GPS", "LED_STRIP"],
+    OTHER: ["LED_STRIP"],
     RSSI: ["RSSI_ADC"],
   };
 
