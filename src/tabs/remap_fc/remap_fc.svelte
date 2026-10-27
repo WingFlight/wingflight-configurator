@@ -623,6 +623,7 @@
   // remapFcHintGeneric.
   const CONNECTOR_HINT_KEYS = {
     TLM: "remapFcHintTlm",
+    "S9(TLM)": "remapFcHintTlm", // FrSky Aegis Lite
     SBUS: "remapFcHintSbus",
   };
 
