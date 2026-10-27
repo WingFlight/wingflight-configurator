@@ -1012,7 +1012,14 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
 
                 GUI.log(i18n.getMessage('dfu_device_flash_info', (self.flash_layout.total_size / 1024).toString()));
 
-                if (self.hex.bytes_total > self.available_flash_size) {
+                // A block that starts in this layout but runs past its end can't be written by this device
+                const layoutEnd = self.flash_layout.start_address + self.flash_layout.total_size;
+                const crossesLayout = self.hex.data.some((block) =>
+                    block.address >= self.flash_layout.start_address &&
+                    block.address < layoutEnd &&
+                    block.address + block.bytes > layoutEnd);
+
+                if (crossesLayout || self.hex.bytes_total > self.available_flash_size) {
                     GUI.log(i18n.getMessage('dfu_error_image_size',
                         [(self.hex.bytes_total / 1024.0).toFixed(1),
                         (self.available_flash_size / 1024.0).toFixed(1)]));
@@ -1177,7 +1184,7 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                 var erase_pages = [];
                 // The Wingflight loader has no mass erase and erases 64 KB
                 // blocks only, so "erase chip" means the blocks this hex
-                // touches there.
+                // touches there, plus a request to wipe the firmware's config.
                 const erase_all = self.options.erase_chip && !self.isLoaderLayout;
                 for (let i = 0; i < self.flash_layout.sectors.length; i++) {
                     for (var j = 0; j < self.flash_layout.sectors[i].num_pages; j++) {
@@ -1203,6 +1210,13 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                         }
                     }
                   }
+                }
+
+                // The firmware's config is on another flash than the one the loader exposes. An erase
+                // just past the end of the exposed flash asks the firmware to wipe it at its next start.
+                // Sent first, so a loader that rejects it fails before any firmware page is erased.
+                if (self.options.erase_chip && self.isLoaderLayout && erase_pages.length > 0) {
+                    erase_pages.unshift({'address': self.flash_layout.start_address + self.flash_layout.total_size});
                 }
 
                 if (erase_pages.length === 0) {
@@ -1232,13 +1246,30 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                     }
                 };
 
+                var erase_failed = function (reason) {
+                    // A loader without the config wipe request rejects its address
+                    if (erase_pages[page].address !== undefined) {
+                        const message = i18n.getMessage('stm32WingflightLoaderOutdated');
+                        GUI.log(message);
+                        TABS.firmware_flasher.flashingMessage(message, TABS.firmware_flasher.FLASH_MESSAGE_TYPES.INVALID);
+                    }
+                    console.log(reason);
+                    self.cleanup();
+                };
+
                 var erase_page = function() {
-                    var page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
-                            self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                    var page_addr;
+                    if (erase_pages[page].address !== undefined) {
+                        page_addr = erase_pages[page].address;
+                        console.log('Erasing config request @ 0x' + page_addr.toString(16));
+                    } else {
+                        page_addr = erase_pages[page].page * self.flash_layout.sectors[erase_pages[page].sector].page_size +
+                                self.flash_layout.sectors[erase_pages[page].sector].start_address;
+                        total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
+                        console.log('Erasing. sector ' + erase_pages[page].sector +
+                                    ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
+                    }
                     var cmd = [0x41, page_addr & 0xff, (page_addr >> 8) & 0xff, (page_addr >> 16) & 0xff, (page_addr >> 24) & 0xff];
-                    total_erased += self.flash_layout.sectors[erase_pages[page].sector].page_size;
-                    console.log('Erasing. sector ' + erase_pages[page].sector +
-                                ', page ' + erase_pages[page].page + ' @ 0x' + page_addr.toString(16));
 
                     self.controlTransfer('out', self.request.DNLOAD, 0, 0, 0, cmd, function () {
                         self.controlTransfer('in', self.request.GETSTATUS, 0, 0, 6, 0, function (data) {
@@ -1266,22 +1297,19 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
                                                     if (data[4] == self.state.dfuIDLE) {
                                                         erase_page_next();
                                                     } else {
-                                                        console.log('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
-                                                        self.cleanup();
+                                                        erase_failed('Failed to erase page 0x' + page_addr.toString(16) + ' (did not reach dfuIDLE after clearing');
                                                     }
                                                 });
                                             });
                                         } else if (data[4] == self.state.dfuDNLOAD_IDLE) {
                                             erase_page_next();
                                         } else {
-                                            console.log('Failed to erase page 0x' + page_addr.toString(16));
-                                            self.cleanup();
+                                            erase_failed('Failed to erase page 0x' + page_addr.toString(16));
                                         }
                                     });
                                 }, delay);
                             } else {
-                                console.log('Failed to initiate page erase, page 0x' + page_addr.toString(16));
-                                self.cleanup();
+                                erase_failed('Failed to initiate page erase, page 0x' + page_addr.toString(16));
                             }
                         });
                     });
