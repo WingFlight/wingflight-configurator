@@ -1619,16 +1619,6 @@
         "english": "Enable Software Serial ports",
         "status": "New entry. Please translate!"
     },
-    "feature_GPS": {
-        "message": "GPS for telemetry",
-        "english": "GPS for telemetry",
-        "status": "Reused translation. Please check!",
-        "previous": {
-            "message": "네비게이션과 텔레메트리를 위한 GPS",
-            "english": "GPS for navigation and telemetry",
-            "status": "Reused translation. Please check!"
-        }
-    },
     "feature_SONAR": {
         "message": "Sonar altitude radar",
         "english": "Sonar altitude radar",
@@ -1724,11 +1714,6 @@
             "message": "다른 기능",
             "english": "Other Features"
         }
-    },
-    "featureTip_GPS": {
-        "message": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration.",
-        "english": "Enables support for GPS telemetry. Adds the <i>GPS</i> tab for configuration.",
-        "status": "New entry. Please translate!"
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration.",

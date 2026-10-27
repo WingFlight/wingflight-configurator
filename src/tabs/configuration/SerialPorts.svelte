@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { isFbusMuxSerialPort } from "@/js/FbusMux.js";
   import { i18n } from "@/js/i18n.js";
+  import { updateTabList } from "@/js/main.js";
 
   import {
     BAUD_RATE_OPTIONS,
@@ -47,22 +48,10 @@
         continue;
       }
 
-      // A port already set to it stays editable, so the function can be removed
-      const featureOff =
-        func.feature &&
-        func.id !== port.functionMask &&
-        !FC.FEATURE_CONFIG.features.isEnabled(func.feature);
-      const label = $i18n.t(`portsFunction_${func.name}`);
-
       options.push({
         value: func.id,
-        label: featureOff
-          ? $i18n.t("portsFunctionFeatureOff", {
-              function: label,
-              feature: func.feature,
-            })
-          : label,
-        disabled: featureOff || !!(func.id & exclFuncs),
+        label: $i18n.t(`portsFunction_${func.name}`),
+        disabled: !!(func.id & exclFuncs),
       });
     }
 
@@ -100,6 +89,8 @@
 
   function onFunctionChange(port, value) {
     port.functionMask = Number(value);
+    // The GPS tabs follow the ports
+    updateTabList(FC.FEATURE_CONFIG.features);
   }
 
   function onBaudrateChange(port, value) {

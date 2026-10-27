@@ -1832,9 +1832,6 @@
     "feature_SOFTSERIAL": {
         "message": "Enable Software Serial ports"
     },
-    "feature_GPS": {
-        "message": "GPS"
-    },
     "feature_TELEMETRY": {
         "message": "Transmitter telemetry"
     },
@@ -1882,9 +1879,6 @@
     },
     "configurationFeatures": {
         "message": "Features"
-    },
-    "featureTip_GPS": {
-        "message": "Enables GPS telemetry and GPS navigation (RTH, Loiter, and the Failsafe Procedure's GPS Rescue option). Adds the <i>GPS</i> tab for configuration."
     },
     "featureTip_LED_STRIP": {
         "message": "Enables support for WS2811/2812 LED strips. Adds the <i>LED Strip</i> tab for configuration."
@@ -2387,9 +2381,6 @@
     },
     "portsFunction_FBUS_OUT": {
         "message": "F.BUS"
-    },
-    "portsFunctionFeatureOff": {
-        "message": "{{function}} (enable the {{feature}} feature)"
     },
     "portsFbusMuxReserved": {
         "message": "Used by the FBUS mux"
