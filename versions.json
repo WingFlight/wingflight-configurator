@@ -161,13 +161,6 @@
     },
     {
       "type": "branch",
-      "name": "bugfix-service-worker-stale-assets",
-      "path": "./bugfix-service-worker-stale-assets/",
-      "branch": "bugfix/service-worker-stale-assets",
-      "date": "2026-10-27T09:23:39Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
