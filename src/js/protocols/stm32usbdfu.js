@@ -1214,8 +1214,9 @@ STM32DFU_protocol.prototype.upload_procedure = function (step) {
 
                 // The firmware's config is on another flash than the one the loader exposes. An erase
                 // just past the end of the exposed flash asks the firmware to wipe it at its next start.
+                // Sent first, so a loader that rejects it fails before any firmware page is erased.
                 if (self.options.erase_chip && self.isLoaderLayout && erase_pages.length > 0) {
-                    erase_pages.push({'address': self.flash_layout.start_address + self.flash_layout.total_size});
+                    erase_pages.unshift({'address': self.flash_layout.start_address + self.flash_layout.total_size});
                 }
 
                 if (erase_pages.length === 0) {
