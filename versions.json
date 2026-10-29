@@ -220,6 +220,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-motor-pwm-50",
+      "path": "./feature-motor-pwm-50/",
+      "branch": "feature/motor-pwm-50",
+      "date": "2026-10-29T17:00:47Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-parameter-addressing",
       "path": "./feature-parameter-addressing/"
     },
