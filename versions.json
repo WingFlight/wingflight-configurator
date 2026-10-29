@@ -173,6 +173,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-auto-trim-label",
+      "path": "./feature-auto-trim-label/",
+      "branch": "feature/auto-trim-label",
+      "date": "2026-10-29T16:37:16Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
