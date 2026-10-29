@@ -5248,7 +5248,7 @@
         "message": "Update Frequency"
     },
     "motorsUnsyncedPWMFreqHelp": {
-        "message": "ESC PWM update frequency in Hz. This is how often the throttle value is sent to the ESC. Usually between 50Hz and 250Hz. Most modern ESCs work fine with 250Hz."
+        "message": "ESC PWM update frequency in Hz. This is how often the throttle value is sent to the ESC. The default is 50Hz. Use a higher rate only if supported by your ESC."
     },
     "motorsDshotBidir": {
         "message": "Dshot RPM Telemetry"

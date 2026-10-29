@@ -899,7 +899,7 @@ export function applyVirtualConfig() {
     maxthrottle: 2000,
     motor_count_blheli: 2, // lets ESC2 (motor 2) be exercised in virtual mode
     motor_pwm_protocol: 0,
-    motor_pwm_rate: 250,
+    motor_pwm_rate: 50,
     motor_poles: [8, 8, 8, 8],
     motor_rpm_lpf: [0, 0, 0, 0],
     use_dshot_telemetry: false,

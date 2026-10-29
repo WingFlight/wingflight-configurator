@@ -62,7 +62,7 @@
             <Tooltip
               help="motorsUnsyncedPWMFreqHelp"
               attrs={[
-                { name: "genericDefault", value: "250Hz" },
+                { name: "genericDefault", value: "50Hz" },
                 { name: "genericRange", value: "50Hz - 8000Hz" },
               ]}
             />
