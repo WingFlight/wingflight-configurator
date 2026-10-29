@@ -9946,7 +9946,7 @@
         "message": "Normal rate flying inside bank and pitch limits: the stabilizer stops the model rolling or pitching past them. It doesn't level the wings for you."
     },
     "setupWizardModes_autoTrim": {
-        "message": "Auto trim"
+        "message": "AUTO TRIM"
     },
     "setupWizardModesHelp_autoTrim": {
         "message": "Fly straight and level with it on for a few seconds, then land and disarm: the trim is saved as the servo trim (see the Servos tab). The servo centers don't change. Switch it off before disarming to cancel."
