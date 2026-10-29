@@ -223,7 +223,11 @@
       "name": "feature-motor-pwm-50",
       "path": "./feature-motor-pwm-50/",
       "branch": "feature/motor-pwm-50",
-      "date": "2026-10-29T17:00:47Z"
+      "date": "2026-10-29T17:00:47Z",
+      "number": 216,
+      "title": "Default virtual motor PWM to 50 Hz",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/216",
+      "draft": false
     },
     {
       "type": "branch",
