@@ -176,11 +176,7 @@
       "name": "feature-auto-trim-label",
       "path": "./feature-auto-trim-label/",
       "branch": "feature/auto-trim-label",
-      "date": "2026-10-29T16:37:16Z",
-      "number": 215,
-      "title": "Capitalize AUTO TRIM in setup wizard",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/215",
-      "draft": false
+      "date": "2026-10-29T16:37:16Z"
     },
     {
       "type": "branch",
