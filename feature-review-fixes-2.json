@@ -1,4 +1,8 @@
 {
   "branch": "feature/review-fixes-2",
-  "date": "2026-10-31T06:11:27Z"
+  "date": "2026-10-31T06:11:27Z",
+  "number": 217,
+  "title": "Describe the GOVERNOR arming flag as the governor switch",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/217",
+  "draft": false
 }
