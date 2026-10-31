@@ -1596,7 +1596,7 @@
         "description": "Message that pops up to describe the BOXFAILSAFE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipGOVERNOR": {
-        "message": "Governor can't function without an RPM signal",
+        "message": "Governor switch is on. Turn it off to arm, then turn it back on",
         "description": "Message that pops up to describe the GOVERNOR arming disable flag"
     },
     "statusArmingDisableFlagsTooltipRPM_SIGNAL": {
