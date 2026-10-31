@@ -250,6 +250,13 @@
       "path": "./feature-remote-web/",
       "branch": "feature/remote-web",
       "date": "2026-10-27T19:25:57Z"
+    },
+    {
+      "type": "branch",
+      "name": "feature-review-fixes-2",
+      "path": "./feature-review-fixes-2/",
+      "branch": "feature/review-fixes-2",
+      "date": "2026-10-31T06:11:27Z"
     }
   ]
 }
