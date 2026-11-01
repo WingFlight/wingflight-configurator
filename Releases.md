@@ -1,3 +1,11 @@
+# 0.0.39
+
+Support the 0.0.39 firmware (MSP API 22.15).
+Add a second backup receiver: assign a port Receiver: Backup 2 and a Backup Receiver 2 box appears on the Receiver tab with its own protocol, wiring switches and wiring detect. The Active Source badges name the backup in control, and each channel bar shows a meter per backup.
+Group the Ports tab functions: core functions, receivers in failover order (Receiver: Primary, Backup 1, Backup 2), Telemetry, ESC (Telemetry, SRXL2) and Bus (S.BUS Output, F.BUS Master, S.PORT Master, CRSF Sensors). The receiver boxes are now Primary Receiver and Backup Receiver 1 and 2.
+Describe the GOVERNOR arming-disable flag as the governor switch being on.
+Default the virtual flight controller's motor PWM to 50 Hz, matching the firmware.
+
 # 0.0.38
 
 Support the 0.0.38 firmware (MSP API 22.15).
