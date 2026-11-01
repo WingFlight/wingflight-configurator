@@ -290,10 +290,17 @@ export class VirtualMsp {
                 at += o.w;
                 continue;
             }
-            const value = getInt(data, at, o.w, o.flags.includes("w"));
+            let value = getInt(data, at, o.w, o.flags.includes("w"));
             at += o.w;
             if (o.check && ((o.check.min !== undefined && value < o.check.min) || (o.check.max !== undefined && value > o.check.max))) {
                 throw new VirtualMspError(`opcode ${code}: ${value} is out of range`);
+            }
+            const clamp = o.check?.clamp;
+            if (clamp) {
+                // the firmware stores constrain(value, low, high) / MIN(value, high)
+                const [low, high] = clamp;
+                if (low !== null && low !== undefined && value < low) value = low;
+                if (high !== null && high !== undefined && value > high) value = high;
             }
             const bytes = [];
             putInt(bytes, value, o.size); // the store truncates to the field

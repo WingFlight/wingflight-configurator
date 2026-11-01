@@ -46,9 +46,38 @@ async function refuses(what, fn) {
 
 const hex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join(" ");
 
+/** Clamp the field an "f" op names to its clamp, for every element it may address. */
+function clampField(groups, op) {
+    const [, , pgn, off, size, flags, extra] = op;
+    const bytes = groups.get(pgn);
+    if (!bytes) return;
+    const [low, high] = extra.clamp;
+    const signed = flags.includes("s");
+    // The op's offset is within one element (a profile's or an indexed one's) or
+    // absolute; clamping every element's copy covers either.
+    const stride = flags.includes("P") || flags.includes("R") || flags.includes("T") || flags.includes("i")
+        ? groupStride(groups, pgn) : bytes.length;
+    for (let base = 0; base + off + size <= bytes.length; base += stride) {
+        let value = 0;
+        for (let k = size - 1; k >= 0; k--) value = value * 256 + bytes[base + off + k];
+        if (signed && value >= 2 ** (8 * size - 1)) value -= 2 ** (8 * size);
+        if (low !== null && value < low) value = low;
+        if (high !== null && value > high) value = high;
+        let v = value < 0 ? value + 2 ** (8 * size) : value;
+        for (let k = 0; k < size; k++) {
+            bytes[base + off + k] = v % 256;
+            v = Math.floor(v / 256);
+        }
+    }
+}
+
+let groupStrides = new Map();
+const groupStride = (groups, pgn) => groupStrides.get(pgn) ?? groups.get(pgn).length;
+
 /** A board holding raw group bytes, logging writes. */
 function board(manifest, fill = () => 0) {
     const groups = new Map(manifest.raw.pgs.map((pg) => [pg.pgn, Uint8Array.from({ length: pg.size }, (_, i) => fill(pg.pgn, i))]));
+    groupStrides = new Map(manifest.raw.pgs.map((pg) => [pg.pgn, pg.size / pg.length]));
     // A field selecting an array element must stay in range; out of range the
     // firmware reads past the array, and the virtual layer refuses.
     const fixSelectors = () => {
@@ -58,6 +87,9 @@ function board(manifest, fill = () => 0) {
                 // A string field always ends in a NUL: its setter clears it and
                 // copies one byte short of it.
                 if (op[0] === "z") groups.get(op[2])?.fill(0, op[3] + op[1] - 1, op[3] + op[1]);
+                // A field the firmware stores clamped holds a value in range:
+                // one outside could not round-trip through its setter.
+                if (op[0] === "f" && op[6]?.clamp) clampField(groups, op);
             }
         }
     };
@@ -100,6 +132,8 @@ function board(manifest, fill = () => 0) {
             5: { dir: "in", len: 2, ops: [["f", 2, 10, 0, 2, ""]] },
             6: { dir: "in", index: { w: 1, max: 3, map: [10, 20, 30], miss: "ignore" }, ops: [["f", 2, 20, 0, 2, "i"]] },
             7: { dir: "in", index: { w: 1, max: 4, miss: "ignore" }, ops: [["f", 2, 20, 0, 2, "i"]] },
+            // constrain(sbufReadU16(src), 50, 1000) and MIN(sbufReadU8(src), 8)
+            8: { dir: "in", ops: [["f", 2, 10, 0, 2, "", { clamp: [50, 1000] }], ["f", 1, 10, 2, 1, "", { clamp: [null, 8] }]] },
         },
     };
     const manifest = new Manifest(raw);
@@ -123,6 +157,13 @@ function board(manifest, fill = () => 0) {
     demo.set([0, 0, 0, 0, 0x55, 0x55]);
     await v.write(3, [1, 9]);
     check("an optional tail the request leaves out is left alone", demo[4] === 0x55 && demo[0] === 1, hex(demo));
+
+    await v.write(8, [0x10, 0x27, 200]); // 10000, 200
+    check("a clamped field stores the upper bound", demo[0] === 0xe8 && demo[1] === 0x03 && demo[2] === 8, hex(demo));
+    await v.write(8, [5, 0, 3]);
+    check("a clamped field stores the lower bound, a bound left open leaves the value", demo[0] === 50 && demo[1] === 0 && demo[2] === 3, hex(demo));
+    await v.write(8, [0x2c, 0x01, 8]); // 300 within
+    check("a clamped field inside its range is stored as sent", demo[0] === 0x2c && demo[1] === 0x01, hex(demo));
 
     await v.write(4, [2, 0x34, 0x12, 5]);
     check("an indexed setter writes into its element", hex(b.groups.get(20).slice(6, 9)) === "34 12 05", hex(b.groups.get(20)));
