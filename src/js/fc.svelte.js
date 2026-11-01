@@ -1,4 +1,9 @@
 import { Features } from "./features.svelte.js";
+import {
+  RX_INPUT_BACKUP_COUNT,
+  defaultRxInputBackupPortConfig,
+  defaultRxInputBackupPortStatus,
+} from "./RxInputBackup.js";
 import { WiggleFlags } from "./wiggle.svelte.js";
 
 class FlightController {
@@ -479,20 +484,15 @@ class FlightController {
       usedSize:                   0,
     };
 
+    // One entry per backup receiver, in failover order (js/RxInputBackup.js).
     this.RX_INPUT_BACKUP_CONFIG = {
-      provider:                   0,
-      inverted:                   false,
-      halfDuplex:                 false,
-      pinSwap:                    false,
+      ports: Array.from({ length: RX_INPUT_BACKUP_COUNT }, defaultRxInputBackupPortConfig),
     };
 
     this.RX_INPUT_BACKUP_STATUS = {
-      enabled:                    false,
       mainLinkUp:                 null,
-      provider:                   0,
-      linkUp:                     false,
-      activeSource:               "main",
-      channels:                   [],
+      activeIndex:                -1,
+      ports: Array.from({ length: RX_INPUT_BACKUP_COUNT }, defaultRxInputBackupPortStatus),
     };
 
     this.CRSF_SENSORS_STATUS = {
