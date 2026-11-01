@@ -1,3 +1,7 @@
+# 0.0.40
+
+Support the 0.0.40 firmware (MSP API 22.15).
+
 # 0.0.39
 
 Support the 0.0.39 firmware (MSP API 22.15).
