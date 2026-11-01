@@ -787,6 +787,34 @@ if (adc && timerGroup) {
     await throwsAsync("servo flags refuses a bad flag", () => c.execute("servo flags 2 +FOO"));
     await throwsAsync("servo override is refused rather than ignored", () => c.execute("servo override 1 0"));
 
+    // servo trim: saved trims, limited to servoTrimLimitPercent of the larger scale
+    if (manifest.raw.cli.limits.servoTrimLimitPercent !== undefined) {
+        const limit = Math.trunc((450 * manifest.raw.cli.limits.servoTrimLimitPercent) / 100); // servo 2: rpos 450
+        check("servo trim sets a saved trim", (await c.execute("servo trim 2 20")) === "servo trim 2 20");
+        check("servo trim limits the trim to a share of the scale",
+            (await c.execute("servo trim 2 500")) === `servo trim 2 ${limit}`, await c.execute("servo trim"));
+        check("servo trim limits a negative trim too", (await c.execute("servo trim 2 -500")) === `servo trim 2 -${limit}`);
+        check("servo trim lists the PWM servos in use", (await c.execute("servo trim")) === `servo trim 1 0\nservo trim 2 -${limit}`);
+        await throwsAsync("servo trim refuses servo 0", () => c.execute("servo trim 0 10"));
+        await throwsAsync("servo trim refuses a short line", () => c.execute("servo trim 2"));
+        const diffed = (await c.diff("all")).split("\n");
+        check("diff carries the changed trim after the servo lines",
+            diffed.includes(`servo trim 2 -${limit}`) &&
+                diffed.indexOf(`servo trim 2 -${limit}`) > diffed.findIndex((l) => l.startsWith("servo 2 ")));
+        await c.execute("servo trim 2 0");
+    }
+
+    // servo: the center limits the travel (servoTravelMin/Max)
+    if (manifest.raw.cli.limits.busServoSignalMax !== undefined) {
+        const L = manifest.raw.cli.limits;
+        const warned = (await c.execute("servo 1 2000 -700 700 500 500 50 0 0")).split("\n");
+        check("servo warns when the center limits max",
+            warned[0] === `###WARNING: servo 1 max 700 limited to ${L.servoPulseMax - 2000} by center 2000 (output max ${L.servoPulseMax} us)###` &&
+                warned.at(-1) === "servo 1 2000 -700 700 500 500 50 0 0", warned.join(" | "));
+        check("servo says nothing when the travel fits",
+            (await c.execute("servo 1 1500 -700 700 500 500 50 0 0")) === "servo 1 1500 -700 700 500 500 50 0 0");
+    }
+
     const busPort = manifest.raw.cli.serial_ports.find((id) => id >= 0 && id < 20);
     await c.execute(`serial ${busPort} ${manifest.raw.cli.limits.busServoFunctionMask & -manifest.raw.cli.limits.busServoFunctionMask} 115200 57600 0 115200`);
     const withBus = (await c.execute("servo")).split("\n");

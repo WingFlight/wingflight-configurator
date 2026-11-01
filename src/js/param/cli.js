@@ -987,7 +987,7 @@ export class ParamCli {
                     "map      <AETR1234>  channel map",
                     "aux      <index> <mode> <channel> <start> <end> <logic> <linked>  mode switch",
                     "mixer    [reset] | input <in> <min> <max> <rate> | rule <n> <op> <in> <out> <weight> <offset> ... | rule <n> del",
-                    "servo    [flags <n> +REV|-REV +GEO|-GEO] | <n> <mid> <min> <max> <rneg> <rpos> <rate> <speed> <flags>",
+                    "servo    [flags <n> +REV|-REV +GEO|-GEO] | trim [<n> <us>] | <n> <mid> <min> <max> <rneg> <rpos> <rate> <speed> <flags>",
                     "rxfail   <channel> [a|h|s [<value>]]  RX failsafe per channel",
                     "beeper / beacon  [list] | [-]<condition>  enable or disable a beeper condition",
                     "led      <index> <x>,<y>:<dirs>:<functions>:<color>:<pattern>:<pause>:<alt>",

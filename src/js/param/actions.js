@@ -272,6 +272,8 @@ export const NOT_AVAILABLE = {
     dshot_telemetry_info: "a live diagnostic",
     fbus_sensors: "a live diagnostic",
     sd_info: "a live diagnostic; see the Blackbox tab",
+    serialdebug: "a live diagnostic that blocks the firmware's scheduler to monitor or scan a port; see the Ports tab and the GPS diagnostics",
+    fpga: "a bench tool for the FBUS mux FPGA; its state and channel modes are on the Remap FC tab",
     srxl2esc: "a live diagnostic",
     mcu_id: "board identity; see the Setup tab",
     signature: "board identity",

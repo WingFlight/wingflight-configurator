@@ -787,6 +787,82 @@ export function servoLines(manifest, io, onlyChanged) {
     return servoBlock(manifest, io, onlyChanged, true);
 }
 
+// --- servo trim --------------------------------------------------------------
+
+function trimTables(manifest) {
+    const t = servoTables(manifest);
+    const trims = groupBySymbol(manifest, "servoTrims_SystemArray");
+    if (!trims || t.L.servoTrimLimitPercent === undefined) {
+        throw new CliError("servo trim is not supported by this firmware's manifest");
+    }
+    return { ...t, trims };
+}
+
+function trimLine(index, trim) {
+    return `servo trim ${index + 1} ${trim}`;
+}
+
+/**
+ * printServoTrim(): the saved trims of the PWM servos in use, then S9.. when bus
+ * servos are in play or one of their trims was changed. After the servo lines,
+ * so a restore sets the scales the trim limit is worked out from first.
+ */
+async function servoTrimBlock(manifest, io, onlyChanged, withDefaults) {
+    const t = trimTables(manifest);
+    const live = await readGroup(io, t.trims);
+    const defaults = withDefaults ? await readDefaultGroup(io, t.trims) : null;
+    const serialLive = await readGroup(io, t.serial);
+    const serialDefault = withDefaults ? await readDefaultGroup(io, t.serial) : null;
+    const mask = t.L.busServoFunctionMask;
+    const trimOf = (bytes, i) => readElement(bytes, t.trims, i).trim;
+    const changed = (i) => !defaults || trimOf(live, i) !== trimOf(defaults, i);
+
+    let printBus = hasBusServos(serialLive, t.serial, mask) || hasBusServos(serialDefault, t.serial, mask);
+    if (!printBus && defaults) {
+        for (let i = t.L.busServoOffset; i < t.count; i++) printBus ||= changed(i);
+    }
+
+    const pwm = await pwmServoCount(io, t);
+    const lines = [];
+    for (let i = 0; i < t.count; i++) {
+        if (i < t.L.busServoOffset ? i >= pwm : !printBus) continue;
+        if (!onlyChanged || changed(i)) lines.push(trimLine(i, trimOf(live, i)));
+    }
+    return lines;
+}
+
+export function servoTrimLines(manifest, io, onlyChanged) {
+    return servoTrimBlock(manifest, io, onlyChanged, true);
+}
+
+/** setServoSavedTrim(): limited to servoTrimLimitPercent of the larger scale. */
+function clampTrim(t, servo, value) {
+    const limit = Math.trunc((Math.max(servo.rneg, servo.rpos) * t.L.servoTrimLimitPercent) / 100);
+    return Math.min(Math.max(value, -limit), limit);
+}
+
+/**
+ * servoTravelMin/Max(): the travel the center leaves within the signal range,
+ * the PWM pulse range or, for S9.., the bus servo signal range. Older manifests
+ * do not carry the bus range; then nothing is said.
+ */
+function centerWarnings(t, index, s) {
+    const bus = index >= t.L.busServoOffset;
+    const minSignal = bus ? t.L.busServoSignalMin : t.L.servoPulseMin;
+    const maxSignal = bus ? t.L.busServoSignalMax : t.L.servoPulseMax;
+    if (minSignal === undefined || maxSignal === undefined) return [];
+    const travelMax = Math.min(s.max, maxSignal - s.mid);
+    const travelMin = Math.max(s.min, minSignal - s.mid);
+    const lines = [];
+    if (travelMax < s.max) {
+        lines.push(`###WARNING: servo ${index + 1} max ${s.max} limited to ${travelMax} by center ${s.mid} (output max ${s.mid + travelMax} us)###`);
+    }
+    if (travelMin > s.min) {
+        lines.push(`###WARNING: servo ${index + 1} min ${s.min} limited to ${travelMin} by center ${s.mid} (output min ${s.mid + travelMin} us)###`);
+    }
+    return lines;
+}
+
 function flagsText(index, flags) {
     return `servo flags ${index} ${flags & SERVO_FLAG_REVERSED ? "+" : "-"}REV ${flags & SERVO_FLAG_GEO_CORR ? "+" : "-"}GEO`;
 }
@@ -806,6 +882,26 @@ export async function servoCommand(manifest, io, argument) {
     const sub = args[0].toLowerCase();
     if (sub === "status" || sub === "override") {
         throw new CliError(`servo ${sub} acts on live outputs and is not available in the configurator CLI`);
+    }
+
+    if (sub === "trim") {
+        const tt = trimTables(manifest);
+        if (count === 1) {
+            return (await servoTrimBlock(manifest, io, false, false)).join("\n");
+        }
+        if (count === 3) {
+            const index = atoi(args[1]);
+            if (index < 1 || index > tt.count) throw outOfRange();
+            const servo = readElement(await readGroup(io, tt.params), tt.params, index - 1);
+            const trim = clampTrim(tt, servo, atoi(args[2]));
+            const element = readElement(await readGroup(io, tt.trims), tt.trims, index - 1);
+            const f = repeatLayout(tt.trims).sub.trim;
+            const bytes = new Uint8Array(f.size);
+            setInt(bytes, 0, f.size, trim);
+            await io.writeRange(tt.trims.pgn, element.base + f.off, [...bytes]);
+            return trimLine(index - 1, trim);
+        }
+        throw new CliError("INVALID ARGUMENT COUNT");
     }
 
     if (sub === "flags") {
@@ -851,7 +947,8 @@ export async function servoCommand(manifest, io, argument) {
         const values = { mid, min, max, rneg, rpos, rate, speed, flags: flags & 0xffff };
         const { repeat } = repeatLayout(t.params);
         await io.writeRange(t.params.pgn, repeat.off + (index - 1) * repeat.stride, [...encodeElement(t.params, values)]);
-        return servoLine(index - 1, values);
+        // min/max are kept as given, but at this center the output may not reach them
+        return [...centerWarnings(t, index - 1, values), servoLine(index - 1, values)].join("\n");
     }
 
     throw new CliError("PARSING FAILED");
@@ -1388,6 +1485,12 @@ export const CONFIG_BLOCKS = [
     { heading: "feature", lines: featureLines, needs: ["featureConfig_System", "features"] },
     { heading: "serial", lines: serialLines, needs: ["serialConfig_System", "baud_rates", "serial_ports"] },
     { heading: "servo", lines: servoLines, needs: ["servoParams_SystemArray", "limits"] },
+    {
+        heading: "servo trim",
+        lines: servoTrimLines,
+        needs: ["servoTrims_SystemArray", "limits"],
+        when: (cli) => cli.limits?.servoTrimLimitPercent !== undefined,
+    },
     { heading: "mixer input", lines: mixerInputLines, needs: ["mixerInputs_SystemArray", "mixer_inputs", "limits"] },
     { heading: "mixer rule", lines: mixerRuleLines, needs: ["mixerRules_SystemArray", "mixer_ops", "mixer_inputs", "mixer_outputs", "limits"] },
     { heading: "beeper", lines: beeperLines, needs: ["beeperConfig_System", "beepers", "limits"] },
