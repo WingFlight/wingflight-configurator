@@ -21,6 +21,7 @@ import {
     readTaskInfo,
     readGyroRegisters,
     readSetpointInfo,
+    readFbusMux,
 } from "./access.js";
 import { resolveManifest, explainMissingManifest, ResolveError } from "./resolve.js";
 import { ParamCli } from "./cli.js";
@@ -147,6 +148,7 @@ export async function openParamSession({ sources, storage, fetchRelease, askForF
             battery: decodeBatteryState((await MSP.promise(MSPCodes.MSP_BATTERY_STATE)).data),
             setpoint: await readSetpointInfo(),
             mcuTypeId: FC.CONFIG?.mcuTypeId,
+            fbusMux: await readFbusMux(),
         }),
         // Switch the board's live profile, as the on-device `profile` command
         // did. MSP_SELECT_SETTING takes the rate profile with bit 7 set.

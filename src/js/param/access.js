@@ -10,7 +10,7 @@
 import { MSP } from "@/js/msp.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { decodeValues, encodeValues, settingSpan, ManifestError } from "./manifest.js";
-import { decodeTaskPage, decodeGyroRegisters, decodeSetpointInfo } from "./runtime.js";
+import { decodeTaskPage, decodeGyroRegisters, decodeSetpointInfo, decodeFbusMux } from "./runtime.js";
 
 /** Matches MSP_PARAM_PROTOCOL_VERSION in the firmware's msp_param.h. */
 export const SUPPORTED_PARAM_PROTOCOL = 1;
@@ -291,6 +291,13 @@ export async function readGyroRegisters() {
 export async function readSetpointInfo() {
     const view = await request(MSPCodes.MSP2_WING_SETPOINT_INFO, false, 3, "setpoint info");
     return decodeSetpointInfo(view);
+}
+
+/** The FBUS mux FPGA's state for `status`; null on builds without one, which refuse the request. */
+export async function readFbusMux() {
+    const reply = await MSP.promise(MSPCodes.MSP2_WING_FBUS_MUX_CONFIG, false);
+    if (!reply || reply.crcError || reply.unsupported) return null;
+    return decodeFbusMux(reply.data);
 }
 
 /**

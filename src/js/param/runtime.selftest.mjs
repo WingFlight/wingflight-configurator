@@ -20,6 +20,7 @@ import {
     decodeStatus,
     decodeBatteryState,
     formatStatus,
+    decodeFbusMux,
     TASK_INFO_FLAG_STATISTICS,
     TASK_INFO_FLAG_LATE_STATS,
 } from "./runtime.js";
@@ -212,7 +213,8 @@ sameText(
         "CPU:12%, cycle time: 125, GYRO rate: 8000, RX rate: 250",
         "Voltage: 1692 * 0.01V (4S battery - WARNING)",
         "Arming disable flags: RXLOSS CLI",
-        "# not reported over MSP: clock, Vref, core temperature, stack, EEPROM size, I2C errors, sensor models, uptime",
+        "# not reported over MSP: clock, Vref, core temperature, stack, EEPROM size, I2C errors, sensor models, uptime, " +
+            "the FBUS mux bitstream, XIP flash mode",
     ].join("\n"),
 );
 check("status without RX signal reports RX rate 0",
@@ -225,6 +227,20 @@ try {
     shortStatus = true;
 }
 check("a short status reply is rejected, not zero-filled", shortStatus);
+
+// MSP2_WING_FBUS_MUX_CONFIG: version, channels, DShot mask, UART, status, U32 word,
+// then (configured, in use) per channel, then the override flag
+const muxReply = (status) => new DataView(Uint8Array.from([
+    1, 4, 0, 2, status, 0x78, 0x56, 0x34, 0x12, 0, 0, 1, 1, 2, 2, 1, 0, 1,
+]).buffer);
+const mux = decodeFbusMux(muxReply(4));
+check("fbus mux: modes in use and the override decode", mux && mux.modes.join() === "0,1,2,0" && mux.override && mux.modeWord === 0x12345678);
+check("status prints the FBUS mux line after the voltage",
+    formatStatus({ status, battery, mcuTypeId: 4, setpoint: null, fbusMux: mux }, statusTables).split("\n")[6] ===
+        "FBUS mux FPGA: READY, word: 0x12345678, modes: PWM FBUS DSHOT PWM OVERRIDE");
+check("status leaves a disabled FBUS mux out",
+    !formatStatus({ status, battery, mcuTypeId: 4, setpoint: null, fbusMux: decodeFbusMux(muxReply(0)) }, statusTables).includes("FBUS mux FPGA:"));
+check("a short FBUS mux reply decodes to nothing", decodeFbusMux(new DataView(new Uint8Array(4).buffer)) === null);
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
 process.exit(failures ? 1 : 0);

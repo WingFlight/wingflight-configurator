@@ -229,7 +229,42 @@ const STATUS_SENSORS = [
  * names, uptime -- none of which any MSP reply has, so they are named as
  * missing rather than guessed.
  */
-export function formatStatus({ status, battery, mcuTypeId, setpoint }, tables = {}) {
+// fbusMuxFpgaStatus_e and fbusMuxMode_e, as the firmware's `status` names them
+const FBUS_MUX_STATUS_NAMES = ["DISABLED", "RESOURCE ERROR", "LOAD FAILED", "NO CONFIG ECHO", "READY"];
+const FBUS_MUX_MODE_NAMES = ["PWM", "FBUS", "DSHOT"];
+const FBUS_MUX_STATUS_DISABLED = 0;
+const FBUS_MUX_FIXED_LENGTH = 9; // version, channels, DShot mask, UART, status, U32 mode word
+const FBUS_MUX_CHANNEL_LENGTH = 2; // configured mode, mode in use
+
+/**
+ * Decode MSP2_WING_FBUS_MUX_CONFIG (FBUS mux FPGA builds; others refuse it):
+ * the status, the mode word sent to the FPGA, each channel's mode in use and
+ * whether an override is held. Null for a reply too short to hold them.
+ */
+export function decodeFbusMux(view) {
+    if (!view || view.byteLength < FBUS_MUX_FIXED_LENGTH) return null;
+    const channels = view.getUint8(1);
+    const status = view.getUint8(4);
+    const modeWord = view.getUint32(5, true);
+    const modes = [];
+    let at = FBUS_MUX_FIXED_LENGTH;
+    for (let ch = 0; ch < channels && at + FBUS_MUX_CHANNEL_LENGTH <= view.byteLength; ch++, at += FBUS_MUX_CHANNEL_LENGTH) {
+        modes.push(view.getUint8(at + 1));
+    }
+    const override = at < view.byteLength && view.getUint8(at) !== 0;
+    return { status, modeWord, modes, override };
+}
+
+/** The firmware's `status` line for the FBUS mux FPGA, when it is enabled; without the bitstream name. */
+function fbusMuxLine(mux) {
+    if (!mux || mux.status === FBUS_MUX_STATUS_DISABLED) return null;
+    const status = FBUS_MUX_STATUS_NAMES[mux.status] ?? `status ${mux.status}`;
+    const word = (mux.modeWord >>> 0).toString(16).padStart(8, "0");
+    const modes = mux.modes.map((m) => ` ${FBUS_MUX_MODE_NAMES[m] ?? m}`).join("");
+    return `FBUS mux FPGA: ${status}, word: 0x${word}, modes:${modes}${mux.override ? " OVERRIDE" : ""}`;
+}
+
+export function formatStatus({ status, battery, mcuTypeId, setpoint, fbusMux }, tables = {}) {
     const name = (list, index, fallback) => list?.[index] ?? fallback;
     const lines = [];
 
@@ -250,13 +285,19 @@ export function formatStatus({ status, battery, mcuTypeId, setpoint }, tables = 
 
     lines.push(`Voltage: ${battery.voltage} * 0.01V (${battery.cellCount}S battery - ${name(tables.battery_states, battery.state, battery.state)})`);
 
+    const mux = fbusMuxLine(fbusMux);
+    if (mux) lines.push(mux);
+
     const flags = [];
     for (let bit = 0; bit < 32; bit++) {
         if (status.armingDisableFlags & (1 << bit)) flags.push(` ${name(tables.arming_disable_flags, bit, `bit${bit}`)}`);
     }
     lines.push(`Arming disable flags:${flags.join("")}`);
 
-    lines.push("# not reported over MSP: clock, Vref, core temperature, stack, EEPROM size, I2C errors, sensor models, uptime");
+    lines.push(
+        "# not reported over MSP: clock, Vref, core temperature, stack, EEPROM size, I2C errors, sensor models, uptime, " +
+            "the FBUS mux bitstream, XIP flash mode",
+    );
     return lines.join("\n");
 }
 
