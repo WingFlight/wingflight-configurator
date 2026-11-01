@@ -268,14 +268,14 @@ export const MSPCodes = {
     // the offsets mean. See the firmware's
     // docs/parameter-addressing-design.md.
     //
-    // Deliberately started at 0x5F20 rather than 0x5F16: the block above grows
-    // one opcode at a time as features land, and this group stays contiguous.
-    MSP2_WING_BUILD_ID:               0x5F20,
-    MSP2_WING_PG_LIST:                0x5F21,
-    MSP2_WING_PARAM_READ:             0x5F22,
-    MSP2_WING_PARAM_WRITE:            0x5F23,
-    MSP2_WING_PG_DEFAULT:             0x5F24,
-    MSP2_WING_MANIFEST_READ:          0x5F25,
+    // One contiguous group, in the first free block after the opcodes above
+    // (0x5F1E-0x5F24 are FBUS OTA and the FBUS mux).
+    MSP2_WING_BUILD_ID:               0x5F35,
+    MSP2_WING_PG_LIST:                0x5F36,
+    MSP2_WING_PARAM_READ:             0x5F37,
+    MSP2_WING_PARAM_WRITE:            0x5F38,
+    MSP2_WING_PG_DEFAULT:             0x5F39,
+    MSP2_WING_MANIFEST_READ:          0x5F3A,
 
     // Runtime diagnostics the on-device CLI used to print. The firmware sends
     // raw values; src/js/param/runtime.js formats them.
