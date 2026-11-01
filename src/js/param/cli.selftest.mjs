@@ -595,10 +595,10 @@ if (adc && timerGroup) {
     const bytesOf = (symbol) => b.groups.get(groupBySymbol(symbol).pgn);
 
     // feature
-    check("feature enables by name", (await c.execute("feature GPS")) === "Enabled GPS");
-    check("feature sets the GPS bit", (bytesOf("featureConfig_System")[0] & (1 << 7)) !== 0);
-    check("feature matches a prefix, case-insensitively", (await c.execute("feature -gp")) === "Disabled GPS");
-    check("feature -x clears the bit", (bytesOf("featureConfig_System")[0] & (1 << 7)) === 0);
+    check("feature enables by name", (await c.execute("feature SOFTSERIAL")) === "Enabled SOFTSERIAL");
+    check("feature sets the SOFTSERIAL bit", (bytesOf("featureConfig_System")[0] & (1 << 6)) !== 0);
+    check("feature matches a prefix, case-insensitively", (await c.execute("feature -soft")) === "Disabled SOFTSERIAL");
+    check("feature -x clears the bit", (bytesOf("featureConfig_System")[0] & (1 << 6)) === 0);
     await throwsAsync("feature refuses an unknown name", () => c.execute("feature NOPE"));
     check("feature list names every feature",
         (await c.execute("feature list")) === `Available:${cliTables.features.map((f) => ` ${f.name}`).join("")}`);
@@ -638,8 +638,9 @@ if (adc && timerGroup) {
     check("aux stores steps centred on 1500", auxBytes[4] === 40 && auxBytes[5] === 120);
     check("aux with four arguments defaults logic and link (backwards compatibility)",
         (await c.execute("aux 1 13 2 900 1300")) === "aux 1 13 2 900 1300 0 0");
-    const perm3 = cliTables.boxes.find((x) => x.perm === 3);
-    await c.execute("aux 3 3 1 1500 2000 0 0");
+    // a mode whose permanent id differs from its box id
+    const perm3 = cliTables.boxes.find((x) => x.perm !== x.id);
+    await c.execute(`aux 3 ${perm3.perm} 1 1500 2000 0 0`);
     check("aux stores the box id for a permanent id",
         auxBytes[3 * auxGroup.elem_size] === perm3.id, `${auxBytes[3 * auxGroup.elem_size]} vs ${perm3.id}`);
     check("aux clears a slot when too few arguments are valid",
@@ -659,7 +660,7 @@ if (adc && timerGroup) {
     check("diff keeps only the changed port", diffed.filter((l) => l.startsWith("serial ")).join("|") === "serial 1 64 115200 57600 0 230400");
     check("diff keeps the changed map", diffed.includes("map TAER1234"));
     check("diff keeps only changed aux slots",
-        diffed.filter((l) => l.startsWith("aux ")).join("|") === "aux 0 0 0 1700 2100 1 0|aux 1 13 2 900 1300 0 0|aux 3 3 1 1500 2000 0 0",
+        diffed.filter((l) => l.startsWith("aux ")).join("|") === `aux 0 0 0 1700 2100 1 0|aux 1 13 2 900 1300 0 0|aux 3 ${perm3.perm} 1 1500 2000 0 0`,
         diffed.filter((l) => l.startsWith("aux ")).join("|"));
 
     // The point of all of it: a diff restores these groups exactly.
