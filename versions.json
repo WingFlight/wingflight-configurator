@@ -257,13 +257,6 @@
       "path": "./feature-review-fixes-2/",
       "branch": "feature/review-fixes-2",
       "date": "2026-10-31T06:11:27Z"
-    },
-    {
-      "type": "branch",
-      "name": "feature-rx-backup2",
-      "path": "./feature-rx-backup2/",
-      "branch": "feature/rx-backup2",
-      "date": "2026-11-01T08:50:09Z"
     }
   ]
 }
