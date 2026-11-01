@@ -51,7 +51,8 @@ export function hasRxInputBackupPort(ports, index) {
 //   [v3+] U8 mainLinkUp
 //   [v2+] U8 provider (backup 1)
 //   U8 linkUp (backup 1)
-//   U8 activeSource: 0 = primary RX, n = backup n in control (v1-3: 1 = backup)
+//   U8 activeSource: 0 = no backup in control (primary RX flying, or every
+//      link down: see mainLinkUp), n = backup n in control (v1-3: 1 = backup)
 //   U8 channelCount, channelCount x U16 (backup 1)
 //   [v4+] U8 portCount, then for each further backup:
 //         U8 enabled, U8 provider, U8 linkUp, U8 channelCount, channelCount x U16

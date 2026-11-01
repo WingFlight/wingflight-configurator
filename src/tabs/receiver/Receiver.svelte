@@ -251,9 +251,12 @@
     Object.assign(FC.RC_CONFIG, initialState.RC_CONFIG);
     Object.assign(FC.RX_CONFIG, initialState.RX_CONFIG);
     Object.assign(FC.TELEMETRY_CONFIG, initialState.TELEMETRY_CONFIG);
+    // A deep copy, not Object.assign of the nested `ports` array: initialState
+    // is $state, so its array is a proxy, and sharing it with FC would make
+    // later edits change the baseline too and hide them from the dirty diff.
     Object.assign(
       FC.RX_INPUT_BACKUP_CONFIG,
-      initialState.RX_INPUT_BACKUP_CONFIG,
+      $state.snapshot(initialState.RX_INPUT_BACKUP_CONFIG),
     );
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
     receiverTypeRef?.cleanup();
