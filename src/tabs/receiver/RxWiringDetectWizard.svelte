@@ -5,8 +5,10 @@
   import { MSP } from "@/js/msp.svelte.js";
 
   // mspCode: which trial command to drive - MSPCodes.MSP2_WING_RX_SERIAL_TRIAL
-  // for the main RX, MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL for the backup
-  // port. Both share the exact same start/poll/stop wire shape. onDetected is
+  // for the main RX, MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL for a backup
+  // port. Both share the exact same start/poll/stop wire shape; the backup
+  // variant takes the backup's index (0 = backup 1) as a second request byte,
+  // passed in as trialIndex. onDetected is
   // called with (inverted, halfDuplex, pinSwap) on SUCCESS so the caller can
   // apply the result to whichever FC config object it owns (FC.RX_CONFIG vs
   // FC.RX_INPUT_BACKUP_CONFIG) - this component has no opinion on that.
@@ -16,8 +18,10 @@
   // its own Save button.
   let {
     mspCode,
+    trialIndex = undefined,
     onDetected,
     titleKey = "receiverWiringDetectWizardTitle",
+    titleArgs = [],
     onButtonDisabled,
     onClose,
     onSaveRequested,
@@ -49,7 +53,10 @@
   // rejects and has no timeout of its own on a real (non-virtual)
   // connection, so a missed packet would otherwise hang this loop forever.
   function sendTrialQuery(action) {
-    const payload = action ? [action] : false;
+    let payload = false;
+    if (action) {
+      payload = trialIndex === undefined ? [action] : [action, trialIndex];
+    }
 
     return new Promise((resolve) => {
       let settled = false;
@@ -287,7 +294,7 @@
 </script>
 
 <dialog bind:this={dialogEl} onclose={handleDialogClose}>
-  <h3>{$i18n.t(titleKey)}</h3>
+  <h3>{t(titleKey, titleArgs)}</h3>
   <div class="wizard-step">{wizardStep}</div>
   <div class="wizard-detail">{wizardDetail}</div>
   <div class="wizard-progress" aria-hidden="true">

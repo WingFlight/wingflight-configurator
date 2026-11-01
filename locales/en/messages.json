@@ -866,8 +866,8 @@
     "tabFbusSensors": {
         "message": "FBUS/S.Port Sensors"
     },
-    "tabRxInputBackupConfig": {
-        "message": "Serial RX #2"
+    "receiverBackupTitle": {
+        "message": "Backup Receiver $1"
     },
     "fbusSensorsDescription": {
         "message": "Sensors observed on the FBUS/S.Port bus while this board is acting as an FBUS or S.Port master, with live readings from the sensor types the firmware decodes."
@@ -1119,7 +1119,7 @@
         "message": "Set crsf_sensors_use_rpm = ON (CLI-only) to feed this into blackbox, telemetry, RPM Filter, and the Governor. Telemetry-rate, not motor-rate -- use at your own risk for RPM Filter or the Governor's RPM modes, both of which need bidirectional DShot or a dedicated RPM/frequency sensor to actually track real motor speed."
     },
     "rxInputBackupStatusDescription": {
-        "message": "Live status for the secondary RX input assigned as a backup if the main RX link is lost. See SBUS-In Fallback Receiver in the docs for setup."
+        "message": "Live status for a backup receiver that takes over if the primary RX link is lost. See Backup RX Input in the docs for setup."
     },
     "rxInputBackupStatusLinkUp": {
         "message": "Link: Up"
@@ -1131,7 +1131,7 @@
         "message": "Active Source: Main RX"
     },
     "rxInputBackupStatusActiveBackup": {
-        "message": "Active Source: Backup RX"
+        "message": "Active Source: Backup $1"
     },
     "receiverBackupRxProvider": {
         "message": "Protocol"
@@ -1682,7 +1682,7 @@
         "message": "A setup tool is holding the model: a forced mode, servo probe, or servo, mixer or motor override (for example the Setup Wizard). Arming works again once it lets go."
     },
     "statusArmingDisableFlagsTooltipBACKUP_RX": {
-        "message": "A backup RX is configured but has not yet linked. Power-cycle range test the backup receiver, or check its wiring, before arming.",
+        "message": "A backup receiver is configured but has not linked yet. Every configured backup must link before the first arm. Power-cycle the backup receiver, or check its wiring and binding, before arming.",
         "description": "Message that pops up to describe the BACKUP_RX arming disable flag"
     },
     "statusArmingDisableFlagsTooltipARM_SWITCH": {
@@ -2348,16 +2348,19 @@
         "message": "Telemetry: FrSky SmartPort"
     },
     "portsFunction_SPORT_MASTER": {
-        "message": "S.PORT Master"
+        "message": "Bus: S.PORT Master"
     },
     "portsFunction_SRXL2_ESC": {
-        "message": "SRXL2 ESC"
+        "message": "ESC: SRXL2"
     },
     "portsFunction_CRSF_SENSORS": {
-        "message": "CRSF Sensors"
+        "message": "Bus: CRSF Sensors"
     },
     "portsFunction_RX_INPUT_BACKUP": {
-        "message": "Serial Rx (Backup)"
+        "message": "Receiver: Backup 1"
+    },
+    "portsFunction_RX_INPUT_BACKUP2": {
+        "message": "Receiver: Backup 2"
     },
     "portsFunction_TELEMETRY_IBUS": {
         "message": "Telemetry: FlySky iBUS"
@@ -2372,10 +2375,10 @@
         "message": "Telemetry: Spektrum SRXL"
     },
     "portsFunction_ESC_SENSOR": {
-        "message": "ESC Telemetry"
+        "message": "ESC: Telemetry"
     },
     "portsFunction_RX_SERIAL": {
-        "message": "Serial Rx"
+        "message": "Receiver: Primary"
     },
     "portsFunction_BLACKBOX": {
         "message": "Blackbox Logging"
@@ -2390,10 +2393,10 @@
         "message": "Benewake LIDAR"
     },
     "portsFunction_SBUS_OUT": {
-        "message": "S.BUS Output"
+        "message": "Bus: S.BUS Output"
     },
     "portsFunction_FBUS_OUT": {
-        "message": "F.BUS"
+        "message": "Bus: F.BUS Master"
     },
     "portsFbusMuxReserved": {
         "message": "Used by the FBUS mux"
@@ -2529,7 +2532,7 @@
         "message": "Loaded Profile: <strong class=\"message-positive\">$1</strong>"
     },
     "receiverSelection": {
-        "message": "Serial RX #1"
+        "message": "Primary Receiver"
     },
     "receiverSelectionSectionSignaling": {
         "message": "Signaling"
@@ -2586,7 +2589,7 @@
         "message": "Detect RX Wiring"
     },
     "receiverBackupWiringDetectWizardTitle": {
-        "message": "Detect Backup RX Wiring"
+        "message": "Detect Backup Receiver $1 Wiring"
     },
     "receiverWiringDetectWizardStep1": {
         "message": "Step 1 of 2: Scanning"

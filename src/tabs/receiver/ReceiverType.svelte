@@ -21,7 +21,7 @@
     setRxProto,
     mainLinkUp,
     hasBackupRxPort,
-    backupActive,
+    backupActiveIndex,
     onSaveRequested,
     hasUnsavedChanges,
     armed,
@@ -132,9 +132,11 @@
           : $i18n.t("rxInputBackupStatusLinkDown")}
       </span>
       {#if hasBackupRxPort}
-        <span class="badge" class:active={backupActive}>
-          {backupActive
-            ? $i18n.t("rxInputBackupStatusActiveBackup")
+        <span class="badge" class:active={backupActiveIndex >= 0}>
+          {backupActiveIndex >= 0
+            ? $i18n.t("rxInputBackupStatusActiveBackup", {
+                1: backupActiveIndex + 1,
+              })
             : $i18n.t("rxInputBackupStatusActiveMain")}
         </span>
       {/if}

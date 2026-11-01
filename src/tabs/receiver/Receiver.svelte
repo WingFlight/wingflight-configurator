@@ -29,6 +29,12 @@
     RX_PROTOCOLS,
     EXTERNAL_TELEMETRY_PROTOCOLS,
   } from "./protocols.js";
+  import {
+    RX_INPUT_BACKUP_COUNT,
+    RX_INPUT_BACKUP_PROVIDER_NAMES,
+    RX_INPUT_BACKUP_PROVIDER_FPORT2,
+    hasRxInputBackupPort,
+  } from "@/js/RxInputBackup.js";
 
   let loading = $state(true);
   // $state, not a plain let: `changes` below reads this inside an early
@@ -56,15 +62,19 @@
     unmount(instance);
   }
 
-  function onClickDetectBackupWiring() {
+  // index: which backup receiver (0 = Backup 1) the wizard drives. One wizard
+  // at a time - it is a modal dialog, and the firmware runs one trial at a time.
+  function onClickDetectBackupWiring(index) {
     closeBackupWizard();
+
+    const config = FC.RX_INPUT_BACKUP_CONFIG.ports[index];
 
     // See ReceiverType.svelte's onClickDetectWiring() for why this is
     // snapshotted and conditionally restored on close.
     const before = {
-      inverted: FC.RX_INPUT_BACKUP_CONFIG.inverted,
-      halfDuplex: FC.RX_INPUT_BACKUP_CONFIG.halfDuplex,
-      pinSwap: FC.RX_INPUT_BACKUP_CONFIG.pinSwap,
+      inverted: config.inverted,
+      halfDuplex: config.halfDuplex,
+      pinSwap: config.pinSwap,
     };
     let applied = false;
     let saved = false;
@@ -73,19 +83,21 @@
       target: document.body,
       props: {
         mspCode: MSPCodes.MSP2_WING_RX_INPUT_BACKUP_TRIAL,
+        trialIndex: index,
         titleKey: "receiverBackupWiringDetectWizardTitle",
+        titleArgs: [index + 1],
         onDetected: (inverted, halfDuplex, pinSwap) => {
           applied = true;
-          FC.RX_INPUT_BACKUP_CONFIG.inverted = inverted;
-          FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = halfDuplex;
-          FC.RX_INPUT_BACKUP_CONFIG.pinSwap = pinSwap;
+          config.inverted = inverted;
+          config.halfDuplex = halfDuplex;
+          config.pinSwap = pinSwap;
         },
         onButtonDisabled: (v) => (backupWizardDisabled = v),
         onClose: () => {
           if (applied && !saved) {
-            FC.RX_INPUT_BACKUP_CONFIG.inverted = before.inverted;
-            FC.RX_INPUT_BACKUP_CONFIG.halfDuplex = before.halfDuplex;
-            FC.RX_INPUT_BACKUP_CONFIG.pinSwap = before.pinSwap;
+            config.inverted = before.inverted;
+            config.halfDuplex = before.halfDuplex;
+            config.pinSwap = before.pinSwap;
           }
           closeBackupWizard();
         },
@@ -161,8 +173,8 @@
     }
 
     // Polled unconditionally, not just when hasBackupRxPort - mainLinkUp
-    // (the primary RX's own live signal state) is shown in the Serial RX #1
-    // box regardless of whether a backup port is configured at all; the
+    // (the primary RX's own live signal state) is shown in the Primary
+    // Receiver box regardless of whether a backup port is configured at all; the
     // backup-specific fields just stay at their disabled/empty defaults when
     // it isn't.
     await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
@@ -284,43 +296,17 @@
     ),
   );
 
-  // Serial Rx (Backup) - see FUNCTION_RX_INPUT_BACKUP in wingflight-firmware.
-  // No dedicated feature bit, same as SERIALRX_FUNCTION above: the port assignment
-  // itself is the enablement.
-  const RX_INPUT_BACKUP_FUNCTION = 8388608; // FUNCTION_RX_INPUT_BACKUP, 1 << 23
-  let hasBackupRxPort = $derived(
-    FC.SERIAL_CONFIG.ports.some(
-      (port) => port.functionMask & RX_INPUT_BACKUP_FUNCTION,
+  // Backup receivers - see FUNCTION_RX_INPUT_BACKUP/FUNCTION_RX_INPUT_BACKUP2
+  // in wingflight-firmware (js/RxInputBackup.js). No dedicated feature bit,
+  // same as SERIALRX_FUNCTION above: the port assignment itself is the
+  // enablement. One box per backup whose port is assigned.
+  let backupPortAssigned = $derived(
+    Array.from({ length: RX_INPUT_BACKUP_COUNT }, (_, index) =>
+      hasRxInputBackupPort(FC.SERIAL_CONFIG.ports, index),
     ),
   );
-  let backupRxStatus = $derived(
-    FC.RX_INPUT_BACKUP_STATUS ?? {
-      enabled: false,
-      mainLinkUp: null,
-      provider: 0,
-      linkUp: false,
-      activeSource: "main",
-      channels: [],
-    },
-  );
-
-  // Keep in sync with wingflight-firmware's cli/settings.c
-  // lookupTableRxInputBackupProvider[] (same order, NONE=0 first) - this
-  // array's index must match the firmware enum. Display text matches
-  // RX_PROTOCOLS' own naming (./protocols.js) for the same protocols, so the
-  // two dropdowns read consistently rather than one using full names and the
-  // other short codes.
-  const RX_INPUT_BACKUP_PROVIDER_NAMES = [
-    "None",
-    "Futaba S.BUS",
-    "FrSky FBUS",
-    "FrSky F.PORT",
-    "FrSky FBUS",
-    "Jeti EXBUS",
-    "TBS CRSF",
-  ];
-  // Index 4 (old FPORT2) also detects the speed; it shows only if stored
-  const RX_INPUT_BACKUP_PROVIDER_FPORT2 = 4;
+  let hasBackupRxPort = $derived(backupPortAssigned.some(Boolean));
+  let backupRxStatus = $derived(FC.RX_INPUT_BACKUP_STATUS);
 
   let extTelemProto = $derived.by(() => {
     for (const proto of EXTERNAL_TELEMETRY_PROTOCOLS) {
@@ -510,107 +496,128 @@
         {setRxProto}
         mainLinkUp={backupRxStatus.mainLinkUp}
         {hasBackupRxPort}
-        backupActive={backupRxStatus.activeSource === "backup"}
+        backupActiveIndex={backupRxStatus.activeIndex}
         onSaveRequested={onSave}
         hasUnsavedChanges={changes.length > 0}
         {armed}
       />
-      {#if hasBackupRxPort}
-        {#snippet backupWiringDetectActions()}
-          <div class="wiring-detect">
-            <button
-              class="btn"
-              disabled={backupWizardDisabled ||
-                FC.RX_INPUT_BACKUP_CONFIG.provider === 0 ||
-                changes.length > 0 ||
-                armed}
-              title={armed
-                ? $i18n.t("receiverWiringDetectArmedFirst")
-                : changes.length > 0
-                  ? $i18n.t("receiverWiringDetectSaveFirst")
-                  : undefined}
-              onclick={onClickDetectBackupWiring}
-            >
-              {$i18n.t("receiverWiringDetectButton")}
-            </button>
-            <HelpIcon>
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html $i18n.t("receiverWiringDetectHelp")}
-            </HelpIcon>
-          </div>
-        {/snippet}
-        {#snippet backupConfigHeader()}
-          <div class="section-header">
-            <span class="title">{$i18n.t("tabRxInputBackupConfig")}</span>
-            <div class="grow"></div>
-            <span
-              class="badge"
-              class:up={backupRxStatus.linkUp}
-              class:down={!backupRxStatus.linkUp}
-            >
-              {backupRxStatus.linkUp
-                ? $i18n.t("rxInputBackupStatusLinkUp")
-                : $i18n.t("rxInputBackupStatusLinkDown")}
-            </span>
-            <span
-              class="badge"
-              class:active={backupRxStatus.activeSource === "backup"}
-            >
-              {backupRxStatus.activeSource === "backup"
-                ? $i18n.t("rxInputBackupStatusActiveBackup")
-                : $i18n.t("rxInputBackupStatusActiveMain")}
-            </span>
-          </div>
-        {/snippet}
-        <Section header={backupConfigHeader}>
-          <SubSection>
-            <Field id="backup-rx-provider" label="receiverBackupRxProvider">
-              <select
-                id="backup-rx-provider"
-                bind:value={FC.RX_INPUT_BACKUP_CONFIG.provider}
+      {#each backupPortAssigned as assigned, index (index)}
+        {#if assigned}
+          {@const portStatus = backupRxStatus.ports[index]}
+          {#snippet backupWiringDetectActions()}
+            <div class="wiring-detect">
+              <button
+                class="btn"
+                disabled={backupWizardDisabled ||
+                  FC.RX_INPUT_BACKUP_CONFIG.ports[index].provider === 0 ||
+                  changes.length > 0 ||
+                  armed}
+                title={armed
+                  ? $i18n.t("receiverWiringDetectArmedFirst")
+                  : changes.length > 0
+                    ? $i18n.t("receiverWiringDetectSaveFirst")
+                    : undefined}
+                onclick={() => onClickDetectBackupWiring(index)}
               >
-                {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (i)}
-                  {#if i !== RX_INPUT_BACKUP_PROVIDER_FPORT2 || FC.RX_INPUT_BACKUP_CONFIG.provider === i}
-                    <option value={i}>{name}</option>
-                  {/if}
-                {/each}
-              </select>
-            </Field>
-          </SubSection>
-          <SubSection
-            label="receiverBackupRxSignaling"
-            actions={backupWiringDetectActions}
-          >
-            <Field id="backup-rx-inverted" label="receiverBackupRxInverted">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxInvertedHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-inverted"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.inverted}
-              />
-            </Field>
-            <Field id="backup-rx-halfduplex" label="receiverBackupRxHalfDuplex">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxHalfDuplexHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-halfduplex"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.halfDuplex}
-              />
-            </Field>
-            <Field id="backup-rx-pinswap" label="receiverBackupRxPinSwap">
-              {#snippet tooltip()}
-                <Tooltip help="receiverBackupRxPinSwapHelp" />
-              {/snippet}
-              <Switch
-                id="backup-rx-pinswap"
-                bind:checked={FC.RX_INPUT_BACKUP_CONFIG.pinSwap}
-              />
-            </Field>
-          </SubSection>
-        </Section>
-      {/if}
+                {$i18n.t("receiverWiringDetectButton")}
+              </button>
+              <HelpIcon>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html $i18n.t("receiverWiringDetectHelp")}
+              </HelpIcon>
+            </div>
+          {/snippet}
+          {#snippet backupConfigHeader()}
+            <div class="section-header">
+              <span class="title">
+                {$i18n.t("receiverBackupTitle", { 1: index + 1 })}
+              </span>
+              <div class="grow"></div>
+              <span
+                class="badge"
+                class:up={portStatus.linkUp}
+                class:down={!portStatus.linkUp}
+              >
+                {portStatus.linkUp
+                  ? $i18n.t("rxInputBackupStatusLinkUp")
+                  : $i18n.t("rxInputBackupStatusLinkDown")}
+              </span>
+              <span
+                class="badge"
+                class:active={backupRxStatus.activeIndex === index}
+              >
+                {backupRxStatus.activeIndex >= 0
+                  ? $i18n.t("rxInputBackupStatusActiveBackup", {
+                      1: backupRxStatus.activeIndex + 1,
+                    })
+                  : $i18n.t("rxInputBackupStatusActiveMain")}
+              </span>
+            </div>
+          {/snippet}
+          <Section header={backupConfigHeader}>
+            <SubSection>
+              <Field
+                id="backup-rx-provider-{index}"
+                label="receiverBackupRxProvider"
+              >
+                <select
+                  id="backup-rx-provider-{index}"
+                  bind:value={FC.RX_INPUT_BACKUP_CONFIG.ports[index].provider}
+                >
+                  {#each RX_INPUT_BACKUP_PROVIDER_NAMES as name, i (i)}
+                    {#if i !== RX_INPUT_BACKUP_PROVIDER_FPORT2 || FC.RX_INPUT_BACKUP_CONFIG.ports[index].provider === i}
+                      <option value={i}>{name}</option>
+                    {/if}
+                  {/each}
+                </select>
+              </Field>
+            </SubSection>
+            <SubSection
+              label="receiverBackupRxSignaling"
+              actions={backupWiringDetectActions}
+            >
+              <Field
+                id="backup-rx-inverted-{index}"
+                label="receiverBackupRxInverted"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxInvertedHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-inverted-{index}"
+                  bind:checked={FC.RX_INPUT_BACKUP_CONFIG.ports[index].inverted}
+                />
+              </Field>
+              <Field
+                id="backup-rx-halfduplex-{index}"
+                label="receiverBackupRxHalfDuplex"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxHalfDuplexHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-halfduplex-{index}"
+                  bind:checked={
+                    FC.RX_INPUT_BACKUP_CONFIG.ports[index].halfDuplex
+                  }
+                />
+              </Field>
+              <Field
+                id="backup-rx-pinswap-{index}"
+                label="receiverBackupRxPinSwap"
+              >
+                {#snippet tooltip()}
+                  <Tooltip help="receiverBackupRxPinSwapHelp" />
+                {/snippet}
+                <Switch
+                  id="backup-rx-pinswap-{index}"
+                  bind:checked={FC.RX_INPUT_BACKUP_CONFIG.ports[index].pinSwap}
+                />
+              </Field>
+            </SubSection>
+          </Section>
+        {/if}
+      {/each}
       <ChannelRange />
       {#if telemetry}
         <div transition:slide>

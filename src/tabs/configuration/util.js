@@ -1,6 +1,6 @@
 import semver from "semver";
 
-import { API_VERSION_22_15 } from "@/js/configurator.svelte.js";
+import { API_VERSION_22_15, API_VERSION_22_16 } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 
 export const UART_NAMES = {
@@ -71,27 +71,36 @@ export const BAUD_RATE_OPTIONS = {
   [PORT_TYPES.AUTO]: ["AUTO"],
 };
 
+// The dropdown lists these in this order, grouped: core functions, then the
+// receivers in failover order, telemetry to the radio, ESC links, and the
+// buses the flight controller hosts. The labels (portsFunction_<name>) share
+// a "Group: Item" form within each group.
 // hide: not compiled into Wingflight firmware. Listed only for a port that is
 // still set to it, so it shows its real name instead of "Custom".
 export const PORT_FUNCTIONS = [
   { id: 0, excl: 0, name: "DISABLED", type: PORT_TYPES.DISABLED },
   { id: 1, excl: 1, name: "MSP", type: PORT_TYPES.MSP },
   { id: 2, excl: 2, name: "GPS", type: PORT_TYPES.GPS },
-  { id: 64, excl: 64, name: "RX_SERIAL", type: PORT_TYPES.AUTO },
-  { id: 1024, excl: 1024, name: "ESC_SENSOR", type: PORT_TYPES.AUTO },
   { id: 128, excl: 128, name: "BLACKBOX", type: PORT_TYPES.BLACKBOX },
-  { id: 262144, excl: 262144, name: "SBUS_OUT", type: PORT_TYPES.AUTO },
-  { id: 524288, excl: 524288, name: "FBUS_OUT", type: PORT_TYPES.AUTO },
-  { id: 1048576, excl: 1048576, name: "SPORT_MASTER", type: PORT_TYPES.AUTO },
-  { id: 2097152, excl: 2097152, name: "SRXL2_ESC", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
-  { id: 4194304, excl: 4194304, name: "CRSF_SENSORS", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
+  // Receivers: primary, then the backups in the order they take over
+  { id: 64, excl: 64, name: "RX_SERIAL", type: PORT_TYPES.AUTO },
   { id: 8388608, excl: 8388608, name: "RX_INPUT_BACKUP", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
-  { id: 4, excl: 4668, name: "TELEMETRY_FRSKY", type: PORT_TYPES.TELEM, hide: true },
+  { id: 16777216, excl: 16777216, name: "RX_INPUT_BACKUP2", type: PORT_TYPES.AUTO, minApiVersion: API_VERSION_22_16 },
+  // Telemetry to the radio
   { id: 32, excl: 4668, name: "TELEMETRY_SMARTPORT", type: PORT_TYPES.TELEM },
   { id: 4096, excl: 4668, name: "TELEMETRY_IBUS", type: PORT_TYPES.TELEM },
   { id: 8, excl: 4668, name: "TELEMETRY_HOTT", type: PORT_TYPES.TELEM },
+  { id: 4, excl: 4668, name: "TELEMETRY_FRSKY", type: PORT_TYPES.TELEM, hide: true },
   { id: 512, excl: 4668, name: "TELEMETRY_MAVLINK", type: PORT_TYPES.MAVLINK, hide: true },
   { id: 16, excl: 4668, name: "TELEMETRY_LTM", type: PORT_TYPES.TELEM, hide: true },
+  // ESC links
+  { id: 1024, excl: 1024, name: "ESC_SENSOR", type: PORT_TYPES.AUTO },
+  { id: 2097152, excl: 2097152, name: "SRXL2_ESC", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
+  // Buses the flight controller hosts
+  { id: 262144, excl: 262144, name: "SBUS_OUT", type: PORT_TYPES.AUTO },
+  { id: 524288, excl: 524288, name: "FBUS_OUT", type: PORT_TYPES.AUTO },
+  { id: 1048576, excl: 1048576, name: "SPORT_MASTER", type: PORT_TYPES.AUTO },
+  { id: 4194304, excl: 4194304, name: "CRSF_SENSORS", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
 ];
 
 export const VCP_PORT_IDENTIFIER = 20;
