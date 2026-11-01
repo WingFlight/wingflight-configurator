@@ -1,6 +1,6 @@
 import semver from "semver";
 
-import { API_VERSION_22_15, API_VERSION_22_16 } from "@/js/configurator.svelte.js";
+import { API_VERSION_22_15 } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
 
 export const UART_NAMES = {
@@ -85,7 +85,7 @@ export const PORT_FUNCTIONS = [
   // Receivers: primary, then the backups in the order they take over
   { id: 64, excl: 64, name: "RX_SERIAL", type: PORT_TYPES.AUTO },
   { id: 8388608, excl: 8388608, name: "RX_INPUT_BACKUP", type: PORT_TYPES.AUTO, minApiVersion: "22.2.0" },
-  { id: 16777216, excl: 16777216, name: "RX_INPUT_BACKUP2", type: PORT_TYPES.AUTO, minApiVersion: API_VERSION_22_16 },
+  { id: 16777216, excl: 16777216, name: "RX_INPUT_BACKUP2", type: PORT_TYPES.AUTO, minApiVersion: API_VERSION_22_15 },
   // Telemetry to the radio
   { id: 32, excl: 4668, name: "TELEMETRY_SMARTPORT", type: PORT_TYPES.TELEM },
   { id: 4096, excl: 4668, name: "TELEMETRY_IBUS", type: PORT_TYPES.TELEM },
