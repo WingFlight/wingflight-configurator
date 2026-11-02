@@ -273,7 +273,11 @@
       "name": "feature-srxl2-motor2",
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
-      "date": "2026-11-02T17:03:35Z"
+      "date": "2026-11-02T17:03:35Z",
+      "number": 219,
+      "title": "Show the SRXL2 ESC settings on the Motors tab",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/219",
+      "draft": false
     }
   ]
 }
