@@ -1,8 +1,10 @@
 <script>
   import diff from "microdiff";
+  import semver from "semver";
   import { onMount, onDestroy } from "svelte";
   import { slide } from "svelte/transition";
 
+  import { API_VERSION_22_15 } from "@/js/configurator.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { FC } from "@/js/fc.svelte.js";
   import { reinitialiseConnection } from "@/js/serial_backend";
@@ -54,6 +56,7 @@
     return $state.snapshot({
       MOTOR_CONFIG: FC.MOTOR_CONFIG,
       ESC_SENSOR_CONFIG: FC.ESC_SENSOR_CONFIG,
+      SRXL2_ESC_CONFIG: FC.SRXL2_ESC_CONFIG,
       GOVERNOR_CONFIG: FC.GOVERNOR_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
@@ -76,6 +79,12 @@
     await MSP.promise(MSPCodes.MSP_MOTOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_ESC_SENSOR_CONFIG);
+    // SRXL2 ESC settings. The helper leaves SRXL2_ESC_CONFIG null on
+    // firmware that doesn't answer the message, which hides the section.
+    FC.SRXL2_ESC_CONFIG = null;
+    if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_15)) {
+      await MSP.promise(MSPCodes.MSP2_WING_SRXL2_ESC_CONFIG);
+    }
     await MSP.promise(MSPCodes.MSP2_WING_GOVERNOR_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR);
     await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
@@ -146,6 +155,9 @@
     await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
     await save(MSPCodes.MSP_SET_MOTOR_CONFIG);
     await save(MSPCodes.MSP_SET_ESC_SENSOR_CONFIG);
+    if (FC.SRXL2_ESC_CONFIG) {
+      await save(MSPCodes.MSP2_WING_SET_SRXL2_ESC_CONFIG);
+    }
     await save(MSPCodes.MSP2_WING_SET_GOVERNOR_CONFIG);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
@@ -161,6 +173,9 @@
 
     Object.assign(FC.MOTOR_CONFIG, initialState.MOTOR_CONFIG);
     Object.assign(FC.ESC_SENSOR_CONFIG, initialState.ESC_SENSOR_CONFIG);
+    FC.SRXL2_ESC_CONFIG = initialState.SRXL2_ESC_CONFIG
+      ? { ...initialState.SRXL2_ESC_CONFIG }
+      : null;
     Object.assign(FC.GOVERNOR_CONFIG, initialState.GOVERNOR_CONFIG);
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
     telemetryRef?.cleanup();

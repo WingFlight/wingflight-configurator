@@ -293,6 +293,9 @@ class FlightController {
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
     };
+    // MSP2_WING_SRXL2_ESC_CONFIG: throttle_rate_hz, telem_interval_frames, motor2_channel.
+    // Null until read, and on firmware without the message.
+    this.SRXL2_ESC_CONFIG = null;
     // FBUS mux FPGA (src/js/FbusMux.js), null on builds without one
     this.FBUS_MUX = null;
     this.PID_NAMES =                [];

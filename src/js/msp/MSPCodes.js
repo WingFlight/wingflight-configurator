@@ -255,6 +255,8 @@ export const MSPCodes = {
     // 0x5F33: 0x5F28-0x5F32 are taken on open firmware branches.
     MSP2_WING_FBUS_SENSORS_STATUS:    0x5F33,
     MSP2_WING_SERIAL_STATUS:          0x5F34,
+    MSP2_WING_SRXL2_ESC_CONFIG:       0x5F35,
+    MSP2_WING_SET_SRXL2_ESC_CONFIG:   0x5F36,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
