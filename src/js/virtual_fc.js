@@ -556,6 +556,23 @@ function encodeFbusSensorsStatus() {
   return Uint8Array.from(buffer);
 }
 
+// MSP2_WING_SRXL2_ESC_CONFIG / _SET_, firmware pg/srxl2_esc.c defaults. A save is
+// kept so the Motors tab reads it back after its reboot.
+const virtualSrxl2EscConfig = {
+  throttle_rate_hz: 250,
+  telem_interval_frames: 7,
+  motor2_channel: 0,
+};
+
+function encodeSrxl2EscConfig() {
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer.push16(virtualSrxl2EscConfig.throttle_rate_hz);
+  buffer.push8(virtualSrxl2EscConfig.telem_interval_frames);
+  buffer.push8(virtualSrxl2EscConfig.motor2_channel);
+  return Uint8Array.from(buffer);
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -575,6 +592,18 @@ function decodeVirtualReply(code, payload) {
 // the outgoing write payload (a plain array of byte values) for write codes.
 export function getVirtualResponse(code, requestData) {
   switch (code) {
+    case MSPCodes.MSP2_WING_SRXL2_ESC_CONFIG:
+      return decodeVirtualReply(code, encodeSrxl2EscConfig());
+    // Exactly four bytes, as msp.c requires: u16 rate, u8 interval, u8 channel.
+    case MSPCodes.MSP2_WING_SET_SRXL2_ESC_CONFIG:
+      if (requestData?.length === 4) {
+        virtualSrxl2EscConfig.throttle_rate_hz =
+          requestData[0] | (requestData[1] << 8);
+        virtualSrxl2EscConfig.telem_interval_frames = requestData[2];
+        virtualSrxl2EscConfig.motor2_channel =
+          requestData[3] < 32 ? requestData[3] : 0;
+      }
+      return undefined;
     case MSPCodes.MSP_SELECT_SETTING: {
       const index = requestData[0];
       if (index & RATE_PROFILE_MASK) {
