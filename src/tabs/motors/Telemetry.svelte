@@ -136,6 +136,27 @@
             {/each}
           </select>
         </Field>
+        {#if motorState.isSrxl2 && FC.SRXL2_ESC_CONFIG}
+          <div transition:slide>
+            <Field id="srxl2-telem-interval" label="motorsSrxl2TelemInterval">
+              {#snippet tooltip()}
+                <Tooltip
+                  help="motorsSrxl2TelemIntervalHelp"
+                  attrs={[
+                    { name: "genericDefault", value: "7" },
+                    { name: "genericRange", value: "0 - 255" },
+                  ]}
+                />
+              {/snippet}
+              <NumberInput
+                id="srxl2-telem-interval"
+                min="0"
+                max="255"
+                bind:value={FC.SRXL2_ESC_CONFIG.telem_interval_frames}
+              />
+            </Field>
+          </div>
+        {/if}
       </SubSection>
     </div>
   {/if}
@@ -167,29 +188,6 @@
           <Switch
             id="esc-telemetry-pinswap"
             bind:checked={FC.ESC_SENSOR_CONFIG.pinswap}
-          />
-        </Field>
-      </SubSection>
-    </div>
-  {/if}
-  {#if motorState.isSrxl2 && FC.SRXL2_ESC_CONFIG}
-    <div transition:slide>
-      <SubSection label="motorsSectionSrxl2Esc">
-        <Field id="srxl2-telem-interval" label="motorsSrxl2TelemInterval">
-          {#snippet tooltip()}
-            <Tooltip
-              help="motorsSrxl2TelemIntervalHelp"
-              attrs={[
-                { name: "genericDefault", value: "7" },
-                { name: "genericRange", value: "0 - 255" },
-              ]}
-            />
-          {/snippet}
-          <NumberInput
-            id="srxl2-telem-interval"
-            min="0"
-            max="255"
-            bind:value={FC.SRXL2_ESC_CONFIG.telem_interval_frames}
           />
         </Field>
       </SubSection>
