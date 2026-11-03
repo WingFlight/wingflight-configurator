@@ -290,6 +290,10 @@ export function formatValue(setting, value) {
  * out-of-range value is the client's job now. That is a gain, not a
  * compromise -- it can say what the range is.
  */
+// What the firmware's CLI read as a number: decimal digits, optionally signed.
+// Number() would also take "" (as 0) and "0x10".
+const DECIMAL_INTEGER = /^[+-]?\d+$/;
+
 export function parseValue(setting, text) {
     const raw = text.trim();
 
@@ -298,7 +302,7 @@ export function parseValue(setting, text) {
         if (index >= 0) {
             return index;
         }
-        const numeric = Number(raw);
+        const numeric = DECIMAL_INTEGER.test(raw) ? Number(raw) : NaN;
         if (Number.isInteger(numeric) && numeric >= 0 && numeric < setting.values.length) {
             return numeric;
         }
@@ -318,6 +322,10 @@ export function parseValue(setting, text) {
     if (setting.mode === "string") {
         return raw;
     }
+    // An empty string clears a text setting; anything else needs a value.
+    if (!raw) {
+        throw new CliError(`${setting.name}: no value given`);
+    }
 
     const { count } = settingSpan(setting);
     const parts = setting.mode === "array" ? raw.split(",") : [raw];
@@ -326,7 +334,7 @@ export function parseValue(setting, text) {
     }
 
     const values = parts.map((part) => {
-        const value = Number(part.trim());
+        const value = DECIMAL_INTEGER.test(part.trim()) ? Number(part.trim()) : NaN;
         if (!Number.isInteger(value)) {
             throw new CliError(`${setting.name}: '${part.trim()}' is not a whole number`);
         }

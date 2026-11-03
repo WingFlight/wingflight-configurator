@@ -276,6 +276,25 @@ console.log(`round-tripped ${roundTripped} settings through format/parse (${skip
 check("every non-string setting round trips", roundTripped + skippedStrings === manifest.settings.size,
     `${roundTripped}+${skippedStrings} vs ${manifest.settings.size}`);
 
+// A truncated line or a typo must not write a value: Number() reads "" as 0
+// and "0x10" as 16, the firmware's CLI did neither.
+{
+    const plain = [...manifest.settings.values()].find((s) => s.mode === "direct" && (s.min ?? 0) <= 0 && s.max >= 16);
+    const listed = [...manifest.settings.values()].find((s) => s.mode === "lookup" && s.values?.length > 1);
+    const text = [...manifest.settings.values()].find((s) => s.mode === "string");
+    for (const [setting, input] of [[plain, ""], [plain, "  "], [plain, "0x10"], [plain, "1e1"], [listed, ""], [listed, "0x1"]]) {
+        let refused = false;
+        try {
+            parseValue(setting, input);
+        } catch (error) {
+            refused = error instanceof CliError;
+        }
+        check(`parseValue refuses '${input}' for ${setting.name}`, refused);
+    }
+    check("parseValue accepts a signed decimal", parseValue(plain, "+16") === 16);
+    check("an empty value still clears a string", parseValue(text, "") === "");
+}
+
 // --- get -------------------------------------------------------------------
 
 const gyroGet = await cli.get("gyro_hardware_lpf");
