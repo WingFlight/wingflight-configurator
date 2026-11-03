@@ -1,15 +1,21 @@
 import { reinitialiseConnection } from "@/js/serial_backend.js";
 import { CliAutoComplete } from "@/js/CliAutoComplete.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
-import {
-  openParamSession,
-  explainMissingManifest,
-} from "@/js/param/session.js";
+import { openParamSession, ResolveError } from "@/js/param/session.js";
 import VirtualCli from "@/js/virtual_cli.js";
 
 const CHAR_CODE_BACKSPACE = 8;
 const CHAR_CODE_LINE_FEED = 10;
 const CHAR_CODE_CARRIAGE_RETURN = 13;
+
+// Shown when the board does not answer MSP2_WING_BUILD_ID: a firmware from
+// before parameter addressing, which still has its own CLI.
+const NO_ADDRESSING =
+  "###ERROR: this firmware has no parameter addressing, which the configurator's CLI needs. It still has its own CLI, which this configurator does not use.";
+
+function escapeHtml(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 /**
  * The firmware has no CLI any more. These commands are executed here, against
@@ -155,13 +161,17 @@ export default class CliEngine {
 
     try {
       this.#session = await openParamSession({
-        onProgress: (what) => this.#writeLineToOutput(`# ${what}`),
+        onProgress: (what) => this.#writeLocalLine(`# ${what}`),
       });
     } catch (error) {
       this.#session = undefined;
       CONFIGURATOR.cliEngineValid = false;
-      this.#writeLineToOutput(`###ERROR: ${error.message}`);
-      this.#writeLineToOutput(explainMissingManifest(undefined));
+      // A missing manifest explains itself (ResolveError). Anything else here
+      // is the board not answering MSP2_WING_BUILD_ID.
+      this.#writeLocalLine(`###ERROR: ${error.message}`);
+      if (!(error instanceof ResolveError)) {
+        this.#writeLocalLine(NO_ADDRESSING);
+      }
       return false;
     }
 
@@ -171,13 +181,9 @@ export default class CliEngine {
     CONFIGURATOR.cliEngineValid = true;
 
     const { identity, source, manifest } = this.#session;
-    this.#writeLineToOutput(
-      `# Wingflight / ${identity.target} ${identity.version} (${identity.revision})`,
-    );
-    this.#writeLineToOutput(
-      `# manifest ${identity.buildId} from ${source}, ${manifest.settings.size} settings`,
-    );
-    this.#writeLineToOutput("# type 'help' for a list of commands");
+    this.#writeLocalLine(`# Wingflight / ${identity.target} ${identity.version} (${identity.revision})`);
+    this.#writeLocalLine(`# manifest ${identity.buildId} from ${source}, ${manifest.settings.size} settings`);
+    this.#writeLocalLine("# type 'help' for a list of commands");
     return true;
   }
 
@@ -337,6 +343,15 @@ export default class CliEngine {
     this.#GUI.window.scrollTop(this.#GUI.window.prop("scrollHeight"));
   }
 
+  // A line the configurator produced itself, now that the CLI runs here: kept
+  // raw in the output history, which is what backups and the Remap FC tab read
+  // back, and escaped for the console, which renders HTML. Serial output is
+  // escaped and recorded as it is read (#adjustCliBuffer).
+  #writeLocalLine(text) {
+    this.#outputHistory += `${text}\n`;
+    this.#writeLineToOutput(escapeHtml(text));
+  }
+
   #writeLineToOutput(text) {
     if (this.#cliAutoComplete && this.#cliAutoComplete.isBuilding()) {
       this.#cliAutoComplete.builderParseLine(text);
@@ -472,12 +487,10 @@ export default class CliEngine {
     const text = String(line).replace(/[\r\n]+$/, "");
 
     // Echo the command, as the board did when it was the one reading it.
-    this.#writeLineToOutput(`# ${text}`);
+    this.#writeLocalLine(`# ${text}`);
 
     if (!this.#session) {
-      this.#writeLineToOutput(
-        "###ERROR: no manifest for this board; configuration is unavailable",
-      );
+      this.#writeLocalLine("###ERROR: no manifest for this board; configuration is unavailable");
       return;
     }
 
@@ -485,11 +498,11 @@ export default class CliEngine {
       const output = await this.#session.cli.execute(text);
       for (const outputLine of String(output).split("\n")) {
         if (outputLine.length) {
-          this.#writeLineToOutput(outputLine);
+          this.#writeLocalLine(outputLine);
         }
       }
     } catch (error) {
-      this.#writeLineToOutput(`###ERROR: ${error.message}`);
+      this.#writeLocalLine(`###ERROR: ${error.message}`);
     }
   }
 
