@@ -1,3 +1,8 @@
+# 0.0.41
+
+Support the 0.0.41 firmware (MSP API 22.15).
+Add the SRXL2 ESC settings to the Motors tab: SRXL2 Motor 2 Channel under the motor protocol in the Throttle box for dual-motor Smart ESCs, and SRXL2 Telemetry Interval under the ESC telemetry protocol. Both show only when the protocol is SRXL2 and need the 0.0.41 firmware; older firmware hides them.
+
 # 0.0.40
 
 Support the 0.0.40 firmware (MSP API 22.15).
