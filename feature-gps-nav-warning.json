@@ -1,0 +1,8 @@
+{
+  "branch": "feature/gps-nav-warning",
+  "date": "2026-11-03T18:51:36Z",
+  "number": 223,
+  "title": "Warn on the GPS tabs when the GPS provider can't navigate",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/223",
+  "draft": false
+}
