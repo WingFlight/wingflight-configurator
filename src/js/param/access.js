@@ -9,7 +9,7 @@
 
 import { MSP } from "@/js/msp.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
-import { decodeValues, encodeValues, settingSpan, ManifestError } from "./manifest.js";
+import { readString, decodeSetting, readSettingVia, writeSettingVia } from "./setting_io.js";
 import { decodeTaskPage, decodeGyroRegisters, decodeSetpointInfo, decodeFbusMux } from "./runtime.js";
 
 /** Matches MSP_PARAM_PROTOCOL_VERSION in the firmware's msp_param.h. */
@@ -44,19 +44,6 @@ async function request(code, payload, minimumBytes, what) {
 
 function u16(value) {
     return [value & 0xff, (value >> 8) & 0xff];
-}
-
-/** Read a zero-terminated string starting at `offset`; returns [text, next]. */
-function readString(view, offset) {
-    let end = offset;
-    while (end < view.byteLength && view.getUint8(end) !== 0) {
-        end++;
-    }
-    let text = "";
-    for (let i = offset; i < end; i++) {
-        text += String.fromCharCode(view.getUint8(i));
-    }
-    return [text, end + 1];
 }
 
 /**
@@ -176,73 +163,25 @@ export async function writeRange(pgn, offset, bytes) {
     await request(MSPCodes.MSP2_WING_PARAM_WRITE, [...u16(pgn), ...u16(offset), ...bytes], 0, `write to group ${pgn}+${offset}`);
 }
 
-/**
- * Read one setting by name.
- *
- * Returns an array for `array` settings and a single value otherwise, matching
- * how the CLI presents them.
- */
-export async function readSetting(manifest, name, profileIndex = 0) {
-    const { pgn, offset, length, setting } = manifest.address(name, profileIndex);
-    const view = await readRange(pgn, offset, length);
-    return decodeSetting(setting, view, 0);
+const MSP_RANGE = { readRange, writeRange };
+const MSP_DEFAULT_RANGE = { readRange: readDefaultRange, writeRange };
+
+/** Read one setting by name from the board. See setting_io.js. */
+export function readSetting(manifest, name, profileIndex = 0) {
+    return readSettingVia(MSP_RANGE, manifest, name, profileIndex);
 }
 
 /** As readSetting(), but the firmware's defaults rather than the live value. */
-export async function readSettingDefault(manifest, name, profileIndex = 0) {
-    const { pgn, offset, length, setting } = manifest.address(name, profileIndex);
-    const view = await readDefaultRange(pgn, offset, length);
-    return decodeSetting(setting, view, 0);
+export function readSettingDefault(manifest, name, profileIndex = 0) {
+    return readSettingVia(MSP_DEFAULT_RANGE, manifest, name, profileIndex);
 }
 
-export function decodeSetting(setting, view, at) {
-    if (setting.mode === "string") {
-        const [text] = readString(view, at);
-        return text;
-    }
-    const { count } = settingSpan(setting);
-    const values = decodeValues(view, at, setting.kind, setting.size, count);
-    if (setting.mode === "bitset") {
-        return Boolean(values[0] & (1 << (setting.bit ?? 0)));
-    }
-    return setting.mode === "array" ? values : values[0];
+/** Write one setting by name to the board. See setting_io.js. */
+export function writeSetting(manifest, name, value, profileIndex = 0) {
+    return writeSettingVia(MSP_RANGE, manifest, name, value, profileIndex);
 }
 
-/**
- * Write one setting by name.
- *
- * A bitset is read-modify-write: it names one bit of a shared value, so
- * writing it blind would clear whichever neighbours happen to share the byte.
- */
-export async function writeSetting(manifest, name, value, profileIndex = 0) {
-    const { pgn, offset, setting } = manifest.address(name, profileIndex);
-
-    if (setting.mode === "string") {
-        const { bytes } = settingSpan(setting);
-        const out = new Array(bytes).fill(0);
-        for (let i = 0; i < Math.min(value.length, bytes - 1); i++) {
-            out[i] = value.charCodeAt(i) & 0xff;
-        }
-        await writeRange(pgn, offset, out);
-        return;
-    }
-
-    if (setting.mode === "bitset") {
-        const current = await readRange(pgn, offset, setting.size);
-        const [word] = decodeValues(current, 0, "uint", setting.size, 1);
-        const mask = 1 << (setting.bit ?? 0);
-        const updated = value ? word | mask : word & ~mask;
-        await writeRange(pgn, offset, encodeValues([updated >>> 0], "uint", setting.size));
-        return;
-    }
-
-    const values = Array.isArray(value) ? value : [value];
-    const { count } = settingSpan(setting);
-    if (values.length !== count) {
-        throw new ManifestError(`'${name}' takes ${count} value(s), got ${values.length}`);
-    }
-    await writeRange(pgn, offset, encodeValues(values, setting.kind, setting.size));
-}
+export { decodeSetting };
 
 /**
  * The scheduler's task list, for `tasks`.
