@@ -108,6 +108,13 @@ export const VCP_PORT_IDENTIFIER = 20;
 // GPS sources (FC.GPS_CONFIG.provider), in firmware order.
 export const GPS_PROVIDERS = ["NMEA", "UBLOX", "MSP", "FBUS", "CRSF"];
 
+// GPS navigation (LOITER, RTH, GPS Rescue) only runs on a u-blox GPS, or the
+// MSP simulator feed, matching the firmware's gpsProviderSupportsNav().
+export function gpsProviderSupportsNav(provider) {
+  const name = GPS_PROVIDERS[provider];
+  return name === "UBLOX" || name === "MSP";
+}
+
 // The ports each GPS source needs. MSP needs none.
 const GPS_PROVIDER_PORTS = {
   NMEA: ["GPS"],

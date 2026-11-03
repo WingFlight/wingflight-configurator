@@ -7530,6 +7530,10 @@
     "failsafeGpsRescueNavNote": {
         "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, including Nav Throttle, on the GPS Navigation tab. The throttle value below is used only while landing."
     },
+    "gpsNavProviderUnsupportedNote": {
+        "message": "GPS navigation (Loiter, RTH and GPS Rescue) needs a u-blox GPS. With the {{provider}} GPS provider these modes will not engage; the GPS is used for position display and telemetry only.",
+        "description": "Warning on the GPS and GPS Navigation tabs when the GPS provider is NMEA, FBUS or CRSF"
+    },
     "gpsNavSectionTitle": {
         "message": "GPS Navigation (RTH / Loiter)"
     },
