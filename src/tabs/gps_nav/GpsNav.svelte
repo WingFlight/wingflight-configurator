@@ -7,6 +7,10 @@
   import { FC } from "@/js/fc.svelte.js";
   import { reinitialiseConnection } from "@/js/serial_backend";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
+  import {
+    GPS_PROVIDERS,
+    gpsProviderSupportsNav,
+  } from "@/tabs/configuration/util.js";
 
   import Expert from "@/components/Expert.svelte";
   import Field from "@/components/Field.svelte";
@@ -43,7 +47,13 @@
     { value: 1, label: $i18n.t("gpsNavLoiterDirectionCcw") },
   ]);
 
+  // From the provider setting, not the live fix, so it shows on the bench.
+  let navUnsupported = $derived(
+    FC.GPS_CONFIG != null && !gpsProviderSupportsNav(FC.GPS_CONFIG.provider),
+  );
+
   onMount(async () => {
+    await MSP.promise(MSPCodes.MSP_GPS_CONFIG);
     await MSP.promise(MSPCodes.MSP2_WING_GPS_NAV_CONFIG);
     await MSP.promise(MSPCodes.MSP_GPS_RESCUE);
 
@@ -98,6 +108,13 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
+  {#if navUnsupported}
+    <p class="note">
+      {$i18n.t("gpsNavProviderUnsupportedNote", {
+        provider: GPS_PROVIDERS[FC.GPS_CONFIG.provider],
+      })}
+    </p>
+  {/if}
   <div class="content">
     <div>
       <Section label="gpsNavSectionTitle" summary="gpsNavSectionHelp">
