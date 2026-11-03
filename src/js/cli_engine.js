@@ -1,12 +1,29 @@
 import { reinitialiseConnection } from "@/js/serial_backend.js";
 import { CliAutoComplete } from "@/js/CliAutoComplete.js";
 import { CONFIGURATOR } from "@/js/configurator.svelte.js";
+import { openParamSession, ResolveError } from "@/js/param/session.js";
 import VirtualCli from "@/js/virtual_cli.js";
 
 const CHAR_CODE_BACKSPACE = 8;
 const CHAR_CODE_LINE_FEED = 10;
 const CHAR_CODE_CARRIAGE_RETURN = 13;
 
+// Shown when the board does not answer MSP2_WING_BUILD_ID: a firmware from
+// before parameter addressing, which still has its own CLI.
+const NO_ADDRESSING =
+  "###ERROR: this firmware has no parameter addressing, which the configurator's CLI needs. It still has its own CLI, which this configurator does not use.";
+
+function escapeHtml(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * The firmware has no CLI any more. These commands are executed here, against
+ * addressed parameter access, and their output is written to the same places
+ * the serial output used to go -- so the CLI tab, cli_backup.js and the
+ * firmware flasher all keep working through this one seam rather than each
+ * learning about manifests.
+ */
 export default class CliEngine {
   #lineDelayMs = 15;
   #profileSwitchDelayMs = 100;
@@ -33,6 +50,7 @@ export default class CliEngine {
 
   #onSendCommandsProgressCallback = undefined; // callback to be called when sending commands to the flight controller (used for a progress bar)
   #responseCallback = undefined; // callback to be called when a response is received from the flight controller
+  #session = undefined; // the resolved manifest and addressed access behind these commands
   #cliAutoComplete = undefined; // holds an instance of the CLIAutoComplete
 
   #startProcessingForValidation = false; // Start processing the serial read data for validation of the engine
@@ -126,20 +144,47 @@ export default class CliEngine {
     this.#onSendCommandsProgressCallback?.(value);
   }
 
-  enterCliMode() {
-    const bufferOut = new ArrayBuffer(1);
-    const bufView = new Uint8Array(bufferOut);
+  // There is no CLI on the board to enter. What this does now is assemble the
+  // pieces the commands need -- identify the firmware, find and verify the
+  // manifest that describes it -- and report the outcome the way the firmware's
+  // banner used to.
+  async enterCliMode() {
     this.#cliBuffer = "";
+    CONFIGURATOR.cliEngineActive = true;
 
-    bufView[0] = 0x23;
-
+    // The Virtual FC has no board and no manifest: its own CLI stands in.
     if (CONFIGURATOR.virtualMode) {
       this.#virtualCli = new VirtualCli();
       this.#receiveVirtual(this.#virtualCli.banner());
-      return;
+      return true;
     }
 
-    serial.send(bufferOut);
+    try {
+      this.#session = await openParamSession({
+        onProgress: (what) => this.#writeLocalLine(`# ${what}`),
+      });
+    } catch (error) {
+      this.#session = undefined;
+      CONFIGURATOR.cliEngineValid = false;
+      // A missing manifest explains itself (ResolveError). Anything else here
+      // is the board not answering MSP2_WING_BUILD_ID.
+      this.#writeLocalLine(`###ERROR: ${error.message}`);
+      if (!(error instanceof ResolveError)) {
+        this.#writeLocalLine(NO_ADDRESSING);
+      }
+      return false;
+    }
+
+    // Callers do not await this; they poll cliEngineValid, exactly as they did
+    // when it was the firmware's banner being waited for. Setting it here is
+    // what keeps them working unchanged.
+    CONFIGURATOR.cliEngineValid = true;
+
+    const { identity, source, manifest } = this.#session;
+    this.#writeLocalLine(`# Wingflight / ${identity.target} ${identity.version} (${identity.revision})`);
+    this.#writeLocalLine(`# manifest ${identity.buildId} from ${source}, ${manifest.settings.size} settings`);
+    this.#writeLocalLine("# type 'help' for a list of commands");
+    return true;
   }
 
   #setTextareaListen() {
@@ -199,6 +244,9 @@ export default class CliEngine {
   }
 
   // Close attempts to send an `exit` to the flight controller. Notably, it uses the `_lineWithBuffer` function as there could be pending CLI buffer data.
+  // Nothing to leave: the board was never put into a CLI mode, so there is no
+  // `exit` to send and -- unlike the firmware's cliExit() -- no reboot. That
+  // is a real improvement: leaving the tab used to cost a reconnect.
   close(callback) {
     if (CONFIGURATOR.virtualMode) {
       // Nothing to reboot, and replying with "Rebooting" would switch tabs
@@ -211,21 +259,11 @@ export default class CliEngine {
       return;
     }
 
-    let line = "exit\r";
-    if (this.#cliBufferContainsPartialCommand) {
-      line = this.#lineWithBuffer(line);
-    }
-    this.#send(line, function () {
-      // we could handle this "nicely", but this will do for now
-      // (another approach is however much more complicated):
-      // we can setup an interval asking for data lets say every 200ms,
-      // when data arrives, callback will be triggered and tab switched
-      // we could probably implement this someday
-      callback?.();
-      CONFIGURATOR.cliEngineActive = false;
-      CONFIGURATOR.cliEngineValid = false;
-      CONFIGURATOR.cliTab = "";
-    });
+    this.#session = undefined;
+    CONFIGURATOR.cliEngineActive = false;
+    CONFIGURATOR.cliEngineValid = false;
+    CONFIGURATOR.cliTab = "";
+    callback?.();
   }
 
   // executeCommands splits (on \n) the given output string into an array of strings and returns a promise that resolves after all of the commands have been sent.
@@ -303,6 +341,15 @@ export default class CliEngine {
   writeToOutput(text) {
     this.#GUI.windowWrapper.append(text);
     this.#GUI.window.scrollTop(this.#GUI.window.prop("scrollHeight"));
+  }
+
+  // A line the configurator produced itself, now that the CLI runs here: kept
+  // raw in the output history, which is what backups and the Remap FC tab read
+  // back, and escaped for the console, which renders HTML. Serial output is
+  // escaped and recorded as it is read (#adjustCliBuffer).
+  #writeLocalLine(text) {
+    this.#outputHistory += `${text}\n`;
+    this.#writeLineToOutput(escapeHtml(text));
   }
 
   #writeLineToOutput(text) {
@@ -424,9 +471,39 @@ export default class CliEngine {
     this.#GUI.textarea.val(text);
   }
 
-  // sendLine sends a line that ends with a \n. This will clear the buffer, as it will no longer contain a partial command.
+  // Runs one command here rather than sending it to the board. The output goes
+  // through the same writer the serial data used to, so anything subscribed --
+  // the tab's window, a headless backup collector -- sees it unchanged.
   sendLine(line, callback) {
-    this.#send(`${line}\n`, callback);
+    if (this.#virtualCli) {
+      this.#send(`${line}
+`, callback);
+      return;
+    }
+    this.#executeLocally(line).finally(() => callback?.());
+  }
+
+  async #executeLocally(line) {
+    const text = String(line).replace(/[\r\n]+$/, "");
+
+    // Echo the command, as the board did when it was the one reading it.
+    this.#writeLocalLine(`# ${text}`);
+
+    if (!this.#session) {
+      this.#writeLocalLine("###ERROR: no manifest for this board; configuration is unavailable");
+      return;
+    }
+
+    try {
+      const output = await this.#session.cli.execute(text);
+      for (const outputLine of String(output).split("\n")) {
+        if (outputLine.length) {
+          this.#writeLocalLine(outputLine);
+        }
+      }
+    } catch (error) {
+      this.#writeLocalLine(`###ERROR: ${error.message}`);
+    }
   }
 
   // _sendLineWithTab sends a line with a tab character -- this triggers the FC's native autocomplete, which in turn will populate the buffer with a partial command that needs to be handled.

@@ -52,6 +52,9 @@ export const MSPCodes = {
     MSP_DATAFLASH_SUMMARY:          70,
     MSP_DATAFLASH_READ:             71,
     MSP_DATAFLASH_ERASE:            72,
+    // Frozen for third-party ESC tools, and used by the CLI's passthrough
+    // commands. See the firmware's msp.c mspFcSetPassthroughCommand().
+    MSP_SET_PASSTHROUGH:            245,
     MSP_TELEMETRY_CONFIG:           73,
     MSP_SET_TELEMETRY_CONFIG:       74,
     MSP_FAILSAFE_CONFIG:            75,
@@ -205,7 +208,6 @@ export const MSPCodes = {
     MSP_SERVO_MIX_RULES:            241,
     MSP_SET_SERVO_MIX_RULE:         242, // Not used
     MSP_SET_4WIF_ESC_FWD_PROG:      244,
-    MSP_SET_4WAY_IF:                245, // Not used
     MSP_SET_RTC:                    246,
     MSP_RTC:                        247, // Not used
     MSP_SET_BOARD_INFO:             248, // Not used
@@ -257,6 +259,29 @@ export const MSPCodes = {
     MSP2_WING_SERIAL_STATUS:          0x5F34,
     MSP2_WING_SRXL2_ESC_CONFIG:       0x5F35,
     MSP2_WING_SET_SRXL2_ESC_CONFIG:   0x5F36,
+
+    // Generic parameter addressing. These reach configuration by
+    // (pgn, offset, length) against the firmware's parameter group registry
+    // instead of one opcode per field, which is what lets the firmware stop
+    // carrying setting names and per-field marshalling. A build manifest,
+    // generated from the firmware ELF and keyed to it by BUILD_ID, says what
+    // the offsets mean. See the firmware's
+    // docs/parameter-addressing-design.md.
+    //
+    // One contiguous group in the run the firmware reserves for open branches
+    // (0x5F28-0x5F32), right below the runtime diagnostics that go with it.
+    MSP2_WING_BUILD_ID:               0x5F2A,
+    MSP2_WING_PG_LIST:                0x5F2B,
+    MSP2_WING_PARAM_READ:             0x5F2C,
+    MSP2_WING_PARAM_WRITE:            0x5F2D,
+    MSP2_WING_PG_DEFAULT:             0x5F2E,
+    MSP2_WING_MANIFEST_READ:          0x5F2F,
+
+    // Runtime diagnostics the on-device CLI used to print. The firmware sends
+    // raw values; src/js/param/runtime.js formats them.
+    MSP2_WING_TASK_INFO:              0x5F30,
+    MSP2_WING_GYRO_REGISTERS:         0x5F31,
+    MSP2_WING_SETPOINT_INFO:          0x5F32,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
