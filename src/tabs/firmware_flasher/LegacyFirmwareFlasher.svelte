@@ -687,6 +687,10 @@
     }
   }
 
+  function escapeHtml(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
   // See FirmwareFlasher.svelte: where the hex's manifest may be found.
   function manifestSources(buildId) {
     const hexUrl = localFirmwareLoaded ? null : releaseInfo?.fileUrl;
@@ -729,7 +733,8 @@
       GUI.saveDefaultTab("status");
     } catch (e) {
       console.log(`Flashing failed: ${e.message}`);
-      setFlashingMessage(e.message, FLASH_MESSAGE_TYPES.INVALID);
+      // Rendered as HTML, and a compile error quotes the config line it refused.
+      setFlashingMessage(escapeHtml(e.message), FLASH_MESSAGE_TYPES.INVALID);
     }
   }
 
