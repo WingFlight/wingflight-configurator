@@ -88,7 +88,7 @@ export function defaultSources(identity, { storage = globalThis.localStorage, fe
     return sources;
 }
 
-function cacheManifest(raw, storage = globalThis.localStorage) {
+export function cacheManifest(raw, storage = globalThis.localStorage) {
     try {
         if (raw?.build?.id && storage) {
             storage.setItem(CACHE_PREFIX + raw.build.id, JSON.stringify(raw));
