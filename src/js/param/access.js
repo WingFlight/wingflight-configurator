@@ -21,17 +21,45 @@ export const CAP_BUILD_ID_VALID = 1 << 1;
 export class ParamError extends Error {}
 
 /**
+ * One addressed request at a time.
+ *
+ * MSP matches a reply to its callbacks by opcode alone: every pending request
+ * with the same code is resolved by the first reply that arrives. That is
+ * harmless for a parameterless poll and wrong for PARAM_READ / PARAM_WRITE,
+ * where two requests differ only in their (pgn, offset, length) -- the second
+ * would get the first one's bytes. The CLI, the virtual MSP layer's routed
+ * replies and its setter checks all run at once, so every request here waits
+ * for the one before it. `serialised()` gives other code with the same
+ * problem (session.js's raw requests) the same queue.
+ */
+let queue = Promise.resolve();
+
+export function serialised(run) {
+    const result = queue.then(run);
+    queue = result.catch(() => {});
+    return result;
+}
+
+/**
  * Send one request and insist on a usable reply.
  *
  * The firmware answers a refused request with MSP_RESULT_ERROR, which arrives
- * as a response with no payload. Every caller here knows how many bytes it
- * expects, so checking the length turns a silent empty reply -- which would
- * otherwise decode as zeroes -- into an error.
+ * flagged `unsupported` with no payload: a refused write is an error, not a
+ * success. Every caller here also knows how many bytes it expects, so checking
+ * the length turns a short reply -- which would otherwise decode as zeroes --
+ * into an error too.
  */
-async function request(code, payload, minimumBytes, what) {
+function request(code, payload, minimumBytes, what) {
+    return serialised(() => requestNow(code, payload, minimumBytes, what));
+}
+
+async function requestNow(code, payload, minimumBytes, what) {
     const reply = await MSP.promise(code, payload ?? false);
     if (!reply || reply.crcError) {
         throw new ParamError(`${what}: no usable reply from the flight controller`);
+    }
+    if (reply.unsupported) {
+        throw new ParamError(`${what}: refused by the flight controller`);
     }
     const view = reply.data;
     if (view.byteLength < minimumBytes) {
