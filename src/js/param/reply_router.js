@@ -9,6 +9,10 @@
  * and behind it checkSetterAfterFirmware() confirms the codec would have
  * stored the same bytes. Only then are later requests for it written through
  * addressed access.
+ *
+ * An authoritative router (a build without a config catalogue) routes every
+ * request its codecs describe, setters included, from the first one: the
+ * firmware has no own reply to verify against or to fall back to.
  */
 
 import { VirtualMspError } from "./virtual_msp.js";
@@ -21,12 +25,14 @@ export class ReplyRouter {
      * @param msp     the MSP object: its listeners get the reply, its
      *                send_message the fallback
      * @param setters null, or { io, log } to route setters verified on first use
+     * @param options { authoritative }: route every codec at once, no fallback
      */
-    constructor(virtual, codes, msp, setters = null) {
+    constructor(virtual, codes, msp, setters = null, { authoritative = false } = {}) {
         this.virtual = virtual;
         this.codes = new Set(codes);
         this.msp = msp;
         this.setters = setters;
+        this.authoritative = authoritative;
         this.setterState = new Map(); // opcode -> "pending" | true | false
     }
 
@@ -37,9 +43,11 @@ export class ReplyRouter {
     routes(code, data) {
         const codec = this.virtual.codec(code);
         if (codec?.dir === "in") {
+            if (this.authoritative) return true;
             return this.setters !== null && this.setterState.get(code) === true;
         }
-        if (!this.codes.has(code)) return false;
+        if (!this.authoritative && !this.codes.has(code)) return false;
+        if (!codec) return false;
         const length = data ? data.length : 0;
         return codec?.index ? length === (codec.len ?? codec.index.w) : length === 0;
     }
@@ -50,7 +58,7 @@ export class ReplyRouter {
      * taken the request; otherwise `callback` itself.
      */
     observe(code, data, callback) {
-        if (this.setters === null || this.virtual.codec(code)?.dir !== "in" || this.setterState.has(code)) {
+        if (this.authoritative || this.setters === null || this.virtual.codec(code)?.dir !== "in" || this.setterState.has(code)) {
             return callback;
         }
         this.setterState.set(code, "pending");
@@ -100,6 +108,12 @@ export class ReplyRouter {
         done.then((bytes) => deliver(bytes, 0)).catch((error) => {
             if (setter && error instanceof VirtualMspError) {
                 // the request is one the firmware refuses: answer as it does
+                deliver(new Uint8Array(0), 1);
+                return;
+            }
+            if (this.authoritative) {
+                // no firmware opcode to fall back to: a refusal, as the board gives
+                console.warn(`virtual ${setter ? "setter" : "reply"} for opcode ${code} failed: ${error.message}`);
                 deliver(new Uint8Array(0), 1);
                 return;
             }
