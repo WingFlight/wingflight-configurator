@@ -30,6 +30,8 @@ import {
     ledCommand,
     colorCommand,
     modeColorCommand,
+    boardInfoLines,
+    boardInfoCommand,
 } from "./config_lines.js";
 import * as actions from "./actions.js";
 import { VirtualMsp } from "./virtual_msp.js";
@@ -52,7 +54,7 @@ const SECTION_HEADING = {
  * a replayed backup selects the right element before its `set` lines. `field`
  * is where systemConfig keeps the board's current selection.
  */
-const PROFILE_KINDS = [
+export const PROFILE_KINDS = [
     { section: "profile", command: "profile", field: "pidProfileIndex" },
     { section: "rate_profile", command: "rateprofile", field: "activeRateProfile" },
     { section: "tv_profile", command: "tv_profile", field: "tvProfileIndex" },
@@ -629,14 +631,19 @@ export class ParamCli {
                 : await this.#emit({ onlyChanged, sections });
             const before =
                 sections[0] === "hardware"
-                    ? await this.#resources()
+                    ? [...(await this.#boardInfo(onlyChanged)), ...(await this.#resources())]
                     : sections[0] === "master"
-                      ? [...(await this.#nameLines(onlyChanged)), ...(await this.#configBlocks(onlyChanged))]
+                      ? [
+                            ...(await this.#boardInfo(onlyChanged)),
+                            ...(await this.#nameLines(onlyChanged)),
+                            ...(await this.#configBlocks(onlyChanged)),
+                        ]
                       : [];
             return this.#wrap([...before, ...body]);
         }
 
         const body = [
+            ...(await this.#boardInfo(onlyChanged)),
             ...(await this.#nameLines(onlyChanged)),
             ...(await this.#resources()),
             ...(await this.#configBlocks(onlyChanged)),
@@ -654,6 +661,10 @@ export class ParamCli {
             }
         }
         return this.#wrap(body);
+    }
+
+    async #boardInfo(onlyChanged) {
+        return this.io.readRange ? boardInfoLines(this.manifest, this.io, onlyChanged) : [];
     }
 
     async #nameLines(onlyChanged) {
@@ -911,6 +922,10 @@ export class ParamCli {
                     PROFILE_KINDS.find((kind) => kind.command === command.toLowerCase()),
                     argument,
                 );
+            case "board_name":
+            case "board_design":
+            case "manufacturer_id":
+                return boardInfoCommand(this.manifest, this.io, command.toLowerCase(), argument);
             case "feature":
                 return featureCommand(this.manifest, this.io, argument);
             case "serial":
@@ -982,6 +997,7 @@ export class ParamCli {
                     "dump     print the configuration",
                     "diff     print what differs from defaults",
                     "save     write the configuration and reboot",
+                    "board_name / board_design / manufacturer_id [<value>]  the board's identity, fixed once set",
                     "feature  [list] | [-]<name>  enable or disable a feature",
                     "serial   <id> <functions> <msp> <gps> <telemetry> <blackbox>  configure a port",
                     "map      <AETR1234>  channel map",

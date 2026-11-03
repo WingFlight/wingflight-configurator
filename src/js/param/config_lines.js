@@ -1477,6 +1477,87 @@ export async function nameLines(manifest, io, onlyChanged) {
     return ["", `# name: ${name || "-"}`];
 }
 
+// --- board_name / board_design / manufacturer_id ------------------------------
+
+/**
+ * The board's identity, in printConfig() order. Every target config opens with
+ * these, and the flasher reads them back to pick the target to flash, so a
+ * dump and a custom defaults compile both need them.
+ */
+export const BOARD_INFO_COMMANDS = [
+    { command: "board_name", field: "boardName" },
+    { command: "board_design", field: "boardDesign" },
+    { command: "manufacturer_id", field: "manufacturerId" },
+];
+
+const BOARD_INFO_SET_FIELD = "boardInformationSet";
+
+function boardInfoLayout(manifest) {
+    const group = groupBySymbol(manifest, "boardConfig_System");
+    const set = group && fieldNamed(group.fields, BOARD_INFO_SET_FIELD);
+    return group && set ? { group, set } : null;
+}
+
+function boardString(bytes, field) {
+    let text = "";
+    for (let i = field.off; i < field.off + field.count && bytes[i]; i++) {
+        text += String.fromCharCode(bytes[i]);
+    }
+    return text;
+}
+
+/** printBoardName() and friends: a diff leaves out what is empty. */
+export async function boardInfoLines(manifest, io, onlyChanged) {
+    const layout = boardInfoLayout(manifest);
+    if (!layout) return [];
+    const bytes = await readGroup(io, layout.group);
+    const lines = [];
+    for (const { command, field } of BOARD_INFO_COMMANDS) {
+        const text = boardString(bytes, fieldNamed(layout.group.fields, field));
+        if (!onlyChanged || text) {
+            lines.push(`${command} ${text}`);
+        }
+    }
+    return lines.length ? ["", ...lines] : [];
+}
+
+/**
+ * cliBoardName() and friends. Once the board information is set it is bound
+ * to the hardware: the same value is accepted, a different one refused, as the
+ * firmware did. Setting it marks the board information set, which
+ * persistBoardInformation() did on `save`.
+ */
+export async function boardInfoCommand(manifest, io, command, argument) {
+    const layout = boardInfoLayout(manifest);
+    if (!layout) {
+        throw new CliError(`${command} is not supported by this firmware's manifest`);
+    }
+    const { field: name } = BOARD_INFO_COMMANDS.find((c) => c.command === command);
+    const field = fieldNamed(layout.group.fields, name);
+    const bytes = await readGroup(io, layout.group);
+    const current = boardString(bytes, field);
+    const wanted = argument.trim();
+
+    if (!wanted) {
+        return `${command} ${current}`;
+    }
+    const isSet = bytes[layout.set.off] !== 0;
+    if (isSet && current && current !== wanted) {
+        throw new CliError(`${command} cannot be changed from '${current}' to '${wanted}' after it has been set`);
+    }
+    if (isSet && current === wanted) {
+        return `${command} ${current}`;
+    }
+
+    const text = new Array(field.count).fill(0);
+    for (let i = 0; i < Math.min(wanted.length, field.count - 1); i++) {
+        text[i] = wanted.charCodeAt(i) & 0xff;
+    }
+    await io.writeRange(layout.group.pgn, field.off, text);
+    await io.writeRange(layout.group.pgn, layout.set.off, [1]);
+    return `# Set ${command}.\n${command} ${wanted}`;
+}
+
 /**
  * The blocks in the order printConfig() emitted them, each only if the
  * manifest can describe it.
