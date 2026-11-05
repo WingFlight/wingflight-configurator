@@ -68,7 +68,7 @@
       "LOAD",
       "CALIBRATING",
       "CLI",
-      "CMS_MENU",
+      "NO_ARM_SWITCH", // bit 14, was CMS_MENU (never set)
       "BST",
       "MSP",
       "PARALYZE",

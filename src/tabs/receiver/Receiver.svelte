@@ -19,6 +19,7 @@
   import Tooltip from "@/components/Tooltip.svelte";
   import HelpIcon from "@/components/HelpIcon.svelte";
   import ChannelRange from "./ChannelRange.svelte";
+  import ThrottleMode from "./ThrottleMode.svelte";
   import ReceiverType from "./ReceiverType.svelte";
   import RxWiringDetectWizard from "./RxWiringDetectWizard.svelte";
   import TelemetrySettings from "./TelemetrySettings.svelte";
@@ -49,6 +50,7 @@
   let sensorUpdateTimer;
   let backupRxPollerTimer;
   let armedPollerTimer;
+  let reverseFlightPollerTimer;
   let pollersStopped = false;
   let receiverTypeRef;
 
@@ -117,6 +119,7 @@
       RX_CONFIG: FC.RX_CONFIG,
       TELEMETRY_CONFIG: FC.TELEMETRY_CONFIG,
       RX_INPUT_BACKUP_CONFIG: FC.RX_INPUT_BACKUP_CONFIG,
+      REVERSE_FLIGHT_CONFIG: FC.REVERSE_FLIGHT_CONFIG,
       features: FC.FEATURE_CONFIG.features.bitfield,
     });
   }
@@ -140,6 +143,12 @@
     await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
     await MSP.promise(MSPCodes.MSP_TELEMETRY_CONFIG);
     await MSP.promise(MSPCodes.MSP_RC);
+    // Bidirectional (4D) throttle. The helper leaves REVERSE_FLIGHT_CONFIG null on
+    // firmware that doesn't answer the message, which hides the section.
+    // TODO: gate on the API version that brings it once its constant exists.
+    FC.REVERSE_FLIGHT_CONFIG = null;
+    FC.REVERSE_FLIGHT_STATUS = null;
+    await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_CONFIG);
 
     initialState = snapshotState();
     loading = false;
@@ -206,6 +215,17 @@
     }
     pollArmed();
 
+    // Live stick position and reverse flight state for the Throttle Mode box.
+    // Same self-rescheduling shape as the pollers above; only when the FC has it.
+    async function pollReverseFlight() {
+      if (pollersStopped || !FC.REVERSE_FLIGHT_CONFIG) return;
+      await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_STATUS);
+      if (!pollersStopped) {
+        reverseFlightPollerTimer = setTimeout(pollReverseFlight, 100);
+      }
+    }
+    pollReverseFlight();
+
     // initialState is snapshotted above before this block runs, so re-snapshot
     // now that RX_INPUT_BACKUP_CONFIG has actually been fetched - otherwise
     // isDirty()/onRevert() would compare against the pre-fetch default values
@@ -218,6 +238,7 @@
     clearTimeout(sensorUpdateTimer);
     clearTimeout(backupRxPollerTimer);
     clearTimeout(armedPollerTimer);
+    clearTimeout(reverseFlightPollerTimer);
     receiverTypeRef?.cleanup();
     backupWizardInstance?.stop();
     closeBackupWizard();
@@ -236,6 +257,9 @@
     await save(MSPCodes.MSP_SET_FEATURE_CONFIG);
     if (hasBackupRxPort) {
       await save(MSPCodes.MSP2_WING_SET_RX_INPUT_BACKUP_CONFIG);
+    }
+    if (FC.REVERSE_FLIGHT_CONFIG) {
+      await save(MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG);
     }
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
@@ -258,6 +282,9 @@
       FC.RX_INPUT_BACKUP_CONFIG,
       $state.snapshot(initialState.RX_INPUT_BACKUP_CONFIG),
     );
+    FC.REVERSE_FLIGHT_CONFIG = initialState.REVERSE_FLIGHT_CONFIG
+      ? $state.snapshot(initialState.REVERSE_FLIGHT_CONFIG)
+      : null;
     FC.FEATURE_CONFIG.features.bitfield = initialState.features;
     receiverTypeRef?.cleanup();
     backupWizardInstance?.stop();
@@ -622,6 +649,7 @@
         {/if}
       {/each}
       <ChannelRange />
+      <ThrottleMode />
       {#if telemetry}
         <div transition:slide>
           <TelemetrySettings {telemetry} {resetTelemetry} />

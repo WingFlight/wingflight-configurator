@@ -1607,7 +1607,7 @@
         "description": "Message that pops up to describe the CRASH arming disable flag"
     },
     "statusArmingDisableFlagsTooltipTHROTTLE": {
-        "message": "Throttle channel is too high",
+        "message": "Throttle channel is too high. With bidirectional (4D) throttle: the stick is not in the deadband at mid stick",
         "description": "Message that pops up to describe the THROTTLE arming disable flag"
     },
     "statusArmingDisableFlagsTooltipANGLE": {
@@ -1634,9 +1634,9 @@
         "message": "CLI is active",
         "description": "Message that pops up to describe the CLI arming disable flag"
     },
-    "statusArmingDisableFlagsTooltipCMS_MENU": {
-        "message": "CMS (config menu) is Active - over OSD or other display -",
-        "description": "Message that pops up to describe the CMS_MENU arming disable flag"
+    "statusArmingDisableFlagsTooltipNO_ARM_SWITCH": {
+        "message": "Bidirectional (4D) throttle needs an ARM switch: the sticks can't arm or disarm in this mode. Set up ARM in the Modes tab",
+        "description": "Message that pops up to describe the NO_ARM_SWITCH arming disable flag"
     },
     "statusArmingDisableFlagsTooltipBST": {
         "message": "A Black Sheep Telemetry device (TBS Core Pro for example) disarmed and is preventing arming",
@@ -1675,7 +1675,7 @@
         "description": "Message that pops up to describe the ACC_CALIB arming disable flag"
     },
     "statusArmingDisableFlagsTooltipMOTOR_PROTO": {
-        "message": "There is no motor throttle protocol selected",
+        "message": "There is no motor throttle protocol selected, or bidirectional (4D) throttle is on and a motor is not bidirectional (save the Receiver tab and reboot)",
         "description": "Message that pops up to describe the MOTOR_PROTO arming disable flag"
     },
     "statusArmingDisableFlagsTooltipSETUP": {
@@ -2539,6 +2539,138 @@
     },
     "receiverSettings": {
         "message": "Channel Range"
+    },
+    "receiverThrottleMode": {
+        "message": "Throttle Mode"
+    },
+    "receiverThrottleModeLabel": {
+        "message": "Throttle mode"
+    },
+    "receiverThrottleModeHelp": {
+        "message": "<p><strong>Normal:</strong> throttle from 0% at the low end to 100% at the top.</p><p><strong>Bidirectional (4D):</strong> zero thrust at mid stick, forward above and reverse below, for planes with a reversible motor on a gimbal. Wingflight then flips the stabilisation when the plane stops and flies backwards.</p><p>Choosing bidirectional also sets every motor to bidirectional. Set the ESCs to bidirectional (3D) mode as well.</p>"
+    },
+    "receiverThrottleModeNormal": {
+        "message": "Normal"
+    },
+    "receiverThrottleModeBidirectional": {
+        "message": "Bidirectional (4D)"
+    },
+    "receiverThrottleModeNote": {
+        "message": "Zero thrust at <strong>$1 μs</strong>. Arming needs an ARM switch (the sticks can't arm or disarm in this mode) and the throttle stick in the deadband. All motors run bidirectional: set the ESCs to bidirectional (3D) mode. With PWM or OneShot, set the ESC's PPM center throttle to the middle of the motor range (see the Motors tab)."
+    },
+    "receiverThrottleStick": {
+        "message": "Throttle stick position"
+    },
+    "receiverThrottleReverse": {
+        "message": "Reverse"
+    },
+    "receiverThrottleForward": {
+        "message": "Forward"
+    },
+    "receiverThrottleFlipAt": {
+        "message": "flips at ±$1 μs"
+    },
+    "receiverReverseState": {
+        "message": "State"
+    },
+    "receiverReverseState_off": {
+        "message": "Off"
+    },
+    "receiverReverseState_disarmed": {
+        "message": "Disarmed"
+    },
+    "receiverReverseState_ground": {
+        "message": "On the ground"
+    },
+    "receiverReverseState_motorStopped": {
+        "message": "Motor stopped"
+    },
+    "receiverReverseState_forward": {
+        "message": "Forward"
+    },
+    "receiverReverseState_handover": {
+        "message": "Stopping (gimbal only)"
+    },
+    "receiverReverseState_reverse": {
+        "message": "Reverse"
+    },
+    "receiverReverseMotor": {
+        "message": "Motor"
+    },
+    "receiverReverseGimbal": {
+        "message": "Gimbal factor"
+    },
+    "receiverReverseSurfaces": {
+        "message": "Surface factor"
+    },
+    "receiverThrottleDeadband": {
+        "message": "Deadband"
+    },
+    "receiverThrottleDeadbandHelp": {
+        "message": "Distance from the middle of the throttle range, each side, where the motor is stopped. Without a self-centring throttle stick you find the middle by feel, so keep it wide."
+    },
+    "receiverThrottleHysteresis": {
+        "message": "Reverse hysteresis"
+    },
+    "receiverThrottleHysteresisHelp": {
+        "message": "How far past the deadband the stick has to go before the motor changes direction, in % of the deadband. Stops the direction from chattering when the stick rests near an edge."
+    },
+    "receiverThrottleReverseLimit": {
+        "message": "Reverse limit"
+    },
+    "receiverThrottleReverseLimitHelp": {
+        "message": "Maximum reverse thrust, in % of full thrust."
+    },
+    "receiverReverseFlight": {
+        "message": "Reverse Flight"
+    },
+    "receiverReverseSurfaceGain": {
+        "message": "Surface gain in reverse"
+    },
+    "receiverReverseSurfaceGainHelp": {
+        "message": "Authority of the rudder, elevator and ailerons while flying backwards. Flying tail first is less stable and there is no prop wash over the surfaces, so it may need more than 100%."
+    },
+    "receiverReverseMotorTime": {
+        "message": "Motor reversal time"
+    },
+    "receiverReverseMotorTimeHelp": {
+        "message": "How quickly the ESC brakes the prop and spins it up the other way (time constant). Sets when the gimbal's correction flips."
+    },
+    "receiverReverseTimeConstant": {
+        "message": "Speed time constant"
+    },
+    "receiverReverseTimeConstantHelp": {
+        "message": "How quickly the plane changes speed. Sets when the surfaces flip after the plane has stopped. Tune it from blackbox logs (debug mode REVERSE_FLIGHT)."
+    },
+    "receiverReverseFade": {
+        "message": "Fade range"
+    },
+    "receiverReverseFadeHelp": {
+        "message": "How much thrust or speed, in % of full, a control needs before it works at full gain. Below that it fades out instead of pushing with an uncertain direction."
+    },
+    "receiverReverseMotorDwell": {
+        "message": "Pause before reversing"
+    },
+    "receiverReverseMotorDwellHelp": {
+        "message": "Keeps the motor stopped for this long before it may reverse. Only needed if the ESC loses sync on an instant reversal."
+    },
+    "receiverReverseCoupled": {
+        "message": "Surfaces Linked to the Gimbal"
+    },
+    "receiverReverseCoupledYaw": {
+        "message": "Rudder moves the gimbal (yaw)"
+    },
+    "receiverReverseCoupledPitch": {
+        "message": "Elevator moves the gimbal (pitch)"
+    },
+    "receiverReverseCoupledHelp": {
+        "message": "Turn on when one servo moves both the surface and the motor gimbal. That servo stays on the surface's mixer rule (Stabilized Yaw or Pitch); don't also map the thrust vector input of that axis. Wingflight then follows the gimbal while there is thrust and the surface when the motor is stopped."
+    },
+    "motorsBidirectionalNote": {
+        "message": "Bidirectional (4D) throttle is on (Receiver tab). Zero thrust is the middle of the motor range: set the ESC's PPM center throttle to <strong>$1 μs</strong> and its direction to bidirectional."
+    },
+    "motorsBidirectionalDshotNote": {
+        "message": "Bidirectional (4D) throttle is on (Receiver tab). Set the ESC's motor direction to bidirectional (3D)."
     },
     "receiverSettingsThrottleChannel": {
         "message": "Throttle Channel"

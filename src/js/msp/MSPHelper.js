@@ -5,6 +5,11 @@ import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
 import { readPropHang, writePropHang } from "@/js/PropHang.js";
 import {
+    readReverseFlightConfig,
+    readReverseFlightStatus,
+    writeReverseFlightConfig,
+} from "@/js/ReverseFlight.js";
+import {
     readRxInputBackupConfig,
     readRxInputBackupStatus,
     writeRxInputBackupConfig,
@@ -808,6 +813,20 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 console.log('SRXL2 ESC config saved');
                 break;
             }
+
+            // Bidirectional (4D) throttle. Firmware without the messages answers
+            // with no payload, which leaves these null and hides the UI.
+            case MSPCodes.MSP2_WING_REVERSE_FLIGHT_CONFIG:
+                FC.REVERSE_FLIGHT_CONFIG = readReverseFlightConfig(data);
+                break;
+
+            case MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG:
+                console.log('Reverse flight config saved');
+                break;
+
+            case MSPCodes.MSP2_WING_REVERSE_FLIGHT_STATUS:
+                FC.REVERSE_FLIGHT_STATUS = readReverseFlightStatus(data);
+                break;
 
             case MSPCodes.MSP2_WING_FBUS_MUX_CONFIG:
                 FC.FBUS_MUX = readFbusMuxConfig(data);
@@ -2556,6 +2575,10 @@ MspHelper.prototype.crunch = function(code) {
             }
             break;
         }
+
+        case MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG:
+            writeReverseFlightConfig(buffer, FC.REVERSE_FLIGHT_CONFIG);
+            break;
 
         case MSPCodes.MSP2_WING_SET_SRXL2_ESC_CONFIG: {
             // Same fields as the read, without its version byte.

@@ -102,6 +102,8 @@ class FlightController {
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
   SRXL2_ESC_CONFIG = $state();
+  REVERSE_FLIGHT_CONFIG = $state();
+  REVERSE_FLIGHT_STATUS = $state();
   TELEMETRY_CONFIG = $state();
   TRANSPONDER = $state();
   TUNING_SLIDERS = $state();
@@ -297,6 +299,10 @@ class FlightController {
     // MSP2_WING_SRXL2_ESC_CONFIG: throttle_rate_hz, telem_interval_frames, motor2_channel.
     // Null until read, and on firmware without the message.
     this.SRXL2_ESC_CONFIG = null;
+    // MSP2_WING_REVERSE_FLIGHT_CONFIG / _STATUS: bidirectional (4D) throttle and reverse
+    // flight (src/js/ReverseFlight.js). Null until read, and on firmware without them.
+    this.REVERSE_FLIGHT_CONFIG = null;
+    this.REVERSE_FLIGHT_STATUS = null;
     // FBUS mux FPGA (src/js/FbusMux.js), null on builds without one
     this.FBUS_MUX = null;
     this.PID_NAMES =                [];
