@@ -78,6 +78,32 @@ export function surfacesFromRules(rules, servoCount) {
     .map((s) => ({ ...s, kind: surfaceKind(s.axes, s.flap, s.base) }));
 }
 
+// Thrust vector inputs (MIXER_IN_STABILIZED_TV_ROLL/PITCH/YAW). They follow
+// the same signs as AXES: pitch + is stick forward, yaw + is yaw left.
+export const VECTOR_AXES = [
+  { key: "roll", input: 27 },
+  { key: "pitch", input: 28 },
+  { key: "yaw", input: 29 },
+];
+
+// Servos that tilt the motor gimbal: driven by a thrust vector input. One
+// entry per servo, with the gimbal axis of its first such rule. Surface
+// servos (AXES, flap) are left to surfacesFromRules(); a servo mixed from
+// both shows up in each.
+export function gimbalsFromRules(rules, servoCount) {
+  const byServo = new Map();
+  for (const rule of rules) {
+    if (rule.oper !== OP_SET && rule.oper !== OP_ADD) continue;
+    const axis = VECTOR_AXES.find((a) => a.input === rule.src);
+    if (!axis) continue;
+    if (rule.weight === 0 && rule.weightNeg === 0) continue;
+    const servo = rule.dst - 1;
+    if (servo < 0 || servo >= servoCount || byServo.has(servo)) continue;
+    byServo.set(servo, { servo, axis: axis.key, input: axis.input });
+  }
+  return [...byServo.values()].sort((a, b) => a.servo - b.servo);
+}
+
 // Servo numbers (1-based) that the surface mix drives but that are past the
 // board's servo outputs (up to `slots`), so surfacesFromRules() leaves them
 // out. The firmware only counts servo pins with a timer assigned

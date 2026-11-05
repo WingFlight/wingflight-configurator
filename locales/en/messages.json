@@ -9606,6 +9606,162 @@
     "setupWizardMotorTestCheck": {
         "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
     },
+    "setupWizardStep_gimbal": {
+        "message": "Gimbal"
+    },
+    "setupWizardMotorThrottleTitle": {
+        "message": "Throttle"
+    },
+    "setupWizardMotorThrottle_normal": {
+        "message": "Normal"
+    },
+    "setupWizardMotorThrottleHelp_normal": {
+        "message": "Motor off at the bottom of the stick, full power at the top."
+    },
+    "setupWizardMotorThrottle_bidirectional": {
+        "message": "Bidirectional (4D)"
+    },
+    "setupWizardMotorThrottleHelp_bidirectional": {
+        "message": "Motor off at mid stick, forward above, reverse below. For a reversible motor on a gimbal. Sets the motor to bidirectional and needs an ARM switch."
+    },
+    "setupWizardMotorBidirectionalDshot": {
+        "message": "Set the ESC's motor direction to bidirectional (3D) in BLHeliSuite or your ESC's tool. The deadband, reverse limit and timing are on the Receiver tab."
+    },
+    "setupWizardMotorBidirectionalPwm": {
+        "message": "Set the ESC's motor direction to bidirectional (3D), and its PPM center throttle to $1 µs (the middle of the motor range). The deadband, reverse limit and timing are on the Receiver tab."
+    },
+    "setupWizardMotorTestDirection": {
+        "message": "Direction"
+    },
+    "setupWizardMotorTestForward": {
+        "message": "Forward"
+    },
+    "setupWizardMotorTestReverse": {
+        "message": "Reverse"
+    },
+    "setupWizardMotorTestCheckBidirectional": {
+        "message": "Forward must blow air back over the plane, as if pulling it forward. If it runs the wrong way, reverse the direction in the ESC's settings or swap two motor wires. Reverse must run the other way."
+    },
+    "setupWizardGimbalIntro": {
+        "message": "The servos that tilt the motor. Check their centre, direction and how far they may travel, with the propeller off."
+    },
+    "setupWizardGimbalLinkedTitle": {
+        "message": "Surfaces linked to the gimbal"
+    },
+    "setupWizardGimbalLinkedHelp": {
+        "message": "Turn on when one servo moves both the surface and the motor gimbal. That servo stays on the surface's rule; Wingflight follows the gimbal while there is thrust and the surface when the motor is stopped."
+    },
+    "setupWizardGimbalLinked_yaw": {
+        "message": "Rudder moves the gimbal (yaw)"
+    },
+    "setupWizardGimbalLinked_pitch": {
+        "message": "Elevator moves the gimbal (pitch)"
+    },
+    "setupWizardGimbalLinkedRule_yaw": {
+        "message": "The mix also has a separate Thrust Vector Yaw rule. With the rudder linked, the rudder rule drives that servo: remove the gimbal yaw rule."
+    },
+    "setupWizardGimbalLinkedRule_pitch": {
+        "message": "The mix also has a separate Thrust Vector Pitch rule. With the elevator linked, the elevator rule drives that servo: remove the gimbal pitch rule."
+    },
+    "setupWizardGimbalRemoveRule": {
+        "message": "Remove the rule"
+    },
+    "setupWizardGimbalNone": {
+        "message": "No gimbal servo in the mix. If your model has a motor gimbal, add Thrust vectoring in the Airframe step. Otherwise press Next."
+    },
+    "setupWizardGimbalModeHint": {
+        "message": "In flight the gimbal only moves while the THRUST VECTOR mode is on (Mode switches step). Here the wizard moves it directly."
+    },
+    "setupWizardGimbalServo": {
+        "message": "Servo $1 · $2"
+    },
+    "setupWizardGimbalAxis_roll": {
+        "message": "Gimbal roll"
+    },
+    "setupWizardGimbalAxis_pitch": {
+        "message": "Gimbal pitch"
+    },
+    "setupWizardGimbalAxis_yaw": {
+        "message": "Gimbal yaw"
+    },
+    "setupWizardGimbalIdentify": {
+        "message": "Identify"
+    },
+    "setupWizardGimbalCentre": {
+        "message": "Centre"
+    },
+    "setupWizardGimbalHoldCentre": {
+        "message": "Hold at centre"
+    },
+    "setupWizardGimbalCentreHelp": {
+        "message": "The motor should point straight along the fuselage."
+    },
+    "setupWizardGimbalDirection": {
+        "message": "Direction"
+    },
+    "setupWizardGimbalHold_pitch": {
+        "message": "Hold: stick back"
+    },
+    "setupWizardGimbalHold_yaw": {
+        "message": "Hold: right rudder"
+    },
+    "setupWizardGimbalHold_roll": {
+        "message": "Hold: right roll"
+    },
+    "setupWizardGimbalQuestion_pitch": {
+        "message": "Does the thrust tilt up (prop moves up)?"
+    },
+    "setupWizardGimbalQuestion_yaw": {
+        "message": "Does the thrust tilt to the right?"
+    },
+    "setupWizardGimbalQuestion_roll": {
+        "message": "Does the gimbal roll right?"
+    },
+    "setupWizardGimbalYes": {
+        "message": "Yes"
+    },
+    "setupWizardGimbalNo": {
+        "message": "No, reverse it"
+    },
+    "setupWizardGimbalOk": {
+        "message": "Correct"
+    },
+    "setupWizardGimbalReversed": {
+        "message": "Reversed"
+    },
+    "setupWizardGimbalLimits": {
+        "message": "Travel limits"
+    },
+    "setupWizardGimbalFullTilt": {
+        "message": "Hold full tilt $1"
+    },
+    "setupWizardGimbalMin": {
+        "message": "Min (µs)"
+    },
+    "setupWizardGimbalMax": {
+        "message": "Max (µs)"
+    },
+    "setupWizardGimbalLimitsHelp": {
+        "message": "Hold full tilt each way and bring the limit in until the mount stops just short of binding, about ±20° on most 4D gimbals."
+    },
+    "setupWizardModes_thrustVector": {
+        "message": "Thrust vector gimbal"
+    },
+    "setupWizardModesHelp_thrustVector": {
+        "message": "The gimbal only moves while this is on. Use Always on unless you want to switch it off in flight."
+    },
+    "setupWizardModesAlwaysOn": {
+        "message": "Always on"
+    },
+    "setupWizardModesAlwaysOnSet": {
+        "message": "Always on"
+    },
+    "setupWizardModesArmBidirectional": {
+        "message": "With bidirectional (4D) throttle the sticks can't arm or disarm: the ARM switch is the only way. Arm with the throttle stick at mid stick, in the deadband."
+    },
+    "setupWizardGyroGimbal": {
+        "message": "The gimbal corrects too, while the THRUST VECTOR mode is on: lift the nose and the thrust should tilt down; yaw the nose right and it should tilt left."
+    },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
     },

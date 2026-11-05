@@ -35,6 +35,9 @@
 </script>
 
 <p>{$i18n.t("setupWizardGyroIntro")}</p>
+{#if wiz.gimbals.length > 0}
+  <p>{$i18n.t("setupWizardGyroGimbal")}</p>
+{/if}
 
 {#if wiz.angleModeActive}
   <div class="mode-on good">

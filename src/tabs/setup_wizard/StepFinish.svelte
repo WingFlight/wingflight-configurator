@@ -9,6 +9,11 @@
 
   import { AXES } from "./surfaces.js";
   import { matchingStyle } from "./styles.js";
+  import {
+    THROTTLE_MODE_BIDIRECTIONAL,
+    COUPLED_AXIS_PITCH,
+    COUPLED_AXIS_YAW,
+  } from "@/js/ReverseFlight.js";
 
   const wiz = getContext("setupWizard");
 
@@ -55,6 +60,34 @@
     FC.MODE_RANGES.some((r) => r.id === 0 && r.range.start < r.range.end),
   );
 
+  let reverseFlight = $derived(FC.REVERSE_FLIGHT_CONFIG);
+  let bidirectional = $derived(
+    reverseFlight?.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL,
+  );
+  let gimbalModeAssigned = $derived(
+    FC.MODE_RANGES.some((r) => r.id === 63 && r.range.start < r.range.end),
+  );
+  let gimbalText = $derived(
+    wiz.gimbals
+      .map((g) =>
+        $i18n.t("setupWizardGimbalServo", {
+          1: g.servo + 1,
+          2: $i18n.t(`setupWizardGimbalAxis_${g.axis}`),
+        }),
+      )
+      .join(", "),
+  );
+  let linkedText = $derived(
+    [
+      ((reverseFlight?.reverse_coupled_axes ?? 0) & COUPLED_AXIS_YAW) !== 0 &&
+        $i18n.t("setupWizardGimbalLinked_yaw"),
+      ((reverseFlight?.reverse_coupled_axes ?? 0) & COUPLED_AXIS_PITCH) !== 0 &&
+        $i18n.t("setupWizardGimbalLinked_pitch"),
+    ]
+      .filter(Boolean)
+      .join(", "),
+  );
+
   async function finish() {
     if (wiz.pending) {
       await wiz.save();
@@ -87,6 +120,32 @@
       ? $i18n.t(`setupWizardStyle_${style.key}`)
       : $i18n.t("setupWizardFinishStyleCustom")}
   </dd>
+
+  {#if reverseFlight}
+    <dt>{$i18n.t("setupWizardMotorThrottleTitle")}</dt>
+    <dd>
+      {bidirectional
+        ? $i18n.t("setupWizardMotorThrottle_bidirectional")
+        : $i18n.t("setupWizardMotorThrottle_normal")}
+    </dd>
+  {/if}
+
+  {#if wiz.gimbals.length > 0}
+    <dt>{$i18n.t("setupWizardStep_gimbal")}</dt>
+    <dd>{gimbalText}</dd>
+
+    <dt>{$i18n.t("setupWizardModes_thrustVector")}</dt>
+    <dd class={gimbalModeAssigned ? "good" : "bad"}>
+      {gimbalModeAssigned
+        ? $i18n.t("setupWizardModesAssigned")
+        : $i18n.t("setupWizardModesNotAssigned")}
+    </dd>
+  {/if}
+
+  {#if bidirectional && linkedText}
+    <dt>{$i18n.t("setupWizardGimbalLinkedTitle")}</dt>
+    <dd>{linkedText}</dd>
+  {/if}
 
   <dt>{$i18n.t("setupWizardModes_arm")}</dt>
   <dd class={armAssigned ? "good" : "bad"}>

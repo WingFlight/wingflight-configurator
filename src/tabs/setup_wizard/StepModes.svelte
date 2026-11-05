@@ -6,7 +6,9 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { bit_check } from "@/js/serial_backend";
 
-  import { rangeForSwitch } from "./modeRanges.js";
+  import { THROTTLE_MODE_BIDIRECTIONAL } from "@/js/ReverseFlight.js";
+
+  import { rangeForSwitch, CHANNEL_MIN, CHANNEL_MAX } from "./modeRanges.js";
   import ModeRangeBar from "./ModeRangeBar.svelte";
   import SwitchFlick from "./SwitchFlick.svelte";
 
@@ -31,6 +33,15 @@
     { id: 47, key: "trainer", names: ["TRAINER"], icon: "fa-graduation-cap" },
     // See the Trim and gain step.
     { id: 60, key: "autoTrim", names: ["AUTO TRIM"], icon: "fa-crosshairs" },
+    // The gimbal loop's outputs are zero while this is off, so a model with a
+    // thrust vector gimbal needs it on whenever it flies (Always on).
+    {
+      id: 63,
+      key: "thrustVector",
+      names: ["THRUST VECTOR"],
+      icon: "fa-crosshairs",
+      gimbal: true,
+    },
     {
       id: 12,
       key: "passthrough",
@@ -39,10 +50,45 @@
     },
   ];
 
-  // Only the modes this FC offers.
-  let offered = $derived(
-    MODES.filter((m) => FC.AUX_CONFIG.some((name) => m.names.includes(name))),
+  let hasGimbal = $derived(wiz.gimbals.length > 0);
+  let bidirectional = $derived(
+    FC.REVERSE_FLIGHT_CONFIG?.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL,
   );
+
+  // Only the modes this FC offers; THRUST VECTOR only for a model with a
+  // gimbal, and then it is required.
+  let offered = $derived(
+    MODES.filter(
+      (m) =>
+        FC.AUX_CONFIG.some((name) => m.names.includes(name)) &&
+        (!m.gimbal || hasGimbal),
+    ),
+  );
+
+  function isRequired(mode) {
+    return mode.required || (mode.gimbal && hasGimbal);
+  }
+
+  // A range over the whole channel: on in every switch position.
+  async function alwaysOn(mode) {
+    let index = rangeIndex(mode);
+    if (index < 0) {
+      index = FC.MODE_RANGES.findIndex((r) => !(r.range.start < r.range.end));
+    }
+    if (index < 0) return;
+    await writeSlot(index, mode.id, 0, {
+      start: CHANNEL_MIN,
+      end: CHANNEL_MAX,
+    });
+  }
+
+  function isAlwaysOn(range) {
+    return (
+      !!range &&
+      range.range.start <= CHANNEL_MIN &&
+      range.range.end >= CHANNEL_MAX
+    );
+  }
 
   const AUX_OFFSET = 4; // AUX1 is the fifth channel
   const MOVE_US = 300; // a switch, not stick noise
@@ -203,8 +249,8 @@
     <div class="text">
       <span class="mode-name">
         {$i18n.t(`setupWizardModes_${mode.key}`)}
-        <span class={["tag", mode.required && "required"]}>
-          {mode.required
+        <span class={["tag", isRequired(mode) && "required"]}>
+          {isRequired(mode)
             ? $i18n.t("setupWizardModesRequired")
             : $i18n.t("setupWizardModesOptional")}
         </span>
@@ -217,6 +263,19 @@
         <span class="prompt">{$i18n.t("setupWizardModesFlick")}</span>
         <button class="btn" onclick={cancel}>
           {$i18n.t("setupWizardModesCancel")}
+        </button>
+      {:else if range && isAlwaysOn(range)}
+        <span class="range-text">{$i18n.t("setupWizardModesAlwaysOnSet")}</span>
+        <span class={["live", active && "on"]}>
+          {active
+            ? $i18n.t("setupWizardModesOn")
+            : $i18n.t("setupWizardModesOff")}
+        </span>
+        <button class="btn" onclick={() => listen(mode)}>
+          {$i18n.t("setupWizardModesChange")}
+        </button>
+        <button class="btn" onclick={() => remove(mode)}>
+          {$i18n.t("setupWizardModesRemove")}
         </button>
       {:else if range}
         <span class="assigned">
@@ -247,6 +306,11 @@
         </button>
       {:else}
         <span class="muted">{$i18n.t("setupWizardModesNotAssigned")}</span>
+        {#if mode.gimbal}
+          <button class="btn primary" onclick={() => alwaysOn(mode)}>
+            {$i18n.t("setupWizardModesAlwaysOn")}
+          </button>
+        {/if}
         <button
           class={["btn", mode.required && "primary"]}
           onclick={() => listen(mode)}
@@ -262,10 +326,14 @@
 
 <h3 class="group">{$i18n.t("setupWizardModesGroupRequired")}</h3>
 <ul class="modes">
-  {#each offered.filter((m) => m.required) as mode (mode.id)}
+  {#each offered.filter((m) => isRequired(m)) as mode (mode.id)}
     {@render modeRow(mode)}
   {/each}
 </ul>
+
+{#if bidirectional}
+  <div class="note">{$i18n.t("setupWizardModesArmBidirectional")}</div>
+{/if}
 
 {#if !assignment(MODES[0])}
   <div class="note warn">{$i18n.t("setupWizardModesArmMissing")}</div>
@@ -276,7 +344,7 @@
 <h3 class="group">{$i18n.t("setupWizardModesGroupOptional")}</h3>
 <p class="hint">{$i18n.t("setupWizardModesOptionalHint")}</p>
 <ul class="modes">
-  {#each offered.filter((m) => !m.required) as mode (mode.id)}
+  {#each offered.filter((m) => !isRequired(m)) as mode (mode.id)}
     {@render modeRow(mode)}
   {/each}
 </ul>
