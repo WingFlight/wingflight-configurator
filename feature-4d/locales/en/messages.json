@@ -9642,6 +9642,15 @@
     "setupWizardMotorTestCheckBidirectional": {
         "message": "Forward must blow air back over the plane, as if pulling it forward. If it runs the wrong way, reverse the direction in the ESC's settings or swap two motor wires. Reverse must run the other way."
     },
+    "setupWizardMotorMidStick": {
+        "message": "Throttle stick at $1 µs ($2 µs from the middle)."
+    },
+    "setupWizardMotorMidStickOk": {
+        "message": "In the deadband: the motor is stopped and you can arm here."
+    },
+    "setupWizardMotorMidStickOff": {
+        "message": "Outside the ±$1 µs deadband. Put the stick in the middle; if it can't get there, centre the radio's throttle or widen the deadband on the Receiver tab."
+    },
     "setupWizardGimbalIntro": {
         "message": "The servos that tilt the motor. Check their centre, direction and how far they may travel, with the propeller off."
     },
@@ -9649,7 +9658,7 @@
         "message": "Surfaces linked to the gimbal"
     },
     "setupWizardGimbalLinkedHelp": {
-        "message": "Turn on when one servo moves both the surface and the motor gimbal. That servo stays on the surface's rule; Wingflight follows the gimbal while there is thrust and the surface when the motor is stopped."
+        "message": "Turn on when one servo moves both the surface and the motor gimbal. That servo stays on the surface's rule; Wingflight follows the gimbal while there is thrust and the surface when the motor is stopped. The linkage must agree: right rudder moves the rudder right and tilts the thrust right, stick back moves the elevator up and tilts the thrust up. Check it in the Direction step; if the surface is right and the gimbal is not, fix the linkage, not the servo."
     },
     "setupWizardGimbalLinked_yaw": {
         "message": "Rudder moves the gimbal (yaw)"
