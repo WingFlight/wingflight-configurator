@@ -75,6 +75,30 @@
   let throttleChanged = $state(false);
   let testReverse = $state(false);
 
+  // Live throttle stick position for the 4D mid-stick check: arming needs the
+  // stick inside the deadband around the neutral point.
+  let statusTimer;
+  let statusStopped = false;
+  async function pollStatus() {
+    if (statusStopped) return;
+    if (bidirectional) {
+      await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_STATUS);
+    }
+    if (!statusStopped) statusTimer = setTimeout(pollStatus, 150);
+  }
+  if (FC.REVERSE_FLIGHT_CONFIG) pollStatus();
+
+  let stick = $derived.by(() => {
+    const status = FC.REVERSE_FLIGHT_STATUS;
+    if (!bidirectional || !status || !status.throttleChannel) return null;
+    const offset = status.throttleChannel - reverseFlight.throttle_neutral;
+    return {
+      channel: status.throttleChannel,
+      offset,
+      inDeadband: Math.abs(offset) <= reverseFlight.throttle_deadband,
+    };
+  });
+
   function setThrottleMode(mode) {
     if (!reverseFlight || reverseFlight.throttle_mode === mode) return;
     reverseFlight.throttle_mode = mode;
@@ -146,7 +170,11 @@
     setAll(0);
   }
 
-  onDestroy(stopSpin);
+  onDestroy(() => {
+    stopSpin();
+    statusStopped = true;
+    clearTimeout(statusTimer);
+  });
 </script>
 
 <div class="intro">
@@ -227,6 +255,28 @@
         })}
       {/if}
     </p>
+    {#if stick}
+      <div class={["midstick", stick.inDeadband ? "ok" : "off"]}>
+        <i
+          class={[
+            "fas",
+            stick.inDeadband ? "fa-check-circle" : "fa-exclamation-triangle",
+          ]}
+          aria-hidden="true"
+        ></i>
+        <span>
+          {$i18n.t("setupWizardMotorMidStick", {
+            1: stick.channel,
+            2: (stick.offset >= 0 ? "+" : "") + stick.offset,
+          })}
+          {stick.inDeadband
+            ? $i18n.t("setupWizardMotorMidStickOk")
+            : $i18n.t("setupWizardMotorMidStickOff", {
+                1: reverseFlight.throttle_deadband,
+              })}
+        </span>
+      </div>
+    {/if}
   {/if}
 {/if}
 
@@ -335,6 +385,24 @@
 </div>
 
 <style lang="scss">
+  .midstick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-soft);
+    max-width: 70ch;
+
+    &.ok i {
+      color: var(--color-status-good);
+    }
+
+    &.off i {
+      color: var(--color-yellow-500, var(--color-border-accent));
+    }
+  }
+
   .btn {
     @extend %button;
   }

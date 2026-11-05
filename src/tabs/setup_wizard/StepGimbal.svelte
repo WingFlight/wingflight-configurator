@@ -65,9 +65,26 @@
     wiz.sendServo(servo);
   }
 
-  function answer(gimbal, correct) {
+  // A servo that is also a control surface (its surface rule plus a thrust
+  // vector rule) already has its direction from the Direction step, so only
+  // the gimbal's rule is turned round there.
+  function isSurface(servo) {
+    return wiz.surfaces.some((s) => s.servo === servo);
+  }
+
+  async function answer(gimbal, correct) {
     answers[gimbal.servo] = correct ? "ok" : "fixed";
     if (correct) return;
+    if (isSurface(gimbal.servo)) {
+      FC.MIXER_RULES = FC.MIXER_RULES.map((r) =>
+        r.oper !== 0 && r.src === gimbal.input && r.dst === gimbal.servo + 1
+          ? { ...r, weight: -r.weight, weightNeg: -r.weightNeg }
+          : r,
+      );
+      await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
+      wiz.markChanged();
+      return;
+    }
     const config = FC.SERVO_CONFIG[gimbal.servo];
     config.flags ^= SERVO_FLAG_REVERSE;
     wiz.sendServo(gimbal.servo);

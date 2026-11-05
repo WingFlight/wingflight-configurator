@@ -8,7 +8,7 @@
 
   import { THROTTLE_MODE_BIDIRECTIONAL } from "@/js/ReverseFlight.js";
 
-  import { rangeForSwitch, CHANNEL_MIN, CHANNEL_MAX } from "./modeRanges.js";
+  import { rangeForSwitch } from "./modeRanges.js";
   import ModeRangeBar from "./ModeRangeBar.svelte";
   import SwitchFlick from "./SwitchFlick.svelte";
 
@@ -69,24 +69,35 @@
     return mode.required || (mode.gimbal && hasGimbal);
   }
 
+  // The widest range the firmware stores (steps -125..125). Its end is
+  // exclusive (isRangeActive() in fc/rc_modes.h), so 900-2100 would drop out
+  // with a radio sending 2100 us or more at 125 % endpoints.
+  const ALWAYS_ON = { start: 875, end: 2125 };
+
   // A range over the whole channel: on in every switch position.
   async function alwaysOn(mode) {
     let index = rangeIndex(mode);
-    if (index < 0) {
-      index = FC.MODE_RANGES.findIndex((r) => !(r.range.start < r.range.end));
-    }
+    if (index < 0) index = freeSlot();
     if (index < 0) return;
-    await writeSlot(index, mode.id, 0, {
-      start: CHANNEL_MIN,
-      end: CHANNEL_MAX,
-    });
+    await writeSlot(index, mode.id, 0, { ...ALWAYS_ON });
   }
 
   function isAlwaysOn(range) {
     return (
       !!range &&
-      range.range.start <= CHANNEL_MIN &&
-      range.range.end >= CHANNEL_MAX
+      range.range.start <= ALWAYS_ON.start &&
+      range.range.end >= ALWAYS_ON.end
+    );
+  }
+
+  // A slot with no mode, no range and no link. A linked mode (Auxiliary tab)
+  // is stored with an empty range but is in use.
+  function freeSlot() {
+    return FC.MODE_RANGES.findIndex(
+      (r, i) =>
+        r.id === 0 &&
+        !(r.range.start < r.range.end) &&
+        !FC.MODE_RANGES_EXTRA[i]?.linkedTo,
     );
   }
 
@@ -219,9 +230,7 @@
 
   async function save(mode, aux, from, to) {
     let index = rangeIndex(mode);
-    if (index < 0) {
-      index = FC.MODE_RANGES.findIndex((r) => !(r.range.start < r.range.end));
-    }
+    if (index < 0) index = freeSlot();
     if (index < 0) return;
     await writeSlot(index, mode.id, aux, rangeForSwitch(from, to));
   }
