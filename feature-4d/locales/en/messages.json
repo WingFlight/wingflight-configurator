@@ -2547,7 +2547,7 @@
         "message": "Throttle mode"
     },
     "receiverThrottleModeHelp": {
-        "message": "<p><strong>Normal:</strong> throttle from 0% at the low end to 100% at the top.</p><p><strong>Bidirectional (4D):</strong> zero thrust at mid stick, forward above and reverse below, for planes with a reversible motor on a gimbal. Wingflight then flips the stabilisation when the plane stops and flies backwards.</p><p>Choosing bidirectional also sets every motor to bidirectional. Set the ESCs to bidirectional (3D) mode as well.</p>"
+        "message": "<p><strong>Normal:</strong> throttle from 0% at the low end to 100% at the top.</p><p><strong>Bidirectional (4D):</strong> zero thrust at mid stick, forward above and reverse below, for planes with a reversible motor on a gimbal. The sticks move the surfaces and the gimbal the same way in both directions; Wingflight reverses only the gyro's correction, once the thrust or the plane's motion has reversed.</p><p>Choosing bidirectional also sets every motor to bidirectional. Set the ESCs to bidirectional (3D) mode as well.</p>"
     },
     "receiverThrottleModeNormal": {
         "message": "Normal"
@@ -2589,7 +2589,7 @@
         "message": "Forward"
     },
     "receiverReverseState_handover": {
-        "message": "Stopping (gimbal only)"
+        "message": "Stopping (surface gyro off)"
     },
     "receiverReverseState_reverse": {
         "message": "Reverse"
@@ -2628,25 +2628,25 @@
         "message": "Surface gain in reverse"
     },
     "receiverReverseSurfaceGainHelp": {
-        "message": "Authority of the rudder, elevator and ailerons while flying backwards. Flying tail first is less stable and there is no prop wash over the surfaces, so it may need more than 100%."
+        "message": "Strength of the gyro's correction on the rudder, elevator and ailerons while flying backwards. The sticks are not affected. Flying tail first is less stable and there is no prop wash over the surfaces, so it may need more than 100%."
     },
     "receiverReverseMotorTime": {
         "message": "Motor reversal time"
     },
     "receiverReverseMotorTimeHelp": {
-        "message": "How quickly the ESC brakes the prop and spins it up the other way (time constant). Sets when the gimbal's correction flips."
+        "message": "How quickly the ESC brakes the prop and spins it up the other way (time constant). Sets when the gimbal's gyro correction reverses."
     },
     "receiverReverseTimeConstant": {
         "message": "Speed time constant"
     },
     "receiverReverseTimeConstantHelp": {
-        "message": "How quickly the plane changes speed. Sets when the surfaces flip after the plane has stopped. Tune it from blackbox logs (debug mode REVERSE_FLIGHT)."
+        "message": "How quickly the plane changes speed. Sets when the surfaces' gyro correction reverses after the plane has stopped. Tune it from blackbox logs (debug mode REVERSE_FLIGHT)."
     },
     "receiverReverseFade": {
         "message": "Fade range"
     },
     "receiverReverseFadeHelp": {
-        "message": "How much thrust or speed, in % of full, a control needs before it works at full gain. Below that it fades out instead of pushing with an uncertain direction."
+        "message": "How much thrust or speed, in % of full, the gyro needs before it corrects at full gain. Below that its correction fades out instead of pushing with an uncertain direction. The sticks always work at full throw."
     },
     "receiverReverseMotorDwell": {
         "message": "Pause before reversing"

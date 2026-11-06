@@ -184,7 +184,7 @@
       "name": "feature-4d",
       "path": "./feature-4d/",
       "branch": "feature/4d",
-      "date": "2026-11-05T18:30:38Z",
+      "date": "2026-11-06T21:00:01Z",
       "number": 224,
       "title": "[4D-Experimental] Bidirectional (4D) throttle in the Receiver and Motors tabs",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/224",
