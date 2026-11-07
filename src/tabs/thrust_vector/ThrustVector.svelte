@@ -112,6 +112,13 @@
 
   let copyDialogEl;
   let copyDestination = $state(0);
+  let profileChangeDialogEl;
+  let profileChangeDialogOpen = $state(false);
+  // TV profile whose values this page loaded. An adjustment switch can change
+  // the active TV profile in flight; MSP2_WING_TV_EFFECTIVE_PID_GAINS reports
+  // the live index, so the poller reloads the page (like Profiles does from
+  // MSP_STATUS) instead of leaving the old tab highlighted over new gains.
+  let mountedTvProfile;
 
   let copyDestinationOptions = $derived(
     profileTabs
@@ -158,7 +165,39 @@
     if (!response || response.length === 0) {
       runtimeGainsSupported = false;
       FC.TV_PID_RUNTIME_GAINS = null;
+      return;
     }
+
+    checkTvProfileChange();
+  }
+
+  function checkTvProfileChange() {
+    const liveProfile = FC.TV_PID_RUNTIME_GAINS?.tvProfile;
+    if (
+      loading ||
+      liveProfile === undefined ||
+      liveProfile === mountedTvProfile
+    ) {
+      return;
+    }
+
+    mountedTvProfile = liveProfile;
+    if (dirty) {
+      if (!profileChangeDialogOpen) {
+        profileChangeDialogOpen = true;
+        profileChangeDialogEl.showModal();
+      }
+    } else {
+      clearInterval(pollerInterval);
+      GUI.tab_switch_reload();
+    }
+  }
+
+  function onConfirmProfileChange() {
+    profileChangeDialogEl.close();
+    profileChangeDialogOpen = false;
+    clearInterval(pollerInterval);
+    GUI.tab_switch_reload();
   }
 
   onMount(async () => {
@@ -166,6 +205,7 @@
     await MSP.promise(MSPCodes.MSP_GAIN_CURVES);
     await updateRuntimeGains();
 
+    mountedTvProfile = FC.CONFIG.tvProfile;
     initialState = snapshotState();
     loading = false;
 
@@ -200,6 +240,8 @@
 
   function activateTvProfile(index) {
     FC.CONFIG.tvProfile = index;
+    // This function reloads the page itself; don't let the poller do it too.
+    mountedTvProfile = index;
     MSP.promise(MSPCodes.MSP2_WING_SELECT_TV_PROFILE, [index]).then(() => {
       GUI.log($i18n.t("profilesActivateProfile", { 1: index + 1 }));
       GUI.tab_switch_reload();
@@ -779,6 +821,23 @@
     </Section>
   {/if}
 </Page>
+
+<dialog
+  bind:this={profileChangeDialogEl}
+  onclose={() => (profileChangeDialogOpen = false)}
+>
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  <h3>{@html $i18n.t("dialogProfileChangeTitle")}</h3>
+  <div class="content">
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <p>{@html $i18n.t("dialogProfileChangeNote")}</p>
+  </div>
+  <div class="buttons">
+    <button class="btn" onclick={onConfirmProfileChange}>
+      {$i18n.t("dialogProfileChangeConfirm")}
+    </button>
+  </div>
+</dialog>
 
 <dialog bind:this={copyDialogEl}>
   <h3>{$i18n.t("dialogCopyProfileTitle")}</h3>
