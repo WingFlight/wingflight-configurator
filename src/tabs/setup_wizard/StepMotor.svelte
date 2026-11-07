@@ -6,6 +6,12 @@
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
   import motorState from "@/tabs/motors/state.svelte.js";
+  import {
+    THROTTLE_MODE_NORMAL,
+    THROTTLE_MODE_BIDIRECTIONAL,
+    motorMaskForThrottleMode,
+    escNeutralPulse,
+  } from "@/js/ReverseFlight.js";
 
   import MotorArt from "./MotorArt.svelte";
 
@@ -50,6 +56,62 @@
 
   let motorCount = $derived(FC.CONFIG.motorCount ?? 0);
 
+  //// Bidirectional (4D) throttle: zero thrust at mid stick, the motor spins
+  //// both ways. Null on firmware without it, which hides the choice.
+  const THROTTLE_CHOICES = [
+    { key: "normal", mode: THROTTLE_MODE_NORMAL },
+    { key: "bidirectional", mode: THROTTLE_MODE_BIDIRECTIONAL },
+  ];
+  let reverseFlight = $derived(FC.REVERSE_FLIGHT_CONFIG);
+  let bidirectional = $derived(
+    reverseFlight?.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL,
+  );
+  // What the motor driver runs now: motor modes apply at boot, so a reverse
+  // spin test only makes sense once a bidirectional setup has been saved and
+  // the board restarted.
+  const runningBidirectional =
+    FC.REVERSE_FLIGHT_CONFIG?.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL &&
+    (FC.REVERSE_FLIGHT_CONFIG?.motor_bidir_mask & 1) === 1;
+  let throttleChanged = $state(false);
+  let testReverse = $state(false);
+
+  // Live throttle stick position for the 4D mid-stick check: arming needs the
+  // stick inside the deadband around the neutral point.
+  let statusTimer;
+  let statusStopped = false;
+  async function pollStatus() {
+    if (statusStopped) return;
+    if (bidirectional) {
+      await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_STATUS);
+    }
+    if (!statusStopped) statusTimer = setTimeout(pollStatus, 150);
+  }
+  if (FC.REVERSE_FLIGHT_CONFIG) pollStatus();
+
+  let stick = $derived.by(() => {
+    const status = FC.REVERSE_FLIGHT_STATUS;
+    if (!bidirectional || !status || !status.throttleChannel) return null;
+    const offset = status.throttleChannel - reverseFlight.throttle_neutral;
+    return {
+      channel: status.throttleChannel,
+      offset,
+      inDeadband: Math.abs(offset) <= reverseFlight.throttle_deadband,
+    };
+  });
+
+  function setThrottleMode(mode) {
+    if (!reverseFlight || reverseFlight.throttle_mode === mode) return;
+    reverseFlight.throttle_mode = mode;
+    // Bidirectional throttle needs every motor bidirectional (the FC refuses
+    // to arm otherwise), so they go together.
+    reverseFlight.motor_bidir_mask = motorMaskForThrottleMode(
+      mode,
+      reverseFlight.motor_count || motorCount,
+    );
+    throttleChanged = true;
+    wiz.markChanged();
+  }
+
   function choose(choice) {
     setProtocol(indexOf(choice.protocol));
   }
@@ -68,11 +130,18 @@
   }
 
   wiz.setCommit(async () => {
-    if (!changed) return;
-    await MSP.promise(
-      MSPCodes.MSP_SET_MOTOR_CONFIG,
-      mspHelper.crunch(MSPCodes.MSP_SET_MOTOR_CONFIG),
-    );
+    if (changed) {
+      await MSP.promise(
+        MSPCodes.MSP_SET_MOTOR_CONFIG,
+        mspHelper.crunch(MSPCodes.MSP_SET_MOTOR_CONFIG),
+      );
+    }
+    if (throttleChanged && FC.REVERSE_FLIGHT_CONFIG) {
+      await MSP.promise(
+        MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG,
+        mspHelper.crunch(MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG),
+      );
+    }
   });
 
   // The FC drops a motor override 1 s after the last one it received
@@ -88,8 +157,10 @@
   function startSpin() {
     if (!propOff || spinning || wiz.armed) return;
     spinning = true;
-    setAll(testThrottle * 10);
-    keepalive = setInterval(() => setAll(testThrottle * 10), KEEPALIVE_MS);
+    // Negative is reverse on a bidirectional motor (flight/motors.c).
+    const value = testThrottle * 10 * (testReverse ? -1 : 1);
+    setAll(value);
+    keepalive = setInterval(() => setAll(value), KEEPALIVE_MS);
   }
 
   function stopSpin() {
@@ -99,7 +170,11 @@
     setAll(0);
   }
 
-  onDestroy(stopSpin);
+  onDestroy(() => {
+    stopSpin();
+    statusStopped = true;
+    clearTimeout(statusTimer);
+  });
 </script>
 
 <div class="intro">
@@ -145,7 +220,67 @@
   <p class="muted">{$i18n.t("setupWizardMotorDshot150NoRpm")}</p>
 {/if}
 
-{#if changed}
+{#if reverseFlight}
+  <fieldset class="choices">
+    <legend>{$i18n.t("setupWizardMotorThrottleTitle")}</legend>
+    {#each THROTTLE_CHOICES as choice (choice.key)}
+      {@const selected = reverseFlight.throttle_mode === choice.mode}
+      <label class={["choice", selected && "selected"]}>
+        <input
+          type="radio"
+          name="throttle-mode"
+          value={choice.mode}
+          checked={selected}
+          onchange={() => setThrottleMode(choice.mode)}
+        />
+        <span class="choice-name">
+          {$i18n.t(`setupWizardMotorThrottle_${choice.key}`)}
+          {#if selected}
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+          {/if}
+        </span>
+        <span class="muted"
+          >{$i18n.t(`setupWizardMotorThrottleHelp_${choice.key}`)}</span
+        >
+      </label>
+    {/each}
+  </fieldset>
+  {#if bidirectional}
+    <p class="muted">
+      {#if motorState.isDshot}
+        {$i18n.t("setupWizardMotorBidirectionalDshot")}
+      {:else}
+        {$i18n.t("setupWizardMotorBidirectionalPwm", {
+          1: escNeutralPulse(FC.MOTOR_CONFIG),
+        })}
+      {/if}
+    </p>
+    {#if stick}
+      <div class={["midstick", stick.inDeadband ? "ok" : "off"]}>
+        <i
+          class={[
+            "fas",
+            stick.inDeadband ? "fa-check-circle" : "fa-exclamation-triangle",
+          ]}
+          aria-hidden="true"
+        ></i>
+        <span>
+          {$i18n.t("setupWizardMotorMidStick", {
+            1: stick.channel,
+            2: (stick.offset >= 0 ? "+" : "") + stick.offset,
+          })}
+          {stick.inDeadband
+            ? $i18n.t("setupWizardMotorMidStickOk")
+            : $i18n.t("setupWizardMotorMidStickOff", {
+                1: reverseFlight.throttle_deadband,
+              })}
+        </span>
+      </div>
+    {/if}
+  {/if}
+{/if}
+
+{#if changed || throttleChanged}
   <div class="actions">
     <span>{$i18n.t("setupWizardRebootNeeded")}</span>
     <button class="btn primary" onclick={wiz.saveAndReboot}>
@@ -186,6 +321,35 @@
             {/each}
           </span>
         </li>
+        {#if runningBidirectional}
+          <li>
+            <span class="step-label"
+              >{$i18n.t("setupWizardMotorTestDirection")}</span
+            >
+            <span class="segments">
+              <label class={["segment", !testReverse && "selected"]}>
+                <input
+                  type="radio"
+                  name="test-direction"
+                  value={false}
+                  bind:group={testReverse}
+                  disabled={!propOff || spinning}
+                />
+                {$i18n.t("setupWizardMotorTestForward")}
+              </label>
+              <label class={["segment", testReverse && "selected"]}>
+                <input
+                  type="radio"
+                  name="test-direction"
+                  value={true}
+                  bind:group={testReverse}
+                  disabled={!propOff || spinning}
+                />
+                {$i18n.t("setupWizardMotorTestReverse")}
+              </label>
+            </span>
+          </li>
+        {/if}
         <li>
           <button
             class={["btn", "spin", spinning && "primary"]}
@@ -206,7 +370,11 @@
         </li>
       </ol>
     </div>
-    <p class="muted">{$i18n.t("setupWizardMotorTestCheck")}</p>
+    <p class="muted">
+      {runningBidirectional
+        ? $i18n.t("setupWizardMotorTestCheckBidirectional")
+        : $i18n.t("setupWizardMotorTestCheck")}
+    </p>
   </section>
 {/if}
 
@@ -217,6 +385,24 @@
 </div>
 
 <style lang="scss">
+  .midstick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-soft);
+    max-width: 70ch;
+
+    &.ok i {
+      color: var(--color-status-good);
+    }
+
+    &.off i {
+      color: var(--color-yellow-500, var(--color-border-accent));
+    }
+  }
+
   .btn {
     @extend %button;
   }

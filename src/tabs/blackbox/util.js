@@ -134,6 +134,8 @@ export function getDebugModes() {
     "GAIN_ATTEN",
     "SNAP_RELAX",
     "PROP_HANG",
+    "FBUS",
+    "REVERSE_FLIGHT",
   ];
 }
 

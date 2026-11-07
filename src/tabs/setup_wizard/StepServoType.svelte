@@ -42,8 +42,14 @@
   function apply() {
     const type = TYPES.find((t) => t.key === selected);
     if (!type) return;
-    for (const surface of wiz.surfaces) {
-      const config = FC.SERVO_CONFIG[surface.servo];
+    // Gimbal servos too: servos on one timer share its rate, and a 4D gimbal
+    // servo often sits next to the surface servos.
+    const servos = new Set([
+      ...wiz.surfaces.map((s) => s.servo),
+      ...wiz.gimbals.map((g) => g.servo),
+    ]);
+    for (const servo of servos) {
+      const config = FC.SERVO_CONFIG[servo];
       config.rate = type.rate;
       if (bandOf(config) !== type.band) {
         const band = BANDS[type.band];
@@ -53,7 +59,7 @@
         config.rneg = band.scale;
         config.rpos = band.scale;
       }
-      wiz.sendServo(surface.servo);
+      wiz.sendServo(servo);
     }
     applied = true;
   }

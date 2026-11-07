@@ -3,6 +3,10 @@ import { GainCurve } from "@/js/GainCurve.js";
 import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 import { Mixer } from "@/js/Mixer.js";
+import {
+  REVERSE_FLIGHT_DEFAULTS,
+  THROTTLE_MODE_BIDIRECTIONAL,
+} from "@/js/ReverseFlight.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import {
   clampServoConfig,
@@ -573,6 +577,55 @@ function encodeSrxl2EscConfig() {
   return Uint8Array.from(buffer);
 }
 
+// MSP2_WING_REVERSE_FLIGHT_CONFIG / _SET_ / _STATUS, firmware pg/reverse_flight.c
+// defaults. A save is kept so the Receiver tab reads it back after its reboot. The
+// status is a disarmed aircraft with the stick at the neutral point.
+const virtualReverseFlightConfig = {
+  ...REVERSE_FLIGHT_DEFAULTS,
+  motor_bidir_mask: 0,
+};
+
+function virtualThrottleNeutral() {
+  return FC.RC_CONFIG?.rc_center ?? 1500;
+}
+
+function encodeReverseFlightConfig() {
+  const c = virtualReverseFlightConfig;
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer
+    .push8(c.throttle_mode)
+    .push8(c.throttle_deadband)
+    .push8(c.throttle_reverse_hysteresis)
+    .push8(c.throttle_reverse_limit)
+    .push16(c.reverse_motor_time)
+    .push16(c.reverse_time_constant)
+    .push16(c.reverse_surface_gain)
+    .push8(c.reverse_fade)
+    .push8(c.reverse_motor_dwell)
+    .push8(c.reverse_coupled_axes)
+    .push16(virtualThrottleNeutral())
+    .push8(c.motor_bidir_mask)
+    .push8(FC.CONFIG?.motorCount ?? 1);
+  return Uint8Array.from(buffer);
+}
+
+function encodeReverseFlightStatus() {
+  const enabled =
+    virtualReverseFlightConfig.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL;
+  const buffer = [];
+  buffer.push8(1); // payload version
+  buffer
+    .push8(enabled ? 1 : 0)
+    .push8(enabled ? 1 : 0) // REVERSE_STATE_DISARMED / _OFF
+    .push8(1) // direction forward
+    .push8(enabled ? 1 : 0) // stick in deadband
+    .push16(virtualThrottleNeutral());
+  // stick thrust, motor command, thrust, speed: 0; gimbal and surface factors: 1
+  [0, 0, 0, 0, 1000, 1000].forEach((v) => buffer.push16(v));
+  return Uint8Array.from(buffer);
+}
+
 // Runs a virtual reply through the real decoder, so FC is updated exactly as it would
 // be by hardware (and a payload that drifts from the wire format shows up here).
 function decodeVirtualReply(code, payload) {
@@ -602,6 +655,29 @@ export function getVirtualResponse(code, requestData) {
         virtualSrxl2EscConfig.telem_interval_frames = requestData[2];
         virtualSrxl2EscConfig.motor2_channel =
           requestData[3] < 32 ? requestData[3] : 0;
+      }
+      return undefined;
+    case MSPCodes.MSP2_WING_REVERSE_FLIGHT_CONFIG:
+      return decodeVirtualReply(code, encodeReverseFlightConfig());
+    case MSPCodes.MSP2_WING_REVERSE_FLIGHT_STATUS:
+      return decodeVirtualReply(code, encodeReverseFlightStatus());
+    // Exactly 14 bytes, as msp.c requires: the settings and the motor mask.
+    case MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG:
+      if (requestData?.length === 14) {
+        const u16 = (i) => requestData[i] | (requestData[i + 1] << 8);
+        Object.assign(virtualReverseFlightConfig, {
+          throttle_mode: requestData[0],
+          throttle_deadband: requestData[1],
+          throttle_reverse_hysteresis: requestData[2],
+          throttle_reverse_limit: requestData[3],
+          reverse_motor_time: u16(4),
+          reverse_time_constant: u16(6),
+          reverse_surface_gain: u16(8),
+          reverse_fade: requestData[10],
+          reverse_motor_dwell: requestData[11],
+          reverse_coupled_axes: requestData[12],
+          motor_bidir_mask: requestData[13],
+        });
       }
       return undefined;
     case MSPCodes.MSP_SELECT_SETTING: {

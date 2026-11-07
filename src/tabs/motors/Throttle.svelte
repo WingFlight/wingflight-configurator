@@ -13,6 +13,11 @@
   import Tooltip from "@/components/Tooltip.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
+  import InfoNote from "@/components/notes/InfoNote.svelte";
+  import {
+    THROTTLE_MODE_BIDIRECTIONAL,
+    escNeutralPulse,
+  } from "@/js/ReverseFlight.js";
 
   import motorState from "./state.svelte.js";
 
@@ -22,6 +27,11 @@
   );
 
   let realtimeThrottleEndpoint = $state(false);
+
+  // Bidirectional (4D) throttle is set in the Receiver tab; the ESC has to match.
+  let bidirectional = $derived(
+    FC.REVERSE_FLIGHT_CONFIG?.throttle_mode === THROTTLE_MODE_BIDIRECTIONAL,
+  );
 
   function save(code) {
     return MSP.promise(code, mspHelper.crunch(code));
@@ -38,6 +48,20 @@
 
 <Section label="motorsSectionLabelThrottle">
   <SubSection>
+    {#if bidirectional && isEnabled}
+      <div transition:slide>
+        {#if motorState.isDshot}
+          <InfoNote message="motorsBidirectionalDshotNote" />
+        {:else}
+          <InfoNote>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html $i18n.t("motorsBidirectionalNote", {
+              1: escNeutralPulse(FC.MOTOR_CONFIG),
+            })}
+          </InfoNote>
+        {/if}
+      </div>
+    {/if}
     <Field id="esc-protocol" label="motorsEscProtocol">
       {#snippet tooltip()}
         <Tooltip

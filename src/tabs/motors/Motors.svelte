@@ -86,6 +86,10 @@
       await MSP.promise(MSPCodes.MSP2_WING_SRXL2_ESC_CONFIG);
     }
     await MSP.promise(MSPCodes.MSP2_WING_GOVERNOR_CONFIG);
+    // Read only here, for the bidirectional (4D) ESC note; set in the Receiver tab.
+    // Stays null on firmware without the message.
+    FC.REVERSE_FLIGHT_CONFIG = null;
+    await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_CONFIG);
     await MSP.promise(MSPCodes.MSP_MOTOR);
     await MSP.promise(MSPCodes.MSP_MOTOR_TELEMETRY);
     await MSP.promise(MSPCodes.MSP_BATTERY_STATE);

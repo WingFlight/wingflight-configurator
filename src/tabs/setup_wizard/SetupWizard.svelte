@@ -15,9 +15,11 @@
 
   import {
     surfacesFromRules,
+    gimbalsFromRules,
     servosPastCount,
     axisGainsFromInputs,
     AXES,
+    VECTOR_AXES,
     FLAP_INPUT,
   } from "./surfaces.js";
   import StepSensors from "./StepSensors.svelte";
@@ -31,6 +33,7 @@
   import StepLimits from "./StepLimits.svelte";
   import StepThrows from "./StepThrows.svelte";
   import StepTravel from "./StepTravel.svelte";
+  import StepGimbal from "./StepGimbal.svelte";
   import StepGyro from "./StepGyro.svelte";
   import StepTrimGain from "./StepTrimGain.svelte";
   import StepModes from "./StepModes.svelte";
@@ -54,6 +57,9 @@
     { key: "limits", component: StepLimits },
     { key: "throws", component: StepThrows },
     { key: "travel", component: StepTravel },
+    // Thrust vector gimbal and 4D linked surfaces. Says so and is skipped with
+    // Next on a model without a gimbal.
+    { key: "gimbal", component: StepGimbal },
     { key: "gyro", component: StepGyro },
     { key: "trimGain", component: StepTrimGain },
     { key: "modes", component: StepModes },
@@ -61,9 +67,14 @@
     { key: "finish", component: StepFinish },
   ];
 
-  // Mixer inputs the wizard holds with overrides: the stabilized axes, and
-  // the flap channel for the flap direction check.
-  const HELD_INPUTS = [...AXES.map((a) => a.input), FLAP_INPUT];
+  // Mixer inputs the wizard holds with overrides: the stabilized axes, the
+  // flap channel for the flap direction check, and the thrust vector inputs
+  // for the gimbal step.
+  const HELD_INPUTS = [
+    ...AXES.map((a) => a.input),
+    FLAP_INPUT,
+    ...VECTOR_AXES.map((a) => a.input),
+  ];
 
   const STEP_STORAGE_KEY = "setupWizardStep";
   const PWM_SERVO_SLOTS = 8;
@@ -115,6 +126,8 @@
   );
 
   let surfaces = $derived(surfacesFromRules(FC.MIXER_RULES, servoCount));
+  // Servos tilting the motor gimbal (thrust vector inputs).
+  let gimbals = $derived(gimbalsFromRules(FC.MIXER_RULES, servoCount));
   // Mixed servos the board has no output for, which the wizard can't show.
   let missingServos = $derived(
     servosPastCount(FC.MIXER_RULES, servoCount, PWM_SERVO_SLOTS),
@@ -133,6 +146,8 @@
       MODE_RANGES_EXTRA: FC.MODE_RANGES_EXTRA,
       // Sent live by the Trim and gain step.
       ADJUSTMENT_RANGES: FC.ADJUSTMENT_RANGES,
+      // Bidirectional (4D) throttle, sent by the Motor and Gimbal steps.
+      REVERSE_FLIGHT_CONFIG: FC.REVERSE_FLIGHT_CONFIG,
     });
   }
 
@@ -165,6 +180,10 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
+    // Bidirectional (4D) throttle. Stays null on firmware without it, which
+    // hides the 4D choices in the steps.
+    FC.REVERSE_FLIGHT_CONFIG = null;
+    await MSP.promise(MSPCodes.MSP2_WING_REVERSE_FLIGHT_CONFIG);
 
     while (FC.MIXER_RULES.length < Mixer.RULE_COUNT) {
       FC.MIXER_RULES.push(Mixer.nullRule());
@@ -351,6 +370,16 @@
     }
   }
 
+  // Holds thrust vector inputs (gimbal step): { pitch: -0.5 } and so on.
+  // Released with the axes.
+  function holdVector(values) {
+    for (const axis of VECTOR_AXES) {
+      if (!(axis.key in values)) continue;
+      FC.MIXER_OVERRIDE[axis.input] = Math.round(values[axis.key] * 1000);
+      mspHelper.sendMixerOverride(axis.input, undefined, overrideTimeout());
+    }
+  }
+
   function releaseAxes() {
     for (const input of HELD_INPUTS) {
       if (FC.MIXER_OVERRIDE[input] === Mixer.OVERRIDE_OFF) continue;
@@ -458,6 +487,13 @@
     FC.MIXER_INPUTS = snapshot.MIXER_INPUTS;
     FC.MIXER_RULES = snapshot.MIXER_RULES;
     Object.assign(FC.MIXER_CONFIG, snapshot.MIXER_CONFIG);
+    if (snapshot.REVERSE_FLIGHT_CONFIG) {
+      FC.REVERSE_FLIGHT_CONFIG = snapshot.REVERSE_FLIGHT_CONFIG;
+      await MSP.promise(
+        MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG,
+        mspHelper.crunch(MSPCodes.MSP2_WING_SET_REVERSE_FLIGHT_CONFIG),
+      );
+    }
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
     await new Promise((resolve) => mspHelper.sendMixerInputs(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
@@ -475,6 +511,9 @@
   setContext("setupWizard", {
     get surfaces() {
       return surfaces;
+    },
+    get gimbals() {
+      return gimbals;
     },
     get servoCount() {
       return servoCount;
@@ -514,6 +553,7 @@
       return passthroughAssigned;
     },
     holdAxes,
+    holdVector,
     releaseAxes,
     holdServo,
     releaseServo,
