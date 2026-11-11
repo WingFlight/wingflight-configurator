@@ -8206,6 +8206,12 @@
     "modeHelp TRADITIONAL": {
         "message": "Stabilizes rate like normal flight, but feels more like a traditional gyro - the servo snaps back immediately on stick release instead of holding position."
     },
+    "mode AUTO GAIN": {
+        "message": "AUTO GAIN"
+    },
+    "modeHelp AUTO GAIN": {
+        "message": "Turns the gyro gain (P and D) of roll, pitch or yaw down while that axis oscillates, then brings it back up. Stick response and trim are not changed."
+    },
     "mode AUTO TRIM": {
         "message": "AUTO TRIM"
     },

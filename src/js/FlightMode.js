@@ -27,7 +27,7 @@ export function getModeDescription(modeName) {
 // isn't named here falls into a trailing "other" group so it stays reachable.
 export const MODE_GROUPS = [
     { key: 'Arming', modes: ['ARM', 'PREARM', 'FAILSAFE'] },
-    { key: 'Flight', modes: ['ANGLE', 'ATT HOLD', 'GYRO OFF', 'MANUAL', 'TRADITIONAL', 'SETUP', 'PASSTHROUGH', 'AUTO TRIM', 'TRAINER'] },
+    { key: 'Flight', modes: ['ANGLE', 'ATT HOLD', 'GYRO OFF', 'MANUAL', 'TRADITIONAL', 'AUTO GAIN', 'SETUP', 'PASSTHROUGH', 'AUTO TRIM', 'TRAINER'] },
     { key: 'ThrustVector', modes: ['THRUST VECTOR', 'THRUST VECTOR ATTITUDE HOLD'] },
     { key: 'Gps', modes: ['GPS LOITER', 'GPS RTH', 'GPS BEEP SATELLITE COUNT'] },
     { key: 'Power', modes: ['GOVERNOR'] },
