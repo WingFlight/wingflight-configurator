@@ -595,13 +595,14 @@ export function getVirtualResponse(code, requestData) {
     case MSPCodes.MSP2_WING_SRXL2_ESC_CONFIG:
       return decodeVirtualReply(code, encodeSrxl2EscConfig());
     // Exactly four bytes, as msp.c requires: u16 rate, u8 interval, u8 channel.
+    // Motor 2 channel: 0 = off, 2..32 (channel 1 is motor 1), as the firmware.
     case MSPCodes.MSP2_WING_SET_SRXL2_ESC_CONFIG:
       if (requestData?.length === 4) {
         virtualSrxl2EscConfig.throttle_rate_hz =
           requestData[0] | (requestData[1] << 8);
         virtualSrxl2EscConfig.telem_interval_frames = requestData[2];
         virtualSrxl2EscConfig.motor2_channel =
-          requestData[3] < 32 ? requestData[3] : 0;
+          requestData[3] >= 2 && requestData[3] <= 32 ? requestData[3] : 0;
       }
       return undefined;
     case MSPCodes.MSP_SELECT_SETTING: {
