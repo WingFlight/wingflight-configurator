@@ -11,6 +11,7 @@
   import {
     GPS_PROVIDERS,
     UART_NAMES,
+    gpsProviderSupportsNav,
     syncLegacyGpsFeature,
   } from "@/tabs/configuration/util.js";
 
@@ -218,6 +219,10 @@
   let fbusSatelliteCountUnknown = $derived(
     fbusSelected && FC.GPS_DATA?.fix && FC.GPS_DATA?.numSat === 0,
   );
+  // From the selected provider, not the live fix, so it shows on the bench.
+  let navUnsupported = $derived(
+    FC.GPS_CONFIG != null && !gpsProviderSupportsNav(FC.GPS_CONFIG.provider),
+  );
   let ubloxSelected = $derived(
     FC.GPS_CONFIG?.provider === GPS_PROTOCOLS.indexOf("UBLOX"),
   );
@@ -367,6 +372,14 @@
           options={protocolOptions}
         />
       </Field>
+
+      {#if navUnsupported}
+        <p class="note">
+          {$i18n.t("gpsNavProviderUnsupportedNote", {
+            provider: GPS_PROTOCOLS[FC.GPS_CONFIG.provider],
+          })}
+        </p>
+      {/if}
 
       {#if !pushedDataSelected}
         {#if autoConfigEnabled && ubloxSelected}
