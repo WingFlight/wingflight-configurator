@@ -9229,6 +9229,18 @@
     "setupWizardGainCentre": {
         "message": "Fly the first flight with the knob at center (75%)."
     },
+    "setupWizardAutoGainTitle": {
+        "message": "Auto gain"
+    },
+    "setupWizardAutoGainText": {
+        "message": "Turns the gain of an axis down by itself while that axis wobbles, then brings it back up. It never turns the gain up past what is set."
+    },
+    "setupWizardAutoGainKnobNote": {
+        "message": "Auto gain hides the wobble you look for when setting the knob, so set the knob first on a flight with auto gain off."
+    },
+    "setupWizardAutoGainNoKnobNote": {
+        "message": "With no gain knob, auto gain is the only thing that turns the gain down in the air if the model wobbles."
+    },
     "setupWizardOpenAdjustments": {
         "message": "Open the Adjustments tab"
     },
