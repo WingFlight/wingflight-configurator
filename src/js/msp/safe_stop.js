@@ -17,8 +17,7 @@
 */
 
 export const MOTOR_COUNT = 4; // MAX_SUPPORTED_MOTORS
-export const SERVO_COUNT = 32; // MAX_SUPPORTED_SERVOS with bus servos
-export const PWM_SERVO_COUNT = 8; // MAX_SUPPORTED_PWM_SERVOS
+export const SERVO_COUNT = 24; // MAX_SUPPORTED_SERVOS
 export const MIXER_INPUT_COUNT = 36; // MIXER_INPUT_COUNT; 0 is "none"
 
 const MSP_SET_ARMING_DISABLED = 99;
@@ -85,7 +84,7 @@ export function safeStopGroups({ disarm = false } = {}) {
             encodeRequest(MSP_SET_MIXER_OVERRIDE, [i + 1, ...u16(MIXER_OVERRIDE_OFF)]),
         ),
         // Timeout 0 clears a probe, the mode override and the mux override.
-        Array.from({ length: PWM_SERVO_COUNT }, (_, i) =>
+        Array.from({ length: SERVO_COUNT }, (_, i) =>
             encodeRequest(MSP2_WING_SET_SERVO_PROBE, [i, 0, 0, 0, 0]),
         ),
         [encodeRequest(MSP2_WING_SET_MODE_OVERRIDE, [0, 0, 0]), encodeRequest(MSP2_WING_SET_FBUS_MUX_OVERRIDE, [0, 0])],

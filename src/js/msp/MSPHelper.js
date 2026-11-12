@@ -993,15 +993,15 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP_SERVO_CONFIGURATIONS: {
                 FC.SERVO_CONFIG = []; // empty the array as new data is coming in
                 const servoConfigurationCount = data.readU8();
-                if (data.byteLength == 1 + servoConfigurationCount * 16) {
-                    for (let i = 1; i < data.byteLength; i += 16) {
+                // Seven U16 per servo
+                if (data.byteLength == 1 + servoConfigurationCount * 14) {
+                    for (let i = 1; i < data.byteLength; i += 14) {
                         const arr = {
                             'mid':       data.readU16(),
                             'min':       data.read16(),
                             'max':       data.read16(),
                             'rneg':      data.read16(),
                             'rpos':      data.read16(),
-                            'rate':      data.read16(),
                             'speed':     data.readU16(),
                             'flags':     data.read16()
                         };
@@ -1199,13 +1199,17 @@ MspHelper.prototype.process_data = function(dataHandler) {
 
             case MSPCodes.MSP_MIXER_CONFIG: {
                 FC.MIXER_CONFIG.model_type = data.readU8();
-                FC.MIXER_CONFIG.bus_servo_clone_pwm = data.readU8();
+                data.readU8(); // was bus_servo_clone_pwm
                 // API 22.5: SBUS and F.Bus output channel counts, then the
                 // count the configured bus output drives
                 if (data.byteLength >= 5) {
                     FC.MIXER_CONFIG.sbus_out_channels = data.readU8();
                     FC.MIXER_CONFIG.fbus_master_channels = data.readU8();
                     FC.MIXER_CONFIG.bus_servo_output_count = data.readU8();
+                }
+                // API 22.16: update rate of every PWM servo output, Hz
+                if (data.byteLength >= 7) {
+                    FC.MIXER_CONFIG.servo_pwm_rate = data.readU16();
                 }
                 break;
             }
@@ -2372,10 +2376,11 @@ MspHelper.prototype.crunch = function(code) {
 
         case MSPCodes.MSP_SET_MIXER_CONFIG: {
             buffer.push8(FC.MIXER_CONFIG.model_type);
-            buffer.push8(FC.MIXER_CONFIG.bus_servo_clone_pwm);
+            buffer.push8(0); // was bus_servo_clone_pwm
             if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5)) {
                 buffer.push8(FC.MIXER_CONFIG.sbus_out_channels);
                 buffer.push8(FC.MIXER_CONFIG.fbus_master_channels);
+                buffer.push16(FC.MIXER_CONFIG.servo_pwm_rate);
             }
             break;
         }
@@ -3208,7 +3213,6 @@ MspHelper.prototype.sendServoConfig = function(servoIndex, onCompleteCallback)
           .push16(CONFIG.max)
           .push16(CONFIG.rneg)
           .push16(CONFIG.rpos)
-          .push16(CONFIG.rate)
           .push16(CONFIG.speed)
           .push16(CONFIG.flags);
 

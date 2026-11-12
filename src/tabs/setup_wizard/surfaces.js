@@ -79,10 +79,10 @@ export function surfacesFromRules(rules, servoCount) {
 }
 
 // Servo numbers (1-based) that the surface mix drives but that are past the
-// board's servo outputs (up to `slots`), so surfacesFromRules() leaves them
-// out. The firmware only counts servo pins with a timer assigned
-// (servoInit() in flight/servos.c), so a flap mixed onto servo 5 of a board
-// with 4 servo pins never moves.
+// servos in use (up to `slots`), so surfacesFromRules() leaves them out. The
+// firmware only sends a servo that has a PWM output or a bus channel
+// (getServoCount() in flight/servos.c), so a flap mixed onto servo 5 of a
+// board with 4 servo pins and no bus output never moves.
 export function servosPastCount(rules, servoCount, slots) {
   const servos = new Set();
   for (const rule of rules) {

@@ -66,7 +66,8 @@
   const HELD_INPUTS = [...AXES.map((a) => a.input), FLAP_INPUT];
 
   const STEP_STORAGE_KEY = "setupWizardStep";
-  const PWM_SERVO_SLOTS = 8;
+  // MAX_SUPPORTED_SERVOS in the firmware
+  const SERVO_SLOTS = 24;
   const SERVO_OVERRIDE_OFF = 2001;
 
   let loading = $state(true);
@@ -103,21 +104,16 @@
     }
   }
 
-  // PWM servos only: mixer output N drives FC.SERVO_CONFIG[N - 1] and servo
-  // override N - 1 directly. Bus servos use a different index scheme and are
-  // left to the Servos tab.
+  // The servos in use, on a PWM output, a bus channel or both: mixer output
+  // N drives FC.SERVO_CONFIG[N - 1] and servo override N - 1 directly.
   let servoCount = $derived(
-    Math.min(
-      FC.CONFIG.servoCount ?? 0,
-      PWM_SERVO_SLOTS,
-      FC.SERVO_CONFIG.length,
-    ),
+    Math.min(FC.CONFIG.servoCount ?? 0, SERVO_SLOTS, FC.SERVO_CONFIG.length),
   );
 
   let surfaces = $derived(surfacesFromRules(FC.MIXER_RULES, servoCount));
   // Mixed servos the board has no output for, which the wizard can't show.
   let missingServos = $derived(
-    servosPastCount(FC.MIXER_RULES, servoCount, PWM_SERVO_SLOTS),
+    servosPastCount(FC.MIXER_RULES, servoCount, SERVO_SLOTS),
   );
 
   let axisGains = $derived(axisGainsFromInputs(FC.MIXER_INPUTS));
@@ -390,6 +386,12 @@
     pending = true;
   }
 
+  // The PWM update rate of every servo output (FC.MIXER_CONFIG.servo_pwm_rate).
+  function sendPwmRate() {
+    mspHelper.sendMixerConfig();
+    pending = true;
+  }
+
   function axisGainPercent(axisKey) {
     const axis = AXES.find((a) => a.key === axisKey);
     return Math.round(Math.abs(FC.MIXER_INPUTS[axis.input]?.rate ?? 0) / 10);
@@ -525,6 +527,7 @@
     probeServo,
     releaseProbe,
     sendServo,
+    sendPwmRate,
     axisGainPercent,
     setAxisGainPercent,
     invertAxis,

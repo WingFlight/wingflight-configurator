@@ -2,13 +2,8 @@ import { FC } from "@/js/fc.svelte.js";
 import { GainCurve } from "@/js/GainCurve.js";
 import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
-import { Mixer } from "@/js/Mixer.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
-import {
-  clampServoConfig,
-  servoTrimLimit,
-  servoUsableTravel,
-} from "@/js/servoLimits.js";
+import { clampServoConfig, servoTrimLimit } from "@/js/servoLimits.js";
 import { getManufacturer } from "@/tabs/esc_programming/manufacturers/index.js";
 
 // MSP_SELECT_SETTING's index offset for "select rate profile N" (see Rates.svelte)
@@ -359,25 +354,17 @@ function encodeServoTrim() {
 const VIRTUAL_SERVO_TIMERS = [0, 0, 0, 1];
 
 // MSP2_WING_SERVO_TIMING: count, then per PWM servo the rate it runs at and
-// the first servo on its timer. Like servoInit() (flight/servos.c), a servo
-// runs at the lowest rate on its timer, capped by each one's longest pulse.
-// The FC works this out at boot; here it follows the config at once.
+// the first servo on its timer. Every PWM output runs at the one rate
+// (servo_pwm_rate). The FC sets it at boot; here it follows the config at
+// once.
 function encodeServoTiming() {
   const count = Math.min(FC.CONFIG.servoCount, VIRTUAL_SERVO_TIMERS.length);
+  const rate = Math.min(Math.max(FC.MIXER_CONFIG.servo_pwm_rate, 25), 333);
   const buffer = [];
   buffer.push8(count);
   for (let i = 0; i < count; i++) {
-    let rate = FC.SERVO_CONFIG[i].rate;
-    let group = i;
-    for (let j = 0; j < count; j++) {
-      if (VIRTUAL_SERVO_TIMERS[j] !== VIRTUAL_SERVO_TIMERS[i]) continue;
-      group = Math.min(group, j);
-      const config = FC.SERVO_CONFIG[j];
-      const maxPulse = config.mid + servoUsableTravel(config, false).max;
-      rate = Math.min(rate, config.rate, Math.floor(950000 / maxPulse));
-    }
-    buffer.push16(Math.min(Math.max(rate, 25), 5000));
-    buffer.push8(group);
+    buffer.push16(rate);
+    buffer.push8(VIRTUAL_SERVO_TIMERS.indexOf(VIRTUAL_SERVO_TIMERS[i]));
   }
   return Uint8Array.from(buffer);
 }
@@ -662,7 +649,7 @@ export function getVirtualResponse(code, requestData) {
       const index = requestData[0];
       const config = FC.SERVO_CONFIG[index];
       if (config) {
-        clampServoConfig(config, isVirtualBusServo(index));
+        clampServoConfig(config);
       }
       return undefined;
     }
@@ -722,19 +709,6 @@ function applyVirtualModeOverride(permanentIds) {
   for (const index of virtualForcedModes) {
     FC.CONFIG.mode |= 1 << index;
   }
-}
-
-// Same PWM/bus split as the Servos tab: once SBUS or F.Bus output is on,
-// the last BUS_SERVO_CHANNELS entries of FC.SERVO_CONFIG are bus servos.
-function isVirtualBusServo(index) {
-  const busActive = FC.SERIAL_CONFIG.ports.some(
-    (port) =>
-      port.functions.includes("SBUS_OUT") ||
-      port.functions.includes("FBUS_OUT"),
-  );
-  return (
-    busActive && index >= FC.SERVO_CONFIG.length - Mixer.busServoChannels()
-  );
 }
 
 function getVirtualEscResponse(code, requestData) {
@@ -994,11 +968,10 @@ export function applyVirtualConfig() {
   for (let i = 0; i < FC.SERVO_CONFIG.length; i++) {
     FC.SERVO_CONFIG[i] = {
       mid: 1500,
-      min: -700,
-      max: 700,
+      min: -600,
+      max: 600,
       rneg: 500,
       rpos: 500,
-      rate: 333,
       speed: 0,
       flags: 0,
     };

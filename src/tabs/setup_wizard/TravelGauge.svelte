@@ -6,8 +6,7 @@
   // limit (red, in the zone outside the marks) and where the servo is now
   // (dot). Each side is drawn against its own limit, so the marks always
   // sit at the same place and 100% means "exactly at the limit".
-  // `mid` defaults to the servo's own Center; the Servos tab passes the
-  // source PWM servo's for a bus channel that clones it.
+  // `mid` defaults to the servo's own Center.
   let { servo, reach, mid = undefined } = $props();
 
   // Half the bar is LIMIT_AT of the way to the end: the rest shows overshoot,

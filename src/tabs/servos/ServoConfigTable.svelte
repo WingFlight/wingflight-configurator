@@ -28,16 +28,9 @@
   import Switch from "@/components/Switch.svelte";
   import TravelGauge from "@/tabs/setup_wizard/TravelGauge.svelte";
 
-  // pwmServoCount is only meaningful (and only passed) for the bus table -
-  // needed to work out whether a given bus channel is actually being
-  // cloned from a PWM servo right now (see effectiveCurveIndex() below).
-  let {
-    servos,
-    onFieldChange,
-    onRateChange,
-    onTrimChange,
-    pwmServoCount = 0,
-  } = $props();
+  // Each servo: { index, mspIndex, label, hasPwm, hasBus }. Every setting is
+  // the same for all of them.
+  let { servos, onFieldChange, onTrimChange } = $props();
 
   const FLAG_REVERSE = 1;
 
@@ -51,7 +44,7 @@
   // FC.MIXER_RULES currently mixes from the corresponding stabilized axis
   // input (src 1/2/3, see AxisConfig.svelte), matched the same way as the
   // firmware's axisTrimDirection() (flight/servos.c). dst is a mixer output
-  // number, which isn't mspIndex + 1 past S26 (see Mixer.servoOutput()).
+  // number (see Mixer.servoOutput()).
   function axisAffectsServo(axisSrc, mspIndex) {
     const output = Mixer.servoOutput(mspIndex);
     return (FC.MIXER_RULES ?? []).some(
@@ -95,11 +88,6 @@
   function savedTrim(servo) {
     return FC.SERVO_SAVED_TRIM?.[servo.index] ?? 0;
   }
-
-  // Bus servos are always mixer-driven and have no Rate (Hz) setting -- each
-  // table instance is homogeneous (all PWM or all bus), so hide the whole
-  // column rather than leaving an empty cell in every row.
-  let isBusTable = $derived(servos.length > 0 && servos[0].isBusServo);
 
   // Live trim from a Mapped ServoTrim adjustment: runtime-only on the FC, so the
   // servo's Center doesn't change, but it does move the output. Shown beside the
@@ -156,8 +144,8 @@
   );
 
   // Guards against a stale selection surviving a prop change this table
-  // instance doesn't otherwise react to (e.g. bus mode toggling off while
-  // a bus servo's detail view is open).
+  // instance doesn't otherwise react to (e.g. a bus channel count lowered
+  // while the detail view of a servo past it is open).
   $effect(() => {
     if (
       selectedIndex !== null &&
@@ -222,7 +210,6 @@
     if (showTrimColumn) cols.push(trimColumnWidth);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
-      if (!isBusTable) cols.push(VALUE_COL); // Rate (PWM only)
       cols.push(VALUE_COL); // Speed
     }
     cols.push(REVERSE_COL); // Reverse
@@ -234,7 +221,7 @@
   );
 
   // The narrowest this table's *current* column set (which varies with
-  // Expert Mode / bus vs PWM / whether a Trim column is showing) can get
+  // Expert Mode / whether a Trim column is showing) can get
   // before it needs its own horizontal scrollbar -- compared against the
   // actually-measured available width below to decide whether to show the
   // grid at all, rather than guessing a single fixed viewport breakpoint
@@ -257,21 +244,15 @@
   // Min/Max keep what's typed. The firmware limits them against the center
   // when it works out the output (see servoLimits.js), and limitTitle() says
   // how much is used.
-  function bounds(servo, field) {
-    const travel = servoTravelRange(servo.isBusServo);
-    if (servo.isBusServo) {
-      if (field === "mid") return { min: 1001, max: 1999 };
-      if (field === "min") return { min: travel.min, max: -1 };
-      if (field === "max") return { min: 1, max: travel.max };
-    } else {
-      if (field === "mid") return { min: 50, max: 2250 };
-      if (field === "min" || field === "max") return travel;
-    }
+  function bounds(_servo, field) {
+    // SERVO_CENTER_MIN/MAX (flight/servos.h)
+    if (field === "mid") return { min: 1000, max: 2000 };
+    if (field === "min" || field === "max") return servoTravelRange();
     return {};
   }
 
   function limited(servo) {
-    return servoTravelLimited(FC.SERVO_CONFIG[servo.index], servo.isBusServo);
+    return servoTravelLimited(FC.SERVO_CONFIG[servo.index]);
   }
 
   function limitTitle(servo, field) {
@@ -279,10 +260,10 @@
       return undefined;
     }
     const config = FC.SERVO_CONFIG[servo.index];
-    const signal = servoSignalRange(servo.isBusServo);
+    const signal = servoSignalRange();
     return $i18n.t("servoTravelLimitedHelp", {
       1: config.mid,
-      2: servoUsableTravel(config, servo.isBusServo)[field],
+      2: servoUsableTravel(config)[field],
       3: field === "max" ? signal.max : signal.min,
     });
   }
@@ -294,46 +275,16 @@
   // Balance curves are edited on the Curves tab, not here - this is just a
   // read-only "something's set" indicator so it's not invisible from the
   // Servos tab.
-  //
-  // In clone mode (bus_servo_clone_pwm), a bus channel's actual
-  // transmitted signal mirrors its paired PWM servo's already
-  // curve-shaped output verbatim - the firmware never even reads that bus
-  // channel's own curve slot in that case (sbusOutGetValueMixer(),
-  // drivers/sbus_output.c). So the curve that's actually meaningful for a
-  // cloned bus row is the source PWM servo's, not the bus channel's own
-  // (functionally inert while cloned) slot. Only channels that actually
-  // have a PWM counterpart (channel < pwmServoCount) are cloned - beyond
-  // that, a bus channel always runs its own independent mixer/curve
-  // regardless of the clone toggle.
-  function effectiveCurveIndex(servo) {
-    if (servo.isBusServo) {
-      const channel = servo.mspIndex - Mixer.BUS_SERVO_OFFSET;
-      if (
-        FC.MIXER_CONFIG?.bus_servo_clone_pwm === 1 &&
-        channel < pwmServoCount
-      ) {
-        return channel; // PWM servos occupy FC.SERVO_CURVES[0..pwmServoCount-1] directly
-      }
-    }
-    return servo.index;
-  }
-
   function hasActiveCurve(servo) {
-    const curve = FC.SERVO_CURVES?.[effectiveCurveIndex(servo)];
+    const curve = FC.SERVO_CURVES?.[servo.index];
     return (
       !!curve &&
       !ServoBalanceCurve.compareCurve(curve, ServoBalanceCurve.nullCurve())
     );
   }
 
-  function isClonedCurve(servo) {
-    return servo.isBusServo && effectiveCurveIndex(servo) !== servo.index;
-  }
-
-  function curveTooltip(servo) {
-    return isClonedCurve(servo)
-      ? $i18n.t("servoCurveActiveCloned", { 1: effectiveCurveIndex(servo) + 1 })
-      : $i18n.t("servoCurveActive");
+  function curveTooltip() {
+    return $i18n.t("servoCurveActive");
   }
 
   let axisGains = $derived(axisGainsFromInputs(FC.MIXER_INPUTS));
@@ -343,57 +294,26 @@
   // Wizard's travel check (surfaces.js travelReach()), live as Min/Max and
   // the scales are edited. Always returns limits and a center, so every row
   // gets the gauge; the full-stick fill is only there when `estimated`.
-  //
-  // A cloned bus channel sends its PWM servo's finished pulse, clamped to
-  // the bus signal range (sbusOutGetValueMixer(), drivers/sbus_output.c),
-  // and ignores its own Center/Min/Max/scales -- so it shows the PWM servo's
-  // travel, with the bus range as a further limit.
   function reach(servo) {
-    const cloned = isClonedCurve(servo);
-    const source = cloned
-      ? {
-          index: effectiveCurveIndex(servo),
-          mspIndex: effectiveCurveIndex(servo),
-          isBusServo: false,
-        }
-      : servo;
-    const config = FC.SERVO_CONFIG[source.index];
-    const limits = servoUsableTravel(config, source.isBusServo);
-    const ownLimits = { ...limits };
-    if (cloned) {
-      const bus = servoSignalRange(true);
-      limits.min = Math.max(limits.min, bus.min - config.mid);
-      limits.max = Math.min(limits.max, bus.max - config.mid);
-    }
+    const config = FC.SERVO_CONFIG[servo.index];
+    const limits = servoUsableTravel(config);
     // The saved trim is added before the output is held inside Min/Max
     // (servoUpdate(), flight/servos.c), so it uses up travel on one side and
     // gives it on the other.
-    const trim = savedTrim(source);
+    const trim = savedTrim(servo);
     limits.min -= trim;
     limits.max -= trim;
 
-    // Only PWM outputs get a balance curve (servoUpdate(), flight/servos.c);
-    // a cloned bus channel carries its PWM servo's, already applied.
-    const curve = source.isBusServo ? null : FC.SERVO_CURVES?.[source.index];
-    const curved =
-      !!curve &&
-      !ServoBalanceCurve.compareCurve(curve, ServoBalanceCurve.nullCurve());
+    const curved = hasActiveCurve(servo);
 
     const r = outputTravelReach(
       FC.MIXER_RULES ?? [],
-      Mixer.servoOutput(source.mspIndex),
+      Mixer.servoOutput(servo.mspIndex),
       { ...config, ...limits },
       axisGains,
-      curved ? curve : null,
+      curved ? FC.SERVO_CURVES[servo.index] : null,
     );
-    const base = {
-      mid: config.mid,
-      cloned,
-      source: source.index + 1,
-      label: servo.label,
-      trim,
-      ownLimits,
-    };
+    const base = { mid: config.mid };
     if (r?.estimated) return { ...r, ...base, mixed: true, curved };
 
     const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });
@@ -418,58 +338,8 @@
     });
   }
 
-  // Why a cloned bus channel stops short: it sends its PWM servo's pulse,
-  // held to the bus signal range (sbusOutGetValueMixer(),
-  // drivers/sbus_output.c), and full stick plus the trim goes past it. One
-  // line per side, saying whether the trim alone pushes it over (it would
-  // fit without) or the Scale does.
-  function busClipReasons(r) {
-    if (!r.cloned || !r.estimated) return [];
-    const bus = servoSignalRange(true);
-    const sides = [
-      {
-        // Highest pulse: full stick, plus trim, within the PWM servo's own Max.
-        pulse: r.mid + Math.min(r.trim + r.pos.us, r.ownLimits.max),
-        withoutTrim: r.mid + r.pos.us,
-        edge: bus.max,
-        sign: 1,
-      },
-      {
-        pulse: r.mid + Math.max(r.trim - r.neg.us, r.ownLimits.min),
-        withoutTrim: r.mid - r.neg.us,
-        edge: bus.min,
-        sign: -1,
-      },
-    ];
-    return sides
-      .filter((side) => (side.pulse - side.edge) * side.sign > 0)
-      .map((side) => {
-        const params = {
-          1: r.label,
-          2: r.source,
-          3: r.trim > 0 ? `+${r.trim}` : `${r.trim}`,
-          4: Math.round(side.pulse),
-          5: side.edge,
-          6: Math.round(Math.abs(side.pulse - side.edge)),
-        };
-        const trimOnly = (side.withoutTrim - side.edge) * side.sign <= 0;
-        if (trimOnly) return $i18n.t("servoBusClipTrim", params);
-        return $i18n.t(
-          r.trim !== 0 ? "servoBusClipScaleTrim" : "servoBusClipScale",
-          params,
-        );
-      });
-  }
-
-  // Every cloned bus servo in this table that stops short, with the reason.
-  let busClipNotes = $derived(
-    isBusTable ? servos.flatMap((servo) => busClipReasons(reach(servo))) : [],
-  );
-
   function reachTitle(r) {
     const lines = [];
-    if (r.cloned) lines.push($i18n.t("servoTravelCloned", { 1: r.source }));
-    lines.push(...busClipReasons(r));
     if (r.estimated) {
       const sides =
         `${$i18n.t("setupWizardTravelNeg")} ${reachSide(r.neg)}, ` +
@@ -516,26 +386,9 @@
 {/snippet}
 
 {#snippet trimField(servo, config)}
-  {@const cloned = isClonedCurve(servo)}
   <span class="trim-cell">
     {#if savedTrimSupported}
-      {#if cloned}
-        {@const source = { index: effectiveCurveIndex(servo) }}
-        {@const sourceConfig = FC.SERVO_CONFIG[source.index]}
-        <!-- A cloned bus channel sends its PWM servo's output, trim included,
-             and ignores its own trim: show the PWM servo's trim in use. -->
-        <span
-          class="trim-value"
-          title={$i18n.t("servoTrimClonedHelp", { 1: source.index + 1 })}
-        >
-          <NumberInput
-            min={-servoTrimLimit(sourceConfig)}
-            max={servoTrimLimit(sourceConfig)}
-            value={appliedTrim(source, sourceConfig)}
-            disabled
-          />
-        </span>
-      {:else if trimDriven(servo)}
+      {#if trimDriven(servo)}
         <span
           class="trim-value"
           title={$i18n.t("servoTrimDrivenHelp", {
@@ -561,7 +414,7 @@
         </span>
       {/if}
     {/if}
-    {#if !cloned && hasTrimBadges(servo)}{@render trimBadges(servo)}{/if}
+    {#if hasTrimBadges(servo)}{@render trimBadges(servo)}{/if}
   </span>
 {/snippet}
 
@@ -610,21 +463,13 @@
   <button
     type="button"
     class="curve-icon-btn"
-    onclick={() => requestCurveView("servo", effectiveCurveIndex(servo))}
+    onclick={() => requestCurveView("servo", servo.index)}
     title={$i18n.t("servoCurveEdit")}
     aria-label={$i18n.t("servoCurveEdit")}
   >
     {@render curveIconSvg()}
   </button>
 {/snippet}
-
-{#if busClipNotes.length > 0}
-  <div class="note">
-    {#each busClipNotes as note (note)}
-      <p>{note}</p>
-    {/each}
-  </div>
-{/if}
 
 <div class="responsive-table" bind:clientWidth={containerWidth}>
   {#if !showCompact}
@@ -658,15 +503,6 @@
           <HelpIcon>{$i18n.t("servoScalePosHelp")}</HelpIcon>
         </span>
         {#if CONFIGURATOR.expertMode}
-          {#if !isBusTable}
-            <span class="header-label-flex">
-              <span>{$i18n.t("servoRate")}</span>
-              <HelpIcon>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html $i18n.t("servoRateHelp")}
-              </HelpIcon>
-            </span>
-          {/if}
           <span class="header-label-flex">
             <span>{$i18n.t("servoSpeed")}</span>
             <HelpIcon>{$i18n.t("servoSpeedHelp")}</HelpIcon>
@@ -742,16 +578,6 @@
             />
           </span>
           {#if CONFIGURATOR.expertMode}
-            {#if !isBusTable}
-              <span>
-                <NumberInput
-                  min="50"
-                  max="5000"
-                  bind:value={config.rate}
-                  onchange={() => onRateChange(servo.index)}
-                />
-              </span>
-            {/if}
             <span>
               <NumberInput
                 min="0"
@@ -868,17 +694,6 @@
           </div>
 
           {#if CONFIGURATOR.expertMode}
-            {#if !isBusTable}
-              <div class="mobile-field">
-                {@render fieldLabel("servoRate", "servoRateHelp")}
-                <NumberInput
-                  min="50"
-                  max="5000"
-                  bind:value={config.rate}
-                  onchange={() => onRateChange(servo.index)}
-                />
-              </div>
-            {/if}
             <div class="mobile-field">
               {@render fieldLabel("servoSpeed", "servoSpeedHelp")}
               <NumberInput
@@ -997,23 +812,6 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-  }
-
-  .note {
-    margin: 8px;
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border-accent);
-
-    p {
-      margin: 0;
-    }
-
-    p + p {
-      margin-top: 6px;
-    }
   }
 
   .trim-cell {

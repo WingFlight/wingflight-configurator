@@ -4,17 +4,9 @@ import { FC } from "@/js/fc.svelte.js";
 
 export const Mixer = {
 
-    PWM_SERVO_COUNT: 8,
-    BUS_SERVO_OFFSET: 8,
-
-    // API 22.5 (24-channel F.Bus): 24 bus servos (firmware BUS_SERVO_CHANNELS)
-    // and 24 RC channels, where older firmware has 18 of each.
+    // API 22.5: 24 RC channels, where older firmware has 18.
     has24Channels: function () {
         return semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
-    },
-
-    busServoChannels: function () {
-        return this.has24Channels() ? 24 : 18;
     },
 
     get inputNames() {
@@ -157,39 +149,33 @@ export const Mixer = {
         return options;
     },
 
-    // Mixer output numbers never move (firmware flight/mixer.h): 1-26 are
-    // S1-S26, 27-30 the motors, and from API 22.5 31-36 are S27-S32
-    // (bus servos 19-24), after the motors.
-    SERVO_OUTPUT_COUNT: 26,
+    // Mixer output numbers never move (firmware flight/mixer.h): 1-24 are
+    // servos S1-S24, 25 and 26 are reserved and 27-30 are the motors. Servo N
+    // is sent on PWM output N where the board has one and on channel N of a
+    // bus output (SBUS, F.Bus) when one is set up.
+    SERVO_OUTPUT_COUNT: 24,
     MOTOR_OUTPUT_COUNT: 4,
     MOTOR_OUTPUT_OFFSET: 27,
-    HIGH_SERVO_OUTPUT_OFFSET: 31,
 
-    // PWM servo outputs the board has: the servo pins with a timer assigned
-    // (servoInit() in the firmware's flight/servos.c). With an SBUS or F.Bus
-    // output on, the firmware reports PWM servos + bus channels instead
-    // (hasBusServosConfigured() in pg/bus_servo.c). null before MSP_STATUS.
-    pwmServoCount: function ()
+    // Servos in use, S1 up to this: the larger of the board's PWM servo
+    // outputs and the servos a bus output sends (getServoCount() in the
+    // firmware's flight/servos.c). null before MSP_STATUS.
+    servoCount: function ()
     {
         const reported = FC.CONFIG.servoCount;
         if (reported === undefined) {
             return null;
         }
-        const busOutputs = FC.MIXER_CONFIG.bus_servo_output_count;
-        const busActive = busOutputs !== undefined ?
-            busOutputs > 0 :
-            reported > this.PWM_SERVO_COUNT;
-        return Math.max(0, Math.min(this.PWM_SERVO_COUNT,
-            busActive ? reported - this.busServoChannels() : reported));
+        return Math.max(0, Math.min(this.SERVO_OUTPUT_COUNT, reported));
     },
 
-    // PWM servo outputs a model setup would use that the board doesn't have,
-    // so the surfaces on them would never move. buildWizardRules() numbers
-    // servos from 1, so it's every one past pwmServoCount(). Returns
+    // Servo outputs a model setup would use that aren't sent anywhere, so
+    // the surfaces on them would never move. buildWizardRules() numbers
+    // servos from 1, so it's every one past servoCount(). Returns
     // { needed, available, missing }, or null while the count is unknown.
     missingServoOutputs: function (options)
     {
-        const available = this.pwmServoCount();
+        const available = this.servoCount();
         if (available === null) {
             return null;
         }
@@ -207,25 +193,18 @@ export const Mixer = {
         };
     },
 
+    // By mixer output number; 25 and 26 are reserved and never offered.
     get outputNames() {
-        const highServoCount = this.busServoChannels() - 18;
         return [
             'mixerOutputNone',
             ...Array.from({ length: 26 }, (_, i) => `mixerOutputServo${i + 1}`),
             ...Array.from({ length: 4 }, (_, i) => `mixerOutputMotor${i + 1}`),
-            ...Array.from({ length: highServoCount }, (_, i) => `mixerOutputServo${i + 27}`),
         ];
     },
 
     // Output numbers in display order: servos by number, then the motors.
     outputOrder: function () {
-        const count = this.outputNames.length;
-        const servos = [];
-        for (let i = 1; i < count; i++) {
-            if (!this.isMotorOutput(i)) {
-                servos.push(i);
-            }
-        }
+        const servos = Array.from({ length: this.SERVO_OUTPUT_COUNT }, (_, i) => i + 1);
         const motors = Array.from({ length: this.MOTOR_OUTPUT_COUNT }, (_, i) => this.MOTOR_OUTPUT_OFFSET + i);
         return [0, ...servos, ...motors];
     },
@@ -234,27 +213,13 @@ export const Mixer = {
         return index >= this.MOTOR_OUTPUT_OFFSET && index < this.MOTOR_OUTPUT_OFFSET + this.MOTOR_OUTPUT_COUNT;
     },
 
-    // Mixer output number (rule dst) for a 0-based servo slot (S1 = 0).
+    // Mixer output number (rule dst) for a 0-based servo index (S1 = 0).
     servoOutput: function (servoIndex) {
-        return servoIndex < this.SERVO_OUTPUT_COUNT ?
-            servoIndex + 1 :
-            this.HIGH_SERVO_OUTPUT_OFFSET + servoIndex - this.SERVO_OUTPUT_COUNT;
+        return servoIndex + 1;
     },
 
     outputLabel: function (index, i18n) {
-        if (index === 0 || this.isMotorOutput(index)) {
-            return i18n.getMessage(this.outputNames[index]);
-        }
-
-        const servoNumber = index >= this.HIGH_SERVO_OUTPUT_OFFSET ?
-            index - this.HIGH_SERVO_OUTPUT_OFFSET + this.SERVO_OUTPUT_COUNT + 1 :
-            index;
-        if (servoNumber <= this.PWM_SERVO_COUNT) {
-            return `PWM Servo #${servoNumber}`;
-        }
-
-        const busServoNumber = servoNumber - this.BUS_SERVO_OFFSET;
-        return `Bus Servo #${busServoNumber}`;
+        return i18n.getMessage(this.outputNames[index]);
     },
 
     operNames: [

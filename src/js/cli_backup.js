@@ -44,6 +44,53 @@ export function isWingflightBackup(text) {
   return !!text && WINGFLIGHT_VERSION_BANNER.test(text);
 }
 
+// Firmware before MSP API 22.16 kept bus servos in slots of their own: S9-S32
+// were bus channels 1-24, and `bus_servo_clone_pwm` copied the PWM servos
+// onto the bus. From 22.16 servo N is sent on PWM output N and on bus channel
+// N alike, so a `servo`, `servo trim` or `mixer rule` line that names servo 9
+// or above from an older backup now means a servo 8 channels away. Replayed
+// as it is, it would move the wrong servo, so those lines are left out (as a
+// comment saying so) and that part is set up again by hand. Servos 1-8 mean
+// the same as before. The API version is in the banner `dump`/`diff` open
+// with ("... MSP API: 22.15"); text without one is replayed as it is.
+const SERVO_LIST_API = { major: 22, minor: 16 };
+const BACKUP_API_VERSION = /^#.*\bMSP API:\s*(\d+)\.(\d+)/m;
+const OLD_BUS_SERVO_LINES = [
+  /^servo\s+(trim\s+)?(9|[12]\d|3[0-2])\b/i,
+  /^mixer\s+rule\s+\d+\s+\S+\s+\S+\s+S(9|[12]\d|3[0-2])\b/i,
+  /^set\s+bus_servo_clone_pwm\b/i,
+];
+
+export function backupPredatesServoList(text) {
+  const match = text ? BACKUP_API_VERSION.exec(text) : null;
+  if (!match) {
+    return false;
+  }
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  return (
+    major < SERVO_LIST_API.major ||
+    (major === SERVO_LIST_API.major && minor < SERVO_LIST_API.minor)
+  );
+}
+
+// Returns the text to replay and the lines that were left out of it.
+export function adaptBackupForServoList(text) {
+  if (!backupPredatesServoList(text)) {
+    return { text, skipped: [] };
+  }
+  const skipped = [];
+  const lines = text.split("\n").map((line) => {
+    const command = line.trim();
+    if (OLD_BUS_SERVO_LINES.some((pattern) => pattern.test(command))) {
+      skipped.push(command);
+      return `# skipped, bus servos are numbered differently from MSP API 22.16: ${command}`;
+    }
+    return line;
+  });
+  return { text: lines.join("\n"), skipped };
+}
+
 const CLI_ENTER_TIMEOUT_MS = 8000;
 const CLI_IDLE_MS = 750;
 // A freshly-flashed wing FC has a lot more to bring up on boot (servo mixer,
@@ -190,7 +237,15 @@ function endsWithSave(text) {
  * false if the text looked like a backup but the FC never rebooted after
  * all the retries.
  */
-export async function replayBackup(cliEngine, commandsText) {
+export async function replayBackup(cliEngine, backupText) {
+  const { text: commandsText, skipped } = adaptBackupForServoList(backupText);
+  if (skipped.length > 0) {
+    console.warn(
+      `Restore: left out ${skipped.length} bus servo line(s) from a backup made before MSP API 22.16`,
+      skipped,
+    );
+  }
+
   await cliEngine.executeCommands(commandsText);
 
   if (!endsWithSave(commandsText)) {

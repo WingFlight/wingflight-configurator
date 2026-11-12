@@ -22,9 +22,8 @@
     }
   });
 
-  function bandCentre(config) {
-    return config.mid > 860 ? 1500 : 760;
-  }
+  // Every servo centres on a standard pulse.
+  const CENTRE = 1500;
 
   function nudge(servo, delta) {
     const config = FC.SERVO_CONFIG[servo];
@@ -51,7 +50,7 @@
 <div class="surfaces">
   {#each wiz.surfaces as surface (surface.servo)}
     {@const config = FC.SERVO_CONFIG[surface.servo]}
-    {@const centre = bandCentre(config)}
+    {@const centre = CENTRE}
     {@const offset = config.mid - centre}
     {@const far = Math.abs(offset) > MID_WARN_US}
     <section class={["surface", far && "far"]}>

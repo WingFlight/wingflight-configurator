@@ -9,8 +9,8 @@
 import { FBUS_SERVO_DATA_BASE } from "./protocol.js";
 
 // Fixed values per mux channel (1-based): Physical ID = output number, App ID 0x6800 +
-// index, and the channel that follows the output (wire value, 0 = CH1), which with
-// bus_servo_clone_pwm is the bus channel mirroring the PWM servo on that pin.
+// index, and the channel that follows the output (wire value, 0 = CH1): servo N is
+// sent on PWM output N and on bus channel N alike.
 export const AUTO_PROGRAM_PLAN = {
     1: { physicalId: 1, appIdOffset: 0, channel: 0 }, // S1
     2: { physicalId: 2, appIdOffset: 1, channel: 1 }, // S2
