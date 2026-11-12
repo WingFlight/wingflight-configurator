@@ -199,13 +199,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-auto-gain",
-      "path": "./feature-auto-gain/",
-      "branch": "feature/auto-gain",
-      "date": "2026-11-12T12:33:34Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-expert-basic",
       "path": "./feature-expert-basic/"
     },
