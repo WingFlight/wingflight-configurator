@@ -1,6 +1,7 @@
 <script>
   import { getContext, onDestroy, onMount } from "svelte";
 
+  import { autoGainOn, setAutoGain } from "@/js/AutoGain.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
@@ -201,6 +202,20 @@
   }
 
   let singleChannel = $derived(channelOf(ranges, MASTER_GAIN.roll));
+
+  //// Auto gain: a PID profile setting, not an adjustment. It works with or
+  //// without a knob, and is sent as soon as it is changed, like the ranges.
+
+  let autoGain = $derived(autoGainOn(FC.PID_PROFILE));
+
+  async function toggleAutoGain() {
+    setAutoGain(FC.PID_PROFILE, !autoGain);
+    await MSP.promise(
+      MSPCodes.MSP_SET_PID_PROFILE,
+      mspHelper.crunch(MSPCodes.MSP_SET_PID_PROFILE),
+    );
+    wiz.markChanged();
+  }
 
   //// Shared channels. Allowed (it is the user's radio), but flagged: two
   //// trims on one channel move together, and a trim or knob on a switch
@@ -586,6 +601,29 @@
       {/each}
     </ul>
     <p class="muted">{$i18n.t("setupWizardGainCentre")}</p>
+  {/if}
+
+  {#if FC.PID_PROFILE.hasAutoGain}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={autoGain}
+      class={["tile", autoGain && "selected"]}
+      onclick={toggleAutoGain}
+    >
+      <span class="tile-name">
+        {$i18n.t("setupWizardAutoGainTitle")}
+        {#if autoGain}
+          <i class="fas fa-check-circle" aria-hidden="true"></i>
+        {/if}
+      </span>
+      <span class="muted">{$i18n.t("setupWizardAutoGainText")}</span>
+    </button>
+    {#if autoGain && mode !== "none"}
+      <p class="muted">{$i18n.t("setupWizardAutoGainKnobNote")}</p>
+    {:else if !autoGain && mode === "none"}
+      <p class="muted">{$i18n.t("setupWizardAutoGainNoKnobNote")}</p>
+    {/if}
   {/if}
 </section>
 

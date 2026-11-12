@@ -4,6 +4,7 @@ import { readFwSpa, writeFwSpa } from "@/js/FwSpa.js";
 import { readLevelDamping, writeLevelDamping } from "@/js/LevelDamping.js";
 import { readSnapRelax, writeSnapRelax } from "@/js/SnapRelax.js";
 import { readPropHang, writePropHang } from "@/js/PropHang.js";
+import { readAutoGain, writeAutoGain } from "@/js/AutoGain.js";
 import {
     readRxInputBackupConfig,
     readRxInputBackupStatus,
@@ -1739,6 +1740,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 readLevelDamping(data, FC.PID_PROFILE);
                 readSnapRelax(data, FC.PID_PROFILE);
                 readPropHang(data, FC.PID_PROFILE);
+                readAutoGain(data, FC.PID_PROFILE);
                 break;
             }
 
@@ -2897,6 +2899,7 @@ MspHelper.prototype.crunch = function(code) {
             writeLevelDamping(buffer, FC.PID_PROFILE);
             writeSnapRelax(buffer, FC.PID_PROFILE);
             writePropHang(buffer, FC.PID_PROFILE);
+            writeAutoGain(buffer, FC.PID_PROFILE);
             break;
         }
 
