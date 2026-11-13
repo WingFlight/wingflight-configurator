@@ -293,6 +293,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-servo24-followup",
+      "path": "./feature-servo24-followup/",
+      "branch": "feature/servo24-followup",
+      "date": "2026-11-13T15:22:44Z",
+      "number": 230,
+      "title": "Remove the unusual Scale warning from the Servos tab",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/230",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-srxl2-motor2",
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
