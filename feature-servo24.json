@@ -1,8 +1,4 @@
 {
   "branch": "feature/servo24",
-  "date": "2026-11-13T14:49:55Z",
-  "number": 229,
-  "title": "Treat PWM and bus servos as one list of 24 servos",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/229",
-  "draft": false
+  "date": "2026-11-13T14:49:55Z"
 }
