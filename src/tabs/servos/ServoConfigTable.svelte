@@ -6,6 +6,7 @@
   import { requestCurveView } from "@/js/curveNav.svelte.js";
   import { Mixer } from "@/js/Mixer.js";
   import {
+    servoCenterRange,
     servoSignalRange,
     servoTravelLimited,
     servoTravelRange,
@@ -245,9 +246,12 @@
   // when it works out the output (see servoLimits.js), and limitTitle() says
   // how much is used.
   function bounds(_servo, field) {
-    // SERVO_CENTER_MIN/MAX (flight/servos.h)
-    if (field === "mid") return { min: 1000, max: 2000 };
-    if (field === "min" || field === "max") return servoTravelRange();
+    if (field === "mid") return servoCenterRange();
+    // Min is at or below the center and Max at or above it, as the FC keeps
+    // them (validateAndFixServoConfig()).
+    const travel = servoTravelRange();
+    if (field === "min") return { min: travel.min, max: 0 };
+    if (field === "max") return { min: 0, max: travel.max };
     return {};
   }
 

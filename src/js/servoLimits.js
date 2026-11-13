@@ -21,6 +21,10 @@ export function servoSignalRange() {
   return SIGNAL;
 }
 
+export function servoCenterRange() {
+  return CENTER;
+}
+
 // Travel range for the Min/Max fields, before the center is considered. The
 // same for every servo: the FC stores what is set and limits it against the
 // signal range when it works out the output.
@@ -35,6 +39,15 @@ export function servoUsableTravel(config) {
     min: Math.max(config.min, signal.min - config.mid),
     max: Math.min(config.max, signal.max - config.mid),
   };
+}
+
+// The servo config with the min/max the mixer output can move it over: the
+// usable travel, less the saved trim. The trim is added before the output is
+// held inside Min/Max (servoUpdate() in flight/servos.c), so it uses up
+// travel on one side and gives it on the other.
+export function servoStickConfig(config, trim = 0) {
+  const usable = servoUsableTravel(config);
+  return { ...config, min: usable.min - trim, max: usable.max - trim };
 }
 
 // Whether min/max reach a limit set by the center rather than by the travel

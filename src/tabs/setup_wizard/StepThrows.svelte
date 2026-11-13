@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { servoStickConfig } from "@/js/servoLimits.js";
 
   import LivePulse from "./LivePulse.svelte";
   import PassthroughStatus from "./PassthroughStatus.svelte";
@@ -92,10 +93,19 @@
     wiz.setAxisGainPercent(axis, next);
   }
 
+  // The servo's config with the Min/Max the output can use at this center,
+  // as on the Servos tab.
+  function stickConfig(servo) {
+    return servoStickConfig(
+      FC.SERVO_CONFIG[servo],
+      FC.SERVO_SAVED_TRIM?.[servo] ?? 0,
+    );
+  }
+
   // Which scale field this stick direction uses on this servo, and the most
   // it may be before full stick passes that side's binding limit.
   function sideOf(surface, axis, direction) {
-    const config = FC.SERVO_CONFIG[surface.servo];
+    const config = stickConfig(surface.servo);
     const output = outputForAxis(surface, axis, direction.stick, wiz.axisGains);
     const reversed = (config.flags & SERVO_FLAG_REVERSE) !== 0;
     const pos = servoSide(output, reversed) === "pos";
@@ -126,7 +136,7 @@
       };
       const reach = travelReach(
         alone,
-        FC.SERVO_CONFIG[surface.servo],
+        stickConfig(surface.servo),
         wiz.axisGains,
         FC.SERVO_CURVES?.[surface.servo],
       );

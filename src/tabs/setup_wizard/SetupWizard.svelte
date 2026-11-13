@@ -159,6 +159,8 @@
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    // Saved trims take travel from one side (see servoStickConfig()).
+    await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 

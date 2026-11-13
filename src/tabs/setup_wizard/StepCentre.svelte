@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { servoCenterRange } from "@/js/servoLimits.js";
 
   import CentreArt from "./CentreArt.svelte";
   import CentreGauge from "./CentreGauge.svelte";
@@ -27,7 +28,9 @@
 
   function nudge(servo, delta) {
     const config = FC.SERVO_CONFIG[servo];
-    config.mid += delta;
+    // The FC keeps the center in this range (validateAndFixServoConfig()).
+    const range = servoCenterRange();
+    config.mid = Math.max(range.min, Math.min(range.max, config.mid + delta));
     wiz.sendServo(servo);
   }
 

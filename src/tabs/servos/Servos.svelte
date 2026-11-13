@@ -158,64 +158,29 @@
     return notes;
   });
 
-  // Unusual-value warnings. The center is a standard pulse (1000-2000us) on
-  // every servo; narrow-band (760us) servos aren't supported.
-  const SERVO_TYPE = {
-    pulse: 1520,
-    travel: { min: 300, max: 660, usual: 600 },
-    scale: { min: 300, max: 750, usual: 500 },
-  };
+  // Unusual-value warning for Scale. Min/Max aren't judged here: they are
+  // hard stops found on the model (the setup wizard's Limits step), and
+  // travelLimitNotes() covers travel the signal range cuts short.
+  const SCALE_USUAL = { min: 300, max: 750, usual: 500 };
 
-  // Notes for a servo whose Min/Max or Scale don't suit its type, saying
-  // what it was taken for and what to set instead.
   function servoTypeNotes(servo, label) {
-    const type = SERVO_TYPE;
-    const { travel, scale } = type;
-    const notes = [];
-    if (servo.min < -travel.max || servo.max > travel.max) {
-      notes.push(
-        $i18n.t("servoLimitsTooWideWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.mid + servo.min,
-          5: servo.mid + servo.max,
-          6: servo.mid - travel.max,
-          7: servo.mid + travel.max,
-          8: travel.usual,
-        }),
-      );
-    }
-    if (servo.min > -travel.min || servo.max < travel.min) {
-      notes.push(
-        $i18n.t("servoLimitsTooNarrowWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.min,
-          5: servo.max,
-          6: travel.usual,
-        }),
-      );
-    }
+    const scale = SCALE_USUAL;
     if (
-      servo.rneg < scale.min ||
-      servo.rneg > scale.max ||
-      servo.rpos < scale.min ||
-      servo.rpos > scale.max
+      servo.rneg >= scale.min &&
+      servo.rneg <= scale.max &&
+      servo.rpos >= scale.min &&
+      servo.rpos <= scale.max
     ) {
-      notes.push(
-        $i18n.t("servoScaleUnusualWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.rneg,
-          5: servo.rpos,
-          6: scale.usual,
-        }),
-      );
+      return [];
     }
-    return notes;
+    return [
+      $i18n.t("servoScaleUnusualWarning", {
+        1: label,
+        4: servo.rneg,
+        5: servo.rpos,
+        6: scale.usual,
+      }),
+    ];
   }
 
   let typeNotes = $derived.by(() => {
