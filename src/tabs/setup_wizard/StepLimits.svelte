@@ -39,8 +39,8 @@
   // are opened to this range while exploring and the override is set in
   // scale units.
   function openRange(config) {
-    const travel = servoTravelRange(false);
-    const signal = servoSignalRange(false);
+    const travel = servoTravelRange();
+    const signal = servoSignalRange();
     return {
       min: Math.max(travel.min, signal.min - config.mid),
       max: Math.min(travel.max, signal.max - config.mid),

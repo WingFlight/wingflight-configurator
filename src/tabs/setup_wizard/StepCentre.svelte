@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { servoCenterRange } from "@/js/servoLimits.js";
 
   import CentreArt from "./CentreArt.svelte";
   import CentreGauge from "./CentreGauge.svelte";
@@ -22,13 +23,14 @@
     }
   });
 
-  function bandCentre(config) {
-    return config.mid > 860 ? 1500 : 760;
-  }
+  // Every servo centres on a standard pulse.
+  const CENTRE = 1500;
 
   function nudge(servo, delta) {
     const config = FC.SERVO_CONFIG[servo];
-    config.mid += delta;
+    // The FC keeps the center in this range (validateAndFixServoConfig()).
+    const range = servoCenterRange();
+    config.mid = Math.max(range.min, Math.min(range.max, config.mid + delta));
     wiz.sendServo(servo);
   }
 
@@ -51,7 +53,7 @@
 <div class="surfaces">
   {#each wiz.surfaces as surface (surface.servo)}
     {@const config = FC.SERVO_CONFIG[surface.servo]}
-    {@const centre = bandCentre(config)}
+    {@const centre = CENTRE}
     {@const offset = config.mid - centre}
     {@const far = Math.abs(offset) > MID_WARN_US}
     <section class={["surface", far && "far"]}>

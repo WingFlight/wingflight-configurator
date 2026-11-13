@@ -14,9 +14,12 @@ export const API_VERSION_22_12 = "22.12.0";
 export const API_VERSION_22_13 = "22.13.0";
 export const API_VERSION_22_14 = "22.14.0";
 export const API_VERSION_22_15 = "22.15.0";
+export const API_VERSION_22_16 = "22.16.0";
 
-export const API_VERSION_WGFL_MIN = API_VERSION_22_9;
-export const API_VERSION_WGFL_MAX = API_VERSION_22_15;
+// 22.16 made PWM and bus servos one list of 24 servos and renumbered the
+// servo messages, so older firmware is not supported.
+export const API_VERSION_WGFL_MIN = API_VERSION_22_16;
+export const API_VERSION_WGFL_MAX = API_VERSION_22_16;
 
 export const FW_VERSION_WGFL_MIN = "4.3.0-0";
 export const FW_VERSION_WGFL_MAX = "4.6.99";

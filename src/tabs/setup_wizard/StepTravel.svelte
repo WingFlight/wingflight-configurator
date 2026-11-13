@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { servoStickConfig } from "@/js/servoLimits.js";
 
   import TravelGauge from "./TravelGauge.svelte";
   import StickCorners from "./StickCorners.svelte";
@@ -14,9 +15,14 @@
   let rows = $derived(
     wiz.surfaces.map((surface) => ({
       surface,
+      // Against the Min/Max the output can use at this center, as on the
+      // Servos tab.
       reach: travelReach(
         surface,
-        FC.SERVO_CONFIG[surface.servo],
+        servoStickConfig(
+          FC.SERVO_CONFIG[surface.servo],
+          FC.SERVO_SAVED_TRIM?.[surface.servo] ?? 0,
+        ),
         wiz.axisGains,
         FC.SERVO_CURVES?.[surface.servo],
       ),
@@ -74,7 +80,14 @@
           </span>
         {/if}
       </div>
-      <TravelGauge servo={surface.servo} {reach} />
+      <!-- The limits are measured from the trimmed center, so the live dot
+           is too. -->
+      <TravelGauge
+        servo={surface.servo}
+        {reach}
+        mid={FC.SERVO_CONFIG[surface.servo].mid +
+          (FC.SERVO_SAVED_TRIM?.[surface.servo] ?? 0)}
+      />
       <div class="sides">
         {#each [{ s: reach.neg, label: "setupWizardTravelNeg" }, { s: reach.pos, label: "setupWizardTravelPos" }] as { s, label } (label)}
           <span class={["reading", s.fraction > 1 && "clips"]}>

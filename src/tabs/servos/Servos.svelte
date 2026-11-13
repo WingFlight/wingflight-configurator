@@ -1,12 +1,9 @@
 <script>
   import diff from "microdiff";
   import { onMount, onDestroy } from "svelte";
-  import semver from "semver";
 
-  import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { Mixer } from "@/js/Mixer.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { reinitialiseConnection } from "@/js/serial_backend";
@@ -25,28 +22,22 @@
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
-  const PWM_SERVO_SLOTS = 8;
-  const BUS_SERVO_OFFSET = 8;
-  // Firmware BUS_SERVO_CHANNELS: 24 from API 22.5, 18 before
-  const BUS_SERVO_CHANNELS = Mixer.busServoChannels();
-  const MAX_SERVOS = PWM_SERVO_SLOTS + BUS_SERVO_CHANNELS;
-  const OVERRIDE_OFF = 2001;
+  // A servo is a servo: servo N is sent on PWM output N where the board has
+  // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
+  // The FC lists the servos in use, the larger of the two counts.
 
-  // Bus output channel counts (API 22.5): wingflight-firmware's
-  // sbus_out_channels / fbus_master_channels, carried in MSP_MIXER_CONFIG.
-  const hasBusOutChannels = semver.gte(FC.CONFIG.apiVersion, API_VERSION_22_5);
+  // Bus output channel counts: wingflight-firmware's sbus_out_channels /
+  // fbus_master_channels, carried in MSP_MIXER_CONFIG.
   const SBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16];
   const FBUS_OUT_CHANNEL_OPTIONS = [8, 12, 16, 24];
 
   let loading = $state(true);
   let needReboot = $state(false);
   let initialConfig = $state(null);
-  // bus_servo_clone_pwm lives on FC.MIXER_CONFIG, not FC.SERVO_CONFIG, so it
-  // falls outside the diff below -- tracked separately so it participates in
-  // the same dirty/Save/Revert cycle as everything else on this tab instead
-  // of silently self-committing with no toolbar feedback.
-  let initialBusClonePwm = $state(null);
-  // Same idea for the bus output channel counts (also on FC.MIXER_CONFIG).
+  // The output options (PWM rate, bus output channel counts) live on
+  // FC.MIXER_CONFIG, not FC.SERVO_CONFIG, so they fall outside the diff
+  // below -- tracked separately so they take part in the same
+  // dirty/Save/Revert cycle as everything else on this tab.
   let initialBusOutChannels = $state(null);
   // Saved trims (FC.SERVO_SAVED_TRIM) are also outside FC.SERVO_CONFIG, and
   // can change from the FC side too (a Stepped ServoTrim adjustment on the
@@ -66,18 +57,19 @@
       return [];
     }
 
-    return diff(initialConfig, $state.snapshot(FC.SERVO_CONFIG));
+    // initialConfig can hold more servos than are in use now, after a bus
+    // channel count was lowered (see reloadServoLists()).
+    return diff(
+      initialConfig.slice(0, FC.SERVO_CONFIG.length),
+      $state.snapshot(FC.SERVO_CONFIG),
+    );
   });
-
-  let busCloneDirty = $derived(
-    initialBusClonePwm !== null &&
-      FC.MIXER_CONFIG.bus_servo_clone_pwm !== initialBusClonePwm,
-  );
 
   let busOutChannelsDirty = $derived(
     initialBusOutChannels !== null &&
       (FC.MIXER_CONFIG.sbus_out_channels !== initialBusOutChannels.sbus ||
-        FC.MIXER_CONFIG.fbus_master_channels !== initialBusOutChannels.fbus),
+        FC.MIXER_CONFIG.fbus_master_channels !== initialBusOutChannels.fbus ||
+        FC.MIXER_CONFIG.servo_pwm_rate !== initialBusOutChannels.pwmRate),
   );
 
   // Firmware with saved trims keeps every kind of trim apart from Mid.
@@ -89,9 +81,7 @@
       FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
   );
 
-  let dirty = $derived(
-    changes.length > 0 || busCloneDirty || busOutChannelsDirty || trimsDirty,
-  );
+  let dirty = $derived(changes.length > 0 || busOutChannelsDirty || trimsDirty);
 
   let hasSbusOut = $derived(
     FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("SBUS_OUT")),
@@ -101,15 +91,11 @@
   );
   let hasFbusOrSbus = $derived(hasSbusOut || hasFbusOut);
 
-  // Bus servos the configured outputs drive. SBUS and F.Bus output can run
-  // at the same time, and bus servo N is channel N on both, so it's the
-  // larger of the two - as in the firmware's getBusServoOutputCount().
-  // Follows the selectors below straight away; 16 on firmware without the
-  // setting.
-  let busOutputCount = $derived.by(() => {
-    if (!hasBusOutChannels) {
-      return 16;
-    }
+  // Servos the configured bus outputs send. SBUS and F.Bus output can run at
+  // the same time, and servo N is channel N on both, so it's the larger of
+  // the two. A 16-channel frame also has two digital channels, taken from
+  // servos 17 and 18 (busOutServoCount() in the firmware's pg/bus_servo.c).
+  let busServoCount = $derived.by(() => {
     let count = 0;
     if (hasFbusOut) {
       count = Math.max(count, FC.MIXER_CONFIG.fbus_master_channels);
@@ -117,27 +103,33 @@
     if (hasSbusOut) {
       count = Math.max(count, Math.min(FC.MIXER_CONFIG.sbus_out_channels, 16));
     }
-    return count || 16;
+    return count === 16 ? 18 : count;
   });
-  let maxServos = MAX_SERVOS;
   let busActive = $derived(hasFbusOrSbus);
 
-  // FC.CONFIG.servoCount includes bus servos once FBUS/SBUS is active, so it
-  // can't be used directly to bound "PWM-only" logic (unusual-value
-  // warnings, timer groups) -- this is the
-  // actual PWM servo count either way.
-  let pwmServoCount = $derived(
-    busActive
-      ? Math.max(0, FC.SERVO_CONFIG.length - BUS_SERVO_CHANNELS)
-      : Math.min(FC.CONFIG.servoCount, maxServos),
+  // Servos with a PWM output on this board, servo 1 up to this: the count in
+  // MSP2_WING_SERVO_TIMING.
+  let pwmServoCount = $derived((FC.SERVO_TIMING ?? []).length);
+
+  // The lists are read one after another, so while the number of servos in
+  // use is changing they differ in length for a moment. A servo is listed
+  // once every list has it: its Trim field can't bind to a value that hasn't
+  // arrived yet.
+  let listedServoCount = $derived(
+    Math.min(
+      FC.SERVO_CONFIG.length,
+      savedTrimSupported ? FC.SERVO_SAVED_TRIM.length : Infinity,
+    ),
   );
 
-  let pwmServos = $derived.by(() => {
+  let servos = $derived.by(() => {
     const list = [];
-    for (let index = 0; index < pwmServoCount; index++) {
+    for (let index = 0; index < listedServoCount; index++) {
+      const hasPwm = index < pwmServoCount;
       list.push({
         index,
-        isBusServo: false,
+        hasPwm,
+        hasBus: busActive && index < busServoCount,
         label: `${index + 1}`,
         mspIndex: index,
       });
@@ -145,119 +137,58 @@
     return list;
   });
 
-  let busServos = $derived.by(() => {
-    if (!busActive) {
+  // Where the servos come out, when a bus output is in use: the bus sends
+  // every servo up to its channel count, and the first ones are on the PWM
+  // outputs as well. (A board has at most 8 PWM outputs and a bus at least 8
+  // channels, so no servo is on a PWM output only.)
+  let outputNotes = $derived.by(() => {
+    if (!busActive || servos.length === 0) {
       return [];
     }
-
-    const displayCount = Math.min(busOutputCount, BUS_SERVO_CHANNELS);
-    const list = [];
-    for (let i = 0; i < displayCount; i++) {
-      const index = pwmServoCount + i;
-      list.push({
-        index,
-        isBusServo: true,
-        label: `${i + 1}`,
-        mspIndex: BUS_SERVO_OFFSET + i,
-      });
+    const busChannels = busServoCount === 18 ? 16 : busServoCount;
+    const notes = [$i18n.t("servoOutputsBus", { 1: busChannels })];
+    if (pwmServoCount > 0) {
+      notes.push($i18n.t("servoOutputsPwm", { 1: pwmServoCount }));
     }
-    return list;
-  });
-
-  let allServos = $derived([...pwmServos, ...busServos]);
-
-  // Unusual-value warnings, computed across PWM servos only -- these
-  // thresholds are calibrated for analog PWM pulse-width ranges (mirrors
-  // process_warnings() in the legacy tab) and don't mean anything for bus/
-  // digital servos, which use a completely different scale (rneg/rpos
-  // default to 1000, well outside any of these PWM-oriented bounds).
-  // Usual setup for each PWM servo type, told apart by the center. A 760us
-  // (narrow-band) servo covers about 510-1010us (760 +-250), so travel past
-  // +-250 drives it into its end stops.
-  function servoType(servo) {
-    if (servo.mid > 860) {
-      return {
-        pulse: 1520,
-        maxRate: 433,
-        travel: { min: 300, max: 750, usual: 700 },
-        scale: { min: 300, max: 750, usual: 500 },
-      };
-    }
-    return {
-      pulse: 760,
-      maxRate: 600,
-      travel: { min: 150, max: 250, usual: 250 },
-      scale: { min: 50, max: 375, usual: 250 },
-    };
-  }
-
-  // Notes for a servo whose Min/Max or Scale don't suit its type, saying
-  // what it was taken for and what to set instead.
-  function servoTypeNotes(servo, label) {
-    const type = servoType(servo);
-    const { travel, scale } = type;
-    const notes = [];
-    if (servo.min < -travel.max || servo.max > travel.max) {
-      notes.push(
-        $i18n.t("servoLimitsTooWideWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.mid + servo.min,
-          5: servo.mid + servo.max,
-          6: servo.mid - travel.max,
-          7: servo.mid + travel.max,
-          8: travel.usual,
-        }),
-      );
-    }
-    if (servo.min > -travel.min || servo.max < travel.min) {
-      notes.push(
-        $i18n.t("servoLimitsTooNarrowWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.min,
-          5: servo.max,
-          6: travel.usual,
-        }),
-      );
-    }
-    if (
-      servo.rneg < scale.min ||
-      servo.rneg > scale.max ||
-      servo.rpos < scale.min ||
-      servo.rpos > scale.max
-    ) {
-      notes.push(
-        $i18n.t("servoScaleUnusualWarning", {
-          1: label,
-          2: servo.mid,
-          3: type.pulse,
-          4: servo.rneg,
-          5: servo.rpos,
-          6: scale.usual,
-        }),
-      );
+    if (busServoCount === 18) {
+      notes.push($i18n.t("servoOutputsBusDigital"));
     }
     return notes;
+  });
+
+  // Unusual-value warning for Scale. Min/Max aren't judged here: they are
+  // hard stops found on the model (the setup wizard's Limits step), and
+  // travelLimitNotes() covers travel the signal range cuts short.
+  const SCALE_USUAL = { min: 300, max: 750, usual: 500 };
+
+  function servoTypeNotes(servo, label) {
+    const scale = SCALE_USUAL;
+    if (
+      servo.rneg >= scale.min &&
+      servo.rneg <= scale.max &&
+      servo.rpos >= scale.min &&
+      servo.rpos <= scale.max
+    ) {
+      return [];
+    }
+    return [
+      $i18n.t("servoScaleUnusualWarning", {
+        1: label,
+        4: servo.rneg,
+        5: servo.rpos,
+        6: scale.usual,
+      }),
+    ];
   }
 
-  let warnings = $derived.by(() => {
-    let unusualRate = false;
-    const typeNotes = [];
-
-    const SERVOS = FC.SERVO_CONFIG;
-
-    for (let index = 0; index < pwmServoCount; index++) {
-      const servo = SERVOS[index];
+  let typeNotes = $derived.by(() => {
+    const notes = [];
+    for (let index = 0; index < FC.SERVO_CONFIG.length; index++) {
+      const servo = FC.SERVO_CONFIG[index];
       if (!servo) continue;
-
-      if (servo.rate > servoType(servo).maxRate) unusualRate = true;
-      typeNotes.push(...servoTypeNotes(servo, `${index + 1}`));
+      notes.push(...servoTypeNotes(servo, `${index + 1}`));
     }
-
-    return { typeNotes, unusualRate };
+    return notes;
   });
 
   // Servos whose Min/Max the output can't fully use at their center, because
@@ -266,9 +197,9 @@
     return servos.flatMap((servo) => {
       const config = FC.SERVO_CONFIG[servo.index];
       if (!config) return [];
-      const limited = servoTravelLimited(config, servo.isBusServo);
-      const usable = servoUsableTravel(config, servo.isBusServo);
-      const signal = servoSignalRange(servo.isBusServo);
+      const limited = servoTravelLimited(config);
+      const usable = servoUsableTravel(config);
+      const signal = servoSignalRange();
       const notes = [];
       if (limited.max) {
         notes.push(
@@ -294,8 +225,7 @@
     });
   }
 
-  let pwmLimitNotes = $derived(travelLimitNotes(pwmServos));
-  let busLimitNotes = $derived(travelLimitNotes(busServos));
+  let limitNotes = $derived(travelLimitNotes(servos));
 
   let showToolbar = $derived(!loading && dirty);
 
@@ -322,10 +252,9 @@
     await MSP.promise(MSPCodes.MSP_SERVO);
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
-    initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
-    overrideEnabled = allServos.some((servo) => {
+    overrideEnabled = servos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
     });
@@ -382,29 +311,12 @@
     return savedTrimSupported ? [...FC.SERVO_SAVED_TRIM] : null;
   }
 
-  // A bus channel cloned from its PWM servo sends that servo's output, trim
-  // included, and ignores its own (sbusOutGetValueMixer(),
-  // drivers/sbus_output.c), so the trim actions leave it alone.
-  function isClonedBusServo(servo) {
-    return (
-      servo.isBusServo &&
-      FC.MIXER_CONFIG.bus_servo_clone_pwm === 1 &&
-      servo.mspIndex - BUS_SERVO_OFFSET < pwmServoCount
-    );
-  }
-
-  function trimmableServos(servos) {
-    return servos.filter((servo) => !isClonedBusServo(servo));
-  }
-
   function hasTrims(servos) {
-    return trimmableServos(servos).some(
-      (servo) => FC.SERVO_SAVED_TRIM?.[servo.index],
-    );
+    return servos.some((servo) => FC.SERVO_SAVED_TRIM?.[servo.index]);
   }
 
   async function clearTrims(servos) {
-    for (const servo of trimmableServos(servos)) {
+    for (const servo of servos) {
       if (FC.SERVO_SAVED_TRIM[servo.index]) {
         FC.SERVO_SAVED_TRIM[servo.index] = 0;
         await mspHelper.sendServoTrim(servo.index);
@@ -416,14 +328,14 @@
   // the signal range lets Center go) and what moved is taken off the trim.
   // Min/Max are offsets from Center, so the end stops move with it.
   async function trimsToCenter(servos) {
-    for (const servo of trimmableServos(servos)) {
+    for (const servo of servos) {
       const trim = FC.SERVO_SAVED_TRIM[servo.index];
       const config = FC.SERVO_CONFIG[servo.index];
       if (!trim || !config) continue;
 
       const mid = config.mid;
       config.mid += trim;
-      clampServoConfig(config, servo.isBusServo);
+      clampServoConfig(config);
       FC.SERVO_SAVED_TRIM[servo.index] = trim - (config.mid - mid);
 
       await new Promise((resolve) =>
@@ -433,87 +345,82 @@
     }
   }
 
-  // PWM servos that share a hardware timer, from MSP2_WING_SERVO_TIMING: one
-  // list of servo indices per timer driving more than one servo.
-  let sharedTimerGroups = $derived.by(() => {
-    const groups = {};
-    (FC.SERVO_TIMING ?? []).slice(0, pwmServoCount).forEach((timing, index) => {
-      (groups[timing.group] ??= []).push(index);
-    });
-    return Object.values(groups).filter((group) => group.length > 1);
+  // PWM update rate: one setting for every PWM servo output
+  // (servo_pwm_rate), which the FC applies at boot. Offered as two choices;
+  // a rate set to something else (from the CLI) is listed as it is.
+  const PWM_RATE_STANDARD = 50;
+  const PWM_RATE_HIGH_SPEED = 333;
+
+  let pwmRateOptions = $derived.by(() => {
+    const options = [
+      { value: PWM_RATE_STANDARD, label: $i18n.t("servoPwmRateStandard") },
+      { value: PWM_RATE_HIGH_SPEED, label: $i18n.t("servoPwmRateHighSpeed") },
+    ];
+    const rate = FC.MIXER_CONFIG.servo_pwm_rate;
+    if (!options.some((option) => option.value === rate)) {
+      options.push({
+        value: rate,
+        label: $i18n.t("servoPwmRateCustom", { 1: rate }),
+      });
+    }
+    return options;
   });
 
-  function servoList(indices) {
-    return indices.map((index) => `${index + 1}`).join(", ");
-  }
-
-  let timerNotes = $derived.by(() => {
-    const notes = sharedTimerGroups.map((group) =>
-      $i18n.t("servoSharedTimerNote", { 1: servoList(group) }),
-    );
-
-    // The FC sets its rates at boot, so after a change these are stale
-    // until the reboot.
-    if (!needReboot) {
-      (FC.SERVO_TIMING ?? [])
-        .slice(0, pwmServoCount)
-        .forEach((timing, index) => {
-          const rate = FC.SERVO_CONFIG[index]?.rate;
-          if (timing.rate && rate && timing.rate !== rate) {
-            notes.push(
-              $i18n.t("servoRunRateNote", {
-                1: index + 1,
-                2: timing.rate,
-                3: rate,
-              }),
-            );
-          }
-        });
-    }
-
-    return notes;
-  });
-
-  // Servos on one timer can only run at one rate, so a new rate is set on
-  // every servo sharing the timer.
-  function onRateChange(index) {
-    needReboot = true;
-    const group = sharedTimerGroups.find((g) => g.includes(index)) ?? [index];
-    for (const member of group) {
-      if (member !== index) {
-        FC.SERVO_CONFIG[member].rate = FC.SERVO_CONFIG[index].rate;
-      }
-      onFieldChange(member);
-    }
+  // Pushed to the FC live like the other fields, and saved by onSave().
+  function onPwmRateChange() {
+    // Back at the rate the FC booted with, there is nothing to reboot for.
+    needReboot =
+      FC.MIXER_CONFIG.servo_pwm_rate !== initialBusOutChannels?.pwmRate;
+    mspHelper.sendMixerConfig();
   }
 
   function onToggleOverrideEnabled(checked) {
     overrideEnabled = checked;
-    for (const servo of allServos) {
-      FC.SERVO_OVERRIDE[servo.mspIndex] = checked ? 0 : OVERRIDE_OFF;
+    if (!checked) {
+      // Every servo the FC has, not only the ones listed: an override left
+      // on a servo that has dropped off the list would come back with it.
+      mspHelper.resetServoOverrides();
+      return;
+    }
+    for (const servo of servos) {
+      FC.SERVO_OVERRIDE[servo.mspIndex] = 0;
       mspHelper.sendServoOverride(servo.mspIndex);
     }
   }
 
-  // Mirrors onFieldChange: push the new value to the FC live (so it's
-  // immediately testable) but don't touch EEPROM here -- that only happens
-  // via the shared onSave() below, once this shows up as a dirty change on
-  // the toolbar like every other field on this tab.
-  function onToggleBusClone(checked) {
-    FC.MIXER_CONFIG.bus_servo_clone_pwm = checked ? 1 : 0;
-    mspHelper.sendMixerConfig();
+  // Pushed to the FC live like onFieldChange, and saved to EEPROM by
+  // onSave(). The FC uses the new count from its next frame, and the servos
+  // in use change with it, so the lists are read again.
+  async function onBusOutChannelsChange() {
+    await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    await reloadServoLists();
   }
 
-  // Same live-push as onToggleBusClone; the firmware uses the new count from
-  // its next frame.
-  function onBusOutChannelsChange() {
-    mspHelper.sendMixerConfig();
+  // Reads the servo lists again after the number of servos in use changed.
+  // A servo that wasn't listed before starts from what the FC holds for it;
+  // the ones already known keep their Revert values.
+  async function reloadServoLists() {
+    await MSP.promise(MSPCodes.MSP_STATUS);
+    await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    await pollRuntimeTrim();
+    await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
+    await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
+
+    const config = $state.snapshot(FC.SERVO_CONFIG);
+    if (initialConfig && config.length > initialConfig.length) {
+      initialConfig = [...initialConfig, ...config.slice(initialConfig.length)];
+    }
+    const trims = snapshotTrims();
+    if (initialTrims && trims && trims.length > initialTrims.length) {
+      initialTrims = [...initialTrims, ...trims.slice(initialTrims.length)];
+    }
   }
 
   function snapshotBusOutChannels() {
     return {
       sbus: FC.MIXER_CONFIG.sbus_out_channels,
       fbus: FC.MIXER_CONFIG.fbus_master_channels,
+      pwmRate: FC.MIXER_CONFIG.servo_pwm_rate,
     };
   }
 
@@ -523,9 +430,9 @@
 
   export async function onSave() {
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
-    // Already pushed live by onToggleBusClone / onBusOutChannelsChange when
-    // changed -- EEPROM_WRITE below persists them along with everything else,
-    // no need to resend.
+    // The bus channel counts were already pushed live by
+    // onBusOutChannelsChange -- EEPROM_WRITE below persists them along with
+    // everything else, no need to resend.
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
 
@@ -537,16 +444,25 @@
 
     needReboot = false;
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
-    initialBusClonePwm = FC.MIXER_CONFIG.bus_servo_clone_pwm;
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
   }
 
   export async function onRevert() {
-    FC.SERVO_CONFIG = initialConfig;
+    const channelsChanged = busOutChannelsDirty;
+    if (channelsChanged) {
+      FC.MIXER_CONFIG.sbus_out_channels = initialBusOutChannels.sbus;
+      FC.MIXER_CONFIG.fbus_master_channels = initialBusOutChannels.fbus;
+      FC.MIXER_CONFIG.servo_pwm_rate = initialBusOutChannels.pwmRate;
+      await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    }
+
+    // Every servo this tab has shown, in use now or not: the FC takes a
+    // setting for any of them.
+    FC.SERVO_CONFIG = $state.snapshot(initialConfig);
     await new Promise((resolve) => mspHelper.sendServoConfigurations(resolve));
 
-    if (trimsDirty) {
+    if (initialTrims !== null && savedTrimSupported) {
       for (let i = 0; i < initialTrims.length; i++) {
         if (FC.SERVO_SAVED_TRIM[i] !== initialTrims[i]) {
           FC.SERVO_SAVED_TRIM[i] = initialTrims[i];
@@ -555,12 +471,8 @@
       }
     }
 
-    if (busCloneDirty || busOutChannelsDirty) {
-      FC.MIXER_CONFIG.bus_servo_clone_pwm = initialBusClonePwm;
-      FC.MIXER_CONFIG.sbus_out_channels = initialBusOutChannels.sbus;
-      FC.MIXER_CONFIG.fbus_master_channels = initialBusOutChannels.fbus;
-      await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
-    }
+    // Back to the servos the FC has in use.
+    await reloadServoLists();
 
     needReboot = false;
   }
@@ -608,75 +520,25 @@
 {/snippet}
 
 <Page {header} {loading} toolbar={showToolbar && toolbar}>
-  <Section label="servoConfigurationPwm">
-    {#if warnings.typeNotes.length > 0 || warnings.unusualRate}
-      <div class="note">
-        {#each warnings.typeNotes as note (note)}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html note}</p>
-        {/each}
-        {#if warnings.unusualRate}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html $i18n.t("servoUnusualRatesWarning")}</p>
-        {/if}
-      </div>
-    {/if}
-
-    {#if pwmLimitNotes.length > 0}
-      <div class="note">
-        {#each pwmLimitNotes as note (note)}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html note}</p>
-        {/each}
-      </div>
-    {/if}
-
-    {#if timerNotes.length > 0}
-      <div class="note">
-        {#each timerNotes as note (note)}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html note}</p>
-        {/each}
-      </div>
-    {/if}
-
-    {#if needReboot}
-      <div class="note">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <p>{@html $i18n.t("servoRateRebootNote")}</p>
-      </div>
-    {/if}
-
-    {@render trimActions(pwmServos)}
-
-    <div class="table-scroll">
-      <ServoConfigTable
-        servos={pwmServos}
-        {onFieldChange}
-        {onRateChange}
-        {onTrimChange}
-        {pwmServoCount}
-      />
-    </div>
-  </Section>
-
-  {#if busActive}
-    <Section label="servoConfigurationBus">
+  <Section label="servoConfiguration">
+    {#if busActive || pwmServoCount > 0}
       <div class="bus-options">
-        <Switch
-          id="servo-bus-clone-enable"
-          bind:checked={
-            () => FC.MIXER_CONFIG.bus_servo_clone_pwm === 1, onToggleBusClone
-          }
-        />
-        <label for="servo-bus-clone-enable">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html $i18n.t("servoBusCloneLabel")}
-        </label>
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        <span class="description">{@html $i18n.t("servoBusCloneText")}</span>
-
-        {#if hasBusOutChannels && hasFbusOut}
+        {#if pwmServoCount > 0}
+          <select
+            id="servo-pwm-rate"
+            bind:value={FC.MIXER_CONFIG.servo_pwm_rate}
+            onchange={onPwmRateChange}
+          >
+            {#each pwmRateOptions as option (option.value)}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+          <label for="servo-pwm-rate">
+            <strong>{$i18n.t("servoPwmRate")}</strong>
+          </label>
+          <span class="description">{$i18n.t("servoPwmRateHelp")}</span>
+        {/if}
+        {#if hasFbusOut}
           <select
             id="servo-fbus-out-channels"
             bind:value={FC.MIXER_CONFIG.fbus_master_channels}
@@ -691,7 +553,7 @@
           </label>
           <span class="description">{$i18n.t("servoFbusOutChannelsHelp")}</span>
         {/if}
-        {#if hasBusOutChannels && hasSbusOut}
+        {#if hasSbusOut}
           <select
             id="servo-sbus-out-channels"
             bind:value={FC.MIXER_CONFIG.sbus_out_channels}
@@ -707,29 +569,47 @@
           <span class="description">{$i18n.t("servoSbusOutChannelsHelp")}</span>
         {/if}
       </div>
+    {/if}
 
-      {#if busLimitNotes.length > 0}
-        <div class="note">
-          {#each busLimitNotes as note (note)}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            <p>{@html note}</p>
-          {/each}
-        </div>
-      {/if}
-
-      {@render trimActions(busServos)}
-
-      <div class="table-scroll">
-        <ServoConfigTable
-          servos={busServos}
-          {onFieldChange}
-          {onRateChange}
-          {onTrimChange}
-          {pwmServoCount}
-        />
+    {#if outputNotes.length > 0}
+      <div class="note">
+        {#each outputNotes as note (note)}
+          <p>{note}</p>
+        {/each}
       </div>
-    </Section>
-  {/if}
+    {/if}
+
+    {#if typeNotes.length > 0}
+      <div class="note">
+        {#each typeNotes as note (note)}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <p>{@html note}</p>
+        {/each}
+      </div>
+    {/if}
+
+    {#if limitNotes.length > 0}
+      <div class="note">
+        {#each limitNotes as note (note)}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <p>{@html note}</p>
+        {/each}
+      </div>
+    {/if}
+
+    {#if needReboot}
+      <div class="note">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        <p>{@html $i18n.t("servoRateRebootNote")}</p>
+      </div>
+    {/if}
+
+    {@render trimActions(servos)}
+
+    <div class="table-scroll">
+      <ServoConfigTable {servos} {onFieldChange} {onTrimChange} />
+    </div>
+  </Section>
 
   <Section label="servoOverride" summary="servoOverrideHelp">
     <div class="override-toggle">
@@ -748,15 +628,9 @@
   </Section>
 
   {#if overrideEnabled}
-    <Section label="servoOverridePwm">
-      <ServoOverrideTable servos={pwmServos} />
+    <Section label="servoOverrideServos">
+      <ServoOverrideTable {servos} />
     </Section>
-
-    {#if busActive}
-      <Section label="servoOverrideBus">
-        <ServoOverrideTable servos={busServos} />
-      </Section>
-    {/if}
   {/if}
 </Page>
 
@@ -820,12 +694,11 @@
     padding: 8px;
   }
 
-  // Control | label | description, one row per bus option, so the switch and
-  // the channel selectors line up and every description starts in the same
-  // column.
+  // Control | label | description, one row per output option, so the
+  // selectors line up and every description starts in the same column.
   .bus-options {
     display: grid;
-    grid-template-columns: 5rem max-content 1fr;
+    grid-template-columns: 11rem max-content 1fr;
     align-items: center;
     column-gap: 12px;
     row-gap: 12px;

@@ -1,7 +1,9 @@
 <script>
   import { FC } from "@/js/fc.svelte.js";
+  import { servoUsableTravel } from "@/js/servoLimits.js";
 
-  // Live output of one servo, drawn against its Min/Max either side of Mid.
+  // Live output of one servo, drawn against the Min/Max it can use either
+  // side of Mid.
   let { servo } = $props();
 
   let config = $derived(FC.SERVO_CONFIG[servo]);
@@ -9,7 +11,11 @@
   // 0 means no reading yet (or a board that doesn't report it).
   let known = $derived(pulse > 0 && !!config);
   let offset = $derived(known ? pulse - config.mid : 0);
-  let span = $derived(config ? Math.max(config.max, -config.min, 1) : 1);
+  let span = $derived.by(() => {
+    if (!config) return 1;
+    const usable = servoUsableTravel(config);
+    return Math.max(usable.max, -usable.min, 1);
+  });
   let fraction = $derived(Math.max(-1, Math.min(1, offset / span)));
 </script>
 

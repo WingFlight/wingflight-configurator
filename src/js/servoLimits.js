@@ -5,43 +5,56 @@
 // Firmware before that change rewrote the stored min/max instead; either way
 // servoTravelLimited() flags the servos it affects.
 
-// PWM_SERVO_PULSE_MIN/MAX (rx/rx.h)
-const PWM_SIGNAL = { min: 50, max: 2250 };
-// BUS_SERVO_MIN/MAX_SIGNAL (pg/bus_servo.h)
-const BUS_SIGNAL = { min: 1000, max: 2000 };
+// Every servo has the same limits, whether it is sent on a PWM output, a bus
+// channel (SBUS, F.Bus) or both.
+
+// SERVO_SIGNAL_MIN/MAX (flight/servos.h): what a bus channel can carry
+const SIGNAL = { min: 880, max: 2159 };
+// SERVO_CENTER_MIN/MAX (flight/servos.h): a standard pulse on every servo
+const CENTER = { min: 1000, max: 2000 };
 
 // SERVO_LIMIT_MIN/MAX (flight/servos.h)
 const TRAVEL_LIMIT = 1000;
 
-// Travel the Servos tab offers either side of center. Bus servos only span
-// 1000-2000, so a centered bus servo can't use more than 500.
-const PWM_TRAVEL = 1000;
-const BUS_TRAVEL = 500;
 
-export function servoSignalRange(isBusServo) {
-  return isBusServo ? BUS_SIGNAL : PWM_SIGNAL;
+export function servoSignalRange() {
+  return SIGNAL;
 }
 
-// Travel range for the Min/Max fields, before the center is considered.
-export function servoTravelRange(isBusServo) {
-  const travel = isBusServo ? BUS_TRAVEL : PWM_TRAVEL;
-  return { min: -travel, max: travel };
+export function servoCenterRange() {
+  return CENTER;
+}
+
+// Travel range for the Min/Max fields, before the center is considered. The
+// same for every servo: the FC stores what is set and limits it against the
+// signal range when it works out the output.
+export function servoTravelRange() {
+  return { min: -TRAVEL_LIMIT, max: TRAVEL_LIMIT };
 }
 
 // Travel the output actually uses at this center (servoTravelMin/Max()).
-export function servoUsableTravel(config, isBusServo) {
-  const signal = servoSignalRange(isBusServo);
+export function servoUsableTravel(config) {
+  const signal = servoSignalRange();
   return {
     min: Math.max(config.min, signal.min - config.mid),
     max: Math.min(config.max, signal.max - config.mid),
   };
 }
 
+// The servo config with the min/max the mixer output can move it over: the
+// usable travel, less the saved trim. The trim is added before the output is
+// held inside Min/Max (servoUpdate() in flight/servos.c), so it uses up
+// travel on one side and gives it on the other.
+export function servoStickConfig(config, trim = 0) {
+  const usable = servoUsableTravel(config);
+  return { ...config, min: usable.min - trim, max: usable.max - trim };
+}
+
 // Whether min/max reach a limit set by the center rather than by the travel
 // range, so the output stops short of (or exactly at) the signal limit.
-export function servoTravelLimited(config, isBusServo) {
-  const signal = servoSignalRange(isBusServo);
-  const travel = servoTravelRange(isBusServo);
+export function servoTravelLimited(config) {
+  const signal = servoSignalRange();
+  const travel = servoTravelRange();
   const minLimit = signal.min - config.mid;
   const maxLimit = signal.max - config.mid;
   return {
@@ -52,9 +65,8 @@ export function servoTravelLimited(config, isBusServo) {
 
 // Same fix the firmware's validateAndFixServoConfig() applies on every servo
 // config write. It doesn't touch min/max against the center.
-export function clampServoConfig(config, isBusServo) {
-  const signal = servoSignalRange(isBusServo);
-  config.mid = Math.min(Math.max(config.mid, signal.min), signal.max);
+export function clampServoConfig(config) {
+  config.mid = Math.min(Math.max(config.mid, CENTER.min), CENTER.max);
   config.min = Math.min(Math.max(config.min, -TRAVEL_LIMIT), 0);
   config.max = Math.min(Math.max(config.max, 0), TRAVEL_LIMIT);
 }

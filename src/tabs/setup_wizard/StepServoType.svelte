@@ -9,31 +9,18 @@
 
   const wiz = getContext("setupWizard");
 
-  // Rates and bands as on the Servos tab. A narrow-band servo (760 us
-  // centre) needs its own centre, limits and scale, so those are reset only
-  // when the band changes; within a band only the rate changes.
+  // Only the update rate differs between the types: every servo centres on
+  // a standard 1500 us pulse (narrow-band 760 us servos aren't supported).
+  // The rate is one setting for every PWM servo output (servo_pwm_rate).
   const TYPES = [
-    { key: "analog", rate: 50, band: "wide" },
-    { key: "digital", rate: 333, band: "wide" },
-    { key: "narrow", rate: 560, band: "narrow" },
+    { key: "analog", rate: 50 },
+    { key: "digital", rate: 333 },
   ];
-  const BANDS = {
-    wide: { mid: 1500, min: -700, max: 700, scale: 500 },
-    narrow: { mid: 760, min: -350, max: 350, scale: 250 },
-  };
-
-  function bandOf(config) {
-    return config.mid > 860 ? "wide" : "narrow";
-  }
+  const PULSE_WIDTH = 1500;
 
   function currentType() {
-    const first = wiz.surfaces[0];
-    if (!first) return null;
-    const config = FC.SERVO_CONFIG[first.servo];
-    return (
-      TYPES.find((t) => t.rate === config.rate && t.band === bandOf(config))
-        ?.key ?? null
-    );
+    const rate = FC.MIXER_CONFIG.servo_pwm_rate;
+    return TYPES.find((t) => t.rate === rate)?.key ?? null;
   }
 
   let selected = $state(currentType());
@@ -42,19 +29,8 @@
   function apply() {
     const type = TYPES.find((t) => t.key === selected);
     if (!type) return;
-    for (const surface of wiz.surfaces) {
-      const config = FC.SERVO_CONFIG[surface.servo];
-      config.rate = type.rate;
-      if (bandOf(config) !== type.band) {
-        const band = BANDS[type.band];
-        config.mid = band.mid;
-        config.min = band.min;
-        config.max = band.max;
-        config.rneg = band.scale;
-        config.rpos = band.scale;
-      }
-      wiz.sendServo(surface.servo);
-    }
+    FC.MIXER_CONFIG.servo_pwm_rate = type.rate;
+    wiz.sendPwmRate();
     applied = true;
   }
 </script>
@@ -79,8 +55,8 @@
           <i class="fas fa-check-circle" aria-hidden="true"></i>
         {/if}
       </span>
-      <PulseTrain rate={type.rate} width={BANDS[type.band].mid} />
-      <span class="rate">{type.rate} Hz · {BANDS[type.band].mid} µs</span>
+      <PulseTrain rate={type.rate} width={PULSE_WIDTH} />
+      <span class="rate">{type.rate} Hz · {PULSE_WIDTH} µs</span>
       <span class="muted"
         >{$i18n.t(`setupWizardServoTypeHelp_${type.key}`)}</span
       >
@@ -91,11 +67,7 @@
 <p class="muted">{$i18n.t("setupWizardServoTypeAllSurfaces")}</p>
 
 <div class="actions">
-  <button
-    class="btn"
-    disabled={!selected || wiz.surfaces.length === 0}
-    onclick={apply}
-  >
+  <button class="btn" disabled={!selected} onclick={apply}>
     {$i18n.t("setupWizardApply")}
   </button>
   {#if applied}

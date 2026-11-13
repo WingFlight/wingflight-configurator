@@ -42,15 +42,11 @@
     }
 
     const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
-    return servo.isBusServo
-      ? Math.round((raw * 90) / 500)
-      : Math.round((raw * 50) / 1000);
+    return Math.round((raw * 50) / 1000);
   }
 
   function setAngle(servo, angle) {
-    const raw = servo.isBusServo
-      ? Math.round((angle * 500) / 90)
-      : Math.round((angle * 1000) / 50);
+    const raw = Math.round((angle * 1000) / 50);
     FC.SERVO_OVERRIDE[servo.mspIndex] = raw;
     mspHelper.sendServoOverride(servo.mspIndex);
   }
