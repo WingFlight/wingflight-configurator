@@ -293,13 +293,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-servo24",
-      "path": "./feature-servo24/",
-      "branch": "feature/servo24",
-      "date": "2026-11-13T14:49:55Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-srxl2-motor2",
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
