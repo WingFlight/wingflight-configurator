@@ -4152,9 +4152,6 @@
     "servoTravelLimitedHelp": {
         "message": "At center $1 this can only reach $2: the output can't go past $3 µs."
     },
-    "servoScaleUnusualWarning": {
-        "message": "<span class=\"message-negative\">Servo $1:</span> <i>Scale</i> is $4/$5. <i>Scale</i> sets how far the servo moves at full stick. Set <i>Scale neg</i>/<i>pos</i> to about $6."
-    },
     "servoUnusualGeometryCorrection": {
         "message": "<span class=\"message-negative\">Warning:</span> The <i>Geometry correction</i> is not equal for all servos. Please check!"
     },

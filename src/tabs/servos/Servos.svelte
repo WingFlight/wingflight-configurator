@@ -156,40 +156,9 @@
     return notes;
   });
 
-  // Unusual-value warning for Scale. Min/Max aren't judged here: they are
-  // hard stops found on the model (the setup wizard's Limits step), and
-  // travelLimitNotes() covers travel the signal range cuts short.
-  const SCALE_USUAL = { min: 300, max: 750, usual: 500 };
-
-  function servoTypeNotes(servo, label) {
-    const scale = SCALE_USUAL;
-    if (
-      servo.rneg >= scale.min &&
-      servo.rneg <= scale.max &&
-      servo.rpos >= scale.min &&
-      servo.rpos <= scale.max
-    ) {
-      return [];
-    }
-    return [
-      $i18n.t("servoScaleUnusualWarning", {
-        1: label,
-        4: servo.rneg,
-        5: servo.rpos,
-        6: scale.usual,
-      }),
-    ];
-  }
-
-  let typeNotes = $derived.by(() => {
-    const notes = [];
-    for (let index = 0; index < FC.SERVO_CONFIG.length; index++) {
-      const servo = FC.SERVO_CONFIG[index];
-      if (!servo) continue;
-      notes.push(...servoTypeNotes(servo, `${index + 1}`));
-    }
-    return notes;
-  });
+  // Min/Max and Scale aren't judged here: they are set on the model (the
+  // setup wizard's Limits and Throws steps use the fields' whole range), so
+  // no value in range is unusual.
 
   // Servos whose Min/Max the output can't fully use at their center, because
   // center + travel would leave the signal range.
@@ -575,15 +544,6 @@
       <div class="note">
         {#each outputNotes as note (note)}
           <p>{note}</p>
-        {/each}
-      </div>
-    {/if}
-
-    {#if typeNotes.length > 0}
-      <div class="note">
-        {#each typeNotes as note (note)}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p>{@html note}</p>
         {/each}
       </div>
     {/if}
