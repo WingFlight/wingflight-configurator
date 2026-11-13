@@ -964,7 +964,7 @@ export function applyVirtualConfig() {
     "RX_SET",
   ]);
 
-  FC.SERVO_CONFIG = new Array(26);
+  FC.SERVO_CONFIG = new Array(24);
   for (let i = 0; i < FC.SERVO_CONFIG.length; i++) {
     FC.SERVO_CONFIG[i] = {
       mid: 1500,

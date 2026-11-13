@@ -253,7 +253,9 @@
       }
     }
     for (let i = 0; i < servoCount; i++) {
-      if (FC.SERVO_OVERRIDE[i] !== SERVO_OVERRIDE_OFF) {
+      // Not read yet for a servo the override list hasn't reached.
+      const override = FC.SERVO_OVERRIDE[i];
+      if (override !== undefined && override !== SERVO_OVERRIDE_OFF) {
         mspHelper.sendServoOverride(i, undefined, OVERRIDE_TIMEOUT_MS);
       }
     }

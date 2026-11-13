@@ -317,7 +317,9 @@
       axisGains,
       curved ? FC.SERVO_CURVES[servo.index] : null,
     );
-    const base = { mid: config.mid };
+    // The limits are measured from the trimmed center, so the gauge's live
+    // dot is too.
+    const base = { mid: config.mid + trim };
     if (r?.estimated) return { ...r, ...base, mixed: true, curved };
 
     const side = (limit) => ({ us: 0, limit: Math.max(limit, 0), fraction: 0 });

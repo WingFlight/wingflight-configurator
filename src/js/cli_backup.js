@@ -244,6 +244,8 @@ export async function replayBackup(cliEngine, backupText) {
       `Restore: left out ${skipped.length} bus servo line(s) from a backup made before MSP API 22.16`,
       skipped,
     );
+    // Shown in the log, which is on screen in the CLI tab and the flasher.
+    GUI.log(i18n.getMessage("backupOldBusServosSkipped", [skipped.length]));
   }
 
   await cliEngine.executeCommands(commandsText);

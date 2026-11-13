@@ -80,7 +80,14 @@
           </span>
         {/if}
       </div>
-      <TravelGauge servo={surface.servo} {reach} />
+      <!-- The limits are measured from the trimmed center, so the live dot
+           is too. -->
+      <TravelGauge
+        servo={surface.servo}
+        {reach}
+        mid={FC.SERVO_CONFIG[surface.servo].mid +
+          (FC.SERVO_SAVED_TRIM?.[surface.servo] ?? 0)}
+      />
       <div class="sides">
         {#each [{ s: reach.neg, label: "setupWizardTravelNeg" }, { s: reach.pos, label: "setupWizardTravelPos" }] as { s, label } (label)}
           <span class={["reading", s.fraction > 1 && "clips"]}>

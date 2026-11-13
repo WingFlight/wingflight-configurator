@@ -160,6 +160,15 @@ export function servoSide(output, reversed) {
   return signed >= 0 ? "pos" : "neg";
 }
 
+// Fraction reported for a side that is asked to move but has no travel at
+// all (limit 0): past the limit, and finite so it still shows as a percentage.
+const NO_TRAVEL_FRACTION = 9.99;
+
+function reachFraction(us, limit) {
+  if (limit > 0) return us / limit;
+  return us > 0 ? NO_TRAVEL_FRACTION : 0;
+}
+
 // Worst-case reach of each servo side with every axis at full stick in the
 // direction that pushes that side furthest (and the flap channel, if the
 // surface has one, at whichever end does the same), in us and as a fraction
@@ -205,8 +214,8 @@ export function travelReach(surface, servoConfig, axisGains, curve = null) {
   const negLimit = Math.max(-servoConfig.min, 0);
 
   return {
-    pos: { us: posUs, limit: posLimit, fraction: posLimit > 0 ? posUs / posLimit : 0 },
-    neg: { us: negUs, limit: negLimit, fraction: negLimit > 0 ? negUs / negLimit : 0 },
+    pos: { us: posUs, limit: posLimit, fraction: reachFraction(posUs, posLimit) },
+    neg: { us: negUs, limit: negLimit, fraction: reachFraction(negUs, negLimit) },
   };
 }
 

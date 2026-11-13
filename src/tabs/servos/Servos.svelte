@@ -22,8 +22,6 @@
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
 
-  const OVERRIDE_OFF = 2001;
-
   // A servo is a servo: servo N is sent on PWM output N where the board has
   // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
   // The FC lists the servos in use, the larger of the two counts.
@@ -370,14 +368,22 @@
 
   // Pushed to the FC live like the other fields, and saved by onSave().
   function onPwmRateChange() {
-    needReboot = true;
+    // Back at the rate the FC booted with, there is nothing to reboot for.
+    needReboot =
+      FC.MIXER_CONFIG.servo_pwm_rate !== initialBusOutChannels?.pwmRate;
     mspHelper.sendMixerConfig();
   }
 
   function onToggleOverrideEnabled(checked) {
     overrideEnabled = checked;
+    if (!checked) {
+      // Every servo the FC has, not only the ones listed: an override left
+      // on a servo that has dropped off the list would come back with it.
+      mspHelper.resetServoOverrides();
+      return;
+    }
     for (const servo of servos) {
-      FC.SERVO_OVERRIDE[servo.mspIndex] = checked ? 0 : OVERRIDE_OFF;
+      FC.SERVO_OVERRIDE[servo.mspIndex] = 0;
       mspHelper.sendServoOverride(servo.mspIndex);
     }
   }
