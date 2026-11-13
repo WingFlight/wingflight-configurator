@@ -164,6 +164,9 @@
     "buttonHelp": {
         "message": "Help"
     },
+    "backupOldBusServosSkipped": {
+        "message": "<span class=\"message-negative\">Restore:</span> $1 line(s) for servo 9 and above were left out, because this backup was made before MSP API 22.16 and numbers bus servos differently. Set those servos and their mixer rules up again by hand."
+    },
     "eepromSaved": {
         "message": "EEPROM <span class=\"message-positive\">saved</span>"
     },
