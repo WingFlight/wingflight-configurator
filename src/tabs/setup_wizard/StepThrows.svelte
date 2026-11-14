@@ -103,23 +103,27 @@
   }
 
   // Which scale field this stick direction uses on this servo, and the most
-  // it may be before full stick passes that side's binding limit.
+  // it may be before full stick passes that side's binding limit: null when
+  // the side has no travel left (the saved trim has used it), so no scale
+  // fits.
   function sideOf(surface, axis, direction) {
     const config = stickConfig(surface.servo);
     const output = outputForAxis(surface, axis, direction.stick, wiz.axisGains);
     const reversed = (config.flags & SERVO_FLAG_REVERSE) !== 0;
     const pos = servoSide(output, reversed) === "pos";
+    const limit = pos ? config.max : -config.min;
     return {
       field: pos ? "rpos" : "rneg",
-      max: maxScale(output, pos ? config.max : -config.min),
+      max: output !== 0 && limit <= 0 ? null : maxScale(output, limit),
     };
   }
 
   function nudgeSide(surface, axis, direction, delta) {
     const config = FC.SERVO_CONFIG[surface.servo];
     const side = sideOf(surface, axis, direction);
+    // With no travel left the scale can come down but not go up.
     config[side.field] = Math.min(
-      side.max,
+      side.max ?? config[side.field],
       Math.max(SCALE_MIN, config[side.field] + delta),
     );
     wiz.sendServo(surface.servo);
@@ -264,7 +268,7 @@
                     >+{delta}%</button
                   >
                 {/each}
-                {#if config[side.field] >= side.max}
+                {#if side.max === null || config[side.field] >= side.max}
                   <span class="warn"
                     >{$i18n.t("setupWizardThrowsSideAtLimit")}</span
                   >
