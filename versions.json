@@ -277,6 +277,13 @@
     },
     {
       "type": "branch",
+      "name": "feature-remote-handover",
+      "path": "./feature-remote-handover/",
+      "branch": "feature/remote-handover",
+      "date": "2026-11-14T18:11:29Z"
+    },
+    {
+      "type": "branch",
       "name": "feature-remote-view",
       "path": "./feature-remote-view/",
       "branch": "feature/remote-view",
