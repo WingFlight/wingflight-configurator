@@ -296,8 +296,10 @@ PortHandler.detectPort = function(currentPorts) {
         }
 
         // Neither auto-connect nor a reappearing port may reconnect while the
-        // flasher owns the port, or while remote support shares the board.
-        const flasherOwns = flasherOwnsPort() || RemoteSupport.session.role === 'share';
+        // flasher owns the port, or while remote support shares the board
+        // (unless the pilot has taken control back for now).
+        const flasherOwns = flasherOwnsPort()
+            || (RemoteSupport.session.role === 'share' && RemoteSupport.control !== 'pilot');
 
         // While joined to a remote support session, only the pilot's board is
         // worked on: a board plugged in here must not take over by itself.
@@ -480,6 +482,11 @@ PortHandler.updatePortSelect = function (ports) {
  */
 PortHandler.virtualPortListed = function () {
     return SHOW_VIRTUAL_PORT && !flasherOwnsPort();
+};
+
+/** True when a port of this computer (not Virtual, DFU or manual) is selected. */
+PortHandler.devicePortSelected = function () {
+    return $('option:selected', this.portPickerElement).data()?.isManual === false;
 };
 
 PortHandler.virtualSelected = function () {
