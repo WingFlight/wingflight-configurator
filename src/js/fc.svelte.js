@@ -294,6 +294,9 @@ class FlightController {
     this.SERIAL_STATUS = null;
     this.FBUS_MASTER_CONFIG = {
       forwardedSensors:            [],
+      // Port wiring; null until read, and on firmware that doesn't send it
+      pinSwap:                     null,
+      inverted:                    null,
     };
     // MSP2_WING_SRXL2_ESC_CONFIG: throttle_rate_hz, telem_interval_frames, motor2_channel.
     // Null until read, and on firmware without the message.

@@ -22,6 +22,7 @@
   } from "./surfaces.js";
   import StepSensors from "./StepSensors.svelte";
   import StepReceiver from "./StepReceiver.svelte";
+  import StepBusOutput from "./StepBusOutput.svelte";
   import StepAirframe from "./StepAirframe.svelte";
   import StepServoType from "./StepServoType.svelte";
   import StepMotor from "./StepMotor.svelte";
@@ -44,6 +45,9 @@
     { key: "sensors", component: StepSensors },
     // Before anything that uses the sticks or the PASSTHROUGH switch.
     { key: "receiver", component: StepReceiver },
+    // Optional. Before the airframe, because a bus output is what gives the
+    // model more servos than the board has pins for.
+    { key: "busOutput", component: StepBusOutput },
     { key: "airframe", component: StepAirframe },
     { key: "servoType", component: StepServoType },
     { key: "motor", component: StepMotor },
