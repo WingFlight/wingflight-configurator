@@ -18,12 +18,18 @@
  * request goes to the firmware, and the codec must find exactly the bytes
  * the firmware stored. Setter side effects are not replayed; the save
  * applies them (MSP_EEPROM_WRITE stays on the firmware's opcode).
+ *
+ * A build without a config catalogue (BUILD_ID capability, step 5 of the
+ * firmware's parameter-addressing design) has no legacy config opcodes to
+ * verify against: there the router is installed regardless of the options,
+ * authoritative, for every reply and setter the manifest's codecs cover.
  */
 
 import * as config from "@/js/config.js";
 import { MSP } from "@/js/msp.svelte.js";
 import { MSPCodes } from "@/js/msp/MSPCodes.js";
 import { openParamSession } from "./session.js";
+import { readBuildId } from "./access.js";
 import { VirtualMsp } from "./virtual_msp.js";
 import { verifyReplies } from "./verify_msp.js";
 import { ReplyRouter } from "./reply_router.js";
@@ -35,6 +41,18 @@ export async function startAddressedReplies(log = console.log) {
     stopAddressedReplies();
     const replies = Boolean(config.get(OPTION));
     const setters = Boolean(config.get(SETTERS_OPTION));
+    // One request: firmware without parameter addressing refuses it, which
+    // leaves everything on the legacy opcodes.
+    let identity;
+    try {
+        identity = await readBuildId();
+    } catch {
+        identity = null;
+    }
+    if (identity?.noConfigCatalogue) {
+        await startAuthoritative(log);
+        return;
+    }
     if (!replies && !setters) {
         return;
     }
@@ -68,6 +86,26 @@ export async function startAddressedReplies(log = console.log) {
     if (setters) {
         log("Addressed config writes: each setter is verified on its first use, then written through addressed access");
     }
+}
+
+// A build without a config catalogue: every codec, replies and setters,
+// answered by the virtual layer from the first request.
+async function startAuthoritative(log) {
+    let session;
+    try {
+        session = await openParamSession({ askForFile: false });
+    } catch (error) {
+        log(`Addressed access: this firmware has no config catalogue and no manifest was found (${error.message}); config tabs cannot load`);
+        return;
+    }
+    const virtual = new VirtualMsp(session.manifest, session.io);
+    const codes = Object.keys(virtual.codecs).map(Number);
+    if (!codes.length) {
+        log("Addressed access: this firmware has no config catalogue and its manifest carries no MSP codecs; config tabs cannot load");
+        return;
+    }
+    MSP.virtualLayer = new ReplyRouter(virtual, codes, MSP, null, { authoritative: true });
+    log(`Addressed access: this firmware has no config catalogue; ${codes.length} config opcodes answered from addressed access`);
 }
 
 export function stopAddressedReplies() {

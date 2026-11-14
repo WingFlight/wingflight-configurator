@@ -17,6 +17,9 @@ export const SUPPORTED_PARAM_PROTOCOL = 1;
 
 export const CAP_EMBEDDED_MANIFEST = 1 << 0;
 export const CAP_BUILD_ID_VALID = 1 << 1;
+// The build has no MSP config catalogue (firmware msp_param.h,
+// MSP_PARAM_CAP_NO_CONFIG_CATALOGUE): config opcodes exist only as codecs.
+export const CAP_NO_CONFIG_CATALOGUE = 1 << 2;
 
 export class ParamError extends Error {}
 
@@ -110,6 +113,7 @@ export async function readBuildId() {
         // should say so rather than hunting for a manifest of eight zero bytes.
         buildId: capabilities & CAP_BUILD_ID_VALID ? id : null,
         hasEmbeddedManifest: Boolean(capabilities & CAP_EMBEDDED_MANIFEST),
+        noConfigCatalogue: Boolean(capabilities & CAP_NO_CONFIG_CATALOGUE),
         manifestSize,
         target,
         version,
