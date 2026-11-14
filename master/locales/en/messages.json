@@ -9199,6 +9199,72 @@
     "setupWizardStep_airframe": {
         "message": "Airframe"
     },
+    "setupWizardStep_busOutput": {
+        "message": "Servo bus"
+    },
+    "setupWizardBusIntro": {
+        "message": "Optional. Servos on an F.Bus or SBUS line plug into a serial port instead of the servo pins, which gives the model more servos than the board has pins for. Servo 1 is channel 1 on the bus, servo 2 is channel 2, and so on. If every servo plugs into a servo pin, press Next."
+    },
+    "setupWizardBusProtocolTitle": {
+        "message": "Protocol"
+    },
+    "setupWizardBusProtocolHelp": {
+        "message": "F.Bus servos and sensors answer back, so this step can check the wiring. SBUS is one-way."
+    },
+    "setupWizardBusMux": {
+        "message": "This board switches its servo pins to F.Bus one by one. Do that in the Remap tool."
+    },
+    "setupWizardBusPortTitle": {
+        "message": "Port the bus is plugged into"
+    },
+    "setupWizardBusPortNone": {
+        "message": "None"
+    },
+    "setupWizardBusPortNoneUse": {
+        "message": "Servo pins only"
+    },
+    "setupWizardBusPortSuggested": {
+        "message": "Free, suggested"
+    },
+    "setupWizardBusChannelsTitle": {
+        "message": "Channels on the bus"
+    },
+    "setupWizardBusChannelsHelp": {
+        "message": "The highest servo number the bus carries. Use the smallest that fits the model."
+    },
+    "setupWizardBusSignalTitle": {
+        "message": "Signal"
+    },
+    "setupWizardBusDevices": {
+        "message": "$1 answering"
+    },
+    "setupWizardBusNoDevices": {
+        "message": "Nothing answering"
+    },
+    "setupWizardBusFbusSignal": {
+        "message": "With the bus powered, its F.Bus servos and sensors should answer within a few seconds."
+    },
+    "setupWizardBusSbusSignal": {
+        "message": "SBUS is sent on the port's TX pin. Nothing answers on SBUS, so check it in the later steps, where each servo is moved."
+    },
+    "setupWizardBusOnRxPin": {
+        "message": "F.Bus is on the RX pin of $1."
+    },
+    "setupWizardBusOnTxPin": {
+        "message": "F.Bus is on the TX pin of $1."
+    },
+    "setupWizardBusOtherPin": {
+        "message": "Use the other pin"
+    },
+    "setupWizardBusOtherPinHelp": {
+        "message": "If nothing answers, the bus may be on the port's other pin. Switching pins needs a save and reboot."
+    },
+    "setupWizardBusPinFixed": {
+        "message": "This firmware can't switch the pin from here. F.Bus uses the TX pin unless fbus_master_pinswap is set in the CLI."
+    },
+    "setupWizardBusOpenServos": {
+        "message": "Open the Servos tab"
+    },
     "setupWizardStep_servoType": {
         "message": "Servo type"
     },
