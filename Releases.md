@@ -1,3 +1,15 @@
+# 0.0.42
+
+Support the 0.0.42 firmware (MSP API 22.16), which is now required; older firmware is refused.
+Rework the Servos tab for the firmware's 24 servos: one table for PWM and bus servos, with a note saying which servos are on the bus. The clone switch and the per-servo Rate column are gone; one PWM update rate (Standard 50Hz or High speed 333Hz) replaces them.
+Change the servo limits to the firmware's: center 1000 to 2000, signal 880 to 2159, Min up to 0 and Max from 0. The Servos tab no longer warns about wide or narrow Min/Max or an unusual Scale, which the setup wizard sets on purpose.
+Change the setup wizard to cover every servo in use and to set the one PWM rate; the narrow-band servo type is removed. Its Throws and Travel check steps measure against the travel the output can really use at the current center, with the saved trim counted, and show a side with no travel as clipping.
+Change restoring a backup made before 0.0.42 to leave out the lines for servo 9 and above, which meant a different servo then, and to log how many were left out.
+Change the SRXL2 Motor 2 Channel choices to Off and 2 to 32, following the firmware.
+Add a note on the GPS and GPS Navigation tabs when the GPS provider can't navigate (NMEA, FBUS or CRSF).
+Fix the Thrust Vector tab staying on the old profile when a switch changes the TV profile.
+Add the FBUS debug mode name.
+
 # 0.0.41
 
 Support the 0.0.41 firmware (MSP API 22.15).
