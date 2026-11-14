@@ -74,7 +74,7 @@
     wiz.markChanged();
   }
 
-  //// 1. Protocol. "None" takes the bus output off its port.
+  //// 1. Port. "None", a free port, or the one the bus output is on now.
 
   let ports = $derived(
     (FC.SERIAL_CONFIG.ports ?? []).filter(
@@ -85,9 +85,8 @@
   let protocol = $derived(busProtocol(ports));
   let busPort = $derived(findBusPort(ports));
 
-  // A protocol picked before any port is free to take it.
-  let wanted = $state(null);
-  let shownProtocol = $derived(protocol ?? wanted);
+  // The SBUS connector, offered as the usual place for a bus.
+  let suggested = $derived(recommendedPort(ports, portNames, muxPort));
 
   function muxPort(port) {
     return isFbusMuxSerialPort(FC.FBUS_MUX, port);
@@ -98,27 +97,10 @@
   let canSetPin = $derived(FC.FBUS_MASTER_CONFIG.pinSwap !== null);
 
   function applyPin(port) {
-    if (canSetPin && shownProtocol === "fbus") {
+    if (canSetPin && protocol === "fbus") {
       FC.FBUS_MASTER_CONFIG.pinSwap = needsPinSwap(portNames, port);
     }
   }
-
-  function chooseProtocol(value) {
-    wanted = value || null;
-    if (!wanted) {
-      clearBusOutput(ports);
-      changeConnection();
-      return;
-    }
-    // Keep the port already chosen, otherwise start on the SBUS connector.
-    const port = busPort ?? recommendedPort(ports, portNames, muxPort);
-    if (port && setBusOutput(ports, port, wanted)) {
-      applyPin(port);
-      changeConnection();
-    }
-  }
-
-  //// 2. Port. Only a free port, or the one the bus output is on now.
 
   function maskOf(port) {
     return port.functionMask ?? 0;
@@ -141,9 +123,26 @@
     return maskOf(port) === 0 && !muxPort(port);
   }
 
+  // A newly chosen port starts on F.Bus, whose devices can prove the wiring.
   function choosePort(port) {
     if (port === busPort || !isFree(port)) return;
-    if (setBusOutput(ports, port, shownProtocol)) {
+    if (setBusOutput(ports, port, protocol ?? "fbus")) {
+      applyPin(port);
+      changeConnection();
+    }
+  }
+
+  function chooseNone() {
+    if (!busPort) return;
+    clearBusOutput(ports);
+    changeConnection();
+  }
+
+  //// 2. Protocol, on the chosen port.
+
+  function chooseProtocol(value) {
+    const port = busPort;
+    if (setBusOutput(ports, port, value)) {
       applyPin(port);
       changeConnection();
     }
@@ -151,7 +150,7 @@
 
   //// 3. Channels: how many servos the bus carries.
 
-  let config = $derived(shownProtocol ? BUS_PROTOCOLS[shownProtocol] : null);
+  let config = $derived(protocol ? BUS_PROTOCOLS[protocol] : null);
 
   function chooseChannels(value) {
     FC.MIXER_CONFIG[config.channelsKey] = Number(value);
@@ -181,59 +180,74 @@
   <!-- Waiting for the FC. -->
 {:else}
   <section class="card">
-    <h3><span class="num">1</span>{$i18n.t("setupWizardBusProtocolTitle")}</h3>
-    <div class="protocol">
-      <select
-        value={shownProtocol ?? ""}
-        onchange={(e) => chooseProtocol(e.target.value)}
+    <h3><span class="num">1</span>{$i18n.t("setupWizardBusPortTitle")}</h3>
+    <div class="ports" role="radiogroup">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!busPort}
+        class={["port", !busPort && "selected"]}
+        onclick={chooseNone}
       >
-        <option value="">{$i18n.t("setupWizardBusProtocolNone")}</option>
-        <option value="fbus">F.Bus</option>
-        <option value="sbus">SBUS</option>
-      </select>
-      <span class="muted">{$i18n.t("setupWizardBusProtocolHelp")}</span>
+        <span class="port-name">
+          {$i18n.t("setupWizardBusPortNone")}
+          {#if !busPort}
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+          {/if}
+        </span>
+        <span class="port-use">{$i18n.t("setupWizardBusPortNoneUse")}</span>
+      </button>
+      {#each ports as port (port.identifier)}
+        {@const isBus = port === busPort}
+        {@const free = isFree(port)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isBus}
+          class={["port", isBus && "selected"]}
+          disabled={!isBus && !free}
+          onclick={() => choosePort(port)}
+        >
+          <span class="port-name">
+            {portName(port)}
+            {#if isBus}
+              <i class="fas fa-check-circle" aria-hidden="true"></i>
+            {/if}
+          </span>
+          <span class="port-use">
+            {#if isBus}
+              {$i18n.t(`portsFunction_${getPortFunc(maskOf(port))?.name}`)}
+            {:else if free && port === suggested}
+              {$i18n.t("setupWizardBusPortSuggested")}
+            {:else if free}
+              {$i18n.t("setupWizardReceiverPortFree")}
+            {:else}
+              {$i18n.t("setupWizardReceiverPortInUse", {
+                1: usedFor(port),
+              })}
+            {/if}
+          </span>
+        </button>
+      {/each}
     </div>
 
-    {#if FC.FBUS_MUX && shownProtocol === "fbus"}
-      <div class="note">{$i18n.t("setupWizardBusMux")}</div>
-    {/if}
-
-    {#if shownProtocol}
-      <h3><span class="num">2</span>{$i18n.t("setupWizardBusPortTitle")}</h3>
-      <div class="ports" role="radiogroup">
-        {#each ports as port (port.identifier)}
-          {@const isBus = port === busPort}
-          {@const free = isFree(port)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={isBus}
-            class={["port", isBus && "selected"]}
-            disabled={!isBus && !free}
-            onclick={() => choosePort(port)}
-          >
-            <span class="port-name">
-              {portName(port)}
-              {#if isBus}
-                <i class="fas fa-check-circle" aria-hidden="true"></i>
-              {/if}
-            </span>
-            <span class="port-use">
-              {#if isBus}
-                {$i18n.t(`portsFunction_${getPortFunc(maskOf(port))?.name}`)}
-              {:else if free}
-                {$i18n.t("setupWizardReceiverPortFree")}
-              {:else}
-                {$i18n.t("setupWizardReceiverPortInUse", {
-                  1: usedFor(port),
-                })}
-              {/if}
-            </span>
-          </button>
-        {/each}
+    {#if busPort}
+      <h3>
+        <span class="num">2</span>{$i18n.t("setupWizardBusProtocolTitle")}
+      </h3>
+      <div class="protocol">
+        <select
+          value={protocol}
+          onchange={(e) => chooseProtocol(e.target.value)}
+        >
+          <option value="fbus">F.Bus</option>
+          <option value="sbus">SBUS</option>
+        </select>
+        <span class="muted">{$i18n.t("setupWizardBusProtocolHelp")}</span>
       </div>
-      {#if !busPort}
-        <p class="muted">{$i18n.t("setupWizardBusPortNone")}</p>
+
+      {#if FC.FBUS_MUX && protocol === "fbus"}
+        <div class="note">{$i18n.t("setupWizardBusMux")}</div>
       {/if}
 
       <h3>

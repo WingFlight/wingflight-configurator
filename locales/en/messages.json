@@ -9206,10 +9206,7 @@
         "message": "Optional. Servos on an F.Bus or SBUS line plug into a serial port instead of the servo pins, which gives the model more servos than the board has pins for. Servo 1 is channel 1 on the bus, servo 2 is channel 2, and so on. If every servo plugs into a servo pin, press Next."
     },
     "setupWizardBusProtocolTitle": {
-        "message": "Servo bus"
-    },
-    "setupWizardBusProtocolNone": {
-        "message": "None, servo pins only"
+        "message": "Protocol"
     },
     "setupWizardBusProtocolHelp": {
         "message": "F.Bus servos and sensors answer back, so this step can check the wiring. SBUS is one-way."
@@ -9221,7 +9218,13 @@
         "message": "Port the bus is plugged into"
     },
     "setupWizardBusPortNone": {
-        "message": "No port chosen yet. Pick a free one."
+        "message": "None"
+    },
+    "setupWizardBusPortNoneUse": {
+        "message": "Servo pins only"
+    },
+    "setupWizardBusPortSuggested": {
+        "message": "Free, suggested"
     },
     "setupWizardBusChannelsTitle": {
         "message": "Channels on the bus"
