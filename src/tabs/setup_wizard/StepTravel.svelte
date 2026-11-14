@@ -3,7 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { servoStickConfig } from "@/js/servoLimits.js";
+  import { servoAppliedTrim, servoStickConfig } from "@/js/servoLimits.js";
 
   import TravelGauge from "./TravelGauge.svelte";
   import StickCorners from "./StickCorners.svelte";
@@ -86,7 +86,10 @@
         servo={surface.servo}
         {reach}
         mid={FC.SERVO_CONFIG[surface.servo].mid +
-          (FC.SERVO_SAVED_TRIM?.[surface.servo] ?? 0)}
+          servoAppliedTrim(
+            FC.SERVO_CONFIG[surface.servo],
+            FC.SERVO_SAVED_TRIM?.[surface.servo] ?? 0,
+          )}
       />
       <div class="sides">
         {#each [{ s: reach.neg, label: "setupWizardTravelNeg" }, { s: reach.pos, label: "setupWizardTravelPos" }] as { s, label } (label)}

@@ -45,8 +45,9 @@ export function servoUsableTravel(config) {
 // usable travel, less the saved trim. The trim is added before the output is
 // held inside Min/Max (servoUpdate() in flight/servos.c), so it uses up
 // travel on one side and gives it on the other.
-export function servoStickConfig(config, trim = 0) {
+export function servoStickConfig(config, savedTrim = 0) {
   const usable = servoUsableTravel(config);
+  const trim = servoAppliedTrim(config, savedTrim);
   return { ...config, min: usable.min - trim, max: usable.max - trim };
 }
 
@@ -79,4 +80,13 @@ export function servoTrimLimit(config) {
   return Math.trunc(
     (Math.max(config.rneg, config.rpos) * TRIM_LIMIT_PERCENT) / 100,
   );
+}
+
+// The saved trim the flight controller adds to the output (getServoTrim() in
+// flight/servos.c). A trim is held inside the limit when it is saved, but a
+// scale lowered afterwards leaves it larger than the limit, and the output
+// then uses the limit.
+export function servoAppliedTrim(config, savedTrim = 0) {
+  const limit = servoTrimLimit(config);
+  return Math.min(limit, Math.max(-limit, savedTrim));
 }
