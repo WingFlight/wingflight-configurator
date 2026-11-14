@@ -192,6 +192,7 @@
         role="radio"
         aria-checked={!busPort}
         class={["port", !busPort && "selected"]}
+        disabled={wiz.saving}
         onclick={chooseNone}
       >
         <span class="port-name">
@@ -210,7 +211,7 @@
           role="radio"
           aria-checked={isBus}
           class={["port", isBus && "selected"]}
-          disabled={!isBus && !free}
+          disabled={wiz.saving || (!isBus && !free)}
           onclick={() => choosePort(port)}
         >
           <span class="port-name">
@@ -243,6 +244,7 @@
       <div class="protocol">
         <select
           value={protocol}
+          disabled={wiz.saving}
           onchange={(e) => chooseProtocol(e.target.value)}
         >
           <option value="fbus">F.Bus</option>
@@ -261,6 +263,7 @@
       <div class="protocol">
         <select
           value={FC.MIXER_CONFIG[config.channelsKey]}
+          disabled={wiz.saving}
           onchange={(e) => chooseChannels(e.target.value)}
         >
           {#each config.channels as count (count)}
@@ -309,7 +312,11 @@
                 ? $i18n.t("setupWizardBusOnRxPin", { 1: portName(busPort) })
                 : $i18n.t("setupWizardBusOnTxPin", { 1: portName(busPort) })}
             </span>
-            <button class="btn" disabled={wiz.armed} onclick={useOtherPin}>
+            <button
+              class="btn"
+              disabled={wiz.armed || wiz.saving}
+              onclick={useOtherPin}
+            >
               {$i18n.t("setupWizardBusOtherPin")}
             </button>
           </div>
