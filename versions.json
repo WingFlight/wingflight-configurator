@@ -226,7 +226,9 @@
     {
       "type": "branch",
       "name": "feature-fclink",
-      "path": "./feature-fclink/"
+      "path": "./feature-fclink/",
+      "branch": "feature/fclink",
+      "date": ""
     },
     {
       "type": "branch",
