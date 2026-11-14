@@ -1,5 +1,7 @@
 import { MSPConnectorImpl } from '@/js/msp/MSPConnector.js';
 import { portUsage } from "@/js/port_usage.svelte.js";
+import { RemoteSupport, REMOTE_PORT_PREFIX } from "@/js/protocols/RemoteSupport.js";
+import { askToAllow } from "@/js/protocols/RemoteView.svelte.js";
 
 /*
     STM32 F103 serial bus seems to properly initialize with quite a huge auto-baud range
@@ -14,6 +16,10 @@ import { portUsage } from "@/js/port_usage.svelte.js";
 // so permission is asked for sooner there.
 const DFU_WAIT_INTERVAL_MS = 500;
 const DFU_WAIT_ATTEMPTS = 20;
+// A remote board shared from a browser: the pilot has to allow the DFU device
+// before it shows up. Ask them after a short wait, then give them time.
+const DFU_REMOTE_ASK_ATTEMPT = 4;
+const DFU_WAIT_ATTEMPTS_REMOTE_ALLOW = 180;
 const DFU_WAIT_ATTEMPTS_WEB = 4;
 // A port still listed this many checks after the first is a USB-UART
 // board's, whose ROM bootloader answers on it.
@@ -130,15 +136,33 @@ STM32_protocol.prototype.connect = function (port, baud, hex, options, callback)
                 }
                 serialPortPresent(function(portPresent) {
                     // The board is on its way into DFU. Windows can take several
-                    // seconds to enumerate the ROM bootloader (longer over remote
-                    // support), so keep looking. Never open the old port here:
-                    // opening one Windows is still removing can fail the device
-                    // or hang the app. On web, an unauthorized DFU device never
-                    // shows up, so ask for permission sooner.
-                    const maxAttempts = (__BACKEND__ === "web") ? DFU_WAIT_ATTEMPTS_WEB : DFU_WAIT_ATTEMPTS;
+                    // seconds to enumerate the ROM bootloader, so keep looking.
+                    // Never open the old port here: opening one Windows is still
+                    // removing can fail the device or hang the app. On web, an
+                    // unauthorized DFU device never shows up, so ask for
+                    // permission sooner.
+                    // A board shared in a remote support session is never
+                    // this browser's to ask permission for: wait as long as
+                    // the desktop app does, then give up.
+                    // If the pilot shares from a browser, they have to allow
+                    // the DFU device: ask them (RemoteSupport.js) and wait
+                    // longer.
+                    const remote = self.port.startsWith(REMOTE_PORT_PREFIX);
+                    const askWebPermission = __BACKEND__ === "web" && !remote;
+                    const askPilot = remote && RemoteSupport.peerCanAllow.dfu;
+                    if (askPilot && !portPresent && attempt === DFU_REMOTE_ASK_ATTEMPT) {
+                        askToAllow('dfu');
+                        GUI.log(i18n.getMessage('remoteSupportDfuAskedPilot'));
+                    }
+                    let maxAttempts = DFU_WAIT_ATTEMPTS;
+                    if (askWebPermission) {
+                        maxAttempts = DFU_WAIT_ATTEMPTS_WEB;
+                    } else if (askPilot) {
+                        maxAttempts = DFU_WAIT_ATTEMPTS_REMOTE_ALLOW;
+                    }
                     if (!portPresent && attempt < maxAttempts) {
                         setTimeout(() => startFlashing(attempt + 1), DFU_WAIT_INTERVAL_MS);
-                    } else if (!portPresent && __BACKEND__ !== "web") {
+                    } else if (!portPresent && !askWebPermission) {
                         giveUp(i18n.getMessage('stm32UsbDfuNotFoundAfterReboot'));
                     } else if (portPresent && attempt < SERIAL_SETTLE_ATTEMPTS) {
                         // A USB-VCP board's port can still be listed just
