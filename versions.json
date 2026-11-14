@@ -205,7 +205,9 @@
     {
       "type": "branch",
       "name": "feature-expert-basic",
-      "path": "./feature-expert-basic/"
+      "path": "./feature-expert-basic/",
+      "branch": "feature/expert-basic",
+      "date": ""
     },
     {
       "type": "branch",
