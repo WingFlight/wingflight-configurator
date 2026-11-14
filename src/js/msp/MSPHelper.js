@@ -779,6 +779,11 @@ MspHelper.prototype.process_data = function(dataHandler) {
                     forwardedSensors.push(data.readU8());
                 }
                 FC.FBUS_MASTER_CONFIG.forwardedSensors = forwardedSensors;
+                // Payload version 2: the port wiring (fbus_master_pinswap,
+                // fbus_master_inverted). Null on firmware without it.
+                const hasWiring = data.remaining() >= 2;
+                FC.FBUS_MASTER_CONFIG.pinSwap = hasWiring ? data.readU8() !== 0 : null;
+                FC.FBUS_MASTER_CONFIG.inverted = hasWiring ? data.readU8() !== 0 : null;
                 break;
             }
 
@@ -2558,6 +2563,11 @@ MspHelper.prototype.crunch = function(code) {
             // matches FBUS_MASTER_MAX_FORWARDED_SENSORS in pg/fbus_master.h
             for (let i = 0; i < 8; i++) {
                 buffer.push8(FC.FBUS_MASTER_CONFIG.forwardedSensors[i] ?? 0xFF);
+            }
+            // Port wiring, only to firmware that reported it
+            if (FC.FBUS_MASTER_CONFIG.pinSwap !== null && FC.FBUS_MASTER_CONFIG.inverted !== null) {
+                buffer.push8(Number(FC.FBUS_MASTER_CONFIG.pinSwap))
+                    .push8(Number(FC.FBUS_MASTER_CONFIG.inverted));
             }
             break;
         }

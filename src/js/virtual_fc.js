@@ -789,6 +789,9 @@ export function applyVirtualConfig() {
   FC.SERIAL_CONFIG.ports[2].functionMask = 1024; // ESC_SENSOR
   FC.SERIAL_CONFIG.ports[3].functionMask = 2; // GPS
 
+  // F.Bus master port wiring (pg/fbus_master.c defaults)
+  Object.assign(FC.FBUS_MASTER_CONFIG, { pinSwap: false, inverted: true });
+
   // GPS source (pg/gps.c defaults). With the GPS port above, GPS is active.
   Object.assign(FC.GPS_CONFIG, {
     provider: 0, // NMEA
