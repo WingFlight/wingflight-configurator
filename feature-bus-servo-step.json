@@ -1,8 +1,4 @@
 {
   "branch": "feature/bus-servo-step",
-  "date": "2026-11-14T20:09:07Z",
-  "number": 235,
-  "title": "Setup Wizard: add a servo bus step for F.Bus and SBUS output",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/235",
-  "draft": false
+  "date": "2026-11-14T20:09:07Z"
 }
