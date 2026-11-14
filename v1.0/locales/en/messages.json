@@ -164,6 +164,9 @@
     "buttonHelp": {
         "message": "Help"
     },
+    "backupOldBusServosSkipped": {
+        "message": "<span class=\"message-negative\">Restore:</span> $1 line(s) for servo 9 and above were left out, because this backup was made before MSP API 22.16 and numbers bus servos differently. Set those servos and their mixer rules up again by hand."
+    },
     "eepromSaved": {
         "message": "EEPROM <span class=\"message-positive\">saved</span>"
     },
@@ -4002,11 +4005,14 @@
     "servoConfiguration": {
         "message": "Servo Configuration"
     },
-    "servoConfigurationPwm": {
-        "message": "PWM Servo Configuration"
+    "servoOutputsBus": {
+        "message": "The bus sends servos 1–$1, each on the channel with the same number."
     },
-    "servoConfigurationBus": {
-        "message": "Bus Servo Configuration"
+    "servoOutputsPwm": {
+        "message": "Servos 1–$1 are also sent on PWM outputs 1–$1."
+    },
+    "servoOutputsBusDigital": {
+        "message": "With 16 bus channels, servos 17 and 18 drive the two digital channels of the frame: on at center and above, off below."
     },
     "servoNumber": {
         "message": "Servo"
@@ -4031,18 +4037,6 @@
     },
     "servoTrimBadgesHelp": {
         "message": "Shows a badge when a ServoTrim Roll/Pitch/Yaw adjustment range (Adjustments tab) is configured for this servo's stabilized axis. Highlighted when currently active, with the controlling AUX channel."
-    },
-    "servoBusClipTrim": {
-        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Without the trim it would fit: reduce it, or Clear trims."
-    },
-    "servoBusClipScale": {
-        "message": "Bus $1 copies PWM servo $2: full stick reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to keep the full throw."
-    },
-    "servoBusClipScaleTrim": {
-        "message": "Bus $1 copies PWM servo $2: full stick with its $3 µs trim reaches $4 µs, past the $5 µs the bus can send, so this side stops $6 µs short. Lower Scale on PWM servo $2 to leave room for the trim."
-    },
-    "servoTrimClonedHelp": {
-        "message": "This bus servo copies PWM servo $1, trim included, so its own trim isn't used. Shows the trim in use on PWM servo $1."
     },
     "servoTrimDrivenHelp": {
         "message": "Set by a ServoTrim adjustment (Adjustments tab), so it can't be edited here. Shows the trim in use: saved $1 µs (Stepped, Auto Trim) plus live $2 µs (Mapped, not saved). Clear trims sets the saved part to 0."
@@ -4072,19 +4066,28 @@
         "message": "Scale neg"
     },
     "servoScaleNegHelp": {
-        "message": "Scaling factor on the negative side. Typically 500µs for normal (1520µs) servos, and 250µs for narrow band (760µs) servos. Altering this setting from the default is used for correcting any nonlinearity between the negative and positive throws."
+        "message": "Scaling factor on the negative side, typically 500µs. Altering this setting from the default is used for correcting any nonlinearity between the negative and positive throws."
     },
     "servoScalePos": {
         "message": "Scale pos"
     },
     "servoScalePosHelp": {
-        "message": "Scaling factor on the positive side. Typically 500µs for normal (1520µs) servos, and 250µs for narrow band (760µs) servos. Altering this setting from the default is used for correcting any nonlinearity between the negative and positive throws."
+        "message": "Scaling factor on the positive side, typically 500µs. Altering this setting from the default is used for correcting any nonlinearity between the negative and positive throws."
     },
-    "servoRate": {
-        "message": "Rate [Hz]"
+    "servoPwmRate": {
+        "message": "PWM update rate"
     },
-    "servoRateHelp": {
-        "message": "PWM update rate in Hz. For analog servos, set it to 50Hz, as higher values can cause damage. For digital servos, values from 100Hz to 560Hz are typical. Please check the servo data sheet. Note: Select Save and reboot to actually change the update rate, as the rate is initialised at boot time. Servos that share a hardware timer always run at the same rate."
+    "servoPwmRateHelp": {
+        "message": "How often every PWM servo output is updated. Standard suits any servo. High speed responds faster but is for digital servos only: it can damage an analog servo. Check the servo data sheet. Takes effect after Save and reboot."
+    },
+    "servoPwmRateStandard": {
+        "message": "Standard (50 Hz)"
+    },
+    "servoPwmRateHighSpeed": {
+        "message": "High speed (333 Hz)"
+    },
+    "servoPwmRateCustom": {
+        "message": "$1 Hz"
     },
     "servoSource": {
         "message": "Source"
@@ -4111,25 +4114,16 @@
         "message": "Enable <i>Geometry Correction</i> for correcting the rotational geometry at the servo movement extremes. Do not use with linear servos."
     },
     "servoSignal": {
-        "message": "PWM Signal"
+        "message": "Signal"
     },
     "servoCurveActive": {
         "message": "Balance curve active - edit on the Curves tab"
     },
-    "servoCurveActiveCloned": {
-        "message": "Cloned from PWM $1's balance curve - edit on the Curves tab"
-    },
     "servoCurveEdit": {
         "message": "Edit balance curve on the Curves tab"
     },
-    "servoSharedTimerNote": {
-        "message": "Servos $1 share a hardware timer, so they run at one <i>Rate</i>. Changing it on one changes it on all of them."
-    },
-    "servoRunRateNote": {
-        "message": "<span class=\"message-negative\">Servo $1</span> runs at $2 Hz, not the $3 Hz set. Servos on one timer run at the lowest <i>Rate</i> among them, and long pulses (<i>Center</i> + <i>Max</i>) lower the rate further."
-    },
     "servoRateRebootNote": {
-        "message": "<span class=\"message-negative\">Warning:</span> Changes to the <i>Servo Rate</i> parameter require System Reboot before taking affect!"
+        "message": "<span class=\"message-negative\">Warning:</span> A change to the <i>PWM update rate</i> takes effect after a reboot."
     },
     "servoTravelLimitedMaxWarning": {
         "message": "<span class=\"message-negative\">Servo $1:</span> at <i>Center</i> $2, <i>Max</i> can only reach $3, because the output can't go above $4 µs. Move the center closer to the middle to use more."
@@ -4146,9 +4140,6 @@
     "servoTravelClips": {
         "message": "Reaches its Min or Max before full stick"
     },
-    "servoTravelCloned": {
-        "message": "Copies PWM servo $1, held to the bus range of 1000-2000 µs. This servo's own settings aren't used while it copies."
-    },
     "servoTravelCurveIncluded": {
         "message": "Includes this servo's balance curve."
     },
@@ -4161,29 +4152,14 @@
     "servoTravelLimitedHelp": {
         "message": "At center $1 this can only reach $2: the output can't go past $3 µs."
     },
-    "servoLimitsTooWideWarning": {
-        "message": "<span class=\"message-negative\">Servo $1:</span> a <i>Center</i> of $2 makes this a $3 µs servo, but <i>Min</i>/<i>Max</i> drive it from $4 to $5 µs. A $3 µs servo only covers about $6–$7 µs, so it can hit its end stops, stall and overheat. Set <i>Min</i>/<i>Max</i> to about -$8/$8."
-    },
-    "servoLimitsTooNarrowWarning": {
-        "message": "<span class=\"message-negative\">Servo $1:</span> a <i>Center</i> of $2 makes this a $3 µs servo, but <i>Min</i>/<i>Max</i> of $4/$5 leave it little travel. Set them to about -$6/$6."
-    },
-    "servoScaleUnusualWarning": {
-        "message": "<span class=\"message-negative\">Servo $1:</span> a <i>Center</i> of $2 makes this a $3 µs servo, but <i>Scale</i> is $4/$5. <i>Scale</i> sets how far the servo moves at full stick, and a 760 µs servo needs about half the <i>Scale</i> of a 1520 µs one. Set <i>Scale neg</i>/<i>pos</i> to about $6."
-    },
-    "servoUnusualRatesWarning": {
-        "message": "<span class=\"message-negative\">Warning:</span> The servo <i>Rates</i> are set to unusual values. Please check!"
-    },
     "servoUnusualGeometryCorrection": {
         "message": "<span class=\"message-negative\">Warning:</span> The <i>Geometry correction</i> is not equal for all servos. Please check!"
     },
     "servoOverride": {
         "message": "Servo Override"
     },
-    "servoOverridePwm": {
-        "message": "PWM Servo Override"
-    },
-    "servoOverrideBus": {
-        "message": "Bus Servo Override"
+    "servoOverrideServos": {
+        "message": "Servo Override"
     },
     "servoOverrideHelp": {
         "message": "Select the servo to be controlled and then move the slider to move the servo arm to the commanded angle."
@@ -4193,12 +4169,6 @@
     },
     "servoEnableOverrideText": {
         "message": " <i>Servo override</i> forces the servos to a arbitrary positions for setup purposes. The override values are not saved, and will be reset after a reboot."
-    },
-    "servoBusCloneLabel": {
-        "message": "<strong>Clone PWM outputs to bus servos</strong>"
-    },
-    "servoBusCloneText": {
-        "message": "Bus servo 1 copies PWM servo 1, bus servo 2 copies PWM servo 2, and so on. Turn off to give bus servos their own mixer rules."
     },
     "servoFbusOutChannels": {
         "message": "F.Bus output channels"
@@ -5209,7 +5179,7 @@
         "message": "SRXL2 Motor 2 Channel"
     },
     "motorsSrxl2Motor2ChannelHelp": {
-        "message": "For dual-motor Smart ESCs (e.g. Spektrum SPMXAE1020): the SRXL2 channel that carries motor 2. Motor 1 is always channel 0. With a channel set the motor count becomes 2 and the mixer's second motor output drives it. Leave Off for a single motor."
+        "message": "For dual-motor Smart ESCs (e.g. Spektrum SPMXAE1020): the SRXL2 channel that carries motor 2. Motor 1 is always channel 1. With a channel set the motor count becomes 2 and the mixer's second motor output drives it. Leave Off for a single motor."
     },
     "motorsSrxl2Motor2ChannelOff": {
         "message": "Off"
@@ -7530,6 +7500,10 @@
     "failsafeGpsRescueNavNote": {
         "message": "GPS Rescue flies home and orbits using the aircraft's GPS Navigation settings, including Nav Throttle, on the GPS Navigation tab. The throttle value below is used only while landing."
     },
+    "gpsNavProviderUnsupportedNote": {
+        "message": "GPS navigation (Loiter, RTH and GPS Rescue) needs a u-blox GPS. With the {{provider}} GPS provider these modes will not engage; the GPS is used for position display and telemetry only.",
+        "description": "Warning on the GPS and GPS Navigation tabs when the GPS provider is NMEA, FBUS or CRSF"
+    },
     "gpsNavSectionTitle": {
         "message": "GPS Navigation (RTH / Loiter)"
     },
@@ -9295,7 +9269,7 @@
         "message": "The model is armed. The wizard can only move the surfaces while it is disarmed."
     },
     "setupWizardNoServos": {
-        "message": "No PWM servos found. Check that the board has servo outputs."
+        "message": "No servos found. Check that the board has servo outputs, or that an SBUS or F.Bus output is set up."
     },
     "setupWizardServosPastCount": {
         "message": "The mixer uses servo outputs $1, but this flight controller only has $2. Those surfaces won't move, and the wizard can't set them up. Assign more servo outputs on the Remap FC tab, or move those surfaces to servo outputs the board has."
@@ -9394,7 +9368,7 @@
         "message": "None yet. Choose a model type."
     },
     "setupWizardAirframeCustomNote": {
-        "message": "The wizard sets up PWM servos 1–8 driven by roll, pitch, yaw and the flap channel. Set up bus servos on the Servos tab."
+        "message": "The wizard sets up the servos driven by roll, pitch, yaw and the flap channel."
     },
     "setupWizardServoTypeIntro": {
         "message": "What kind of servos drive the control surfaces?"
@@ -9411,14 +9385,8 @@
     "setupWizardServoTypeHelp_digital": {
         "message": "333 Hz. Check that your servos support it."
     },
-    "setupWizardServoType_narrow": {
-        "message": "Narrow-band (760 µs)"
-    },
-    "setupWizardServoTypeHelp_narrow": {
-        "message": "560 Hz. Only for servos made for a 760 µs center."
-    },
     "setupWizardServoTypeAllSurfaces": {
-        "message": "Applies to every control-surface servo. Switching between normal and narrow-band also resets that servo's center, limits and scale."
+        "message": "Applies to every servo on a PWM output."
     },
     "setupWizardMotorIntro": {
         "message": "Choose how the flight controller talks to the ESC, then check the motor runs. ESC telemetry is the next step; throttle range and other settings are on the Motors tab."

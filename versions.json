@@ -10,9 +10,14 @@
       "type": "line",
       "name": "1.0",
       "path": "./v1.0/",
-      "tag": "0.0.41",
-      "date": "2026-11-03T13:43:33Z",
+      "tag": "0.0.42",
+      "date": "2026-11-14T08:18:07Z",
       "notes": "Snapshots of 1.0 until it is released, then its releases. Install it as an app to keep it next to other versions."
+    },
+    {
+      "type": "snapshot",
+      "name": "0.0.42",
+      "path": "./snapshot/0.0.42/"
     },
     {
       "type": "snapshot",
