@@ -1,4 +1,8 @@
 {
   "branch": "feature/remote-handover",
-  "date": "2026-11-14T18:11:29Z"
+  "date": "2026-11-14T18:11:29Z",
+  "number": 234,
+  "title": "Remote support: hand control back and forth, call the pilot's attention",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/234",
+  "draft": false
 }
