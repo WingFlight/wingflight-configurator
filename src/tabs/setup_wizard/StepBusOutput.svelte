@@ -69,8 +69,13 @@
     }
   });
 
-  function changeConnection() {
+  // Which card the last change needing a reboot was made in, so the Save
+  // and Reboot button shows up next to it.
+  let rebootAt = $state("port");
+
+  function changeConnection(at = "port") {
     rebootNeeded = true;
+    rebootAt = at;
     wiz.markChanged();
   }
 
@@ -167,7 +172,7 @@
 
   function useOtherPin() {
     FC.FBUS_MASTER_CONFIG.pinSwap = !FC.FBUS_MASTER_CONFIG.pinSwap;
-    changeConnection();
+    changeConnection("pin");
   }
 </script>
 
@@ -266,7 +271,7 @@
       </div>
     {/if}
 
-    {#if rebootNeeded}
+    {#if rebootNeeded && rebootAt === "port"}
       <div class="actions">
         <span>{$i18n.t("setupWizardRebootNeeded")}</span>
         <button class="btn primary" onclick={wiz.saveAndReboot}>
@@ -308,7 +313,16 @@
               {$i18n.t("setupWizardBusOtherPin")}
             </button>
           </div>
-          <p class="muted">{$i18n.t("setupWizardBusOtherPinHelp")}</p>
+          {#if rebootNeeded && rebootAt === "pin"}
+            <div class="actions">
+              <span>{$i18n.t("setupWizardRebootNeeded")}</span>
+              <button class="btn primary" onclick={wiz.saveAndReboot}>
+                {$i18n.t("buttonSaveReboot")}
+              </button>
+            </div>
+          {:else}
+            <p class="muted">{$i18n.t("setupWizardBusOtherPinHelp")}</p>
+          {/if}
         {:else}
           <p class="muted">{$i18n.t("setupWizardBusPinFixed")}</p>
         {/if}
