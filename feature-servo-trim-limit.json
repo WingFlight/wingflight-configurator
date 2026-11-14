@@ -1,0 +1,8 @@
+{
+  "branch": "feature/servo-trim-limit",
+  "date": "2026-11-14T07:37:23Z",
+  "number": 231,
+  "title": "Use the applied servo trim in the wizard's travel check",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/231",
+  "draft": false
+}
