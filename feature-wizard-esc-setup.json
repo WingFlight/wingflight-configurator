@@ -1,6 +1,6 @@
 {
   "branch": "feature/wizard-esc-setup",
-  "date": "2026-11-15T07:57:34Z",
+  "date": "2026-11-15T08:13:32Z",
   "number": 236,
   "title": "Setup Wizard: PWM ESC calibration, bus wiring detection, radio mix guides",
   "url": "https://github.com/WingFlight/wingflight-configurator/pull/236",
