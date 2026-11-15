@@ -55,6 +55,10 @@
 
   function setProtocol(index) {
     if (index < 0 || index === FC.MOTOR_CONFIG.motor_pwm_protocol) return;
+    // A protocol change hides the calibration and spin controls, so nothing
+    // may be left running behind them.
+    if (calibration === "full") endCalibration(false);
+    stopOutput();
     FC.MOTOR_CONFIG.motor_pwm_protocol = index;
     // DShot150 has no bidirectional RPM telemetry, and an ESC that doesn't
     // answer bidirectional requests may not arm, so turn it off. It goes out
@@ -115,6 +119,9 @@
 
   function startSpin(motor) {
     if (!canRun || output !== null) return;
+    // A spin needs the battery in, so "the battery is unplugged" no longer
+    // holds: calibration asks again.
+    batteryOut = false;
     hold(motor, [motor], testThrottle * 10);
   }
 
@@ -279,7 +286,7 @@
                 <input
                   type="checkbox"
                   bind:checked={batteryOut}
-                  disabled={!canRun}
+                  disabled={!canRun || output !== null}
                 />
                 {$i18n.t("setupWizardMotorCalBatteryOut")}
               </label>

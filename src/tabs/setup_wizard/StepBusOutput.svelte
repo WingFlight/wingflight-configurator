@@ -72,6 +72,11 @@
     function send(code) {
       return MSP.promise(code, mspHelper.crunch(code));
     }
+    // A trial still running has the port on a wiring it is only trying:
+    // end it, which puts the old wiring back, before anything is saved.
+    if (detecting) {
+      await cancelTrial();
+    }
     if (rebootNeeded) {
       await send(MSPCodes.MSP_SET_SERIAL_CONFIG);
     }
@@ -210,6 +215,17 @@
   let wiringFound = $state(false);
   let trialTimer;
   let trialStartedAt = 0;
+  // Counts the runs, so a reply that arrives after its run was cancelled is
+  // ignored.
+  let trialRun = 0;
+
+  async function cancelTrial() {
+    trialRun += 1;
+    clearTimeout(trialTimer);
+    detecting = false;
+    trialResult = null;
+    await sendTrial(BUS_TRIAL_ACTION.STOP);
+  }
 
   // The reply, or null if none came within a second (MSP.promise() has no
   // timeout of its own on a real connection).
@@ -243,25 +259,46 @@
     trialResult = null;
     trial = null;
     trialStartedAt = Date.now();
+    trialRun += 1;
+    const run = trialRun;
+
+    // The run is given up: the flight controller puts the old wiring back.
+    function giveUp() {
+      sendTrial(BUS_TRIAL_ACTION.STOP);
+      trialResult = "failed";
+      detecting = false;
+    }
 
     async function step(action) {
-      if (stopped) return;
+      if (stopped || run !== trialRun) return;
       const status = readBusTrial(await sendTrial(action));
-      if (stopped) return;
-      if (!status) {
+      if (stopped || run !== trialRun) return;
+      if (!status && action === BUS_TRIAL_ACTION.START) {
         // No payload: firmware without the trial. The pin can still be
         // switched by hand.
-        if (action === BUS_TRIAL_ACTION.START) trialSupported = false;
+        trialSupported = false;
         detecting = false;
+        return;
+      }
+      if (!status) {
+        // A poll went unanswered. The trial may still be running, or have
+        // found the wiring, so ask again until the deadline and stop it
+        // then: a run is never left on the flight controller unattended.
+        if (Date.now() - trialStartedAt > TRIAL_TIMEOUT_MS) {
+          giveUp();
+          return;
+        }
+        trialTimer = setTimeout(
+          () => step(BUS_TRIAL_ACTION.POLL),
+          TRIAL_POLL_MS,
+        );
         return;
       }
       trialSupported = true;
       trial = status;
       if (!busTrialEnded(status.state)) {
         if (Date.now() - trialStartedAt > TRIAL_TIMEOUT_MS) {
-          sendTrial(BUS_TRIAL_ACTION.STOP);
-          trialResult = "failed";
-          detecting = false;
+          giveUp();
           return;
         }
         trialTimer = setTimeout(
@@ -309,7 +346,7 @@
         role="radio"
         aria-checked={!busPort}
         class={["port", !busPort && "selected"]}
-        disabled={wiz.saving}
+        disabled={wiz.saving || detecting}
         onclick={chooseNone}
       >
         <span class="port-name">
@@ -328,7 +365,7 @@
           role="radio"
           aria-checked={isBus}
           class={["port", isBus && "selected"]}
-          disabled={wiz.saving || (!isBus && !free)}
+          disabled={wiz.saving || detecting || (!isBus && !free)}
           onclick={() => choosePort(port)}
         >
           <span class="port-name">
@@ -361,7 +398,7 @@
       <div class="protocol">
         <select
           value={protocol}
-          disabled={wiz.saving}
+          disabled={wiz.saving || detecting}
           onchange={(e) => chooseProtocol(e.target.value)}
         >
           <option value="fbus">F.Bus</option>
