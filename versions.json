@@ -309,6 +309,17 @@
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
       "date": "2026-11-02T22:07:15Z"
+    },
+    {
+      "type": "branch",
+      "name": "feature-wizard-esc-setup",
+      "path": "./feature-wizard-esc-setup/",
+      "branch": "feature/wizard-esc-setup",
+      "date": "2026-11-15T07:57:34Z",
+      "number": 236,
+      "title": "Setup Wizard: PWM ESC calibration, bus wiring detection, radio mix guides",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/236",
+      "draft": false
     }
   ]
 }
