@@ -312,6 +312,17 @@
     },
     {
       "type": "branch",
+      "name": "feature-wizard-esc-serial",
+      "path": "./feature-wizard-esc-serial/",
+      "branch": "feature/wizard-esc-serial",
+      "date": "2026-11-15T08:43:04Z",
+      "number": 237,
+      "title": "Setup Wizard: ask for the serial port an SRXL2 ESC is plugged into",
+      "url": "https://github.com/WingFlight/wingflight-configurator/pull/237",
+      "draft": false
+    },
+    {
+      "type": "branch",
       "name": "feature-wizard-esc-setup",
       "path": "./feature-wizard-esc-setup/",
       "branch": "feature/wizard-esc-setup",
