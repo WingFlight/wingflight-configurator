@@ -257,6 +257,7 @@ export const MSPCodes = {
     MSP2_WING_SERIAL_STATUS:          0x5F34,
     MSP2_WING_SRXL2_ESC_CONFIG:       0x5F35,
     MSP2_WING_SET_SRXL2_ESC_CONFIG:   0x5F36,
+    MSP2_WING_FBUS_MASTER_TRIAL:      0x5F37,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,

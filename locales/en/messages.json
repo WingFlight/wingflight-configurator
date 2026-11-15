@@ -9262,6 +9262,27 @@
     "setupWizardBusPinFixed": {
         "message": "This firmware can't switch the pin from here. F.Bus uses the TX pin unless fbus_master_pinswap is set in the CLI."
     },
+    "setupWizardBusDetect": {
+        "message": "Detect wiring"
+    },
+    "setupWizardBusDetectHelp": {
+        "message": "If nothing answers, Detect wiring tries each pin of the port and both signal polarities until a device answers. It takes a few seconds and needs no restart."
+    },
+    "setupWizardBusDetecting": {
+        "message": "Trying wiring $1 of $2…"
+    },
+    "setupWizardBusDetect_found": {
+        "message": "Found it. The bus answers on this wiring, which is now in use. Save to keep it."
+    },
+    "setupWizardBusDetect_same": {
+        "message": "The bus answers on the wiring already set."
+    },
+    "setupWizardBusDetect_failed": {
+        "message": "Nothing answered on any wiring. Check the bus has power and is plugged into this port."
+    },
+    "setupWizardBusDetect_rejected": {
+        "message": "The flight controller can't test the wiring now: the model is armed, or this board switches F.Bus through its output mux."
+    },
     "setupWizardBusOpenServos": {
         "message": "Open the Servos tab"
     },
@@ -9464,7 +9485,7 @@
         "message": "Standard PWM"
     },
     "setupWizardMotorHelp_pwm": {
-        "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
+        "message": "Works with any ESC. The motor check below teaches the ESC the throttle range."
     },
     "setupWizardMotor_dshot150": {
         "message": "DShot150"
@@ -9507,6 +9528,39 @@
     },
     "setupWizardMotorTestCheck": {
         "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
+    },
+    "setupWizardMotorCalTitle": {
+        "message": "Calibrate the ESC"
+    },
+    "setupWizardMotorCalBatteryOut": {
+        "message": "The battery is unplugged"
+    },
+    "setupWizardMotorCalFull": {
+        "message": "Hold full throttle"
+    },
+    "setupWizardMotorCalRamping": {
+        "message": "Going to full throttle: $1 s"
+    },
+    "setupWizardMotorCalPlugIn": {
+        "message": "Plug the battery in now. After the ESC's beeps, press Low throttle."
+    },
+    "setupWizardMotorCalLow": {
+        "message": "Low throttle"
+    },
+    "setupWizardMotorCalCancel": {
+        "message": "Cancel"
+    },
+    "setupWizardMotorCalHelp": {
+        "message": "A PWM ESC has to learn where full and low throttle are. Start with the flight battery unplugged from the ESC: full throttle is held while you plug it in, the ESC beeps to confirm, then Low throttle finishes it. Skip this if the ESC is already calibrated to this flight controller."
+    },
+    "setupWizardMotorCalDoneHelp": {
+        "message": "The throttle goes to low over a few seconds and the ESC beeps again. If it did not confirm, unplug the battery and try again."
+    },
+    "setupWizardMotorHoldMotor": {
+        "message": "Hold to spin motor $1"
+    },
+    "setupWizardMotorTestCheckTwin": {
+        "message": "Each motor runs only while you hold its button, and stops within a second if the connection drops. Check which motor is which, that each starts smoothly, and that it turns the right way for its propeller."
     },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"

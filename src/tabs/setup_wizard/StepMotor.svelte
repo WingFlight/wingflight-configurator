@@ -45,7 +45,6 @@
 
   let propOff = $state(false);
   let testThrottle = $state(10);
-  let spinning = $state(false);
   let keepalive;
 
   let motorCount = $derived(FC.CONFIG.motorCount ?? 0);
@@ -77,29 +76,91 @@
 
   // The FC drops a motor override 1 s after the last one it received
   // (MOTOR_OVERRIDE_TIMEOUT in flight/motors.h) and ignores it while armed,
-  // so the motor runs only while the button is held and the link is up.
-  function setAll(value) {
-    for (let i = 0; i < motorCount; i++) {
+  // so a motor runs only while this page keeps sending and the link is up.
+  // It also ramps an override at a quarter of the range per second
+  // (MOTOR_OVERRIDE_RATE), so full throttle takes four seconds to reach.
+
+  // What is driving the motors now: null, "calibrate" or a motor index. One
+  // holder at a time.
+  let output = $state(null);
+
+  function send(motors, value) {
+    for (const i of motors) {
       FC.MOTOR_OVERRIDE[i] = value;
       mspHelper.sendMotorOverride(i);
     }
   }
 
-  function startSpin() {
-    if (!propOff || spinning || wiz.armed) return;
-    spinning = true;
-    setAll(testThrottle * 10);
-    keepalive = setInterval(() => setAll(testThrottle * 10), KEEPALIVE_MS);
+  function allMotors() {
+    return Array.from({ length: motorCount }, (_, i) => i);
   }
 
-  function stopSpin() {
-    if (!spinning) return;
-    spinning = false;
+  function hold(holder, motors, value) {
     clearInterval(keepalive);
-    setAll(0);
+    output = holder;
+    send(motors, value);
+    keepalive = setInterval(() => send(motors, value), KEEPALIVE_MS);
   }
 
-  onDestroy(stopSpin);
+  function stopOutput() {
+    if (output === null) return;
+    output = null;
+    clearInterval(keepalive);
+    send(allMotors(), 0);
+  }
+
+  let canRun = $derived(propOff && !wiz.armed);
+
+  //// Spin, one motor at a time, so a twin shows which motor is which.
+
+  function startSpin(motor) {
+    if (!canRun || output !== null) return;
+    hold(motor, [motor], testThrottle * 10);
+  }
+
+  function stopSpin(motor) {
+    if (output === motor) stopOutput();
+  }
+
+  //// Calibrate: a PWM ESC learns the throttle range. Full throttle is held
+  //// while the battery is plugged in, then low throttle. DShot has no range
+  //// to learn.
+
+  const FULL_THROTTLE = 1000; // MOTOR_OVERRIDE_MAX
+  // The override ramp from zero to full, and a margin.
+  const RAMP_SECONDS = 5;
+
+  let isPwm = $derived(current === "PWM");
+  // idle -> full (held at 100 %) -> done
+  let calibration = $state("idle");
+  let batteryOut = $state(false);
+  let fullSeconds = $state(0);
+  let fullTimer;
+
+  function startCalibration() {
+    if (!canRun || !batteryOut || output !== null) return;
+    calibration = "full";
+    fullSeconds = 0;
+    hold("calibrate", allMotors(), FULL_THROTTLE);
+    fullTimer = setInterval(() => (fullSeconds += 1), 1000);
+  }
+
+  function endCalibration(done) {
+    clearInterval(fullTimer);
+    stopOutput();
+    calibration = done ? "done" : "idle";
+    batteryOut = false;
+  }
+
+  // An armed model or a cleared prop-off tick stops it.
+  $effect(() => {
+    if (calibration === "full" && !canRun) endCalibration(false);
+  });
+
+  onDestroy(() => {
+    clearInterval(fullTimer);
+    stopOutput();
+  });
 </script>
 
 <div class="intro">
@@ -157,16 +218,66 @@
     <strong>{$i18n.t("setupWizardMotorTestTitle")}</strong>
     <div class="test-body">
       <div class="art">
-        <MotorArt propOff {spinning} />
+        <MotorArt propOff spinning={typeof output === "number"} />
       </div>
-      <!-- In order: prop off, pick a throttle, hold to spin. -->
+      <!-- In order: prop off, calibrate a PWM ESC, pick a throttle, hold
+           to spin. -->
       <ol class="steps">
         <li>
           <label class="prop">
-            <input type="checkbox" bind:checked={propOff} />
+            <input
+              type="checkbox"
+              bind:checked={propOff}
+              disabled={output !== null}
+            />
             {$i18n.t("setupWizardMotorPropOff")}
           </label>
         </li>
+        {#if isPwm}
+          <li class="calibrate">
+            <span class="step-label">
+              {$i18n.t("setupWizardMotorCalTitle")}
+              {#if calibration === "done"}
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+              {/if}
+            </span>
+            {#if calibration === "full"}
+              <span class="cal-text">
+                {fullSeconds < RAMP_SECONDS
+                  ? $i18n.t("setupWizardMotorCalRamping", {
+                      1: RAMP_SECONDS - fullSeconds,
+                    })
+                  : $i18n.t("setupWizardMotorCalPlugIn")}
+              </span>
+              <button
+                class="btn primary"
+                disabled={fullSeconds < RAMP_SECONDS}
+                onclick={() => endCalibration(true)}
+              >
+                {$i18n.t("setupWizardMotorCalLow")}
+              </button>
+              <button class="btn" onclick={() => endCalibration(false)}>
+                {$i18n.t("setupWizardMotorCalCancel")}
+              </button>
+            {:else}
+              <label class="prop">
+                <input
+                  type="checkbox"
+                  bind:checked={batteryOut}
+                  disabled={!canRun}
+                />
+                {$i18n.t("setupWizardMotorCalBatteryOut")}
+              </label>
+              <button
+                class="btn"
+                disabled={!canRun || !batteryOut || output !== null}
+                onclick={startCalibration}
+              >
+                {$i18n.t("setupWizardMotorCalFull")}
+              </button>
+            {/if}
+          </li>
+        {/if}
         <li>
           <span class="step-label"
             >{$i18n.t("setupWizardMotorTestThrottle")}</span
@@ -179,7 +290,7 @@
                   name="test-throttle"
                   value={t}
                   bind:group={testThrottle}
-                  disabled={!propOff || spinning}
+                  disabled={!canRun || output !== null}
                 />
                 {t}%
               </label>
@@ -187,26 +298,41 @@
           </span>
         </li>
         <li>
-          <button
-            class={["btn", "spin", spinning && "primary"]}
-            disabled={!propOff || wiz.armed}
-            onpointerdown={startSpin}
-            onpointerup={stopSpin}
-            onpointerleave={stopSpin}
-            onpointercancel={stopSpin}
-            onkeydown={(e) =>
-              (e.key === " " || e.key === "Enter") && startSpin()}
-            onkeyup={stopSpin}
-            onblur={stopSpin}
-          >
-            {spinning
-              ? $i18n.t("setupWizardMotorSpinning")
-              : $i18n.t("setupWizardMotorHoldToSpin")}
-          </button>
+          {#each allMotors() as motor (motor)}
+            <button
+              class={["btn", "spin", output === motor && "primary"]}
+              disabled={!canRun || (output !== null && output !== motor)}
+              onpointerdown={() => startSpin(motor)}
+              onpointerup={() => stopSpin(motor)}
+              onpointerleave={() => stopSpin(motor)}
+              onpointercancel={() => stopSpin(motor)}
+              onkeydown={(e) =>
+                (e.key === " " || e.key === "Enter") && startSpin(motor)}
+              onkeyup={() => stopSpin(motor)}
+              onblur={() => stopSpin(motor)}
+            >
+              {output === motor
+                ? $i18n.t("setupWizardMotorSpinning")
+                : motorCount > 1
+                  ? $i18n.t("setupWizardMotorHoldMotor", { 1: motor + 1 })
+                  : $i18n.t("setupWizardMotorHoldToSpin")}
+            </button>
+          {/each}
         </li>
       </ol>
     </div>
-    <p class="muted">{$i18n.t("setupWizardMotorTestCheck")}</p>
+    {#if isPwm}
+      <p class="muted">
+        {calibration === "done"
+          ? $i18n.t("setupWizardMotorCalDoneHelp")
+          : $i18n.t("setupWizardMotorCalHelp")}
+      </p>
+    {/if}
+    <p class="muted">
+      {motorCount > 1
+        ? $i18n.t("setupWizardMotorTestCheckTwin")
+        : $i18n.t("setupWizardMotorTestCheck")}
+    </p>
   </section>
 {/if}
 
@@ -393,6 +519,14 @@
 
   .step-label {
     font-weight: 600;
+
+    i {
+      color: var(--color-status-good);
+    }
+  }
+
+  .cal-text {
+    font-weight: 600;
   }
 
   // Throttle as a segmented control; the radios stay for the keyboard.
@@ -435,7 +569,7 @@
   }
 
   .spin {
-    min-width: 200px;
+    min-width: 180px;
     touch-action: none;
     user-select: none;
   }

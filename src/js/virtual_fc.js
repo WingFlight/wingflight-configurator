@@ -391,6 +391,44 @@ const VIRTUAL_FBUS_SENSORS = [
 
 let virtualFbusClearedAt = Date.now();
 
+// MSP2_WING_FBUS_MASTER_TRIAL (firmware drivers/fbus_master.c): state, combo
+// index, combo count, pin swap, inverted, u16 valid frames, port open. The
+// virtual bus answers on the wiring already set, once it has been tried for
+// a second. States: 0 idle, 1 running, 2 success, 4 rejected.
+const VIRTUAL_TRIAL_MS = 1000;
+let virtualTrialStartedAt = null;
+let virtualTrialState = 0;
+
+function encodeFbusMasterTrial(requestData) {
+  const action = requestData?.[0] ?? 0;
+  const hasPort = FC.SERIAL_CONFIG.ports.some(
+    (port) => (port?.functionMask ?? 0) & (1 << 19),
+  );
+  if (action === 1) {
+    virtualTrialStartedAt = hasPort ? Date.now() : null;
+    virtualTrialState = hasPort ? 1 : 4;
+  } else if (action === 2) {
+    virtualTrialStartedAt = null;
+    virtualTrialState = 0;
+  }
+  const elapsed =
+    virtualTrialStartedAt === null ? 0 : Date.now() - virtualTrialStartedAt;
+  if (virtualTrialState === 1 && elapsed >= VIRTUAL_TRIAL_MS) {
+    virtualTrialState = 2;
+  }
+  const frames = virtualTrialState === 2 ? 3 : 0;
+  return Uint8Array.from([
+    virtualTrialState,
+    0,
+    4,
+    FC.FBUS_MASTER_CONFIG.pinSwap ? 1 : 0,
+    FC.FBUS_MASTER_CONFIG.inverted ? 1 : 0,
+    frames & 0xff,
+    frames >> 8,
+    hasPort ? 1 : 0,
+  ]);
+}
+
 // MSP2_WING_FBUS_SENSORS: count, then per sensor physical ID, source,
 // forwarded, packet count, name and app IDs.
 function encodeFbusSensors() {
@@ -667,6 +705,8 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeFbusSensorsStatus());
     case MSPCodes.MSP2_WING_SERIAL_STATUS:
       return decodeVirtualReply(code, encodeSerialStatus(requestData));
+    case MSPCodes.MSP2_WING_FBUS_MASTER_TRIAL:
+      return encodeFbusMasterTrial(requestData);
     // The sensors keep answering, so they show again at once with fresh counts
     case MSPCodes.MSP2_WING_CLEAR_FBUS_SENSORS:
       virtualFbusClearedAt = Date.now();
