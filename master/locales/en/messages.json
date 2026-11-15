@@ -9163,6 +9163,69 @@
     "setupWizardGainTitle": {
         "message": "Gain"
     },
+    "setupWizardRadioMixTitle_knob": {
+        "message": "Set the knob up on the radio first"
+    },
+    "setupWizardRadioMixText_knob": {
+        "message": "A knob does nothing until a mix on the radio puts it on a channel. Detect watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_knob": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_knob": {
+        "message": "Name it GAIN. Set <b>Source</b> to the knob or slider (S1 here, under Analogs) and <b>Output</b> to a spare channel (CH9 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_knob": {
+        "message": "The Mixes page then lists GAIN with its channel and source. For one knob per axis, add a mix like this for each knob, each on its own spare channel."
+    },
+    "setupWizardRadioMixStep4_knob": {
+        "message": "Click Detect below and turn the knob from one end to the other."
+    },
+    "setupWizardRadioMixImage1_knob": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_knob": {
+        "message": "Ethos Free mix named GAIN: Source S1, Output CH9"
+    },
+    "setupWizardRadioMixImage3_knob": {
+        "message": "Ethos Mixes page listing GAIN on channel 9 from S1"
+    },
+    "setupWizardRadioMixTitle_switch": {
+        "message": "Put each switch on a channel on the radio first"
+    },
+    "setupWizardRadioMixText_switch": {
+        "message": "A switch does nothing until a mix on the radio puts it on a channel. Assign watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_switch": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_switch": {
+        "message": "Name it after the mode (ARM here). Set <b>Source</b> to the switch (SF here, under Switches) and <b>Output</b> to a spare channel (CH10 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_switch": {
+        "message": "The Mixes page then lists it with its channel and source. Add a mix like this for each switch you want to use, each on its own spare channel. One 3-position switch can carry two modes."
+    },
+    "setupWizardRadioMixStep4_switch": {
+        "message": "Press Assign below and flick the switch to its on position."
+    },
+    "setupWizardRadioMixImage1_switch": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_switch": {
+        "message": "Ethos Free mix named ARM: Source SF, Output CH10"
+    },
+    "setupWizardRadioMixImage3_switch": {
+        "message": "Ethos Mixes page listing ARM on channel 10 from SF"
+    },
+    "setupWizardRadioMixShow": {
+        "message": "Show the steps on the radio"
+    },
+    "setupWizardRadioMixHide": {
+        "message": "Hide the steps"
+    },
+    "setupWizardRadioMixOtherRadios": {
+        "message": "On other radios (EdgeTX, OpenTX, Jeti and so on) do the same: one mix per control, with the control as its source and a spare channel as its output."
+    },
     "setupWizardGainText": {
         "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Fully down turns the stabilizer off, center is 75% and fully up is 150%."
     },
@@ -9261,6 +9324,27 @@
     },
     "setupWizardBusPinFixed": {
         "message": "This firmware can't switch the pin from here. F.Bus uses the TX pin unless fbus_master_pinswap is set in the CLI."
+    },
+    "setupWizardBusDetect": {
+        "message": "Detect wiring"
+    },
+    "setupWizardBusDetectHelp": {
+        "message": "If nothing answers, Detect wiring tries each pin of the port and both signal polarities until a device answers. It takes a few seconds and needs no restart."
+    },
+    "setupWizardBusDetecting": {
+        "message": "Trying wiring $1 of $2…"
+    },
+    "setupWizardBusDetect_found": {
+        "message": "Found it. The bus answers on this wiring, which is now in use. Save to keep it."
+    },
+    "setupWizardBusDetect_same": {
+        "message": "The bus answers on the wiring already set."
+    },
+    "setupWizardBusDetect_failed": {
+        "message": "Nothing answered on any wiring. Check the bus has power and is plugged into this port."
+    },
+    "setupWizardBusDetect_rejected": {
+        "message": "The flight controller can't test the wiring now: the model is armed, or this board switches F.Bus through its output mux."
     },
     "setupWizardBusOpenServos": {
         "message": "Open the Servos tab"
@@ -9464,7 +9548,7 @@
         "message": "Standard PWM"
     },
     "setupWizardMotorHelp_pwm": {
-        "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
+        "message": "Works with any ESC. Calibrate, below, teaches the ESC the throttle range."
     },
     "setupWizardMotor_dshot150": {
         "message": "DShot150"
@@ -9507,6 +9591,75 @@
     },
     "setupWizardMotorTestCheck": {
         "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
+    },
+    "setupWizardMotorCalTitle": {
+        "message": "Calibrate the ESC"
+    },
+    "setupWizardMotorCalBatteryOut": {
+        "message": "The battery is unplugged"
+    },
+    "setupWizardMotorCalFull": {
+        "message": "Set full throttle"
+    },
+    "setupWizardMotorCalRamping": {
+        "message": "Going to full throttle: $1 s"
+    },
+    "setupWizardMotorCalLow": {
+        "message": "Set zero throttle"
+    },
+    "setupWizardMotorCalCancel": {
+        "message": "Cancel"
+    },
+    "setupWizardMotorHoldMotor": {
+        "message": "Hold to spin motor $1"
+    },
+    "setupWizardMotorTestCheckTwin": {
+        "message": "Each motor runs only while you hold its button, and stops within a second if the connection drops. Check which motor is which, that each starts smoothly, and that it turns the right way for its propeller."
+    },
+    "setupWizardMotorPropHelp": {
+        "message": "Nothing below runs the motor until this is ticked."
+    },
+    "setupWizardMotorCalDone": {
+        "message": "Done"
+    },
+    "setupWizardMotorCalIntro": {
+        "message": "A PWM ESC has to learn where full and zero throttle are. Do this once. Skip it if the ESC is already calibrated to this flight controller."
+    },
+    "setupWizardMotorCalStage1": {
+        "message": "Unplug the battery"
+    },
+    "setupWizardMotorCalStage1Help": {
+        "message": "Start with the flight battery unplugged from the ESC."
+    },
+    "setupWizardMotorCalStage2": {
+        "message": "Set full throttle"
+    },
+    "setupWizardMotorCalStage2Help": {
+        "message": "The throttle output goes to full and stays there."
+    },
+    "setupWizardMotorCalFullSet": {
+        "message": "Full throttle is set."
+    },
+    "setupWizardMotorCalStage3": {
+        "message": "Plug in the battery"
+    },
+    "setupWizardMotorCalStage3Help": {
+        "message": "Wait for the ESC's beeps, usually about two seconds."
+    },
+    "setupWizardMotorCalStage4": {
+        "message": "Set zero throttle"
+    },
+    "setupWizardMotorCalStage4Help": {
+        "message": "The ESC beeps again to confirm."
+    },
+    "setupWizardMotorCalZeroSet": {
+        "message": "Zero throttle is set. If the ESC did not confirm, unplug the battery and calibrate again."
+    },
+    "setupWizardMotorCalCancelHelp": {
+        "message": "Cancel takes the throttle back to zero."
+    },
+    "setupWizardMotorCalAgain": {
+        "message": "Calibrate again"
     },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
