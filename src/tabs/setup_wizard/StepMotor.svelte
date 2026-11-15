@@ -152,6 +152,25 @@
     batteryOut = false;
   }
 
+  // The four stages in order: unplug the battery, set full throttle, plug
+  // the battery in, set zero throttle. Full throttle counts as set once the
+  // output has had time to get there.
+  let ramping = $derived(calibration === "full" && fullSeconds < RAMP_SECONDS);
+  let fullSet = $derived(calibration === "full" && !ramping);
+
+  function stageState(stage) {
+    if (calibration === "done") return "done";
+    if (stage === 1) {
+      return calibration === "full" || batteryOut ? "done" : "current";
+    }
+    if (stage === 2) {
+      if (fullSet) return "done";
+      return calibration === "full" || batteryOut ? "current" : "";
+    }
+    // Plug in the battery, then set zero throttle.
+    return fullSet ? "current" : "";
+  }
+
   // An armed model or a cleared prop-off tick stops it.
   $effect(() => {
     if (calibration === "full" && !canRun) endCalibration(false);
@@ -214,52 +233,48 @@
     </button>
   </div>
 {:else if current !== "DISABLED" && motorCount > 0}
+  <!-- Everything below runs the motor, so the propeller comes off first. -->
   <section class={["test", propOff && "confirmed"]}>
-    <strong>{$i18n.t("setupWizardMotorTestTitle")}</strong>
-    <div class="test-body">
-      <div class="art">
-        <MotorArt propOff spinning={typeof output === "number"} />
-      </div>
-      <!-- In order: prop off, calibrate a PWM ESC, pick a throttle, hold
-           to spin. -->
-      <ol class="steps">
-        <li>
-          <label class="prop">
-            <input
-              type="checkbox"
-              bind:checked={propOff}
-              disabled={output !== null}
-            />
-            {$i18n.t("setupWizardMotorPropOff")}
-          </label>
-        </li>
-        {#if isPwm}
-          <li class="calibrate">
-            <span class="step-label">
-              {$i18n.t("setupWizardMotorCalTitle")}
-              {#if calibration === "done"}
-                <i class="fas fa-check-circle" aria-hidden="true"></i>
-              {/if}
-            </span>
-            {#if calibration === "full"}
-              <span class="cal-text">
-                {fullSeconds < RAMP_SECONDS
-                  ? $i18n.t("setupWizardMotorCalRamping", {
-                      1: RAMP_SECONDS - fullSeconds,
-                    })
-                  : $i18n.t("setupWizardMotorCalPlugIn")}
-              </span>
-              <button
-                class="btn primary"
-                disabled={fullSeconds < RAMP_SECONDS}
-                onclick={() => endCalibration(true)}
-              >
-                {$i18n.t("setupWizardMotorCalLow")}
-              </button>
-              <button class="btn" onclick={() => endCalibration(false)}>
-                {$i18n.t("setupWizardMotorCalCancel")}
-              </button>
-            {:else}
+    <div class="art">
+      <MotorArt propOff spinning={typeof output === "number"} />
+    </div>
+    <div class="safety-text">
+      <label class="prop">
+        <input
+          type="checkbox"
+          bind:checked={propOff}
+          disabled={output !== null}
+        />
+        {$i18n.t("setupWizardMotorPropOff")}
+      </label>
+      <span class="muted">{$i18n.t("setupWizardMotorPropHelp")}</span>
+    </div>
+  </section>
+
+  {#if isPwm}
+    <!-- 1: calibrate. Each stage has its instruction beside it. -->
+    <section class="card">
+      <h3>
+        <span class="num">1</span>{$i18n.t("setupWizardMotorCalTitle")}
+        {#if calibration === "done"}
+          <span class="badge good">
+            <i class="fas fa-check" aria-hidden="true"></i>
+            {$i18n.t("setupWizardMotorCalDone")}
+          </span>
+        {/if}
+      </h3>
+      <p class="muted">{$i18n.t("setupWizardMotorCalIntro")}</p>
+
+      <ol class="stages">
+        <li class={stageState(1)}>
+          <span class="mark"></span>
+          <span class="stage-text">
+            <strong>{$i18n.t("setupWizardMotorCalStage1")}</strong>
+            <span class="muted">{$i18n.t("setupWizardMotorCalStage1Help")}</span
+            >
+          </span>
+          <span class="stage-action">
+            {#if calibration === "idle"}
               <label class="prop">
                 <input
                   type="checkbox"
@@ -268,6 +283,27 @@
                 />
                 {$i18n.t("setupWizardMotorCalBatteryOut")}
               </label>
+            {/if}
+          </span>
+        </li>
+        <li class={stageState(2)}>
+          <span class="mark"></span>
+          <span class="stage-text">
+            <strong>{$i18n.t("setupWizardMotorCalStage2")}</strong>
+            <span class="muted">
+              {#if ramping}
+                {$i18n.t("setupWizardMotorCalRamping", {
+                  1: RAMP_SECONDS - fullSeconds,
+                })}
+              {:else if fullSet}
+                {$i18n.t("setupWizardMotorCalFullSet")}
+              {:else}
+                {$i18n.t("setupWizardMotorCalStage2Help")}
+              {/if}
+            </span>
+          </span>
+          <span class="stage-action">
+            {#if calibration === "idle"}
               <button
                 class="btn"
                 disabled={!canRun || !batteryOut || output !== null}
@@ -276,63 +312,108 @@
                 {$i18n.t("setupWizardMotorCalFull")}
               </button>
             {/if}
-          </li>
-        {/if}
-        <li>
-          <span class="step-label"
-            >{$i18n.t("setupWizardMotorTestThrottle")}</span
-          >
-          <span class="segments">
-            {#each TEST_THROTTLES as t (t)}
-              <label class={["segment", testThrottle === t && "selected"]}>
-                <input
-                  type="radio"
-                  name="test-throttle"
-                  value={t}
-                  bind:group={testThrottle}
-                  disabled={!canRun || output !== null}
-                />
-                {t}%
-              </label>
-            {/each}
           </span>
         </li>
-        <li>
-          {#each allMotors() as motor (motor)}
-            <button
-              class={["btn", "spin", output === motor && "primary"]}
-              disabled={!canRun || (output !== null && output !== motor)}
-              onpointerdown={() => startSpin(motor)}
-              onpointerup={() => stopSpin(motor)}
-              onpointerleave={() => stopSpin(motor)}
-              onpointercancel={() => stopSpin(motor)}
-              onkeydown={(e) =>
-                (e.key === " " || e.key === "Enter") && startSpin(motor)}
-              onkeyup={() => stopSpin(motor)}
-              onblur={() => stopSpin(motor)}
+        <li class={stageState(3)}>
+          <span class="mark"></span>
+          <span class="stage-text">
+            <strong>{$i18n.t("setupWizardMotorCalStage3")}</strong>
+            <span class="muted">{$i18n.t("setupWizardMotorCalStage3Help")}</span
             >
-              {output === motor
-                ? $i18n.t("setupWizardMotorSpinning")
-                : motorCount > 1
-                  ? $i18n.t("setupWizardMotorHoldMotor", { 1: motor + 1 })
-                  : $i18n.t("setupWizardMotorHoldToSpin")}
-            </button>
-          {/each}
+          </span>
+          <span class="stage-action"></span>
+        </li>
+        <li class={stageState(4)}>
+          <span class="mark"></span>
+          <span class="stage-text">
+            <strong>{$i18n.t("setupWizardMotorCalStage4")}</strong>
+            <span class="muted">
+              {calibration === "done"
+                ? $i18n.t("setupWizardMotorCalZeroSet")
+                : $i18n.t("setupWizardMotorCalStage4Help")}
+            </span>
+          </span>
+          <span class="stage-action">
+            {#if calibration === "full"}
+              <button
+                class="btn primary"
+                disabled={!fullSet}
+                onclick={() => endCalibration(true)}
+              >
+                {$i18n.t("setupWizardMotorCalLow")}
+              </button>
+            {/if}
+          </span>
         </li>
       </ol>
-    </div>
-    {#if isPwm}
-      <p class="muted">
-        {calibration === "done"
-          ? $i18n.t("setupWizardMotorCalDoneHelp")
-          : $i18n.t("setupWizardMotorCalHelp")}
-      </p>
-    {/if}
+
+      {#if calibration === "full"}
+        <div class="actions">
+          <button class="btn" onclick={() => endCalibration(false)}>
+            {$i18n.t("setupWizardMotorCalCancel")}
+          </button>
+          <span class="muted">{$i18n.t("setupWizardMotorCalCancelHelp")}</span>
+        </div>
+      {:else if calibration === "done"}
+        <div class="actions">
+          <button class="btn" onclick={() => (calibration = "idle")}>
+            {$i18n.t("setupWizardMotorCalAgain")}
+          </button>
+        </div>
+      {/if}
+    </section>
+  {/if}
+
+  <!-- The spin test: pick a throttle, hold to spin. -->
+  <section class="card">
+    <h3>
+      {#if isPwm}<span class="num">2</span>{/if}
+      {$i18n.t("setupWizardMotorTestTitle")}
+    </h3>
     <p class="muted">
       {motorCount > 1
         ? $i18n.t("setupWizardMotorTestCheckTwin")
         : $i18n.t("setupWizardMotorTestCheck")}
     </p>
+    <div class="actions">
+      <span class="step-label">{$i18n.t("setupWizardMotorTestThrottle")}</span>
+      <span class="segments">
+        {#each TEST_THROTTLES as t (t)}
+          <label class={["segment", testThrottle === t && "selected"]}>
+            <input
+              type="radio"
+              name="test-throttle"
+              value={t}
+              bind:group={testThrottle}
+              disabled={!canRun || output !== null}
+            />
+            {t}%
+          </label>
+        {/each}
+      </span>
+    </div>
+    <div class="actions">
+      {#each allMotors() as motor (motor)}
+        <button
+          class={["btn", "spin", output === motor && "primary"]}
+          disabled={!canRun || (output !== null && output !== motor)}
+          onpointerdown={() => startSpin(motor)}
+          onpointerup={() => stopSpin(motor)}
+          onpointerleave={() => stopSpin(motor)}
+          onpointercancel={() => stopSpin(motor)}
+          onkeydown={(e) =>
+            (e.key === " " || e.key === "Enter") && startSpin(motor)}
+          onkeyup={() => stopSpin(motor)}
+          onblur={() => stopSpin(motor)}
+        >
+          {output === motor
+            ? $i18n.t("setupWizardMotorSpinning")
+            : motorCount > 1
+              ? $i18n.t("setupWizardMotorHoldMotor", { 1: motor + 1 })
+              : $i18n.t("setupWizardMotorHoldToSpin")}
+        </button>
+      {/each}
+    </div>
   </section>
 {/if}
 
@@ -435,14 +516,14 @@
     gap: 12px;
   }
 
-  //// Spin test: the picture on the left, the three actions in order on the
-  //// right. The whole panel is a warning until the prop-off box is ticked.
+  //// The safety card: a warning until the prop-off box is ticked.
 
   .test {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 16px 18px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+    padding: 14px 18px;
     border: 1px solid var(--color-status-bad);
     border-radius: var(--radius-md);
     background-color: color-mix(
@@ -460,54 +541,145 @@
     }
   }
 
-  .test-body {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 32px;
-  }
-
   .art {
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: var(--radius-sm);
     background-color: var(--color-surface);
   }
 
-  .steps {
+  .safety-text {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 6px;
+  }
+
+  //// Numbered cards, as on the Receiver step.
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+  }
+
+  h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin: 0;
+    font-size: 1em;
+    font-weight: 700;
+  }
+
+  .num {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    color: var(--color-accent-fg);
+    font-size: 0.8em;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-pill);
+    font-size: 0.8em;
+    font-weight: 600;
+
+    &.good {
+      color: var(--color-status-good);
+    }
+  }
+
+  //// Calibration stages: a mark, what to do, and the control for it. The
+  //// stage to do now is lit; finished ones are ticked.
+
+  .stages {
+    display: flex;
+    flex-direction: column;
     margin: 0;
     padding: 0;
     list-style: none;
-    counter-reset: step;
+    counter-reset: stage;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
 
     li {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
-      gap: 10px;
-      counter-increment: step;
+      gap: 6px 14px;
+      padding: 10px 14px;
+      counter-increment: stage;
+      opacity: 0.6;
 
-      &::before {
-        content: counter(step);
-        display: inline-grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
-        border: 1px solid var(--color-border);
-        border-radius: 50%;
-        font-size: 0.8em;
-        font-weight: 600;
-        color: var(--color-text-soft);
+      & + li {
+        border-top: 1px solid var(--color-border-soft);
+      }
+
+      &.current,
+      &.done {
+        opacity: 1;
+      }
+
+      &.current {
+        background-color: var(--color-accent-soft);
       }
     }
   }
 
-  .confirmed .steps li:first-child::before {
-    content: "\2713";
-    border-color: var(--color-status-good);
-    color: var(--color-status-good);
+  .mark {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--color-text-soft);
+
+    &::before {
+      content: counter(stage);
+    }
+
+    .current > & {
+      border-color: var(--color-accent-500);
+      color: var(--color-accent-500);
+    }
+
+    .done > & {
+      border-color: var(--color-status-good);
+      color: var(--color-status-good);
+
+      &::before {
+        content: "\2713";
+      }
+    }
+  }
+
+  .stage-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stage-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 190px;
   }
 
   .prop {
@@ -518,14 +690,6 @@
   }
 
   .step-label {
-    font-weight: 600;
-
-    i {
-      color: var(--color-status-good);
-    }
-  }
-
-  .cal-text {
     font-weight: 600;
   }
 

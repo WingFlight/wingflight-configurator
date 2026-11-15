@@ -9485,7 +9485,7 @@
         "message": "Standard PWM"
     },
     "setupWizardMotorHelp_pwm": {
-        "message": "Works with any ESC. The motor check below teaches the ESC the throttle range."
+        "message": "Works with any ESC. Calibrate, below, teaches the ESC the throttle range."
     },
     "setupWizardMotor_dshot150": {
         "message": "DShot150"
@@ -9536,31 +9536,67 @@
         "message": "The battery is unplugged"
     },
     "setupWizardMotorCalFull": {
-        "message": "Start full throttle"
+        "message": "Set full throttle"
     },
     "setupWizardMotorCalRamping": {
         "message": "Going to full throttle: $1 s"
     },
-    "setupWizardMotorCalPlugIn": {
-        "message": "Plug the battery in now. After the ESC's beeps, press Low throttle."
-    },
     "setupWizardMotorCalLow": {
-        "message": "Low throttle"
+        "message": "Set zero throttle"
     },
     "setupWizardMotorCalCancel": {
         "message": "Cancel"
-    },
-    "setupWizardMotorCalHelp": {
-        "message": "A PWM ESC has to learn where full and low throttle are. Start with the flight battery unplugged from the ESC: full throttle is held while you plug it in, the ESC beeps to confirm, then Low throttle finishes it. Skip this if the ESC is already calibrated to this flight controller."
-    },
-    "setupWizardMotorCalDoneHelp": {
-        "message": "The throttle goes to low over a few seconds and the ESC beeps again. If it did not confirm, unplug the battery and try again."
     },
     "setupWizardMotorHoldMotor": {
         "message": "Hold to spin motor $1"
     },
     "setupWizardMotorTestCheckTwin": {
         "message": "Each motor runs only while you hold its button, and stops within a second if the connection drops. Check which motor is which, that each starts smoothly, and that it turns the right way for its propeller."
+    },
+    "setupWizardMotorPropHelp": {
+        "message": "Nothing below runs the motor until this is ticked."
+    },
+    "setupWizardMotorCalDone": {
+        "message": "Done"
+    },
+    "setupWizardMotorCalIntro": {
+        "message": "A PWM ESC has to learn where full and zero throttle are. Do this once. Skip it if the ESC is already calibrated to this flight controller."
+    },
+    "setupWizardMotorCalStage1": {
+        "message": "Unplug the battery"
+    },
+    "setupWizardMotorCalStage1Help": {
+        "message": "Start with the flight battery unplugged from the ESC."
+    },
+    "setupWizardMotorCalStage2": {
+        "message": "Set full throttle"
+    },
+    "setupWizardMotorCalStage2Help": {
+        "message": "The throttle output goes to full and stays there."
+    },
+    "setupWizardMotorCalFullSet": {
+        "message": "Full throttle is set."
+    },
+    "setupWizardMotorCalStage3": {
+        "message": "Plug in the battery"
+    },
+    "setupWizardMotorCalStage3Help": {
+        "message": "Wait for the ESC's beeps, usually about two seconds."
+    },
+    "setupWizardMotorCalStage4": {
+        "message": "Set zero throttle"
+    },
+    "setupWizardMotorCalStage4Help": {
+        "message": "The ESC beeps again to confirm."
+    },
+    "setupWizardMotorCalZeroSet": {
+        "message": "Zero throttle is set. If the ESC did not confirm, unplug the battery and calibrate again."
+    },
+    "setupWizardMotorCalCancelHelp": {
+        "message": "Cancel takes the throttle back to zero."
+    },
+    "setupWizardMotorCalAgain": {
+        "message": "Calibrate again"
     },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
