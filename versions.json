@@ -312,13 +312,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-wizard-esc-serial",
-      "path": "./feature-wizard-esc-serial/",
-      "branch": "feature/wizard-esc-serial",
-      "date": "2026-11-15T08:43:04Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-wizard-esc-setup",
       "path": "./feature-wizard-esc-setup/",
       "branch": "feature/wizard-esc-setup",
