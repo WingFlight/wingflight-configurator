@@ -5136,6 +5136,15 @@
     "motorsEscProtocolSrxl2LockedHelp": {
         "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs use that same connection for throttle and telemetry, so it can't be set independently here. To use a different protocol, change that port's function instead."
     },
+    "motorsEscProtocolSrxl2NeedsPort": {
+        "message": "SRXL2 (set a serial port to ESC: SRXL2 first)"
+    },
+    "motorsEscProtocolSrxl2NoPort": {
+        "message": "SRXL2 is selected, but no serial port is set to <i>ESC: SRXL2</i>, so the ESC gets no signal. An SRXL2 ESC is wired to a serial port, not to the motor output. Set the port on the <i>Configuration</i> tab or on the Setup Wizard's Motor step, or choose another protocol."
+    },
+    "motorsEscProtocolCastleNote": {
+        "message": "Castle Link uses the motor output, like PWM. The ESC's telemetry is read on the same wire, so it needs no serial port and no telemetry protocol."
+    },
     "motorsEscProtocolDisabled": {
         "message": "Please select a protocol appropriate for your ESCs. $t(escProtocolDisabledMessage.message)"
     },
@@ -9661,6 +9670,21 @@
     "setupWizardMotorCalAgain": {
         "message": "Calibrate again"
     },
+    "setupWizardMotorSerialPortTitle": {
+        "message": "Port the $1 ESC is plugged into"
+    },
+    "setupWizardMotorSerialPortText": {
+        "message": "An $1 ESC takes its throttle and sends its telemetry on one signal wire, and that wire goes to a serial port. Plug it into the port you choose here, not into the motor (ESC) output."
+    },
+    "setupWizardMotorSerialPortNone": {
+        "message": "Choose the port. Nothing is changed until you do, because $1 without a port gives the ESC no signal."
+    },
+    "setupWizardMotorSerialPortPins": {
+        "message": "The wire goes on the port's TX pin. If the connector only has an RX pin, turn on Pin Swap under ESC Telemetry on the Motors tab."
+    },
+    "setupWizardMotorCastle": {
+        "message": "Castle Link is wired like Standard PWM: the ESC's signal wire goes to the motor (ESC) output. The flight controller reads the ESC's telemetry on that same wire, so no serial port is needed. Choosing it turns ESC telemetry on."
+    },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
     },
@@ -9684,6 +9708,9 @@
     },
     "setupWizardEscCastle": {
         "message": "Castle Link reads telemetry on the throttle wire, so it needs no port."
+    },
+    "setupWizardEscSrxl2": {
+        "message": "An SRXL2 ESC sends its telemetry on the same serial port as its throttle. That port is chosen on the Motor step, so there is nothing to connect here."
     },
     "setupWizardEscElsewhere": {
         "message": "ESC telemetry is set to $1, which doesn't use an ESC Telemetry port. Change it on the Motors tab."
