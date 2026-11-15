@@ -12,6 +12,7 @@
   import Switch from "@/components/Switch.svelte";
   import Tooltip from "@/components/Tooltip.svelte";
   import NumberInput from "@/components/NumberInput.svelte";
+  import InfoNote from "@/components/notes/InfoNote.svelte";
   import WarningNote from "@/components/notes/WarningNote.svelte";
 
   import motorState from "./state.svelte.js";
@@ -19,6 +20,13 @@
   let protocol = $derived(FC.MOTOR_CONFIG.motor_pwm_protocol);
   let isEnabled = $derived(
     motorState.throttleEnabled && FC.CONFIG.motorCount > 0,
+  );
+
+  // SRXL2 saved as the protocol with no port set to SRXL2 ESC (the port was
+  // freed on the Configuration tab): the ESC gets no signal.
+  let srxl2NoPort = $derived(
+    motorState.throttleProtocols[protocol] === "SRXL2" &&
+      !motorState.srxl2PortAssigned,
   );
 
   let realtimeThrottleEndpoint = $state(false);
@@ -52,10 +60,28 @@
         disabled={motorState.srxl2PortAssigned}
       >
         {#each motorState.throttleProtocols as proto, index (proto)}
-          <option value={index}>{proto}</option>
+          {#if proto === "SRXL2" && !motorState.srxl2PortAssigned}
+            <!-- The serial port turns SRXL2 on: without one the firmware
+                 runs no SRXL2 driver and drives no motor pin, so it can't
+                 be chosen here. Still listed if it is what the FC has. -->
+            <option value={index} disabled={protocol !== index}>
+              {$i18n.t("motorsEscProtocolSrxl2NeedsPort")}
+            </option>
+          {:else}
+            <option value={index}>{proto}</option>
+          {/if}
         {/each}
       </select>
     </Field>
+    {#if srxl2NoPort}
+      <div class="warning-container" transition:slide>
+        <WarningNote message="motorsEscProtocolSrxl2NoPort" />
+      </div>
+    {:else if motorState.isCastleLink}
+      <div class="warning-container" transition:slide>
+        <InfoNote message="motorsEscProtocolCastleNote" />
+      </div>
+    {/if}
     {#if isEnabled && !motorState.isDshot}
       <div transition:slide>
         <Field id="pwm-freq" label="motorsUnsyncedPWMFreq" unit="Hz">

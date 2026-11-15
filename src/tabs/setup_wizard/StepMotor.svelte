@@ -1,12 +1,26 @@
 <script>
-  import { getContext, onDestroy } from "svelte";
+  import { getContext, onDestroy, onMount } from "svelte";
 
   import { FC } from "@/js/fc.svelte.js";
+  import { isFbusMuxSerialPort } from "@/js/FbusMux.js";
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
 
+  import {
+    PORT_NAMES_RF2,
+    UART_NAMES,
+    VCP_PORT_IDENTIFIER,
+    getPortFunc,
+  } from "@/tabs/configuration/util.js";
   import motorState from "@/tabs/motors/state.svelte.js";
 
+  import {
+    clearSrxl2Port,
+    needsSerialPort,
+    setSrxl2Port,
+    srxl2Port,
+    telemetryForProtocol,
+  } from "./escSerial.js";
   import MotorArt from "./MotorArt.svelte";
 
   const wiz = getContext("setupWizard");
@@ -30,9 +44,30 @@
     return motorState.throttleProtocols.indexOf(protocol);
   }
 
-  let current = $derived(
+  // The protocol saved or being set up on the FC.
+  let fcProtocol = $derived(
     motorState.throttleProtocols[FC.MOTOR_CONFIG.motor_pwm_protocol],
   );
+
+  //// A protocol on a serial port (SRXL2). The ESC's one signal wire goes to
+  //// a serial port, and the port's SRXL2 ESC function is what turns the
+  //// protocol on in the firmware: see escSerial.js. So choosing it only
+  //// asks for the port, and nothing is changed until a port is picked.
+
+  let ports = $derived(
+    (FC.SERIAL_CONFIG.ports ?? []).filter(
+      (p) => p && p.identifier !== VCP_PORT_IDENTIFIER,
+    ),
+  );
+  let serialPort = $derived(srxl2Port(ports));
+  // Chosen from the list, no port picked yet.
+  let serialWanted = $state(false);
+  let portsChanged = $state(false);
+  let telemetryChanged = $state(false);
+
+  // The protocol the page shows as chosen.
+  let current = $derived(serialWanted || serialPort ? "SRXL2" : fcProtocol);
+  let onSerial = $derived(needsSerialPort(current));
   let currentChoice = $derived(
     CHOICES.find((c) => c.protocol === current)?.key ?? null,
   );
@@ -53,13 +88,61 @@
     setProtocol(indexOf(choice.protocol));
   }
 
-  function setProtocol(index) {
-    if (index < 0 || index === FC.MOTOR_CONFIG.motor_pwm_protocol) return;
+  onMount(async () => {
+    // Read at connect, but another tab may have edited them since.
+    await MSP.promise(MSPCodes.MSP_SERIAL_CONFIG);
+  });
+
+  function stopEverything() {
     // A protocol change hides the calibration and spin controls, so nothing
     // may be left running behind them.
     if (calibration === "full") endCalibration(false);
     stopOutput();
+  }
+
+  // ESC telemetry follows a change to or from SRXL2 or Castle Link, as on
+  // the Motors tab: SRXL2 carries its own, Castle Link is read on the
+  // throttle wire with the ESC sensor on and no serial protocol.
+  function followTelemetry(from, to) {
+    const telemetry = telemetryForProtocol(
+      from,
+      to,
+      FC.ESC_SENSOR_CONFIG.protocol,
+      motorState.telemetryProtocols.indexOf("SRXL2"),
+    );
+    if (!telemetry) return;
+    FC.ESC_SENSOR_CONFIG.protocol = telemetry.protocol;
+    FC.FEATURE_CONFIG.features.ESC_SENSOR = telemetry.feature;
+    if (telemetry.halfDuplex !== undefined) {
+      FC.ESC_SENSOR_CONFIG.half_duplex = telemetry.halfDuplex;
+    }
+    telemetryChanged = true;
+  }
+
+  function setProtocol(index) {
+    const name = motorState.throttleProtocols[index];
+    if (!name) return;
+    if (needsSerialPort(name)) {
+      // Nothing changes until the port is chosen.
+      if (!onSerial) {
+        stopEverything();
+        serialWanted = true;
+      }
+      return;
+    }
+    if (serialWanted && !serialPort && name === fcProtocol) {
+      // Back to the saved protocol before a port was picked.
+      serialWanted = false;
+      return;
+    }
+    if (!onSerial && index === FC.MOTOR_CONFIG.motor_pwm_protocol) return;
+    stopEverything();
+    const from = serialPort ? "SRXL2" : fcProtocol;
+    serialWanted = false;
+    // The ESC is no longer on a serial port, so the port is freed.
+    if (clearSrxl2Port(ports)) portsChanged = true;
     FC.MOTOR_CONFIG.motor_pwm_protocol = index;
+    followTelemetry(from, name);
     // DShot150 has no bidirectional RPM telemetry, and an ESC that doesn't
     // answer bidirectional requests may not arm, so turn it off. It goes out
     // with MSP_SET_MOTOR_CONFIG on commit.
@@ -70,12 +153,53 @@
     wiz.markChanged();
   }
 
+  function maskOf(port) {
+    return port.functionMask ?? 0;
+  }
+
+  function portName(port) {
+    const names = PORT_NAMES_RF2[FC.CONFIG.boardDesign];
+    return (
+      names?.[port.identifier] ?? UART_NAMES[port.identifier] ?? port.identifier
+    );
+  }
+
+  function usedFor(port) {
+    const func = getPortFunc(maskOf(port));
+    return $i18n.t(`portsFunction_${func ? func.name : "CUSTOM"}`);
+  }
+
+  function isFree(port) {
+    return maskOf(port) === 0 && !isFbusMuxSerialPort(FC.FBUS_MUX, port);
+  }
+
+  function chooseSerialPort(port) {
+    if (port === serialPort || !isFree(port)) return;
+    const index = indexOf("SRXL2");
+    if (index < 0) return;
+    if (!setSrxl2Port(ports, port)) return;
+    stopEverything();
+    serialWanted = false;
+    portsChanged = true;
+    // The firmware sets these from the port on save. Set here too, so the
+    // rest of the wizard sees SRXL2 before the restart.
+    FC.MOTOR_CONFIG.motor_pwm_protocol = index;
+    followTelemetry(undefined, "SRXL2");
+    changed = true;
+    wiz.markChanged();
+  }
+
   wiz.setCommit(async () => {
     if (!changed) return;
-    await MSP.promise(
-      MSPCodes.MSP_SET_MOTOR_CONFIG,
-      mspHelper.crunch(MSPCodes.MSP_SET_MOTOR_CONFIG),
-    );
+    function send(code) {
+      return MSP.promise(code, mspHelper.crunch(code));
+    }
+    if (portsChanged) await send(MSPCodes.MSP_SET_SERIAL_CONFIG);
+    if (telemetryChanged) {
+      await send(MSPCodes.MSP_SET_FEATURE_CONFIG);
+      await send(MSPCodes.MSP_SET_ESC_SENSOR_CONFIG);
+    }
+    await send(MSPCodes.MSP_SET_MOTOR_CONFIG);
   });
 
   // The FC drops a motor override 1 s after the last one it received
@@ -218,7 +342,7 @@
 <div class="actions">
   <span class="muted">{$i18n.t("setupWizardMotorOther")}</span>
   <select
-    value={FC.MOTOR_CONFIG.motor_pwm_protocol}
+    value={onSerial ? indexOf(current) : FC.MOTOR_CONFIG.motor_pwm_protocol}
     onchange={(e) => setProtocol(Number(e.target.value))}
   >
     {#each protocols as p (p.index)}
@@ -228,6 +352,50 @@
 </div>
 {#if current === "DISABLED"}
   <p class="muted">{$i18n.t("setupWizardMotorHelp_none")}</p>
+{:else if onSerial}
+  <!-- The ESC is wired to a serial port, not to the motor output. -->
+  <section class="card">
+    <h3>{$i18n.t("setupWizardMotorSerialPortTitle", { 1: current })}</h3>
+    <p>{$i18n.t("setupWizardMotorSerialPortText", { 1: current })}</p>
+    <div class="ports" role="radiogroup">
+      {#each ports as port (port.identifier)}
+        {@const isEsc = port === serialPort}
+        {@const free = isFree(port)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isEsc}
+          class={["port", isEsc && "selected"]}
+          disabled={!isEsc && !free}
+          onclick={() => chooseSerialPort(port)}
+        >
+          <span class="port-name">
+            {portName(port)}
+            {#if isEsc}
+              <i class="fas fa-check-circle" aria-hidden="true"></i>
+            {/if}
+          </span>
+          <span class="port-use">
+            {#if isEsc}
+              {$i18n.t("portsFunction_SRXL2_ESC")}
+            {:else if free}
+              {$i18n.t("setupWizardReceiverPortFree")}
+            {:else}
+              {$i18n.t("setupWizardReceiverPortInUse", { 1: usedFor(port) })}
+            {/if}
+          </span>
+        </button>
+      {/each}
+    </div>
+    {#if !serialPort}
+      <p class="muted">
+        {$i18n.t("setupWizardMotorSerialPortNone", { 1: current })}
+      </p>
+    {/if}
+    <p class="muted">{$i18n.t("setupWizardMotorSerialPortPins")}</p>
+  </section>
+{:else if current === "CASTLE"}
+  <p class="muted">{$i18n.t("setupWizardMotorCastle")}</p>
 {:else if motorState.isDshot && !motorState.bidirCapable}
   <p class="muted">{$i18n.t("setupWizardMotorDshot150NoRpm")}</p>
 {/if}
@@ -239,8 +407,10 @@
       {$i18n.t("buttonSaveReboot")}
     </button>
   </div>
-{:else if current !== "DISABLED" && motorCount > 0}
-  <!-- Everything below runs the motor, so the propeller comes off first. -->
+{:else if current !== "DISABLED" && motorCount > 0 && (!onSerial || serialPort)}
+  <!-- Everything below runs the motor, so the propeller comes off first.
+       Not offered while a serial protocol has no port: the ESC would get
+       no signal. -->
   <section class={["test", propOff && "confirmed"]}>
     <div class="art">
       <MotorArt propOff spinning={typeof output === "number"} />
@@ -521,6 +691,70 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
+  }
+
+  //// Port cards, as on the ESC telemetry step.
+
+  .ports {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  .port {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--animation-speed),
+      background-color var(--animation-speed),
+      box-shadow var(--animation-speed);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-border);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
+    &.selected {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--color-accent-500);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      background-color: transparent;
+    }
+
+    i {
+      color: var(--color-accent-500);
+    }
+  }
+
+  .port-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+  }
+
+  .port-use {
+    color: var(--color-text-soft);
+    font-size: 0.85em;
   }
 
   //// The safety card: a warning until the prop-off box is ticked.

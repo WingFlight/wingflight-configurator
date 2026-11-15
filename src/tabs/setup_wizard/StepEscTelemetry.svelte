@@ -32,8 +32,8 @@
   const MAX_CELLS = 14;
 
   // F.BUS and SRXL2 ESC telemetry don't use the ESC Telemetry port function
-  // (F.BUS rides on the receiver, SRXL2 on its own bus), so they stay on the
-  // Motors tab.
+  // (F.BUS rides on the receiver, SRXL2 on the ESC's own serial port, which
+  // the Motor step sets), so they are not offered here.
   const OWN_PORT = ["FrSky F.BUS", "SRXL2"];
 
   let protocols = $derived(
@@ -111,10 +111,11 @@
     motorState.telemetryProtocols[FC.ESC_SENSOR_CONFIG.protocol],
   );
   // Set up some other way: Castle Link reads telemetry on the throttle wire,
-  // SRXL2 and F.BUS don't use an ESC Telemetry port.
+  // SRXL2 has it on the serial port chosen on the Motor step, and F.BUS
+  // doesn't use an ESC Telemetry port.
   let elsewhere = $derived(
     motorState.isCastleLink ||
-      motorState.srxl2PortAssigned ||
+      motorState.isSrxl2 ||
       OWN_PORT.includes(protocolName),
   );
   let protocol = $derived(
@@ -338,7 +339,9 @@
       <p>
         {motorState.isCastleLink
           ? $i18n.t("setupWizardEscCastle")
-          : $i18n.t("setupWizardEscElsewhere", { 1: protocolName })}
+          : motorState.isSrxl2 || protocolName === "SRXL2"
+            ? $i18n.t("setupWizardEscSrxl2")
+            : $i18n.t("setupWizardEscElsewhere", { 1: protocolName })}
       </p>
     {:else}
       <div class="protocol">
