@@ -15,6 +15,7 @@
 
   import {
     BUS_PROTOCOLS,
+    answeringDevices,
     busPort as findBusPort,
     busProtocol,
     clearBusOutput,
@@ -22,12 +23,17 @@
     recommendedPort,
     setBusOutput,
   } from "./busOutput.js";
+  import {
+    BUS_TRIAL,
+    BUS_TRIAL_ACTION,
+    busTrialEnded,
+    readBusTrial,
+  } from "./busWiringTrial.js";
   import ServoArt from "./ServoArt.svelte";
 
   const wiz = getContext("setupWizard");
 
   const POLL_MS = 1000;
-  const FBUS_SOURCE = 0; // FC.FBUS_SENSORS source: 0 = F.Bus, 1 = S.Port
 
   let loading = $state(true);
   let rebootNeeded = $state(false);
@@ -45,6 +51,9 @@
       if (stopped) return;
       if (protocol === "fbus" && !rebootNeeded) {
         await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
+        const result = answeringDevices(packetCounts, FC.FBUS_SENSORS);
+        packetCounts = result.counts;
+        devices = result.answering;
       }
       if (!stopped) pollTimer = setTimeout(poll, POLL_MS);
     }
@@ -54,14 +63,29 @@
   onDestroy(() => {
     stopped = true;
     clearTimeout(pollTimer);
+    clearTimeout(trialTimer);
+    // A run still going, or a found wiring that was never saved: the flight
+    // controller puts back the wiring it had.
+    if (detecting || (wiringFound && wiz.pending)) {
+      sendTrial(BUS_TRIAL_ACTION.STOP);
+    }
   });
 
   wiz.setCommit(async () => {
     function send(code) {
       return MSP.promise(code, mspHelper.crunch(code));
     }
+    // A trial still running has the port on a wiring it is only trying:
+    // end it, which puts the old wiring back, before anything is saved.
+    if (detecting) {
+      await cancelTrial();
+    }
     if (rebootNeeded) {
       await send(MSPCodes.MSP_SET_SERIAL_CONFIG);
+    }
+    // The wiring the trial found is already live and in the FC's config;
+    // this sends the same values, for the save that follows.
+    if (rebootNeeded || wiringFound) {
       await send(MSPCodes.MSP2_WING_SET_FBUS_MASTER_CONFIG);
     }
     if (rebootNeeded || changed) {
@@ -166,13 +190,148 @@
   //// 4. Signal. F.Bus devices answer, so they prove the wiring; SBUS is
   //// one-way and can only be checked by watching a servo move.
 
-  let devices = $derived(
-    (FC.FBUS_SENSORS ?? []).filter((s) => s.source === FBUS_SOURCE).length,
-  );
+  // Devices answering now: those whose packet count rose since the last
+  // poll (the flight controller also lists devices that have gone). Null
+  // until the second poll.
+  let devices = $state(null);
+  let packetCounts = null;
 
+  // Fallback for firmware without the wiring trial: the other pin, used
+  // after a restart.
   function useOtherPin() {
     FC.FBUS_MASTER_CONFIG.pinSwap = !FC.FBUS_MASTER_CONFIG.pinSwap;
     changeConnection("pin");
+  }
+
+  //// Wiring detection: the flight controller tries each pin and polarity on
+  //// the live port until a device answers (busWiringTrial.js). A found
+  //// wiring is in use at once, so it needs a save but no restart.
+
+  const TRIAL_POLL_MS = 300;
+  // Four wirings at a second and a half each, and some margin.
+  const TRIAL_TIMEOUT_MS = 10000;
+
+  // null until tried; false on firmware without the trial.
+  let trialSupported = $state(null);
+  let detecting = $state(false);
+  let trial = $state(null);
+  // "found", "same", "failed", "rejected" or null
+  let trialResult = $state(null);
+  let wiringFound = $state(false);
+  let trialTimer;
+  let trialStartedAt = 0;
+  // Counts the runs, so a reply that arrives after its run was cancelled is
+  // ignored.
+  let trialRun = 0;
+
+  async function cancelTrial() {
+    trialRun += 1;
+    clearTimeout(trialTimer);
+    detecting = false;
+    trialResult = null;
+    await sendTrial(BUS_TRIAL_ACTION.STOP);
+  }
+
+  // The reply, or null if none came within a second (MSP.promise() has no
+  // timeout of its own on a real connection).
+  function sendTrial(action) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (response) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        resolve(response?.data ?? null);
+      };
+      const timeout = setTimeout(() => finish(null), 1000);
+      MSP.send_message(
+        MSPCodes.MSP2_WING_FBUS_MASTER_TRIAL,
+        [action],
+        false,
+        finish,
+        true,
+      );
+    });
+  }
+
+  async function detectWiring() {
+    if (detecting || wiz.armed || wiz.saving) return;
+    const before = {
+      pinSwap: FC.FBUS_MASTER_CONFIG.pinSwap,
+      inverted: FC.FBUS_MASTER_CONFIG.inverted,
+    };
+    detecting = true;
+    trialResult = null;
+    trial = null;
+    trialStartedAt = Date.now();
+    trialRun += 1;
+    const run = trialRun;
+
+    // The run is given up: the flight controller puts the old wiring back.
+    function giveUp() {
+      sendTrial(BUS_TRIAL_ACTION.STOP);
+      trialResult = "failed";
+      detecting = false;
+    }
+
+    async function step(action) {
+      if (stopped || run !== trialRun) return;
+      const status = readBusTrial(await sendTrial(action));
+      if (stopped || run !== trialRun) return;
+      if (!status && action === BUS_TRIAL_ACTION.START) {
+        // No payload: firmware without the trial. The pin can still be
+        // switched by hand.
+        trialSupported = false;
+        detecting = false;
+        return;
+      }
+      if (!status) {
+        // A poll went unanswered. The trial may still be running, or have
+        // found the wiring, so ask again until the deadline and stop it
+        // then: a run is never left on the flight controller unattended.
+        if (Date.now() - trialStartedAt > TRIAL_TIMEOUT_MS) {
+          giveUp();
+          return;
+        }
+        trialTimer = setTimeout(
+          () => step(BUS_TRIAL_ACTION.POLL),
+          TRIAL_POLL_MS,
+        );
+        return;
+      }
+      trialSupported = true;
+      trial = status;
+      if (!busTrialEnded(status.state)) {
+        if (Date.now() - trialStartedAt > TRIAL_TIMEOUT_MS) {
+          giveUp();
+          return;
+        }
+        trialTimer = setTimeout(
+          () => step(BUS_TRIAL_ACTION.POLL),
+          TRIAL_POLL_MS,
+        );
+        return;
+      }
+      detecting = false;
+      if (status.state === BUS_TRIAL.SUCCESS) {
+        const same =
+          status.pinSwap === before.pinSwap &&
+          status.inverted === before.inverted;
+        FC.FBUS_MASTER_CONFIG.pinSwap = status.pinSwap;
+        FC.FBUS_MASTER_CONFIG.inverted = status.inverted;
+        trialResult = same ? "same" : "found";
+        if (!same) {
+          wiringFound = true;
+          wiz.markChanged();
+        }
+      } else if (status.state === BUS_TRIAL.FAILED) {
+        trialResult = "failed";
+      } else {
+        trialResult = "rejected";
+      }
+    }
+
+    await step(BUS_TRIAL_ACTION.START);
   }
 </script>
 
@@ -192,7 +351,7 @@
         role="radio"
         aria-checked={!busPort}
         class={["port", !busPort && "selected"]}
-        disabled={wiz.saving}
+        disabled={wiz.saving || detecting}
         onclick={chooseNone}
       >
         <span class="port-name">
@@ -211,7 +370,7 @@
           role="radio"
           aria-checked={isBus}
           class={["port", isBus && "selected"]}
-          disabled={wiz.saving || (!isBus && !free)}
+          disabled={wiz.saving || detecting || (!isBus && !free)}
           onclick={() => choosePort(port)}
         >
           <span class="port-name">
@@ -244,7 +403,7 @@
       <div class="protocol">
         <select
           value={protocol}
-          disabled={wiz.saving}
+          disabled={wiz.saving || detecting}
           onchange={(e) => chooseProtocol(e.target.value)}
         >
           <option value="fbus">F.Bus</option>
@@ -288,7 +447,7 @@
     <section class="card">
       <h3>
         <span class="num">4</span>{$i18n.t("setupWizardBusSignalTitle")}
-        {#if protocol === "fbus" && !rebootNeeded}
+        {#if protocol === "fbus" && !rebootNeeded && devices !== null}
           <span class={["badge", devices > 0 ? "good" : "bad"]}>
             <i
               class={["fas", devices > 0 ? "fa-check" : "fa-times"]}
@@ -312,14 +471,36 @@
                 ? $i18n.t("setupWizardBusOnRxPin", { 1: portName(busPort) })
                 : $i18n.t("setupWizardBusOnTxPin", { 1: portName(busPort) })}
             </span>
-            <button
-              class="btn"
-              disabled={wiz.armed || wiz.saving}
-              onclick={useOtherPin}
-            >
-              {$i18n.t("setupWizardBusOtherPin")}
-            </button>
+            {#if trialSupported === false}
+              <button
+                class="btn"
+                disabled={wiz.armed || wiz.saving}
+                onclick={useOtherPin}
+              >
+                {$i18n.t("setupWizardBusOtherPin")}
+              </button>
+            {:else}
+              <button
+                class="btn"
+                disabled={rebootNeeded || detecting || wiz.armed || wiz.saving}
+                onclick={detectWiring}
+              >
+                {$i18n.t("setupWizardBusDetect")}
+              </button>
+            {/if}
           </div>
+          {#if detecting}
+            <p>
+              {$i18n.t("setupWizardBusDetecting", {
+                1: (trial?.comboIndex ?? 0) + 1,
+                2: trial?.comboCount ?? 4,
+              })}
+            </p>
+          {:else if trialResult}
+            <p class={["result", trialResult]}>
+              {$i18n.t(`setupWizardBusDetect_${trialResult}`)}
+            </p>
+          {/if}
           {#if rebootNeeded && rebootAt === "pin"}
             <div class="actions">
               <span>{$i18n.t("setupWizardRebootNeeded")}</span>
@@ -327,8 +508,10 @@
                 {$i18n.t("buttonSaveReboot")}
               </button>
             </div>
-          {:else}
+          {:else if trialSupported === false}
             <p class="muted">{$i18n.t("setupWizardBusOtherPinHelp")}</p>
+          {:else if !detecting && !trialResult}
+            <p class="muted">{$i18n.t("setupWizardBusDetectHelp")}</p>
           {/if}
         {:else}
           <p class="muted">{$i18n.t("setupWizardBusPinFixed")}</p>
@@ -497,6 +680,20 @@
     }
 
     &.bad {
+      color: var(--color-status-bad);
+    }
+  }
+
+  .result {
+    font-weight: 600;
+
+    &.found,
+    &.same {
+      color: var(--color-status-good);
+    }
+
+    &.failed,
+    &.rejected {
       color: var(--color-status-bad);
     }
   }

@@ -55,11 +55,35 @@ export function sbusConnectorIdentifier(portNames) {
 
 /**
  * Whether F.Bus on this port needs the pin swap. F.Bus runs half-duplex on
- * the UART's TX pin. A connector labelled SBUS is a receiver input, the
- * UART's RX pin, so F.Bus only reaches it with the pins swapped.
+ * the UART's TX pin. A connector labelled SBUS or RX is a receiver input,
+ * the UART's RX pin, so F.Bus only reaches it with the pins swapped.
  */
 export function needsPinSwap(portNames, port) {
-    return !!port && port.identifier === sbusConnectorIdentifier(portNames);
+    if (!port) return false;
+    return /^(S\.?BUS|RX)$/i.test(portNames?.[port.identifier] ?? '');
+}
+
+/**
+ * How many F.Bus devices are answering now. The flight controller lists
+ * every device it has heard from since boot, so a device counts only if its
+ * packet count rose since the previous poll.
+ * @param {Map<string, number>|null} previous - packet counts from the last
+ *   poll, null on the first.
+ * @param {Array} sensors - FC.FBUS_SENSORS.
+ * @returns {{answering: number|null, counts: Map<string, number>}} answering
+ *   is null on the first poll, when there is nothing to compare with.
+ */
+export function answeringDevices(previous, sensors) {
+    const FBUS_SOURCE = 0; // 0 = F.Bus, 1 = S.Port
+    const counts = new Map();
+    let answering = 0;
+    for (const sensor of sensors ?? []) {
+        if (sensor.source !== FBUS_SOURCE) continue;
+        const key = String(sensor.physicalId);
+        counts.set(key, sensor.packetCount);
+        if (previous && sensor.packetCount > (previous.get(key) ?? 0)) answering += 1;
+    }
+    return { answering: previous ? answering : null, counts };
 }
 
 /** Takes every bus output off the ports. */

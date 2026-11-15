@@ -9,6 +9,7 @@
 
   import AxisIcon from "./AxisIcon.svelte";
   import KnobArt from "./KnobArt.svelte";
+  import RadioMixGuide from "./RadioMixGuide.svelte";
   import TrimArt from "./TrimArt.svelte";
   import { movedChannel } from "./receiver.js";
   import {
@@ -201,6 +202,13 @@
   }
 
   let singleChannel = $derived(channelOf(ranges, MASTER_GAIN.roll));
+  // Every knob the chosen gain mode needs is on a channel: one for a single
+  // knob, one per axis otherwise.
+  let gainAssigned = $derived(
+    mode === "single"
+      ? singleChannel !== null
+      : AXES.every((axis) => channelOf(ranges, MASTER_GAIN[axis]) !== null),
+  );
 
   //// Shared channels. Allowed (it is the user's radio), but flagged: two
   //// trims on one channel move together, and a trim or knob on a switch
@@ -571,6 +579,10 @@
       </button>
     {/each}
   </div>
+
+  {#if mode === "single" || mode === "separate"}
+    <RadioMixGuide kind="knob" done={gainAssigned} />
+  {/if}
 
   {#if mode === "single"}
     <ul class="rows">
