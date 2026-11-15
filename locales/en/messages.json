@@ -9536,7 +9536,7 @@
         "message": "The battery is unplugged"
     },
     "setupWizardMotorCalFull": {
-        "message": "Hold full throttle"
+        "message": "Start full throttle"
     },
     "setupWizardMotorCalRamping": {
         "message": "Going to full throttle: $1 s"
