@@ -9163,6 +9163,69 @@
     "setupWizardGainTitle": {
         "message": "Gain"
     },
+    "setupWizardRadioMixTitle_knob": {
+        "message": "Set the knob up on the radio first"
+    },
+    "setupWizardRadioMixText_knob": {
+        "message": "A knob does nothing until a mix on the radio puts it on a channel. Detect watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_knob": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_knob": {
+        "message": "Name it GAIN. Set <b>Source</b> to the knob or slider (S1 here, under Analogs) and <b>Output</b> to a spare channel (CH9 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_knob": {
+        "message": "The Mixes page then lists GAIN with its channel and source. For one knob per axis, add a mix like this for each knob, each on its own spare channel."
+    },
+    "setupWizardRadioMixStep4_knob": {
+        "message": "Click Detect below and turn the knob from one end to the other."
+    },
+    "setupWizardRadioMixImage1_knob": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_knob": {
+        "message": "Ethos Free mix named GAIN: Source S1, Output CH9"
+    },
+    "setupWizardRadioMixImage3_knob": {
+        "message": "Ethos Mixes page listing GAIN on channel 9 from S1"
+    },
+    "setupWizardRadioMixTitle_switch": {
+        "message": "Put each switch on a channel on the radio first"
+    },
+    "setupWizardRadioMixText_switch": {
+        "message": "A switch does nothing until a mix on the radio puts it on a channel. Assign watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_switch": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_switch": {
+        "message": "Name it after the mode (ARM here). Set <b>Source</b> to the switch (SF here, under Switches) and <b>Output</b> to a spare channel (CH10 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_switch": {
+        "message": "The Mixes page then lists it with its channel and source. Add a mix like this for each switch you want to use, each on its own spare channel. One 3-position switch can carry two modes."
+    },
+    "setupWizardRadioMixStep4_switch": {
+        "message": "Press Assign below and flick the switch to its on position."
+    },
+    "setupWizardRadioMixImage1_switch": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_switch": {
+        "message": "Ethos Free mix named ARM: Source SF, Output CH10"
+    },
+    "setupWizardRadioMixImage3_switch": {
+        "message": "Ethos Mixes page listing ARM on channel 10 from SF"
+    },
+    "setupWizardRadioMixShow": {
+        "message": "Show the steps on the radio"
+    },
+    "setupWizardRadioMixHide": {
+        "message": "Hide the steps"
+    },
+    "setupWizardRadioMixOtherRadios": {
+        "message": "On other radios (EdgeTX, OpenTX, Jeti and so on) do the same: one mix per control, with the control as its source and a spare channel as its output."
+    },
     "setupWizardGainText": {
         "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Fully down turns the stabilizer off, center is 75% and fully up is 150%."
     },

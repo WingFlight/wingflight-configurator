@@ -9,6 +9,7 @@
 
   import AxisIcon from "./AxisIcon.svelte";
   import KnobArt from "./KnobArt.svelte";
+  import RadioMixGuide from "./RadioMixGuide.svelte";
   import TrimArt from "./TrimArt.svelte";
   import { movedChannel } from "./receiver.js";
   import {
@@ -571,6 +572,13 @@
       </button>
     {/each}
   </div>
+
+  {#if mode === "single" || mode === "separate"}
+    <RadioMixGuide
+      kind="knob"
+      done={mode === "single" && singleChannel !== null}
+    />
+  {/if}
 
   {#if mode === "single"}
     <ul class="rows">

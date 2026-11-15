@@ -8,6 +8,7 @@
 
   import { rangeForSwitch } from "./modeRanges.js";
   import ModeRangeBar from "./ModeRangeBar.svelte";
+  import RadioMixGuide from "./RadioMixGuide.svelte";
   import SwitchFlick from "./SwitchFlick.svelte";
 
   // Click Assign, flick the switch: the wizard sees which AUX channel moved
@@ -259,6 +260,8 @@
 {/snippet}
 
 <p>{$i18n.t("setupWizardModesIntro")}</p>
+
+<RadioMixGuide kind="switch" done={!!assignment(MODES[0])} />
 
 <h3 class="group">{$i18n.t("setupWizardModesGroupRequired")}</h3>
 <ul class="modes">
