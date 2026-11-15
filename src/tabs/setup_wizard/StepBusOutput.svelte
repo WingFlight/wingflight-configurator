@@ -15,6 +15,7 @@
 
   import {
     BUS_PROTOCOLS,
+    answeringDevices,
     busPort as findBusPort,
     busProtocol,
     clearBusOutput,
@@ -33,7 +34,6 @@
   const wiz = getContext("setupWizard");
 
   const POLL_MS = 1000;
-  const FBUS_SOURCE = 0; // FC.FBUS_SENSORS source: 0 = F.Bus, 1 = S.Port
 
   let loading = $state(true);
   let rebootNeeded = $state(false);
@@ -51,6 +51,9 @@
       if (stopped) return;
       if (protocol === "fbus" && !rebootNeeded) {
         await MSP.promise(MSPCodes.MSP2_WING_FBUS_SENSORS);
+        const result = answeringDevices(packetCounts, FC.FBUS_SENSORS);
+        packetCounts = result.counts;
+        devices = result.answering;
       }
       if (!stopped) pollTimer = setTimeout(poll, POLL_MS);
     }
@@ -187,9 +190,11 @@
   //// 4. Signal. F.Bus devices answer, so they prove the wiring; SBUS is
   //// one-way and can only be checked by watching a servo move.
 
-  let devices = $derived(
-    (FC.FBUS_SENSORS ?? []).filter((s) => s.source === FBUS_SOURCE).length,
-  );
+  // Devices answering now: those whose packet count rose since the last
+  // poll (the flight controller also lists devices that have gone). Null
+  // until the second poll.
+  let devices = $state(null);
+  let packetCounts = null;
 
   // Fallback for firmware without the wiring trial: the other pin, used
   // after a restart.
@@ -442,7 +447,7 @@
     <section class="card">
       <h3>
         <span class="num">4</span>{$i18n.t("setupWizardBusSignalTitle")}
-        {#if protocol === "fbus" && !rebootNeeded}
+        {#if protocol === "fbus" && !rebootNeeded && devices !== null}
           <span class={["badge", devices > 0 ? "good" : "bad"]}>
             <i
               class={["fas", devices > 0 ? "fa-check" : "fa-times"]}
