@@ -98,6 +98,9 @@ class FlightController {
   // the FC does not have it). Added at the output on top of the center, never changing it.
   SERVO_SAVED_TRIM = $state();
   SERVO_CURVES = $state();
+  // What each servo drives, one byte per servo (role << 3 | number - 1, see
+  // servoRoles.js; MSP2_WING_SERVO_ROLES). null when the FC does not have it.
+  SERVO_ROLES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
@@ -365,6 +368,7 @@ class FlightController {
     this.SERVO_TIMING =             null;
     this.SERVO_SAVED_TRIM =         null;
     this.SERVO_CURVES =             [];
+    this.SERVO_ROLES =              null;
 
     this.SERIAL_CONFIG = {
       ports:                      [],

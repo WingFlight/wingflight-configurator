@@ -14,6 +14,7 @@
     referenceCandidates,
     resampleCurve,
   } from "@/js/servoBalance.js";
+  import { roleText, servosWithRole } from "@/js/servoRoles.js";
 
   import BalanceGraph from "./BalanceGraph.svelte";
 
@@ -50,9 +51,7 @@
 
   let count = $derived(servos.length);
   let anchor = $derived(group[0] ?? null);
-  let suggestions = $derived(
-    anchor === null ? [] : referenceCandidates(FC.MIXER_RULES, anchor, count),
-  );
+  let suggestions = $derived(anchor === null ? [] : surfaceMates(anchor));
   let others = $derived(servos.filter((s) => !group.includes(s.index)));
   let ready = $derived(
     group.length > 0 && group.every((s) => FC.SERVO_CURVES?.[s]),
@@ -61,8 +60,21 @@
     group.filter((s) => s !== anchor && direction(s) === null),
   );
 
+  // "Servo 2 · Left aileron 2" when the FC has servo roles.
   function label(index) {
-    return $i18n.t("servoBalanceServo", { 1: index + 1 });
+    const name = $i18n.t("servoBalanceServo", { 1: index + 1 });
+    const role = roleText(FC.SERVO_ROLES, index, (key) => $i18n.t(key));
+    return role ? `${name} · ${role}` : name;
+  }
+
+  // The other servos on `servo`'s surface: the ones with the same role, or
+  // without roles, the ones mixed the same way.
+  function surfaceMates(servo) {
+    const sameRole = servosWithRole(FC.SERVO_ROLES, servo).filter(
+      (s) => s !== servo && s < count,
+    );
+    if (sameRole.length > 0) return sameRole;
+    return referenceCandidates(FC.MIXER_RULES, servo, count);
   }
 
   // Which way the mix moves `servo` compared with the first servo: -1 when
@@ -152,7 +164,7 @@
   export function open(servo) {
     if (!group.includes(servo)) {
       letGo();
-      const same = referenceCandidates(FC.MIXER_RULES, servo, count);
+      const same = surfaceMates(servo);
       group = [servo, ...same].slice(0, MAX_GROUP);
       selected = null;
     }
@@ -302,7 +314,7 @@
       <option value="">{$i18n.t("servoBalanceAdd")}</option>
       {#each others.filter((s) => suggestions.includes(s.index)) as s (s.index)}
         <option value={s.index}>
-          {$i18n.t("servoBalanceSameMix", { 1: s.index + 1 })}
+          {$i18n.t("servoBalanceSameMix", { 1: label(s.index) })}
         </option>
       {/each}
       {#each others.filter((s) => !suggestions.includes(s.index)) as s (s.index)}
@@ -359,7 +371,7 @@
       {@const isActive = servo === activeServo}
       <BalanceGraph
         title={direction(servo) === -1
-          ? $i18n.t("servoBalanceMirrored", { 1: servo + 1 })
+          ? $i18n.t("servoBalanceMirrored", { 1: label(servo) })
           : label(servo)}
         {curve}
         active={isActive}

@@ -25,14 +25,18 @@
     $state.snapshot({
       type: FC.MIXER_CONFIG.model_type,
       rules: FC.MIXER_RULES,
+      roles: FC.SERVO_ROLES,
     }),
   );
+
+  const initialRoles = FC.SERVO_ROLES ? [...FC.SERVO_ROLES] : null;
 
   let changed = $derived(
     JSON.stringify(
       $state.snapshot({
         type: FC.MIXER_CONFIG.model_type,
         rules: FC.MIXER_RULES,
+        roles: FC.SERVO_ROLES,
       }),
     ) !== initial,
   );
@@ -45,6 +49,10 @@
     if (!changed) return;
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
+    // What each servo drives, set with the mix.
+    if (Array.isArray(FC.SERVO_ROLES)) {
+      await mspHelper.sendServoRoles(initialRoles);
+    }
   });
 
   let current = $derived(FC.MIXER_CONFIG.model_type);

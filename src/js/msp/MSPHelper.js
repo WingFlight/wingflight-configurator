@@ -1849,6 +1849,16 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_SERVO_ROLES: {
+                // Count-prefixed, one U8 per servo: role << 3 | (number - 1).
+                FC.SERVO_ROLES = [];
+                const roleCount = data.readU8();
+                for (let i = 0; i < roleCount; i++) {
+                    FC.SERVO_ROLES.push(data.readU8());
+                }
+                break;
+            }
+
             case MSPCodes.MSP_SERVO_CURVES: {
                 // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
                 // physical servo, not a fixed pool like mixer/gain curves).
@@ -3476,6 +3486,28 @@ MspHelper.prototype.sendModeOverride = function(permanentIds, timeoutMs)
             // No response at all: the request was dropped (link lost).
             (response) => resolve(!!response && !response.unsupported && !response.crcError), true);
     });
+};
+
+// Sets what servo `servoIndex` drives from FC.SERVO_ROLES.
+MspHelper.prototype.sendServoRole = function(servoIndex)
+{
+    const buffer = [];
+
+    buffer.push8(servoIndex)
+          .push8(FC.SERVO_ROLES[servoIndex]);
+
+    return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_ROLE, buffer);
+};
+
+// Sends the roles that differ from `previous` (all of them without it).
+MspHelper.prototype.sendServoRoles = async function(previous = null)
+{
+    const roles = FC.SERVO_ROLES ?? [];
+    for (let i = 0; i < roles.length; i++) {
+        if (!previous || previous[i] !== roles[i]) {
+            await this.sendServoRole(i);
+        }
+    }
 };
 
 // Sets the saved trim (us) of servo `servoIndex` (FC.SERVO_CONFIG order) from

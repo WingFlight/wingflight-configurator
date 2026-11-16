@@ -12,6 +12,7 @@
   import { bit_check, reinitialiseConnection } from "@/js/serial_backend";
 
   import Page from "@/components/Page.svelte";
+  import { roleText } from "@/js/servoRoles.js";
 
   import {
     surfacesFromRules,
@@ -128,6 +129,8 @@
       MIXER_INPUTS: FC.MIXER_INPUTS,
       MIXER_RULES: FC.MIXER_RULES,
       MIXER_CONFIG: FC.MIXER_CONFIG,
+      // Set by the Airframe step with the mix.
+      SERVO_ROLES: FC.SERVO_ROLES,
       // Sent live by the Mode switches step.
       MODE_RANGES: FC.MODE_RANGES,
       MODE_RANGES_EXTRA: FC.MODE_RANGES_EXTRA,
@@ -165,6 +168,10 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     // Saved trims take travel from one side (see servoStickConfig()).
     await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
+    // What each servo drives. Firmware without servo roles answers
+    // "unsupported" and leaves it null.
+    FC.SERVO_ROLES = null;
+    await MSP.promise(MSPCodes.MSP2_WING_SERVO_ROLES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
@@ -472,6 +479,11 @@
     await new Promise((resolve) => mspHelper.sendMixerInputs(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
+    if (Array.isArray(snapshot.SERVO_ROLES) && Array.isArray(FC.SERVO_ROLES)) {
+      const current = [...FC.SERVO_ROLES];
+      FC.SERVO_ROLES = snapshot.SERVO_ROLES;
+      await mspHelper.sendServoRoles(current);
+    }
     pending = false;
   }
 
@@ -552,10 +564,15 @@
     setLeave(fn) {
       leaveFn = fn;
     },
+    // "Servo 2 · Right aileron": the servo's role when it has one, otherwise
+    // the kind of surface its mix makes it.
     surfaceLabel(surface) {
+      const role = roleText(FC.SERVO_ROLES, surface.servo, (key) =>
+        $i18n.t(key),
+      );
       return $i18n.t("setupWizardSurfaceLabel", {
         1: surface.servo + 1,
-        2: $i18n.t(`setupWizardSurface_${surface.kind}`),
+        2: role || $i18n.t(`setupWizardSurface_${surface.kind}`),
       });
     },
   });

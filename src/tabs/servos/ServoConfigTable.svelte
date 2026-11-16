@@ -5,6 +5,7 @@
   import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
   import { requestCurveView } from "@/js/curveNav.svelte.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { SERVO_ROLES, roleKey, roleOf, roleText } from "@/js/servoRoles.js";
   import {
     servoCenterRange,
     servoSignalRange,
@@ -33,7 +34,12 @@
   // the same for all of them.
   // onCurveClick(servoIndex): the balance curve indicator was clicked. Without
   // it the indicator opens the servo's curve on the Curves tab.
-  let { servos, onFieldChange, onTrimChange, onCurveClick } = $props();
+  // onRoleChange(servoIndex, role): a servo's role was picked (firmware with
+  // servo roles only, FC.SERVO_ROLES).
+  let { servos, onFieldChange, onTrimChange, onCurveClick, onRoleChange } =
+    $props();
+
+  let rolesSupported = $derived(Array.isArray(FC.SERVO_ROLES));
 
   const FLAG_REVERSE = 1;
 
@@ -168,6 +174,8 @@
   // be computed from the exact same numbers instead of a second,
   // independently-hand-typed guess that could drift out of sync with it.
   const INDEX_COL = 44;
+  // What the servo drives (servo roles).
+  const ROLE_COL = 150;
   const VALUE_COL = 100;
   const TRIM_COL = 100;
   // The adjustment badges and the live (Mapped) trim sit beside the trim
@@ -209,7 +217,9 @@
   });
 
   let columnWidths = $derived.by(() => {
-    const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
+    const cols = [INDEX_COL]; // Servo #
+    if (rolesSupported) cols.push(ROLE_COL);
+    cols.push(VALUE_COL); // Center
     if (showTrimColumn) cols.push(trimColumnWidth);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
@@ -272,6 +282,11 @@
       2: servoUsableTravel(config)[field],
       3: field === "max" ? signal.max : signal.min,
     });
+  }
+
+  // "Left aileron 2" when another servo has the same role.
+  function roleLabel(servo) {
+    return roleText(FC.SERVO_ROLES, servo.index, (key) => $i18n.t(key));
   }
 
   function flag(index, mask) {
@@ -451,6 +466,24 @@
   </span>
 {/snippet}
 
+{#snippet roleSelect(servo)}
+  {@const role = roleOf(FC.SERVO_ROLES[servo.index])}
+  <select
+    class="role-select"
+    value={role}
+    title={roleLabel(servo)}
+    onchange={(e) => onRoleChange?.(servo.index, Number(e.target.value))}
+  >
+    {#each SERVO_ROLES as r (r.value)}
+      <option value={r.value}>{$i18n.t(`servoRole_${r.key}`)}</option>
+    {/each}
+    <!-- A role from newer firmware this configurator doesn't know -->
+    {#if !SERVO_ROLES.some((r) => r.value === role)}
+      <option value={role}>{$i18n.t(roleKey(role))}</option>
+    {/if}
+  </select>
+{/snippet}
+
 {#snippet curveIconSvg()}
   <svg
     class="curve-icon"
@@ -488,6 +521,12 @@
     <div class="servo-config desktop-table">
       <div class="header-row" style="grid-template-columns: {gridColumns}">
         <span>{$i18n.t("servoNumber")}</span>
+        {#if rolesSupported}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoRole")}</span>
+            <HelpIcon>{$i18n.t("servoRoleHelp")}</HelpIcon>
+          </span>
+        {/if}
         <span class="header-label-flex">
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
@@ -540,6 +579,9 @@
             {servo.label}
             {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
           </span>
+          {#if rolesSupported}
+            <span>{@render roleSelect(servo)}</span>
+          {/if}
           <span>
             <NumberInput
               {...bounds(servo, "mid")}
@@ -637,6 +679,13 @@
               {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
             </span>
           </div>
+
+          {#if rolesSupported}
+            <div class="mobile-field">
+              {@render fieldLabel("servoRole", "servoRoleHelp")}
+              {@render roleSelect(servo)}
+            </div>
+          {/if}
 
           <div class="mobile-field">
             {@render fieldLabel("servoMid", "servoMidHelp")}
@@ -770,6 +819,9 @@
                 {servo.label}
                 {#if hasActiveCurve(servo)}{@render curveIconSvg()}{/if}
               </span>
+              {#if rolesSupported && roleOf(FC.SERVO_ROLES[servo.index])}
+                <span class="mobile-row-role">{roleLabel(servo)}</span>
+              {/if}
               {@render signal(servo, "mobile-row-signal")}
               <span class="mobile-row-mid"
                 >{$i18n.t("servoMid")}: {config.mid}</span
@@ -933,6 +985,16 @@
   // fallback - see width/height="1em" on the <svg>) so it tracks whatever
   // font-size/line-height applies at each of its three call sites, instead
   // of a fixed px size that's right in one place and wrong in the others.
+  .role-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-row-role {
+    color: var(--color-text-soft);
+    font-size: 0.85em;
+  }
+
   .curve-icon {
     width: 1em;
     height: 1em;

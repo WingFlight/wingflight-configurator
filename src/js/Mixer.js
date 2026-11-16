@@ -1,6 +1,7 @@
 import semver from "semver";
 import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
+import { SERVO_ROLE, applyLayoutRoles, roleText } from "@/js/servoRoles.js";
 
 export const Mixer = {
 
@@ -218,8 +219,15 @@ export const Mixer = {
         return servoIndex + 1;
     },
 
+    // "Servo 3", and what it drives when the FC has servo roles
+    // ("Servo 3 · Elevator").
     outputLabel: function (index, i18n) {
-        return i18n.getMessage(this.outputNames[index]);
+        const label = i18n.getMessage(this.outputNames[index]);
+        if (index < 1 || index > this.SERVO_OUTPUT_COUNT || !Array.isArray(FC.SERVO_ROLES)) {
+            return label;
+        }
+        const role = roleText(FC.SERVO_ROLES, index - 1, (key) => i18n.getMessage(key));
+        return role ? `${label} · ${role}` : label;
     },
 
     operNames: [
@@ -427,9 +435,34 @@ export const Mixer = {
 
     buildWizardRules : function (options)
     {
+        return Mixer.buildWizardLayout(options).rules;
+    },
+
+    // FC.SERVO_ROLES after a setup from these options: the servos it lays
+    // out get their surface's role, the rest keep theirs unless it was a
+    // surface role (see applyLayoutRoles()).
+    buildRoleTableFromOptions : function (options, currentRoles)
+    {
+        return applyLayoutRoles(currentRoles, Mixer.buildWizardLayout(options).roles);
+    },
+
+    // The rules for a set of options, and the role of every servo they use
+    // ({ servoIndex: role }, 0-based).
+    buildWizardLayout : function (options)
+    {
         const rules = [];
+        const roles = {};
         let nextServo = 1;
         let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
+
+        // Mixer output number of the next servo, which drives `role`.
+        function servo(role)
+        {
+            const output = nextServo++;
+            if (output <= Mixer.SERVO_OUTPUT_COUNT) roles[output - 1] = role;
+            return output;
+        }
+        const R = SERVO_ROLE;
         // Every output that ends up carrying pitch, across whichever layout
         // ran below -- the flap compensation rule(s) further down ADD onto
         // all of these, since a flap-induced pitching moment shows up on
@@ -453,25 +486,25 @@ export const Mixer = {
 
         if (options.layout === 'conventional') {
             if (options.ailerons === 'single') {
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+                rules.push(rule(OP_SET, ROLL, servo(R.AILERON), 1000));
             } else if (options.ailerons === 'independent') {
-                const leftAileron = nextServo++, rightAileron = nextServo++;
+                const leftAileron = servo(R.AILERON_LEFT), rightAileron = servo(R.AILERON_RIGHT);
                 rules.push(rule(OP_SET, ROLL, leftAileron, 1000));
                 rules.push(rule(OP_SET, ROLL, rightAileron, 1000, true));
                 aileronOutputs.push(leftAileron, rightAileron);
             }
 
             if (options.tailControl === 'elevatorOnly') {
-                const elevator = nextServo++;
+                const elevator = servo(R.ELEVATOR);
                 rules.push(rule(OP_SET, PITCH, elevator, 1000));
                 pitchOutputs.push(elevator);
             } else if (options.tailControl === 'elevatorRudder') {
-                const elevator = nextServo++;
+                const elevator = servo(R.ELEVATOR);
                 rules.push(rule(OP_SET, PITCH, elevator, 1000));
                 pitchOutputs.push(elevator);
-                rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW,   servo(R.RUDDER), 1000));
             } else if (options.tailControl === 'vtail') {
-                const rightTail = nextServo++, leftTail = nextServo++;
+                const rightTail = servo(R.VTAIL_RIGHT), leftTail = servo(R.VTAIL_LEFT);
                 rules.push(rule(OP_SET, YAW,   rightTail, 1000));
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
                 rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
@@ -479,7 +512,7 @@ export const Mixer = {
                 pitchOutputs.push(rightTail, leftTail);
             }
         } else if (options.layout === 'flyingWing') {
-            const leftElevon = nextServo++, rightElevon = nextServo++;
+            const leftElevon = servo(R.ELEVON_LEFT), rightElevon = servo(R.ELEVON_RIGHT);
             rules.push(rule(OP_SET, PITCH, leftElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
@@ -487,7 +520,7 @@ export const Mixer = {
             pitchOutputs.push(leftElevon, rightElevon);
 
             if (options.wingYaw === 'rudder') {
-                rules.push(rule(OP_SET, YAW, nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW, servo(R.RUDDER), 1000));
             }
         }
 
@@ -508,7 +541,7 @@ export const Mixer = {
                     rules.push(rule(OP_ADD, RC_AUX1, output, 500));
                 });
             } else if (options.flapServos >= 2) {
-                const leftFlap = nextServo++, rightFlap = nextServo++;
+                const leftFlap = servo(R.FLAP_LEFT), rightFlap = servo(R.FLAP_RIGHT);
                 rules.push(rule(OP_SET, RC_AUX1, leftFlap, 1000));
                 rules.push(rule(OP_SET, RC_AUX1, rightFlap, 1000));
 
@@ -524,7 +557,7 @@ export const Mixer = {
                     rules.push(rule(OP_ADD, ROLL, rightFlap, 500, true));
                 }
             } else {
-                rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+                rules.push(rule(OP_SET, RC_AUX1, servo(R.FLAP), 1000));
             }
 
             // Flap-induced pitching moment otherwise gets silently absorbed
@@ -558,16 +591,16 @@ export const Mixer = {
         // so each axis is wired independently rather than assuming a fixed
         // combination.
         if (options.thrustVectorRoll) {
-            rules.push(rule(OP_SET, TV_ROLL, nextServo++, 1000));
+            rules.push(rule(OP_SET, TV_ROLL, servo(R.THRUST_VECTOR_ROLL), 1000));
         }
         if (options.thrustVectorPitch) {
-            rules.push(rule(OP_SET, TV_PITCH, nextServo++, 1000));
+            rules.push(rule(OP_SET, TV_PITCH, servo(R.THRUST_VECTOR_PITCH), 1000));
         }
         if (options.thrustVectorYaw) {
-            rules.push(rule(OP_SET, TV_YAW, nextServo, 1000));
+            rules.push(rule(OP_SET, TV_YAW, servo(R.THRUST_VECTOR_YAW), 1000));
         }
 
-        return rules;
+        return { rules, roles };
     },
 
     isNullRule : function (a) {

@@ -92,6 +92,10 @@
 
   function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
+    // What each servo drives, on firmware with servo roles.
+    if (Array.isArray(FC.SERVO_ROLES)) {
+      FC.SERVO_ROLES = Mixer.buildRoleTableFromOptions(options, FC.SERVO_ROLES);
+    }
 
     applied = true;
     dialogEl.close();

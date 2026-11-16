@@ -1,4 +1,5 @@
 import { FC } from "@/js/fc.svelte.js";
+import { SERVO_ROLE, packRole } from "@/js/servoRoles.js";
 import { GainCurve } from "@/js/GainCurve.js";
 import { MixerCurve } from "@/js/MixerCurve.js";
 import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
@@ -346,6 +347,19 @@ function encodeServoTrim() {
   buffer.push8(count);
   for (let i = 0; i < count; i++) buffer.push16(0);
   for (let i = 0; i < count; i++) buffer.push16(FC.SERVO_SAVED_TRIM?.[i] ?? 0);
+  return Uint8Array.from(buffer);
+}
+
+// What each servo drives (servoRoles PG). Kept here rather than in FC so a
+// read that clears FC.SERVO_ROLES first still gets the stored values back.
+let virtualServoRoles = [];
+
+// MSP2_WING_SERVO_ROLES: count, then one U8 per servo.
+function encodeServoRoles() {
+  const count = FC.SERVO_CONFIG.length;
+  const buffer = [];
+  buffer.push8(count);
+  for (let i = 0; i < count; i++) buffer.push8(virtualServoRoles[i] ?? 0);
   return Uint8Array.from(buffer);
 }
 
@@ -699,6 +713,15 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeServoTrim());
     case MSPCodes.MSP2_WING_SERVO_TIMING:
       return decodeVirtualReply(code, encodeServoTiming());
+    case MSPCodes.MSP2_WING_SERVO_ROLES:
+      return decodeVirtualReply(code, encodeServoRoles());
+    // Like the FC, any value is kept; a servo past the slots is refused.
+    case MSPCodes.MSP2_WING_SET_SERVO_ROLE: {
+      const [servo, value] = requestData;
+      if (servo >= FC.SERVO_CONFIG.length) return undefined;
+      virtualServoRoles[servo] = value;
+      return new Uint8Array(0);
+    }
     case MSPCodes.MSP2_WING_FBUS_SENSORS:
       return decodeVirtualReply(code, encodeFbusSensors());
     case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS:
@@ -1166,6 +1189,14 @@ export function applyVirtualConfig() {
   // Live and saved servo trims (MSP_SERVO_TRIM): servoTrims PG default is 0
   FC.SERVO_RUNTIME_TRIM = FC.SERVO_CONFIG.map(() => 0);
   FC.SERVO_SAVED_TRIM = FC.SERVO_CONFIG.map(() => 0);
+
+  // Servo roles: the servoRoles PG default, matching the mix above
+  virtualServoRoles = FC.SERVO_CONFIG.map(() => 0);
+  virtualServoRoles[0] = packRole(SERVO_ROLE.AILERON_LEFT);
+  virtualServoRoles[1] = packRole(SERVO_ROLE.AILERON_RIGHT);
+  virtualServoRoles[2] = packRole(SERVO_ROLE.ELEVATOR);
+  virtualServoRoles[3] = packRole(SERVO_ROLE.RUDDER);
+  FC.SERVO_ROLES = [...virtualServoRoles];
 
   // Failsafe/arming: pg/failsafe.c and pg/arming.c defaults
   Object.assign(FC.FAILSAFE_CONFIG, {

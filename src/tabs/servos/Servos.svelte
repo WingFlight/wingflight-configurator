@@ -23,6 +23,7 @@
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
   import ServoBalance from "./ServoBalance.svelte";
   import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { setRole } from "@/js/servoRoles.js";
 
   // A servo is a servo: servo N is sent on PWM output N where the board has
   // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
@@ -47,6 +48,8 @@
   let initialTrims = $state(null);
   // Balance curves, set live by the Balance section (and the Curves tab).
   let initialCurves = $state(null);
+  // What each servo drives (FC.SERVO_ROLES), sent live like the other fields.
+  let initialRoles = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -94,8 +97,18 @@
       ),
   );
 
+  let rolesDirty = $derived(
+    initialRoles !== null &&
+      Array.isArray(FC.SERVO_ROLES) &&
+      FC.SERVO_ROLES.some((value, i) => value !== initialRoles[i]),
+  );
+
   let dirty = $derived(
-    changes.length > 0 || busOutChannelsDirty || trimsDirty || curvesDirty,
+    changes.length > 0 ||
+      busOutChannelsDirty ||
+      trimsDirty ||
+      curvesDirty ||
+      rolesDirty,
   );
 
   let hasSbusOut = $derived(
@@ -232,6 +245,10 @@
     // section. Not guaranteed populated otherwise if this tab is visited
     // before Curves.
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
+    // Firmware without servo roles answers "unsupported" and leaves this
+    // null; the Role column isn't shown then.
+    FC.SERVO_ROLES = null;
+    await MSP.promise(MSPCodes.MSP2_WING_SERVO_ROLES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
@@ -239,6 +256,7 @@
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
     initialCurves = snapshotCurves();
+    initialRoles = snapshotRoles();
     overrideEnabled = servos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -294,6 +312,18 @@
 
   function snapshotTrims() {
     return savedTrimSupported ? [...FC.SERVO_SAVED_TRIM] : null;
+  }
+
+  function snapshotRoles() {
+    return Array.isArray(FC.SERVO_ROLES) ? [...FC.SERVO_ROLES] : null;
+  }
+
+  // Pushed live like onFieldChange. Servos on the same role are numbered in
+  // servo order, so others on the old or new role may be renumbered too.
+  async function onRoleChange(index, role) {
+    const before = [...FC.SERVO_ROLES];
+    FC.SERVO_ROLES = setRole(FC.SERVO_ROLES, index, role);
+    await mspHelper.sendServoRoles(before);
   }
 
   function snapshotCurves() {
@@ -411,6 +441,9 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await pollRuntimeTrim();
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
+    if (Array.isArray(FC.SERVO_ROLES)) {
+      await MSP.promise(MSPCodes.MSP2_WING_SERVO_ROLES);
+    }
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
 
     const config = $state.snapshot(FC.SERVO_CONFIG);
@@ -420,6 +453,10 @@
     const trims = snapshotTrims();
     if (initialTrims && trims && trims.length > initialTrims.length) {
       initialTrims = [...initialTrims, ...trims.slice(initialTrims.length)];
+    }
+    const roles = snapshotRoles();
+    if (initialRoles && roles && roles.length > initialRoles.length) {
+      initialRoles = [...initialRoles, ...roles.slice(initialRoles.length)];
     }
     const curves = snapshotCurves();
     if (initialCurves && curves.length > initialCurves.length) {
@@ -458,6 +495,7 @@
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
     initialCurves = snapshotCurves();
+    initialRoles = snapshotRoles();
   }
 
   export async function onRevert() {
@@ -492,6 +530,15 @@
           await new Promise((resolve) => mspHelper.sendServoCurve(i, resolve));
         }
       }
+    }
+
+    if (initialRoles !== null && Array.isArray(FC.SERVO_ROLES)) {
+      const current = [...FC.SERVO_ROLES];
+      FC.SERVO_ROLES = [
+        ...initialRoles.slice(0, current.length),
+        ...current.slice(initialRoles.length),
+      ];
+      await mspHelper.sendServoRoles(current);
     }
 
     // Back to the servos the FC has in use.
@@ -625,6 +672,7 @@
         {servos}
         {onFieldChange}
         {onTrimChange}
+        {onRoleChange}
         onCurveClick={(servo) => balanceRef.open(servo)}
       />
     </div>

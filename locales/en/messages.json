@@ -10581,10 +10581,10 @@
         "message": "Servo $1"
     },
     "servoBalanceSameMix": {
-        "message": "Servo $1 (same mix)"
+        "message": "$1 (same surface)"
     },
     "servoBalanceNoSameMix": {
-        "message": "No other servo is mixed the same way as servo $1. Check the two servos really move the same surface."
+        "message": "No other servo has the same role or mix as servo $1. Check the servos really move the same surface."
     },
     "servoBalanceNoSharedInput": {
         "message": "Servo $1 shares no mixer input with servo $2, so it is held the same way. Check they move the surface the same way before holding them away from center."
@@ -10614,7 +10614,7 @@
         "message": "Remove servo $1"
     },
     "servoBalanceAddSuggested": {
-        "message": "Add the other servos on this surface. Mixed the same way: servo $1."
+        "message": "Add the other servos on this surface: servo $1."
     },
     "servoBalanceLock": {
         "message": "Hold"
@@ -10623,9 +10623,108 @@
         "message": "Holding"
     },
     "servoBalanceMirrored": {
-        "message": "Servo $1 (mirrored in the mix)"
+        "message": "$1 (mirrored in the mix)"
     },
     "servoBalanceHowTo": {
         "message": "Click a point to hold the servos there, or drag it up and down. With a graph selected: ← → move to the next point, ↑ ↓ move the servo 1 µs (Shift: 10 µs), Enter holds or lets go. Let go and the markers follow the sticks."
+    },
+    "servoRole": {
+        "message": "Role"
+    },
+    "servoRoleHelp": {
+        "message": "What this servo drives. It names the servo everywhere it is listed (Mixer, Balance servos, Setup Wizard, radio scripts) and tells tools which servos share a surface. Two servos with the same role are numbered in servo order: Left aileron 1, Left aileron 2. A model setup in the Mixer sets the roles of the surfaces it lays out. The FC doesn't use it to fly."
+    },
+    "servoRole_none": {
+        "message": "—"
+    },
+    "servoRole_aileron": {
+        "message": "Aileron"
+    },
+    "servoRole_aileronLeft": {
+        "message": "Left aileron"
+    },
+    "servoRole_aileronRight": {
+        "message": "Right aileron"
+    },
+    "servoRole_elevator": {
+        "message": "Elevator"
+    },
+    "servoRole_elevatorLeft": {
+        "message": "Left elevator"
+    },
+    "servoRole_elevatorRight": {
+        "message": "Right elevator"
+    },
+    "servoRole_rudder": {
+        "message": "Rudder"
+    },
+    "servoRole_vtailLeft": {
+        "message": "Left V-tail"
+    },
+    "servoRole_vtailRight": {
+        "message": "Right V-tail"
+    },
+    "servoRole_elevonLeft": {
+        "message": "Left elevon"
+    },
+    "servoRole_elevonRight": {
+        "message": "Right elevon"
+    },
+    "servoRole_flap": {
+        "message": "Flap"
+    },
+    "servoRole_flapLeft": {
+        "message": "Left flap"
+    },
+    "servoRole_flapRight": {
+        "message": "Right flap"
+    },
+    "servoRole_spoiler": {
+        "message": "Spoiler"
+    },
+    "servoRole_spoilerLeft": {
+        "message": "Left spoiler"
+    },
+    "servoRole_spoilerRight": {
+        "message": "Right spoiler"
+    },
+    "servoRole_throttle": {
+        "message": "Throttle"
+    },
+    "servoRole_thrustVectorPitch": {
+        "message": "Thrust vector pitch"
+    },
+    "servoRole_thrustVectorYaw": {
+        "message": "Thrust vector yaw"
+    },
+    "servoRole_thrustVectorRoll": {
+        "message": "Thrust vector roll"
+    },
+    "servoRole_steering": {
+        "message": "Steering"
+    },
+    "servoRole_gear": {
+        "message": "Gear"
+    },
+    "servoRole_wheelBrake": {
+        "message": "Wheel brake"
+    },
+    "servoRole_towRelease": {
+        "message": "Tow release"
+    },
+    "servoRole_payloadRelease": {
+        "message": "Payload release"
+    },
+    "servoRole_smoke": {
+        "message": "Smoke"
+    },
+    "servoRole_choke": {
+        "message": "Choke"
+    },
+    "servoRole_other": {
+        "message": "Other"
+    },
+    "servoRole_unknown": {
+        "message": "Unknown role"
     }
 }

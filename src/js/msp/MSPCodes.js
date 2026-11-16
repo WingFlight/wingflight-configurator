@@ -258,6 +258,9 @@ export const MSPCodes = {
     MSP2_WING_SRXL2_ESC_CONFIG:       0x5F35,
     MSP2_WING_SET_SRXL2_ESC_CONFIG:   0x5F36,
     MSP2_WING_FBUS_MASTER_TRIAL:      0x5F37,
+    // 0x5F3A: 0x5F38-0x5F39 are taken on an open firmware branch.
+    MSP2_WING_SERVO_ROLES:            0x5F3A,
+    MSP2_WING_SET_SERVO_ROLE:         0x5F3B,
 
     // MSPv2 Betaflight specific
     MSP2_BETAFLIGHT_BIND:               0x3000,
