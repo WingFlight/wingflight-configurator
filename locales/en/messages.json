@@ -5161,7 +5161,7 @@
         "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs report telemetry automatically over that same bus, so no separate telemetry protocol needs to be chosen."
     },
     "motorsEscTelemetryProtocolFbusHelp": {
-        "message": "FrSky F.BUS reads telemetry over its own dedicated port, not this module's ESC Telemetry one. Assign a UART the <i>FBUS Out</i> or <i>S.PORT Master</i> function on the <i>Configuration</i> tab -- see the <i>FBUS/S.Port Sensors</i> tab to confirm it's actually receiving."
+        "message": "FrSky F.BUS reads telemetry over its own dedicated port, not this module's ESC Telemetry one. Assign a UART the <i>FBUS Out</i> or <i>S.PORT Master</i> function on the <i>Configuration</i> tab -- see the <i>FBUS/S.Port Sensors</i> tab to confirm it's actually receiving. The half duplex and pin swap settings here don't apply: the F.BUS port's wiring is set in the Setup Wizard's <i>Servo bus</i> step."
     },
     "motorsEscTelemetryHalfDuplex": {
         "message": "Half-Duplex"
