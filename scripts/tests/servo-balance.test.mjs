@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
     sameMix, referenceCandidates, mixDirection, holdCommands,
     resampleCurve, servoOutput, nudgeCurvePoint, pointOffsetUs, pointUse,
+    commandFromOutput, nearestPoint,
 } from '../../src/js/servoBalance.js';
 import { ServoBalanceCurve } from '../../src/js/ServoBalanceCurve.js';
 
@@ -71,6 +72,18 @@ test('a nudge only moves its own point', () => {
     const curve = resampleCurve(null, 5);
     nudgeCurvePoint(config, curve, 3, 15);
     assert.deepEqual(curve.points.slice(0, 5).map((p) => p.y), [0, 0, 0, 30, 0]);
+});
+
+test('the live position is worked back from the output pulse', () => {
+    const config = servo({ rpos: 400, rneg: 600 });
+    assert.equal(commandFromOutput(config, 1700), 500);
+    assert.equal(commandFromOutput(config, 1200), -500);
+    assert.equal(commandFromOutput(servo({ flags: 1 }), 1750), -500);
+    assert.equal(commandFromOutput(config, 1520, 20), 0);
+    assert.equal(commandFromOutput(config, 2500), 1000);
+    const curve = resampleCurve(null, 5);
+    assert.equal(nearestPoint(curve, 300), 3);
+    assert.equal(nearestPoint(curve, -900), 0);
 });
 
 test('a point at the limit of the curve stops there', () => {

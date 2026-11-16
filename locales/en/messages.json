@@ -10575,19 +10575,10 @@
         "message": "When two servos move one control surface, small mechanical differences make one push against the other at some points of the travel. A servo that fights another draws high current, gets hot and can fail in flight. The balanced servo's balance curve adds a small offset at each point, so it can be matched to the other servo along the whole travel."
     },
     "servoBalanceIntro": {
-        "message": "Pick the servo to balance and the servo on the same surface to match it to. Both are held at each point of the balance curve; move the balanced servo until it sits exactly with the other one and neither strains or buzzes."
+        "message": "Add the servos that move one surface, up to four. Each has a graph of its balance curve: the servo's travel across, the offset the curve adds up and down. Pick a point to hold every servo in the group there, then move each servo's point until the servos sit together and none of them strains or buzzes."
     },
     "servoBalanceServo": {
         "message": "Servo $1"
-    },
-    "servoBalanceServoLabel": {
-        "message": "Balance"
-    },
-    "servoBalanceReferenceLabel": {
-        "message": "against"
-    },
-    "servoBalanceChoose": {
-        "message": "Choose a servo"
     },
     "servoBalanceSameMix": {
         "message": "Servo $1 (same mix)"
@@ -10596,19 +10587,10 @@
         "message": "No other servo is mixed the same way as servo $1. Check the two servos really move the same surface."
     },
     "servoBalanceNoSharedInput": {
-        "message": "These two servos share no mixer input, so they are held the same way. Check they move the surface the same way before holding them away from center."
+        "message": "Servo $1 shares no mixer input with servo $2, so it is held the same way. Check they move the surface the same way before holding them away from center."
     },
     "servoBalancePointCount": {
         "message": "Curve points"
-    },
-    "servoBalancePoints": {
-        "message": "Balance curve points"
-    },
-    "servoBalancePickPoint": {
-        "message": "Pick a point to hold both servos there. Start at the ends, where the servos fight hardest."
-    },
-    "servoBalanceHolding": {
-        "message": "Servos $1 and $2 held at $3. Move servo $1:"
     },
     "servoBalanceSweep": {
         "message": "Sweep"
@@ -10619,10 +10601,31 @@
     "servoBalanceReset": {
         "message": "Reset curve"
     },
-    "servoBalanceRelease": {
-        "message": "Let go"
-    },
     "servoBalanceNearLimit": {
         "message": "Near the limit of the balance curve. Adjust the linkage instead."
+    },
+    "servoBalanceGroup": {
+        "message": "Servos on this surface"
+    },
+    "servoBalanceAdd": {
+        "message": "Add a servo"
+    },
+    "servoBalanceRemove": {
+        "message": "Remove servo $1"
+    },
+    "servoBalanceAddSuggested": {
+        "message": "Add the other servos on this surface. Mixed the same way: servo $1."
+    },
+    "servoBalanceLock": {
+        "message": "Hold"
+    },
+    "servoBalanceLocked": {
+        "message": "Holding"
+    },
+    "servoBalanceMirrored": {
+        "message": "Servo $1 (mirrored in the mix)"
+    },
+    "servoBalanceHowTo": {
+        "message": "Click a point to hold the servos there, or drag it up and down. With a graph selected: ← → move to the next point, ↑ ↓ move the servo 1 µs (Shift: 10 µs), Enter holds or lets go. Let go and the markers follow the sticks."
     }
 }

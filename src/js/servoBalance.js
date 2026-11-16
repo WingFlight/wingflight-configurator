@@ -140,6 +140,29 @@ export function pointOffsetUs(config, curve, index) {
   );
 }
 
+// The servo's mixer output (-1000..1000) worked back from its output pulse
+// in us: where it is along its balance curve's X axis right now. The curve's
+// own small offset is left in, which is close enough to place a marker.
+export function commandFromOutput(config, us, trim = 0) {
+  const offset = us - config.mid - trim;
+  const scale = offset >= 0 ? config.rpos : config.rneg;
+  if (!scale) return 0;
+  const pos = offset / scale;
+  const command = reversed(config) ? -pos : pos;
+  return clamp(Math.round(command * 1000), -1000, 1000);
+}
+
+// Index of the curve point nearest to `x`.
+export function nearestPoint(curve, x) {
+  let best = 0;
+  for (let i = 1; i < curve.count; i++) {
+    if (Math.abs(curve.points[i].x - x) < Math.abs(curve.points[best].x - x)) {
+      best = i;
+    }
+  }
+  return best;
+}
+
 // How much of the curve's range a point uses (0..1). Near 1 the servos are
 // too far apart for the curve: the linkage should be adjusted instead.
 export function pointUse(curve, index) {
