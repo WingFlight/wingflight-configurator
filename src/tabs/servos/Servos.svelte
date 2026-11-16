@@ -304,6 +304,10 @@
   // section; letting go puts a servo back to what that section has it at.
   const SERVO_OVERRIDE_OFF = 2001;
 
+  // The Balance servos section, opened from the balance curve indicator in
+  // the servo table.
+  let balanceRef;
+
   function holdServo(servo, value) {
     FC.SERVO_OVERRIDE[servo] = value;
     mspHelper.sendServoOverride(servo);
@@ -617,12 +621,22 @@
     {@render trimActions(servos)}
 
     <div class="table-scroll">
-      <ServoConfigTable {servos} {onFieldChange} {onTrimChange} />
+      <ServoConfigTable
+        {servos}
+        {onFieldChange}
+        {onTrimChange}
+        onCurveClick={(servo) => balanceRef.open(servo)}
+      />
     </div>
   </Section>
 
   <Section label="servoBalanceTitle" summary="servoBalanceHelp">
-    <ServoBalance {servos} hold={holdServo} release={releaseServo} />
+    <ServoBalance
+      bind:this={balanceRef}
+      {servos}
+      hold={holdServo}
+      release={releaseServo}
+    />
   </Section>
 
   <Section label="servoOverride" summary="servoOverrideHelp">

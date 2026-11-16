@@ -38,6 +38,7 @@
   const SWEEP_CYCLES = 2;
 
   let group = $state([]);
+  let rootEl;
   let activeServo = $state(null);
   let selected = $state(null);
   // Where the first servo of the group is held (its mixer output), or null.
@@ -144,6 +145,20 @@
   }
 
   //// The group
+
+  // Opens `servo` for balancing (from the balance curve indicator in the
+  // servo table): a group of it and the servos mixed the same way, unless it
+  // is in the group already. Scrolls the section into view.
+  export function open(servo) {
+    if (!group.includes(servo)) {
+      letGo();
+      const same = referenceCandidates(FC.MIXER_RULES, servo, count);
+      group = [servo, ...same].slice(0, MAX_GROUP);
+      selected = null;
+    }
+    activeServo = servo;
+    rootEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function addServo(value) {
     if (value === "") return;
@@ -268,7 +283,7 @@
   });
 </script>
 
-<p class="intro">{$i18n.t("servoBalanceIntro")}</p>
+<p class="intro" bind:this={rootEl}>{$i18n.t("servoBalanceIntro")}</p>
 
 <div class="row">
   <span class="muted">{$i18n.t("servoBalanceGroup")}</span>

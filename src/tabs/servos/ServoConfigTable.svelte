@@ -31,7 +31,9 @@
 
   // Each servo: { index, mspIndex, label, hasPwm, hasBus }. Every setting is
   // the same for all of them.
-  let { servos, onFieldChange, onTrimChange } = $props();
+  // onCurveClick(servoIndex): the balance curve indicator was clicked. Without
+  // it the indicator opens the servo's curve on the Curves tab.
+  let { servos, onFieldChange, onTrimChange, onCurveClick } = $props();
 
   const FLAG_REVERSE = 1;
 
@@ -276,8 +278,8 @@
     return (FC.SERVO_CONFIG[index].flags & mask) !== 0;
   }
 
-  // Balance curves are edited on the Curves tab and in the Balance section,
-  // not in this table - this is just a
+  // Balance curves are edited in the Balance servos section (and on the
+  // Curves tab), not in this table - this is just a
   // read-only "something's set" indicator so it's not invisible from the
   // Servos tab.
   function hasActiveCurve(servo) {
@@ -470,7 +472,10 @@
   <button
     type="button"
     class="curve-icon-btn"
-    onclick={() => requestCurveView("servo", servo.index)}
+    onclick={() =>
+      onCurveClick
+        ? onCurveClick(servo.index)
+        : requestCurveView("servo", servo.index)}
     title={$i18n.t("servoCurveEdit")}
     aria-label={$i18n.t("servoCurveEdit")}
   >
