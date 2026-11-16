@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { servoName } from "@/js/ServoNames.js";
 
   import ModelSetupDialog from "@/tabs/mixer/ModelSetupDialog.svelte";
 
@@ -128,6 +129,9 @@
             <span class="kind"
               >{$i18n.t(`setupWizardSurface_${surface.kind}`)}</span
             >
+            {#if servoName(surface.servo)}
+              <span class="servo-name">{servoName(surface.servo)}</span>
+            {/if}
             <span class="axes">
               {#each AXES.filter((a) => surface.axes[a.key]) as axis (axis.key)}
                 <span class="axis">
@@ -278,6 +282,11 @@
   }
 
   // Servo output number.
+  .servo-name {
+    font-size: 0.8rem;
+    color: var(--color-text-soft);
+  }
+
   .servo {
     display: grid;
     place-items: center;

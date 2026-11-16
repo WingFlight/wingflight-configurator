@@ -7,6 +7,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { loadServoNames, withServoName } from "@/js/ServoNames.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { getTabHelpURL } from "@/js/help";
   import { bit_check, reinitialiseConnection } from "@/js/serial_backend";
@@ -163,6 +164,8 @@
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    // Servo names, shown with the surfaces
+    await loadServoNames();
     // Saved trims take travel from one side (see servoStickConfig()).
     await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
@@ -553,10 +556,11 @@
       leaveFn = fn;
     },
     surfaceLabel(surface) {
-      return $i18n.t("setupWizardSurfaceLabel", {
+      const label = $i18n.t("setupWizardSurfaceLabel", {
         1: surface.servo + 1,
         2: $i18n.t(`setupWizardSurface_${surface.kind}`),
       });
+      return withServoName(label, surface.servo);
     },
   });
 

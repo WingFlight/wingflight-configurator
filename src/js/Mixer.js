@@ -1,6 +1,7 @@
 import semver from "semver";
 import { API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 import { FC } from "@/js/fc.svelte.js";
+import { withServoName } from "@/js/ServoNames.js";
 
 export const Mixer = {
 
@@ -218,8 +219,13 @@ export const Mixer = {
         return servoIndex + 1;
     },
 
+    // With the servo's name, when it has one (FC.SERVO_NAMES)
     outputLabel: function (index, i18n) {
-        return i18n.getMessage(this.outputNames[index]);
+        const label = i18n.getMessage(this.outputNames[index]);
+        if (index >= 1 && index <= this.SERVO_OUTPUT_COUNT) {
+            return withServoName(label, index - 1);
+        }
+        return label;
     },
 
     operNames: [

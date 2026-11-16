@@ -6,6 +6,7 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { loadServoNames } from "@/js/ServoNames.js";
   import { getTabHelpURL } from "@/js/help";
 
   import Page from "@/components/Page.svelte";
@@ -60,6 +61,8 @@
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE);
+    // Servo names for the output labels
+    await loadServoNames();
     // Needed for the Purpose-tagged rules' ADJ/LIVE badge (RuleTable/
     // SimplifiedMixerForm) -- Profiles.svelte and Servos.svelte each fetch
     // this themselves for their own badges too, since nothing fetches it
