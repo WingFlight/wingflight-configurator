@@ -1,8 +1,4 @@
 {
   "branch": "feature/mixer-weight",
-  "date": "2026-11-16T11:30:16Z",
-  "number": 240,
-  "title": "Mixer: rules started from the blank row get full weight",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/240",
-  "draft": false
+  "date": "2026-11-16T11:30:16Z"
 }
