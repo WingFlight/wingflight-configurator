@@ -246,13 +246,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-mixer-weight",
-      "path": "./feature-mixer-weight/",
-      "branch": "feature/mixer-weight",
-      "date": "2026-11-16T11:30:16Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-modes-picker",
       "path": "./feature-modes-picker/"
     },
