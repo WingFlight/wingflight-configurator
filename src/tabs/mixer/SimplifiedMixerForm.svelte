@@ -64,20 +64,29 @@
       (byOutput[rule.dst] ??= []).push(rule);
     });
 
-    return Object.keys(byOutput)
+    // A servo that follows another moves with that servo's mix, and the FC
+    // ignores any rules of its own.
+    const follows = {};
+    (FC.SERVO_FOLLOW ?? []).forEach((primary, i) => {
+      if (primary && primary !== i + 1) follows[Mixer.servoOutput(i)] = primary;
+    });
+
+    return [...new Set([...Object.keys(byOutput), ...Object.keys(follows)])]
       .map(Number)
       .sort((a, b) => a - b)
       .map((dst) => ({
         dst,
         outputLabel: Mixer.outputLabel(dst, i18nShim),
-        inputsText: byOutput[dst]
-          .map((rule) => {
-            const label = Mixer.inputLabel(rule.src, i18nShim, FC.RC_MAP);
-            return rule.weight < 0
-              ? `${label} (${$i18n.t("mixerRuleReverse")})`
-              : label;
-          })
-          .join(", "),
+        inputsText: follows[dst]
+          ? $i18n.t("servoFollowOf", { 1: follows[dst] })
+          : byOutput[dst]
+              .map((rule) => {
+                const label = Mixer.inputLabel(rule.src, i18nShim, FC.RC_MAP);
+                return rule.weight < 0
+                  ? `${label} (${$i18n.t("mixerRuleReverse")})`
+                  : label;
+              })
+              .join(", "),
       }));
   });
 </script>

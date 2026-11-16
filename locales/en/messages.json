@@ -10567,5 +10567,149 @@
     },
     "remoteSupportPilotMustAllow": {
         "message": "The pilot shares from a browser, which only shares what they allow. Ask them for more if you need it."
+    },
+    "servoFollowTitle": {
+        "message": "Servos on one surface"
+    },
+    "servoFollowIntro": {
+        "message": "When more than one servo moves a control surface, set the extra servos to follow the first one. A follower moves with the first servo's mix, so it needs no mixer rules of its own. Its reverse, center, scale, limits and balance curve stay its own."
+    },
+    "servoFollowServo": {
+        "message": "Servo $1"
+    },
+    "servoFollowNone": {
+        "message": "Drives itself"
+    },
+    "servoFollowOf": {
+        "message": "Follows servo $1"
+    },
+    "servoFollowRulesIgnored": {
+        "message": "These servos follow another, so their own mixer rules are ignored: $1."
+    },
+    "servoBalanceTitle": {
+        "message": "Balance"
+    },
+    "servoBalanceSteps": {
+        "message": "Each follower is matched to its first servo at five points. Start with Copy travel to give the followers the first servo's scale and limits, then work through the points in order. Every change is sent at once; Save keeps it."
+    },
+    "servoBalanceIntro": {
+        "message": "Pick a point to hold the surface there. Work through them in order: center, both ends, then half way."
+    },
+    "servoBalanceGroup": {
+        "message": "$1, followed by $2"
+    },
+    "servoBalanceCopyTravel": {
+        "message": "Copy travel from $1"
+    },
+    "servoBalanceSweep": {
+        "message": "Sweep"
+    },
+    "servoBalanceSweepStop": {
+        "message": "Stop sweep"
+    },
+    "servoBalancePoints": {
+        "message": "Balance points"
+    },
+    "servoBalancePoint_center": {
+        "message": "Center"
+    },
+    "servoBalancePoint_endPos": {
+        "message": "Full +"
+    },
+    "servoBalancePoint_endNeg": {
+        "message": "Full −"
+    },
+    "servoBalancePoint_halfPos": {
+        "message": "Half +"
+    },
+    "servoBalancePoint_halfNeg": {
+        "message": "Half −"
+    },
+    "servoBalanceRelease": {
+        "message": "Let go"
+    },
+    "servoBalanceHint_center": {
+        "message": "The surface is held at center. Move each follower until the surface sits straight and no servo buzzes. This sets the follower's Center."
+    },
+    "servoBalanceHint_endPos": {
+        "message": "The surface is held at full travel one way. Move each follower until it sits exactly with the first servo and doesn't strain. This sets its scale on this side."
+    },
+    "servoBalanceHint_endNeg": {
+        "message": "The surface is held at full travel the other way. Move each follower until it sits exactly with the first servo and doesn't strain. This sets its scale on this side."
+    },
+    "servoBalanceHint_halfPos": {
+        "message": "The surface is held half way. Fine-tune each follower here. This sets its balance curve between center and the end."
+    },
+    "servoBalanceHint_halfNeg": {
+        "message": "The surface is held half way the other way. Fine-tune each follower here. This sets its balance curve between center and the end."
+    },
+    "servoBalanceSettingCenter": {
+        "message": "Center $1"
+    },
+    "servoBalanceSettingScalePos": {
+        "message": "+ scale $1"
+    },
+    "servoBalanceSettingScaleNeg": {
+        "message": "− scale $1"
+    },
+    "servoBalanceSettingCurve": {
+        "message": "Curve $1%"
+    },
+    "servoBalanceResetCurve": {
+        "message": "Reset curve"
+    },
+    "servoBalanceCurveLimit": {
+        "message": "Near the limit of the balance curve. Adjust the linkage instead."
+    },
+    "mixerWizardServosPerSurfaceTitle": {
+        "message": "Servos per surface"
+    },
+    "mixerWizardServosPerSurfaceHint": {
+        "message": "For a surface moved by more than one servo. The extra servos are numbered right after the first and follow it. Match them up on the Servos tab or in the Setup Wizard."
+    },
+    "mixerWizardSurfaceKind_aileron": {
+        "message": "Each aileron"
+    },
+    "mixerWizardSurfaceKind_elevator": {
+        "message": "Elevator"
+    },
+    "mixerWizardSurfaceKind_rudder": {
+        "message": "Rudder"
+    },
+    "mixerWizardSurfaceKind_tail": {
+        "message": "Each V-tail half"
+    },
+    "mixerWizardSurfaceKind_elevon": {
+        "message": "Each elevon"
+    },
+    "mixerWizardSurfaceKind_flap": {
+        "message": "Each flap"
+    },
+    "setupWizardStep_balance": {
+        "message": "Balance servos"
+    },
+    "setupWizardFollowerLabel": {
+        "message": "Servo $1 · $2 (follows servo $3)"
+    },
+    "setupWizardAirframeFollowers": {
+        "message": "Also moved by servo $1"
+    },
+    "setupWizardCentreFollowerHint": {
+        "message": "Another servo on this surface. Center its arm the same way; the Balance step matches it to the first servo later."
+    },
+    "setupWizardDirectionFollowerHint": {
+        "message": "Another servo on this surface. Check it moves the surface the same way."
+    },
+    "setupWizardBalanceIntro": {
+        "message": "Some surfaces have more than one servo. Match each extra servo to the surface's first servo so they don't fight. A servo that fights another draws high current, gets hot and can fail in flight."
+    },
+    "setupWizardBalanceTipCopy": {
+        "message": "Copy travel gives the extra servos the throws you set for the first servo."
+    },
+    "setupWizardBalanceTipPoints": {
+        "message": "Then hold the surface at each point and move each extra servo until it sits exactly with the first: center, both ends, then half way."
+    },
+    "setupWizardBalanceTipListen": {
+        "message": "Listen for buzzing and watch the linkages. If a servo strains, let go and fix it before you go on."
     }
 }

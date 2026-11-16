@@ -21,6 +21,8 @@
 
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
+  import ServoGroups from "./ServoGroups.svelte";
+  import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 
   // A servo is a servo: servo N is sent on PWM output N where the board has
   // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
@@ -43,6 +45,10 @@
   // can change from the FC side too (a Stepped ServoTrim adjustment on the
   // bench), so they get the same dirty/Save/Revert treatment.
   let initialTrims = $state(null);
+  // Which servo each one follows (FC.SERVO_FOLLOW) and the balance curves the
+  // balance tool sets: both sent live, outside FC.SERVO_CONFIG.
+  let initialFollow = $state(null);
+  let initialCurves = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -81,7 +87,31 @@
       FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
   );
 
-  let dirty = $derived(changes.length > 0 || busOutChannelsDirty || trimsDirty);
+  // Firmware with servos that follow another on the same surface.
+  let followSupported = $derived(Array.isArray(FC.SERVO_FOLLOW));
+
+  let followDirty = $derived(
+    initialFollow !== null &&
+      followSupported &&
+      FC.SERVO_FOLLOW.some((primary, i) => primary !== initialFollow[i]),
+  );
+
+  let curvesDirty = $derived(
+    initialCurves !== null &&
+      FC.SERVO_CURVES.some(
+        (curve, i) =>
+          initialCurves[i] &&
+          !ServoBalanceCurve.compareCurve(curve, initialCurves[i]),
+      ),
+  );
+
+  let dirty = $derived(
+    changes.length > 0 ||
+      busOutChannelsDirty ||
+      trimsDirty ||
+      followDirty ||
+      curvesDirty,
+  );
 
   let hasSbusOut = $derived(
     FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("SBUS_OUT")),
@@ -217,12 +247,18 @@
     // curve indicator badge in ServoConfigTable. Not guaranteed populated
     // otherwise if this tab is visited before Curves.
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
+    // Firmware without it answers "unsupported" and leaves this null, and the
+    // servos-on-one-surface section isn't shown.
+    FC.SERVO_FOLLOW = null;
+    await MSP.promise(MSPCodes.MSP2_WING_SERVO_FOLLOW);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialFollow = snapshotFollow();
+    initialCurves = snapshotCurves();
     overrideEnabled = servos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -280,6 +316,26 @@
     return savedTrimSupported ? [...FC.SERVO_SAVED_TRIM] : null;
   }
 
+  function snapshotFollow() {
+    return followSupported ? [...FC.SERVO_FOLLOW] : null;
+  }
+
+  function snapshotCurves() {
+    return ServoBalanceCurve.cloneCurves($state.snapshot(FC.SERVO_CURVES));
+  }
+
+  // The balance tool holds a servo with an override, like the Override
+  // section; letting go puts it back to what that section has it at.
+  function holdServo(servo, value) {
+    FC.SERVO_OVERRIDE[servo] = value;
+    mspHelper.sendServoOverride(servo);
+  }
+
+  function releaseServo(servo) {
+    FC.SERVO_OVERRIDE[servo] = overrideEnabled ? 0 : SERVO_OVERRIDE_OFF;
+    mspHelper.sendServoOverride(servo);
+  }
+
   function hasTrims(servos) {
     return servos.some((servo) => FC.SERVO_SAVED_TRIM?.[servo.index]);
   }
@@ -317,6 +373,8 @@
   // PWM update rate: one setting for every PWM servo output
   // (servo_pwm_rate), which the FC applies at boot. Offered as two choices;
   // a rate set to something else (from the CLI) is listed as it is.
+  const SERVO_OVERRIDE_OFF = 2001;
+
   const PWM_RATE_STANDARD = 50;
   const PWM_RATE_HIGH_SPEED = 333;
 
@@ -373,6 +431,9 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     await pollRuntimeTrim();
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
+    if (followSupported) {
+      await MSP.promise(MSPCodes.MSP2_WING_SERVO_FOLLOW);
+    }
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
 
     const config = $state.snapshot(FC.SERVO_CONFIG);
@@ -382,6 +443,14 @@
     const trims = snapshotTrims();
     if (initialTrims && trims && trims.length > initialTrims.length) {
       initialTrims = [...initialTrims, ...trims.slice(initialTrims.length)];
+    }
+    const follow = snapshotFollow();
+    if (initialFollow && follow && follow.length > initialFollow.length) {
+      initialFollow = [...initialFollow, ...follow.slice(initialFollow.length)];
+    }
+    const curves = snapshotCurves();
+    if (initialCurves && curves.length > initialCurves.length) {
+      initialCurves = [...initialCurves, ...curves.slice(initialCurves.length)];
     }
   }
 
@@ -415,6 +484,8 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialFollow = snapshotFollow();
+    initialCurves = snapshotCurves();
   }
 
   export async function onRevert() {
@@ -436,6 +507,26 @@
         if (FC.SERVO_SAVED_TRIM[i] !== initialTrims[i]) {
           FC.SERVO_SAVED_TRIM[i] = initialTrims[i];
           await mspHelper.sendServoTrim(i);
+        }
+      }
+    }
+
+    if (initialFollow !== null && followSupported) {
+      FC.SERVO_FOLLOW = [...initialFollow];
+      await mspHelper.sendServoFollows();
+    }
+
+    if (initialCurves !== null) {
+      for (
+        let i = 0;
+        i < initialCurves.length && i < FC.SERVO_CURVES.length;
+        i++
+      ) {
+        if (
+          !ServoBalanceCurve.compareCurve(FC.SERVO_CURVES[i], initialCurves[i])
+        ) {
+          FC.SERVO_CURVES[i] = ServoBalanceCurve.cloneCurve(initialCurves[i]);
+          await new Promise((resolve) => mspHelper.sendServoCurve(i, resolve));
         }
       }
     }
@@ -570,6 +661,12 @@
       <ServoConfigTable {servos} {onFieldChange} {onTrimChange} />
     </div>
   </Section>
+
+  {#if followSupported}
+    <Section label="servoFollowTitle">
+      <ServoGroups {servos} hold={holdServo} release={releaseServo} />
+    </Section>
+  {/if}
 
   <Section label="servoOverride" summary="servoOverrideHelp">
     <div class="override-toggle">

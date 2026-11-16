@@ -179,12 +179,17 @@ export const Mixer = {
         if (available === null) {
             return null;
         }
+        const layout = this.buildWizardLayout(options);
         const outputs = new Set();
-        for (const rule of this.buildWizardRules(options)) {
+        for (const rule of layout.rules) {
             if (rule.dst >= 1 && !this.isMotorOutput(rule.dst)) {
                 outputs.add(rule.dst);
             }
         }
+        // Followers have no rules of their own but still need an output.
+        layout.follows.forEach((primary, i) => {
+            if (primary) outputs.add(this.servoOutput(i));
+        });
         const sorted = [...outputs].sort((a, b) => a - b);
         return {
             needed: sorted.length,
@@ -417,6 +422,16 @@ export const Mixer = {
         return nextRules;
     },
 
+    // FC.SERVO_FOLLOW for a fresh setup from these options: the servos the
+    // layout sets up as followers, every other servo driving itself, at the
+    // length of the table loaded from the FC.
+    buildFollowTableFromOptions: function (options, currentFollow)
+    {
+        const follows = Mixer.buildWizardFollows(options);
+        return Array.from({ length: (currentFollow ?? []).length },
+            (_, i) => follows[i] ?? 0);
+    },
+
     //// Mixer setup wizard
     //
     // Composes a starting rule set from a handful of orthogonal airframe
@@ -427,8 +442,66 @@ export const Mixer = {
 
     buildWizardRules : function (options)
     {
+        return Mixer.buildWizardLayout(options).rules;
+    },
+
+    // Per servo (S1 first), the servo it follows, 1-based, 0 for none: the
+    // FC.SERVO_FOLLOW a setup from these options needs. Only the servos the
+    // layout uses are set; the rest drive themselves.
+    buildWizardFollows : function (options)
+    {
+        return Mixer.buildWizardLayout(options).follows;
+    },
+
+    // Surface kinds options.servosPerSurface can give more than one servo,
+    // each the key of a count (1 when left out).
+    SURFACE_SERVO_KINDS: ['aileron', 'elevator', 'rudder', 'tail', 'elevon', 'flap'],
+    SURFACE_SERVOS_MAX: 3,
+
+    // The surface kinds a layout from these options has, in
+    // SURFACE_SERVO_KINDS order -- the ones a servo count can be chosen for.
+    wizardSurfaceKinds : function (options)
+    {
+        const kinds = new Set();
+        if (options.layout === 'conventional') {
+            if (options.ailerons === 'single' || options.ailerons === 'independent') kinds.add('aileron');
+            if (options.tailControl === 'elevatorOnly' || options.tailControl === 'elevatorRudder') kinds.add('elevator');
+            if (options.tailControl === 'elevatorRudder') kinds.add('rudder');
+            if (options.tailControl === 'vtail') kinds.add('tail');
+        } else if (options.layout === 'flyingWing') {
+            kinds.add('elevon');
+            if (options.wingYaw === 'rudder') kinds.add('rudder');
+        }
+        if (options.flaps && options.flapServos !== 0) kinds.add('flap');
+        return Mixer.SURFACE_SERVO_KINDS.filter((kind) => kinds.has(kind));
+    },
+
+    // The rules and servo follows for a set of options. Each surface gets
+    // options.servosPerSurface[kind] servos (1 when left out): the first
+    // carries the rules, and the rest follow it on the next servo numbers,
+    // so the servos of one surface are side by side (left aileron S1 and S2,
+    // right aileron S3 and S4, ...).
+    buildWizardLayout : function (options)
+    {
         const rules = [];
+        const follows = new Array(Mixer.SERVO_OUTPUT_COUNT).fill(0);
         let nextServo = 1;
+
+        // Mixer output number of a new surface's primary servo, after which
+        // its followers are numbered.
+        function surfaceServo(kind)
+        {
+            const primary = nextServo++;
+            const count = Math.max(1, Math.min(Mixer.SURFACE_SERVOS_MAX,
+                options.servosPerSurface?.[kind] ?? 1));
+            for (let n = 1; n < count; n++) {
+                const follower = nextServo++;
+                if (follower <= Mixer.SERVO_OUTPUT_COUNT) {
+                    follows[follower - 1] = primary;
+                }
+            }
+            return primary;
+        }
         let nextMotor = Mixer.MOTOR_OUTPUT_OFFSET;
         // Every output that ends up carrying pitch, across whichever layout
         // ran below -- the flap compensation rule(s) further down ADD onto
@@ -453,25 +526,25 @@ export const Mixer = {
 
         if (options.layout === 'conventional') {
             if (options.ailerons === 'single') {
-                rules.push(rule(OP_SET, ROLL, nextServo++, 1000));
+                rules.push(rule(OP_SET, ROLL, surfaceServo('aileron'), 1000));
             } else if (options.ailerons === 'independent') {
-                const leftAileron = nextServo++, rightAileron = nextServo++;
+                const leftAileron = surfaceServo('aileron'), rightAileron = surfaceServo('aileron');
                 rules.push(rule(OP_SET, ROLL, leftAileron, 1000));
                 rules.push(rule(OP_SET, ROLL, rightAileron, 1000, true));
                 aileronOutputs.push(leftAileron, rightAileron);
             }
 
             if (options.tailControl === 'elevatorOnly') {
-                const elevator = nextServo++;
+                const elevator = surfaceServo('elevator');
                 rules.push(rule(OP_SET, PITCH, elevator, 1000));
                 pitchOutputs.push(elevator);
             } else if (options.tailControl === 'elevatorRudder') {
-                const elevator = nextServo++;
+                const elevator = surfaceServo('elevator');
                 rules.push(rule(OP_SET, PITCH, elevator, 1000));
                 pitchOutputs.push(elevator);
-                rules.push(rule(OP_SET, YAW,   nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW,   surfaceServo('rudder'), 1000));
             } else if (options.tailControl === 'vtail') {
-                const rightTail = nextServo++, leftTail = nextServo++;
+                const rightTail = surfaceServo('tail'), leftTail = surfaceServo('tail');
                 rules.push(rule(OP_SET, YAW,   rightTail, 1000));
                 rules.push(rule(OP_ADD, PITCH, rightTail, 1000));
                 rules.push(rule(OP_SET, YAW,   leftTail, 1000, true));
@@ -479,7 +552,7 @@ export const Mixer = {
                 pitchOutputs.push(rightTail, leftTail);
             }
         } else if (options.layout === 'flyingWing') {
-            const leftElevon = nextServo++, rightElevon = nextServo++;
+            const leftElevon = surfaceServo('elevon'), rightElevon = surfaceServo('elevon');
             rules.push(rule(OP_SET, PITCH, leftElevon, 1000));
             rules.push(rule(OP_ADD, ROLL,  leftElevon, 1000));
             rules.push(rule(OP_SET, PITCH, rightElevon, 1000));
@@ -487,7 +560,7 @@ export const Mixer = {
             pitchOutputs.push(leftElevon, rightElevon);
 
             if (options.wingYaw === 'rudder') {
-                rules.push(rule(OP_SET, YAW, nextServo++, 1000));
+                rules.push(rule(OP_SET, YAW, surfaceServo('rudder'), 1000));
             }
         }
 
@@ -508,7 +581,7 @@ export const Mixer = {
                     rules.push(rule(OP_ADD, RC_AUX1, output, 500));
                 });
             } else if (options.flapServos >= 2) {
-                const leftFlap = nextServo++, rightFlap = nextServo++;
+                const leftFlap = surfaceServo('flap'), rightFlap = surfaceServo('flap');
                 rules.push(rule(OP_SET, RC_AUX1, leftFlap, 1000));
                 rules.push(rule(OP_SET, RC_AUX1, rightFlap, 1000));
 
@@ -524,7 +597,7 @@ export const Mixer = {
                     rules.push(rule(OP_ADD, ROLL, rightFlap, 500, true));
                 }
             } else {
-                rules.push(rule(OP_SET, RC_AUX1, nextServo++, 1000));
+                rules.push(rule(OP_SET, RC_AUX1, surfaceServo('flap'), 1000));
             }
 
             // Flap-induced pitching moment otherwise gets silently absorbed
@@ -567,7 +640,7 @@ export const Mixer = {
             rules.push(rule(OP_SET, TV_YAW, nextServo, 1000));
         }
 
-        return rules;
+        return { rules, follows };
     },
 
     isNullRule : function (a) {
