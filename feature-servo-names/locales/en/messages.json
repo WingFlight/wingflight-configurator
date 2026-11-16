@@ -4024,7 +4024,7 @@
         "message": "Name"
     },
     "servoNameHelp": {
-        "message": "A short name for this servo, up to 8 characters, such as <i>L AIL</i> or <i>ELEV</i>. For reference only: the flight controller stores it but nothing in flight uses it."
+        "message": "A short name for this servo, up to 8 characters, such as “L AIL” or “ELEV”. For reference only: the flight controller stores it but nothing in flight uses it."
     },
     "servoMid": {
         "message": "Center"
