@@ -21,6 +21,8 @@
 
   import ServoConfigTable from "./ServoConfigTable.svelte";
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
+  import ServoBalance from "./ServoBalance.svelte";
+  import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
 
   // A servo is a servo: servo N is sent on PWM output N where the board has
   // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
@@ -43,6 +45,8 @@
   // can change from the FC side too (a Stepped ServoTrim adjustment on the
   // bench), so they get the same dirty/Save/Revert treatment.
   let initialTrims = $state(null);
+  // Balance curves, set live by the Balance section (and the Curves tab).
+  let initialCurves = $state(null);
   let poller;
   let adjustmentPoller;
 
@@ -81,7 +85,18 @@
       FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
   );
 
-  let dirty = $derived(changes.length > 0 || busOutChannelsDirty || trimsDirty);
+  let curvesDirty = $derived(
+    initialCurves !== null &&
+      FC.SERVO_CURVES.some(
+        (curve, i) =>
+          initialCurves[i] &&
+          !ServoBalanceCurve.compareCurve(curve, initialCurves[i]),
+      ),
+  );
+
+  let dirty = $derived(
+    changes.length > 0 || busOutChannelsDirty || trimsDirty || curvesDirty,
+  );
 
   let hasSbusOut = $derived(
     FC.SERIAL_CONFIG.ports.some((port) => port.functions.includes("SBUS_OUT")),
@@ -213,9 +228,9 @@
     FC.SERVO_TIMING = null;
     await MSP.promise(MSPCodes.MSP2_WING_SERVO_TIMING);
     await pollRuntimeTrim();
-    // Read-only here (edited on the Curves tab) - just for the balance
-    // curve indicator badge in ServoConfigTable. Not guaranteed populated
-    // otherwise if this tab is visited before Curves.
+    // For the balance curve badge in ServoConfigTable and the Balance
+    // section. Not guaranteed populated otherwise if this tab is visited
+    // before Curves.
     await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
@@ -223,6 +238,7 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialCurves = snapshotCurves();
     overrideEnabled = servos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
       return raw >= -2000 && raw <= 2000;
@@ -278,6 +294,28 @@
 
   function snapshotTrims() {
     return savedTrimSupported ? [...FC.SERVO_SAVED_TRIM] : null;
+  }
+
+  function snapshotCurves() {
+    return ServoBalanceCurve.cloneCurves($state.snapshot(FC.SERVO_CURVES));
+  }
+
+  // The Balance section holds servos with an override, like the Override
+  // section; letting go puts a servo back to what that section has it at.
+  const SERVO_OVERRIDE_OFF = 2001;
+
+  // The Balance servos section, opened from the balance curve indicator in
+  // the servo table.
+  let balanceRef;
+
+  function holdServo(servo, value) {
+    FC.SERVO_OVERRIDE[servo] = value;
+    mspHelper.sendServoOverride(servo);
+  }
+
+  function releaseServo(servo) {
+    FC.SERVO_OVERRIDE[servo] = overrideEnabled ? 0 : SERVO_OVERRIDE_OFF;
+    mspHelper.sendServoOverride(servo);
   }
 
   function hasTrims(servos) {
@@ -383,6 +421,10 @@
     if (initialTrims && trims && trims.length > initialTrims.length) {
       initialTrims = [...initialTrims, ...trims.slice(initialTrims.length)];
     }
+    const curves = snapshotCurves();
+    if (initialCurves && curves.length > initialCurves.length) {
+      initialCurves = [...initialCurves, ...curves.slice(initialCurves.length)];
+    }
   }
 
   function snapshotBusOutChannels() {
@@ -415,6 +457,7 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialCurves = snapshotCurves();
   }
 
   export async function onRevert() {
@@ -436,6 +479,17 @@
         if (FC.SERVO_SAVED_TRIM[i] !== initialTrims[i]) {
           FC.SERVO_SAVED_TRIM[i] = initialTrims[i];
           await mspHelper.sendServoTrim(i);
+        }
+      }
+    }
+
+    if (initialCurves !== null) {
+      const count = Math.min(initialCurves.length, FC.SERVO_CURVES.length);
+      for (let i = 0; i < count; i++) {
+        const curve = initialCurves[i];
+        if (!ServoBalanceCurve.compareCurve(FC.SERVO_CURVES[i], curve)) {
+          FC.SERVO_CURVES[i] = ServoBalanceCurve.cloneCurve(curve);
+          await new Promise((resolve) => mspHelper.sendServoCurve(i, resolve));
         }
       }
     }
@@ -567,8 +621,22 @@
     {@render trimActions(servos)}
 
     <div class="table-scroll">
-      <ServoConfigTable {servos} {onFieldChange} {onTrimChange} />
+      <ServoConfigTable
+        {servos}
+        {onFieldChange}
+        {onTrimChange}
+        onCurveClick={(servo) => balanceRef.open(servo)}
+      />
     </div>
+  </Section>
+
+  <Section label="servoBalanceTitle" summary="servoBalanceHelp">
+    <ServoBalance
+      bind:this={balanceRef}
+      {servos}
+      hold={holdServo}
+      release={releaseServo}
+    />
   </Section>
 
   <Section label="servoOverride" summary="servoOverrideHelp">
