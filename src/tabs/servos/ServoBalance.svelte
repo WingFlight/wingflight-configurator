@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { withServoName } from "@/js/ServoNames.js";
   import {
     POINT_COUNTS,
     commandFromOutput,
@@ -62,7 +63,7 @@
   );
 
   function label(index) {
-    return $i18n.t("servoBalanceServo", { 1: index + 1 });
+    return withServoName($i18n.t("servoBalanceServo", { 1: index + 1 }), index);
   }
 
   // Which way the mix moves `servo` compared with the first servo: -1 when
