@@ -4020,6 +4020,12 @@
     "servoListBack": {
         "message": "Back to Servo List"
     },
+    "servoName": {
+        "message": "Name"
+    },
+    "servoNameHelp": {
+        "message": "A short name for this servo, up to 8 characters, such as “L AIL” or “ELEV”. For reference only: the flight controller stores it but nothing in flight uses it."
+    },
     "servoMid": {
         "message": "Center"
     },
@@ -4117,10 +4123,10 @@
         "message": "Signal"
     },
     "servoCurveActive": {
-        "message": "Balance curve active - edit on the Curves tab"
+        "message": "Balance curve set - click to balance it under Balance servos"
     },
     "servoCurveEdit": {
-        "message": "Edit balance curve on the Curves tab"
+        "message": "Balance this servo under Balance servos"
     },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> A change to the <i>PWM update rate</i> takes effect after a reboot."
@@ -5136,6 +5142,15 @@
     "motorsEscProtocolSrxl2LockedHelp": {
         "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs use that same connection for throttle and telemetry, so it can't be set independently here. To use a different protocol, change that port's function instead."
     },
+    "motorsEscProtocolSrxl2NeedsPort": {
+        "message": "SRXL2 (set a serial port to ESC: SRXL2 first)"
+    },
+    "motorsEscProtocolSrxl2NoPort": {
+        "message": "SRXL2 is selected, but no serial port is set to <i>ESC: SRXL2</i>, so the ESC gets no signal. An SRXL2 ESC is wired to a serial port, not to the motor output. Set the port on the <i>Configuration</i> tab or on the Setup Wizard's Motor step, or choose another protocol."
+    },
+    "motorsEscProtocolCastleNote": {
+        "message": "Castle Link uses the motor output, like PWM. The ESC's telemetry is read on the same wire, so it needs no serial port and no telemetry protocol."
+    },
     "motorsEscProtocolDisabled": {
         "message": "Please select a protocol appropriate for your ESCs. $t(escProtocolDisabledMessage.message)"
     },
@@ -5152,7 +5167,7 @@
         "message": "Locked to SRXL2 because a serial port is set to the <i>SRXL2 ESC</i> function on the <i>Configuration</i> tab. SRXL2 ESCs report telemetry automatically over that same bus, so no separate telemetry protocol needs to be chosen."
     },
     "motorsEscTelemetryProtocolFbusHelp": {
-        "message": "FrSky F.BUS reads telemetry over its own dedicated port, not this module's ESC Telemetry one. Assign a UART the <i>FBUS Out</i> or <i>S.PORT Master</i> function on the <i>Configuration</i> tab -- see the <i>FBUS/S.Port Sensors</i> tab to confirm it's actually receiving."
+        "message": "FrSky F.BUS reads telemetry over its own dedicated port, not this module's ESC Telemetry one. Assign a UART the <i>FBUS Out</i> or <i>S.PORT Master</i> function on the <i>Configuration</i> tab -- see the <i>FBUS/S.Port Sensors</i> tab to confirm it's actually receiving. The half duplex and pin swap settings here don't apply: the F.BUS port's wiring is set in the Setup Wizard's <i>Servo bus</i> step."
     },
     "motorsEscTelemetryHalfDuplex": {
         "message": "Half-Duplex"
@@ -9163,6 +9178,69 @@
     "setupWizardGainTitle": {
         "message": "Gain"
     },
+    "setupWizardRadioMixTitle_knob": {
+        "message": "Set the knob up on the radio first"
+    },
+    "setupWizardRadioMixText_knob": {
+        "message": "A knob does nothing until a mix on the radio puts it on a channel. Detect watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_knob": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_knob": {
+        "message": "Name it GAIN. Set <b>Source</b> to the knob or slider (S1 here, under Analogs) and <b>Output</b> to a spare channel (CH9 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_knob": {
+        "message": "The Mixes page then lists GAIN with its channel and source. For one knob per axis, add a mix like this for each knob, each on its own spare channel."
+    },
+    "setupWizardRadioMixStep4_knob": {
+        "message": "Click Detect below and turn the knob from one end to the other."
+    },
+    "setupWizardRadioMixImage1_knob": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_knob": {
+        "message": "Ethos Free mix named GAIN: Source S1, Output CH9"
+    },
+    "setupWizardRadioMixImage3_knob": {
+        "message": "Ethos Mixes page listing GAIN on channel 9 from S1"
+    },
+    "setupWizardRadioMixTitle_switch": {
+        "message": "Put each switch on a channel on the radio first"
+    },
+    "setupWizardRadioMixText_switch": {
+        "message": "A switch does nothing until a mix on the radio puts it on a channel. Assign watches the channels, so without that mix it finds nothing. The steps below use Ethos as the example."
+    },
+    "setupWizardRadioMixStep1_switch": {
+        "message": "<b>Model → Mixes</b>: press <b>+</b> and choose <b>Free mix</b>."
+    },
+    "setupWizardRadioMixStep2_switch": {
+        "message": "Name it after the mode (ARM here). Set <b>Source</b> to the switch (SF here, under Switches) and <b>Output</b> to a spare channel (CH10 here). Leave the weight at 100%."
+    },
+    "setupWizardRadioMixStep3_switch": {
+        "message": "The Mixes page then lists it with its channel and source. Add a mix like this for each switch you want to use, each on its own spare channel. One 3-position switch can carry two modes."
+    },
+    "setupWizardRadioMixStep4_switch": {
+        "message": "Press Assign below and flick the switch to its on position."
+    },
+    "setupWizardRadioMixImage1_switch": {
+        "message": "Ethos Mixes library with Free mix first"
+    },
+    "setupWizardRadioMixImage2_switch": {
+        "message": "Ethos Free mix named ARM: Source SF, Output CH10"
+    },
+    "setupWizardRadioMixImage3_switch": {
+        "message": "Ethos Mixes page listing ARM on channel 10 from SF"
+    },
+    "setupWizardRadioMixShow": {
+        "message": "Show the steps on the radio"
+    },
+    "setupWizardRadioMixHide": {
+        "message": "Hide the steps"
+    },
+    "setupWizardRadioMixOtherRadios": {
+        "message": "On other radios (EdgeTX, OpenTX, Jeti and so on) do the same: one mix per control, with the control as its source and a spare channel as its output."
+    },
     "setupWizardGainText": {
         "message": "A knob or slider to turn the stabilizer up or down in flight: up if the model wanders, down if it wobbles. Fully down turns the stabilizer off, center is 75% and fully up is 150%."
     },
@@ -9198,6 +9276,93 @@
     },
     "setupWizardStep_airframe": {
         "message": "Airframe"
+    },
+    "setupWizardStep_busOutput": {
+        "message": "Servo bus"
+    },
+    "setupWizardBusIntro": {
+        "message": "Optional. Servos on an F.Bus or SBUS line plug into a serial port instead of the servo pins, which gives the model more servos than the board has pins for. Servo 1 is channel 1 on the bus, servo 2 is channel 2, and so on. If every servo plugs into a servo pin, press Next."
+    },
+    "setupWizardBusProtocolTitle": {
+        "message": "Protocol"
+    },
+    "setupWizardBusProtocolHelp": {
+        "message": "F.Bus servos and sensors answer back, so this step can check the wiring. SBUS is one-way."
+    },
+    "setupWizardBusMux": {
+        "message": "This board switches its servo pins to F.Bus one by one. Do that in the Remap tool."
+    },
+    "setupWizardBusPortTitle": {
+        "message": "Port the bus is plugged into"
+    },
+    "setupWizardBusPortNone": {
+        "message": "None"
+    },
+    "setupWizardBusPortNoneUse": {
+        "message": "Servo pins only"
+    },
+    "setupWizardBusPortSuggested": {
+        "message": "Free, suggested"
+    },
+    "setupWizardBusChannelsTitle": {
+        "message": "Channels on the bus"
+    },
+    "setupWizardBusChannelsHelp": {
+        "message": "The highest servo number the bus carries. Use the smallest that fits the model."
+    },
+    "setupWizardBusSignalTitle": {
+        "message": "Signal"
+    },
+    "setupWizardBusDevices": {
+        "message": "$1 answering"
+    },
+    "setupWizardBusNoDevices": {
+        "message": "Nothing answering"
+    },
+    "setupWizardBusFbusSignal": {
+        "message": "With the bus powered, its F.Bus servos and sensors should answer within a few seconds."
+    },
+    "setupWizardBusSbusSignal": {
+        "message": "SBUS is sent on the port's TX pin. Nothing answers on SBUS, so check it in the later steps, where each servo is moved."
+    },
+    "setupWizardBusOnRxPin": {
+        "message": "F.Bus is on the RX pin of $1."
+    },
+    "setupWizardBusOnTxPin": {
+        "message": "F.Bus is on the TX pin of $1."
+    },
+    "setupWizardBusOtherPin": {
+        "message": "Use the other pin"
+    },
+    "setupWizardBusOtherPinHelp": {
+        "message": "If nothing answers, the bus may be on the port's other pin. Switching pins needs a save and reboot."
+    },
+    "setupWizardBusPinFixed": {
+        "message": "This firmware can't switch the pin from here. F.Bus uses the TX pin unless fbus_master_pinswap is set in the CLI."
+    },
+    "setupWizardBusDetect": {
+        "message": "Detect wiring"
+    },
+    "setupWizardBusDetectHelp": {
+        "message": "If nothing answers, Detect wiring tries each pin of the port and both signal polarities until a device answers. It takes a few seconds and needs no restart."
+    },
+    "setupWizardBusDetecting": {
+        "message": "Trying wiring $1 of $2…"
+    },
+    "setupWizardBusDetect_found": {
+        "message": "Found it. The bus answers on this wiring, which is now in use. Save to keep it."
+    },
+    "setupWizardBusDetect_same": {
+        "message": "The bus answers on the wiring already set."
+    },
+    "setupWizardBusDetect_failed": {
+        "message": "Nothing answered on any wiring. Check the bus has power and is plugged into this port."
+    },
+    "setupWizardBusDetect_rejected": {
+        "message": "The flight controller can't test the wiring now: the model is armed, or this board switches F.Bus through its output mux."
+    },
+    "setupWizardBusOpenServos": {
+        "message": "Open the Servos tab"
     },
     "setupWizardStep_servoType": {
         "message": "Servo type"
@@ -9398,7 +9563,7 @@
         "message": "Standard PWM"
     },
     "setupWizardMotorHelp_pwm": {
-        "message": "Works with any ESC. Some PWM ESCs need their throttle range calibrated; see the ESC's manual."
+        "message": "Works with any ESC. Calibrate, below, teaches the ESC the throttle range."
     },
     "setupWizardMotor_dshot150": {
         "message": "DShot150"
@@ -9442,6 +9607,90 @@
     "setupWizardMotorTestCheck": {
         "message": "The motor runs only while you hold the button, and stops within a second if the connection drops. Check it starts smoothly and turns the right way for your propeller. If it turns the wrong way, swap any two of the three motor wires, or reverse it in the ESC's settings."
     },
+    "setupWizardMotorCalTitle": {
+        "message": "Calibrate the ESC"
+    },
+    "setupWizardMotorCalBatteryOut": {
+        "message": "The battery is unplugged"
+    },
+    "setupWizardMotorCalFull": {
+        "message": "Set full throttle"
+    },
+    "setupWizardMotorCalRamping": {
+        "message": "Going to full throttle: $1 s"
+    },
+    "setupWizardMotorCalLow": {
+        "message": "Set zero throttle"
+    },
+    "setupWizardMotorCalCancel": {
+        "message": "Cancel"
+    },
+    "setupWizardMotorHoldMotor": {
+        "message": "Hold to spin motor $1"
+    },
+    "setupWizardMotorTestCheckTwin": {
+        "message": "Each motor runs only while you hold its button, and stops within a second if the connection drops. Check which motor is which, that each starts smoothly, and that it turns the right way for its propeller."
+    },
+    "setupWizardMotorPropHelp": {
+        "message": "Nothing below runs the motor until this is ticked."
+    },
+    "setupWizardMotorCalDone": {
+        "message": "Done"
+    },
+    "setupWizardMotorCalIntro": {
+        "message": "A PWM ESC has to learn where full and zero throttle are. Do this once. Skip it if the ESC is already calibrated to this flight controller."
+    },
+    "setupWizardMotorCalStage1": {
+        "message": "Unplug the battery"
+    },
+    "setupWizardMotorCalStage1Help": {
+        "message": "Start with the flight battery unplugged from the ESC."
+    },
+    "setupWizardMotorCalStage2": {
+        "message": "Set full throttle"
+    },
+    "setupWizardMotorCalStage2Help": {
+        "message": "The throttle output goes to full and stays there."
+    },
+    "setupWizardMotorCalFullSet": {
+        "message": "Full throttle is set."
+    },
+    "setupWizardMotorCalStage3": {
+        "message": "Plug in the battery"
+    },
+    "setupWizardMotorCalStage3Help": {
+        "message": "Wait for the ESC's beeps, usually about two seconds."
+    },
+    "setupWizardMotorCalStage4": {
+        "message": "Set zero throttle"
+    },
+    "setupWizardMotorCalStage4Help": {
+        "message": "The ESC beeps again to confirm."
+    },
+    "setupWizardMotorCalZeroSet": {
+        "message": "Zero throttle is set. If the ESC did not confirm, unplug the battery and calibrate again."
+    },
+    "setupWizardMotorCalCancelHelp": {
+        "message": "Cancel takes the throttle back to zero."
+    },
+    "setupWizardMotorCalAgain": {
+        "message": "Calibrate again"
+    },
+    "setupWizardMotorSerialPortTitle": {
+        "message": "Port the $1 ESC is plugged into"
+    },
+    "setupWizardMotorSerialPortText": {
+        "message": "An $1 ESC takes its throttle and sends its telemetry on one signal wire, and that wire goes to a serial port. Plug it into the port you choose here, not into the motor (ESC) output."
+    },
+    "setupWizardMotorSerialPortNone": {
+        "message": "Choose the port. Nothing is changed until you do, because $1 without a port gives the ESC no signal."
+    },
+    "setupWizardMotorSerialPortPins": {
+        "message": "The wire goes on the port's TX pin. If the connector only has an RX pin, turn on Pin Swap under ESC Telemetry on the Motors tab."
+    },
+    "setupWizardMotorCastle": {
+        "message": "Castle Link is wired like Standard PWM: the ESC's signal wire goes to the motor (ESC) output. The flight controller reads the ESC's telemetry on that same wire, so no serial port is needed. Choosing it turns ESC telemetry on."
+    },
     "setupWizardOpenMotors": {
         "message": "Open the Motors tab"
     },
@@ -9465,6 +9714,9 @@
     },
     "setupWizardEscCastle": {
         "message": "Castle Link reads telemetry on the throttle wire, so it needs no port."
+    },
+    "setupWizardEscSrxl2": {
+        "message": "An SRXL2 ESC sends its telemetry on the same serial port as its throttle. That port is chosen on the Motor step, so there is nothing to connect here."
     },
     "setupWizardEscElsewhere": {
         "message": "ESC telemetry is set to $1, which doesn't use an ESC Telemetry port. Change it on the Motors tab."
@@ -10081,7 +10333,7 @@
         "message": "This configurator lets go of the flight controller, and the supporter uses it from theirs."
     },
     "remoteSupportShareStep2": {
-        "message": "You watch the supporter's screen until the session ends."
+        "message": "You watch the supporter's screen. To use the flight controller yourself for a while, e.g. to calibrate something, take control, and give it back when you are done. While you have control, the supporter sees your screen."
     },
     "remoteSupportBeforeShare": {
         "message": "Before you share",
@@ -10204,5 +10456,182 @@
     "remoteSupportFrameJoined": {
         "message": "Remote support: working on the pilot's flight controller",
         "description": "Banner on the frame around the supporter's window while joined to a session"
+    },
+    "remoteSupportTakeControl": {
+        "message": "Take control",
+        "description": "Button for the pilot to take the flight controller back from the supporter for a while, e.g. to calibrate something"
+    },
+    "remoteSupportTakeControlTitle": {
+        "message": "Make the flight controller safe, take it from the supporter and use it from here, e.g. to calibrate something. The supporter sees your screen meanwhile. Give control back when you are done."
+    },
+    "remoteSupportGiveControl": {
+        "message": "Give control back",
+        "description": "Button for the pilot to hand the flight controller back to the supporter"
+    },
+    "remoteSupportHandOver": {
+        "message": "Hand control to pilot",
+        "description": "Button for the supporter to let the pilot use the flight controller from their own configurator"
+    },
+    "remoteSupportHandOverTitle": {
+        "message": "Disconnect from the pilot's flight controller so they can use it from their own configurator, e.g. to calibrate something. You see their screen meanwhile, and they give control back when they are done."
+    },
+    "remoteSupportAskControl": {
+        "message": "Ask for control back",
+        "description": "Button for the supporter, while the pilot has control"
+    },
+    "remoteSupportControlAskSent": {
+        "message": "Asked for control back"
+    },
+    "remoteSupportControlAsked": {
+        "message": "The supporter asks for control back.",
+        "description": "Shown to the pilot while they have control"
+    },
+    "remoteSupportFramePilotControl": {
+        "message": "Remote support: you have control of your flight controller",
+        "description": "Banner on the frame around the pilot's window while the pilot has taken control"
+    },
+    "remoteSupportBeingWatchedPilot": {
+        "message": "The supporter is watching your screen."
+    },
+    "remoteSupportWatchingPilot": {
+        "message": "Pilot's screen (read-only): the pilot has control"
+    },
+    "remoteSupportWatchWaitingPilot": {
+        "message": "The pilot has control. Waiting for their screen..."
+    },
+    "remoteSupportYouHaveControl": {
+        "message": "You have control of your flight controller: connect and use it as usual. Give control back when you are done."
+    },
+    "remoteSupportPilotHasControl": {
+        "message": "The pilot has control of their flight controller."
+    },
+    "remoteSupportControlDisconnectFailed": {
+        "message": "Could not disconnect from the flight controller, so control was not handed over. Disconnect and try again."
+    },
+    "remoteSupportControlFlashing": {
+        "message": "The supporter is using a board in bootloader (DFU) mode and may be flashing firmware. Wait until they are done, or use Kill connection."
+    },
+    "remoteSupportNotNow": {
+        "message": "Not now",
+        "description": "Pilot's answer when the supporter asks for control back"
+    },
+    "remoteSupportDismiss": {
+        "message": "Dismiss"
+    },
+    "remoteSupportAllowPortRequest": {
+        "message": "The supporter needs access to your flight controller's port. Click \"Allow a port...\" and pick it in the browser's list.",
+        "description": "Request shown to a pilot sharing from the web configurator"
+    },
+    "remoteSupportAllowDfuRequest": {
+        "message": "The supporter needs your board in bootloader (DFU) mode. Click \"Allow a DFU device...\" and pick it in the browser's list (often \"STM32 BOOTLOADER\").",
+        "description": "Request shown to a pilot sharing from the web configurator, e.g. while the supporter flashes firmware"
+    },
+    "remoteSupportAllowPromptTitle": {
+        "message": "Let the supporter reach your flight controller",
+        "description": "Large prompt shown to a pilot sharing from the web configurator while no port is shared"
+    },
+    "remoteSupportAllowPromptText": {
+        "message": "Your browser only shares the ports you allow. Click the button, pick your flight controller in the list and confirm."
+    },
+    "remoteSupportAllowPromptDfu": {
+        "message": "Board in bootloader (DFU) mode?"
+    },
+    "remoteSupportControlDeclined": {
+        "message": "The pilot isn't ready to give control back yet.",
+        "description": "Shown to the supporter when the pilot answers \"Not now\""
+    },
+    "remoteSupportAskAllowPort": {
+        "message": "Ask pilot to allow the port",
+        "description": "Supporter's button; the pilot's browser only shares the ports they allowed"
+    },
+    "remoteSupportAskAllowDfu": {
+        "message": "Ask pilot to allow the DFU device",
+        "description": "Supporter's button for a board in bootloader mode on the pilot's side"
+    },
+    "remoteSupportAllowPortAskSent": {
+        "message": "Asked the pilot to allow their port. Waiting for them..."
+    },
+    "remoteSupportAllowDfuAskSent": {
+        "message": "Asked the pilot to allow the board in bootloader (DFU) mode. Waiting for them..."
+    },
+    "remoteSupportDfuAskedPilot": {
+        "message": "Remote support: asked the pilot to allow the board in bootloader (DFU) mode. Waiting for them...",
+        "description": "Log line while flashing a board shared from the pilot's browser"
+    },
+    "remoteSupportSoundOn": {
+        "message": "Turn sound on"
+    },
+    "remoteSupportSoundOff": {
+        "message": "Turn sound off"
+    },
+    "remoteSupportActionNeeded": {
+        "message": "Remote support: action needed",
+        "description": "Flashing window title when the pilot has to do something"
+    },
+    "remoteSupportPilotShares": {
+        "message": "The pilot shares $1 port(s) and $2 bootloader (DFU) device(s)."
+    },
+    "remoteSupportPilotMustAllow": {
+        "message": "The pilot shares from a browser, which only shares what they allow. Ask them for more if you need it."
+    },
+    "servoBalanceTitle": {
+        "message": "Balance servos"
+    },
+    "servoBalanceHelp": {
+        "message": "When two servos move one control surface, small mechanical differences make one push against the other at some points of the travel. A servo that fights another draws high current, gets hot and can fail in flight. The balanced servo's balance curve adds a small offset at each point, so it can be matched to the other servo along the whole travel."
+    },
+    "servoBalanceIntro": {
+        "message": "Add the servos that move one surface, up to four. Each has a graph of its balance curve: the servo's travel across, the offset the curve adds up and down. Pick a point to hold every servo in the group there, then move each servo's point until the servos sit together and none of them strains or buzzes."
+    },
+    "servoBalanceServo": {
+        "message": "Servo $1"
+    },
+    "servoBalanceSameMix": {
+        "message": "Servo $1 (same mix)"
+    },
+    "servoBalanceNoSameMix": {
+        "message": "No other servo is mixed the same way as servo $1. Check the two servos really move the same surface."
+    },
+    "servoBalanceNoSharedInput": {
+        "message": "Servo $1 shares no mixer input with servo $2, so it is held the same way. Check they move the surface the same way before holding them away from center."
+    },
+    "servoBalancePointCount": {
+        "message": "Curve points"
+    },
+    "servoBalanceSweep": {
+        "message": "Sweep"
+    },
+    "servoBalanceSweepStop": {
+        "message": "Stop sweep"
+    },
+    "servoBalanceReset": {
+        "message": "Reset curve"
+    },
+    "servoBalanceNearLimit": {
+        "message": "Near the limit of the balance curve. Adjust the linkage instead."
+    },
+    "servoBalanceGroup": {
+        "message": "Servos on this surface"
+    },
+    "servoBalanceAdd": {
+        "message": "Add a servo"
+    },
+    "servoBalanceRemove": {
+        "message": "Remove servo $1"
+    },
+    "servoBalanceAddSuggested": {
+        "message": "Add the other servos on this surface. Mixed the same way: servo $1."
+    },
+    "servoBalanceLock": {
+        "message": "Hold"
+    },
+    "servoBalanceLocked": {
+        "message": "Holding"
+    },
+    "servoBalanceMirrored": {
+        "message": "Servo $1 (mirrored in the mix)"
+    },
+    "servoBalanceHowTo": {
+        "message": "Click a point to hold the servos there, or drag it up and down. With a graph selected: ← → move to the next point, ↑ ↓ move the servo 1 µs (Shift: 10 µs), Enter holds or lets go. Let go and the markers follow the sticks."
     }
 }
