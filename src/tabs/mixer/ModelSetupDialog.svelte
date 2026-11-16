@@ -2,6 +2,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { assignServoNames } from "@/js/ServoNames.js";
   import WarningNote from "@/components/notes/WarningNote.svelte";
   import ServoOutputMeter from "./ServoOutputMeter.svelte";
   import { isCrsfReceiver } from "@/tabs/receiver/protocols.js";
@@ -92,6 +93,7 @@
 
   function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
+    assignServoNames(FC.MIXER_RULES);
 
     applied = true;
     dialogEl.close();

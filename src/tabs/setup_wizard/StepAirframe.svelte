@@ -4,7 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
-  import { servoName } from "@/js/ServoNames.js";
+  import { sendChangedServoNames, servoName } from "@/js/ServoNames.js";
 
   import ModelSetupDialog from "@/tabs/mixer/ModelSetupDialog.svelte";
 
@@ -42,10 +42,17 @@
     if (changed) wiz.markChanged();
   });
 
+  // The setup dialog names the servos it assigns (assignServoNames()); they
+  // are sent with the rules.
+  const initialNames = Array.isArray(FC.SERVO_NAMES)
+    ? [...FC.SERVO_NAMES]
+    : null;
+
   wiz.setCommit(async () => {
     if (!changed) return;
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
+    await sendChangedServoNames(initialNames);
   });
 
   let current = $derived(FC.MIXER_CONFIG.model_type);

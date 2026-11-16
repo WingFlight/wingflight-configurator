@@ -6,7 +6,11 @@
   import { i18n } from "@/js/i18n.js";
   import { MSPCodes } from "@/js/msp/MSPCodes.js";
   import { Mixer } from "@/js/Mixer.js";
-  import { loadServoNames } from "@/js/ServoNames.js";
+  import {
+    assignServoNames,
+    loadServoNames,
+    sendChangedServoNames,
+  } from "@/js/ServoNames.js";
   import { getTabHelpURL } from "@/js/help";
 
   import Page from "@/components/Page.svelte";
@@ -33,6 +37,8 @@
       MIXER_CONFIG: FC.MIXER_CONFIG,
       MIXER_INPUTS: FC.MIXER_INPUTS,
       MIXER_RULES: FC.MIXER_RULES,
+      // Named by the wizards along with the rules they write
+      SERVO_NAMES: FC.SERVO_NAMES,
     });
   }
 
@@ -126,6 +132,7 @@
     if (rulesDirty) {
       await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
     }
+    await sendChangedServoNames(initialState.SERVO_NAMES);
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -137,6 +144,9 @@
     Object.assign(FC.MIXER_CONFIG, initialState.MIXER_CONFIG);
     Object.assign(FC.MIXER_INPUTS, initialState.MIXER_INPUTS);
     Object.assign(FC.MIXER_RULES, initialState.MIXER_RULES);
+    if (Array.isArray(initialState.SERVO_NAMES)) {
+      FC.SERVO_NAMES = [...initialState.SERVO_NAMES];
+    }
   }
 
   export function isDirty() {
@@ -145,6 +155,7 @@
 
   function onWizardApply(options) {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
+    assignServoNames(FC.MIXER_RULES);
   }
 
   function onClickHelp() {
