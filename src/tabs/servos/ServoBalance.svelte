@@ -191,15 +191,15 @@
     queueSend(servo);
   }
 
-  function setPointCount(n) {
-    letGo();
-    selected = null;
-    for (const servo of group) {
-      const curve = FC.SERVO_CURVES[servo];
-      if (curve.count === n) continue;
-      FC.SERVO_CURVES[servo] = resampleCurve(curve, n);
-      queueSend(servo);
-    }
+  // Each servo's curve has its own points: one servo may need a bend in the
+  // middle while another only needs its ends moved. The group stays held
+  // where it is; only a selected point on this curve is dropped.
+  function setPointCount(servo, n) {
+    const curve = FC.SERVO_CURVES[servo];
+    if (curve.count === n) return;
+    FC.SERVO_CURVES[servo] = resampleCurve(curve, n);
+    if (servo === activeServo) selected = null;
+    queueSend(servo);
   }
 
   function resetCurve(servo) {
@@ -317,19 +317,6 @@
 
 {#if ready && group.length > 1}
   <div class="row">
-    <span class="muted">{$i18n.t("servoBalancePointCount")}</span>
-    {#each POINT_COUNTS as n (n)}
-      <button
-        class={[
-          "btn",
-          group.every((s) => FC.SERVO_CURVES[s].count === n) && "selected",
-        ]}
-        type="button"
-        onclick={() => setPointCount(n)}
-      >
-        {n}
-      </button>
-    {/each}
     <span class="grow"></span>
     <button
       class={["btn", holdX !== null && !sweeping && "selected"]}
@@ -395,6 +382,19 @@
             {$i18n.t("servoBalanceNearLimit")}
           </span>
         {/if}
+        <span class="points" role="group">
+          <span class="muted">{$i18n.t("servoBalancePointCount")}</span>
+          {#each POINT_COUNTS as n (n)}
+            <button
+              class={["btn", "small", curve.count === n && "selected"]}
+              type="button"
+              aria-pressed={curve.count === n}
+              onclick={() => setPointCount(servo, n)}
+            >
+              {n}
+            </button>
+          {/each}
+        </span>
         <button
           class="btn small"
           type="button"
@@ -513,6 +513,17 @@
     .btn {
       min-width: 2.4em;
       padding: 2px 6px;
+    }
+  }
+
+  .points {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9em;
+
+    .btn.small {
+      min-width: 2em;
     }
   }
 
