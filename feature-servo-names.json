@@ -1,8 +1,4 @@
 {
   "branch": "feature/servo-names",
-  "date": "2026-11-16T13:37:51Z",
-  "number": 242,
-  "title": "Servo names: edit on the Servos tab, label servos everywhere, name them from the mixer wizards",
-  "url": "https://github.com/WingFlight/wingflight-configurator/pull/242",
-  "draft": false
+  "date": "2026-11-16T13:37:51Z"
 }
