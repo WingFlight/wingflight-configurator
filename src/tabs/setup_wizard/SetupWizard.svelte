@@ -12,8 +12,6 @@
   import { bit_check, reinitialiseConnection } from "@/js/serial_backend";
 
   import Page from "@/components/Page.svelte";
-  import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
-  import { isFollower, servoGroups } from "@/js/servoGroups.js";
 
   import {
     surfacesFromRules,
@@ -34,7 +32,6 @@
   import StepLimits from "./StepLimits.svelte";
   import StepThrows from "./StepThrows.svelte";
   import StepTravel from "./StepTravel.svelte";
-  import StepBalance from "./StepBalance.svelte";
   import StepGyro from "./StepGyro.svelte";
   import StepTrimGain from "./StepTrimGain.svelte";
   import StepModes from "./StepModes.svelte";
@@ -61,9 +58,6 @@
     { key: "limits", component: StepLimits },
     { key: "throws", component: StepThrows },
     { key: "travel", component: StepTravel },
-    // Only when a surface has more than one servo. After the throws: it
-    // starts each follower from its primary's finished travel.
-    { key: "balance", component: StepBalance },
     { key: "gyro", component: StepGyro },
     { key: "trimGain", component: StepTrimGain },
     { key: "modes", component: StepModes },
@@ -81,9 +75,7 @@
   const SERVO_OVERRIDE_OFF = 2001;
 
   let loading = $state(true);
-  // The step is kept by key: the Balance step comes and goes with the
-  // servos-on-one-surface setup, which moves the numbers of the ones after it.
-  let stepKey = $state(readStoredStep());
+  let stepIndex = $state(readStoredStep());
   let pending = $state(false);
   let saving = $state(false);
   let armed = $state(false);
@@ -99,16 +91,18 @@
   function readStoredStep() {
     try {
       // Stored by key, so adding a step doesn't move a saved position.
-      const key = localStorage.getItem(STEP_STORAGE_KEY);
-      return STEPS.some((s) => s.key === key) ? key : STEPS[0].key;
+      const index = STEPS.findIndex(
+        (s) => s.key === localStorage.getItem(STEP_STORAGE_KEY),
+      );
+      return Math.max(index, 0);
     } catch {
-      return STEPS[0].key;
+      return 0;
     }
   }
 
   function storeStep(index) {
     try {
-      localStorage.setItem(STEP_STORAGE_KEY, steps[index].key);
+      localStorage.setItem(STEP_STORAGE_KEY, STEPS[index].key);
     } catch {
       // Remembering the step is a convenience only.
     }
@@ -120,35 +114,7 @@
     Math.min(FC.CONFIG.servoCount ?? 0, SERVO_SLOTS, FC.SERVO_CONFIG.length),
   );
 
-  // Servos on one surface: a follower moves with its primary and has no
-  // rules of its own (any it has are ignored by the FC), so it isn't a
-  // surface of its own here. Firmware without servo follow has none.
-  let groups = $derived(servoGroups(FC.SERVO_FOLLOW, servoCount));
-  let surfaces = $derived(
-    surfacesFromRules(FC.MIXER_RULES, servoCount).filter(
-      (surface) => !isFollower(FC.SERVO_FOLLOW, surface.servo, servoCount),
-    ),
-  );
-
-  let steps = $derived(
-    STEPS.filter((step) => step.key !== "balance" || groups.length > 0),
-  );
-
-  // A step that isn't shown (the Balance step without followers) opens as
-  // the next one that is.
-  let stepIndex = $derived.by(() => {
-    const index = steps.findIndex((step) => step.key === stepKey);
-    if (index >= 0) return index;
-    const order = STEPS.findIndex((step) => step.key === stepKey);
-    const after = steps.findIndex(
-      (step) => STEPS.findIndex((s) => s.key === step.key) > order,
-    );
-    return after >= 0 ? after : steps.length - 1;
-  });
-
-  function followersOf(servo) {
-    return groups.find((group) => group.primary === servo)?.followers ?? [];
-  }
+  let surfaces = $derived(surfacesFromRules(FC.MIXER_RULES, servoCount));
   // Mixed servos the board has no output for, which the wizard can't show.
   let missingServos = $derived(
     servosPastCount(FC.MIXER_RULES, servoCount, SERVO_SLOTS),
@@ -162,9 +128,6 @@
       MIXER_INPUTS: FC.MIXER_INPUTS,
       MIXER_RULES: FC.MIXER_RULES,
       MIXER_CONFIG: FC.MIXER_CONFIG,
-      // Set by the Airframe and Balance steps.
-      SERVO_FOLLOW: FC.SERVO_FOLLOW,
-      SERVO_CURVES: FC.SERVO_CURVES,
       // Sent live by the Mode switches step.
       MODE_RANGES: FC.MODE_RANGES,
       MODE_RANGES_EXTRA: FC.MODE_RANGES_EXTRA,
@@ -202,11 +165,6 @@
     await MSP.promise(MSPCodes.MSP_SERVO_CONFIGURATIONS);
     // Saved trims take travel from one side (see servoStickConfig()).
     await MSP.promise(MSPCodes.MSP_SERVO_TRIM);
-    // Servos on one surface, and the balance curves that match them up.
-    // Firmware without servo follow answers "unsupported" and leaves it null.
-    FC.SERVO_FOLLOW = null;
-    await MSP.promise(MSPCodes.MSP2_WING_SERVO_FOLLOW);
-    await MSP.promise(MSPCodes.MSP_SERVO_CURVES);
     await MSP.promise(MSPCodes.MSP_SERVO_OVERRIDE);
     await MSP.promise(MSPCodes.MSP_SERVO);
 
@@ -338,20 +296,8 @@
 
   // Holds a servo at Mid + offsetUs regardless of its Min/Max, for the
   // Limits step. Only with timed overrides (see canProbe).
-  // A probe sets the servo's output directly, so the servos following it
-  // don't move with it. They are held at the command that puts the primary
-  // there instead, so the servos on one surface don't fight.
   function probeServo(servo, offsetUs) {
     probes[servo] = offsetUs;
-    const config = FC.SERVO_CONFIG[servo];
-    if (config) {
-      const scale = offsetUs > 0 ? config.rpos : config.rneg;
-      const pos = scale ? offsetUs / scale : 0;
-      const command = config.flags & 1 ? -pos : pos;
-      for (const follower of followersOf(servo)) {
-        holdServo(follower, command * 1000);
-      }
-    }
     return mspHelper.sendServoProbe(servo, offsetUs, OVERRIDE_TIMEOUT_MS);
   }
 
@@ -359,9 +305,6 @@
     if (!(servo in probes)) return;
     delete probes[servo];
     mspHelper.sendServoProbe(servo, 0, 0);
-    for (const follower of followersOf(servo)) {
-      releaseServo(follower);
-    }
   }
 
   function releaseProbes() {
@@ -529,20 +472,6 @@
     await new Promise((resolve) => mspHelper.sendMixerInputs(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
-    if (Array.isArray(snapshot.SERVO_FOLLOW)) {
-      FC.SERVO_FOLLOW = snapshot.SERVO_FOLLOW;
-      await mspHelper.sendServoFollows();
-    }
-    for (let i = 0; i < (snapshot.SERVO_CURVES ?? []).length; i++) {
-      const curve = snapshot.SERVO_CURVES[i];
-      if (
-        FC.SERVO_CURVES[i] &&
-        !ServoBalanceCurve.compareCurve(FC.SERVO_CURVES[i], curve)
-      ) {
-        FC.SERVO_CURVES[i] = curve;
-        await new Promise((resolve) => mspHelper.sendServoCurve(i, resolve));
-      }
-    }
     pending = false;
   }
 
@@ -557,11 +486,6 @@
     get surfaces() {
       return surfaces;
     },
-    // Primaries with followers: [{ primary, followers }], 0-based.
-    get groups() {
-      return groups;
-    },
-    followersOf,
     get servoCount() {
       return servoCount;
     },
@@ -628,24 +552,6 @@
     setLeave(fn) {
       leaveFn = fn;
     },
-    // A follower of the surface on servo `primary`.
-    followerLabel(servo, primary) {
-      return followerLabel(servo, primary);
-    },
-    // Any servo: its surface, or the surface it follows.
-    servoLabel(servo) {
-      const surface = surfaces.find((s) => s.servo === servo);
-      if (surface) {
-        return $i18n.t("setupWizardSurfaceLabel", {
-          1: servo + 1,
-          2: $i18n.t(`setupWizardSurface_${surface.kind}`),
-        });
-      }
-      const group = groups.find((g) => g.followers.includes(servo));
-      return group
-        ? followerLabel(servo, group.primary)
-        : $i18n.t("servoFollowServo", { 1: servo + 1 });
-    },
     surfaceLabel(surface) {
       return $i18n.t("setupWizardSurfaceLabel", {
         1: surface.servo + 1,
@@ -654,25 +560,14 @@
     },
   });
 
-  function followerLabel(servo, primary) {
-    const surface = surfaces.find((s) => s.servo === primary);
-    return $i18n.t("setupWizardFollowerLabel", {
-      1: servo + 1,
-      2: surface
-        ? $i18n.t(`setupWizardSurface_${surface.kind}`)
-        : $i18n.t("servoFollowServo", { 1: primary + 1 }),
-      3: primary + 1,
-    });
-  }
-
   function goTo(index) {
-    if (index === stepIndex || index < 0 || index >= steps.length) return;
+    if (index === stepIndex || index < 0 || index >= STEPS.length) return;
     leaveFn?.();
     leaveFn = null;
     commitFn = null;
     releaseAll();
     removeModeForce();
-    stepKey = steps[index].key;
+    stepIndex = index;
     storeStep(index);
   }
 
@@ -699,7 +594,7 @@
     await revert();
   }
 
-  let Current = $derived(steps[stepIndex].component);
+  let Current = $derived(STEPS[stepIndex].component);
 </script>
 
 {#snippet header()}
@@ -714,7 +609,7 @@
   <div class="layout">
     <nav class="steps" aria-label={$i18n.t("tabSetupWizard")}>
       <ol>
-        {#each steps as step, i (step.key)}
+        {#each STEPS as step, i (step.key)}
           <li>
             <button
               class={[
@@ -761,20 +656,20 @@
           <span class="counter">
             {$i18n.t("setupWizardStepCounter", {
               1: stepIndex + 1,
-              2: steps.length,
+              2: STEPS.length,
             })}
           </span>
-          <h2>{$i18n.t(`setupWizardStep_${steps[stepIndex].key}`)}</h2>
+          <h2>{$i18n.t(`setupWizardStep_${STEPS[stepIndex].key}`)}</h2>
           <div
             class="progress"
             role="progressbar"
             aria-valuemin="1"
-            aria-valuemax={steps.length}
+            aria-valuemax={STEPS.length}
             aria-valuenow={stepIndex + 1}
           >
             <div
               class="progress-fill"
-              style:width="{((stepIndex + 1) / steps.length) * 100}%"
+              style:width="{((stepIndex + 1) / STEPS.length) * 100}%"
             ></div>
           </div>
         </header>
@@ -796,7 +691,7 @@
           </button>
           <div class="grow"></div>
           <!-- The last step has its own Finish button. -->
-          {#if stepIndex < steps.length - 1}
+          {#if stepIndex < STEPS.length - 1}
             {#if pending}
               <span class="unsaved">{$i18n.t("setupWizardUnsaved")}</span>
             {/if}

@@ -25,7 +25,6 @@
     $state.snapshot({
       type: FC.MIXER_CONFIG.model_type,
       rules: FC.MIXER_RULES,
-      follow: FC.SERVO_FOLLOW,
     }),
   );
 
@@ -34,7 +33,6 @@
       $state.snapshot({
         type: FC.MIXER_CONFIG.model_type,
         rules: FC.MIXER_RULES,
-        follow: FC.SERVO_FOLLOW,
       }),
     ) !== initial,
   );
@@ -47,10 +45,6 @@
     if (!changed) return;
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
-    // Servos on one surface, from the setup's servos-per-surface choice.
-    if (Array.isArray(FC.SERVO_FOLLOW)) {
-      await mspHelper.sendServoFollows();
-    }
   });
 
   let current = $derived(FC.MIXER_CONFIG.model_type);
@@ -142,16 +136,6 @@
                 </span>
               {/each}
             </span>
-            {#if wiz.followersOf(surface.servo).length > 0}
-              <span class="followers">
-                {$i18n.t("setupWizardAirframeFollowers", {
-                  1: wiz
-                    .followersOf(surface.servo)
-                    .map((servo) => servo + 1)
-                    .join(", "),
-                })}
-              </span>
-            {/if}
           </span>
         </li>
       {/each}
@@ -316,11 +300,6 @@
 
   .kind {
     font-weight: 600;
-  }
-
-  .followers {
-    color: var(--color-text-soft);
-    font-size: 0.85em;
   }
 
   .axes {

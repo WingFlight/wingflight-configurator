@@ -89,10 +89,6 @@
     for (const surface of wiz.surfaces) {
       if (movedBy(surface, check)) {
         answers[`${check.key}:${surface.servo}`] = "fixed";
-        // Followers move with their surface's servo, so they turn round too.
-        for (const servo of wiz.followersOf(surface.servo)) {
-          answers[`${check.key}:${servo}`] = "fixed";
-        }
       }
     }
   }
@@ -218,46 +214,6 @@
                 {/if}
               </td>
             </tr>
-            <!-- Other servos on the same surface: each is checked on its
-                 surface's own axis, and reversed on its own. No Identify:
-                 moving one alone would fight the others on the surface. -->
-            {#if ownAxis}
-              {#each wiz.followersOf(surface.servo) as servo (servo)}
-                {@const followerState = answers[`${check.key}:${servo}`]}
-                <tr class="follower">
-                  <td class="name">{wiz.followerLabel(servo, surface.servo)}</td
-                  >
-                  <td><LivePulse {servo} /></td>
-                  <td class="buttons">
-                    <button
-                      class="btn"
-                      onclick={() => answer(check, { servo }, true)}
-                    >
-                      {$i18n.t("setupWizardDirectionCorrect")}
-                    </button>
-                    <button
-                      class="btn"
-                      onclick={() => answer(check, { servo }, false)}
-                    >
-                      {$i18n.t("setupWizardDirectionWrong")}
-                    </button>
-                  </td>
-                  <td class="state">
-                    {#if followerState === "ok"}
-                      <span class="good">{$i18n.t("setupWizardDone")}</span>
-                    {:else if followerState === "fixed"}
-                      <span class="good"
-                        >{$i18n.t("setupWizardDirectionReversed")}</span
-                      >
-                    {:else}
-                      <span class="muted"
-                        >{$i18n.t("setupWizardDirectionFollowerHint")}</span
-                      >
-                    {/if}
-                  </td>
-                </tr>
-              {/each}
-            {/if}
           {/each}
         </tbody>
       </table>

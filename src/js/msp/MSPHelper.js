@@ -1849,17 +1849,6 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
-            case MSPCodes.MSP2_WING_SERVO_FOLLOW: {
-                // Count-prefixed, one U8 per servo: the servo it follows on the
-                // same surface, 1-based, 0 for none.
-                FC.SERVO_FOLLOW = [];
-                const followCount = data.readU8();
-                for (let i = 0; i < followCount; i++) {
-                    FC.SERVO_FOLLOW.push(data.readU8());
-                }
-                break;
-            }
-
             case MSPCodes.MSP_SERVO_CURVES: {
                 // Count-prefixed like MSP_SERVO_CONFIGURATIONS (one curve per
                 // physical servo, not a fixed pool like mixer/gain curves).
@@ -3487,32 +3476,6 @@ MspHelper.prototype.sendModeOverride = function(permanentIds, timeoutMs)
             // No response at all: the request was dropped (link lost).
             (response) => resolve(!!response && !response.unsupported && !response.crcError), true);
     });
-};
-
-// Sets which servo `servoIndex` follows from FC.SERVO_FOLLOW (1-based, 0 = none).
-// The FC refuses a servo that follows a follower, or itself.
-MspHelper.prototype.sendServoFollow = function(servoIndex)
-{
-    const buffer = [];
-
-    buffer.push8(servoIndex)
-          .push8(FC.SERVO_FOLLOW[servoIndex]);
-
-    return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_FOLLOW, buffer);
-};
-
-// Sends every servo's FC.SERVO_FOLLOW. A servo can only follow one that drives
-// itself, so the servos that drive themselves go first: a primary that used to
-// be a follower is cleared before anything is set to follow it.
-MspHelper.prototype.sendServoFollows = async function()
-{
-    const follow = FC.SERVO_FOLLOW ?? [];
-    for (let i = 0; i < follow.length; i++) {
-        if (!follow[i]) await this.sendServoFollow(i);
-    }
-    for (let i = 0; i < follow.length; i++) {
-        if (follow[i]) await this.sendServoFollow(i);
-    }
 };
 
 // Sets the saved trim (us) of servo `servoIndex` (FC.SERVO_CONFIG order) from

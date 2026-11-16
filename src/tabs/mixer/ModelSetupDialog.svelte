@@ -36,10 +36,6 @@
   let thrustVectorRoll = $state(false);
   let thrustVectorPitch = $state(false);
   let thrustVectorYaw = $state(false);
-  // Servos on each surface (Mixer.SURFACE_SERVO_KINDS): the first carries the
-  // mix, the others follow it. Only offered on firmware with servo follow.
-  let servosPerSurface = $state({});
-  let followSupported = $derived(Array.isArray(FC.SERVO_FOLLOW));
 
   // Flaperons need a separate servo on each aileron.
   let canFlaperon = $derived(
@@ -71,7 +67,6 @@
     thrustVectorRoll = false;
     thrustVectorPitch = false;
     thrustVectorYaw = false;
-    servosPerSurface = {};
 
     dialogEl.showModal();
   }
@@ -89,10 +84,7 @@
     thrustVectorRoll,
     thrustVectorPitch,
     thrustVectorYaw,
-    servosPerSurface: followSupported ? servosPerSurface : {},
   });
-
-  let surfaceKinds = $derived(Mixer.wizardSurfaceKinds(options));
 
   // Servo outputs these choices need that the board doesn't have, warned
   // about here while they can still be changed.
@@ -100,12 +92,6 @@
 
   function apply() {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
-    if (followSupported) {
-      FC.SERVO_FOLLOW = Mixer.buildFollowTableFromOptions(
-        options,
-        FC.SERVO_FOLLOW,
-      );
-    }
 
     applied = true;
     dialogEl.close();
@@ -285,36 +271,6 @@
       </div>
     {/if}
 
-    {#if followSupported && surfaceKinds.length > 0}
-      <div class="wizardSection">
-        <div class="wizardSectionTitle">
-          {$i18n.t("mixerWizardServosPerSurfaceTitle")}
-        </div>
-        <div class="perSurface">
-          {#each surfaceKinds as kind (kind)}
-            <label>
-              <span>{$i18n.t(`mixerWizardSurfaceKind_${kind}`)}</span>
-              <select
-                value={servosPerSurface[kind] ?? 1}
-                onchange={(e) =>
-                  (servosPerSurface = {
-                    ...servosPerSurface,
-                    [kind]: Number(e.target.value),
-                  })}
-              >
-                {#each Array.from({ length: Mixer.SURFACE_SERVOS_MAX }, (_, i) => i + 1) as n (n)}
-                  <option value={n}>{n}</option>
-                {/each}
-              </select>
-            </label>
-          {/each}
-        </div>
-        <div class="wizardHint">
-          {$i18n.t("mixerWizardServosPerSurfaceHint")}
-        </div>
-      </div>
-    {/if}
-
     <div class="note">
       <p>{$i18n.t("mixerWizardOverwriteWarning")}</p>
     </div>
@@ -376,25 +332,6 @@
     color: var(--color-text-soft);
     font-size: 0.7rem;
     margin-top: 4px;
-  }
-
-  .perSurface {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 6px 16px;
-
-    label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-weight: normal;
-    }
-
-    select {
-      width: 4em;
-      min-width: 0;
-    }
   }
 
   .buttons {

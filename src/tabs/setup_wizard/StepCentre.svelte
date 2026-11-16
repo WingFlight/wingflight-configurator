@@ -17,27 +17,9 @@
   // Servo override at 0 puts each servo exactly at its Mid, as on the Servos
   // tab: nothing from the mixer (gyro, offsets, flaps, curves) reaches it.
   // Released by the wizard when the step is left.
-  // Every servo, followers too: each one centres on its own Mid, with the
-  // ones on the same surface listed after the surface's first servo.
-  let rows = $derived(
-    wiz.surfaces.flatMap((surface) => [
-      {
-        servo: surface.servo,
-        label: wiz.surfaceLabel(surface),
-        kind: surface.kind,
-      },
-      ...wiz.followersOf(surface.servo).map((servo) => ({
-        servo,
-        label: wiz.followerLabel(servo, surface.servo),
-        kind: surface.kind,
-        follower: true,
-      })),
-    ]),
-  );
-
   onMount(() => {
-    for (const row of rows) {
-      wiz.holdServo(row.servo, 0);
+    for (const surface of wiz.surfaces) {
+      wiz.holdServo(surface.servo, 0);
     }
   });
 
@@ -69,14 +51,14 @@
 </div>
 
 <div class="surfaces">
-  {#each rows as row (row.servo)}
-    {@const config = FC.SERVO_CONFIG[row.servo]}
+  {#each wiz.surfaces as surface (surface.servo)}
+    {@const config = FC.SERVO_CONFIG[surface.servo]}
     {@const centre = CENTRE}
     {@const offset = config.mid - centre}
     {@const far = Math.abs(offset) > MID_WARN_US}
     <section class={["surface", far && "far"]}>
       <div class="head">
-        <span class="name">{row.label}</span>
+        <span class="name">{wiz.surfaceLabel(surface)}</span>
         {#if far}
           <span class="flag warn">
             <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
@@ -90,7 +72,7 @@
         {/if}
       </div>
 
-      <CentreGauge servo={row.servo} {centre} warn={MID_WARN_US} />
+      <CentreGauge servo={surface.servo} {centre} warn={MID_WARN_US} />
       <div class="scale" aria-hidden="true">
         <span>{signed(-2 * MID_WARN_US)}</span>
         <span>{centre} µs</span>
@@ -100,7 +82,7 @@
       <div class="controls">
         <span class="nudges">
           {#each [-10, -1] as delta (delta)}
-            <button class="btn" onclick={() => nudge(row.servo, delta)}
+            <button class="btn" onclick={() => nudge(surface.servo, delta)}
               >{delta}</button
             >
           {/each}
@@ -109,7 +91,7 @@
             <span class="unit">µs</span>
           </span>
           {#each [1, 10] as delta (delta)}
-            <button class="btn" onclick={() => nudge(row.servo, delta)}
+            <button class="btn" onclick={() => nudge(surface.servo, delta)}
               >+{delta}</button
             >
           {/each}
@@ -122,10 +104,7 @@
       {#if far}
         <p class="warn-text">{$i18n.t("setupWizardCentreFarWarning")}</p>
       {/if}
-      {#if row.follower}
-        <p class="muted">{$i18n.t("setupWizardCentreFollowerHint")}</p>
-      {/if}
-      {#if row.kind === "flap"}
+      {#if surface.kind === "flap"}
         <p class="muted">{$i18n.t("setupWizardCentreFlapHint")}</p>
       {/if}
     </section>

@@ -349,40 +349,6 @@ function encodeServoTrim() {
   return Uint8Array.from(buffer);
 }
 
-// Servos on one surface (servoFollows PG): kept here rather than in FC so a
-// read that clears FC.SERVO_FOLLOW first still gets the stored values back.
-let virtualServoFollow = [];
-
-// MSP2_WING_SERVO_FOLLOW: count, then one U8 per servo (1-based, 0 = none).
-function encodeServoFollow() {
-  const count = FC.SERVO_CONFIG.length;
-  const buffer = [];
-  buffer.push8(count);
-  for (let i = 0; i < count; i++) buffer.push8(virtualServoFollow[i] ?? 0);
-  return Uint8Array.from(buffer);
-}
-
-// Like the FC's MSP2_WING_SET_SERVO_FOLLOW: a servo can only follow another
-// that drives itself, never itself. Refused (undefined) otherwise.
-function setVirtualServoFollow(servo, primary) {
-  const slots = FC.SERVO_CONFIG.length;
-  if (servo >= slots || primary > slots || primary === servo + 1) {
-    return undefined;
-  }
-  if (primary && virtualServoFollow[primary - 1]) {
-    return undefined;
-  }
-  virtualServoFollow[servo] = primary;
-  // A servo that followed this one now follows a follower: cleared, as the FC
-  // does in validateAndFixServoConfig().
-  if (primary) {
-    virtualServoFollow = virtualServoFollow.map((p) =>
-      p === servo + 1 ? 0 : p,
-    );
-  }
-  return new Uint8Array(0);
-}
-
 // Hardware timer of each virtual PWM servo: S1-S3 share one, as on many
 // boards, and S4 has its own.
 const VIRTUAL_SERVO_TIMERS = [0, 0, 0, 1];
@@ -733,10 +699,6 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeServoTrim());
     case MSPCodes.MSP2_WING_SERVO_TIMING:
       return decodeVirtualReply(code, encodeServoTiming());
-    case MSPCodes.MSP2_WING_SERVO_FOLLOW:
-      return decodeVirtualReply(code, encodeServoFollow());
-    case MSPCodes.MSP2_WING_SET_SERVO_FOLLOW:
-      return setVirtualServoFollow(requestData[0], requestData[1]);
     case MSPCodes.MSP2_WING_FBUS_SENSORS:
       return decodeVirtualReply(code, encodeFbusSensors());
     case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS:
@@ -1204,10 +1166,6 @@ export function applyVirtualConfig() {
   // Live and saved servo trims (MSP_SERVO_TRIM): servoTrims PG default is 0
   FC.SERVO_RUNTIME_TRIM = FC.SERVO_CONFIG.map(() => 0);
   FC.SERVO_SAVED_TRIM = FC.SERVO_CONFIG.map(() => 0);
-
-  // Servos on one surface (servoFollows PG): every servo drives itself
-  virtualServoFollow = FC.SERVO_CONFIG.map(() => 0);
-  FC.SERVO_FOLLOW = [...virtualServoFollow];
 
   // Failsafe/arming: pg/failsafe.c and pg/arming.c defaults
   Object.assign(FC.FAILSAFE_CONFIG, {

@@ -4,56 +4,92 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import {
-    BALANCE_CURVE_X,
-    BALANCE_POINTS,
-    balanceCurve,
-    balanceCurveUse,
-    balanceSetting,
-    copyPrimaryTravel,
-    isBalanceCurve,
-    nudgeBalance,
-  } from "@/js/servoGroups.js";
+    POINT_COUNTS,
+    holdCommands,
+    mixDirection,
+    nudgeCurvePoint,
+    pointOffsetUs,
+    pointUse,
+    referenceCandidates,
+    resampleCurve,
+  } from "@/js/servoBalance.js";
 
-  // Balances the followers of one primary servo against it: the primary is
-  // held at a few points of its travel (the FC moves the followers with it),
-  // and each follower is moved until it sits where the primary does. Every
-  // change is sent live; the page that hosts this saves it.
+  // Balances one servo against another on the same surface with the
+  // balanced servo's balance curve. Both servos are held at each point of the
+  // curve (servo overrides, in the direction their mix moves them), and the
+  // balanced servo's offset there is nudged until it sits exactly with the
+  // other one. Curve changes are sent live; the Servos tab saves them.
   //
-  // hold(servo, value) / release(servo) hold a servo with a servo override
-  // (value -1000..1000 of full travel), so this works on the Servos tab and in
-  // the setup wizard alike. onChange runs after every change sent.
-  let { primary, followers, hold, release, onChange, servoLabel } = $props();
+  // hold(servo, value) / release(servo): servo override, value -1000..1000.
+  let { servos, hold, release, onChange } = $props();
 
-  // Above this share of the balance curve's range the follower is too far
-  // out to balance there: the linkage should be adjusted instead.
-  const CURVE_WARN = 0.8;
+  // Above this share of the curve's range the servos are too far apart for
+  // the curve: the linkage should be adjusted instead.
+  const USE_WARN = 0.8;
 
   const SWEEP_MS = 4000;
   const SWEEP_STEP_MS = 50;
   const SWEEP_CYCLES = 2;
 
+  let servo = $state(null);
+  let reference = $state(null);
   let active = $state(null);
   let sweeping = $state(false);
   let sweepTimer;
+  let held = $state([]);
 
-  function label(servo) {
-    return servoLabel ? servoLabel(servo) : `S${servo + 1}`;
+  let count = $derived(servos.length);
+  let candidates = $derived(
+    servo === null ? [] : referenceCandidates(FC.MIXER_RULES, servo, count),
+  );
+  let direction = $derived(
+    servo === null || reference === null
+      ? null
+      : mixDirection(FC.MIXER_RULES, servo, reference),
+  );
+  let curve = $derived(servo === null ? null : FC.SERVO_CURVES?.[servo]);
+  let config = $derived(servo === null ? null : FC.SERVO_CONFIG[servo]);
+  let ready = $derived(
+    servo !== null && reference !== null && !!curve && !!config,
+  );
+
+  function label(index) {
+    return $i18n.t("servoBalanceServo", { 1: index + 1 });
   }
 
-  function select(point) {
-    stopSweep();
-    active = point.key;
-    hold(primary, point.command);
-  }
-
-  function stop() {
+  function letGo() {
     stopSweep();
     active = null;
-    release(primary);
+    for (const index of held) release(index);
+    held = [];
+  }
+
+  function holdAt(x) {
+    const commands = holdCommands(x, direction);
+    hold(servo, commands.servo);
+    hold(reference, commands.reference);
+    held = [servo, reference];
+  }
+
+  function pickServo(value) {
+    letGo();
+    servo = value === "" ? null : Number(value);
+    reference = servo === null ? null : (candidates[0] ?? null);
+  }
+
+  function pickReference(value) {
+    letGo();
+    reference = value === "" ? null : Number(value);
+  }
+
+  function selectPoint(index) {
+    stopSweep();
+    active = index;
+    holdAt(curve.points[index].x);
   }
 
   // Slowly through the whole travel and back, to watch for a servo that
-  // binds or strains somewhere along the way.
+  // binds or strains anywhere along the way.
   function sweep() {
     stopSweep();
     sweeping = true;
@@ -62,25 +98,18 @@
     sweepTimer = setInterval(() => {
       if (step >= steps * SWEEP_CYCLES) {
         stopSweep();
-        const point = BALANCE_POINTS.find((p) => p.key === active);
-        if (point) {
-          hold(primary, point.command);
+        if (active !== null) {
+          holdAt(curve.points[active].x);
         } else {
-          release(primary);
+          letGo();
         }
         return;
       }
-      // Triangle wave from 0 up, down to -1000 and back to 0
+      // Triangle wave from 0 up to 1000, down to -1000 and back to 0
       const phase = (step % steps) / steps;
-      const command = Math.round(
-        1000 *
-          (phase < 0.25
-            ? phase * 4
-            : phase < 0.75
-              ? 2 - phase * 4
-              : phase * 4 - 4),
-      );
-      hold(primary, command);
+      const x =
+        phase < 0.25 ? phase * 4 : phase < 0.75 ? 2 - phase * 4 : phase * 4 - 4;
+      holdAt(Math.round(1000 * x));
       step++;
     }, SWEEP_STEP_MS);
   }
@@ -91,162 +120,169 @@
     sweeping = false;
   }
 
-  function sendConfig(servo) {
-    return new Promise((resolve) => mspHelper.sendServoConfig(servo, resolve));
-  }
-
-  function sendCurve(servo) {
+  function sendCurve() {
     return new Promise((resolve) => mspHelper.sendServoCurve(servo, resolve));
   }
 
-  async function copyTravel() {
-    for (const follower of followers) {
-      copyPrimaryTravel(FC.SERVO_CONFIG[primary], FC.SERVO_CONFIG[follower]);
-      await sendConfig(follower);
-    }
+  async function nudge(deltaUs) {
+    if (active === null) return;
+    if (!nudgeCurvePoint(config, curve, active, deltaUs)) return;
+    await sendCurve();
     onChange?.();
   }
 
-  async function nudge(follower, deltaUs) {
-    const point = BALANCE_POINTS.find((p) => p.key === active);
-    if (!point) return;
-    const config = FC.SERVO_CONFIG[follower];
-    // Put the curve in the tool's shape first, so a nudge always has its
-    // point to move.
-    if (!isBalanceCurve(FC.SERVO_CURVES[follower])) {
-      FC.SERVO_CURVES[follower] = balanceCurve(FC.SERVO_CURVES[follower]);
-    }
-    const curve = FC.SERVO_CURVES[follower];
-    const changed = nudgeBalance(point, config, curve, deltaUs);
-    if (!changed) return;
-    if (changed === "curve") {
-      await sendCurve(follower);
-    } else {
-      await sendConfig(follower);
-    }
+  async function setPointCount(n) {
+    if (curve.count === n) return;
+    letGo();
+    FC.SERVO_CURVES[servo] = resampleCurve(curve, n);
+    await sendCurve();
     onChange?.();
   }
 
-  // Puts the follower's balance curve back to flat, keeping Center and Scale.
-  async function resetCurve(follower) {
-    FC.SERVO_CURVES[follower] = balanceCurve(null);
-    await sendCurve(follower);
+  async function resetCurve() {
+    FC.SERVO_CURVES[servo] = resampleCurve(null, curve.count);
+    await sendCurve();
     onChange?.();
+    if (active !== null) holdAt(FC.SERVO_CURVES[servo].points[active].x);
   }
 
-  function settingText(follower, point) {
-    const config = FC.SERVO_CONFIG[follower];
-    const setting = balanceSetting(point, config);
-    if (setting === "mid") {
-      return $i18n.t("servoBalanceSettingCenter", { 1: config.mid });
-    }
-    if (setting === "rpos" || setting === "rneg") {
-      return $i18n.t(
-        setting === "rpos"
-          ? "servoBalanceSettingScalePos"
-          : "servoBalanceSettingScaleNeg",
-        { 1: config[setting] },
-      );
-    }
-    const curve = FC.SERVO_CURVES[follower];
-    const index = BALANCE_CURVE_X.indexOf(point.command);
-    const y = isBalanceCurve(curve) ? curve.points[index].y : 0;
-    return $i18n.t("servoBalanceSettingCurve", {
-      1: `${y > 0 ? "+" : ""}${(y / 10).toFixed(1)}`,
-    });
+  function percent(x) {
+    const value = Math.round(x / 10);
+    return `${value > 0 ? "+" : ""}${value}%`;
   }
 
-  onDestroy(() => {
-    stopSweep();
-    if (active) release(primary);
-  });
+  function signed(n) {
+    return `${n > 0 ? "+" : ""}${n}`;
+  }
 
-  let activePoint = $derived(BALANCE_POINTS.find((p) => p.key === active));
+  onDestroy(letGo);
 </script>
 
-<div class="balance">
-  <div class="head">
-    <span class="title">
-      {$i18n.t("servoBalanceGroup", {
-        1: label(primary),
-        2: followers.map(label).join(", "),
-      })}
-    </span>
-    <span class="actions">
-      <button class="btn" type="button" onclick={copyTravel}>
-        {$i18n.t("servoBalanceCopyTravel", { 1: label(primary) })}
-      </button>
-      <button
-        class={["btn", sweeping && "selected"]}
-        type="button"
-        onclick={() => (sweeping ? stopSweep() : sweep())}
-      >
-        {$i18n.t(sweeping ? "servoBalanceSweepStop" : "servoBalanceSweep")}
-      </button>
-    </span>
-  </div>
+<p class="intro">{$i18n.t("servoBalanceIntro")}</p>
 
-  <div class="points" role="group" aria-label={$i18n.t("servoBalancePoints")}>
-    {#each BALANCE_POINTS as point (point.key)}
-      <button
-        class={["btn", "point", active === point.key && "selected"]}
-        type="button"
-        aria-pressed={active === point.key}
-        onclick={() => select(point)}
+<div class="pick">
+  <label>
+    <span>{$i18n.t("servoBalanceServoLabel")}</span>
+    <select value={servo ?? ""} onchange={(e) => pickServo(e.target.value)}>
+      <option value="">{$i18n.t("servoBalanceChoose")}</option>
+      {#each servos as s (s.index)}
+        <option value={s.index}>{label(s.index)}</option>
+      {/each}
+    </select>
+  </label>
+  {#if servo !== null}
+    <label>
+      <span>{$i18n.t("servoBalanceReferenceLabel")}</span>
+      <select
+        value={reference ?? ""}
+        onchange={(e) => pickReference(e.target.value)}
       >
-        {$i18n.t(`servoBalancePoint_${point.key}`)}
+        <option value="">{$i18n.t("servoBalanceChoose")}</option>
+        {#each candidates as index (index)}
+          <option value={index}>
+            {$i18n.t("servoBalanceSameMix", { 1: index + 1 })}
+          </option>
+        {/each}
+        {#each servos.filter((s) => s.index !== servo && !candidates.includes(s.index)) as s (s.index)}
+          <option value={s.index}>{label(s.index)}</option>
+        {/each}
+      </select>
+    </label>
+  {/if}
+</div>
+
+{#if servo !== null && candidates.length === 0}
+  <p class="warn">{$i18n.t("servoBalanceNoSameMix", { 1: servo + 1 })}</p>
+{/if}
+{#if ready && direction === null}
+  <p class="warn">{$i18n.t("servoBalanceNoSharedInput")}</p>
+{/if}
+
+{#if ready}
+  <div class="row">
+    <span class="muted">{$i18n.t("servoBalancePointCount")}</span>
+    {#each POINT_COUNTS as n (n)}
+      <button
+        class={["btn", curve.count === n && "selected"]}
+        type="button"
+        aria-pressed={curve.count === n}
+        onclick={() => setPointCount(n)}
+      >
+        {n}
       </button>
     {/each}
-    {#if active}
-      <button class="btn" type="button" onclick={stop}>
+    <span class="grow"></span>
+    <button
+      class={["btn", sweeping && "selected"]}
+      type="button"
+      onclick={() => (sweeping ? stopSweep() : sweep())}
+    >
+      {$i18n.t(sweeping ? "servoBalanceSweepStop" : "servoBalanceSweep")}
+    </button>
+    <button class="btn" type="button" onclick={resetCurve}>
+      {$i18n.t("servoBalanceReset")}
+    </button>
+    {#if held.length > 0 || active !== null}
+      <button class="btn" type="button" onclick={letGo}>
         {$i18n.t("servoBalanceRelease")}
       </button>
     {/if}
   </div>
 
-  {#if activePoint}
-    <p class="hint">{$i18n.t(`servoBalanceHint_${activePoint.key}`)}</p>
-    <div class="followers">
-      {#each followers as follower (follower)}
-        {@const use = balanceCurveUse(activePoint, FC.SERVO_CURVES[follower])}
-        <div class="follower">
-          <span class="name">{label(follower)}</span>
-          <span class="nudges">
-            {#each [-10, -1] as delta (delta)}
-              <button class="btn" onclick={() => nudge(follower, delta)}
-                >{delta}</button
-              >
-            {/each}
-            <span class="setting">{settingText(follower, activePoint)}</span>
-            {#each [1, 10] as delta (delta)}
-              <button class="btn" onclick={() => nudge(follower, delta)}
-                >+{delta}</button
-              >
-            {/each}
-            <span class="unit">µs</span>
-          </span>
-          {#if balanceSetting(activePoint, FC.SERVO_CONFIG[follower]) === "curve"}
-            <button
-              class="btn link"
-              type="button"
-              onclick={() => resetCurve(follower)}
-            >
-              {$i18n.t("servoBalanceResetCurve")}
-            </button>
-          {/if}
-          {#if use >= CURVE_WARN}
-            <span class="warn">
-              <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-              {$i18n.t("servoBalanceCurveLimit")}
-            </span>
-          {/if}
-        </div>
-      {/each}
+  <div class="points" role="group" aria-label={$i18n.t("servoBalancePoints")}>
+    {#each curve.points.slice(0, curve.count) as point, i (i)}
+      {@const offset = pointOffsetUs(config, curve, i)}
+      <button
+        class={[
+          "point",
+          active === i && "selected",
+          pointUse(curve, i) >= USE_WARN && "near-limit",
+        ]}
+        type="button"
+        aria-pressed={active === i}
+        onclick={() => selectPoint(i)}
+      >
+        <span class="x">{percent(point.x)}</span>
+        <span class="offset">{signed(offset)} µs</span>
+      </button>
+    {/each}
+  </div>
+
+  {#if active !== null}
+    <div class="nudge">
+      <span class="muted">
+        {$i18n.t("servoBalanceHolding", {
+          1: servo + 1,
+          2: reference + 1,
+          3: percent(curve.points[active].x),
+        })}
+      </span>
+      <span class="nudges">
+        {#each [-10, -1] as delta (delta)}
+          <button class="btn" type="button" onclick={() => nudge(delta)}
+            >{delta}</button
+          >
+        {/each}
+        <span class="value"
+          >{signed(pointOffsetUs(config, curve, active))} µs</span
+        >
+        {#each [1, 10] as delta (delta)}
+          <button class="btn" type="button" onclick={() => nudge(delta)}
+            >+{delta}</button
+          >
+        {/each}
+      </span>
+      {#if pointUse(curve, active) >= USE_WARN}
+        <span class="warn">
+          <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+          {$i18n.t("servoBalanceNearLimit")}
+        </span>
+      {/if}
     </div>
   {:else}
-    <p class="hint">{$i18n.t("servoBalanceIntro")}</p>
+    <p class="muted">{$i18n.t("servoBalancePickPoint")}</p>
   {/if}
-</div>
+{/if}
 
 <style lang="scss">
   .btn {
@@ -257,63 +293,89 @@
       border-color: var(--color-accent-500);
       background-color: var(--color-accent-soft);
     }
-
-    &.link {
-      min-width: 0;
-    }
   }
 
-  .balance {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border-soft, var(--color-border));
-    border-radius: var(--radius-md, var(--radius-sm));
-    background-color: var(--color-surface-sunken, transparent);
-  }
-
-  .head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .title {
-    font-weight: 600;
-  }
-
-  .actions,
-  .points {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .hint {
+  .intro,
+  .muted,
+  .warn {
     margin: 0;
-    max-width: 70ch;
+    max-width: 75ch;
+  }
+
+  .intro {
+    padding: 8px;
+  }
+
+  .muted {
     color: var(--color-text-soft);
   }
 
-  .followers {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  .warn {
+    padding: 0 8px;
+    color: var(--color-status-bad, #c80);
   }
 
-  .follower {
+  .pick,
+  .row,
+  .nudge {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px 12px;
+    gap: 8px 12px;
+    padding: 8px;
   }
 
-  .name {
-    min-width: 9em;
-    font-weight: 500;
+  .pick label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .grow {
+    flex-grow: 1;
+  }
+
+  // One button per curve point: where it holds the servos, and the offset
+  // the curve adds there. Laid out left to right like the travel.
+  .points {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .point {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+
+    &.selected {
+      border-color: var(--color-accent-500);
+      background-color: var(--color-accent-soft);
+    }
+
+    &.near-limit .offset {
+      color: var(--color-status-bad, #c80);
+    }
+  }
+
+  .x {
+    font-weight: 600;
+  }
+
+  .offset,
+  .value {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85em;
   }
 
   .nudges {
@@ -322,17 +384,9 @@
     gap: 4px;
   }
 
-  .setting {
-    min-width: 10em;
+  .value {
+    min-width: 5em;
     text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .unit {
-    color: var(--color-text-soft);
-  }
-
-  .warn {
-    color: var(--color-warning, #c80);
+    font-size: 1em;
   }
 </style>

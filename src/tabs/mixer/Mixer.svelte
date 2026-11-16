@@ -32,8 +32,6 @@
       MIXER_CONFIG: FC.MIXER_CONFIG,
       MIXER_INPUTS: FC.MIXER_INPUTS,
       MIXER_RULES: FC.MIXER_RULES,
-      // A setup from the dialog also sets which servos follow another.
-      SERVO_FOLLOW: FC.SERVO_FOLLOW,
     });
   }
 
@@ -62,9 +60,6 @@
     await MSP.promise(MSPCodes.MSP_MIXER_INPUTS);
     await MSP.promise(MSPCodes.MSP_MIXER_RULES);
     await MSP.promise(MSPCodes.MSP_MIXER_OVERRIDE);
-    // Firmware without it answers "unsupported" and leaves this null.
-    FC.SERVO_FOLLOW = null;
-    await MSP.promise(MSPCodes.MSP2_WING_SERVO_FOLLOW);
     // Needed for the Purpose-tagged rules' ADJ/LIVE badge (RuleTable/
     // SimplifiedMixerForm) -- Profiles.svelte and Servos.svelte each fetch
     // this themselves for their own badges too, since nothing fetches it
@@ -128,9 +123,6 @@
     if (rulesDirty) {
       await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
     }
-    if (changes.some((c) => c.path[0] === "SERVO_FOLLOW")) {
-      await mspHelper.sendServoFollows();
-    }
 
     await MSP.promise(MSPCodes.MSP_EEPROM_WRITE);
     GUI.log($i18n.t("eepromSaved"));
@@ -142,25 +134,14 @@
     Object.assign(FC.MIXER_CONFIG, initialState.MIXER_CONFIG);
     Object.assign(FC.MIXER_INPUTS, initialState.MIXER_INPUTS);
     Object.assign(FC.MIXER_RULES, initialState.MIXER_RULES);
-    if (initialState.SERVO_FOLLOW) {
-      FC.SERVO_FOLLOW = [...initialState.SERVO_FOLLOW];
-    }
   }
 
   export function isDirty() {
     return dirty;
   }
 
-  // The Custom setup has no servos-per-surface choice: every servo drives
-  // itself from the new rules.
   function onWizardApply(options) {
     FC.MIXER_RULES = Mixer.buildRuleTableFromOptions(options, FC.MIXER_RULES);
-    if (Array.isArray(FC.SERVO_FOLLOW)) {
-      FC.SERVO_FOLLOW = Mixer.buildFollowTableFromOptions(
-        options,
-        FC.SERVO_FOLLOW,
-      );
-    }
   }
 
   function onClickHelp() {

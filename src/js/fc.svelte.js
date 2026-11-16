@@ -98,9 +98,6 @@ class FlightController {
   // the FC does not have it). Added at the output on top of the center, never changing it.
   SERVO_SAVED_TRIM = $state();
   SERVO_CURVES = $state();
-  // Per servo, the servo it follows on the same control surface (1-based, 0 = none;
-  // MSP2_WING_SERVO_FOLLOW). null when the FC does not have it.
-  SERVO_FOLLOW = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
   SMARTFUEL_CONFIG = $state();
@@ -368,7 +365,6 @@ class FlightController {
     this.SERVO_TIMING =             null;
     this.SERVO_SAVED_TRIM =         null;
     this.SERVO_CURVES =             [];
-    this.SERVO_FOLLOW =             null;
 
     this.SERIAL_CONFIG = {
       ports:                      [],

@@ -276,7 +276,8 @@
     return (FC.SERVO_CONFIG[index].flags & mask) !== 0;
   }
 
-  // Balance curves are edited on the Curves tab, not here - this is just a
+  // Balance curves are edited on the Curves tab and in the Balance section,
+  // not in this table - this is just a
   // read-only "something's set" indicator so it's not invisible from the
   // Servos tab.
   function hasActiveCurve(servo) {
