@@ -23,6 +23,7 @@
   import ServoOverrideTable from "./ServoOverrideTable.svelte";
   import ServoBalance from "./ServoBalance.svelte";
   import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { cleanServoName } from "@/js/ServoNames.js";
 
   // A servo is a servo: servo N is sent on PWM output N where the board has
   // one, and on channel N of a bus output (SBUS, F.Bus) when one is set up.
@@ -45,6 +46,8 @@
   // can change from the FC side too (a Stepped ServoTrim adjustment on the
   // bench), so they get the same dirty/Save/Revert treatment.
   let initialTrims = $state(null);
+  // Servo names (FC.SERVO_NAMES) likewise, on firmware that has them.
+  let initialNames = $state(null);
   // Balance curves, set live by the Balance section (and the Curves tab).
   let initialCurves = $state(null);
   let poller;
@@ -85,6 +88,12 @@
       FC.SERVO_SAVED_TRIM.some((trim, i) => trim !== initialTrims[i]),
   );
 
+  let namesDirty = $derived(
+    initialNames !== null &&
+      Array.isArray(FC.SERVO_NAMES) &&
+      FC.SERVO_NAMES.some((name, i) => name !== initialNames[i]),
+  );
+
   let curvesDirty = $derived(
     initialCurves !== null &&
       FC.SERVO_CURVES.some(
@@ -95,7 +104,11 @@
   );
 
   let dirty = $derived(
-    changes.length > 0 || busOutChannelsDirty || trimsDirty || curvesDirty,
+    changes.length > 0 ||
+      busOutChannelsDirty ||
+      trimsDirty ||
+      namesDirty ||
+      curvesDirty,
   );
 
   let hasSbusOut = $derived(
@@ -227,6 +240,10 @@
     // rates are then shown as set, with no timer grouping.
     FC.SERVO_TIMING = null;
     await MSP.promise(MSPCodes.MSP2_WING_SERVO_TIMING);
+    // Likewise: without servo names FC.SERVO_NAMES stays null and the Name
+    // column is hidden.
+    FC.SERVO_NAMES = null;
+    await MSP.promise(MSPCodes.MSP2_WING_SERVO_NAMES);
     await pollRuntimeTrim();
     // For the balance curve badge in ServoConfigTable and the Balance
     // section. Not guaranteed populated otherwise if this tab is visited
@@ -238,6 +255,7 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialNames = snapshotNames();
     initialCurves = snapshotCurves();
     overrideEnabled = servos.some((servo) => {
       const raw = FC.SERVO_OVERRIDE[servo.mspIndex];
@@ -290,6 +308,17 @@
   // limits the trim, and the next poll shows the value it kept.
   function onTrimChange(index) {
     mspHelper.sendServoTrim(index);
+  }
+
+  // Pushed live like onTrimChange; saved to EEPROM by onSave(). Cleaned to
+  // what the FC accepts first, so the field shows the name as stored.
+  function onNameChange(index) {
+    FC.SERVO_NAMES[index] = cleanServoName(FC.SERVO_NAMES[index]);
+    mspHelper.sendServoName(index);
+  }
+
+  function snapshotNames() {
+    return Array.isArray(FC.SERVO_NAMES) ? [...FC.SERVO_NAMES] : null;
   }
 
   function snapshotTrims() {
@@ -457,6 +486,7 @@
     initialConfig = $state.snapshot(FC.SERVO_CONFIG);
     initialBusOutChannels = snapshotBusOutChannels();
     initialTrims = snapshotTrims();
+    initialNames = snapshotNames();
     initialCurves = snapshotCurves();
   }
 
@@ -479,6 +509,15 @@
         if (FC.SERVO_SAVED_TRIM[i] !== initialTrims[i]) {
           FC.SERVO_SAVED_TRIM[i] = initialTrims[i];
           await mspHelper.sendServoTrim(i);
+        }
+      }
+    }
+
+    if (initialNames !== null && Array.isArray(FC.SERVO_NAMES)) {
+      for (let i = 0; i < initialNames.length; i++) {
+        if (FC.SERVO_NAMES[i] !== initialNames[i]) {
+          FC.SERVO_NAMES[i] = initialNames[i];
+          await mspHelper.sendServoName(i);
         }
       }
     }
@@ -625,6 +664,7 @@
         {servos}
         {onFieldChange}
         {onTrimChange}
+        {onNameChange}
         onCurveClick={(servo) => balanceRef.open(servo)}
       />
     </div>

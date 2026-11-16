@@ -97,6 +97,7 @@ class FlightController {
   // Saved per-servo trim in us (MSP_SERVO_TRIM, appended after the live trim; null when
   // the FC does not have it). Added at the output on top of the center, never changing it.
   SERVO_SAVED_TRIM = $state();
+  SERVO_NAMES = $state();
   SERVO_CURVES = $state();
   SERVO_DATA = $state();
   SERVO_OVERRIDE = $state();
@@ -364,6 +365,7 @@ class FlightController {
     this.SERVO_RUNTIME_TRIM =       null;
     this.SERVO_TIMING =             null;
     this.SERVO_SAVED_TRIM =         null;
+    this.SERVO_NAMES =              null;
     this.SERVO_CURVES =             [];
 
     this.SERIAL_CONFIG = {
