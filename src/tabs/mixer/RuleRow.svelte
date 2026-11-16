@@ -77,7 +77,9 @@
     role = rule.role || 0;
 
     const display = ruleToDisplay(rule);
-    weight = display.weight;
+    // A blank row starts at full weight, like Add Rule: a new rule nearly
+    // always wants it, and a zero weight would make it do nothing.
+    weight = isBlank && Mixer.isNullRule(rule) ? 1000 : display.weight;
     differential = display.differential;
     reverse = display.reverse;
   });
