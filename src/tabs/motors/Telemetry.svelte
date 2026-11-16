@@ -160,7 +160,9 @@
       </SubSection>
     </div>
   {/if}
-  {#if motorState.telemEnabled && motorState.hasTelemPort}
+  <!-- F.BUS ESC telemetry arrives on the FBUS master port, so this module's
+       half duplex / pin swap never apply (escSensorInit() opens no port). -->
+  {#if motorState.telemEnabled && motorState.hasTelemPort && selectedProtocolName !== "FrSky F.BUS"}
     <div transition:slide>
       <SubSection label="motorsSectionSignaling" actions={wiringDetectActions}>
         <Field
