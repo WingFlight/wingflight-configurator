@@ -4117,10 +4117,10 @@
         "message": "Signal"
     },
     "servoCurveActive": {
-        "message": "Balance curve active - edit on the Curves tab"
+        "message": "Balance curve set - click to balance it under Balance servos"
     },
     "servoCurveEdit": {
-        "message": "Edit balance curve on the Curves tab"
+        "message": "Balance this servo under Balance servos"
     },
     "servoRateRebootNote": {
         "message": "<span class=\"message-negative\">Warning:</span> A change to the <i>PWM update rate</i> takes effect after a reboot."

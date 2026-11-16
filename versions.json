@@ -301,7 +301,7 @@
       "name": "feature-servo-gang",
       "path": "./feature-servo-gang/",
       "branch": "feature/servo-gang",
-      "date": "2026-11-16T10:54:28Z",
+      "date": "2026-11-16T10:55:36Z",
       "number": 238,
       "title": "Servos tab: balance two servos on one surface with the balance curve",
       "url": "https://github.com/WingFlight/wingflight-configurator/pull/238",
