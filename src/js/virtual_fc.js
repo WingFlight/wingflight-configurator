@@ -349,6 +349,28 @@ function encodeServoTrim() {
   return Uint8Array.from(buffer);
 }
 
+// Servo names (pg/servo_name.h), kept here rather than in FC: the Servos tab
+// clears FC.SERVO_NAMES before asking for them. Named like the default mixer's
+// four surfaces; a real FC starts with none.
+const VIRTUAL_SERVO_COUNT = 24;
+const SERVO_NAME_BYTES = 8;
+const virtualServoNames = ["L AIL", "R AIL", "ELEV", "RUDDER"].concat(
+  Array(VIRTUAL_SERVO_COUNT - 4).fill(""),
+);
+
+// MSP2_WING_SERVO_NAMES: count, name length, then each name zero-padded
+function encodeServoNames() {
+  const buffer = [];
+  buffer.push8(VIRTUAL_SERVO_COUNT);
+  buffer.push8(SERVO_NAME_BYTES);
+  for (const name of virtualServoNames) {
+    for (let i = 0; i < SERVO_NAME_BYTES; i++) {
+      buffer.push8(i < name.length ? name.charCodeAt(i) : 0);
+    }
+  }
+  return Uint8Array.from(buffer);
+}
+
 // Hardware timer of each virtual PWM servo: S1-S3 share one, as on many
 // boards, and S4 has its own.
 const VIRTUAL_SERVO_TIMERS = [0, 0, 0, 1];
@@ -699,6 +721,21 @@ export function getVirtualResponse(code, requestData) {
       return decodeVirtualReply(code, encodeServoTrim());
     case MSPCodes.MSP2_WING_SERVO_TIMING:
       return decodeVirtualReply(code, encodeServoTiming());
+    case MSPCodes.MSP2_WING_SERVO_NAMES:
+      return decodeVirtualReply(code, encodeServoNames());
+    // Checked like the FC's setServoName(); the next MSP2_WING_SERVO_NAMES reads it back
+    case MSPCodes.MSP2_WING_SET_SERVO_NAME: {
+      const index = requestData[0];
+      const name = String.fromCharCode(...requestData.slice(1)).trim();
+      if (
+        index < VIRTUAL_SERVO_COUNT &&
+        name.length <= SERVO_NAME_BYTES &&
+        /^[\x20-\x7E]*$/.test(name)
+      ) {
+        virtualServoNames[index] = name;
+      }
+      return new Uint8Array(0);
+    }
     case MSPCodes.MSP2_WING_FBUS_SENSORS:
       return decodeVirtualReply(code, encodeFbusSensors());
     case MSPCodes.MSP2_WING_FBUS_SENSORS_STATUS:

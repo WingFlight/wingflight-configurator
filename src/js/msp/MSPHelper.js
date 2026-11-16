@@ -10,6 +10,7 @@ import {
     writeRxInputBackupConfig,
 } from "@/js/RxInputBackup.js";
 import semver from "semver";
+import { cleanServoName } from "@/js/ServoNames.js";
 import { API_VERSION_22_3, API_VERSION_22_5 } from "@/js/configurator.svelte.js";
 
 // Used for LED_STRIP
@@ -1834,6 +1835,26 @@ MspHelper.prototype.process_data = function(dataHandler) {
                 break;
             }
 
+            case MSPCodes.MSP2_WING_SERVO_NAMES: {
+                // U8 servo count, U8 name length, then that many zero-padded
+                // ASCII bytes per servo. Firmware without servo names answers
+                // unsupported, which leaves FC.SERVO_NAMES null.
+                FC.SERVO_NAMES = [];
+                const nameCount = data.readU8();
+                const nameLength = data.readU8();
+                for (let i = 0; i < nameCount; i++) {
+                    let name = '';
+                    for (let j = 0; j < nameLength; j++) {
+                        const c = data.readU8();
+                        if (c !== 0) {
+                            name += String.fromCharCode(c);
+                        }
+                    }
+                    FC.SERVO_NAMES.push(name);
+                }
+                break;
+            }
+
             case MSPCodes.MSP2_WING_SERVO_TIMING: {
                 // Per PWM servo: the rate it really runs at (Hz) and the first
                 // servo on its hardware timer. Servos sharing a timer run at
@@ -2199,6 +2220,7 @@ MspHelper.prototype.process_data = function(dataHandler) {
             case MSPCodes.MSP2_WING_SET_MODE_OVERRIDE:
             case MSPCodes.MSP2_WING_SET_SERVO_PROBE:
             case MSPCodes.MSP2_WING_SET_SERVO_TRIM:
+            case MSPCodes.MSP2_WING_SET_SERVO_NAME:
                 break;
             case MSPCodes.MSP_SET_RC_CONFIG: {
                 console.log('RC controls settings saved');
@@ -3489,6 +3511,21 @@ MspHelper.prototype.sendServoTrim = function(servoIndex)
           .push16(FC.SERVO_SAVED_TRIM[servoIndex]);
 
     return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_TRIM, buffer);
+};
+
+// Sets the name of servo `servoIndex` from FC.SERVO_NAMES (empty clears it).
+// Saved to EEPROM with the rest of the config.
+MspHelper.prototype.sendServoName = function(servoIndex)
+{
+    const buffer = [];
+    const name = cleanServoName(FC.SERVO_NAMES[servoIndex]);
+
+    buffer.push8(servoIndex);
+    for (let i = 0; i < name.length; i++) {
+        buffer.push8(name.charCodeAt(i));
+    }
+
+    return MSP.promise(MSPCodes.MSP2_WING_SET_SERVO_NAME, buffer);
 };
 
 // Holds PWM servo `servo` at Mid + offsetUs, ignoring its Min/Max limits,

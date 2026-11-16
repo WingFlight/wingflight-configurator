@@ -3,6 +3,7 @@
 
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
+  import { servoName } from "@/js/ServoNames.js";
 
   import NumberInput from "@/components/NumberInput.svelte";
   import Slider from "@/components/Slider.svelte";
@@ -61,7 +62,12 @@
 
 {#each servos as servo (servo.index)}
   <div class="servo-row">
-    <span class="col-index">{servo.label}</span>
+    <span class="col-index">
+      {servo.label}
+      {#if servoName(servo.index)}
+        <span class="servo-name">{servoName(servo.index)}</span>
+      {/if}
+    </span>
     <span class="col-enable">
       <Switch
         bind:checked={() => isEnabled(servo), (v) => setEnabled(servo, v)}
@@ -123,6 +129,14 @@
   .col-index {
     font-weight: 600;
     text-align: center;
+  }
+
+  .servo-name {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text-soft);
+    white-space: nowrap;
   }
 
   .col-enable {

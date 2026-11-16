@@ -3,6 +3,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { ServoBalanceCurve } from "@/js/ServoBalanceCurve.js";
+  import { SERVO_NAME_LENGTH } from "@/js/ServoNames.js";
   import { requestCurveView } from "@/js/curveNav.svelte.js";
   import { Mixer } from "@/js/Mixer.js";
   import {
@@ -33,7 +34,8 @@
   // the same for all of them.
   // onCurveClick(servoIndex): the balance curve indicator was clicked. Without
   // it the indicator opens the servo's curve on the Curves tab.
-  let { servos, onFieldChange, onTrimChange, onCurveClick } = $props();
+  let { servos, onFieldChange, onTrimChange, onNameChange, onCurveClick } =
+    $props();
 
   const FLAG_REVERSE = 1;
 
@@ -74,6 +76,8 @@
   // Saved trims (FC.SERVO_SAVED_TRIM): firmware that has them keeps every
   // kind of trim apart from Mid.
   let savedTrimSupported = $derived(Array.isArray(FC.SERVO_SAVED_TRIM));
+  // Firmware with servo names fills FC.SERVO_NAMES (MSP2_WING_SERVO_NAMES)
+  let namesSupported = $derived(Array.isArray(FC.SERVO_NAMES));
 
   // Firmware without saved trims has a Stepped ServoTrim adjustment rewrite
   // Mid, and the polled MSP_SERVO_CONFIGURATIONS response overwrites the
@@ -170,6 +174,7 @@
   const INDEX_COL = 44;
   const VALUE_COL = 100;
   const TRIM_COL = 100;
+  const NAME_COL = 90;
   // The adjustment badges and the live (Mapped) trim sit beside the trim
   // value on the same line, so every row keeps the same height and the
   // fields stay aligned; the column grows by the room they need.
@@ -209,7 +214,9 @@
   });
 
   let columnWidths = $derived.by(() => {
-    const cols = [INDEX_COL, VALUE_COL]; // Servo #, Center
+    const cols = [INDEX_COL]; // Servo #
+    if (namesSupported) cols.push(NAME_COL);
+    cols.push(VALUE_COL); // Center
     if (showTrimColumn) cols.push(trimColumnWidth);
     cols.push(VALUE_COL, VALUE_COL, VALUE_COL, VALUE_COL); // Min, Max, Scale neg/pos
     if (CONFIGURATOR.expertMode) {
@@ -372,6 +379,17 @@
   }
 </script>
 
+{#snippet nameField(servo)}
+  <input
+    class="name-input"
+    type="text"
+    maxlength={SERVO_NAME_LENGTH}
+    placeholder={`S${servo.label}`}
+    bind:value={FC.SERVO_NAMES[servo.index]}
+    onchange={() => onNameChange(servo.index)}
+  />
+{/snippet}
+
 {#snippet trimBadges(servo)}
   <span class="servo-trim-badges">
     {#each servoTrimAdjustments(servo) as trim (trim.axisLabel)}
@@ -488,6 +506,12 @@
     <div class="servo-config desktop-table">
       <div class="header-row" style="grid-template-columns: {gridColumns}">
         <span>{$i18n.t("servoNumber")}</span>
+        {#if namesSupported}
+          <span class="header-label-flex">
+            <span>{$i18n.t("servoName")}</span>
+            <HelpIcon>{$i18n.t("servoNameHelp")}</HelpIcon>
+          </span>
+        {/if}
         <span class="header-label-flex">
           <span>{$i18n.t("servoMid")}</span>
           <HelpIcon>{$i18n.t("servoMidHelp")}</HelpIcon>
@@ -540,6 +564,9 @@
             {servo.label}
             {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
           </span>
+          {#if namesSupported}
+            <span>{@render nameField(servo)}</span>
+          {/if}
           <span>
             <NumberInput
               {...bounds(servo, "mid")}
@@ -637,6 +664,13 @@
               {#if hasActiveCurve(servo)}{@render curveIcon(servo)}{/if}
             </span>
           </div>
+
+          {#if namesSupported}
+            <div class="mobile-field">
+              {@render fieldLabel("servoName", "servoNameHelp")}
+              {@render nameField(servo)}
+            </div>
+          {/if}
 
           <div class="mobile-field">
             {@render fieldLabel("servoMid", "servoMidHelp")}
@@ -770,6 +804,11 @@
                 {servo.label}
                 {#if hasActiveCurve(servo)}{@render curveIconSvg()}{/if}
               </span>
+              {#if FC.SERVO_NAMES?.[servo.index]}
+                <span class="mobile-row-name"
+                  >{FC.SERVO_NAMES[servo.index]}</span
+                >
+              {/if}
               {@render signal(servo, "mobile-row-signal")}
               <span class="mobile-row-mid"
                 >{$i18n.t("servoMid")}: {config.mid}</span
@@ -1082,6 +1121,22 @@
   .mobile-row-signal {
     flex: 1;
     min-width: 70px;
+  }
+
+  .name-input {
+    width: 100%;
+    height: 1.5rem;
+    padding: 0 4px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--color-border-soft);
+    background-color: var(--color-input-bg);
+    color: inherit;
+  }
+
+  .mobile-row-name {
+    flex-shrink: 0;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   .mobile-row-mid {

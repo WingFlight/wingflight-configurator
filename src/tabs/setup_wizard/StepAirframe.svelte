@@ -4,6 +4,7 @@
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
   import { Mixer } from "@/js/Mixer.js";
+  import { sendChangedServoNames, servoName } from "@/js/ServoNames.js";
 
   import ModelSetupDialog from "@/tabs/mixer/ModelSetupDialog.svelte";
 
@@ -41,10 +42,17 @@
     if (changed) wiz.markChanged();
   });
 
+  // The setup dialog names the servos it assigns (assignServoNames()); they
+  // are sent with the rules.
+  const initialNames = Array.isArray(FC.SERVO_NAMES)
+    ? [...FC.SERVO_NAMES]
+    : null;
+
   wiz.setCommit(async () => {
     if (!changed) return;
     await new Promise((resolve) => mspHelper.sendMixerConfig(resolve));
     await new Promise((resolve) => mspHelper.sendMixerRules(resolve));
+    await sendChangedServoNames(initialNames);
   });
 
   let current = $derived(FC.MIXER_CONFIG.model_type);
@@ -128,6 +136,9 @@
             <span class="kind"
               >{$i18n.t(`setupWizardSurface_${surface.kind}`)}</span
             >
+            {#if servoName(surface.servo)}
+              <span class="servo-name">{servoName(surface.servo)}</span>
+            {/if}
             <span class="axes">
               {#each AXES.filter((a) => surface.axes[a.key]) as axis (axis.key)}
                 <span class="axis">
@@ -278,6 +289,11 @@
   }
 
   // Servo output number.
+  .servo-name {
+    font-size: 0.8rem;
+    color: var(--color-text-soft);
+  }
+
   .servo {
     display: grid;
     place-items: center;
