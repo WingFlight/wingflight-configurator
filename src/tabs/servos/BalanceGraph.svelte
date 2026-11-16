@@ -26,9 +26,11 @@
     children,
   } = $props();
 
-  const W = 1200;
-  const H = 180;
-  const PAD = 10;
+  // Wide and short: the offsets are small, so the curve needs little height,
+  // and a group of four still fits on one screen.
+  const W = 1600;
+  const H = 120;
+  const PAD = 8;
 
   let svgEl;
   let dragIndex = $state(null);
@@ -94,8 +96,15 @@
   let polyline = $derived(points.map((p) => `${sx(p.x)},${sy(p.y)}`).join(" "));
 
   // The info box sits by the marker, on whichever side has room.
-  let infoX = $derived(markerX === null ? sx(0) : sx(markerX));
-  let infoLeft = $derived(infoX > W - 190);
+  // The info box is about the selected point, so it sits by that point.
+  let infoX = $derived(
+    selected !== null
+      ? sx(points[selected].x)
+      : markerX === null
+        ? sx(0)
+        : sx(markerX),
+  );
+  let infoLeft = $derived(infoX > W - 240);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -183,7 +192,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 6px 8px 8px;
+    padding: 4px 8px 6px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     outline: none;
@@ -199,7 +208,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 1.8em;
+    min-height: 1.6em;
   }
 
   .title {
@@ -275,7 +284,7 @@
   // Like the X / Δ box on the ETHOS screen.
   .info {
     position: absolute;
-    top: 42px;
+    top: 34px;
     display: flex;
     flex-direction: column;
     margin: 0 8px;

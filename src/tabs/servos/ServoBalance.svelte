@@ -295,6 +295,27 @@
       {/each}
     </select>
   {/if}
+  {#if ready && group.length > 1}
+    <span class="grow"></span>
+    <button
+      class={["btn", holdX !== null && !sweeping && "selected"]}
+      type="button"
+      onclick={toggleLock}
+    >
+      <i
+        class={["fas", holdX !== null ? "fa-lock" : "fa-lock-open"]}
+        aria-hidden="true"
+      ></i>
+      {$i18n.t(holdX !== null ? "servoBalanceLocked" : "servoBalanceLock")}
+    </button>
+    <button
+      class={["btn", sweeping && "selected"]}
+      type="button"
+      onclick={() => (sweeping ? stopSweep() : sweep())}
+    >
+      {$i18n.t(sweeping ? "servoBalanceSweepStop" : "servoBalanceSweep")}
+    </button>
+  {/if}
 </div>
 
 {#if group.length === 1}
@@ -316,28 +337,6 @@
 {/if}
 
 {#if ready && group.length > 1}
-  <div class="row">
-    <span class="grow"></span>
-    <button
-      class={["btn", holdX !== null && !sweeping && "selected"]}
-      type="button"
-      onclick={toggleLock}
-    >
-      <i
-        class={["fas", holdX !== null ? "fa-lock" : "fa-lock-open"]}
-        aria-hidden="true"
-      ></i>
-      {$i18n.t(holdX !== null ? "servoBalanceLocked" : "servoBalanceLock")}
-    </button>
-    <button
-      class={["btn", sweeping && "selected"]}
-      type="button"
-      onclick={() => (sweeping ? stopSweep() : sweep())}
-    >
-      {$i18n.t(sweeping ? "servoBalanceSweepStop" : "servoBalanceSweep")}
-    </button>
-  </div>
-
   <div class="graphs">
     {#each group as servo (servo)}
       {@const curve = FC.SERVO_CURVES[servo]}
