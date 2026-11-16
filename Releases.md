@@ -1,3 +1,17 @@
+# 0.0.43
+
+Use with the 0.0.43 firmware (MSP API 22.16); the 0.0.42 firmware works too, without servo names and F.Bus wiring detection.
+Add servo names: a Name column on the Servos tab, and each servo's name on the Mixer tab, in Servo Override and Balance, and in the Setup Wizard. The mixer wizards and the Setup Wizard's Airframe step name the servos they assign (L AIL, ELEV, RUDDER...). Hidden on firmware without names.
+Add a Balance servos section to the Servos tab, like Ethos Balance channels: up to four servos on one surface, each servo's balance curve graphed, with hold at a point, nudging, 2/5/9 points per curve and a sweep.
+Add a Servo bus step to the Setup Wizard for F.Bus and SBUS output: the port, the protocol and the channel count, how many F.Bus devices answer, and Detect wiring with the 0.0.43 firmware.
+Add PWM ESC calibration and a spin test per motor to the Setup Wizard's Motor step.
+Add the SRXL2 ESC port to the Setup Wizard's Motor step: choosing SRXL2 asks which serial port the ESC is plugged into and sets it up. The Motors tab no longer saves SRXL2 without an SRXL2 ESC port, and says how Castle Link is wired.
+Add radio setup guides, with Ethos screenshots, to the Setup Wizard's gain knob and mode switch steps.
+Add handing control back and forth in remote support: the pilot can take control and give it back, the supporter can hand it over or ask for it back, and requests show as cards with a chime.
+Change a mixer rule started from the blank row to start at weight 1000, as Add Rule does, instead of 0.
+Change the Motors tab to hide ESC half duplex and pin swap when ESC telemetry is F.BUS, where they have no effect.
+Fix a save during a Setup Wizard wiring trial storing the wiring under trial, an edit made while a save ran being lost, and a protocol change during ESC calibration leaving full throttle held.
+
 # 0.0.42
 
 Support the 0.0.42 firmware (MSP API 22.16), which is now required; older firmware is refused.
