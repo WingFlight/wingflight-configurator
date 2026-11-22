@@ -13,7 +13,8 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { ConfigInserter } from "@/js/ConfigInserter.js";
+  import { insertBoardConfig } from "@/js/param/flash_config.js";
+  import { defaultSources, cacheManifest } from "@/js/param/session.js";
   import { FirmwareCache } from "@/js/FirmwareCache.js";
   import { downloadFirmware } from "@/js/FirmwareDownload.js";
   import * as github from "@/js/GitHubApi.js";
@@ -686,7 +687,27 @@
     }
   }
 
-  function onClickFlash() {
+  function escapeHtml(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // See FirmwareFlasher.svelte: where the hex's manifest may be found.
+  function manifestSources(buildId) {
+    const hexUrl = localFirmwareLoaded ? null : releaseInfo?.fileUrl;
+    return defaultSources(
+      { buildId },
+      {
+        fetchRelease: hexUrl
+          ? async () => {
+              const response = await fetch(hexUrl.replace(/\.hex$/, "_manifest.json"));
+              return response.ok ? response.json() : null;
+            }
+          : undefined,
+      },
+    );
+  }
+
+  async function onClickFlash() {
     if (GUI.connect_lock) return;
     if (!parsedHex) {
       flashState.message = $i18n.t("firmwareFlasherFirmwareNotLoaded");
@@ -696,8 +717,11 @@
 
     try {
       if (unifiedTarget.config && !parsedHex.configInserted) {
-        const configInserter = new ConfigInserter();
-        if (configInserter.insertConfig(parsedHex, unifiedTarget.config)) {
+        const { inserted } = await insertBoardConfig(parsedHex, unifiedTarget.config, {
+          sources: manifestSources,
+          onManifest: (raw) => cacheManifest(raw),
+        });
+        if (inserted) {
           parsedHex.configInserted = true;
         } else {
           console.log("Firmware does not support custom defaults.");
@@ -709,6 +733,8 @@
       GUI.saveDefaultTab("status");
     } catch (e) {
       console.log(`Flashing failed: ${e.message}`);
+      // Rendered as HTML, and a compile error quotes the config line it refused.
+      setFlashingMessage(escapeHtml(e.message), FLASH_MESSAGE_TYPES.INVALID);
     }
   }
 

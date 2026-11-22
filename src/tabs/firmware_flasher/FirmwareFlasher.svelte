@@ -6,7 +6,8 @@
   import { CONFIGURATOR } from "@/js/configurator.svelte.js";
   import { FC } from "@/js/fc.svelte.js";
   import { i18n } from "@/js/i18n.js";
-  import { ConfigInserter } from "@/js/ConfigInserter.js";
+  import { insertBoardConfig, FlashConfigError } from "@/js/param/flash_config.js";
+  import { defaultSources, cacheManifest } from "@/js/param/session.js";
   import { FirmwareCache } from "@/js/FirmwareCache.js";
   import { downloadFirmware } from "@/js/FirmwareDownload.js";
   import * as github from "@/js/GitHubApi.js";
@@ -1497,11 +1498,36 @@
     }
   }
 
-  function proceedToFlash(backupText, backupPort) {
+  // Where the manifest of the hex being flashed may be found, for compiling
+  // the board config into custom defaults: the cache, the release assets next
+  // to a downloaded hex, or a file the user picks for a local one.
+  function manifestSources(buildId) {
+    const hexUrl = localFirmwareLoaded ? null : releaseInfo?.fileUrl;
+    return defaultSources(
+      { buildId },
+      {
+        fetchRelease: hexUrl
+          ? async () => {
+              const response = await fetch(hexUrl.replace(/\.hex$/, "_manifest.json"));
+              return response.ok ? response.json() : null;
+            }
+          : undefined,
+      },
+    );
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  async function proceedToFlash(backupText, backupPort) {
     try {
       if (unifiedTarget.config && !parsedHex.configInserted) {
-        const configInserter = new ConfigInserter();
-        if (configInserter.insertConfig(parsedHex, unifiedTarget.config)) {
+        const { inserted } = await insertBoardConfig(parsedHex, unifiedTarget.config, {
+          sources: manifestSources,
+          onManifest: (raw) => cacheManifest(raw),
+        });
+        if (inserted) {
           parsedHex.configInserted = true;
         } else {
           console.log("Firmware does not support custom defaults.");
@@ -1513,6 +1539,13 @@
       GUI.saveDefaultTab("status");
     } catch (e) {
       console.error("Flashing failed", e);
+      if (e instanceof FlashConfigError) {
+        setFlashingMessage(
+          $i18n.t("firmwareFlasherConfigNotCompiled", { 1: escapeHtml(e.message) }),
+          FLASH_MESSAGE_TYPES.INVALID,
+        );
+        return;
+      }
       // Most likely ConfigInserter's "Custom defaults area too small", with
       // a config read off a DIY board -- nothing has size-checked that
       // against the firmware the way published targets are. Shown as a
