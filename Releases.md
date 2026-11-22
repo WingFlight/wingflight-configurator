@@ -1,3 +1,7 @@
+# 0.0.44
+
+Version bump for release alignment; no configurator-relevant changes this cycle.
+
 # 0.0.43
 
 Use with the 0.0.43 firmware (MSP API 22.16); the 0.0.42 firmware works too, without servo names and F.Bus wiring detection.
