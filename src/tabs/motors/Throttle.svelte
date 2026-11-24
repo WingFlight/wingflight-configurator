@@ -168,7 +168,7 @@
             <Tooltip
               help="motorsThrottleMinimumCommandHelp"
               attrs={[
-                { name: "genericDefault", value: "1000μs" },
+                { name: "genericDefault", value: "980μs" },
                 { name: "genericRange", value: "50μs - 2250μs" },
               ]}
             />
