@@ -978,7 +978,7 @@ export function applyVirtualConfig() {
   // Motors
   FC.MOTOR_DATA = new Array(8);
   Object.assign(FC.MOTOR_CONFIG, {
-    mincommand: 1000,
+    mincommand: 980,
     minthrottle: 1070,
     maxthrottle: 2000,
     motor_count_blheli: 2, // lets ESC2 (motor 2) be exercised in virtual mode
