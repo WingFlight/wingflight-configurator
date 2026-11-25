@@ -308,13 +308,6 @@
     },
     {
       "type": "branch",
-      "name": "feature-rx-centre",
-      "path": "./feature-rx-centre/",
-      "branch": "feature/rx-centre",
-      "date": "2026-11-25T08:52:11Z"
-    },
-    {
-      "type": "branch",
       "name": "feature-srxl2-motor2",
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
