@@ -19,7 +19,16 @@
   import ReceiverArt from "./ReceiverArt.svelte";
   import SticksBottomLeft from "./SticksBottomLeft.svelte";
   import StickIcon from "./StickIcon.svelte";
-  import { mapFromDetected, movedChannel, orderLabel } from "./receiver.js";
+  import {
+    CENTRE_MAX,
+    CENTRE_MIN,
+    centreFromSamples,
+    centreIsOff,
+    mapFromDetected,
+    movedChannel,
+    orderLabel,
+    suggestedCentre,
+  } from "./receiver.js";
 
   const wiz = getContext("setupWizard");
 
@@ -58,6 +67,7 @@
   let loading = $state(true);
   let connChanged = $state(false);
   let mapChanged = $state(false);
+  let rcChanged = $state(false);
   let pollTimer;
   let stopped = false;
 
@@ -70,7 +80,9 @@
     async function poll() {
       if (stopped) return;
       await MSP.promise(MSPCodes.MSP_RX_CHANNELS);
+      if (stopped) return;
       orderDetectTick();
+      centreTick();
       await MSP.promise(MSPCodes.MSP2_WING_RX_INPUT_BACKUP_STATUS);
       if (!stopped) pollTimer = setTimeout(poll, POLL_MS);
     }
@@ -95,6 +107,9 @@
     }
     if (mapChanged) {
       await send(MSPCodes.MSP_SET_RX_MAP);
+    }
+    if (rcChanged) {
+      await send(MSPCodes.MSP_SET_RC_CONFIG);
     }
   });
 
@@ -301,6 +316,92 @@
   let readings = $derived(FUNCTIONS.map((fn, i) => ({ ...fn, ...reading(i) })));
   let allLeft = $derived(readings.every((r) => r.state === "left"));
   let anyRight = $derived(readings.some((r) => r.state === "right"));
+
+  //// 5. Stick centre (rc_center): measured from roll, pitch and yaw with
+  //// the sticks and trims centred. A rolling window of the last second
+  //// drives a hint when the resting sticks don't match rc_center.
+
+  const CENTRE_WINDOW = 10; // polls: 1 s
+  const CENTRE_SAMPLES = 15; // polls Detect averages over: 1.5 s
+
+  let centreWindow = $state([]);
+  let centreSampling = $state(null);
+  let centreResult = $state(null);
+
+  function stickValues() {
+    return [0, 1, 2].map((fn) => FC.RX_CHANNELS?.[FC.RC_MAP?.[fn]] ?? 0);
+  }
+
+  function centreTick() {
+    // With the link down the channels hold failsafe values, which are still
+    // and agree, so they would pass as a centre.
+    if (linkUp === false) {
+      centreWindow = [];
+      if (centreSampling) {
+        centreSampling = null;
+        centreResult = { status: "noSignal", applied: false };
+      }
+      return;
+    }
+    const values = stickValues();
+    centreWindow = [...centreWindow, values].slice(-CENTRE_WINDOW);
+    if (!centreSampling) return;
+    const samples = [...centreSampling, values];
+    if (samples.length < CENTRE_SAMPLES) {
+      centreSampling = samples;
+      return;
+    }
+    centreSampling = null;
+    const result = centreFromSamples(samples);
+    const before = FC.RC_CONFIG.rc_center;
+    let applied = false;
+    if (result.status === "ok" && centreIsOff(result.centre, before)) {
+      FC.RC_CONFIG.rc_center = result.centre;
+      rcChanged = true;
+      applied = true;
+      wiz.markChanged();
+    }
+    centreResult = { ...result, applied };
+    // The hint starts again from readings after this result, so it can't
+    // hide the result with readings taken before it.
+    centreWindow = [];
+  }
+
+  function startCentreDetect() {
+    centreResult = null;
+    centreSampling = [];
+  }
+
+  let centreHint = $derived(
+    centreSampling || centreWindow.length < CENTRE_WINDOW
+      ? null
+      : suggestedCentre(centreWindow, FC.RC_CONFIG?.rc_center || 1500),
+  );
+
+  function centreMessage(r) {
+    const t = $i18n.t;
+    switch (r.status) {
+      case "ok":
+        return r.applied
+          ? t("setupWizardReceiverCentreSet", { 1: r.centre })
+          : t("setupWizardReceiverCentreSame", { 1: r.centre });
+      case "noSignal":
+        return t("setupWizardReceiverCentreNoSignal");
+      case "moving":
+        return t("setupWizardReceiverCentreMoving");
+      case "trim":
+        return t("setupWizardReceiverCentreTrim", {
+          1: t(FUNCTIONS[r.axis].label),
+        });
+      case "range":
+        return t("setupWizardReceiverCentreRange", {
+          1: r.centre,
+          2: CENTRE_MIN,
+          3: CENTRE_MAX,
+        });
+    }
+    return "";
+  }
 </script>
 
 <div class="intro">
@@ -539,6 +640,55 @@
     {/if}
     <p class="muted">{$i18n.t("setupWizardReceiverCheckWrongBar")}</p>
   </section>
+
+  <!-- 5: stick centre (rc_center). -->
+  <section class="card">
+    <h3>
+      <span class="num">5</span>{$i18n.t("setupWizardReceiverCentreTitle")}
+      <span class="badge">
+        {$i18n.t("setupWizardReceiverCentreCurrent", {
+          1: FC.RC_CONFIG.rc_center,
+        })}
+      </span>
+    </h3>
+    <p>{$i18n.t("setupWizardReceiverCentreText")}</p>
+    <WarningNote message="setupWizardReceiverCentreTrims" />
+    <div class="actions">
+      <button
+        class="btn"
+        disabled={!hasChannels || !!centreSampling || !!orderDetect}
+        onclick={startCentreDetect}
+      >
+        {$i18n.t("setupWizardReceiverCentreDetect")}
+      </button>
+      {#if centreSampling}
+        <span class="detect-state sampling" aria-live="polite">
+          {$i18n.t("setupWizardReceiverCentreSampling")}
+        </span>
+      {/if}
+    </div>
+    <!-- A newer reading (the hint) replaces the last result. -->
+    {#if centreResult && centreHint === null}
+      {#if centreResult.status === "ok"}
+        <p class="good-text" aria-live="polite">
+          <i class="fas fa-check-circle" aria-hidden="true"></i>
+          {centreMessage(centreResult)}
+        </p>
+      {:else}
+        <div class="note" aria-live="polite">
+          {centreMessage(centreResult)}
+        </div>
+      {/if}
+    {/if}
+    {#if centreHint !== null}
+      <WarningNote>
+        {$i18n.t("setupWizardReceiverCentreHint", {
+          1: centreHint,
+          2: FC.RC_CONFIG.rc_center,
+        })}
+      </WarningNote>
+    {/if}
+  </section>
 {/if}
 
 <div>
@@ -735,7 +885,8 @@
       color: var(--color-status-good);
     }
 
-    .active & {
+    .active &,
+    &.sampling {
       animation: waiting 0.8s ease-in-out infinite alternate;
     }
   }
