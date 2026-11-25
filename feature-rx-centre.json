@@ -1,4 +1,8 @@
 {
   "branch": "feature/rx-centre",
-  "date": "2026-11-25T03:52:42Z"
+  "date": "2026-11-25T03:52:42Z",
+  "number": 244,
+  "title": "Setup wizard: detect the stick center",
+  "url": "https://github.com/WingFlight/wingflight-configurator/pull/244",
+  "draft": false
 }
