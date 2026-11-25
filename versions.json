@@ -323,17 +323,6 @@
       "path": "./feature-srxl2-motor2/",
       "branch": "feature/srxl2-motor2",
       "date": "2026-11-02T22:07:15Z"
-    },
-    {
-      "type": "pr",
-      "name": "244",
-      "path": "./pr/244/",
-      "branch": "feature/rx-centre",
-      "date": "2026-11-25T08:53:00Z",
-      "number": 244,
-      "title": "Setup wizard: detect the stick center",
-      "url": "https://github.com/WingFlight/wingflight-configurator/pull/244",
-      "draft": false
     }
   ]
 }
